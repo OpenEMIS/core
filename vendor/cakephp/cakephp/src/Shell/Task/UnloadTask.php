@@ -19,10 +19,10 @@ use Cake\Filesystem\File;
 
 /**
  * Task for unloading plugins.
- *
  */
 class UnloadTask extends Shell
 {
+
     /**
      * Path to the bootstrap file.
      *
@@ -33,16 +33,17 @@ class UnloadTask extends Shell
     /**
      * Execution method always used for tasks.
      *
-     * @param string $plugin The plugin name.
-     * @return boolean if action passed.
+     * @param string|null $plugin The plugin name.
+     * @return bool if action passed.
      */
     public function main($plugin = null)
     {
-        $this->bootstrap = ROOT . DS . 'config' . DS . 'bootstrap.php';
+        $this->bootstrap = ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
         if (empty($plugin)) {
-            $this->err('<error>You must provide a plugin name in CamelCase format.</error>');
-            $this->err('To unload an "Example" plugin, run <info>`cake plugin unload Example`</info>.');
+            $this->err('You must provide a plugin name in CamelCase format.');
+            $this->err('To unload an "Example" plugin, run `cake plugin unload Example`.');
+
             return false;
         }
 
@@ -72,6 +73,7 @@ class UnloadTask extends Shell
 
             return true;
         }
+
         return false;
     }
 

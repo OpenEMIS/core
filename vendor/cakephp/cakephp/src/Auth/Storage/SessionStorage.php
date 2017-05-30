@@ -62,10 +62,10 @@ class SessionStorage implements StorageInterface
      * Constructor.
      *
      * @param \Cake\Network\Request $request Request instance.
-     * @param \Cake\Netowrk\Response $respose Response instance.
+     * @param \Cake\Network\Response $response Response instance.
      * @param array $config Configuration list.
      */
-    public function __construct(Request $request, Response $respose, array $config = [])
+    public function __construct(Request $request, Response $response, array $config = [])
     {
         $this->_session = $request->session();
         $this->config($config);
@@ -83,6 +83,7 @@ class SessionStorage implements StorageInterface
         }
 
         $this->_user = $this->_session->read($this->_config['key']) ?: false;
+
         return $this->_user;
     }
 
@@ -91,10 +92,10 @@ class SessionStorage implements StorageInterface
      *
      * The session id is also renewed to help mitigate issues with session replays.
      *
-     * @param array $user User record.
+     * @param array|\ArrayAccess $user User record.
      * @return void
      */
-    public function write(array $user)
+    public function write($user)
     {
         $this->_user = $user;
 
@@ -128,7 +129,8 @@ class SessionStorage implements StorageInterface
 
         if ($url === false) {
             $this->_session->delete($this->_config['redirect']);
-            return;
+
+            return null;
         }
 
         $this->_session->write($this->_config['redirect'], $url);

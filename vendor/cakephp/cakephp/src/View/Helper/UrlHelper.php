@@ -29,20 +29,106 @@ class UrlHelper extends Helper
     /**
      * Returns a URL based on provided parameters.
      *
-     * @param string|array $url Either a relative string url like `/products/view/23` or
+     * ### Options:
+     *
+     * - `escape`: If false, the URL will be returned unescaped, do only use if it is manually
+     *    escaped afterwards before being displayed.
+     * - `fullBase`: If true, the full base URL will be prepended to the result
+     *
+     * @param string|array|null $url Either a relative string url like `/products/view/23` or
      *    an array of URL parameters. Using an array for URLs will allow you to leverage
      *    the reverse routing features of CakePHP.
-     * @param bool $full If true, the full base URL will be prepended to the result
+     * @param array|bool $options Array of options; bool `full` for BC reasons.
      * @return string Full translated URL with base path.
      */
-    public function build($url = null, $full = false)
+    public function build($url = null, $options = false)
     {
-        return h(Router::url($url, $full));
+        $defaults = [
+            'fullBase' => false,
+            'escape' => true,
+        ];
+        if (!is_array($options)) {
+            $options = ['fullBase' => $options];
+        }
+        $options += $defaults;
+
+        $url = Router::url($url, $options['fullBase']);
+        if ($options['escape']) {
+            $url = h($url);
+        }
+
+        return $url;
     }
 
     /**
-     * Generate URL for given asset file. Depending on options passed provides full URL with domain name.
-     * Also calls Helper::assetTimestamp() to add timestamp to local files
+     * Generates URL for given image file.
+     *
+     * Depending on options passed provides full URL with domain name. Also calls
+     * `Helper::assetTimestamp()` to add timestamp to local files.
+     *
+     * @param string|array $path Path string or URL array
+     * @param array $options Options array. Possible keys:
+     *   `fullBase` Return full URL with domain name
+     *   `pathPrefix` Path prefix for relative URLs
+     *   `plugin` False value will prevent parsing path as a plugin
+     * @return string Generated URL
+     */
+    public function image($path, array $options = [])
+    {
+        $pathPrefix = Configure::read('App.imageBaseUrl');
+
+        return $this->assetUrl($path, $options + compact('pathPrefix'));
+    }
+
+    /**
+     * Generates URL for given CSS file.
+     *
+     * Depending on options passed provides full URL with domain name. Also calls
+     * `Helper::assetTimestamp()` to add timestamp to local files.
+     *
+     * @param string|array $path Path string or URL array
+     * @param array $options Options array. Possible keys:
+     *   `fullBase` Return full URL with domain name
+     *   `pathPrefix` Path prefix for relative URLs
+     *   `ext` Asset extension to append
+     *   `plugin` False value will prevent parsing path as a plugin
+     * @return string Generated URL
+     */
+    public function css($path, array $options = [])
+    {
+        $pathPrefix = Configure::read('App.cssBaseUrl');
+        $ext = '.css';
+
+        return $this->assetUrl($path, $options + compact('pathPrefix', 'ext'));
+    }
+
+    /**
+     * Generates URL for given javascript file.
+     *
+     * Depending on options passed provides full URL with domain name. Also calls
+     * `Helper::assetTimestamp()` to add timestamp to local files.
+     *
+     * @param string|array $path Path string or URL array
+     * @param array $options Options array. Possible keys:
+     *   `fullBase` Return full URL with domain name
+     *   `pathPrefix` Path prefix for relative URLs
+     *   `ext` Asset extension to append
+     *   `plugin` False value will prevent parsing path as a plugin
+     * @return string Generated URL
+     */
+    public function script($path, array $options = [])
+    {
+        $pathPrefix = Configure::read('App.jsBaseUrl');
+        $ext = '.js';
+
+        return $this->assetUrl($path, $options + compact('pathPrefix', 'ext'));
+    }
+
+    /**
+     * Generates URL for given asset file.
+     *
+     * Depending on options passed provides full URL with domain name. Also calls
+     * `Helper::assetTimestamp()` to add timestamp to local files.
      *
      * @param string|array $path Path string or URL array
      * @param array $options Options array. Possible keys:
@@ -57,7 +143,7 @@ class UrlHelper extends Helper
         if (is_array($path)) {
             return $this->build($path, !empty($options['fullBase']));
         }
-        if (strpos($path, '://') !== false) {
+        if (strpos($path, '://') !== false || preg_match('/^[a-z]+:/i', $path)) {
             return $path;
         }
         if (!array_key_exists('plugin', $options) || $options['plugin'] !== false) {
@@ -83,6 +169,7 @@ class UrlHelper extends Helper
         if (!empty($options['fullBase'])) {
             $path = rtrim(Router::fullBaseUrl(), '/') . '/' . ltrim($path, '/');
         }
+
         return $path;
     }
 
@@ -98,6 +185,7 @@ class UrlHelper extends Helper
         $parts = array_map('rawurldecode', explode('/', $path));
         $parts = array_map('rawurlencode', $parts);
         $encoded = implode('/', $parts);
+
         return h(str_replace($path, $encoded, $url));
     }
 
@@ -119,7 +207,7 @@ class UrlHelper extends Helper
                 '',
                 urldecode($path)
             );
-            $webrootPath = WWW_ROOT . str_replace('/', DS, $filepath);
+            $webrootPath = WWW_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $filepath);
             if (file_exists($webrootPath)) {
                 //@codingStandardsIgnoreStart
                 return $path . '?' . @filemtime($webrootPath);
@@ -129,12 +217,13 @@ class UrlHelper extends Helper
             $plugin = Inflector::camelize($segments[0]);
             if (Plugin::loaded($plugin)) {
                 unset($segments[0]);
-                $pluginPath = Plugin::path($plugin) . 'webroot' . DS . implode(DS, $segments);
+                $pluginPath = Plugin::path($plugin) . 'webroot' . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $segments);
                 //@codingStandardsIgnoreStart
                 return $path . '?' . @filemtime($pluginPath);
                 //@codingStandardsIgnoreEnd
             }
         }
+
         return $path;
     }
 
@@ -153,9 +242,9 @@ class UrlHelper extends Helper
 
         if (!empty($this->theme)) {
             $file = trim($file, '/');
-            $theme = Inflector::underscore($this->theme) . '/';
+            $theme = $this->_inflectThemeName($this->theme) . '/';
 
-            if (DS === '\\') {
+            if (DIRECTORY_SEPARATOR === '\\') {
                 $file = str_replace('/', '\\', $file);
             }
 
@@ -172,7 +261,19 @@ class UrlHelper extends Helper
         if (strpos($webPath, '//') !== false) {
             return str_replace('//', '/', $webPath . $asset[1]);
         }
+
         return $webPath . $asset[1];
+    }
+
+    /**
+     * Inflect the theme name to its underscored version.
+     *
+     * @param string $name Name of the theme which should be inflected.
+     * @return string Inflected name of the theme
+     */
+    protected function _inflectThemeName($name)
+    {
+        return Inflector::underscore($name);
     }
 
     /**

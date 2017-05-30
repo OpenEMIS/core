@@ -15,6 +15,7 @@
 namespace Cake\Database\Log;
 
 use Cake\Database\Statement\StatementDecorator;
+use Exception;
 
 /**
  * Statement decorator used to
@@ -27,7 +28,7 @@ class LoggingStatement extends StatementDecorator
     /**
      * Logger instance responsible for actually doing the logging task
      *
-     * @var QueryLogger
+     * @var \Cake\Database\Log\QueryLogger
      */
     protected $_logger;
 
@@ -42,7 +43,7 @@ class LoggingStatement extends StatementDecorator
      * Wrapper for the execute function to calculate time spent
      * and log the query afterwards.
      *
-     * @param array $params List of values to be bound to query
+     * @param array|null $params List of values to be bound to query
      * @return bool True on success, false otherwise
      * @throws \Exception Re-throws any exception raised during query execution.
      */
@@ -53,7 +54,7 @@ class LoggingStatement extends StatementDecorator
 
         try {
             $result = parent::execute($params);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $e->queryString = $this->queryString;
             $query->error = $e;
             $this->_log($query, $params, $t);
@@ -62,6 +63,7 @@ class LoggingStatement extends StatementDecorator
 
         $query->numRows = $this->rowCount();
         $this->_log($query, $params, $t);
+
         return $result;
     }
 
@@ -115,6 +117,7 @@ class LoggingStatement extends StatementDecorator
         if ($instance === null) {
             return $this->_logger;
         }
+
         return $this->_logger = $instance;
     }
 }

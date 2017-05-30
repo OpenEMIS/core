@@ -15,9 +15,10 @@
 namespace Cake\Database\Driver;
 
 use Cake\Database\Dialect\PostgresDialectTrait;
+use Cake\Database\Driver;
 use PDO;
 
-class Postgres extends \Cake\Database\Driver
+class Postgres extends Driver
 {
 
     use PDODriverTrait;
@@ -55,6 +56,7 @@ class Postgres extends \Cake\Database\Driver
         $config = $this->_config;
         $config['flags'] += [
             PDO::ATTR_PERSISTENT => $config['persistent'],
+            PDO::ATTR_EMULATE_PREPARES => false,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ];
         if (empty($config['unix_socket'])) {
@@ -80,6 +82,7 @@ class Postgres extends \Cake\Database\Driver
         foreach ($config['init'] as $command) {
             $connection->exec($command);
         }
+
         return true;
     }
 
@@ -116,5 +119,13 @@ class Postgres extends \Cake\Database\Driver
     {
         $this->connect();
         $this->_connection->exec('SET search_path TO ' . $this->_connection->quote($schema));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function supportsDynamicConstraints()
+    {
+        return true;
     }
 }

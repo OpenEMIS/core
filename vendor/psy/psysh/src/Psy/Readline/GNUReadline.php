@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell
+ * This file is part of Psy Shell.
  *
- * (c) 2012-2014 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,8 +20,11 @@ namespace Psy\Readline;
  */
 class GNUReadline implements Readline
 {
+    /** @var string|false */
     protected $historyFile;
+    /** @var int */
     protected $historySize;
+    /** @var bool */
     protected $eraseDups;
 
     /**
@@ -38,16 +41,20 @@ class GNUReadline implements Readline
 
     /**
      * GNU Readline constructor.
+     *
+     * @param string|false $historyFile
+     * @param int          $historySize
+     * @param bool         $eraseDups
      */
     public function __construct($historyFile = null, $historySize = 0, $eraseDups = false)
     {
-        $this->historyFile = $historyFile;
+        $this->historyFile = ($historyFile !== null) ? $historyFile : false;
         $this->historySize = $historySize;
         $this->eraseDups = $eraseDups;
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function addHistory($line)
     {
@@ -59,7 +66,7 @@ class GNUReadline implements Readline
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function clearHistory()
     {
@@ -71,7 +78,7 @@ class GNUReadline implements Readline
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function listHistory()
     {
@@ -79,18 +86,17 @@ class GNUReadline implements Readline
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function readHistory()
     {
         // Workaround PHP bug #69054
         //
-        // If open_basedir is set, readline_read_history() segfaults. This will be fixed in 5.6.7:
+        // If open_basedir is set, readline_read_history() segfaults. This was fixed in 5.6.7:
         //
         //     https://github.com/php/php-src/blob/423a057023ef3c00d2ffc16a6b43ba01d0f71796/NEWS#L19-L21
         //
-        // TODO: add a PHP version check after next point release
-        if (!ini_get('open_basedir')) {
+        if (version_compare(PHP_VERSION, '5.6.7', '>=') || !ini_get('open_basedir')) {
             readline_read_history();
         }
         readline_clear_history();
@@ -99,7 +105,7 @@ class GNUReadline implements Readline
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function readline($prompt = null)
     {
@@ -107,7 +113,7 @@ class GNUReadline implements Readline
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function redisplay()
     {
@@ -115,13 +121,18 @@ class GNUReadline implements Readline
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function writeHistory()
     {
         // We have to write history first, since it is used
         // by Libedit to list history
-        $res = readline_write_history($this->historyFile);
+        if ($this->historyFile !== false) {
+            $res = readline_write_history($this->historyFile);
+        } else {
+            $res = true;
+        }
+
         if (!$res || !$this->eraseDups && !$this->historySize > 0) {
             return $res;
         }
@@ -150,6 +161,10 @@ class GNUReadline implements Readline
             readline_add_history($line);
         }
 
-        return readline_write_history($this->historyFile);
+        if ($this->historyFile !== false) {
+            return readline_write_history($this->historyFile);
+        }
+
+        return true;
     }
 }

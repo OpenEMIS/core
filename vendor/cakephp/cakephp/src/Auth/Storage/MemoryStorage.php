@@ -14,18 +14,16 @@
  */
 namespace Cake\Auth\Storage;
 
-use Cake\Core\InstanceConfigTrait;
-use Cake\Network\Request;
-
 /**
  * Memory based non-persistent storage for authenticated user record.
  */
 class MemoryStorage implements StorageInterface
 {
+
     /**
      * User record.
      *
-     * @var array
+     * @var array|null
      */
     protected $_user;
 
@@ -47,7 +45,7 @@ class MemoryStorage implements StorageInterface
     /**
      * {@inheritDoc}
      */
-    public function write(array $user)
+    public function write($user)
     {
         $this->_user = $user;
     }
@@ -71,7 +69,8 @@ class MemoryStorage implements StorageInterface
 
         if ($url === false) {
             $this->_redirectUrl = null;
-            return;
+
+            return null;
         }
 
         $this->_redirectUrl = $url;

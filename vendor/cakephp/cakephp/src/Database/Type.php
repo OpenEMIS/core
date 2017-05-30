@@ -14,7 +14,6 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\Driver;
 use InvalidArgumentException;
 use PDO;
 
@@ -22,7 +21,7 @@ use PDO;
  * Encapsulates all conversion functions for values coming from database into PHP and
  * going from PHP into database.
  */
-class Type
+class Type implements TypeInterface
 {
 
     /**
@@ -35,12 +34,16 @@ class Type
     protected static $_types = [
         'biginteger' => 'Cake\Database\Type\IntegerType',
         'binary' => 'Cake\Database\Type\BinaryType',
+        'boolean' => 'Cake\Database\Type\BoolType',
         'date' => 'Cake\Database\Type\DateType',
-        'float' => 'Cake\Database\Type\FloatType',
-        'decimal' => 'Cake\Database\Type\FloatType',
-        'integer' => 'Cake\Database\Type\IntegerType',
-        'time' => 'Cake\Database\Type\TimeType',
         'datetime' => 'Cake\Database\Type\DateTimeType',
+        'decimal' => 'Cake\Database\Type\DecimalType',
+        'float' => 'Cake\Database\Type\FloatType',
+        'integer' => 'Cake\Database\Type\IntegerType',
+        'json' => 'Cake\Database\Type\JsonType',
+        'string' => 'Cake\Database\Type\StringType',
+        'text' => 'Cake\Database\Type\StringType',
+        'time' => 'Cake\Database\Type\TimeType',
         'timestamp' => 'Cake\Database\Type\DateTimeType',
         'uuid' => 'Cake\Database\Type\UuidType',
     ];
@@ -50,6 +53,7 @@ class Type
      * for doing conversion on these
      *
      * @var array
+     * @deprecated 3.1 All types will now use a specific class
      */
     protected static $_basicTypes = [
         'string' => ['callback' => ['\Cake\Database\Type', 'strval']],
@@ -77,7 +81,7 @@ class Type
     /**
      * Constructor
      *
-     * @param string $name The name identifying this type
+     * @param string|null $name The name identifying this type
      */
     public function __construct($name = null)
     {
@@ -89,27 +93,43 @@ class Type
      *
      * @param string $name type identifier
      * @throws \InvalidArgumentException If type identifier is unknown
-     * @return Type
+     * @return \Cake\Database\Type
      */
     public static function build($name)
     {
         if (isset(static::$_builtTypes[$name])) {
             return static::$_builtTypes[$name];
         }
-        if (isset(static::$_basicTypes[$name])) {
-            return static::$_builtTypes[$name] = new static($name);
-        }
         if (!isset(static::$_types[$name])) {
             throw new InvalidArgumentException(sprintf('Unknown type "%s"', $name));
         }
-        return static::$_builtTypes[$name] = new static::$_types[$name]($name);
+        if (is_string(static::$_types[$name])) {
+            return static::$_builtTypes[$name] = new static::$_types[$name]($name);
+        }
+
+        return static::$_builtTypes[$name] = static::$_types[$name];
+    }
+
+    /**
+     * Returns an arrays with all the mapped type objects, indexed by name
+     *
+     * @return array
+     */
+    public static function buildAll()
+    {
+        $result = [];
+        foreach (self::$_types as $name => $type) {
+            $result[$name] = isset(static::$_builtTypes[$name]) ? static::$_builtTypes[$name] : static::build($name);
+        }
+
+        return $result;
     }
 
     /**
      * Returns a Type object capable of converting a type identified by $name
      *
      * @param string $name The type identifier you want to set.
-     * @param \Cake\Databse\Type $instance The type instance you want to set.
+     * @param \Cake\Database\Type $instance The type instance you want to set.
      * @return void
      */
     public static function set($name, Type $instance)
@@ -122,7 +142,7 @@ class Type
      * If called with no arguments it will return current types map array
      * If $className is omitted it will return mapped class for $type
      *
-     * @param string|array|null $type if string name of type to map, if array list of arrays to be mapped
+     * @param string|array|\Cake\Database\Type|null $type if string name of type to map, if array list of arrays to be mapped
      * @param string|null $className The classname to register.
      * @return array|string|null if $type is null then array with current map, if $className is null string
      * configured class name for give $type, null otherwise
@@ -132,9 +152,10 @@ class Type
         if ($type === null) {
             return self::$_types;
         }
-        if (!is_string($type)) {
+        if (is_array($type)) {
             self::$_types = $type;
-            return;
+
+            return null;
         }
         if ($className === null) {
             return isset(self::$_types[$type]) ? self::$_types[$type] : null;
@@ -154,9 +175,7 @@ class Type
     }
 
     /**
-     * Returns type identifier name for this object
-     *
-     * @return string
+     * {@inheritDoc}
      */
     public function getName()
     {
@@ -164,12 +183,7 @@ class Type
     }
 
     /**
-     * Returns the base type name that this class is inheriting.
-     * This is useful when extending base type for adding extra functionality
-     * but still want the rest of the framework to use the same assumptions it would
-     * do about the base type it inherits from.
-     *
-     * @return string
+     * {@inheritDoc}
      */
     public function getBaseType()
     {
@@ -177,11 +191,7 @@ class Type
     }
 
     /**
-     * Casts given value from a PHP type to one acceptable by database
-     *
-     * @param mixed $value value to be converted to database equivalent
-     * @param Driver $driver object from which database preferences and configuration will be extracted
-     * @return mixed
+     * {@inheritDoc}
      */
     public function toDatabase($value, Driver $driver)
     {
@@ -192,7 +202,7 @@ class Type
      * Casts given value from a database type to PHP equivalent
      *
      * @param mixed $value value to be converted to PHP equivalent
-     * @param Driver $driver object from which database preferences and configuration will be extracted
+     * @param \Cake\Database\Driver $driver object from which database preferences and configuration will be extracted
      * @return mixed
      */
     public function toPHP($value, Driver $driver)
@@ -206,6 +216,7 @@ class Type
      *
      * @param mixed $value value to be converted to PHP equivalent
      * @return mixed
+     * @deprecated 3.1 All types should now be a specific class
      */
     protected function _basicTypeCast($value)
     {
@@ -218,25 +229,17 @@ class Type
                 return $typeInfo['callback']($value);
             }
         }
+
         return $value;
     }
 
     /**
-     * Casts give value to Statement equivalent
-     *
-     * @param mixed $value value to be converted to PHP equivalent
-     * @param Driver $driver object from which database preferences and configuration will be extracted
-     * @return mixed
+     * {@inheritDoc}
      */
     public function toStatement($value, Driver $driver)
     {
         if ($value === null) {
             return PDO::PARAM_NULL;
-        }
-
-        if (!empty(self::$_basicTypes[$this->_name])) {
-            $typeInfo = self::$_basicTypes[$this->_name];
-            return isset($typeInfo['pdo']) ? $typeInfo['pdo'] : PDO::PARAM_STR;
         }
 
         return PDO::PARAM_STR;
@@ -249,12 +252,14 @@ class Type
      *
      * @param mixed $value The value to convert to a boolean.
      * @return bool
+     * @deprecated 3.1.8 This method is now unused.
      */
     public static function boolval($value)
     {
         if (is_string($value) && !is_numeric($value)) {
             return strtolower($value) === 'true' ? true : false;
         }
+
         return !empty($value);
     }
 
@@ -265,23 +270,19 @@ class Type
      *
      * @param mixed $value The value to convert to a string.
      * @return bool
+     * @deprecated 3.1.8 This method is now unused.
      */
     public static function strval($value)
     {
         if (is_array($value)) {
             $value = '';
         }
-        return strval($value);
+
+        return (string)$value;
     }
 
     /**
-     * Generate a new primary key value for a given type.
-     *
-     * This method can be used by types to create new primary key values
-     * when entities are inserted.
-     *
-     * @return mixed A new primary key value.
-     * @see \Cake\Database\Type\UuidType
+     * {@inheritDoc}
      */
     public function newId()
     {
@@ -289,13 +290,7 @@ class Type
     }
 
     /**
-     * Marshalls flat data into PHP objects.
-     *
-     * Most useful for converting request data into PHP objects
-     * that make sense for the rest of the ORM/Database layers.
-     *
-     * @param mixed $value The value to convert.
-     * @return mixed Converted value.
+     * {@inheritDoc}
      */
     public function marshal($value)
     {

@@ -22,6 +22,7 @@ use Cake\I18n\I18n;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use Cake\ORM\PropertyMarshalInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
@@ -38,7 +39,7 @@ use Cake\Utility\Inflector;
  * If you want to bring all or certain languages for each of the fetched records,
  * you can use the custom `translations` finders that is exposed to the table.
  */
-class TranslateBehavior extends Behavior
+class TranslateBehavior extends Behavior implements PropertyMarshalInterface
 {
 
     use LocatorAwareTrait;
@@ -82,7 +83,8 @@ class TranslateBehavior extends Behavior
         'allowEmptyTranslations' => true,
         'onlyTranslated' => false,
         'strategy' => 'subquery',
-        'tableLocator' => null
+        'tableLocator' => null,
+        'validator' => false
     ];
 
     /**
@@ -234,10 +236,10 @@ class TranslateBehavior extends Behavior
             $name = $alias . '_' . $field . '_translation';
 
             $contain[$name]['queryBuilder'] = $conditions(
-            $field,
-            $locale,
-            $query,
-            $select
+                $field,
+                $locale,
+                $query,
+                $select
             );
 
             if ($changeFilter) {
@@ -269,20 +271,52 @@ class TranslateBehavior extends Behavior
 
         $this->_bundleTranslatedFields($entity);
         $bundled = $entity->get('_i18n') ?: [];
+        $noBundled = count($bundled) === 0;
 
-        if ($locale === $this->config('defaultLocale')) {
+        // No additional translation records need to be saved,
+        // as the entity is in the default locale.
+        if ($noBundled && $locale === $this->config('defaultLocale')) {
             return;
         }
 
         $values = $entity->extract($this->_config['fields'], true);
         $fields = array_keys($values);
+        $noFields = empty($fields);
+
+        // If there are no fields and no bundled translations, or both fields
+        // in the default locale and bundled translations we can
+        // skip the remaining logic as its not necessary.
+        if ($noFields && $noBundled || ($fields && $bundled)) {
+            return;
+        }
+
         $primaryKey = (array)$this->_table->primaryKey();
         $key = $entity->get(current($primaryKey));
-        $model = $this->_config['referenceName'];
 
+        // When we have no key and bundled translations, we
+        // need to mark the entity dirty so the root
+        // entity persists.
+        if ($noFields && $bundled && !$key) {
+            foreach ($this->_config['fields'] as $field) {
+                $entity->dirty($field, true);
+            }
+
+            return;
+        }
+
+        if ($noFields) {
+            return;
+        }
+
+        $model = $this->_config['referenceName'];
         $preexistent = $this->_translationTable->find()
             ->select(['id', 'field'])
-            ->where(['field IN' => $fields, 'locale' => $locale, 'foreign_key' => $key, 'model' => $model])
+            ->where([
+                'field IN' => $fields,
+                'locale' => $locale,
+                'foreign_key' => $key,
+                'model' => $model
+            ])
             ->bufferResults(false)
             ->indexBy('field');
 
@@ -322,6 +356,47 @@ class TranslateBehavior extends Behavior
     }
 
     /**
+     * Add in _translations marshalling handlers if translation marshalling is
+     * enabled. You need to specifically enable translation marshalling by adding
+     * `'translations' => true` to the options provided to `Table::newEntity()` or `Table::patchEntity()`.
+     *
+     * {@inheritDoc}
+     */
+    public function buildMarshalMap($marshaller, $map, $options)
+    {
+        if (isset($options['translations']) && !$options['translations']) {
+            return [];
+        }
+
+        return [
+            '_translations' => function ($value, $entity) use ($marshaller, $options) {
+                $translations = $entity->get('_translations');
+                foreach ($this->_config['fields'] as $field) {
+                    $options['validate'] = $this->_config['validator'];
+                    $errors = [];
+                    if (!is_array($value)) {
+                        return;
+                    }
+                    foreach ($value as $language => $fields) {
+                        if (!isset($translations[$language])) {
+                            $translations[$language] = $this->_table->newEntity();
+                        }
+                        $marshaller->merge($translations[$language], $fields, $options);
+                        if ((bool)$translations[$language]->errors()) {
+                            $errors[$language] = $translations[$language]->errors();
+                        }
+                    }
+                    // Set errors into the root entity, so validation errors
+                    // match the original form data position.
+                    $entity->errors($errors);
+                }
+
+                return $translations;
+            }
+        ];
+    }
+
+    /**
      * Sets all future finds for the bound table to also fetch translated fields for
      * the passed locale. If no value is passed, it returns the currently configured
      * locale
@@ -334,6 +409,7 @@ class TranslateBehavior extends Behavior
         if ($locale === null) {
             return $this->_locale ?: I18n::locale();
         }
+
         return $this->_locale = (string)$locale;
     }
 
@@ -363,11 +439,13 @@ class TranslateBehavior extends Behavior
     {
         $locales = isset($options['locales']) ? $options['locales'] : [];
         $targetAlias = $this->_translationTable->alias();
+
         return $query
             ->contain([$targetAlias => function ($q) use ($locales, $targetAlias) {
                 if ($locales) {
                     $q->where(["$targetAlias.locale IN" => $locales]);
                 }
+
                 return $q;
             }])
             ->formatResults([$this, 'groupTranslations'], $query::PREPEND);
@@ -452,6 +530,9 @@ class TranslateBehavior extends Behavior
                 return $row;
             }
             $translations = (array)$row->get('_i18n');
+            if (empty($translations) && $row->get('_translations')) {
+                return $row;
+            }
             $grouped = new Collection($translations);
 
             $result = [];
@@ -469,6 +550,7 @@ class TranslateBehavior extends Behavior
             $row->set('_translations', $result, $options);
             unset($row['_i18n']);
             $row->clean();
+
             return $row;
         });
     }

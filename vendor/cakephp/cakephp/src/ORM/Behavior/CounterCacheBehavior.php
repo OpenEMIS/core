@@ -14,10 +14,12 @@
  */
 namespace Cake\ORM\Behavior;
 
+use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
 use Cake\ORM\Association;
 use Cake\ORM\Behavior;
-use Cake\ORM\Entity;
+use Cake\Utility\Hash;
+use Cake\Utility\Inflector;
 
 /**
  * CounterCache behavior
@@ -64,7 +66,7 @@ use Cake\ORM\Entity;
  * ```
  * [
  *     'Users' => [
- *         'posts_published' => function (Event $event, Entity $entity, Table $table) {
+ *         'posts_published' => function (Event $event, EntityInterface $entity, Table $table) {
  *             $query = $table->find('all')->where([
  *                 'published' => true,
  *                 'user_id' => $entity->get('user_id')
@@ -75,9 +77,58 @@ use Cake\ORM\Entity;
  * ]
  * ```
  *
+ * Ignore updating the field if it is dirty
+ * ```
+ * [
+ *     'Users' => [
+ *         'posts_published' => [
+ *             'ignoreDirty' => true
+ *         ]
+ *     ]
+ * ]
+ * ```
  */
 class CounterCacheBehavior extends Behavior
 {
+
+    /**
+     * Store the fields which should be ignored
+     *
+     * @var array
+     */
+    protected $_ignoreDirty = [];
+
+    /**
+     * beforeSave callback.
+     *
+     * Check if a field, which should be ignored, is dirty
+     *
+     * @param \Cake\Event\Event $event The beforeSave event that was fired
+     * @param \Cake\Datasource\EntityInterface $entity The entity that is going to be saved
+     * @return void
+     */
+    public function beforeSave(Event $event, EntityInterface $entity)
+    {
+        foreach ($this->_config as $assoc => $settings) {
+            $assoc = $this->_table->association($assoc);
+            foreach ($settings as $field => $config) {
+                if (is_int($field)) {
+                    continue;
+                }
+
+                $registryAlias = $assoc->target()->registryAlias();
+                $entityAlias = $assoc->property();
+
+                if (!is_callable($config) &&
+                    isset($config['ignoreDirty']) &&
+                    $config['ignoreDirty'] === true &&
+                    $entity->$entityAlias->dirty($field)
+                ) {
+                    $this->_ignoreDirty[$registryAlias][$field] = true;
+                }
+            }
+        }
+    }
 
     /**
      * afterSave callback.
@@ -85,12 +136,13 @@ class CounterCacheBehavior extends Behavior
      * Makes sure to update counter cache when a new record is created or updated.
      *
      * @param \Cake\Event\Event $event The afterSave event that was fired.
-     * @param \Cake\ORM\Entity $entity The entity that was saved.
+     * @param \Cake\Datasource\EntityInterface $entity The entity that was saved.
      * @return void
      */
-    public function afterSave(Event $event, Entity $entity)
+    public function afterSave(Event $event, EntityInterface $entity)
     {
         $this->_processAssociations($event, $entity);
+        $this->_ignoreDirty = [];
     }
 
     /**
@@ -99,10 +151,10 @@ class CounterCacheBehavior extends Behavior
      * Makes sure to update counter cache when a record is deleted.
      *
      * @param \Cake\Event\Event $event The afterDelete event that was fired.
-     * @param \Cake\ORM\Entity $entity The entity that was deleted.
+     * @param \Cake\Datasource\EntityInterface $entity The entity that was deleted.
      * @return void
      */
-    public function afterDelete(Event $event, Entity $entity)
+    public function afterDelete(Event $event, EntityInterface $entity)
     {
         $this->_processAssociations($event, $entity);
     }
@@ -111,10 +163,10 @@ class CounterCacheBehavior extends Behavior
      * Iterate all associations and update counter caches.
      *
      * @param \Cake\Event\Event $event Event instance.
-     * @param \Cake\ORM\Entity $entity Entity.
+     * @param \Cake\Datasource\EntityInterface $entity Entity.
      * @return void
      */
-    protected function _processAssociations(Event $event, Entity $entity)
+    protected function _processAssociations(Event $event, EntityInterface $entity)
     {
         foreach ($this->_config as $assoc => $settings) {
             $assoc = $this->_table->association($assoc);
@@ -126,19 +178,19 @@ class CounterCacheBehavior extends Behavior
      * Updates counter cache for a single association
      *
      * @param \Cake\Event\Event $event Event instance.
-     * @param \Cake\ORM\Entity $entity Entity
-     * @param Association $assoc The association object
+     * @param \Cake\Datasource\EntityInterface $entity Entity
+     * @param \Cake\ORM\Association $assoc The association object
      * @param array $settings The settings for for counter cache for this association
      * @return void
      */
-    protected function _processAssociation(Event $event, Entity $entity, Association $assoc, array $settings)
+    protected function _processAssociation(Event $event, EntityInterface $entity, Association $assoc, array $settings)
     {
         $foreignKeys = (array)$assoc->foreignKey();
-        $primaryKeys = (array)$assoc->target()->primaryKey();
+        $primaryKeys = (array)$assoc->bindingKey();
         $countConditions = $entity->extract($foreignKeys);
         $updateConditions = array_combine($primaryKeys, $countConditions);
-
         $countOriginalConditions = $entity->extractOriginalChanged($foreignKeys);
+
         if ($countOriginalConditions !== []) {
             $updateOriginalConditions = array_combine($primaryKeys, $countOriginalConditions);
         }
@@ -147,6 +199,12 @@ class CounterCacheBehavior extends Behavior
             if (is_int($field)) {
                 $field = $config;
                 $config = [];
+            }
+
+            if (isset($this->_ignoreDirty[$assoc->target()->registryAlias()][$field]) &&
+                $this->_ignoreDirty[$assoc->target()->registryAlias()][$field] === true
+            ) {
+                continue;
             }
 
             if (!is_string($config) && is_callable($config)) {

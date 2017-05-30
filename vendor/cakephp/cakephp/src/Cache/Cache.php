@@ -15,6 +15,7 @@
 namespace Cake\Cache;
 
 use Cake\Cache\Engine\NullEngine;
+use Cake\Core\ObjectRegistry;
 use Cake\Core\StaticConfigTrait;
 use InvalidArgumentException;
 use RuntimeException;
@@ -113,6 +114,26 @@ class Cache
     protected static $_registry;
 
     /**
+     * Returns the Cache Registry instance used for creating and using cache adapters.
+     * Also allows for injecting of a new registry instance.
+     *
+     * @param \Cake\Core\ObjectRegistry|null $registry Injectable registry object.
+     * @return \Cake\Core\ObjectRegistry
+     */
+    public static function registry(ObjectRegistry $registry = null)
+    {
+        if ($registry) {
+            static::$_registry = $registry;
+        }
+
+        if (empty(static::$_registry)) {
+            static::$_registry = new CacheRegistry();
+        }
+
+        return static::$_registry;
+    }
+
+    /**
      * Finds and builds the instance of the required engine class.
      *
      * @param string $name Name of the config array that needs an engine instance built
@@ -121,9 +142,7 @@ class Cache
      */
     protected static function _buildEngine($name)
     {
-        if (empty(static::$_registry)) {
-            static::$_registry = new CacheRegistry();
-        }
+        $registry = static::registry();
 
         if (empty(static::$_config[$name]['className'])) {
             throw new InvalidArgumentException(
@@ -132,7 +151,11 @@ class Cache
         }
 
         $config = static::$_config[$name];
-        static::$_registry->load($name, $config);
+        $registry->load($name, $config);
+
+        if ($config['className'] instanceof CacheEngine) {
+            $config = $config['className']->config();
+        }
 
         if (!empty($config['groups'])) {
             foreach ($config['groups'] as $group) {
@@ -158,12 +181,15 @@ class Cache
             return new NullEngine();
         }
 
-        if (isset(static::$_registry->{$config})) {
-            return static::$_registry->{$config};
+        $registry = static::registry();
+
+        if (isset($registry->{$config})) {
+            return $registry->{$config};
         }
 
         static::_buildEngine($config);
-        return static::$_registry->{$config};
+
+        return $registry->{$config};
     }
 
     /**
@@ -222,6 +248,7 @@ class Cache
                 E_USER_WARNING
             );
         }
+
         return $success;
     }
 
@@ -252,7 +279,7 @@ class Cache
         $engine = static::engine($config);
         $return = $engine->writeMany($data);
         foreach ($return as $key => $success) {
-            if ($success === false && !empty($data[$key])) {
+            if ($success === false && $data[$key] !== '') {
                 throw new RuntimeException(sprintf(
                     '%s cache was unable to write \'%s\' to %s cache',
                     $config,
@@ -261,6 +288,7 @@ class Cache
                 ));
             }
         }
+
         return $return;
     }
 
@@ -288,6 +316,7 @@ class Cache
     public static function read($key, $config = 'default')
     {
         $engine = static::engine($config);
+
         return $engine->read($key);
     }
 
@@ -316,6 +345,7 @@ class Cache
     public static function readMany($keys, $config = 'default')
     {
         $engine = static::engine($config);
+
         return $engine->readMany($keys);
     }
 
@@ -381,6 +411,7 @@ class Cache
     public static function delete($key, $config = 'default')
     {
         $engine = static::engine($config);
+
         return $engine->delete($key);
     }
 
@@ -409,6 +440,7 @@ class Cache
     public static function deleteMany($keys, $config = 'default')
     {
         $engine = static::engine($config);
+
         return $engine->deleteMany($keys);
     }
 
@@ -422,7 +454,25 @@ class Cache
     public static function clear($check = false, $config = 'default')
     {
         $engine = static::engine($config);
+
         return $engine->clear($check);
+    }
+
+    /**
+     * Delete all keys from the cache from all configurations.
+     *
+     * @param bool $check if true will check expiration, otherwise delete all
+     * @return array Status code. For each configuration, it reports the status of the operation
+     */
+    public static function clearAll($check = false)
+    {
+        $status = [];
+
+        foreach (self::configured() as $config) {
+            $status[$config] = self::clear($check, $config);
+        }
+
+        return $status;
     }
 
     /**
@@ -435,6 +485,7 @@ class Cache
     public static function clearGroup($group, $config = 'default')
     {
         $engine = static::engine($config);
+
         return $engine->clearGroup($group);
     }
 
@@ -538,6 +589,40 @@ class Cache
         }
         $results = call_user_func($callable);
         self::write($key, $results, $config);
+
         return $results;
+    }
+
+    /**
+     * Write data for key into a cache engine if it doesn't exist already.
+     *
+     * ### Usage:
+     *
+     * Writing to the active cache config:
+     *
+     * ```
+     * Cache::add('cached_data', $data);
+     * ```
+     *
+     * Writing to a specific cache config:
+     *
+     * ```
+     * Cache::add('cached_data', $data, 'long_term');
+     * ```
+     *
+     * @param string $key Identifier for the data.
+     * @param mixed $value Data to be cached - anything except a resource.
+     * @param string $config Optional string configuration name to write to. Defaults to 'default'.
+     * @return bool True if the data was successfully cached, false on failure.
+     *   Or if the key existed already.
+     */
+    public static function add($key, $value, $config = 'default')
+    {
+        $engine = static::engine($config);
+        if (is_resource($value)) {
+            return false;
+        }
+
+        return $engine->add($key, $value);
     }
 }

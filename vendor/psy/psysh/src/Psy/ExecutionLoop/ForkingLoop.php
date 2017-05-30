@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell
+ * This file is part of Psy Shell.
  *
- * (c) 2012-2014 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,6 +11,7 @@
 
 namespace Psy\ExecutionLoop;
 
+use Psy\Context;
 use Psy\Shell;
 
 /**
@@ -79,10 +80,10 @@ class ForkingLoop extends Loop
         parent::run($shell);
 
         // Send the scope variables back up to the main thread
-        fwrite($up, $this->serializeReturn($shell->getScopeVariables()));
+        fwrite($up, $this->serializeReturn($shell->getScopeVariables(false)));
         fclose($up);
 
-        exit;
+        posix_kill(posix_getpid(), SIGKILL);
     }
 
     /**
@@ -149,20 +150,28 @@ class ForkingLoop extends Loop
     private function serializeReturn(array $return)
     {
         $serializable = array();
+
         foreach ($return as $key => $value) {
-            // Resources don't error, but they don't serialize well either.
-            if (is_resource($value)) {
+            // No need to return magic variables
+            if (Context::isSpecialVariableName($key)) {
+                continue;
+            }
+
+            // Resources and Closures don't error, but they don't serialize well either.
+            if (is_resource($value) || $value instanceof \Closure) {
                 continue;
             }
 
             try {
-                serialize($value);
+                @serialize($value);
                 $serializable[$key] = $value;
             } catch (\Exception $e) {
                 // we'll just ignore this one...
+            } catch (\Throwable $e) {
+                // and this one too...
             }
         }
 
-        return serialize($serializable);
+        return @serialize($serializable);
     }
 }

@@ -15,14 +15,12 @@
 namespace Cake\Collection\Iterator;
 
 use Cake\Collection\CollectionTrait;
-use Cake\Collection\Iterator\TreePrinter;
 use RecursiveIterator;
 use RecursiveIteratorIterator;
 
 /**
  * A Recursive iterator used to flatten nested structures and also exposes
  * all Collection methods
- *
  */
 class TreeIterator extends RecursiveIteratorIterator
 {
@@ -39,7 +37,7 @@ class TreeIterator extends RecursiveIteratorIterator
     /**
      * Constructor
      *
-     * @param RecursiveIterator $items The iterator to flatten.
+     * @param \RecursiveIterator $items The iterator to flatten.
      * @param int $mode Iterator mode.
      * @param int $flags Iterator flags.
      */
@@ -81,7 +79,7 @@ class TreeIterator extends RecursiveIteratorIterator
      *
      * @param string|callable $valuePath The property to extract or a callable to return
      * the display value
-     * @param string|callable $keyPath The property to use as iteration key or a
+     * @param string|callable|null $keyPath The property to use as iteration key or a
      * callable returning the key value.
      * @param string $spacer The string to use for prefixing the values according to
      * their depth in the tree
@@ -95,6 +93,7 @@ class TreeIterator extends RecursiveIteratorIterator
                 return $counter++;
             };
         }
+
         return new TreePrinter(
             $this->getInnerIterator(),
             $valuePath,

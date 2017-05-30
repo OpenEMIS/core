@@ -9,52 +9,65 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 
-class SurveyQuestionsTable extends CustomFieldsTable {
-	protected $_fieldFormat = ['OpenEMIS', 'OpenEMIS_Institution'];
+class SurveyQuestionsTable extends CustomFieldsTable
+{
+    protected $fieldTypeFormat = ['OpenEMIS', 'OpenEMIS_Institution'];
 
-	public function initialize(array $config) {
-		parent::initialize($config);
-		$this->hasMany('CustomFieldOptions', ['className' => 'Survey.SurveyQuestionChoices', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableColumns', ['className' => 'Survey.SurveyTableColumns', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('CustomTableRows', ['className' => 'Survey.SurveyTableRows', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('SurveyQuestionParams', ['className' => 'Survey.SurveyQuestionParams', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->belongsToMany('CustomForms', [
-			'className' => 'Survey.SurveyForms',
-			'joinTable' => 'survey_forms_questions',
-			'foreignKey' => 'survey_question_id',
-			'targetForeignKey' => 'survey_form_id'
-		]);
-	}
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+        $this->hasMany('CustomFieldOptions', ['className' => 'Survey.SurveyQuestionChoices', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CustomTableColumns', ['className' => 'Survey.SurveyTableColumns', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CustomTableRows', ['className' => 'Survey.SurveyTableRows', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CustomFieldValues', ['className' => 'Institution.InstitutionSurveyAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionSurveyTableCells', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('CustomForms', [
+            'className' => 'Survey.SurveyForms',
+            'joinTable' => 'survey_forms_questions',
+            'foreignKey' => 'survey_question_id',
+            'targetForeignKey' => 'survey_form_id',
+            'through' => 'Survey.SurveyFormsQuestions',
+            'dependent' => true
+        ]);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Rules' => ['index']
+        ]);
+    }
 
-	public function validationDefault(Validator $validator) {
-		$validator
-	    	->add('code', [
-	    		'unique' => [
-			        'rule' => ['validateUnique'],
-			        'provider' => 'table',
-			        'message' => 'This code already exists in the system'
-			    ]
-		    ]);
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
 
-		return $validator;
-	}
+        $validator
+            ->add('code', [
+                'unique' => [
+                    'rule' => ['validateUnique'],
+                    'provider' => 'table',
+                    'message' => 'This code already exists in the system'
+                ]
+            ]);
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'field_type', 'is_mandatory', 'is_unique']);
-	}
+        return $validator;
+    }
 
-	public function addBeforeAction(Event $event) {
-		$this->ControllerAction->field('code');
-	}
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder(['code', 'name', 'field_type', 'is_mandatory', 'is_unique']);
+    }
 
-	public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
-			if (!$request->is('post')) {
-				$textValue = substr(Text::uuid(), 0, 8);
-				$attr['attr']['value'] = $textValue;
-			}
-			return $attr;
-		}
-	}
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('code');
+    }
 
+    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (!$request->is('post')) {
+                $textValue = substr(Text::uuid(), 0, 8);
+                $attr['attr']['value'] = $textValue;
+            }
+            return $attr;
+        }
+    }
 }

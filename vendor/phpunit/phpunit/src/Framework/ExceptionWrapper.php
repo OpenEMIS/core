@@ -16,36 +16,34 @@
  *
  * Unlike PHPUnit_Framework_Exception, the complete stack of previous Exceptions
  * is processed.
- *
- * @author     Daniel F. Kudwien <sun@unleashedmind.com>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 4.3.0
  */
 class PHPUnit_Framework_ExceptionWrapper extends PHPUnit_Framework_Exception
 {
     /**
      * @var string
      */
-    protected $classname;
+    protected $className;
 
     /**
      * @var PHPUnit_Framework_ExceptionWrapper|null
      */
     protected $previous;
 
-    public function __construct(Exception $e)
+    /**
+     * @param Throwable|Exception $e
+     */
+    public function __construct($e)
     {
         // PDOException::getCode() is a string.
         // @see http://php.net/manual/en/class.pdoexception.php#95812
         parent::__construct($e->getMessage(), (int) $e->getCode());
 
-        $this->classname = get_class($e);
+        $this->className = get_class($e);
         $this->file      = $e->getFile();
         $this->line      = $e->getLine();
 
         $this->serializableTrace = $e->getTrace();
+
         foreach ($this->serializableTrace as $i => $call) {
             unset($this->serializableTrace[$i]['args']);
         }
@@ -58,9 +56,9 @@ class PHPUnit_Framework_ExceptionWrapper extends PHPUnit_Framework_Exception
     /**
      * @return string
      */
-    public function getClassname()
+    public function getClassName()
     {
-        return $this->classname;
+        return $this->className;
     }
 
     /**

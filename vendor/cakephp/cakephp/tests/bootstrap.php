@@ -12,12 +12,19 @@
  */
 
 use Cake\Cache\Cache;
+use Cake\Chronos\Chronos;
+use Cake\Chronos\Date;
+use Cake\Chronos\MutableDate;
+use Cake\Chronos\MutableDateTime;
 use Cake\Core\Configure;
 use Cake\Datasource\ConnectionManager;
-use Cake\I18n\I18n;
 use Cake\Log\Log;
 
-require_once 'vendor/autoload.php';
+if (is_file('vendor/autoload.php')) {
+    require_once 'vendor/autoload.php';
+} else {
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
+}
 
 if (!defined('DS')) {
     define('DS', DIRECTORY_SEPARATOR);
@@ -101,6 +108,11 @@ Configure::write('Session', [
 ]);
 
 Log::config([
+    // 'queries' => [
+    //     'className' => 'Console',
+    //     'stream' => 'php://stderr',
+    //     'scopes' => ['queriesLog']
+    // ],
     'debug' => [
         'engine' => 'Cake\Log\Engine\FileLog',
         'levels' => ['notice', 'info', 'debug'],
@@ -113,6 +125,9 @@ Log::config([
     ]
 ]);
 
-Carbon\Carbon::setTestNow(Carbon\Carbon::now());
+Chronos::setTestNow(Chronos::now());
+MutableDateTime::setTestNow(MutableDateTime::now());
+Date::setTestNow(Date::now());
+MutableDate::setTestNow(MutableDate::now());
 
 ini_set('intl.default_locale', 'en_US');

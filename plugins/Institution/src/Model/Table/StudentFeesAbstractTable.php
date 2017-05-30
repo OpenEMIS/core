@@ -29,6 +29,8 @@ class StudentFeesAbstractTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		return $validator
 			->requirePresence('amount')
 			->add('amount', 'notBlank', [

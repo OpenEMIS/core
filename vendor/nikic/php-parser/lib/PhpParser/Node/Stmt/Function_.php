@@ -13,7 +13,7 @@ class Function_ extends Node\Stmt implements FunctionLike
     public $name;
     /** @var Node\Param[] Parameters */
     public $params;
-    /** @var null|string|Node\Name Return type */
+    /** @var null|string|Node\Name|Node\NullableType Return type */
     public $returnType;
     /** @var Node[] Statements */
     public $stmts;
@@ -30,7 +30,7 @@ class Function_ extends Node\Stmt implements FunctionLike
      * @param array  $attributes Additional attributes
      */
     public function __construct($name, array $subNodes = array(), array $attributes = array()) {
-        parent::__construct(null, $attributes);
+        parent::__construct($attributes);
         $this->byRef = isset($subNodes['byRef']) ? $subNodes['byRef'] : false;
         $this->name = $name;
         $this->params = isset($subNodes['params']) ? $subNodes['params'] : array();

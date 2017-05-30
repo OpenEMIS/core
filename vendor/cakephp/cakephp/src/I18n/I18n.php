@@ -16,10 +16,10 @@ namespace Cake\I18n;
 
 use Aura\Intl\FormatterLocator;
 use Aura\Intl\PackageLocator;
-use Aura\Intl\TranslatorFactory;
 use Cake\Cache\Cache;
 use Cake\I18n\Formatter\IcuFormatter;
 use Cake\I18n\Formatter\SprintfFormatter;
+use Cake\I18n\TranslatorFactory;
 use Locale;
 
 /**
@@ -27,6 +27,13 @@ use Locale;
  */
 class I18n
 {
+
+    /**
+     * Default locale
+     *
+     * @var string
+     */
+    const DEFAULT_LOCALE = 'en_US';
 
     /**
      * The translators collection
@@ -59,10 +66,10 @@ class I18n
             new PackageLocator,
             new FormatterLocator([
                 'sprintf' => function () {
-                    return new SprintfFormatter;
+                    return new SprintfFormatter();
                 },
                 'default' => function () {
-                    return new IcuFormatter;
+                    return new IcuFormatter();
                 },
             ]),
             new TranslatorFactory,
@@ -72,6 +79,7 @@ class I18n
         if (class_exists('Cake\Cache\Cache')) {
             static::$_collection->setCacher(Cache::engine('_cake_core_'));
         }
+
         return static::$_collection;
     }
 
@@ -113,7 +121,7 @@ class I18n
      * @param string|null $locale The locale for the translator.
      * @param callable|null $loader A callback function or callable class responsible for
      * constructing a translations package instance.
-     * @return \Aura\Intl\Translator|void The configured translator.
+     * @return \Aura\Intl\Translator|null The configured translator.
      */
     public static function translator($name = 'default', $locale = null, callable $loader = null)
     {
@@ -124,7 +132,8 @@ class I18n
 
             $packages = static::translators()->getPackages();
             $packages->set($name, $locale, $loader);
-            return;
+
+            return null;
         }
 
         $translators = static::translators();
@@ -176,7 +185,7 @@ class I18n
      *      $package = new Package('default');
      *      $messages = (...); // Fetch messages for locale from external service.
      *      $package->setMessages($message);
-     *      $package->setFallback('default);
+     *      $package->setFallback('default');
      *      return $package;
      *  });
      * ```
@@ -199,7 +208,7 @@ class I18n
      * locale as stored in the `intl.default_locale` PHP setting.
      *
      * @param string|null $locale The name of the locale to set as default.
-     * @return string|void The name of the default locale.
+     * @return string|null The name of the default locale.
      */
     public static function locale($locale = null)
     {
@@ -210,12 +219,13 @@ class I18n
             if (isset(static::$_collection)) {
                 static::translators()->setLocale($locale);
             }
-            return;
+
+            return null;
         }
 
         $current = Locale::getDefault();
         if ($current === '') {
-            $current = 'en_US';
+            $current = static::DEFAULT_LOCALE;
             Locale::setDefault($current);
         }
 
@@ -232,8 +242,9 @@ class I18n
     public static function defaultLocale()
     {
         if (static::$_defaultLocale === null) {
-            static::$_defaultLocale = Locale::getDefault() ?: 'en_US';
+            static::$_defaultLocale = Locale::getDefault() ?: static::DEFAULT_LOCALE;
         }
+
         return static::$_defaultLocale;
     }
 

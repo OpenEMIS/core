@@ -11,18 +11,27 @@
 
 namespace Symfony\Component\Config\Tests\Definition\Builder;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Builder\EnumNodeDefinition;
 
-class EnumNodeDefinitionTest extends \PHPUnit_Framework_TestCase
+class EnumNodeDefinitionTest extends TestCase
 {
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage ->values() must be called with at least two distinct values.
-     */
-    public function testNoDistinctValues()
+    public function testWithOneValue()
+    {
+        $def = new EnumNodeDefinition('foo');
+        $def->values(array('foo'));
+
+        $node = $def->getNode();
+        $this->assertEquals(array('foo'), $node->getValues());
+    }
+
+    public function testWithOneDistinctValue()
     {
         $def = new EnumNodeDefinition('foo');
         $def->values(array('foo', 'foo'));
+
+        $node = $def->getNode();
+        $this->assertEquals(array('foo'), $node->getValues());
     }
 
     /**
@@ -33,6 +42,16 @@ class EnumNodeDefinitionTest extends \PHPUnit_Framework_TestCase
     {
         $def = new EnumNodeDefinition('foo');
         $def->getNode();
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage ->values() must be called with at least one value.
+     */
+    public function testWithNoValues()
+    {
+        $def = new EnumNodeDefinition('foo');
+        $def->values(array());
     }
 
     public function testGetNode()

@@ -17,8 +17,7 @@ namespace Cake\Test\Fixture;
 use Cake\TestSuite\Fixture\TestFixture;
 
 /**
- * Class ProductsFixture
- *
+ * ProductsFixture
  */
 class ProductsFixture extends TestFixture
 {
@@ -37,7 +36,7 @@ class ProductsFixture extends TestFixture
         'category' => ['type' => 'integer', 'null' => false],
         'name' => ['type' => 'string', 'null' => false],
         'price' => ['type' => 'integer'],
-        '_constraints' => ['primary' => ['type' => 'primary', 'columns' => ['id', 'category']]]
+        '_constraints' => ['primary' => ['type' => 'primary', 'columns' => ['category', 'id']]]
     ];
 
     /**

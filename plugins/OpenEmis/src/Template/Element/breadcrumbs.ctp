@@ -3,9 +3,9 @@ if (!isset($_breadcrumbs)) {
 	$_breadcrumbs = [];
 }
 if (!empty($_breadcrumbs)) {
-$session = $this->request->session();
-$homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
-
+	if (empty($homeUrl)) {
+		$homeUrl = [];
+	}
 ?>
 <ul class="breadcrumb panel-breadcrumb">
 	<li><a href="<?= $this->Url->build($homeUrl) ?>"><i class="fa fa-home"></i></a></li>

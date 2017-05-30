@@ -14,8 +14,6 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\QueryCompiler;
-
 /**
  * Responsible for compiling a Query object into its SQL representation
  * for SQL Server
@@ -24,6 +22,7 @@ use Cake\Database\QueryCompiler;
  */
 class SqlserverCompiler extends QueryCompiler
 {
+
     /**
      * SQLserver does not support ORDER BY in UNION queries.
      *
@@ -36,7 +35,6 @@ class SqlserverCompiler extends QueryCompiler
      */
     protected $_templates = [
         'delete' => 'DELETE',
-        'update' => 'UPDATE %s',
         'where' => ' WHERE %s',
         'group' => ' GROUP BY %s ',
         'having' => ' HAVING %s ',
@@ -69,7 +67,14 @@ class SqlserverCompiler extends QueryCompiler
     {
         $table = $parts[0];
         $columns = $this->_stringifyExpressions($parts[1], $generator);
-        return sprintf('INSERT INTO %s (%s) OUTPUT INSERTED.*', $table, implode(', ', $columns));
+        $modifiers = $this->_buildModifierPart($query->clause('modifier'), $query, $generator);
+
+        return sprintf(
+            'INSERT%s INTO %s (%s) OUTPUT INSERTED.*',
+            $modifiers,
+            $table,
+            implode(', ', $columns)
+        );
     }
 
     /**

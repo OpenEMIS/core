@@ -3,39 +3,37 @@ namespace Security\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Query;
-use Cake\ORM\Behavior;
-use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
+use Cake\ORM\Behavior;
+use Cake\ORM\ResultSet;
+use Cake\Event\Event;
 
 class InstitutionSubjectBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
-		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 100];
+		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 100];
 		// set the priority of the action button to be after the academic period behavior
-		$events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 101];
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		return $events;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$AccessControl = $this->_table->AccessControl;
-			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]);
+			$query->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->_table->controller]);
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		if (!$this->checkAllSubjectsEditPermission()) {
-			if ($this->checkMySubjectsEditPermission()) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$action = 'edit';
+		if (!$this->checkAllSubjectsPermission($action)) {
+			if ($this->checkMySubjectsPermission($action)) {
 				$userId = $this->_table->Auth->user('id');
 				if (empty($entity->teachers)) {
-					$urlParams = $this->_table->ControllerAction->url('view');
+					$urlParams = $this->_table->url('view');
 					$event->stopPropagation();
 					$this->_table->Alert->error('security.noAccess');
 					return $this->_table->controller->redirect($urlParams);
@@ -48,7 +46,7 @@ class InstitutionSubjectBehavior extends Behavior {
 						}
 					}
 					if (! $isFound) {
-						$urlParams = $this->_table->ControllerAction->url('view');
+						$urlParams = $this->_table->url('view');
 						$event->stopPropagation();
 						$this->_table->Alert->error('security.noAccess');
 						return $this->_table->controller->redirect($urlParams);
@@ -58,42 +56,16 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
-		// Remove the edit function if the user does not have the right to access that page
-		if (!$this->checkAllSubjectsEditPermission()) {
-			if ($this->checkMySubjectsEditPermission()) {
-				$userId = $this->_table->Auth->user('id');
-				if ($entity->has('teachers')) {
-					if (empty($entity->teachers)) {
-						if (isset($buttons['edit'])) {
-							unset($buttons['edit']);
-							return $buttons;
-						}
-					} else {
-						$isFound = false;
-						foreach ($entity->teachers as $staff) {
-							if ($userId == $staff->id) {
-								$isFound = true;
-								break;
-							}
-						}
-						if (! $isFound) {
-							if (isset($buttons['edit'])) {
-								unset($buttons['edit']);
-								return $buttons;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Function to check MySubjects edit permission is set
-	public function checkMySubjectsEditPermission() {
+	// Function to check MySubjects permission is set
+	private function checkMySubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Classes', 'edit']);
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', $action], $roles);
 		if ($mySubjectsEditPermission) {
 			return true;
 		} else {
@@ -101,10 +73,16 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	// Function to check AllSubjects edit permission is set
-	public function checkAllSubjectsEditPermission() {
+	// Function to check AllSubjects permission is set
+	private function checkAllSubjectsPermission($action) {
 		$AccessControl = $this->_table->AccessControl;
-		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'edit']);
+		$controller = $this->_table->controller;
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;	
+    	}
+		$allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', $action], $roles);
 		if ($allSubjectsEditPermission) {
 			return true;
 		} else {
@@ -112,21 +90,52 @@ class InstitutionSubjectBehavior extends Behavior {
 		}
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$staff = [];
-		if (!empty($entity->teachers)) {
-			$staff = $entity->teachers;
-		}
-		$this->_table->request->data[$this->_table->alias()]['teachers'] = $staff;
-	}
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$action = 'view';
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		switch ($action) {
+		// Check if the staff has access to the subject
+		if (!$this->checkAllSubjectsPermission($action)) {
+			if ($this->checkMySubjectsPermission($action)) {
+				$isFound = false;
+				$userId = $this->_table->Auth->user('id');
+				
+				// Homeroom teacher of the class will be able to view the subject
+				if ($entity->has('classes')) {
+					foreach ($entity->classes as $class) {
+						if ($class->staff_id == $userId) {
+							$isFound = true;
+							break;
+						}
+					}
+				}
+
+				// Teachers who are owner of the classes will be able to access the subjects
+				if (!empty($entity->teachers)) {
+					foreach ($entity->teachers as $staff) {
+						if ($userId == $staff->id) {
+							$isFound = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!$isFound) {
+				$urlParams = $this->_table->ControllerAction->url('index');
+				$event->stopPropagation();
+				$this->_table->Alert->error('security.noAccess');
+				return $this->_table->controller->redirect($urlParams);
+			}
+		}
+
+		switch ($this->_table->action) {
 			case 'view':
-				if (!$this->checkAllSubjectsEditPermission()) {
-					if ($this->checkMySubjectsEditPermission()) {
+				if (!$this->checkAllSubjectsPermission('edit')) {
+					if ($this->checkMySubjectsPermission('edit')) {
 						$userId = $this->_table->Auth->user('id');
-						$staffs = $this->_table->request->data[$this->_table->alias()]['teachers'];
+						$staffs = [];
+						if (!empty($entity->teachers)) {
+							$staffs = $entity->teachers;
+						}
 						$isFound = false;
 						foreach ($staffs as $staff) {
 							if ($userId == $staff->id) {
@@ -135,8 +144,11 @@ class InstitutionSubjectBehavior extends Behavior {
 							}
 						}
 						if (! $isFound) {
-							if (isset($toolbarButtons['edit'])) {
-								unset($toolbarButtons['edit']);
+							if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['edit'])) {
+								unset($extra['toolbarButtons']['edit']);
+							}
+							if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['remove'])) {
+								unset($extra['toolbarButtons']['remove']);
 							}
 						}
 					}
@@ -149,25 +161,34 @@ class InstitutionSubjectBehavior extends Behavior {
 		if (array_key_exists('accessControl', $options)) {
 			$AccessControl = $options['accessControl'];
 			$userId = $options['userId'];
-			if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'])) {
+			$roles = [];
+            if (array_key_exists('controller', $options)) {
+                $controller = $options['controller'];
+                $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+                if (is_array($event->result)) {
+                    $roles = $event->result;    
+                }
+            }
+			
+			if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
 				$query->where([
 					'OR' => [
 						// first condition if the current user is a teacher for this subject
 						'EXISTS (
 							SELECT 1 
-							FROM institution_class_staff
-							WHERE institution_class_staff.institution_class_id = ' . $this->_table->aliasField('id') . '
-							AND institution_class_staff.staff_id = ' . $userId . 
+							FROM institution_subject_staff
+							WHERE institution_subject_staff.institution_subject_id = ' . $this->_table->aliasField('id') . '
+							AND institution_subject_staff.staff_id = ' . $userId . 
 						')',
 
 						// second condition if the current user is the homeroom teacher of the subject class
 						'EXISTS (
 							SELECT 1
-							FROM institution_section_classes
-							JOIN institution_sections
-							ON institution_sections.id = institution_section_classes.institution_section_id
-							AND institution_sections.staff_id = ' . $userId . '
-							WHERE institution_section_classes.institution_class_id = ' . $this->_table->aliasField('id') .
+							FROM institution_class_subjects
+							JOIN institution_classes
+							ON institution_classes.id = institution_class_subjects.institution_class_id
+							AND institution_classes.staff_id = ' . $userId . '
+							WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') .
 						')'
 					]
 				]);

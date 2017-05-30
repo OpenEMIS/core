@@ -18,9 +18,9 @@ use Cake\Controller\Component;
 use Cake\I18n\Time;
 use Cake\Network\Request;
 use Cake\Network\Response;
+use Cake\Utility\CookieCryptTrait;
 use Cake\Utility\Hash;
 use Cake\Utility\Security;
-use RuntimeException;
 
 /**
  * Cookie Component.
@@ -36,6 +36,7 @@ use RuntimeException;
  */
 class CookieComponent extends Component
 {
+    use CookieCryptTrait;
 
     /**
      * Default config
@@ -107,13 +108,6 @@ class CookieComponent extends Component
     protected $_response = null;
 
     /**
-     * Valid cipher names for encrypted cookies.
-     *
-     * @var array
-     */
-    protected $_validCiphers = ['aes', 'rijndael'];
-
-    /**
      * Initialize config data and properties.
      *
      * @param array $config The config data.
@@ -172,12 +166,14 @@ class CookieComponent extends Component
         if ($option === null) {
             $default = $this->_config;
             $local = isset($this->_keyConfig[$keyname]) ? $this->_keyConfig[$keyname] : [];
+
             return $local + $default;
         }
         if (!is_array($option)) {
             $option = [$option => $value];
         }
         $this->_keyConfig[$keyname] = $option;
+
         return null;
     }
 
@@ -233,6 +229,7 @@ class CookieComponent extends Component
     public function read($key = null)
     {
         $this->_load($key);
+
         return Hash::get($this->_values, $key);
     }
 
@@ -258,7 +255,7 @@ class CookieComponent extends Component
         $cookie = $this->request->cookies[$first];
         $config = $this->configKey($first);
         $this->_loaded[$first] = true;
-        $this->_values[$first] = $this->_decrypt($cookie, $config['encryption']);
+        $this->_values[$first] = $this->_decrypt($cookie, $config['encryption'], $config['key']);
     }
 
     /**
@@ -272,6 +269,7 @@ class CookieComponent extends Component
         if (empty($key)) {
             return false;
         }
+
         return $this->read($key) !== null;
     }
 
@@ -316,7 +314,7 @@ class CookieComponent extends Component
 
         $this->_response->cookie([
             'name' => $name,
-            'value' => $this->_encrypt($value, $config['encryption']),
+            'value' => $this->_encrypt($value, $config['encryption'], $config['key']),
             'expire' => $expires->format('U'),
             'path' => $config['path'],
             'domain' => $config['domain'],
@@ -351,127 +349,12 @@ class CookieComponent extends Component
     }
 
     /**
-     * Encrypts $value using public $type method in Security class
+     * Returns the encryption key to be used.
      *
-     * @param string $value Value to encrypt
-     * @param string|bool $encrypt Encryption mode to use. False
-     *   disabled encryption.
-     * @return string Encoded values
+     * @return string
      */
-    protected function _encrypt($value, $encrypt)
+    protected function _getCookieEncryptionKey()
     {
-        if (is_array($value)) {
-            $value = $this->_implode($value);
-        }
-        if (!$encrypt) {
-            return $value;
-        }
-        $this->_checkCipher($encrypt);
-        $prefix = "Q2FrZQ==.";
-        if ($encrypt === 'rijndael') {
-            $cipher = Security::rijndael($value, $this->_config['key'], 'encrypt');
-        }
-        if ($encrypt === 'aes') {
-            $cipher = Security::encrypt($value, $this->_config['key']);
-        }
-        return $prefix . base64_encode($cipher);
-    }
-
-    /**
-     * Helper method for validating encryption cipher names.
-     *
-     * @param string $encrypt The cipher name.
-     * @return void
-     * @throws \RuntimeException When an invalid cipher is provided.
-     */
-    protected function _checkCipher($encrypt)
-    {
-        if (!in_array($encrypt, $this->_validCiphers)) {
-            $msg = sprintf(
-                'Invalid encryption cipher. Must be one of %s.',
-                implode(', ', $this->_validCiphers)
-            );
-            throw new RuntimeException($msg);
-        }
-    }
-
-    /**
-     * Decrypts $value using public $type method in Security class
-     *
-     * @param array $values Values to decrypt
-     * @param string|bool $mode Encryption mode
-     * @return string decrypted string
-     */
-    protected function _decrypt($values, $mode)
-    {
-        if (is_string($values)) {
-            return $this->_decode($values, $mode);
-        }
-
-        $decrypted = [];
-        foreach ($values as $name => $value) {
-            $decrypted[$name] = $this->_decode($value, $mode);
-        }
-        return $decrypted;
-    }
-
-    /**
-     * Decodes and decrypts a single value.
-     *
-     * @param string $value The value to decode & decrypt.
-     * @param string|false $encrypt The encryption cipher to use.
-     * @return string Decoded value.
-     */
-    protected function _decode($value, $encrypt)
-    {
-        if (!$encrypt) {
-            return $this->_explode($value);
-        }
-        $this->_checkCipher($encrypt);
-        $prefix = 'Q2FrZQ==.';
-        $value = base64_decode(substr($value, strlen($prefix)));
-        if ($encrypt === 'rijndael') {
-            $value = Security::rijndael($value, $this->_config['key'], 'decrypt');
-        }
-        if ($encrypt === 'aes') {
-            $value = Security::decrypt($value, $this->_config['key']);
-        }
-        return $this->_explode($value);
-    }
-
-    /**
-     * Implode method to keep keys are multidimensional arrays
-     *
-     * @param array $array Map of key and values
-     * @return string A json encoded string.
-     */
-    protected function _implode(array $array)
-    {
-        return json_encode($array);
-    }
-
-    /**
-     * Explode method to return array from string set in CookieComponent::_implode()
-     * Maintains reading backwards compatibility with 1.x CookieComponent::_implode().
-     *
-     * @param string $string A string containing JSON encoded data, or a bare string.
-     * @return array Map of key and values
-     */
-    protected function _explode($string)
-    {
-        $first = substr($string, 0, 1);
-        if ($first === '{' || $first === '[') {
-            $ret = json_decode($string, true);
-            return ($ret !== null) ? $ret : $string;
-        }
-        $array = [];
-        foreach (explode(',', $string) as $pair) {
-            $key = explode('|', $pair);
-            if (!isset($key[1])) {
-                return $key[0];
-            }
-            $array[$key[0]] = $key[1];
-        }
-        return $array;
+        return $this->_config['key'];
     }
 }

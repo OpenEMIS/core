@@ -1,22 +1,17 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
-class NetworkConnectivitiesTable extends AppTable {
-	public function initialize(array $config) {
-        $this->addBehavior('ControllerAction.FieldOption');
+class NetworkConnectivitiesTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
         $this->table('institution_network_connectivities');
         parent::initialize($config);
-		
-		$this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
 
-		$this->CAVersion = '4.0';
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'actions' => ['remove' => 'transfer'],
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
-	}
+        $this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+
+        $this->addBehavior('FieldOption.FieldOption');
+    }
 }

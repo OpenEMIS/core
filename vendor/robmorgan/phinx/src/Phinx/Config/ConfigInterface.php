@@ -93,4 +93,33 @@ interface ConfigInterface extends \ArrayAccess
      * @return string
      */
     public function getMigrationPath();
+
+    /**
+     * Gets the path of the seed files.
+     *
+     * @return string
+     */
+    public function getSeedPath();
+
+     /**
+     * Get the template file name.
+     *
+     * @return string|false
+     */
+     public function getTemplateFile();
+
+     /**
+     * Get the template class name.
+     *
+     * @return string|false
+     */
+    public function getTemplateClass();
+
+    /**
+     * Gets the base class name for migrations.
+     *
+     * @param boolean $dropNamespace Return the base migration class name without the namespace.
+     * @return string
+     */
+    public function getMigrationBaseClassName($dropNamespace = true);
 }

@@ -13,10 +13,13 @@ class InstitutionFeeTypesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		$validator = parent::validationDefault($validator);
+		
+		return $validator
+			->add('amount', 'ruleMaxLength', [
+				'rule' => ['maxLength', 15]
+			])
+			;
 	}
 
-	public function beforeAction() {
-		
-	}
 }

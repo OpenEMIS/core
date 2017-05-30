@@ -7,258 +7,423 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 
-class AccessControlComponent extends Component {
-	private $controller;
-	private $action;
-	private $Session;
+class AccessControlComponent extends Component
+{
+    private $controller;
+    private $action;
+    private $Session;
 
-	protected $_defaultConfig = [
-		'operations' => ['_view', '_add', '_edit', '_delete', '_execute'],
-		'ignoreList' => [],
-		'separator' => '|'
-	];
+    protected $_defaultConfig = [
+        'operations' => ['_view', '_add', '_edit', '_delete', '_execute'],
+        'ignoreList' => [],
+        'separator' => '|'
+    ];
 
-	public $components = ['Auth', 'ControllerAction'];
+    public $components = ['Auth'];
 
-	public function initialize(array $config) {
-		$this->controller = $this->_registry->getController();
-		$this->action = $this->request->params['action'];
-		$this->Session = $this->request->session();
+    public function initialize(array $config)
+    {
+        $this->controller = $this->_registry->getController();
+        $this->action = $this->request->params['action'];
+        $this->Session = $this->request->session();
 
-		// $this->Session->delete('Permissions');
-		// pr($this->Session->read('Permissions.Securities.Roles.add'));
-		if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
-			if (!$this->Session->check('Permissions')) {
-				$this->buildPermissions();
-			} else {
-				// check if permission is updated and rebuild
-				$userId = $this->Auth->user('id');
-				$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
-				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
+            if (!$this->Session->check('Permissions')) {
+                $this->buildPermissions();
+            } else {
+                // check if permission is updated and rebuild
+                $userId = $this->Auth->user('id');
+                if ($this->isChanged($userId)) {
+                    $this->buildPermissions();
+                }
+            }
+        } elseif ($this->Auth->user('super_admin') == 1) {
+            $this->Session->write('System.User.roles', __('System Administrator'));
+        }
+    }
 
-				$roles = $SecurityGroupUsers
-					->find('list', ['keyField' => 'security_role_id', 'valueField' => 'security_role_id'])
-					->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-					->toArray();
+    private function getUserGroupRole()
+    {
+        $rolesList = $this->getRolesByUser();
+        $roles = [];
+        foreach ($rolesList as $obj) {
+            if (!empty($obj->security_group) && !empty($obj->security_role)) {
+                $roles[] = sprintf("%s (%s)", $obj->security_group->name, $obj->security_role->name);
+            }
+        }
+        return implode('<br/>', $roles);
+    }
 
-				$entity = $SecurityRoleFunctions
-					->find()
-					->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
-					->order([$SecurityRoleFunctions->aliasField('modified') => 'DESC'])
-					->first();
+    public function isChanged($userId)
+    {
+        $isChanged = false;
+        $userRole = $this->getUserGroupRole();
+        if ($this->Session->check('System.User.roles')) {
+            $sessionUserRole = $this->Session->read('System.User.roles');
+            if ($userRole !== $sessionUserRole) {
+                $isChanged = true;
+            }
+        }
 
-				if (!is_null($entity)) {
-					$lastModified = $this->Session->read('Permissions.lastModified');
+        $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
-					if (is_null($lastModified)) {
-						$this->buildPermissions();
-					} else {
-						if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
-							$this->buildPermissions();
-						}
-					}
-				}
-			}
-		}
-	}
+        $roles = $SecurityGroupUsers
+            ->find()
+            ->select([$SecurityGroupUsers->aliasField('security_role_id')])
+            ->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId]);
 
-	public function buildPermissions() {
-		$this->Session->delete('Permissions'); // remove all permission first
+        $selectedColumns = [
+            'modified' => '(
+				CASE
+					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').'
+					THEN '.$SecurityRoleFunctions->aliasField('modified').'
+					ELSE '.$SecurityRoleFunctions->aliasField('created').'
+					END
+				)'
+        ];
 
-		$operations = $this->config('operations');
-		$separator = $this->config('separator');
-		$userId = $this->Auth->user('id');
-		$GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
-		$roles = $GroupRoles->find()
-			->contain(['SecurityRoles'])
-			->where([$GroupRoles->aliasField('security_user_id') => $userId])
-			->group([$GroupRoles->aliasField('security_role_id')])
-			->all();
-		;
+        if ($roles->all()->count() > 0) {
+            $entity = $SecurityRoleFunctions
+                ->find()
+                ->select($selectedColumns)
+                ->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
+                ->order(['modified' => 'DESC'])
+                ->first();
 
-		$lastModified = null;
-		foreach ($roles as $role) { // for each role in user
-			$roleId = $role->security_role_id;
-			$functions = $SecurityRoleFunctions->find()
-				->contain(['SecurityFunctions'])
-				->where([$SecurityRoleFunctions->aliasField('security_role_id') => $roleId])
-				->all()
-			;
+            if (!is_null($entity)) {
+                $lastModified = $this->Session->read('Permissions.lastModified');
+                if (empty($lastModified)) {
+                    $isChanged = true;
+                } else {
+                    if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {
+                        $isChanged = true;
+                    }
+                }
+            }
+        }
+        return $isChanged;
+    }
 
-			foreach ($functions as $entity) { // for each function in roles
-				if (!empty($entity->security_function)) {
-					$function = $entity->security_function;
-					if (is_null($lastModified) || (!is_null($lastModified) && !is_null($entity->modified) && $lastModified->lt($entity->modified))) {
-						$lastModified = $entity->modified;
-					} 
+    public function buildPermissions()
+    {
+        $this->Session->delete('Permissions'); // remove all permission first
+        $operations = $this->config('operations');
+        $separator = $this->config('separator');
+        $userId = $this->Auth->user('id');
+        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 
-					foreach ($operations as $op) { // for each operation in function
-						if (!empty($function->$op) && $entity->$op == 1) {
-							$actions = explode($separator, $function->$op);
+        $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+        $roles = $GroupRoles->find()
+            ->where([
+                $GroupRoles->aliasField('security_user_id').'='.$userId
+            ])
+            ->group([$GroupRoles->aliasField('security_role_id')])
+            ->select(['security_role_id' => $GroupRoles->aliasField('security_role_id')]);
 
-							if (is_array($actions)) {
-								foreach ($actions as $action) { // for each action in operation
-									if (!empty($action)) {
-										$permission = implode('.', [$function->controller, $action]);
-										$this->addPermission($permission, $roleId);
-									}
-								}
-							} else {
-								$permission = implode('.', [$function->controller, $action]);
-								$this->addPermission($permission, $roleId);
-							}
-						}
-					}
-				}
-			}
-		}
+        $selectedColumns = [
+            'modified' => '(
+				CASE
+					WHEN '.$SecurityRoleFunctions->aliasField('modified').' > '.$SecurityRoleFunctions->aliasField('created').'
+					THEN '.$SecurityRoleFunctions->aliasField('modified').'
+					ELSE '.$SecurityRoleFunctions->aliasField('created').'
+					END
+				)'
+        ];
 
-		$this->Session->write('Permissions.lastModified', $lastModified);
-	}
+        if ($roles->all()->count() > 0) {
+            // Newly created system role or user role will have no security functions prepopulated in the table,
+            // thus the following may return empty
+            $lastModified = $SecurityRoleFunctions->find()
+                ->select($selectedColumns)
+                ->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
+                ->order(['modified' => 'DESC'])
+                ->first();
 
-	public function addPermission($permission, $roleId) {
-		$permissionKey = 'Permissions.' . $permission;
-		if (!$this->Session->check($permissionKey)) {
-			$this->Session->write($permissionKey, [$roleId]);
-		} else {
-			$roles = $this->Session->read($permissionKey);
-			if (!in_array($roleId, $roles)) {
-				$roles[] = $roleId;
-			}
-			$this->Session->write($permissionKey, $roles);
-		}
-	}
-	
-	public function check($url=[], $roleId=0) {
-		$superAdmin = $this->Auth->user('super_admin');
+            if (!empty($lastModified)) {
+                $lastModified = $lastModified->modified;
+            } else {
+                $lastModified = '';
+            }
 
-		if ($superAdmin) {
-			return true;
-		}
-		// we only need controller and action
-		foreach ($url as $i => $val) {
-			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val)) {
-				unset($url[$i]);
-			}
-		}
-		// Log::write('debug', $url);
+            foreach ($roles->all() as $role) { // for each role in user
+                $roleId = $role->security_role_id;
 
-		if (empty($url)) {
-			$url = [$this->controller->name, $this->action];
-		}
+                $functions = $SecurityRoleFunctions->find()
+                    ->contain(['SecurityFunctions'])
+                    ->where([$SecurityRoleFunctions->aliasField('security_role_id') => $roleId])
+                    ->all();
 
-		// check if the action is excluded from permissions checking
-		$action = next($url);
-		$controller = reset($url);
-		if ($this->isIgnored($controller, $action)) {
-			return true;
-		}
+                foreach ($functions as $entity) { // for each function in roles
+                    if (!empty($entity->security_function)) {
+                        $function = $entity->security_function;
 
-		$url = array_merge(['Permissions'], $url);
-		$permissionKey = implode('.', $url);
-		// pr($permissionKey);
-		
-		if ($this->Session->check($permissionKey)) {
-			if ($roleId != 0) {
-				$roles = $this->Session->read($permissionKey);
-				return in_array($roleId, $roles);
-			} else {
-				// Log::write('debug', $permissionKey);
-				return true;
-			}
-		}
-		return false;
-	}
+                        foreach ($operations as $op) { // for each operation in function
+                            if (!empty($function->$op) && $entity->$op == 1) {
+                                $actions = explode($separator, $function->$op);
 
-	private function isUuid($input) {
-		if (preg_match('/^\{?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}?$/', strtolower($input))) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+                                if (is_array($actions)) {
+                                    foreach ($actions as $action) { // for each action in operation
+                                        if (!empty($action)) {
+                                            $permission = implode('.', [$function->controller, $action]);
+                                            $this->addPermission($permission, $roleId);
+                                        }
+                                    }
+                                } else {
+                                    $permission = implode('.', [$function->controller, $action]);
+                                    $this->addPermission($permission, $roleId);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-	public function isAdmin() {
-		$superAdmin = $this->Auth->user('super_admin');
-		return $superAdmin == 1;
-	}
+            $userRole = $this->getUserGroupRole();
+            $this->Session->write('System.User.roles', $userRole);
+            $this->Session->write('Permissions.lastModified', $lastModified);
+        } else {
+            $this->Session->write('System.User.roles', '');
+            $this->Session->write('Permissions.lastModified', '');
+        }
+    }
 
-	// determines whether the action is required for access control checking
-	public function isIgnored($controller, $action) {
-		$ignoreList = $this->config('ignoreList');
-		$ignored = false;
+    public function addPermission($permission, $roleId)
+    {
+        $permissionKey = 'Permissions.' . $permission;
+        if (!$this->Session->check($permissionKey)) {
+            $this->Session->write($permissionKey, [$roleId]);
+        } else {
+            $roles = $this->Session->read($permissionKey);
+            if (!in_array($roleId, $roles)) {
+                $roles[] = $roleId;
+            }
+            $this->Session->write($permissionKey, $roles);
+        }
+    }
 
-		if (array_key_exists($controller, $ignoreList)) {
-			if (!empty($ignoreList[$controller])) {
-				$actions = $ignoreList[$controller];
-				if (in_array($action, $actions)) {
-					$ignored = true;
-				}
-			} else {
-				$ignored = true;
-			}
-		}
+    public function check($url = [], $roleIds = [])
+    {
+        $superAdmin = $this->Auth->user('super_admin');
 
-		return $ignored;
-	}
+        if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
+            return true;
+        }
 
-	public function getRolesByUser($userId = null) {
-		if (is_null($userId)) {
-			$userId = $this->Auth->user('id');
-		}
+        // we only need controller and action
+        foreach ($url as $i => $val) {
+            if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val) || $this->isSHA256($val) || $this->isEncodedParam($val)) {
+                unset($url[$i]);
+            }
+        }
+        // Log::write('debug', $url);
 
-		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$data = $SecurityGroupUsers
-		->find()
-		->contain(['SecurityRoles', 'SecurityGroups'])
-		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-		->all();
+        if (empty($url)) {
+            $url = ['controller' => $this->controller->name, 'action' => $this->action];
+        } else {
+            if (!array_key_exists('controller', $url)) {
+                $url['controller'] = $this->controller->name;
+            }
+        }
+        $url = $this->checkAccessMap($url);
+        $checkUrl = [];
 
-		return $data;
-	}
+        if (!(array_key_exists('controller', $url) && array_key_exists('action', $url) && array_key_exists('0', $url))) {
+            if (array_key_exists('0', $url) && array_key_exists('1', $url) && array_key_exists('2', $url)) {
+                $url['controller'] = $url[0];
+                $url['action'] = $url[1];
+                $url[0] = $url[2];
+                unset($url[1]);
+                unset($url[2]);
+            } elseif (array_key_exists('0', $url) && array_key_exists('1', $url)) {
+                $url['controller'] = $url[0];
+                $url['action'] = $url[1];
+                unset($url[0]);
+                unset($url[1]);
+            }
+        }
 
-	public function getInstitutionsByUser($userId = null) {
-		if (is_null($userId)) {
-			$userId = $this->Auth->user('id');
-		}
+        if (array_key_exists('controller', $url)) {
+            $checkUrl[] = $url['controller'];
+            unset($url['controller']);
+        }
+        if (array_key_exists('action', $url)) {
+            $checkUrl[] = $url['action'];
+            unset($url['action']);
+        }
+        $controller = $checkUrl[0];
+        $action = $checkUrl[1];
+        $url = array_merge($checkUrl, $url);
+        $url = array_merge(['Permissions'], $url);
+        $permissionKey = implode('.', $url);
+        // Log::write('debug', $permissionKey);
 
-		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$groupIds = $SecurityGroupUsers
-		->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
-		->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
-		->toArray();
+        if ($controller == $this->controller->name) {
+            $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
+            if ($event->result == true) {
+                return true;
+            }
+        }
 
-		$SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-		$institutionIds = $SecurityGroupInstitutions
-		->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
-		->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
+        if ($this->Session->check($permissionKey)) {
+            if (!empty($roleIds)) {
+                $roles = $this->Session->read($permissionKey);
+                if (!isset($roles[0])) {
+                    if (isset($roles['index'])) {
+                        $roles = $roles['index'];
+                    } else {
+                        $roles = [];
+                    }
+                }
+                return count(array_intersect($roleIds, $roles)) > 0;
+            } else {
+                // Log::write('debug', $permissionKey);
+                return true;
+            }
+        }
+        return false;
+    }
 
-		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$areaInstitutions = $SecurityGroupAreas
-		->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
-		->select(['Institutions.id'])
-		->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
-		->innerJoin(['Areas' => 'areas'], [
-			'Areas.lft >= AreaAll.lft',
-			'Areas.rght <= AreaAll.rght'
-		])
-		->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
-		->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
-		->toArray();
+    public function checkAccessMap($url)
+    {
+        $urlValues = array_values($url);
+        $key = implode('.', [$urlValues[0], $urlValues[1]]);
 
-		$institutionIds = $institutionIds + $areaInstitutions;
-		return $institutionIds;
-	}
+        $paramKey = 'accessMap';
+        $request = $this->request;
+        if (array_key_exists($paramKey, $request->params)) {
+            $accessMap = $request->params['accessMap'];
 
-	public function getAreasByUser($userId = null) {
-		if (is_null($userId)) {
-			$userId = $this->Auth->user('id');
-		}
+            if (array_key_exists($key, $accessMap)) {
+                $action = 'index';
+                if (isset($urlValues[2])) {
+                    if (!is_numeric($urlValues[2]) && !$this->isUuid($urlValues[2])) { // this is an action
+                        $action = $urlValues[2];
+                    }
+                } else {
+                    $paramsPass = $request->params['pass'];
+                    if (count($paramsPass) > 0) {
+                        if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
+                            $action = array_shift($paramsPass);
+                        }
+                    }
+                }
+                $url = explode('.', sprintf($accessMap[$key], $action));
+            }
+        }
+        return $url;
+    }
 
-		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-		$areas = $SecurityGroupAreas->getAreasByUser($userId);
-		return $areas;
-	}
+    private function isUuid($input)
+    {
+        if (preg_match('/^\{?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}?$/', strtolower($input))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function isSHA256($input)
+    {
+        if (preg_match('/^\{?[a-f0-9]{64}\}?$/', strtolower($input))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function isEncodedParam($input)
+    {
+        if (strpos($input, '.') !== false) {
+            if (count(explode('.', $input)) == 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isAdmin()
+    {
+        $superAdmin = $this->Auth->user('super_admin');
+        return $superAdmin == 1;
+    }
+
+    public function getRolesByUser($userId = null)
+    {
+        if (is_null($userId)) {
+            $userId = $this->Auth->user('id');
+        }
+
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $data = $SecurityGroupUsers
+            ->find()
+            ->contain(['SecurityRoles', 'SecurityGroups'])
+            ->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+            ->group([$SecurityGroupUsers->aliasField('security_group_id'), $SecurityGroupUsers->aliasField('security_role_id')])
+            ->all();
+
+        return $data;
+    }
+
+    public function getInstitutionsByUser($userId = null)
+    {
+        $institutionIds = [];
+
+        if (is_null($userId)) {
+            $userId = $this->Auth->user('id');
+        }
+
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
+
+        return $institutionIds;
+        /*
+        if (is_null($userId)) {
+            $userId = $this->Auth->user('id');
+        }
+
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupIds = $SecurityGroupUsers
+        ->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
+        ->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
+        ->toArray();
+
+        if (!empty($groupIds)) {
+            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+            $institutionIds = $SecurityGroupInstitutions
+            ->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
+            ->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
+            ->toArray();
+
+            $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+            $areaInstitutions = $SecurityGroupAreas
+            ->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
+            ->select(['Institutions.id'])
+            ->innerJoin(['AreaAll' => 'areas'], ['AreaAll.id = SecurityGroupAreas.area_id'])
+            ->innerJoin(['Areas' => 'areas'], [
+                'Areas.lft >= AreaAll.lft',
+                'Areas.rght <= AreaAll.rght'
+            ])
+            ->innerJoin(['Institutions' => 'institutions'], ['Institutions.area_id = Areas.id'])
+            ->where([$SecurityGroupAreas->aliasField('security_group_id') . ' IN ' => $groupIds])
+            ->toArray();
+
+            $institutionIds = $institutionIds + $areaInstitutions;
+            return $institutionIds;
+        } else {
+            return [];
+        }
+        */
+    }
+
+    public function getAreasByUser($userId = null)
+    {
+        if (is_null($userId)) {
+            $userId = $this->Auth->user('id');
+        }
+
+        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $areas = $SecurityGroupAreas->getAreasByUser($userId);
+        return $areas;
+    }
 }

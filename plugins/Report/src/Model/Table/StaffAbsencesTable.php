@@ -16,7 +16,7 @@ class StaffAbsencesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
+		$this->belongsTo('StaffAbsenceReasons', ['className' => 'Institution.StaffAbsenceReasons']);
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
@@ -25,15 +25,16 @@ class StaffAbsencesTable extends AppTable {
 				'end_year',
 				'staff_id',
 				'institution_id',
-				'full_day', 
-				'start_date', 
-				'start_time', 
+				'full_day',
+				'start_date',
+				'start_time',
 				'end_time',
 				'end_date',
 				'staff_absence_reason_id',
 			],
 			'pages' => false
 		]);
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -113,7 +114,7 @@ class StaffAbsencesTable extends AppTable {
 		} else {
 			$endDate = $entity->end_date;
 		}
-		
+
 		if ($entity->full_day) {
 			return sprintf('%s %s (%s - %s)', __('Full'), __('Day'), $startDate, $endDate);
 		} else {

@@ -18,6 +18,7 @@ use Cake\Mailer\AbstractTransport;
 use Cake\Mailer\Email;
 use Cake\Network\Exception\SocketException;
 use Cake\Network\Socket;
+use Exception;
 
 /**
  * Send mail using SMTP protocol
@@ -72,8 +73,8 @@ class SmtpTransport extends AbstractTransport
     {
         try {
             $this->disconnect();
-        } catch (\Exception $e) {
-// avoid fatal error on script termination
+        } catch (Exception $e) {
+            // avoid fatal error on script termination
         }
     }
 
@@ -245,9 +246,9 @@ class SmtpTransport extends AbstractTransport
      */
     protected function _auth()
     {
-        if (isset($this->_config['username']) && isset($this->_config['password'])) {
-            $replyCode = $this->_smtpSend('AUTH LOGIN', '334|500|502|504');
-            if ($replyCode == '334') {
+        if (isset($this->_config['username'], $this->_config['password'])) {
+            $replyCode = (string)$this->_smtpSend('AUTH LOGIN', '334|500|502|504');
+            if ($replyCode === '334') {
                 try {
                     $this->_smtpSend(base64_encode($this->_config['username']), '334');
                 } catch (SocketException $e) {
@@ -258,7 +259,7 @@ class SmtpTransport extends AbstractTransport
                 } catch (SocketException $e) {
                     throw new SocketException('SMTP server did not accept the password.');
                 }
-            } elseif ($replyCode == '504') {
+            } elseif ($replyCode === '504') {
                 throw new SocketException('SMTP authentication method not allowed, check if SMTP server requires TLS.');
             } else {
                 throw new SocketException('AUTH command not recognized or not implemented, SMTP server may not require authentication.');
@@ -300,6 +301,7 @@ class SmtpTransport extends AbstractTransport
         if (empty($from)) {
             $from = $email->from();
         }
+
         return $from;
     }
 
@@ -314,6 +316,7 @@ class SmtpTransport extends AbstractTransport
         $to = $email->to();
         $cc = $email->cc();
         $bcc = $email->bcc();
+
         return array_merge(array_keys($to), array_keys($cc), array_keys($bcc));
     }
 
@@ -345,6 +348,7 @@ class SmtpTransport extends AbstractTransport
                 $messages[] = $line;
             }
         }
+
         return implode("\r\n", $messages);
     }
 
@@ -410,8 +414,8 @@ class SmtpTransport extends AbstractTransport
     /**
      * Protected method for sending data to SMTP connection
      *
-     * @param string $data data to be sent to SMTP server
-     * @param string|bool $checkCode code to check for in server response, false to skip
+     * @param string|null $data Data to be sent to SMTP server
+     * @param string|bool $checkCode Code to check for in server response, false to skip
      * @return string|null The matched code, or null if nothing matched
      * @throws \Cake\Network\Exception\SocketException
      */
@@ -443,6 +447,7 @@ class SmtpTransport extends AbstractTransport
                 if ($code[2] === '-') {
                     continue;
                 }
+
                 return $code[1];
             }
             throw new SocketException(sprintf('SMTP Error: %s', $response));

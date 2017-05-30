@@ -2,30 +2,24 @@
 
 namespace Test\Phinx\Console\Command;
 
-use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Console\Output\StreamOutput;
-use Phinx\Config\Config;
 use Phinx\Console\Command\Init;
+use Phinx\Console\PhinxApplication;
+use Symfony\Component\Console\Tester\CommandTester;
 
 class InitTest extends \PHPUnit_Framework_TestCase
 {
     protected function setUp()
     {
-        $files = glob(sys_get_temp_dir() . '/*');
-        foreach ($files as $file) {
-            if (is_file($file)) {
-                unlink($file);
-            }
+        $file = sys_get_temp_dir() . '/phinx.yml';
+        if (is_file($file)) {
+            unlink($file);
         }
     }
 
     public function testConfigIsWritten()
     {
-        $application = new \Phinx\Console\PhinxApplication('testing');
+        $application = new PhinxApplication('testing');
         $application->add(new Init());
-
-        // setup dependencies
-        $output = new StreamOutput(fopen('php://memory', 'a', false));
 
         $command = $application->find('init');
 
@@ -33,6 +27,8 @@ class InitTest extends \PHPUnit_Framework_TestCase
         $commandTester->execute(array(
             'command' => $command->getName(),
             'path' => sys_get_temp_dir()
+        ), array(
+            'decorated' => false
         ));
 
         $this->assertRegExp(
@@ -53,11 +49,8 @@ class InitTest extends \PHPUnit_Framework_TestCase
     public function testThrowsExceptionWhenConfigFilePresent()
     {
         touch(sys_get_temp_dir() . '/phinx.yml');
-        $application = new \Phinx\Console\PhinxApplication('testing');
+        $application = new PhinxApplication('testing');
         $application->add(new Init());
-
-        // setup dependencies
-        $output = new StreamOutput(fopen('php://memory', 'a', false));
 
         $command = $application->find('init');
 
@@ -65,6 +58,8 @@ class InitTest extends \PHPUnit_Framework_TestCase
         $commandTester->execute(array(
             'command' => $command->getName(),
             'path' => sys_get_temp_dir()
+        ), array(
+            'decorated' => false
         ));
     }
 }

@@ -14,17 +14,17 @@
  */
 namespace Cake\Database;
 
+use Cake\Core\App;
 use Cake\Database\Exception\MissingConnectionException;
 use Cake\Database\Exception\MissingDriverException;
 use Cake\Database\Exception\MissingExtensionException;
 use Cake\Database\Log\LoggedQuery;
 use Cake\Database\Log\LoggingStatement;
 use Cake\Database\Log\QueryLogger;
-use Cake\Database\Query;
 use Cake\Database\Schema\CachedCollection;
 use Cake\Database\Schema\Collection as SchemaCollection;
-use Cake\Database\ValueBinder;
 use Cake\Datasource\ConnectionInterface;
+use Exception;
 
 /**
  * Represents a connection with a database server.
@@ -59,7 +59,7 @@ class Connection implements ConnectionInterface
     /**
      * Whether a transaction is active in this connection.
      *
-     * @var int
+     * @var bool
      */
     protected $_transactionStarted = false;
 
@@ -81,7 +81,7 @@ class Connection implements ConnectionInterface
     /**
      * Logger object instance.
      *
-     * @var QueryLogger
+     * @var \Cake\Database\Log\QueryLogger
      */
     protected $_logger = null;
 
@@ -138,6 +138,7 @@ class Connection implements ConnectionInterface
         if (empty($this->_config['name'])) {
             return '';
         }
+
         return $this->_config['name'];
     }
 
@@ -159,14 +160,16 @@ class Connection implements ConnectionInterface
             return $this->_driver;
         }
         if (is_string($driver)) {
-            if (!class_exists($driver)) {
+            $className = App::className($driver, 'Database/Driver');
+            if (!$className || !class_exists($className)) {
                 throw new MissingDriverException(['driver' => $driver]);
             }
-            $driver = new $driver($config);
+            $driver = new $className($config);
         }
         if (!$driver->enabled()) {
             throw new MissingExtensionException(['driver' => get_class($driver)]);
         }
+
         return $this->_driver = $driver;
     }
 
@@ -180,8 +183,9 @@ class Connection implements ConnectionInterface
     {
         try {
             $this->_driver->connect();
+
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new MissingConnectionException(['reason' => $e->getMessage()]);
         }
     }
@@ -241,6 +245,7 @@ class Connection implements ConnectionInterface
         } else {
             $statement = $this->query($query);
         }
+
         return $statement;
     }
 
@@ -283,6 +288,7 @@ class Connection implements ConnectionInterface
     {
         $statement = $this->prepare($sql);
         $statement->execute();
+
         return $statement;
     }
 
@@ -330,6 +336,7 @@ class Connection implements ConnectionInterface
     public function insert($table, array $data, array $types = [])
     {
         $columns = array_keys($data);
+
         return $this->newQuery()->insert($columns, $types)
             ->into($table)
             ->values($data)
@@ -382,6 +389,7 @@ class Connection implements ConnectionInterface
             $this->_driver->beginTransaction();
             $this->_transactionLevel = 0;
             $this->_transactionStarted = true;
+
             return;
         }
 
@@ -407,6 +415,7 @@ class Connection implements ConnectionInterface
             if ($this->_logQueries) {
                 $this->log('COMMIT');
             }
+
             return $this->_driver->commitTransaction();
         }
         if ($this->useSavePoints()) {
@@ -414,6 +423,7 @@ class Connection implements ConnectionInterface
         }
 
         $this->_transactionLevel--;
+
         return true;
     }
 
@@ -436,12 +446,14 @@ class Connection implements ConnectionInterface
                 $this->log('ROLLBACK');
             }
             $this->_driver->rollbackTransaction();
+
             return true;
         }
 
         if ($useSavePoint) {
             $this->rollbackSavepoint($this->_transactionLevel--);
         }
+
         return true;
     }
 
@@ -529,6 +541,17 @@ class Connection implements ConnectionInterface
     }
 
     /**
+     * Returns whether the driver supports adding or dropping constraints
+     * to already created tables.
+     *
+     * @return bool true if driver supports dynamic constraints
+     */
+    public function supportsDynamicConstraints()
+    {
+        return $this->_driver->supportsDynamicConstraints();
+    }
+
+    /**
      * {@inheritDoc}
      *
      * ### Example:
@@ -545,17 +568,19 @@ class Connection implements ConnectionInterface
 
         try {
             $result = $callback($this);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->rollback();
             throw $e;
         }
 
         if ($result === false) {
             $this->rollback();
+
             return false;
         }
 
         $this->commit();
+
         return $result;
     }
 
@@ -576,12 +601,13 @@ class Connection implements ConnectionInterface
 
         try {
             $result = $callback($this);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->enableForeignKeys();
             throw $e;
         }
 
         $this->enableForeignKeys();
+
         return $result;
     }
 
@@ -599,12 +625,13 @@ class Connection implements ConnectionInterface
      * Quotes value to be used safely in database query.
      *
      * @param mixed $value The value to quote.
-     * @param string $type Type to be used for determining kind of quoting to perform
-     * @return mixed quoted value
+     * @param string|null $type Type to be used for determining kind of quoting to perform
+     * @return string Quoted value
      */
     public function quote($value, $type = null)
     {
         list($value, $type) = $this->cast($value, $type);
+
         return $this->_driver->quote($value, $type);
     }
 
@@ -635,7 +662,7 @@ class Connection implements ConnectionInterface
      *
      * Changing this setting will not modify existing schema collections objects.
      *
-     * @param bool|string $cache Either boolean false to disable meta dataing caching, or
+     * @param bool|string $cache Either boolean false to disable metadata caching, or
      *   true to use `_cake_model_` or the name of the cache config to use.
      * @return void
      */
@@ -663,8 +690,9 @@ class Connection implements ConnectionInterface
     {
         if ($instance === null) {
             if ($this->_logger === null) {
-                $this->_logger = new QueryLogger;
+                $this->_logger = new QueryLogger();
             }
+
             return $this->_logger;
         }
         $this->_logger = $instance;
@@ -678,7 +706,7 @@ class Connection implements ConnectionInterface
      */
     public function log($sql)
     {
-        $query = new LoggedQuery;
+        $query = new LoggedQuery();
         $query->query = $sql;
         $this->logger()->log($query);
     }
@@ -694,6 +722,7 @@ class Connection implements ConnectionInterface
     {
         $log = new LoggingStatement($statement, $this->driver());
         $log->logger($this->logger());
+
         return $log;
     }
 
@@ -710,9 +739,7 @@ class Connection implements ConnectionInterface
             'username' => '*****',
             'host' => '*****',
             'database' => '*****',
-            'port' => '*****',
-            'prefix' => '*****',
-            'schema' => '*****'
+            'port' => '*****'
         ];
         $replace = array_intersect_key($secrets, $this->_config);
         $config = $replace + $this->_config;

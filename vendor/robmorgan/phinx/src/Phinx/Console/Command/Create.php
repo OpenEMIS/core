@@ -29,7 +29,7 @@
 namespace Phinx\Console\Command;
 
 use Phinx\Migration\CreationInterface;
-use Phinx\Migration\Util;
+use Phinx\Util\Util;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -79,7 +79,7 @@ class Create extends AbstractCommand
     }
 
     /**
-     * Migrate the database.
+     * Create the new migration.
      *
      * @param InputInterface $input
      * @param OutputInterface $output
@@ -108,9 +108,16 @@ class Create extends AbstractCommand
         $path = realpath($path);
         $className = $input->getArgument('name');
 
-        if (!Util::isValidMigrationClassName($className)) {
+        if (!Util::isValidPhinxClassName($className)) {
             throw new \InvalidArgumentException(sprintf(
                 'The migration class name "%s" is invalid. Please use CamelCase format.',
+                $className
+            ));
+        }
+
+        if (!Util::isUniqueMigrationClassName($className, $path)) {
+            throw new \InvalidArgumentException(sprintf(
+                'The migration class name "%s" already exists',
                 $className
             ));
         }
@@ -126,11 +133,24 @@ class Create extends AbstractCommand
             ));
         }
 
-        // Get the alternative template and static class options, but only allow one of them.
+        // Get the alternative template and static class options from the config, but only allow one of them.
+        $defaultAltTemplate = $this->getConfig()->getTemplateFile();
+        $defaultCreationClassName = $this->getConfig()->getTemplateClass();
+        if ($defaultAltTemplate && $defaultCreationClassName){
+            throw new \InvalidArgumentException('Cannot define template:class and template:file at the same time');
+        }
+
+        // Get the alternative template and static class options from the command line, but only allow one of them.
         $altTemplate = $input->getOption('template');
         $creationClassName = $input->getOption('class');
         if ($altTemplate && $creationClassName) {
             throw new \InvalidArgumentException('Cannot use --template and --class at the same time');
+        }
+
+        // If no commandline options then use the defaults.
+        if (!$altTemplate && !$creationClassName){
+            $altTemplate = $defaultAltTemplate;
+            $creationClassName = $defaultCreationClassName;
         }
 
         // Verify the alternative template file's existence.
@@ -141,27 +161,50 @@ class Create extends AbstractCommand
             ));
         }
 
-        // Verify the static class exists and that it implements the required interface.
+        // Verify that the template creation class (or the aliased class) exists and that it implements the required interface.
+        $aliasedClassName  = null;
         if ($creationClassName) {
+            // Supplied class does not exist, is it aliased?
             if (!class_exists($creationClassName)) {
-                throw new \InvalidArgumentException(sprintf(
-                    'The class "%s" does not exist',
-                    $creationClassName
-                ));
+                $aliasedClassName = $this->getConfig()->getAlias($creationClassName);
+                if ($aliasedClassName && !class_exists($aliasedClassName)) {
+                    throw new \InvalidArgumentException(sprintf(
+                        'The class "%s" via the alias "%s" does not exist',
+                        $aliasedClassName,
+                        $creationClassName
+                    ));
+                } elseif (!$aliasedClassName) {
+                    throw new \InvalidArgumentException(sprintf(
+                        'The class "%s" does not exist',
+                        $creationClassName
+                    ));
+                }
             }
-            if (!is_subclass_of($creationClassName, self::CREATION_INTERFACE)) {
+
+            // Does the class implement the required interface?
+            if (!$aliasedClassName && !is_subclass_of($creationClassName, self::CREATION_INTERFACE)) {
                 throw new \InvalidArgumentException(sprintf(
                     'The class "%s" does not implement the required interface "%s"',
+                    $creationClassName,
+                    self::CREATION_INTERFACE
+                ));
+            } elseif ($aliasedClassName && !is_subclass_of($aliasedClassName, self::CREATION_INTERFACE)) {
+                throw new \InvalidArgumentException(sprintf(
+                    'The class "%s" via the alias "%s" does not implement the required interface "%s"',
+                    $aliasedClassName,
                     $creationClassName,
                     self::CREATION_INTERFACE
                 ));
             }
         }
 
+        // Use the aliased class.
+        $creationClassName = $aliasedClassName ?: $creationClassName;
+
         // Determine the appropriate mechanism to get the template
         if ($creationClassName) {
             // Get the template from the creation class
-            $creationClass = new $creationClassName();
+            $creationClass = new $creationClassName($input, $output);
             $contents = $creationClass->getMigrationTemplate();
         } else {
             // Load the alternative template if it is defined.
@@ -172,6 +215,7 @@ class Create extends AbstractCommand
         $classes = array(
             '$useClassName'  => $this->getConfig()->getMigrationBaseClassName(false),
             '$className'     => $className,
+            '$version'       => Util::getVersionFromFileName($fileName),
             '$baseClassName' => $this->getConfig()->getMigrationBaseClassName(true),
         );
         $contents = strtr($contents, $classes);
@@ -198,6 +242,6 @@ class Create extends AbstractCommand
             $output->writeln('<info>using default template</info>');
         }
 
-        $output->writeln('<info>created</info> .' . str_replace(getcwd(), '', $filePath));
+        $output->writeln('<info>created</info> ' . str_replace(getcwd(), '', $filePath));
     }
 }

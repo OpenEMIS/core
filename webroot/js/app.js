@@ -4,12 +4,12 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright � 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright � 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
+, either version 3 of the License, or any later version.  This program is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
@@ -24,7 +24,7 @@ $(document).ajaxComplete(function() {
 	jsForm.linkVoid();
 });
 
-$(document).ready(function() {	
+$(document).ready(function() {
 	jsForm.init();
 	jsList.init();
 });
@@ -42,12 +42,12 @@ var utility = {
 		else if(evt.which) { keynum = evt.which; } // Netscape/Firefox/Opera
 		return keynum;
 	},
-	
+
 	integerCheck: function(evt) {
 		var keynum = utility.getKeyPressed(evt);
 		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==undefined);
 	},
-	
+
 	floatCheck: function(evt) {
 		var keynum = utility.getKeyPressed(evt);
 		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==undefined);
@@ -68,24 +68,24 @@ var utility = {
 			obj.value = obj.value.substring(0, obj.value.length - 1);
 		}
 	},
-        
+
 	FTECheck: function(evt) {
 		var keynum = utility.getKeyPressed(evt);
-                
+
 		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==190 || keynum==undefined);
 	},
-	
+
 	br2nl: function(str, newline) {
 		return str.replace(/(<br \/>)|(<br>)|(<br\/>)/g, newline ? '\n' : '');
 	},
-	
+
 	nl2br: function(str) {
 		return str.replace(/\n/g, '<br />\n');
 	},
-	
+
 	basename: function(path, suffix) {
 		var b = path.replace(/^.*[\/\\]/g, '');
-		
+
 		if (typeof(suffix) == 'string' && b.substr(b.length - suffix.length) == suffix) {
 			b = b.substr(0, b.length - suffix.length);
 		}
@@ -109,23 +109,23 @@ var utility = {
 		// check if in expected format (2010-01-25)
 	    if (dateStr.search(/^\d{4}[\/|\-|\.|_]\d{1,2}[\/|\-|\.|_]\d{1,2}/g) != 0)
 	        return false;
-	  
-	    // remove other separators invalid with the Date class              
+
+	    // remove other separators invalid with the Date class
 	    dateStr = dateStr.replace(/[\-|\.|_]/g, "/");
-	               
-	    // convert it into a date instance   
+
+	    // convert it into a date instance
 	    var dt = new Date(Date.parse(dateStr));
-	  
-	    // check the components of the date   
-	    // since Date instance automatically rolls over each component   
-	    var arrDateParts = dateStr.split("/");   
+
+	    // check the components of the date
+	    // since Date instance automatically rolls over each component
+	    var arrDateParts = dateStr.split("/");
 	    return (
-	        dt.getMonth() == arrDateParts[1]-1 &&   
-	        dt.getDate() == arrDateParts[2] && 
+	        dt.getMonth() == arrDateParts[1]-1 &&
+	        dt.getDate() == arrDateParts[2] &&
 	        dt.getFullYear() == arrDateParts[0]
-	    );  
+	    );
 	},
-	
+
 	charLimit: function (field, maxNum) {
 		// limit the num of chars, default 1000
 		if (maxNum === "" || maxNum == undefined || maxNum === 0) {
@@ -145,7 +145,7 @@ var jsAjax = {
 	result: function(opt) {
 		var data = opt.data;
 		var callback = opt.callback;
-		
+
 		if(data != null && data.type != undefined) {
 			if(data.type == ajaxType.success) {
 				if(callback != undefined) callback.call();
@@ -175,12 +175,16 @@ var jsAjax = {
 var jsForm = {
 	init: function() {
 		$('input[type="number"]').keypress(function(evt) {
-			return utility.integerCheck(evt);
+			if ($(this).attr("step") !== undefined) {
+				return utility.floatCheck(evt);
+			} else {
+				return utility.integerCheck(evt);
+			}
 		});
 		this.linkVoid();
 
 		// to handle select box to change url for filtering
-		$("select[data-named-key]").change(function() {
+		$("select[url]").change(function() {
 			jsForm.change($(this));
 		});
 	},
@@ -189,7 +193,7 @@ var jsForm = {
 	submit: function() {
 		var key = 'data-input-name';
 		var form = $('form:first');
-		
+
 		$('[' + key + ']').each(function() {
 			form.append($('<input>').attr({
 				'type': 'hidden',
@@ -215,7 +219,7 @@ var jsForm = {
 		// console.log('total: '+ parseFloat(total).toFixed(2));
 		$("[data-compute-target=true]").val(parseFloat(total).toFixed(2));
 	},
-	
+
 	goto: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url');
 	},
@@ -224,17 +228,24 @@ var jsForm = {
 		var ret = [];
 		var key = $(obj).attr('data-named-key');
 		var group = $(obj).attr('data-named-group');
-		ret.push(encodeURIComponent($(obj).attr('data-named-key')) + "=" + encodeURIComponent($(obj).val()));
 
-		if (group != undefined) {
-			var groupArray = group.split(',');
-			for (var i in groupArray) {
-				ret.push(encodeURIComponent(groupArray[i]) + "=" + encodeURIComponent($('[data-named-key=' + groupArray[i] + ']').val()));
+		if (key !== undefined) {
+			ret.push(encodeURIComponent($(obj).attr('data-named-key')) + "=" + encodeURIComponent($(obj).val()));
+			if (group != undefined) {
+				var groupArray = group.split(',');
+				for (var i in groupArray) {
+					ret.push(encodeURIComponent(groupArray[i]) + "=" + encodeURIComponent($('[data-named-key=' + groupArray[i] + ']').val()));
+				}
 			}
 		}
+
 		var url = window.location.origin + $(obj).attr('url');
 		var separator = url.indexOf('?') == -1 ? '?' : '&';
-		window.location.href = url+separator+ret.join("&");
+		if (key === undefined) {
+			window.location.href = $.trim(url) + $(obj).val();
+		} else {
+			window.location.href = url+separator+ret.join("&");
+		}
 	},
 
 	linkVoid: function(id) {
@@ -243,7 +254,7 @@ var jsForm = {
 			$(this).attr('href', 'javascript: void(0)');
 		});
 	},
-	
+
 	toggleSelect: function(obj) {
 		var table = $(obj).closest('.table');
 		table.find('.table_body input[type="checkbox"]').each(function() {
@@ -263,7 +274,7 @@ var jsForm = {
 			}
 		});
 	},
-	
+
 	isSubmitDisabled: function(form) {
 		return !$(form).find('input[type="submit"]').hasClass('btn_disabled');
 	},
@@ -289,10 +300,10 @@ var jsForm = {
 
 var jsList = {
 	isSorting: false,
-	
+
 	init: function(list) {
 		$('.table_view select').change(function() { jsList.attachSelectedEvent(this); });
-		
+
 		$("[data-load-image=true]:first").each(function() {
 			jsList.loadImage($(this));
 		});
@@ -326,14 +337,14 @@ var jsList = {
 					jsList.loadImage($(this));
 				});
 			}
-		});	
+		});
 	},
-	
+
 	attachSelectedEvent: function(obj) {
 		var value = $(obj).val();
 		$(obj).find('option[value="' + value + '"]').attr('selected', 'selected');
 	},
-	
+
 	doRemove: function(obj) {
 		var row = $(obj).closest('.new_row');
 		var list = row.closest('.table_view');
@@ -347,7 +358,7 @@ var jsList = {
 };
 
 var utils = {
-	
+
 	printerF : function (){
 		var w = window.open('', 'P', 'width=720,height=520,resizeable,scrollbars');
 		w.document.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"  "http://www.w3.org/TR/html4/strict.dtd">');
@@ -364,4 +375,15 @@ var utils = {
 		w.focus();
 		w.print();
 	}
+}
+
+function pr(data) {
+    data = data || '';
+    // if (typeof data ==='array') {
+    // 	for (var i in data) {
+    // 		console.log(data[i]);
+    // 	}
+    // } else {
+	    console.log(data);
+    // }
 }

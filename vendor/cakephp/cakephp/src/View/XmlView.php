@@ -15,12 +15,8 @@
 namespace Cake\View;
 
 use Cake\Core\Configure;
-use Cake\Event\EventManager;
-use Cake\Network\Request;
-use Cake\Network\Response;
 use Cake\Utility\Hash;
 use Cake\Utility\Xml;
-use Cake\View\SerializeView;
 
 /**
  * A view class that is used for creating XML responses.
@@ -140,6 +136,10 @@ class XmlView extends SerializedView
         }
         if (Configure::read('debug')) {
             $options['pretty'] = true;
+        }
+
+        if (isset($options['return']) && strtolower($options['return']) === 'domdocument') {
+            return Xml::fromArray($data, $options)->saveXML();
         }
 
         return Xml::fromArray($data, $options)->asXML();

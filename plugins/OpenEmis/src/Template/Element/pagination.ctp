@@ -1,10 +1,10 @@
 <?php
 $params = $this->Paginator->params();
-$totalRecords = $params['count'];
+$totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
 ?>
 
 <?php if ($totalRecords > 0) : ?>
-<div class="pagination-wrapper">
+<div class="pagination-wrapper" ng-class="disableElement">
 	<?php
 	$totalPages = $params['pageCount'];
 
@@ -19,18 +19,18 @@ $totalRecords = $params['count'];
 	</ul>
 	<?php endif ?>
 	<div class="counter">
-		<?php 
+		<?php
 		$defaultLocale = $this->ControllerAction->locale();
-		$this->ControllerAction->locale('en_US'); 
+		$this->ControllerAction->locale('en_US');
 		?>
-		<?php 
+		<?php
 			$paginateCountString = $this->Paginator->counter([
 				'format' => '{{start}} {{end}} {{count}}'
-			]); 
+			]);
 
 			$paginateCountArray = explode(' ', $paginateCountString);
-			$this->ControllerAction->locale($defaultLocale); 
-			echo sprintf('Showing %s to %s of %s records', $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
+			$this->ControllerAction->locale($defaultLocale);
+			echo sprintf(__('Showing %s to %s of %s records'), $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
 		?>
 	</div>
 	<div class="display-limit">

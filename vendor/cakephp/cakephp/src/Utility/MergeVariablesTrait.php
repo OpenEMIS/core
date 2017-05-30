@@ -13,12 +13,9 @@
  */
 namespace Cake\Utility;
 
-use Cake\Utility\Hash;
-
 /**
  * Provides features for merging object properties recursively with
  * parent classes.
- *
  */
 trait MergeVariablesTrait
 {
@@ -113,6 +110,7 @@ trait MergeVariablesTrait
                 $current[$key] = $value;
             }
         }
+
         return $current;
     }
 }

@@ -2,6 +2,7 @@
 	$tableClass = 'table-in-view';
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+	$this->Form->unlockField('trainee_id');
 ?>
 
 <?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
@@ -16,19 +17,31 @@
 		    'action' => $this->request->params['action'],
 		    'ajaxTraineeAutocomplete'
 		]);
-		$table = $ControllerAction['table']->alias();
+		$alias = $ControllerAction['table']->alias();
 
-		echo $this->Form->input('trainee_search', [
+		echo $this->Form->input("$alias.trainee_search", [
 			'label' => __('Add Trainee'),
 			'type' => 'text',
 			'class' => 'autocomplete',
+			'value' => '',
 			'autocomplete-url' => $url,
 			'autocomplete-no-results' => __('No Trainee found.'),
 			'autocomplete-class' => 'error-message',
 			'autocomplete-target' => 'trainee_id',
 			'autocomplete-submit' => "$('#reload').val('addTrainee').click();"
 		]);
-		echo $this->Form->hidden('trainee_id', ['autocomplete-value' => 'trainee_id']);
+		echo $this->Form->hidden("$alias.trainee_id", ['autocomplete-value' => 'trainee_id']);
+
+		$importAttr = [
+		    'model' => $attr['model'],
+		    'field' => 'trainees_import',
+		    'className' => $attr['className'],
+			'label' => __('Import Trainees'),
+			'comment' => isset($attr['comment']) ? $attr['comment'] : '',
+			'startWithOneLeftButton' => 'download',
+			'alwaysShowOneButton' => false
+		];
+		echo $this->HtmlField->binary($ControllerAction['action'], $data, $importAttr);
 	?>
 	<div class="clearfix"></div>
 	<hr>

@@ -24,14 +24,15 @@ class DisplayBehavior extends Behavior {
 	public function initialize(array $config) {
 		$this->fieldOptionName = $config['fieldOptionName'];
 		$this->defaultFieldOrder = $this->_table->defaultFieldOrder;
-	}	
+	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {	
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
 		$table = TableRegistry::get($this->fieldOptionName);
 		$query = $table->find();
 		$this->displayFields($table);
 		return $query;
-	}	
+	}
 
 	public function viewBeforeAction(Event $event) {
 		$table = TableRegistry::get($this->fieldOptionName);
@@ -61,18 +62,18 @@ class DisplayBehavior extends Behavior {
 		foreach ($columns as $key => $attr) {
 			$this->_table->ControllerAction->field($attr, ['model' => $table->alias()]);
 			$this->defaultFieldOrder[] = $attr;
-			
+
 			if(!in_array($attr, $this->excludeFieldList)) {
-				$this->_table->ControllerAction->field($attr, ['visible' => true, 
-					'order' => $fieldOrder, 
+				$this->_table->ControllerAction->field($attr, ['visible' => true,
+					'order' => $fieldOrder,
 					'model' => $table->alias(), 'className' => $this->fieldOptionName]);
 				$fieldOrder++;
 			} else {
 				$this->_table->ControllerAction->field($attr, ['visible' => ['index' => false, 'edit' => false, 'add' => false, 'view' => true], 'order' => $fieldOrderExcluded, 'model' => $table->alias(), 'className' => $this->fieldOptionName]);
 				$fieldOrderExcluded++;
 			}
-		}		
-		$this->_table->ControllerAction->setFieldOrder($this->defaultFieldOrder); 
+		}
+		$this->_table->ControllerAction->setFieldOrder($this->defaultFieldOrder);
 	}
 
 }

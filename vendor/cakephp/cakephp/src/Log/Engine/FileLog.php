@@ -15,13 +15,11 @@
 namespace Cake\Log\Engine;
 
 use Cake\Core\Configure;
-use Cake\Log\Engine\BaseLog;
 use Cake\Utility\Text;
 
 /**
  * File Storage stream for Logging. Writes logs to different files
  * based on the level of log it is.
- *
  */
 class FileLog extends BaseLog
 {
@@ -179,8 +177,8 @@ class FileLog extends BaseLog
      * Also if `rotate` count is reached oldest file is removed.
      *
      * @param string $filename Log file name
-     * @return mixed True if rotated successfully or false in case of error.
-     *   Void if file doesn't need to be rotated.
+     * @return bool|null True if rotated successfully or false in case of error.
+     *   Null if file doesn't need to be rotated.
      */
     protected function _rotateFile($filename)
     {
@@ -190,7 +188,7 @@ class FileLog extends BaseLog
         if (!file_exists($filepath) ||
             filesize($filepath) < $this->_size
         ) {
-            return;
+            return null;
         }
 
         $rotate = $this->_config['rotate'];

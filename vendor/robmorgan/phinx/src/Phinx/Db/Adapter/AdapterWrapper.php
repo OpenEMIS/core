@@ -33,6 +33,7 @@ use Phinx\Db\Table\Column;
 use Phinx\Db\Table\Index;
 use Phinx\Db\Table\ForeignKey;
 use Phinx\Migration\MigrationInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -111,6 +112,23 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     /**
      * {@inheritdoc}
      */
+    public function setInput(InputInterface $input)
+    {
+        $this->adapter->setInput($input);
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getInput()
+    {
+        return $this->adapter->getInput();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function setOutput(OutputInterface $output)
     {
         $this->adapter->setOutput($output);
@@ -122,7 +140,7 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
      */
     public function getOutput()
     {
-        return $this->adapter->getOutput($output);
+        return $this->adapter->getOutput();
     }
 
     /**
@@ -160,6 +178,14 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     /**
      * {@inheritdoc}
      */
+    public function insert(Table $table, $row)
+    {
+        return $this->getAdapter()->insert($table, $row);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function fetchRow($sql)
     {
         return $this->getAdapter()->fetchRow($sql);
@@ -184,10 +210,35 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     /**
      * {@inheritdoc}
      */
+    public function getVersionLog()
+    {
+        return $this->getAdapter()->getVersionLog();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function migrated(MigrationInterface $migration, $direction, $startTime, $endTime)
     {
         $this->getAdapter()->migrated($migration, $direction, $startTime, $endTime);
         return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function toggleBreakpoint(MigrationInterface $migration)
+    {
+        $this->getAdapter()->toggleBreakpoint($migration);
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function resetAllBreakpoints()
+    {
+        return $this->getAdapter()->resetAllBreakpoints();
     }
 
     /**
@@ -361,6 +412,14 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     /**
      * {@inheritdoc}
      */
+    public function hasIndexByName($tableName, $indexName)
+    {
+        return $this->getAdapter()->hasIndexByName($tableName, $indexName);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function addIndex(Table $table, Index $index)
     {
         return $this->getAdapter()->addIndex($table, $index);
@@ -436,5 +495,13 @@ abstract class AdapterWrapper implements AdapterInterface, WrapperInterface
     public function dropDatabase($name)
     {
         return $this->getAdapter()->dropDatabase($name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function castToBool($value)
+    {
+        return $this->getAdapter()->castToBool($value);
     }
 }

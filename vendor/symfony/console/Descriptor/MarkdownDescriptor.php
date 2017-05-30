@@ -13,6 +13,7 @@ namespace Symfony\Component\Console\Descriptor;
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
@@ -36,7 +37,7 @@ class MarkdownDescriptor extends Descriptor
             .'* Name: '.($argument->getName() ?: '<none>')."\n"
             .'* Is required: '.($argument->isRequired() ? 'yes' : 'no')."\n"
             .'* Is array: '.($argument->isArray() ? 'yes' : 'no')."\n"
-            .'* Description: '.preg_replace('/\s*\R\s*/', PHP_EOL.'  ', $argument->getDescription() ?: '<none>')."\n"
+            .'* Description: '.preg_replace('/\s*[\r\n]\s*/', "\n  ", $argument->getDescription() ?: '<none>')."\n"
             .'* Default: `'.str_replace("\n", '', var_export($argument->getDefault(), true)).'`'
         );
     }
@@ -53,7 +54,7 @@ class MarkdownDescriptor extends Descriptor
             .'* Accept value: '.($option->acceptValue() ? 'yes' : 'no')."\n"
             .'* Is value required: '.($option->isValueRequired() ? 'yes' : 'no')."\n"
             .'* Is multiple: '.($option->isArray() ? 'yes' : 'no')."\n"
-            .'* Description: '.preg_replace('/\s*\R\s*/', PHP_EOL.'  ', $option->getDescription() ?: '<none>')."\n"
+            .'* Description: '.preg_replace('/\s*[\r\n]\s*/', "\n  ", $option->getDescription() ?: '<none>')."\n"
             .'* Default: `'.str_replace("\n", '', var_export($option->getDefault(), true)).'`'
         );
     }
@@ -94,11 +95,11 @@ class MarkdownDescriptor extends Descriptor
 
         $this->write(
             $command->getName()."\n"
-            .str_repeat('-', strlen($command->getName()))."\n\n"
+            .str_repeat('-', Helper::strlen($command->getName()))."\n\n"
             .'* Description: '.($command->getDescription() ?: '<none>')."\n"
             .'* Usage:'."\n\n"
             .array_reduce(array_merge(array($command->getSynopsis()), $command->getAliases(), $command->getUsages()), function ($carry, $usage) {
-                return $carry .= '  * `'.$usage.'`'."\n";
+                return $carry.'  * `'.$usage.'`'."\n";
             })
         );
 
@@ -121,7 +122,7 @@ class MarkdownDescriptor extends Descriptor
         $describedNamespace = isset($options['namespace']) ? $options['namespace'] : null;
         $description = new ApplicationDescription($application, $describedNamespace);
 
-        $this->write($application->getName()."\n".str_repeat('=', strlen($application->getName())));
+        $this->write($application->getName()."\n".str_repeat('=', Helper::strlen($application->getName())));
 
         foreach ($description->getNamespaces() as $namespace) {
             if (ApplicationDescription::GLOBAL_NAMESPACE !== $namespace['id']) {

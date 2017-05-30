@@ -1,4 +1,6 @@
-# CakePHP DebugKit [![Build Status](https://secure.travis-ci.org/cakephp/debug_kit.png?branch=3.0)](http://travis-ci.org/cakephp/debug_kit)
+# CakePHP DebugKit
+[![Build Status](https://secure.travis-ci.org/cakephp/debug_kit.png?branch=master)](http://travis-ci.org/cakephp/debug_kit)
+[![Coverage Status](https://img.shields.io/codecov/c/github/cakephp/debug_kit.svg?style=flat-square)](https://codecov.io/github/cakephp/debug_kit)
 
 DebugKit provides a debugging toolbar and enhanced debugging tools for CakePHP applications.
 
@@ -6,25 +8,25 @@ DebugKit provides a debugging toolbar and enhanced debugging tools for CakePHP a
 
 The `master` branch has the following requirements:
 
-* CakePHP 3.0.0 or greater.
+* CakePHP 3.1.0 or greater.
 * PHP 5.4.16 or greater.
 * SQLite or another database driver that CakePHP can talk to. By default DebugKit will use SQLite, if you
   need to use a different database see the Database Configuration section below.
 
 ## DebugKit for CakePHP 2.x
 
-If you want DebugKit for your 2.x application, you can use the latest `2.2.y` tag or the 2.2 branch.
+If you want DebugKit for your 2.x application, you can use the latest `2.2.y` tag or the [2.2 branch](https://github.com/cakephp/debug_kit/tree/2.2).
 
 ## Installation
 
-* Install the plugin with composer from your CakePHP Project's ROOT directory (where composer.json file is located)
+* Install the plugin with [Composer](https://getcomposer.org/) from your CakePHP Project's ROOT directory (where the **composer.json** file is located)
 ```sh
 php composer.phar require --dev cakephp/debug_kit "~3.0"
 ```
 
-* Load the plugin
+* [Load the plugin](http://book.cakephp.org/3.0/en/plugins.html#loading-a-plugin)
 ```php
-Plugin::load('DebugKit', ['bootstrap' => true]);
+Plugin::load('DebugKit', ['bootstrap' => true, 'routes' => true]);
 ```
 * Set `'debug' => true,` in `config/app.php`.
 
@@ -53,15 +55,10 @@ correct branch.
 * `1.3.0` is compatible with CakePHP 1.3.x only. It will not work with CakePHP
   1.2. You can also use the `1.3` branch to get the most recent updates and
   bugfixes.
-* `2.0.0` is compatible with CakePHP 2.0.x only. It will not work with previous
-  CakePHP versions.
-* `2.2.0` is compatible with CakePHP 2.2.0 and greater. It will not work with
-  older versions of CakePHP as this release uses new API's available in 2.2.
-  You can also use the `master` branch to get the most recent updates.
 * `2.2.x` are compatible with CakePHP 2.2.0 and greater. It is a necessary
   upgrade for people using CakePHP 2.4 as the naming conventions around loggers
-  changed in that release.
-* `3.0.x` is compatible with CakePHP 3.0.x and is still under active development.
+  changed in that release. 2.2.x is not actively being developed.
+* `3.x` is compatible with CakePHP 3.x and is still under active development.
 
 # Documentation
 
@@ -84,21 +81,32 @@ your own custom panels.
 
 There are several built-in panels, they are:
 
- * **Request** Displays information about the current request, GET, POST, Cake
-   Parameters, Current Route information and Cookies if the `CookieComponent`
-   is in you controller's components.
- * **Session** Display the information currently in the Session.
- * **Timer** Display any timers that were set during the request see
-   `DebugKitDebugger` for more information. Also displays
-   memory use at component callbacks as well as peak memory used.
- * **Sql Logs** Displays sql logs for each database connection.
- * **Log** Display any entries made to the log files this request.
- * **Variables** Display View variables set in controller.
- * **Environment** Display environment variables related to PHP + CakePHP.
+* **Request** Displays information about the current request, GET, POST, Cake
+  Parameters, Current Route information and Cookies if the `CookieComponent`
+  is in you controller's components.
+* **Session** Display the information currently in the Session.
+* **Timer** Display any timers that were set during the request see
+  `DebugKitDebugger` for more information. Also displays
+  memory use at component callbacks as well as peak memory used.
+* **Sql Logs** Displays sql logs for each database connection.
+* **Log** Display any entries made to the log files this request.
+* **Variables** Display View variables set in controller.
+* **Environment** Display environment variables related to PHP + CakePHP.
+* **Routes** Display all the routes connected in your application, highlighting
+  the current route.
+* **Packages** Display the packages your application depends on, and view which
+  ones are out-dated.
+* **Mail** After building `MailPreview` classes you can preview your
+  application's email messages inside DebugKit.
 
 ## Configuration
 
-There is no configuration at this time. Configuration options will be coming soon.
+* `DebugKit.panels` - Enable or disable panels for DebugKit. You can disable any of the
+  standard panels by:
+```php
+// Before loading DebugKit
+Configure::write('DebugKit.panels', ['DebugKit.Packages' => false]);
+```
 
 ## Developing Your Own Panels
 
@@ -175,7 +183,7 @@ the panel.
 ```php
 Configure::write(
 	'DebugKit.panels',
-	array_merge((array)Configure::read('DebugKit.panels'), ['MyPlugin.MyCustomPanel'])
+	array_merge((array)Configure::read('DebugKit.panels'), ['MyPlugin.MyCustom'])
 );
 ```
 

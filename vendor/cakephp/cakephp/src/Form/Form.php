@@ -14,7 +14,6 @@
  */
 namespace Cake\Form;
 
-use Cake\Form\Schema;
 use Cake\Validation\Validator;
 
 /**
@@ -65,7 +64,7 @@ class Form
      * is first built. This hook method lets you configure the
      * schema or load a pre-defined one.
      *
-     * @param \Cake\Form\Schema $schema The schema to set, or null.
+     * @param \Cake\Form\Schema|null $schema The schema to set, or null.
      * @return \Cake\Form\Schema the schema instance.
      */
     public function schema(Schema $schema = null)
@@ -76,6 +75,7 @@ class Form
         if ($schema) {
             $this->_schema = $schema;
         }
+
         return $this->_schema;
     }
 
@@ -101,7 +101,7 @@ class Form
      * is first built. This hook method lets you configure the
      * validator or load a pre-defined one.
      *
-     * @param \Cake\Validation\Validator $validator The validator to set, or null.
+     * @param \Cake\Validation\Validator|null $validator The validator to set, or null.
      * @return \Cake\Validation\Validator the validator instance.
      */
     public function validator(Validator $validator = null)
@@ -112,6 +112,7 @@ class Form
         if ($validator) {
             $this->_validator = $validator;
         }
+
         return $this->_validator;
     }
 
@@ -140,6 +141,7 @@ class Form
     {
         $validator = $this->validator();
         $this->_errors = $validator->errors($data);
+
         return count($this->_errors) === 0;
     }
 
@@ -173,6 +175,7 @@ class Form
         if (!$this->validate($data)) {
             return false;
         }
+
         return $this->_execute($data);
     }
 
@@ -201,6 +204,7 @@ class Form
             '_errors' => $this->errors(),
             '_validator' => $this->validator()->__debugInfo()
         ];
+
         return $special + get_object_vars($this);
     }
 }

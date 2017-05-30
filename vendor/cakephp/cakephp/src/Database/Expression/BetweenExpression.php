@@ -15,8 +15,7 @@
 namespace Cake\Database\Expression;
 
 use Cake\Database\ExpressionInterface;
-use Cake\Database\Expression\FieldInterface;
-use Cake\Database\Expression\FieldTrait;
+use Cake\Database\Type\ExpressionTypeCasterTrait;
 use Cake\Database\ValueBinder;
 
 /**
@@ -27,6 +26,7 @@ use Cake\Database\ValueBinder;
 class BetweenExpression implements ExpressionInterface, FieldInterface
 {
 
+    use ExpressionTypeCasterTrait;
     use FieldTrait;
 
     /**
@@ -53,13 +53,18 @@ class BetweenExpression implements ExpressionInterface, FieldInterface
     /**
      * Constructor
      *
-     * @param mixed $field The field name to compare for values in between the range.
+     * @param string|\Cake\Database\ExpressionInterface $field The field name to compare for values in between the range.
      * @param mixed $from The initial value of the range.
      * @param mixed $to The ending value in the comparison range.
-     * @param string $type The data type name to bind the values with.
+     * @param string|null $type The data type name to bind the values with.
      */
     public function __construct($field, $from, $to, $type = null)
     {
+        if ($type !== null) {
+            $from = $this->_castToExpression($from, $type);
+            $to = $this->_castToExpression($to, $type);
+        }
+
         $this->_field = $field;
         $this->_from = $from;
         $this->_to = $to;
@@ -85,7 +90,7 @@ class BetweenExpression implements ExpressionInterface, FieldInterface
         }
 
         foreach ($parts as $name => $part) {
-            if ($field instanceof ExpressionInterface) {
+            if ($part instanceof ExpressionInterface) {
                 $parts[$name] = $part->sql($generator);
                 continue;
             }
@@ -120,6 +125,21 @@ class BetweenExpression implements ExpressionInterface, FieldInterface
     {
         $placeholder = $generator->placeholder('c');
         $generator->bind($placeholder, $value, $type);
+
         return $placeholder;
+    }
+
+    /**
+     * Do a deep clone of this expression.
+     *
+     * @return void
+     */
+    public function __clone()
+    {
+        foreach (['_field', '_from', '_to'] as $part) {
+            if ($this->{$part} instanceof ExpressionInterface) {
+                $this->{$part} = clone $this->{$part};
+            }
+        }
     }
 }

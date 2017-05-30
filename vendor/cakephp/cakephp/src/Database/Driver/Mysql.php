@@ -15,11 +15,12 @@
 namespace Cake\Database\Driver;
 
 use Cake\Database\Dialect\MysqlDialectTrait;
+use Cake\Database\Driver;
 use Cake\Database\Query;
 use Cake\Database\Statement\MysqlStatement;
 use PDO;
 
-class Mysql extends \Cake\Database\Driver
+class Mysql extends Driver
 {
 
     use MysqlDialectTrait;
@@ -42,6 +43,20 @@ class Mysql extends \Cake\Database\Driver
         'timezone' => null,
         'init' => [],
     ];
+
+    /**
+     * The server version
+     *
+     * @var string
+     */
+    protected $_version;
+
+    /**
+     * Whether or not the server supports native JSON
+     *
+     * @var bool
+     */
+    protected $_supportsNativeJson;
 
     /**
      * Establishes a connection to the database server
@@ -69,7 +84,7 @@ class Mysql extends \Cake\Database\Driver
         $config['flags'] += [
             PDO::ATTR_PERSISTENT => $config['persistent'],
             PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ];
 
         if (!empty($config['ssl_key']) && !empty($config['ssl_cert'])) {
@@ -94,6 +109,7 @@ class Mysql extends \Cake\Database\Driver
                 $connection->exec($command);
             }
         }
+
         return true;
     }
 
@@ -122,6 +138,41 @@ class Mysql extends \Cake\Database\Driver
         if ($isObject && $query->bufferResults() === false) {
             $result->bufferResults(false);
         }
+
         return $result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function schema()
+    {
+        return $this->_config['database'];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function supportsDynamicConstraints()
+    {
+        return true;
+    }
+
+    /**
+     * Returns true if the server supports native JSON columns
+     *
+     * @return bool
+     */
+    public function supportsNativeJson()
+    {
+        if ($this->_supportsNativeJson !== null) {
+            return $this->_supportsNativeJson;
+        }
+
+        if ($this->_version === null) {
+            $this->_version = $this->_connection->getAttribute(PDO::ATTR_SERVER_VERSION);
+        }
+
+        return $this->_supportsNativeJson = version_compare($this->_version, '5.7.0', '>=');
     }
 }

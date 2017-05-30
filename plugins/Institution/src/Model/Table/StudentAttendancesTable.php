@@ -11,720 +11,1086 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 
-class StudentAttendancesTable extends AppTable {
-	use OptionsTrait;
-	use MessagesTrait;
-	private $allDayOptions = [];
-	private $selectedDate = [];
-	private $typeOptions = [];
-	private $reasonOptions = [];
-	private $_fieldOrder = ['openemis_no', 'student_id'];
-	private $dataCount = null;
-	private $_absenceData = [];
+class StudentAttendancesTable extends AppTable
+{
+    use OptionsTrait;
+    use MessagesTrait;
+    private $allDayOptions = [];
+    private $selectedDate = [];
+    private $typeOptions = [];
+    private $reasonOptions = [];
+    private $_fieldOrder = ['openemis_no', 'student_id'];
+    private $dataCount = null;
+    private $_absenceData = [];
+    const PRESENT = 0;
+    private $absenceList;
+    private $absenceCodeList;
 
-	public function initialize(array $config) {
-		$this->table('institution_section_students');
-		$config['Modified'] = false;
-		$config['Created'] = false;
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        $this->table('institution_class_students');
+        $config['Modified'] = false;
+        $config['Created'] = false;
+        parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
-		$this->belongsTo('InstitutionSections', ['className' => 'Institution.InstitutionSections']);
-		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->addBehavior('AcademicPeriod.AcademicPeriod');
-		$this->addBehavior('Excel', [
-			'excludes' => ['status', 'education_grade_id'],
-			'pages' => ['index']
-		]);
-		$this->addBehavior('Import.ImportLink');
-	}
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$sectionId = $this->request->query['section_id'];
-		$query->where([$this->aliasField('institution_section_id') => $sectionId]);
-	}
-
-	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$academicPeriodId = $this->request->query['academic_period_id'];
-		$startDate = $AcademicPeriodTable->get($academicPeriodId)->start_date->format('Y-m-d');
-		$endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
-		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$sectionId = $this->request->query['section_id'];
-
-		foreach ($months as $month) {
-			$year = $month['year'];
-			$sheetName = $month['month']['inString'].' '.$year;
-			$monthInNumber = $month['month']['inNumber'];
- 			$sheets[] = [
- 				'name' => $sheetName,
- 				'table' => $this,
- 				'query' => $this
- 					->find()
- 					->select(['openemis_no' => 'Users.openemis_no']),
-				'month' => $monthInNumber,
-				'year' => $year,
-				'startDate' => $startDate,
-				'endDate' => $endDate,
-				'institutionId' => $institutionId,
-				'sectionId' => $sectionId,
-				'orientation' => 'landscape'
- 			];
-		}
-	}
-
-	// To select another one more field from the containable data
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-		$newArray[] = [
-			'key' => 'Users.openemis_no',
-			'field' => 'openemis_no',
-			'type' => 'string',
-			'label' => ''
-		];
-		
-		$newFields = array_merge($newArray, $fields->getArrayCopy());
-		$fields->exchangeArray($newFields);
-		$sheet = $settings['sheet'];
-		$year = $sheet['year'];
-		$month = $sheet['month'];
-		$startDate = $sheet['startDate'];
-		$endDate = $sheet['endDate'];
-		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$days = $AcademicPeriodTable->generateDaysOfMonth($year, $month, $startDate, $endDate);
-		$dayIndex = [];
-		$workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
-		foreach($days as $item) {
-			$dayIndex[] = $item['date'];
-			if (in_array($item['weekDay'], $workingDays)) {
-				$fields[] = [
-					'key' => 'AcademicPeriod.days',
-					'field' => 'attendance_field',
-					'type' => 'attendance',
-					'label' => sprintf('%s (%s)', $item['day'], $item['weekDay']),
-					'date' => $item['date']
-				];
-			}
-		}
-		$startDate = $dayIndex[0];
-		$endDate = $dayIndex[count($dayIndex)-1];
-
-		// Set data into a temporary variable
-		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId'], $sheet['sectionId']);
-	}
-
-	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
-		// Get the data from the temporary variable
-		$absenceData = $this->_absenceData;
-
-		if (isset($absenceData[$entity->student_id][$attr['date']])) {
-			$absenceObj = $absenceData[$entity->student_id][$attr['date']];
-			if (! $absenceObj['full_day']) {
-				$startTimeAbsent = $absenceObj['start_time'];
-				$endTimeAbsent = $absenceObj['end_time'];
-				$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
-				return $timeStr;
-			} else{
-				return sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
-			}
-		}else{
-			return '';
-		}
-	}
-
-	public function getData($monthStartDay, $monthEndDay, $institutionId, $sectionId) {		
-		$StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
-
-		$absenceData = $StudentAbsenceTable->find('all')
-			->contain(['StudentAbsenceReasons'])
-			->where([
-				$StudentAbsenceTable->aliasField('institution_id') => $institutionId,
-				$StudentAbsenceTable->aliasField('start_date').' >= ' => $monthStartDay,
-				$StudentAbsenceTable->aliasField('end_date').' <= ' => $monthEndDay,
-			])
-			->innerJoin(
-				['InstitutionSectionStudents' => 'institution_section_students'],
-				[
-					'InstitutionSectionStudents.student_id = '.$StudentAbsenceTable->aliasField('student_id'),
-					'InstitutionSectionStudents.institution_section_id' => $sectionId
-				]
-			)
-			->select([
-					'student_id' => $StudentAbsenceTable->aliasField('student_id'),
-					'start_date' => $StudentAbsenceTable->aliasField('start_date'),
-					'end_date' => $StudentAbsenceTable->aliasField('end_date'),
-					'full_day' => $StudentAbsenceTable->aliasField('full_day'),
-					'start_time' => $StudentAbsenceTable->aliasField('start_time'),
-					'end_time' => $StudentAbsenceTable->aliasField('end_time'),
-					'absence_type' => 'StudentAbsenceReasons.name'
-				])
-			->toArray();
-		$absenceCheckList = [];
-		foreach ($absenceData as $absenceUnit) {
-			$studentId = $absenceUnit['student_id'];
-			$indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
-
-			$absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
-
-			if ($absenceUnit['full_day'] && !empty($absenceUnit['end_date']) && $absenceUnit['end_date'] > $absenceUnit['start_date']) {
-				$tempStartDate = date("Y-m-d", strtotime($absenceUnit['start_date']));
-				$formatedLastDate = date("Y-m-d", strtotime($absenceUnit['end_date']));
-				
-				while ($tempStartDate <= $formatedLastDate) {
-					$stampTempDate = strtotime($tempStartDate);
-					$tempIndex = date('Y-m-d', $stampTempDate);
-					$absenceCheckList[$studentId][$tempIndex] = $absenceUnit;
-					$stampTempDateNew = strtotime('+1 day', $stampTempDate);
-					$tempStartDate = date("Y-m-d", $stampTempDateNew);
-				}
-			}
-		}
-		return $absenceCheckList;
-	}
-
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
+        $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->addBehavior('Excel', [
+            'excludes' => ['status', 'education_grade_id', 'id', 'academic_period_id', 'institution_id'],
+            'pages' => ['index']
+        ]);
+        $this->addBehavior('Import.ImportLink');
+        $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
+        $this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
+        $this->absenceCodeList = $AbsenceTypesTable->getCodeList();
     }
 
-	// Event: ControllerAction.Model.beforeAction
-	public function beforeAction(Event $event) {
-		$tabElements = [
-			'Attendance' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'],
-				'text' => __('Attendance')
-			],
-			'Absence' => [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences'],
-				'text' => __('Absence')
-			]
-		];
-
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Attendance');
-
-		$this->ControllerAction->field('openemis_no');
-		$this->ControllerAction->field('student_id');
-		$this->ControllerAction->field('institution_section_id', ['visible' => false]);
-		$this->ControllerAction->field('education_grade_id', ['visible' => false]);
-		$this->ControllerAction->field('status', ['visible' => false]);
-	}
-
-	// Event: ControllerAction.Model.afterAction
-	public function afterAction(Event $event, ArrayObject $config) {
-		if (!is_null($this->request->query('mode'))) {
-			if ($this->dataCount > 0) {
-				$config['formButtons'] = true;
-				$config['url'] = $config['buttons']['index']['url'];
-				$config['url'][0] = 'indexEdit';
-			}
-		}
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
-	}
-
-	// Event: ControllerAction.Model.onGetOpenemisNo
-	public function onGetOpenemisNo(Event $event, Entity $entity) {
-		return $entity->user->openemis_no;
-	}
-
-	// Event: ControllerAction.Model.onGetType
-	public function onGetType(Event $event, Entity $entity) {
-		$html = '';
-		$studentId = $entity->student_id;
-		$StudentTable = TableRegistry::get('Institution.Students');
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-
-		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
-			$Form = $event->subject()->Form;
-
-			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$id = $entity->student_id;
-			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-			
-			$alias = Inflector::underscore($StudentAbsences->alias());
-			$fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
-			$options = ['type' => 'select', 'label' => false, 'options' => $this->typeOptions, 'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();'];
-			if (empty($entity->StudentAbsences['id'])) {
-				$options['value'] = 'PRESENT';
-			} else {
-				$html .= $Form->hidden($fieldPrefix.".id", ['value' => $entity->StudentAbsences['id']]);
-				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
-					$options['value'] = 'UNEXCUSED';
-				} else {
-					$options['value'] = 'EXCUSED';
-				}
-			}
-
-			$html .= $Form->input($fieldPrefix.".absence_type", $options);
-			$html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
-			$html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
-
-			$selectedDate = $this->selectedDate->format('d-m-Y');
-			$html .= $Form->hidden($fieldPrefix.".full_day", ['value' => 1]);	//full day
-			$html .= $Form->hidden($fieldPrefix.".start_date", ['value' => $selectedDate]);
-			$html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
-		} else {
-			$types = $this->getSelectOptions('Absence.types');
-			$type = $types['EXCUSED'];
-
-			if (empty($entity->StudentAbsences['id'])) {
-				$type = '<i class="fa fa-check"></i>';
-			} else {
-				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
-					$type = $types['UNEXCUSED'];
-				}
-			}
-			$html .= $type;
-		}
-
-		return $html;
-	}
-
-	// Event: ControllerAction.Model.onGetReason
-	public function onGetReason(Event $event, Entity $entity) {
-		$html = '';
-		$studentId = $entity->student_id;
-		$StudentTable = TableRegistry::get('Institution.Students');
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		if (!is_null($this->request->query('mode')) && $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
-			$Form = $event->subject()->Form;
-
-			$id = $entity->student_id;
-			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-
-			$alias = Inflector::underscore($StudentAbsences->alias());
-			$fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
-
-			$presentDisplay = 'display: none;';
-			$excusedDisplay = 'display: none;';
-			$unexcusedDisplay = 'display: none;';
-			$reasonId = 0;
-			if (empty($entity->StudentAbsences['id'])) {
-				$presentDisplay = '';	// PRESENT
-			} else {
-				if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
-					$unexcusedDisplay = '';	// UNEXCUSED
-				} else {
-					$excusedDisplay = '';	// EXCUSED
-					$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
-				}
-			}
-			foreach ($this->typeOptions as $key => $value) {
-				switch($key) {
-					case 'PRESENT':
-						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$presentDisplay.'">';
-							$html .= '<i class="fa fa-minus"></i>';
-						$html .= '</span>';
-						break;
-					case 'EXCUSED':
-						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$excusedDisplay.'">';
-							$options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
-							if ($reasonId != 0) {
-								$options['value'] = $reasonId;
-							}
-							$html .= $Form->input($fieldPrefix.".student_absence_reason_id", $options);
-						$html .= '</span>';
-						break;
-					case 'UNEXCUSED':
-						$html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$unexcusedDisplay.'">';
-							$html .= '<i class="fa fa-minus"></i>';
-						$html .= '</span>';
-						break;
-				}
-			}
-		} else {
-			$reasonId = $entity->StudentAbsences['student_absence_reason_id'];
-			$StudentAbsenceReasons = TableRegistry::get('FieldOption.StudentAbsenceReasons');
-
-			if (!empty($reasonId)) {
-				$obj = $StudentAbsenceReasons->findById($reasonId)->first();
-				$html .= $obj['name'];
-			} else {
-				$html .= '<i class="fa fa-minus"></i>';
-			}
-		}
-
-		return $html;
-	}
-
-	public function onGetSunday(Event $event, Entity $entity) {
-		return $this->getAbsenceData($event, $entity, 'sunday');
-	}
-
-	public function onGetMonday(Event $event, Entity $entity) {
-		return $this->getAbsenceData($event, $entity, 'monday');
-	}
-
-	public function onGetTuesday(Event $event, Entity $entity) {
-		return $this->getAbsenceData($event, $entity, 'tuesday');
-	}
-
-	public function onGetWednesday(Event $event, Entity $entity) {
-		return $this->getAbsenceData($event, $entity, 'wednesday');
-	}
-
-	public function onGetThursday(Event $event, Entity $entity) {
-		return $this->getAbsenceData($event, $entity, 'thursday');
-	}
-
-	public function onGetFriday(Event $event, Entity $entity) {
-		return $this->getAbsenceData($event, $entity, 'friday');
-	}
-
-	public function onGetSaturday(Event $event, Entity $entity) {
-		return $this->getAbsenceData($event, $entity, 'saturday');
-	}
-
-	public function getAbsenceData(Event $event, Entity $entity, $key) {
-		$value = '<i class="fa fa-check"></i>';
-
-		if (isset($entity->StudentAbsences['id'])) {
-			$startDate = $entity->StudentAbsences['start_date'];
-			$endDate = $entity->StudentAbsences['end_date'];
-			$currentDay = $this->allDayOptions[$key]['date'];
-			if ($currentDay >= $startDate && $currentDay <= $endDate) {
-				$InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-				$absenceQuery = $InstitutionStudentAbsences
-					->findById($entity->StudentAbsences['id'])
-					->contain('StudentAbsenceReasons');
-				$absenceResult = $absenceQuery->first();
-
-				$typeOptions = $this->getSelectOptions('Absence.types');
-				if (empty($absenceResult->student_absence_reason)) {
-					$absenceType = 'UNEXCUSED';
-				} else {
-					$absenceType = 'EXCUSED';
-				}
-				if ($absenceResult->full_day == 0) {
-					$urlLink = sprintf(__('Absent') . ' - ' . $typeOptions[$absenceType]. ' (%s - %s)' , $absenceResult->start_time, $absenceResult->end_time);
-				} else {
-					$urlLink = __('Absent') . ' - ' . $typeOptions[$absenceType]. ' (full day)';
-				}
-
-				$StudentAbsences = TableRegistry::get('Institution.StudentAbsences');
-				$value = $event->subject()->Html->link($urlLink, [
-					'plugin' => $this->controller->plugin,
-					'controller' => $this->controller->name,
-					'action' => $StudentAbsences->alias(),
-					'view',
-					$entity->StudentAbsences['id']
-				]);
-			}
-		}
-
-		return $value;
-	}
-
-	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$toolbarElements = [
-			['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
-
-		// Setup period options
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$periodOptions = $AcademicPeriod->getList();
-		if (empty($this->request->query['academic_period_id'])) {
-			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
-		}
-		
-		$Sections = TableRegistry::get('Institution.InstitutionSections');
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
-
-		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-			'message' => '{{label}} - ' . $this->getMessage('general.noSections'),
-			'callable' => function($id) use ($Sections, $institutionId) {
-				return $Sections->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
-			}
-		]);
-		// End setup periods
-
-		$this->request->query['academic_period_id'] = $selectedPeriod;
-
-		if ($selectedPeriod != 0) {
-			$todayDate = date("Y-m-d");
-			$this->controller->set(compact('periodOptions', 'selectedPeriod'));
-
-			// Setup week options
-			$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
-			$weekStr = 'Week %d (%s - %s)';
-			$weekOptions = [];
-			$currentWeek = null;
-			foreach ($weeks as $index => $dates) {
-				if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
-					$weekStr = __('Current Week') . ' %d (%s - %s)';
-					$currentWeek = $index;
-				} else {
-					$weekStr = 'Week %d (%s - %s)';
-				}
-				$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
-			}
-			$selectedYear = $AcademicPeriod->get($selectedPeriod)->start_year;
-			if ($selectedYear == date("Y") && !is_null($currentWeek)) {
-				$selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
-			} else {
-				$selectedWeek = $this->queryString('week', $weekOptions);
-			}
-			$this->advancedSelectOptions($weekOptions, $selectedWeek);
-			$this->controller->set(compact('weekOptions', 'selectedWeek'));
-			// end setup weeks
-
-			// Setup day options
-			$ConfigItems = TableRegistry::get('ConfigItems');
-			$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
-			$daysPerWeek = $ConfigItems->value('days_per_week');
-			$schooldays = [];
-
-			for($i=0; $i<$daysPerWeek; $i++) {
-				$schooldays[] = ($firstDayOfWeek + $i) % 7;
-			}
-
-			$week = $weeks[$selectedWeek];
-			$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
-			$firstDayOfWeek = $week[0]->copy();
-			$firstDay = -1;
-			$today = null;
-
-			do {
-				if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
-					if ($firstDay == -1) {
-						$firstDay = $firstDayOfWeek->dayOfWeek;
-					}
-					if ($firstDayOfWeek->isToday()) {
-						$today = $firstDayOfWeek->dayOfWeek;
-					}
-					$dayOptions[$firstDayOfWeek->dayOfWeek] = [
-						'value' => $firstDayOfWeek->dayOfWeek,
-						'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
-					];
-					$this->allDayOptions[strtolower($firstDayOfWeek->format('l'))] = [
-						'date' => $firstDayOfWeek->format('Y-m-d'),
-						'text' => __($firstDayOfWeek->format('l'))
-					];
-				}
-				$firstDayOfWeek->addDay();
-			} while($firstDayOfWeek->lte($week[1]));
-
-			$selectedDay = -1;
-			if (isset($this->request->query['day'])) {
-				$selectedDay = $this->request->query('day');
-				if (!array_key_exists($selectedDay, $dayOptions)) {
-					$selectedDay = $firstDay;
-				}
-			} else {
-				if (!is_null($today)) {
-					$selectedDay = $today;
-				} else {
-					$selectedDay = $firstDay;
-				}
-			}
-			$dayOptions[$selectedDay][] = 'selected';
-			
-			$currentDay = $week[0]->copy();
-			if ($selectedDay != -1) {
-				if ($currentDay->dayOfWeek != $selectedDay) {
-					$this->selectedDate = $currentDay->next($selectedDay);
-				} else {
-					$this->selectedDate = $currentDay;
-				}
-			} else {
-				$this->selectedDate = $week;
-			}
-			$this->controller->set(compact('dayOptions', 'selectedDay'));
-			// End setup days
-
-			// Setup section options
-			$userId = $this->Auth->user('id');
-			$AccessControl = $this->AccessControl;
-			$sectionOptions = $Sections
-				->find('list')
-				->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl]) // restrict user to see own class if permission is set
-				->where([
-					$Sections->aliasField('institution_id') => $institutionId, 
-					$Sections->aliasField('academic_period_id') => $selectedPeriod
-				])
-				->toArray();
-
-			$selectedSection = $this->queryString('section_id', $sectionOptions);
-			$this->advancedSelectOptions($sectionOptions, $selectedSection);
-			$this->controller->set(compact('sectionOptions', 'selectedSection'));
-			// End setup sections
-
-			$settings['pagination'] = false;
-			$query
-				->contain(['Users'])
-				->find('withAbsence', ['date' => $this->selectedDate])
-				->where([$this->aliasField('institution_section_id') => $selectedSection]);
-
-			if ($selectedDay == -1) {
-				foreach ($this->allDayOptions as $key => $obj) {
-					$this->ControllerAction->addField($key);
-					$this->_fieldOrder[] = $key;
-				}
-			} else {
-				$this->ControllerAction->field('type');
-				$this->ControllerAction->field('reason');
-				$this->_fieldOrder[] = 'type';
-				$this->_fieldOrder[] = 'reason';
-
-				$this->typeOptions = [
-					'PRESENT' => __('Present'),
-					'EXCUSED' => __('Absent - Excused'),
-					'UNEXCUSED' => __('Absent - Unexcused')
-				];
-
-				$StudentAbsenceReasons = TableRegistry::get('FieldOption.StudentAbsenceReasons');
-				$this->reasonOptions = $StudentAbsenceReasons->getList()->toArray();
-			}
-		} else {
-			$settings['pagination'] = false;
-			$query
-				->where([$this->aliasField('student_id') => 0]);
-
-			$this->ControllerAction->field('type');
-			$this->ControllerAction->field('reason');
-
-			$this->Alert->warning('StudentAttendances.noSections');
-		}
-	}
-
-	public function indexAfterAction(Event $event, $data) {
-		$this->dataCount = $data->count();
-	}
-
-	public function findWithAbsence(Query $query, array $options) {
-		$date = $options['date'];
-
-		$conditions = ['StudentAbsences.student_id = StudentAttendances.student_id'];
-		if (is_array($date)) {
-			$startDate = $date[0]->format('Y-m-d');
-			$endDate = $date[1]->format('Y-m-d');
-
-			$conditions['OR'] = [
-				'OR' => [
-					[
-						'StudentAbsences.end_date IS NOT NULL',
-						'StudentAbsences.start_date >=' => $startDate,
-						'StudentAbsences.start_date <=' => $endDate
-					],
-					[
-						'StudentAbsences.end_date IS NOT NULL',
-						'StudentAbsences.start_date <=' => $startDate,
-						'StudentAbsences.end_date >=' => $startDate
-					],
-					[
-						'StudentAbsences.end_date IS NOT NULL',
-						'StudentAbsences.start_date <=' => $endDate,
-						'StudentAbsences.end_date >=' => $endDate
-					],
-					[
-						'StudentAbsences.end_date IS NOT NULL',
-						'StudentAbsences.start_date >=' => $startDate,
-						'StudentAbsences.end_date <=' => $endDate
-					]
-				],
-				[
-					'StudentAbsences.end_date IS NULL',
-					'StudentAbsences.start_date <=' => $endDate
-				]
-			];
-		} else {
-			$conditions['StudentAbsences.start_date <= '] = $date->format('Y-m-d');
-			$conditions['StudentAbsences.end_date >= '] = $date->format('Y-m-d');
-		}
-    	return $query
-    		->select([
-    			$this->aliasField('student_id'), 
-    			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
-    			'StudentAbsences.id',
-    			'StudentAbsences.start_date',
-    			'StudentAbsences.end_date',
-    			'StudentAbsences.student_absence_reason_id'
-    		])
-			->join([
-				[
-					'table' => 'institution_student_absences',
-					'alias' => 'StudentAbsences',
-					'type' => 'LEFT',
-					'conditions' => $conditions
-				]
-			])
-			->order(['Users.openemis_no'])
-			;
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $classId = !empty($this->request->query['class_id']) ? $this->request->query['class_id'] : 0 ;
+        $query->where([$this->aliasField('institution_class_id') => $classId]);
     }
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($this->AccessControl->check(['Institutions', 'StudentAttendances', 'indexEdit'])) {
-	    	if ($this->request->query('day') != -1) {
-	    		if (!is_null($this->request->query('mode'))) {
-	    			$toolbarButtons['back'] = $buttons['back'];
-					if ($toolbarButtons['back']['url']['mode']) {
-						unset($toolbarButtons['back']['url']['mode']);
-					}
-					$toolbarButtons['back']['type'] = 'button';
-					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-					$toolbarButtons['back']['attr'] = $attr;
-					$toolbarButtons['back']['attr']['title'] = __('Back');
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $this->request->query['academic_period_id'];
+        $startDate = $AcademicPeriodTable->get($academicPeriodId)->start_date->format('Y-m-d');
+        $endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
+        $months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $classId = !empty($this->request->query['class_id']) ? $this->request->query['class_id'] : 0 ;
 
-					if (isset($toolbarButtons['export'])) {
-						unset($toolbarButtons['export']);
-					}
+        foreach ($months as $month) {
+            $year = $month['year'];
+            $sheetName = $month['month']['inString'].' '.$year;
+            $monthInNumber = $month['month']['inNumber'];
+            $sheets[] = [
+                'name' => $sheetName,
+                'table' => $this,
+                'query' => $this
+                    ->find()
+                    ->select(['openemis_no' => 'Users.openemis_no']),
+                'month' => $monthInNumber,
+                'year' => $year,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'institutionId' => $institutionId,
+                'classId' => $classId,
+                'orientation' => 'landscape'
+            ];
+        }
+    }
 
-				} else {
-					$toolbarButtons['back'] = $buttons['back'];
-					$toolbarButtons['back']['type'] = null;
-				}	
-			}
-		}
+    // To select another one more field from the containable data
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+        $newArray[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
 
-		// if ($action == 'index') {
-		// 	$toolbarButtons['export']['url']['action'] = 'AttendanceExport';
-		// }
-	}
+        $newFields = array_merge($newArray, $fields->getArrayCopy());
+        $fields->exchangeArray($newFields);
+        $sheet = $settings['sheet'];
+        $year = $sheet['year'];
+        $month = $sheet['month'];
+        $startDate = $sheet['startDate'];
+        $endDate = $sheet['endDate'];
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $days = $AcademicPeriodTable->generateDaysOfMonth($year, $month, $startDate, $endDate);
+        $dayIndex = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($days as $item) {
+            $dayIndex[] = $item['date'];
+            if (in_array($item['weekDay'], $workingDays)) {
+                $fields[] = [
+                    'key' => 'AcademicPeriod.days',
+                    'field' => 'attendance_field',
+                    'type' => 'attendance',
+                    'label' => sprintf('%s (%s)', $item['day'], __($item['weekDay'])),
+                    'date' => $item['date']
+                ];
+            }
+        }
+        $startDate = $dayIndex[0];
+        $endDate = $dayIndex[count($dayIndex)-1];
 
-	public function indexEdit() {
-		if ($this->request->is(['post', 'put'])) {
-			$requestQuery = $this->request->query;
-			$requestData = $this->request->data;
-			$StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-			$alias = Inflector::underscore($StudentAbsences->alias());
+        // Set data into a temporary variable
+        $this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId'], $sheet['classId']);
+    }
 
-			if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {
-				if (array_key_exists($alias, $requestData[$StudentAbsences->Users->alias()])) {
-					foreach ($requestData[$StudentAbsences->Users->alias()][$alias] as $key => $obj) {
-						$obj['academic_period_id'] = $requestQuery['academic_period_id'];
-						if ($obj['absence_type'] == 'UNEXCUSED') {
-							$obj['student_absence_reason_id'] = 0;
-						}
+    public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
+    {
+        // Get the data from the temporary variable
+        $absenceData = $this->_absenceData;
+        $absenceCodeList = $this->absenceCodeList;
+        if (isset($absenceData[$entity->student_id][$attr['date']])) {
+            $absenceObj = $absenceData[$entity->student_id][$attr['date']];
+            if (! $absenceObj['full_day']) {
+                $startTimeAbsent = $absenceObj['start_time'];
+                $endTimeAbsent = $absenceObj['end_time'];
+                $startTime = new Time($startTimeAbsent);
+                $startTimeAbsent = $startTime->format('h:i A');
+                $endTime = new Time($endTimeAbsent);
+                $endTimeAbsent = $endTime->format('h:i A');
+                if ($absenceCodeList[$absenceObj['absence_type_id']] == 'LATE') {
+                    $secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
+                    $minutesLate = $secondsLate / 60;
+                    $hoursLate = floor($minutesLate / 60);
+                    if ($hoursLate > 0) {
+                        $minutesLate = $minutesLate - ($hoursLate * 60);
+                        $lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
+                    } else {
+                        $lateString = $minutesLate.' '.__('Minute');
+                    }
+                    $timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s)', $lateString);
+                } else {
+                    $timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_reason']. ' (%s - %s)', $startTimeAbsent, $endTimeAbsent);
+                }
+                return $timeStr;
+            } else {
+                return sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
+            }
+        } else {
+            return '';
+        }
+    }
 
-						if ($obj['absence_type'] == 'PRESENT') {
-							if (isset($obj['id'])) {
-								$StudentAbsences->deleteAll([
-									$StudentAbsences->aliasField('id') => $obj['id']
-								]);
-							}
-						} else if ($obj['absence_type'] == 'EXCUSED' || $obj['absence_type'] == 'UNEXCUSED') {
-							$entity = $StudentAbsences->newEntity($obj);
-							if ($StudentAbsences->save($entity)) {
-							} else {
-								$this->log($entity->errors(), 'debug');
-							}
-						}
-					}
-				}
-			}
-		}
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
-		$url = array_merge($url, $this->request->query, $this->request->pass);
-		$url[0] = 'index';
-		if (isset($url['mode'])) {
-			unset($url['mode']);
-		}
+    public function getData($monthStartDay, $monthEndDay, $institutionId, $classId)
+    {
+        $StudentAbsenceTable = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
-		return $this->controller->redirect($url);
-	}
+        $absenceData = $StudentAbsenceTable->find('all')
+            ->contain(['StudentAbsenceReasons', 'AbsenceTypes'])
+            ->where([
+                $StudentAbsenceTable->aliasField('institution_id') => $institutionId,
+                $StudentAbsenceTable->aliasField('start_date').' >= ' => $monthStartDay,
+                $StudentAbsenceTable->aliasField('end_date').' <= ' => $monthEndDay,
+            ])
+            ->innerJoin(
+                ['InstitutionClassStudents' => 'institution_class_students'],
+                [
+                    'InstitutionClassStudents.student_id = '.$StudentAbsenceTable->aliasField('student_id'),
+                    'InstitutionClassStudents.institution_class_id' => $classId
+                ]
+            )
+            ->select([
+                    'student_id' => $StudentAbsenceTable->aliasField('student_id'),
+                    'start_date' => $StudentAbsenceTable->aliasField('start_date'),
+                    'end_date' => $StudentAbsenceTable->aliasField('end_date'),
+                    'full_day' => $StudentAbsenceTable->aliasField('full_day'),
+                    'start_time' => $StudentAbsenceTable->aliasField('start_time'),
+                    'end_time' => $StudentAbsenceTable->aliasField('end_time'),
+                    'absence_type_id' => $StudentAbsenceTable->aliasField('absence_type_id'),
+                    'absence_type_name' => 'AbsenceTypes.name',
+                    'absence_reason' => 'StudentAbsenceReasons.name'
+                ])
+            ->toArray();
+        $absenceCheckList = [];
+        foreach ($absenceData as $absenceUnit) {
+            $studentId = $absenceUnit['student_id'];
+            $indexAbsenceDate = date('Y-m-d', strtotime($absenceUnit['start_date']));
+
+            $absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
+
+            if ($absenceUnit['full_day'] && !empty($absenceUnit['end_date']) && $absenceUnit['end_date'] > $absenceUnit['start_date']) {
+                $tempStartDate = date("Y-m-d", strtotime($absenceUnit['start_date']));
+                $formatedLastDate = date("Y-m-d", strtotime($absenceUnit['end_date']));
+
+                while ($tempStartDate <= $formatedLastDate) {
+                    $stampTempDate = strtotime($tempStartDate);
+                    $tempIndex = date('Y-m-d', $stampTempDate);
+                    $absenceCheckList[$studentId][$tempIndex] = $absenceUnit;
+                    $stampTempDateNew = strtotime('+1 day', $stampTempDate);
+                    $tempStartDate = date("Y-m-d", $stampTempDateNew);
+                }
+            }
+        }
+        return $absenceCheckList;
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+        return $events;
+    }
+
+    // Event: ControllerAction.Model.beforeAction
+    public function beforeAction(Event $event)
+    {
+        $tabElements = [
+            'Attendance' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendances'],
+                'text' => __('Attendance')
+            ],
+            'Absence' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences'],
+                'text' => __('Absence')
+            ]
+        ];
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Attendance');
+
+        $this->ControllerAction->field('openemis_no');
+        $this->ControllerAction->field('student_id');
+        $this->ControllerAction->field('institution_class_id', ['visible' => false]);
+        $this->ControllerAction->field('education_grade_id', ['visible' => false]);
+        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
+        $this->ControllerAction->field('status', ['visible' => false]);
+        $this->ControllerAction->field('student_status_id', ['visible' => false]);
+    }
+
+    // Event: ControllerAction.Model.afterAction
+    public function afterAction(Event $event, ArrayObject $config)
+    {
+        if (!is_null($this->request->query('mode'))) {
+            if ($this->dataCount > 0) {
+                $config['formButtons'] = true;
+                $config['url'] = $config['buttons']['index']['url'];
+                $config['url'][0] = 'indexEdit';
+            }
+        }
+        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+    }
+
+    // Function use by the mini dashboard
+    public function getNumberOfStudentByAttendance($params=[])
+    {
+        $query = $params['query'];
+        $selectedDay = $params['selectedDay'];
+
+        // Add this condition if the selected day is all day
+        if ($selectedDay == -1) {
+            $dateRange = array_column($this->allDayOptions, 'date');
+            // Sort the date range
+            usort($dateRange, function ($a, $b) {
+                $dateTimestamp1 = strtotime($a);
+                $dateTimestamp2 = strtotime($b);
+                return $dateTimestamp1 < $dateTimestamp2 ? -1: 1;
+            });
+            if (!empty($dateRange)) {
+                $startDate = $dateRange[0];
+                $endDate = $dateRange[count($dateRange) - 1];
+                $dateRangeCondition = [
+                    'StudentAbsences.end_date >=' => $startDate,
+                    'StudentAbsences.start_date <=' => $endDate
+                ];
+            } else {
+                $dateRangeCondition = ['1 = 0'];
+            }
+        } else {
+            $dateRangeCondition = [];
+        }
+
+        $StudentAttendancesQuery = clone $query;
+
+        $studentAbsenceArray = $StudentAttendancesQuery
+            ->find('list', [
+                'groupField' => 'student_id',
+                'keyField' => 'absence_id',
+                'valueField' => 'absence_type'
+            ])
+            ->select(['absence_id' => 'StudentAbsences.id', 'student_id' => $this->aliasField('student_id'), 'absence_type' => 'StudentAbsences.absence_type_id'])
+            ->group(['student_id', 'absence_type'])
+            ->where($dateRangeCondition)
+            ->toArray();
+        // Creating the data set
+        $dataSet = [];
+        $data = [];
+        foreach ($studentAbsenceArray as $userAbsenceType) {
+            // Compile the dataset
+            $absenceForTheWeek = false;
+            foreach ($userAbsenceType as $absenceType) {
+                if (empty($absenceType)) {
+                    if (isset($data['Present'])) {
+                        $data['Present'] = ++$data['Present'];
+                    } else {
+                        $data['Present'] = 1;
+                    }
+                } else {
+                    $typeName = $this->absenceList[$absenceType];
+                    if ($typeName != __('Late')) {
+                        $typeName = 'Absence';
+                    }
+                    if (!$absenceForTheWeek || $typeName == __('Late')) {
+                        if (isset($data[$typeName])) {
+                            $data[$typeName] = ++$data[$typeName];
+                        } else {
+                            $data[$typeName] = 1;
+                        }
+                    }
+
+                    if ($typeName == 'Absence') {
+                        $absenceForTheWeek = true;
+                    }
+                }
+            }
+        }
+        unset($StudentAttendancesQuery);
+        return $data;
+    }
+
+
+    // Event: ControllerAction.Model.onGetOpenemisNo
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $sessionPath = 'Users.institution_student_absences.';
+        $timeError = $this->Session->read($sessionPath.$entity->student_id.'.timeError');
+        $startTimestamp = $this->Session->read($sessionPath.$entity->student_id.'.startTimestamp');
+        $endTimestamp = $this->Session->read($sessionPath.$entity->student_id.'.endTimestamp');
+        $this->Session->delete($sessionPath.$entity->student_id.'.timeError');
+        $this->Session->delete($sessionPath.$entity->student_id.'.startTimestamp');
+        $this->Session->delete($sessionPath.$entity->student_id.'.endTimestamp');
+        $html = $event->subject()->Html->link($entity->user->openemis_no, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentUser',
+            'view',
+            $this->paramsEncode(['id' => $entity->user->id])
+        ]);
+
+        if ($timeError) {
+            $startTime = __('Must be within shift timing, from') . ' ' . date('h:i A', $startTimestamp);
+            $endTime = __('to') . ' ' . date('h:i A', $endTimestamp);
+
+            $error = $startTime . ' ' . $endTime;
+            $html .= '&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$error.'"></i>';
+        }
+
+        return $html;
+    }
+
+    // Event: ControllerAction.Model.onGetType
+    public function onGetType(Event $event, Entity $entity)
+    {
+        $html = '';
+        $studentId = $entity->student_id;
+        $StudentTable = TableRegistry::get('Institution.Students');
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        // checkEnrolledInInstitution will list only enrolled student in the school
+        if (!is_null($this->request->query('mode'))) {
+            $Form = $event->subject()->Form;
+
+            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $id = $entity->student_id;
+            $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+
+            $alias = Inflector::underscore($StudentAbsences->alias());
+            $fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
+            $absenceCodeList = $this->absenceCodeList;
+            $codeAbsenceTypeList = array_flip($absenceCodeList);
+            $options = [
+                'error' => true,
+                'type' => 'select',
+                'label' => false,
+                'options' => $this->typeOptions,
+                'onChange' => '$(".type_'.$id.'").hide();$("#type_'.$id.'_"+$(this).val()).show();$("#late_time__'.$id.'").hide();$(".late_time__'.$id.'_"+$(this).val()).show();',
+            ];
+            $displayTime = 'display:none;';
+            $HtmlField = $event->subject()->HtmlField;
+
+            $classId = $this->request->query['class_id'];
+
+            $InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+            $shiftTime = $InstitutionShift
+                ->find('shiftTime', ['institution_class_id' => $classId])
+                ->first();
+
+            $startTime = $shiftTime->start_time;
+            $startTimestamp = strtotime($startTime);
+
+            $attr['value'] = date('h:i A', $startTimestamp);
+            $attr['default_time'] = false;
+            $attr['null'] = true;
+
+            if (empty($entity->StudentAbsences['id'])) {
+                $options['value'] = self::PRESENT;
+                $html .= $Form->input($fieldPrefix.".absence_type_id", $options);
+            } else {
+                $html .= $Form->hidden($fieldPrefix.".id", ['value' => $entity->StudentAbsences['id']]);
+                $options['value'] = $entity->StudentAbsences['absence_type_id'];
+                $html .= $Form->input($fieldPrefix.".absence_type_id", $options);
+                $html .= $Form->hidden($fieldPrefix.".start_time", ['value' => $entity->StudentAbsences['start_time']]);
+                if ($absenceCodeList[$options['value']] == 'LATE') {
+                    $displayTime = '';
+                    $endTime = new Time($entity->StudentAbsences['end_time']);
+                    $attr['value'] = $endTime->format('h:i A');
+                }
+            }
+            $attr['time_options']['defaultTime'] = $attr['value'];
+            $attr['class'] = 'margin-top-10 no-margin-bottom';
+            $attr['field'] = 'late_time';
+            $attr['model'] = $fieldPrefix;
+            $attr['id'] = 'late_time_'.$id;
+            $attr['label'] = false;
+
+            $time = $HtmlField->time('edit', $entity, $attr);
+            $html .= '<div id="late_time__'.$id.'" class="late_time__'.$id.'_'.$codeAbsenceTypeList['LATE'].'" style="'.$displayTime.'">'.$time.'</div>';
+
+            $html .= $Form->hidden($fieldPrefix.".institution_id", ['value' => $institutionId]);
+            $html .= $Form->hidden($fieldPrefix.".student_id", ['value' => $id]);
+
+            $selectedDate = $this->selectedDate->format('d-m-Y');
+            $html .= $Form->hidden($fieldPrefix.".full_day", ['value' => 1]);    //full day
+            $html .= $Form->hidden($fieldPrefix.".start_date", ['value' => $selectedDate]);
+            $html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
+        } else {
+            $absenceTypeList = $this->absenceList;
+            if (empty($entity->StudentAbsences['id'])) {
+                $type = '<i class="fa fa-check"></i>';
+            } else {
+                $absenceTypeId = $entity->StudentAbsences['absence_type_id'];
+                $type = __($absenceTypeList[$absenceTypeId]);
+            }
+            $html .= $type;
+        }
+
+        return $html;
+    }
+
+    // Event: ControllerAction.Model.onGetReason
+    public function onGetReason(Event $event, Entity $entity)
+    {
+        $html = '';
+        $studentId = $entity->student_id;
+        $StudentTable = TableRegistry::get('Institution.Students');
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        if (!is_null($this->request->query('mode'))) {
+            $Form = $event->subject()->Form;
+
+            $id = $entity->student_id;
+            $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+
+            $alias = Inflector::underscore($StudentAbsences->alias());
+            $fieldPrefix = $StudentAbsences->Users->alias() . '.'.$alias.'.' . $id;
+
+            $presentDisplay = 'display: none;';
+            $excusedDisplay = 'display: none;';
+            $unexcusedDisplay = 'display: none;';
+            $lateDisplay = 'display: none;';
+            $absenceCodeList = $this->absenceCodeList;
+            if (empty($entity->StudentAbsences['student_absence_reason_id'])) {
+                $reasonId = 0;
+            } else {
+                $reasonId = $entity->StudentAbsences['student_absence_reason_id'];
+            }
+            if (empty($entity->StudentAbsences['id'])) {
+                $presentDisplay = '';    // PRESENT
+            } else {
+                $absenceTypeId = $entity->StudentAbsences['absence_type_id'];
+                foreach ($absenceCodeList as $absenceTypeCode) {
+                    $codeDisplay = strtolower($absenceTypeCode).'Display';
+                    if ($absenceCodeList[$absenceTypeId] == $absenceTypeCode) {
+                        $$codeDisplay = '';
+                        break;
+                    }
+                }
+            }
+            $codeAbsenceType = array_flip($absenceCodeList);
+            foreach ($this->typeOptions as $key => $value) {
+                switch ($key) {
+                    case self::PRESENT:
+                        $html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$presentDisplay.'">';
+                            $html .= '<i class="fa fa-minus"></i>';
+                        $html .= '</span>';
+                        break;
+                    case $codeAbsenceType['EXCUSED']:
+                        $html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$excusedDisplay.'">';
+                            $options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
+                            if ($reasonId != 0) {
+                                $options['value'] = $reasonId;
+                            }
+                            $html .= $Form->input($fieldPrefix.".student_absence_reason_id", $options);
+                        $html .= '</span>';
+                        break;
+                    case $codeAbsenceType['UNEXCUSED']:
+                        $html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$unexcusedDisplay.'">';
+                            $html .= '<i class="fa fa-minus"></i>';
+                        $html .= '</span>';
+                        break;
+                    case $codeAbsenceType['LATE']:
+                        $html .= '<span class="type_'.$id.'" id="type_'.$id.'_'.$key.'" style="'.$lateDisplay.'">';
+                            $options = ['type' => 'select', 'label' => false, 'options' => $this->reasonOptions];
+                            if ($reasonId != 0) {
+                                $options['value'] = $reasonId;
+                            }
+                            $html .= $Form->input($fieldPrefix.".late_student_absence_reason_id", $options);
+                        $html .= '</span>';
+                        break;
+                }
+            }
+        } else {
+            $reasonId = $entity->StudentAbsences['student_absence_reason_id'];
+            $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
+
+            if (!empty($reasonId)) {
+                $obj = $StudentAbsenceReasons->findById($reasonId)->first();
+                $html .= $obj['name'];
+            } else {
+                if (!empty($entity['StudentAbsences']['absence_type_id'])) {
+                    if ($this->absenceCodeList[$entity['StudentAbsences']['absence_type_id']] == 'LATE') {
+                        $startTime = new Time($entity['StudentAbsences']['start_time']);
+                        $endTime = new Time($entity['StudentAbsences']['end_time']);
+                        $secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
+                        $minutesLate = $secondsLate / 60;
+                        $hoursLate = floor($minutesLate / 60);
+                        if ($hoursLate > 0) {
+                            $minutesLate = $minutesLate - ($hoursLate * 60);
+                            $lateString = $hoursLate.' '.__('Hour').' '.$minutesLate.' '.__('Minute');
+                        } else {
+                            $lateString = $minutesLate.' '.__('Minute');
+                        }
+                        $html .= $lateString;
+                    } else {
+                        $html .= '<i class="fa fa-minus"></i>';
+                    }
+                } else {
+                    $html .= '<i class="fa fa-minus"></i>';
+                }
+            }
+        }
+
+        return $html;
+    }
+
+    public function onGetSunday(Event $event, Entity $entity)
+    {
+        return $this->getAbsenceData($event, $entity, 'sunday');
+    }
+
+    public function onGetMonday(Event $event, Entity $entity)
+    {
+        return $this->getAbsenceData($event, $entity, 'monday');
+    }
+
+    public function onGetTuesday(Event $event, Entity $entity)
+    {
+        return $this->getAbsenceData($event, $entity, 'tuesday');
+    }
+
+    public function onGetWednesday(Event $event, Entity $entity)
+    {
+        return $this->getAbsenceData($event, $entity, 'wednesday');
+    }
+
+    public function onGetThursday(Event $event, Entity $entity)
+    {
+        return $this->getAbsenceData($event, $entity, 'thursday');
+    }
+
+    public function onGetFriday(Event $event, Entity $entity)
+    {
+        return $this->getAbsenceData($event, $entity, 'friday');
+    }
+
+    public function onGetSaturday(Event $event, Entity $entity)
+    {
+        return $this->getAbsenceData($event, $entity, 'saturday');
+    }
+
+    public function getAbsenceData(Event $event, Entity $entity, $key)
+    {
+        $value = '<i class="fa fa-check"></i>';
+
+        if (isset($entity->StudentAbsences['id'])) {
+            $startDate = $entity->StudentAbsences['start_date'];
+            $endDate = $entity->StudentAbsences['end_date'];
+            $currentDay = $this->allDayOptions[$key]['date'];
+            if ($currentDay >= $startDate && $currentDay <= $endDate) {
+                $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+                $absenceQuery = $InstitutionStudentAbsences
+                    ->findById($entity->StudentAbsences['id'])
+                    ->contain('StudentAbsenceReasons');
+                $absenceResult = $absenceQuery->first();
+
+                $absenceType = $this->absenceList[$entity->StudentAbsences['absence_type_id']];
+                if ($absenceResult->full_day == 0) {
+                    $urlLink = sprintf(__($absenceType) . ' - (%s - %s)', $absenceResult->start_time, $absenceResult->end_time);
+                } else {
+                    $urlLink = __($absenceType) . ' - ('.__('Full Day').')';
+                }
+
+                $StudentAbsences = TableRegistry::get('Institution.StudentAbsences');
+                $value = $event->subject()->Html->link($urlLink, [
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'action' => $StudentAbsences->alias(),
+                    'view',
+                    $this->paramsEncode(['id' => $entity->StudentAbsences['id']])
+                ]);
+            }
+        }
+
+        return $value;
+    }
+
+    // Event: ControllerAction.Model.index.beforeAction
+    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    {
+        $query = $settings['query'];
+        // Setup period options
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodOptionsData = $AcademicPeriod->getList();
+        // only year options will appear
+        $periodOptions = $periodOptionsData[key($periodOptionsData)];
+
+        if (empty($this->request->query['academic_period_id'])) {
+            $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
+        }
+
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
+
+        $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+            'message' => '{{label}} - ' . $this->getMessage('general.noClasses'),
+            'callable' => function ($id) use ($Classes, $institutionId) {
+                return $Classes->findByInstitutionIdAndAcademicPeriodId($institutionId, $id)->count();
+            }
+        ]);
+        // End setup periods
+
+        $this->request->query['academic_period_id'] = $selectedPeriod;
+
+        if ($selectedPeriod != 0) {
+            $todayDate = date("Y-m-d");
+            $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+
+            // Setup week options
+            $weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
+            $weekStr = 'Week %d (%s - %s)';
+            $weekOptions = [];
+            $currentWeek = null;
+            foreach ($weeks as $index => $dates) {
+                if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
+                    $weekStr = __('Current Week') . ' %d (%s - %s)';
+                    $currentWeek = $index;
+                } else {
+                    $weekStr = __('Week').' %d (%s - %s)';
+                }
+                $weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+            }
+            $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
+            $startYear = $academicPeriodObj->start_year;
+            $endYear = $academicPeriodObj->end_year;
+            if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
+                $selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
+            } else {
+                $selectedWeek = $this->queryString('week', $weekOptions);
+            }
+
+            $weekStartDate = $weeks[$selectedWeek][0];
+            $weekEndDate = $weeks[$selectedWeek][1];
+
+            $this->advancedSelectOptions($weekOptions, $selectedWeek);
+            $this->controller->set(compact('weekOptions', 'selectedWeek'));
+            // end setup weeks
+
+            // Setup day options
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+            $daysPerWeek = $ConfigItems->value('days_per_week');
+            $schooldays = [];
+
+            for ($i=0; $i<$daysPerWeek; $i++) {
+                // sunday should be '7' in order to be displayed
+                $schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
+            }
+
+            $week = $weeks[$selectedWeek];
+            if (is_null($this->request->query('mode'))) {
+                $dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
+            }
+            $firstDayOfWeek = $week[0]->copy();
+            $firstDay = -1;
+            $today = null;
+
+            do {
+                if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
+                    if ($firstDay == -1) {
+                        $firstDay = $firstDayOfWeek->dayOfWeek;
+                    }
+                    if ($firstDayOfWeek->isToday()) {
+                        $today = $firstDayOfWeek->dayOfWeek;
+                    }
+                    $dayOptions[$firstDayOfWeek->dayOfWeek] = [
+                        'value' => $firstDayOfWeek->dayOfWeek,
+                        'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
+                    ];
+                    $this->allDayOptions[strtolower($firstDayOfWeek->format('l'))] = [
+                        'date' => $firstDayOfWeek->format('Y-m-d'),
+                        'text' => __($firstDayOfWeek->format('l'))
+                    ];
+                }
+                $firstDayOfWeek->addDay();
+            } while ($firstDayOfWeek->lte($week[1]));
+
+            $selectedDay = -1;
+            if (isset($this->request->query['day'])) {
+                $selectedDay = $this->request->query('day');
+                if (!array_key_exists($selectedDay, $dayOptions)) {
+                    $selectedDay = $firstDay;
+                }
+            } else {
+                if (!is_null($today)) {
+                    $selectedDay = $today;
+                } else {
+                    $selectedDay = $firstDay;
+                }
+            }
+            $dayOptions[$selectedDay][] = 'selected';
+
+            $currentDay = $week[0]->copy();
+            if ($selectedDay != -1) {
+                if ($currentDay->dayOfWeek != $selectedDay) {
+                    $this->selectedDate = $currentDay->next($selectedDay);
+                } else {
+                    $this->selectedDate = $currentDay;
+                }
+            } else {
+                $this->selectedDate = $week;
+            }
+            $this->controller->set(compact('dayOptions', 'selectedDay'));
+            // End setup days
+
+            // Setup class options
+            $userId = $this->Auth->user('id');
+            $AccessControl = $this->AccessControl;
+            $classOptions = $Classes
+                ->find('list')
+                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
+                ->where([
+                    $Classes->aliasField('institution_id') => $institutionId,
+                    $Classes->aliasField('academic_period_id') => $selectedPeriod
+                ])
+                ->toArray();
+
+            $selectedClass = $this->queryString('class_id', $classOptions);
+            $this->advancedSelectOptions($classOptions, $selectedClass);
+            $this->controller->set(compact('classOptions', 'selectedClass'));
+            // End setup classes
+
+            $settings['pagination'] = false;
+
+            if ($selectedDay == -1) {
+                $startDate = $weekStartDate->format('Y-m-d');
+                $endDate = $weekEndDate->format('Y-m-d');
+            } else {
+                $startDate = $this->selectedDate->format('Y-m-d');
+                $endDate = $startDate;
+            }
+
+            $conditions = [];
+            $conditions['OR'] = [
+                'OR' => [
+                    [
+                        'InstitutionStudents.end_date IS NOT NULL',
+                        'InstitutionStudents.start_date <=' => $startDate,
+                        'InstitutionStudents.end_date >=' => $startDate
+                    ],
+                    [
+                        'InstitutionStudents.end_date IS NOT NULL',
+                        'InstitutionStudents.start_date <=' => $endDate,
+                        'InstitutionStudents.end_date >=' => $endDate
+                    ],
+                    [
+                        'InstitutionStudents.end_date IS NOT NULL',
+                        'InstitutionStudents.start_date >=' => $startDate,
+                        'InstitutionStudents.end_date <=' => $endDate
+                    ]
+                ],
+                [
+                    'InstitutionStudents.end_date IS NULL',
+                    'InstitutionStudents.start_date <=' => $endDate
+                ]
+            ];
+
+            $query
+                ->contain(['Users'])
+                ->find('withAbsence', ['date' => $this->selectedDate])
+                ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+                    'InstitutionClasses.id = '.$this->aliasField('institution_class_id')
+                ])
+                ->innerJoin(['InstitutionStudents' => 'institution_students'], [
+                    'InstitutionStudents.academic_period_id = InstitutionClasses.academic_period_id',
+                    'InstitutionStudents.institution_id = InstitutionClasses.institution_id',
+                    'InstitutionStudents.education_grade_id = '. $this->aliasField('education_grade_id'),
+                    'InstitutionStudents.student_id = '. $this->aliasField('student_id'),
+                ])
+                ->where([$this->aliasField('institution_class_id') => $selectedClass])
+                ->where($conditions);
+
+            $queryClone = clone $query;
+            $totalStudent = $queryClone->distinct(['InstitutionStudents.student_id'])->count();
+
+            $indexDashboard = 'attendance';
+
+            $dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
+
+            $present = 0;
+            $absent = 0;
+            $late = 0;
+            foreach ($dataSet as $key => $data) {
+                if ($key == 'Present') {
+                    $present = $data;
+                } elseif ($key == __('Late')) {
+                    $late = $data;
+                } else {
+                    $absent += $data;
+                }
+            }
+
+            $studentAttendanceArray = [];
+
+            if ($selectedDay != -1) {
+                $studentAttendanceArray[] = ['label' => 'No. of Students Present', 'value' => $present];
+                $studentAttendanceArray[] = ['label' => 'No. of Students Absent', 'value' => $absent];
+                $studentAttendanceArray[] = ['label' => 'No. of Students Late', 'value' => $late];
+            } else {
+                $studentAttendanceArray[] = ['label' => 'No. of Students Absent for the week', 'value' => $absent];
+                $studentAttendanceArray[] = ['label' => 'No. of Students Late for the week', 'value' => $late];
+            }
+
+            $toolbarElements[] = [
+                'name' => $indexDashboard,
+                'data' => [
+                    'model' => 'students',
+                    'modelCount' => $totalStudent,
+                    'modelArray' => $studentAttendanceArray,
+                ],
+                'options' => []
+            ];
+            $toolbarElements[] = [
+                'name' => 'Institution.Attendance/controls',
+                'data' => [],
+                'options' => []
+            ];
+
+            $this->controller->set('toolbarElements', $toolbarElements);
+
+            if ($selectedDay == -1) {
+                foreach ($this->allDayOptions as $key => $obj) {
+                    $this->ControllerAction->addField($key);
+                    $this->_fieldOrder[] = $key;
+                }
+            } else {
+                $this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
+                $this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
+                $this->_fieldOrder[] = 'type';
+                $this->_fieldOrder[] = 'reason';
+
+                $typeOptions = [self::PRESENT => __('Present')];
+                $this->typeOptions = $typeOptions + $this->absenceList;
+
+                $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
+                $this->reasonOptions = $StudentAbsenceReasons->getList()->toArray();
+            }
+        } else {
+            $settings['pagination'] = false;
+            $query
+                ->where([$this->aliasField('student_id') => 0]);
+
+            $this->ControllerAction->field('type');
+            $this->ControllerAction->field('reason');
+
+            $this->Alert->warning('StudentAttendances.noClasses');
+        }
+    }
+
+    public function indexAfterAction(Event $event, $data)
+    {
+        $this->dataCount = $data->count();
+
+        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string']);
+    }
+
+    public function findWithAbsence(Query $query, array $options)
+    {
+        $date = $options['date'];
+
+        $conditions = ['StudentAbsences.student_id = StudentAttendances.student_id'];
+        if (is_array($date)) {
+            $startDate = $date[0]->format('Y-m-d');
+            $endDate = $date[1]->format('Y-m-d');
+
+            $conditions['OR'] = [
+                'OR' => [
+                    [
+                        'StudentAbsences.end_date IS NOT NULL',
+                        'StudentAbsences.start_date >=' => $startDate,
+                        'StudentAbsences.start_date <=' => $endDate
+                    ],
+                    [
+                        'StudentAbsences.end_date IS NOT NULL',
+                        'StudentAbsences.start_date <=' => $startDate,
+                        'StudentAbsences.end_date >=' => $startDate
+                    ],
+                    [
+                        'StudentAbsences.end_date IS NOT NULL',
+                        'StudentAbsences.start_date <=' => $endDate,
+                        'StudentAbsences.end_date >=' => $endDate
+                    ],
+                    [
+                        'StudentAbsences.end_date IS NOT NULL',
+                        'StudentAbsences.start_date >=' => $startDate,
+                        'StudentAbsences.end_date <=' => $endDate
+                    ]
+                ],
+                [
+                    'StudentAbsences.end_date IS NULL',
+                    'StudentAbsences.start_date <=' => $endDate
+                ]
+            ];
+        } else {
+            $conditions['StudentAbsences.start_date <= '] = $date->format('Y-m-d');
+            $conditions['StudentAbsences.end_date >= '] = $date->format('Y-m-d');
+        }
+        return $query
+            ->select([
+                $this->aliasField('student_id'),
+                'Users.openemis_no', 'Users.first_name', 'Users.middle_name', 'Users.third_name','Users.last_name', 'Users.id',
+                'StudentAbsences.id',
+                'StudentAbsences.start_date',
+                'StudentAbsences.end_date',
+                'StudentAbsences.start_time',
+                'StudentAbsences.end_time',
+                'StudentAbsences.absence_type_id',
+                'StudentAbsences.student_absence_reason_id'
+            ])
+            ->join([
+                [
+                    'table' => 'institution_student_absences',
+                    'alias' => 'StudentAbsences',
+                    'type' => 'LEFT',
+                    'conditions' => $conditions
+                ]
+            ])
+            ->order(['Users.openemis_no'])
+            ;
+    }
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        if ($this->AccessControl->check(['Institutions', 'StudentAttendances', 'indexEdit'])) {
+            if ($this->request->query('day') != -1) {
+                if (!is_null($this->request->query('mode'))) {
+                    $toolbarButtons['back'] = $buttons['back'];
+                    if ($toolbarButtons['back']['url']['mode']) {
+                        unset($toolbarButtons['back']['url']['mode']);
+                    }
+                    $toolbarButtons['back']['type'] = 'button';
+                    $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+                    $toolbarButtons['back']['attr'] = $attr;
+                    $toolbarButtons['back']['attr']['title'] = __('Back');
+
+                    if (isset($toolbarButtons['export'])) {
+                        unset($toolbarButtons['export']);
+                    }
+                } else {
+                    $toolbarButtons['back'] = $buttons['back'];
+                    $toolbarButtons['back']['type'] = null;
+                }
+            } else { // if user selected All Days, Edit operation will not be allowed
+                if ($toolbarButtons->offsetExists('edit')) {
+                    $toolbarButtons->offsetUnset('edit');
+                }
+            }
+        }
+    }
+
+    public function indexEdit()
+    {
+        if ($this->request->is(['post', 'put'])) {
+            $requestQuery = $this->request->query;
+            $requestData = $this->request->data;
+
+            $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $alias = Inflector::underscore($StudentAbsences->alias());
+            $codeAbsenceType = array_flip($this->absenceCodeList);
+            $error = false;
+
+            if (array_key_exists($StudentAbsences->Users->alias(), $requestData)) {
+                if (array_key_exists($alias, $requestData[$StudentAbsences->Users->alias()])) {
+                    foreach ($requestData[$StudentAbsences->Users->alias()][$alias] as $key => $obj) {
+                        $timeError = false;
+                        $obj['academic_period_id'] = $requestQuery['academic_period_id'];
+                        if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
+                            $obj['student_absence_reason_id'] = 0;
+                        } elseif ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
+                            $obj['student_absence_reason_id'] = $obj['late_student_absence_reason_id'];
+                            $obj['full_day'] = 0;
+
+                            $lateTime = strtotime($obj['late_time']);
+
+                            $classId = $this->request->query['class_id'];
+
+                            $InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+                            $shiftTime = $InstitutionShift
+                                ->find('shiftTime', ['institution_class_id' => $classId])
+                                ->first();
+
+                            $startTime = $shiftTime->start_time;
+                            $endTime = $shiftTime->end_time;
+
+                            $obj['start_time'] = $startTime;
+                            $inputTime = $obj['late_time'];
+                            $obj['end_time'] = $inputTime;
+
+                            $startTimestamp = strtotime($startTime);
+                            $endTimestamp = strtotime($endTime);
+
+                            if (($lateTime < $startTimestamp) || ($lateTime > $endTimestamp)) {
+                                $key = $obj['student_id'];
+                                $timeError = true;
+                                $error = true;
+                                $this->Session->write($StudentAbsences->Users->alias().'.'.$alias.'.'.$key.'.timeError', true);
+                                $this->Session->write($StudentAbsences->Users->alias().'.'.$alias.'.'.$key.'.startTimestamp', $startTimestamp);
+                                $this->Session->write($StudentAbsences->Users->alias().'.'.$alias.'.'.$key.'.endTimestamp', $endTimestamp);
+                            }
+                        }
+
+                        if ($obj['absence_type_id'] == self::PRESENT) {
+                            if (isset($obj['id'])) {
+                                $StudentAbsences->deleteAll([
+                                    $StudentAbsences->aliasField('id') => $obj['id']
+                                ]);
+                            }
+                        } else {
+                            if (!$timeError) {
+                                $entity = $StudentAbsences->newEntity($obj);
+                                if ($StudentAbsences->save($entity)) {
+                                } else {
+                                    $this->log($entity->errors(), 'debug');
+                                }
+                            } else {
+                                $this->Alert->error('general.edit.failed', ['reset' => true]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
+        $url = array_merge($url, $this->request->query, $this->request->pass);
+        $url[0] = 'index';
+        if (isset($url['mode']) && !$error) {
+            unset($url['mode']);
+        }
+
+        return $this->controller->redirect($url);
+    }
 }
