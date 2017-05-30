@@ -685,13 +685,6 @@ class UserGroupsTable extends ControllerActionTable
         // delete all areas if no areas remains in the table
         if (!array_key_exists('areas', $data[$this->alias()])) {
             $data[$this->alias()]['areas'] = [];
-        } else {
-            $areas = [];
-            foreach ($data[$this->alias()]['areas'] as $area) {
-                $areas[] = $area['id'];
-            }
-            $data[$this->alias()]['areas'] = [];
-            $data[$this->alias()]['areas']['_ids'] = $areas;
         }
 
         if (!array_key_exists('institutions', $data[$this->alias()])) {
@@ -708,8 +701,12 @@ class UserGroupsTable extends ControllerActionTable
         // Required by patchEntity for associated data
         $newOptions = [];
         $newOptions['associated'] = [
-            'Areas',
-            'Institutions',
+            'Areas' => [
+                'validate' => false
+            ],
+            'Institutions' => [
+                'validate' => false
+            ],
             'Users'
         ];
 
