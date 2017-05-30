@@ -1451,19 +1451,52 @@ class StaffTable extends ControllerActionTable
                 });
     }
 
+    // used for student report cards
     public function findPrincipalEditPermissions(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $staffId = $options['staff_id'];
 
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $principalRoleId = $SecurityRoles->getPrincipalRoleId();
+
         return $query
-            ->innerJoinWith('Positions.StaffPositionTitles.SecurityRoles')
-            ->innerJoinWith('StaffStatuses')
+            ->innerJoinWith('SecurityGroupUsers')
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('staff_id') => $staffId,
-                'StaffStatuses.code' => 'ASSIGNED',
-                'SecurityRoles.code' => 'PRINCIPAL'
+                'SecurityGroupUsers.security_role_id' => $principalRoleId
+            ]);
+    }
+
+    // used for student report cards
+    public function findHomeroomEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $classId = $options['institution_class_id'];
+        $staffId = $options['staff_id'];
+
+        $Institution = TableRegistry::get('Institution.Institutions');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+        $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
+        $securityGroupId = $Institution->get($institutionId)->security_group_id;
+
+        return $query
+            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                $InstitutionClasses->aliasField('id') => $classId
+            ])
+            ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+                $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+            ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_id') => $staffId
             ]);
     }
 
