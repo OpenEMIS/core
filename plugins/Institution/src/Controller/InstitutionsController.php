@@ -970,20 +970,20 @@ class InstitutionsController extends AppController
 
             //Institutions By Year
             $params = array(
-                'conditions' => array('area_id IN' => $areas)
+                'conditions' => array('area_id IN' => $areas, 'id != ' => $id)
             );
             $highChartDatas[] = $Institutions->getHighChart('number_of_institutions_by_year', $params);
 
             //Staffs By Year, only shows assigned staff
             $params = array(
-                'associatedConditions' => array($Institutions->aliasField('area_id IN ') => $areas),
+                'associatedConditions' => array($Institutions->aliasField('area_id IN ') => $areas, $Institutions->aliasField('id != ') => $id),
                 'conditions' => array('staff_status_id' => $assignedStatus)
             );
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
 
             //Staffs By Position Title for current year, only shows assigned staff
             $params = array(
-                'associatedConditions' => array($Institutions->aliasField('area_id IN ') => $areas),
+                'associatedConditions' => array($Institutions->aliasField('area_id IN ') => $areas, $Institutions->aliasField('id != ') => $id),
                 'conditions' => array('staff_status_id' => $assignedStatus)
             );
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_position', $params);
