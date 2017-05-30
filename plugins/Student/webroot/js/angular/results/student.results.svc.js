@@ -185,15 +185,15 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         columnDefs.push({
             headerName: "Subject",
             field: "subject",
-            filterParams: filterParams
+            filterParams: filterParams,
+            pinned: 'left'
         });
 
         angular.forEach(assessmentPeriods, function(assessmentPeriod, key) {
             var assessmentPeriodField = 'period_' + assessmentPeriod.id;
             var weightField = 'weight_' + assessmentPeriod.id;
-
             var columnDef = {
-                headerName: assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
+                headerName: assessmentPeriod.academic_term + " - " + assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
                 field: assessmentPeriodField,
                 filter: "number",
                 filterParams: filterParams,
