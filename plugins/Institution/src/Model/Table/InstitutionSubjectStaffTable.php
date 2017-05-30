@@ -190,6 +190,7 @@ class InstitutionSubjectStaffTable extends AppTable
         // }
     }
 
+    // used for student report cards
     public function findTeacherEditPermissions(Query $query, array $options)
     {
         $reportCardId = $options['report_card_id'];

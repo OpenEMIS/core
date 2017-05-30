@@ -13,10 +13,10 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         ReportCardCommentCodesTable: 'ReportCard.ReportCardCommentCodes',
         InstitutionStudentsReportCardsTable: 'Institution.InstitutionStudentsReportCards',
         InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments',
-        InstitutionClassesTable: 'Institution.InstitutionClasses',
         InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents',
         StaffUserTable: 'Institution.StaffUser',
         StaffTable: 'Institution.Staff',
+        HomeroomStaffTable: 'Institution.Staff',
         InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff'
     };
 
@@ -61,10 +61,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 staff_id: currentUserId
             });
 
-        var homeroomTeacherPermission = InstitutionClassesTable
+        var homeroomTeacherPermission = HomeroomStaffTable
             .select()
-            .where({
-                id: classId,
+            .find('HomeroomEditPermissions', {
+                institution_id: institutionId,
+                institution_class_id: classId,
                 staff_id: currentUserId
             });
 
