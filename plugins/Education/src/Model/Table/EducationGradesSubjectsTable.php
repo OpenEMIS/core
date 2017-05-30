@@ -65,6 +65,20 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $query->where([$this->aliasField('education_grade_id') => $selectedGrade]);
 
         $extra['auto_contain_fields'] = ['EducationSubjects' => ['code']];
+
+        //check for grades setup, if nothing is set, then hide the add button to prevent error
+        $educationGradeCount = $this->EducationGrades->find('visible');
+
+        if (!empty($selectedProgramme)) {
+            $educationGradeCount->where([
+                $this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme
+            ]);
+        }
+
+        if ($educationGradeCount->count() < 1) {
+            $this->Alert->warning('EducationStructure.noGradesSetup');
+            unset($extra['toolbarButtons']['add']);
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
