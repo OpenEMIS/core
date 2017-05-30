@@ -912,7 +912,10 @@ class InstitutionsController extends AppController
         // $this->ControllerAction->model->action = $this->request->action;
 
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $classification = $Institutions->get($id)->classification;
+        $InstitutionData = $Institutions->get($id);
+        $classification = $InstitutionData->classification;
+        $areaId = $InstitutionData->area_id;
+
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
@@ -951,10 +954,37 @@ class InstitutionsController extends AppController
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
             );
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_type', $params);
-        } elseif ($classification == $Institutions::NON_ACADEMIC) {
+
+        } else if ($classification == $Institutions::NON_ACADEMIC) {
+            // get institution area and all children areas
+            $Areas = TableRegistry::get('Area.Areas');
+            $areas = $Areas->find()
+                ->where([
+                    'OR' => [
+                        $Areas->aliasField('id') => $areaId,
+                        $Areas->aliasField('parent_id') => $areaId
+                    ]
+                ])
+                ->extract('id')
+                ->toArray();
+
+            //Institutions By Year
+            $params = array(
+                'conditions' => array('area_id IN' => $areas)
+            );
+            $highChartDatas[] = $Institutions->getHighChart('number_of_institutions_by_year', $params);
+
+            //Staffs By Year, only shows assigned staff
+            $params = array(
+                'associatedConditions' => array($Institutions->aliasField('area_id IN ') => $areas),
+                'conditions' => array('staff_status_id' => $assignedStatus)
+            );
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
+
             //Staffs By Position Title for current year, only shows assigned staff
             $params = array(
-                'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
+                'associatedConditions' => array($Institutions->aliasField('area_id IN ') => $areas),
+                'conditions' => array('staff_status_id' => $assignedStatus)
             );
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_position', $params);
         }
