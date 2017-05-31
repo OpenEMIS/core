@@ -385,6 +385,7 @@ class AssessmentResultsTable extends AppTable
                 ->innerJoin(
                     [$this->alias() => $this->table()],
                     [
+                        $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
                         $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
                         $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
                         $this->aliasField('institution_class_id') => $params['class_id']
@@ -400,8 +401,10 @@ class AssessmentResultsTable extends AppTable
                 ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
                 ->where([
                     $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id']
                 ])
                 ->group([
+                    $AssessmentItemResults->aliasField('institution_id'),
                     $AssessmentItemResults->aliasField('academic_period_id'),
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
