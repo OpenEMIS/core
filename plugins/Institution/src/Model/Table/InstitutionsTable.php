@@ -559,10 +559,15 @@ class InstitutionsTable extends ControllerActionTable
 	// For Dashboard (Institution Dashboard and Home Page)
     public function getNumberOfInstitutionsByYear($params=[])
     {
-        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $associatedConditions = isset($params['associatedConditions']) ? $params['associatedConditions'] : [];
+        foreach ($associatedConditions as $key => $value) {
+            $_conditions[$key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -609,6 +614,7 @@ class InstitutionsTable extends ControllerActionTable
 	                    'valueField' => 'total'
 	                ])
                 	->matching('Genders')
+                    ->matching('Areas')
 	                ->select([
 	                    'gender_name' => 'Genders.name',
 	                    'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('id'))
