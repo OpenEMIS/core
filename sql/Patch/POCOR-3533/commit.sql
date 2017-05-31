@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `report_card_comment_codes` (
  `created_user_id` int(11) NOT NULL,
  `created` datetime NOT NULL,
  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This is a field option table containing the list of user-defined comment codes that can be used for student report cards';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This is a field option table containing the list of user-defined comment codes that can be used for student report cards';
 
 -- security_functions
 UPDATE `security_functions`

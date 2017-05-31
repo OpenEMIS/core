@@ -29,7 +29,9 @@ class ExcelReportBehavior extends Behavior
         'download' => true,
         'save' => false,
         'wrapText' => false,
-        'lockSheets' => false
+        'lockSheets' => false,
+        'templateTable' => null,
+        'templateTableKey' => null
     ];
 
     // function name and keyword pairs
