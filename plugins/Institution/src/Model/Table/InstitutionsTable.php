@@ -140,9 +140,19 @@ class InstitutionsTable extends ControllerActionTable
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
-        $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
+        $this->addBehavior('HighChart', [
+        	'number_of_institutions_by_year' => [
+                '_function' => 'getNumberOfInstitutionsByYear',
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Years')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
+        	'institutions' => [
+        		'_function' => 'getNumberOfInstitutionsByModel'
+        	]
+        ]);
         $this->addBehavior('Import.ImportLink');
-
+        $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Institution.AdvancedProgrammeSearch');
 
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
@@ -543,6 +553,85 @@ class InstitutionsTable extends ControllerActionTable
             $params['dataSet'] = $dataSet;
         }
         unset($institutionRecords);
+        return $params;
+    }
+
+	// For Dashboard (Institution Dashboard and Home Page)
+    public function getNumberOfInstitutionsByYear($params=[])
+    {
+        $_conditions = [];
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $associatedConditions = isset($params['associatedConditions']) ? $params['associatedConditions'] : [];
+        foreach ($associatedConditions as $key => $value) {
+            $_conditions[$key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $currentPeriodId = $AcademicPeriod->getCurrent();
+
+        $genderOptions = $this->Genders->getList();
+        $dataSet = new ArrayObject();
+        foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = ['name' => __($value), 'data' => []];
+        }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+		// only show one year before and after the current academic period (if configured)
+        $academicPeriodList = [];
+        $found = false;
+        foreach ($AcademicPeriod->getYearList() as $periodId => $periodName) {
+            if ($found) {
+                $academicPeriodList[$periodId] = $periodName;
+                break;
+            }
+            if ($periodId == $currentPeriodId) {
+                $academicPeriodList[$periodId] = $periodName;
+                $found = true;
+            } else {
+                $academicPeriodList = [$periodId => $periodName];
+            }
+        }
+        $academicPeriodList = array_reverse($academicPeriodList, true);
+
+        foreach ($academicPeriodList as $periodId => $periodName) {
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$periodName] = 0;
+                }
+            }
+
+            foreach ($genderOptions as $genderId => $genderName) {
+                $queryCondition = array_merge(['Genders.id' => $genderId], $_conditions);
+
+                $institutionsByYear = $this
+                    ->find('AcademicPeriod', ['academic_period_id' => $periodId, 'start_date_field' => 'date_opened', 'end_date_field' => 'date_closed'])
+                    ->find('list',[
+	                    'keyField' => 'gender_name',
+	                    'valueField' => 'total'
+	                ])
+                	->matching('Genders')
+                    ->matching('Areas')
+	                ->select([
+	                    'gender_name' => 'Genders.name',
+	                    'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('id'))
+	                ])
+	                ->where($queryCondition)
+	                ->group(['gender_name'])
+	                ->hydrate(false)
+	                ->toArray();
+
+                if (!empty($institutionsByYear)) {
+                    $dataSet[$genderName]['data'][$periodName] = $institutionsByYear[$genderName];
+                    $dataSet['Total']['data'][$periodName] += $institutionsByYear[$genderName];
+                }
+            }
+        }
+
+        $params['dataSet'] = $dataSet->getArrayCopy();
         return $params;
     }
 
