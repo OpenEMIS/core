@@ -304,7 +304,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                     'number': userRecord['identity_number']
                 }];
             }
-            console.log(userRecord);
             StaffUser.reset();
             StaffUser.save(userRecord)
             .then(function(studentRecord) {
