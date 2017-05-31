@@ -38,6 +38,8 @@ class AssessmentResultsTable extends AppTable
         ]);
 
         $this->addBehavior('CustomExcel.ExcelReport', [
+            'templateTable' => 'Assessments.Assessments',
+            'templateTableKey' => 'assessment_id',
             'variables' => [
                 'Assessments',
                 // 'AssessmentItems',
