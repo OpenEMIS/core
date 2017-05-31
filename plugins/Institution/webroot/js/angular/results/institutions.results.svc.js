@@ -1,5 +1,5 @@
-angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc) {
+angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc', 'alert.svc'])
+.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc, AlertSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
@@ -401,6 +401,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     cellClass: function(params) {
                         studentStatusId = params.data.student_status_id;
                         var highlightClass = 'oe-cell-highlight';
+                        if (params.data.save_error) {
+                            highlightClass += ' oe-cell-error';
+                        }
                         return (studentStatusId == enrolledStatus) ? highlightClass : false;
                     },
                     editable: function(params) {
@@ -431,6 +434,10 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
+                    cellClass: function(params) {
+                        var errorClass = 'oe-cell-error';
+                        return (params.data.save_error) ? errorClass : false;
+                    },
                     cellRenderer: function(params) {
                         studentStatusId = params.data.student_status_id;
 
@@ -475,8 +482,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 _results[studentId][periodId]['gradingOptionId'] = newValue;
                                 vm.saveSingleRecordData(params, extra)
                                 .then(function(response) {
+                                    params.data.save_error = false;
+                                    params.api.refreshView();
+
                                 }, function(error) {
+                                    params.data.save_error = true;
                                     console.log(error);
+                                    AlertSvc.error(params.context._scope, 'There was an error when saving the result');
+                                    params.api.refreshView();
                                 });
                             });
 
@@ -565,6 +578,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     cellClass: function(params) {
                         studentStatusId = params.data.student_status_id;
                         var highlightClass = 'oe-cell-highlight';
+                        if (params.data.save_error == true) {
+                            highlightClass += ' oe-cell-error';
+                        }
                         return (studentStatusId == enrolledStatus) ? highlightClass : false;
                     },
                     cellRenderer: function(params) {
@@ -653,8 +669,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 _results[studentId][periodId]['duration'] = durationAsFloat;
                                 vm.saveSingleRecordData(params, extra)
                                 .then(function(response) {
+                                    params.data.save_error = false;
+                                    params.api.refreshView();
+
                                 }, function(error) {
+                                    params.data.save_error = true;
                                     console.log(error);
+                                    AlertSvc.error(params.context._scope, 'There was an error when saving the result');
+                                    params.api.refreshView();
                                 });
                             });
                             return eCell;
@@ -722,7 +744,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     student_status_id: subjectStudent.student_status_id,
                                     student_status_name: subjectStudent.student_status.name,
                                     total_mark: subjectStudent.total_mark,
-                                    is_dirty: false
+                                    is_dirty: false,
+                                    save_error: false
                                 };
 
                                 var periodWeight = 0;
