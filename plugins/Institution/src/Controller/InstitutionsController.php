@@ -252,6 +252,18 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCases']);
     }
+    public function ReportCardComments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
+    }
+    public function ReportCardStatuses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
+    }
+    public function InstitutionStudentsReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
+    }
     // End
 
     // AngularJS
@@ -292,6 +304,12 @@ class InstitutionsController extends AppController
         $this->set('excelUrl', Router::url($url));
 
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function Comments()
+    {
+        $this->set('_edit', $this->AccessControl->check(['Institutions', 'Comments', 'edit']));
+        $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
     // End
 
@@ -692,6 +710,12 @@ class InstitutionsController extends AppController
                     }
                 }
                 break;
+            case 'Comments':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'institutions.comments.ctrl',
+                    'institutions.comments.svc'
+                ]);
             case 'Classes':
                 if (isset($this->request->pass[0])) {
                     if ($this->request->param('pass')[0] == 'edit') {
@@ -1132,6 +1156,7 @@ class InstitutionsController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
+            'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
