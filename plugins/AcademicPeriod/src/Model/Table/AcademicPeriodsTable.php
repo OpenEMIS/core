@@ -59,10 +59,17 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true]);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]);
+        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]);
+        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true]);
+
         $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Tree');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -109,23 +116,25 @@ class AcademicPeriodsTable extends AppTable
                     $academicPeriodId = $extra['primaryKey']['id'];
 
                     $weeks = $this->getAttendanceWeeks($academicPeriodId);
-                    $weekStr = 'Week %d (%s - %s)';
+                    $weekStr = __('Week') . ' %d (%s - %s)';
                     $currentWeek = null;
 
                     foreach ($weeks as $index => $dates) {
                         $startDay = $dates[0]->format('Y-m-d');
                         $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
                         if ($todayDate >= $startDay && $todayDate <= $endDay) {
                             $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            $weekAttr['current'] = true;
                             $currentWeek = $index;
                         } else {
-                            $weekStr = 'Week %d (%s - %s)';
+                            $weekStr = __('Week') . ' %d (%s - %s)';
                         }
-                        $weekOptions[$index] = [
-                            'name' => sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1])),
-                            'start_day' => $startDay,
-                            'end_day' => $endDay
-                        ];
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekOptions[$index] = $weekAttr;
                     }
                 }
 
@@ -187,17 +196,16 @@ class AcademicPeriodsTable extends AppTable
         return $buttons;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
         $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Room', 'Shift'];
+        $shells = ['Infrastructure', 'Shift'];
         if ($canCopy) {
             // only trigger shell to copy data if is not empty
             if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
                 $copyFrom = $entity->copy_data_from;
                 $copyTo = $entity->id;
-
                 foreach ($shells as $shell) {
                     $this->triggerCopyShell($shell, $copyFrom, $copyTo);
                 }
@@ -212,11 +220,19 @@ class AcademicPeriodsTable extends AppTable
 
         $broadcaster = $this;
         $listeners = [];
+        $listeners[] = TableRegistry::get('Institution.InstitutionLands');
+        $listeners[] = TableRegistry::get('Institution.InstitutionBuildings');
+        $listeners[] = TableRegistry::get('Institution.InstitutionFloors');
         $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
 
         if (!empty($listeners)) {
             $this->dispatchEventToModels('Model.AcademicPeriods.afterSave', [$entity], $broadcaster, $listeners);
         }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        $this->addAfterSave($event, $entity, $requestData);
     }
 
     public function beforeAction(Event $event)
@@ -839,7 +855,7 @@ class AcademicPeriodsTable extends AppTable
     public function triggerCopyShell($shellName, $copyFrom, $copyTo)
     {
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
-        $logs = ROOT . DS . 'logs' . DS . 'copy.log & echo $!';
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'_copy.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         $pid = exec($shellCmd);
         Log::write('debug', $shellCmd);

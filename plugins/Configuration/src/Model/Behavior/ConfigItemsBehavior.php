@@ -10,8 +10,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 
-class ConfigItemsBehavior extends Behavior {
-	private $model;
+class ConfigItemsBehavior extends Behavior
+{
+    private $model;
     private $selectedType;
 
     public function implementedEvents()
@@ -24,43 +25,59 @@ class ConfigItemsBehavior extends Behavior {
         return $events;
     }
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->model = $this->_table;
     }
 
-	private function isCAv4() {
-		return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
-	}
+    private function isCAv4()
+    {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+    }
 
-	public function buildSystemConfigFilters() {
-		$toolbarElements = [
-			['name' => 'Configuration.controls', 'data' => [], 'options' => []]
-		];
-		$this->model->controller->set('toolbarElements', $toolbarElements);
+    public function buildSystemConfigFilters()
+    {
+        $toolbarElements = [
+            ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
+        ];
+        $this->model->controller->set('toolbarElements', $toolbarElements);
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-		$typeOptions = array_keys($ConfigItem->find('list', ['keyField' => 'type', 'valueField' => 'type'])->order('type')->toArray());
+        $typeList = $ConfigItem
+            ->find('list', [
+                'keyField' => 'type',
+                'valueField' => 'type'
+            ])
+            ->order('type')
+            ->toArray();
+        $typeOptions = array_keys($typeList);
 
-		$selectedType = $this->model->queryString('type', $typeOptions);
+        $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
-		$buffer = $typeOptions;
-		foreach ($buffer as $key => $value) {
-			$result = $ConfigItem->find()->where([$ConfigItem->aliasField('type') => $value, $ConfigItem->aliasField('visible') => 1])->count();
-			if (!$result) {
-				unset($typeOptions[$key]);
-			}
-		}
-		$this->model->request->query['type_value'] = $typeOptions[$selectedType];
-		$this->model->advancedSelectOptions($typeOptions, $selectedType);
-		$this->model->controller->set('typeOptions', $typeOptions);
+        $buffer = $typeOptions;
+        foreach ($buffer as $key => $value) {
+            $result = $ConfigItem
+                ->find()
+                ->where([
+                    $ConfigItem->aliasField('type') => $value,
+                    $ConfigItem->aliasField('visible') => 1
+                ])
+                ->count();
+            if (!$result) {
+                unset($typeOptions[$key]);
+            }
+        }
+        $this->model->request->query['type_value'] = $typeOptions[$selectedType];
+        $this->model->advancedSelectOptions($typeOptions, $selectedType);
+        $this->model->controller->set('typeOptions', $typeOptions);
         $controlElement = $toolbarElements[0];
         $controlElement['data'] = ['typeOptions' => $typeOptions];
         $controlElement['order'] = 1;
 
         return $controlElement;
-	}
+    }
 
-	public function checkController()
-	{
+    public function checkController()
+    {
         $typeValue = $this->model->request->query['type_value'];
         $typeValue = Inflector::camelize($typeValue, ' ');
         $action = '';
@@ -74,16 +91,20 @@ class ConfigItemsBehavior extends Behavior {
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
             $url['action'] = $typeValue;
             $this->model->controller->redirect($url);
-        } else if ($action != $typeValue && $action != 'index') {
-            $this->model->controller->redirect(['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => 'index', 'type' => $this->selectedType]);
+        } elseif ($action != $typeValue && $action != 'index') {
+            $this->model->controller->redirect([
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'index',
+                'type' => $this->selectedType]);
         }
-	}
+    }
     public function beforeAction(Event $event, $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
     }
 
-	public function indexBeforeAction(Event $event, $extra)
+    public function indexBeforeAction(Event $event, $extra)
     {
         if ($this->isCAv4()) {
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
@@ -92,5 +113,5 @@ class ConfigItemsBehavior extends Behavior {
             $this->buildSystemConfigFilters();
             $this->checkController();
         }
-	}
+    }
 }

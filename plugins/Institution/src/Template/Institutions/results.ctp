@@ -40,13 +40,12 @@ $this->start('toolbar');
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
             <i class="fa kd-back"></i>
         </button>
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="onSaveClick()">
-            <i class="fa fa-save"></i>
-        </button>
         <!-- End -->
     <?php endif; ?>
-
     <?php if ($_excel) : ?>
+        <?php if (isset($customExcel)) : ?>
+            <a href="<?=$customExcel ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-table"></i></button></a>
+        <?php endif;?>
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
     <?php endif; ?>
 <?php
@@ -69,7 +68,7 @@ $roles = '[' . implode(",", $_roles) . ']';
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="{{subject.name}}" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
+                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>

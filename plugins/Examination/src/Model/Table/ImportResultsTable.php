@@ -69,25 +69,29 @@ class ImportResultsTable extends AppTable
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
-        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('weight')];
+        $Examinations = TableRegistry::get('Examination.Examinations');
+
+        $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjects');
+        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('weight'), $Examinations->aliasField('code')];
         // show distinct list of subjects which are added as exam items and subject weight is more than zero
         $modelData = $ExaminationCentreSubjects->find('all')
             ->select($selectFields)
             ->matching($lookedUpTable->alias())
+            ->matching($Examinations->alias())
             ->where([$lookedUpTable->aliasField('weight > ') => 0])
             ->group([$ExaminationCentreSubjects->aliasField('examination_item_id')])
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol];
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Examination Code')];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->_matchingData[$lookedUpTable->alias()]->name,
                     $row->_matchingData[$lookedUpTable->alias()]->code,
-                    $row->_matchingData[$lookedUpTable->alias()]->$lookupColumn
+                    $row->_matchingData[$lookedUpTable->alias()]->$lookupColumn,
+                    $row->_matchingData[$Examinations->alias()]->code
                 ];
             }
         }
@@ -146,16 +150,16 @@ class ImportResultsTable extends AppTable
                     $examinationItemEntity = $examinationItemResults->first();
                     $tempRow['education_subject_id'] = $examinationItemEntity->education_subject_id;
 
-                    $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
+                    $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
                     $registeredStudentQuery = $ExaminationCentreStudents
                         ->find()
                         ->where([
                             $ExaminationCentreStudents->aliasField('examination_id') => $tempRow['examination_id'],
-                            $ExaminationCentreStudents->aliasField('examination_item_id') => $tempRow['examination_item_id'],
                             $ExaminationCentreStudents->aliasField('student_id') => $tempRow['student_id']
-                        ]);
+                        ])
+                        ->all();
 
-                    if ($registeredStudentQuery->count() == 0) {
+                    if ($registeredStudentQuery->isEmpty()) {
                         // Student is registered to the exam
                         $rowInvalidCodeCols['student_id'] = __('Student is not registered for the Examination');
                         return false;

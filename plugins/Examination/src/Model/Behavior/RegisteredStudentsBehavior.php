@@ -14,12 +14,15 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 
 class RegisteredStudentsBehavior extends Behavior {
+
+    private $identityType;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
         $model = $this->_table;
 
         $model->addBehavior('User.AdvancedNameSearch');
-        $model->toggle('edit', false); // temporary not allow edit
+        $model->toggle('edit', false);
         $model->toggle('remove', false);
 	}
 
@@ -36,6 +39,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['ControllerAction.Model.unregister'] = 'unregister';
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
+        $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 20];
         $events['ControllerAction.Model.onUpdateFieldAcademicPeriodId'] = 'onUpdateFieldAcademicPeriodId';
         $events['ControllerAction.Model.onUpdateFieldExaminationId'] = 'onUpdateFieldExaminationId';
         $events['ControllerAction.Model.onUpdateFieldOpenemisNo'] = 'onUpdateFieldOpenemisNo';
@@ -91,22 +95,22 @@ class RegisteredStudentsBehavior extends Behavior {
                 $requestData = $request->data;
 
                 $studentId = $entity->student_id;
-                $educationGradeId = $entity->education_grade_id;
-                $academicPeriodId = $entity->academic_period_id;
                 $examinationId = $entity->examination_id;
                 $examinationCentreId = $entity->examination_centre_id;
 
-                $result = $model->deleteAll([
-                    'student_id' => $studentId,
-                    'education_grade_id' => $educationGradeId,
-                    'academic_period_id' => $academicPeriodId,
-                    'examination_id' => $examinationId
-                ]);
+                $examStudentEntity = $model->find()
+                    ->where([
+                        $model->aliasField('student_id') => $studentId,
+                        $model->aliasField('examination_id') => $examinationId,
+                        $model->aliasField('examination_centre_id') => $examinationCentreId,
+                    ])
+                    ->first();
+                $result = $model->delete($examStudentEntity);
 
                 if ($result) {
                     // event to delete all associated records for student
-                    $listeners[] = TableRegistry::get('Examination.ExaminationCentreStudents');
-                    $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $academicPeriodId, $examinationId, $examinationCentreId], $this, $listeners);
+                    $listeners[] = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+                    $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $examinationId, $examinationCentreId], $this, $listeners);
 
                     $model->Alert->success('general.delete.success', ['reset' => 'override']);
                 } else {
@@ -121,6 +125,10 @@ class RegisteredStudentsBehavior extends Behavior {
         }
 
         $this->setupFields($entity, $extra);
+
+        $model->field('repeated', ['visible' => false]);
+        $model->field('transferred', ['visible' => false]);
+        $model->field('identity_number', ['visible' => false]);
 
         if (!$entity) {
             $event->stopPropagation();
@@ -143,6 +151,9 @@ class RegisteredStudentsBehavior extends Behavior {
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $model = $this->_table;
         // sort attr is required by sortWhitelist
+        $model->field('registration_number', [
+            'sort' => ['field' => 'registration_number']
+        ]);
         $model->field('openemis_no', [
             'sort' => ['field' => 'Users.openemis_no']
         ]);
@@ -152,10 +163,12 @@ class RegisteredStudentsBehavior extends Behavior {
         ]);
         $model->field('date_of_birth', ['type' => 'date']);
         $model->field('gender_id');
-        $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['visible' => false]);
         $model->field('examination_id', ['visible' => false]);
-        $model->field('education_subject_id', ['visible' => false]);
+
+        $model->field('identity_number');
+        $model->field('repeated');
+        $model->field('transferred');
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -184,7 +197,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
-        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        $sortList = ['Users.openemis_no', 'Users.first_name', 'registration_number'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -204,7 +217,6 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->aliasField('examination_id'),
                 $model->aliasField('registration_number'),
                 $model->aliasField('examination_centre_id'),
-                $model->aliasField('examination_item_id'),
                 $model->Users->aliasField('openemis_no'),
                 $model->Users->aliasField('first_name'),
                 $model->Users->aliasField('middle_name'),
@@ -213,11 +225,13 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->Users->aliasField('preferred_name'),
                 $model->Users->aliasField('date_of_birth'),
                 $model->Users->aliasField('identity_number'),
+                $model->Users->MainIdentityTypes->aliasField('name'),
                 $model->Users->Genders->aliasField('name'),
+                $model->Users->MainNationalities->aliasField('name'),
                 $model->Institutions->aliasField('code'),
                 $model->Institutions->aliasField('name')
             ])
-            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users.Genders'], true)
+            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users.Genders', 'Users.MainNationalities', 'Users.MainIdentityTypes'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
@@ -255,13 +269,25 @@ class RegisteredStudentsBehavior extends Behavior {
         $session->delete($successSessionKey);
         $session->delete($errorSessionKey);
         $session->delete($warningSessionKey);
+
+        $model->field('tooltip_column');
+        $model->field('nationality');
+        $model->field('identity_type');
+
+        $model->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_type', 'identity_number', 'repeated', 'transferred', 'tooltip_column', 'institution_id']);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $model = $this->_table;
 
         $query
-            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'])
+            ->contain([
+                'Users.SpecialNeeds.SpecialNeedTypes', 
+                'Users.Genders', 
+                'Institutions', 
+                'Users.Nationalities.NationalitiesLookUp',
+                'Users.MainIdentityTypes'
+            ])
             ->matching('AcademicPeriods')
             ->matching('Examinations');
     }
@@ -296,83 +322,164 @@ class RegisteredStudentsBehavior extends Behavior {
             $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         }
 
-
         $this->setupFields($entity, $extra);
+
+        if ($entity->user->has('main_identity_type') && !empty($entity->user->main_identity_type)) {
+            $this->identityType = $entity->user->main_identity_type->name;
+        }
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) {
-        $process = function ($model, $entity) use ($requestData) {
-            $conn = ConnectionManager::get('default');
-            $conn->begin();
-
-            $studentId = $entity->student_id;
-            $institutionId = $entity->institution_id;
-            $educationGradeId = $entity->education_grade_id;
-            $academicPeriodId = $entity->academic_period_id;
-            $examinationId = $entity->examination_id;
-
-            $deleteStudentEntity = $this->find()
-                ->where([$this->aliasField('student_id') => $studentId, $this->aliasField('examination_id') => $examinationId])
-                ->group([$this->aliasField('student_id')])
-                ->first();
-
-            if (!empty($deleteStudentEntity)) {
-                $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
-                $ExamCentreStudents->delete($deleteStudentEntity);
-            }
-
-            if (array_key_exists($model->alias(), $requestData) && array_key_exists('education_subjects', $requestData[$model->alias()])) {
-                $newEntities = [];
-                foreach ($requestData[$model->alias()]['education_subjects'] as $key => $obj) {
-                    $subjectId = $obj['education_subject_id'];
-                    $examinationCentreId = $obj['examination_centre_id'];
-                    $data = [
-                        'student_id' => $studentId,
-                        'institution_id' => $institutionId,
-                        'education_grade_id' => $educationGradeId,
-                        'academic_period_id' => $academicPeriodId,
-                        'examination_id' => $examinationId,
-                        'education_subject_id' => $subjectId
-                    ];
-
-                    if (!empty($examinationCentreId)) {
-                        $data['examination_centre_id'] = $examinationCentreId;
-                        $newEntities[] = $model->newEntity($data);
-                    }
-                }
-
-                $result = $model->saveMany($newEntities);
-                if ($result) {
-                    $conn->commit();
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+    {
+        if ($this->_table->action == 'view') {
+            if ($field == 'identity_number') {
+                if ($this->identityType) {
+                    return __($this->identityType);
                 } else {
-                    $conn->rollback();
-                    Log::write('debug', $newEntities->errors());
+                    return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
                 }
-
-                return $result;
             }
-        };
-
-        return $process;
+        }
+        
+        if ($field == 'tooltip_column') {
+            return '';
+        }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra) {
-        $model = $this->_table;
+    public function onGetRepeated(Event $event, Entity $entity)
+    {  
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.success';
-        $session->write($sessionKey, 'general.edit.success');
+        $statuses = $StudentStatuses->findCodeList();
+        $repeatedStatus = $statuses['REPEATED'];
 
-        $url = $model->url('index', 'QUERY');
-        $url['academic_period_id'] = $entity->academic_period_id;
-        $url['examination_id'] = $entity->examination_id;
+        if ($entity) {
+            if ($entity->extractOriginal(['student_id'])) {
+                $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+            }
 
-        $event->stopPropagation();
-        return $model->controller->redirect($url);
+            if ($entity->academic_period_id) {
+                $academicPeriod = $entity->academic_period_id;
+            }
+            
+            $institutionId = '';
+            if ($entity->institution) {
+                $institutionId = $entity->institution->id;
+            }
+
+            $educationGrade = '';
+            if ($entity->education_grade) {
+                $educationGrade = $entity->education_grade->id;
+            }
+        }
+
+        $repeatStudent = '';
+        if ($studentId && $educationGrade && $repeatedStatus) {
+
+            //check whether there is any repeat status on student history for the same grade.
+            $repeatStudent = $InstitutionStudents
+                            ->find()
+                            ->where([
+                                $InstitutionStudents->aliasField('student_id') => $studentId,
+                                $InstitutionStudents->aliasField('education_grade_id') => $educationGrade,
+                                $InstitutionStudents->aliasField('student_status_id') => $repeatedStatus //repeated
+                            ])
+                            ->count();
+        }
+
+        if ($repeatStudent) {
+            return __('Yes');
+        } else {
+            return __('No');
+        }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-        $this->setupFields($entity, $extra);
+    public function onGetTransferred(Event $event, Entity $entity)
+    {
+        //check whether there is transfer record for the current academic year that already approved.
+        $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+        
+        if ($entity) {
+            if ($entity->extractOriginal(['student_id'])) {
+                $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+            }
+
+            if ($entity->academic_period_id) {
+                $academicPeriod = $entity->academic_period_id;
+            }
+            
+            $institutionId = '';
+            if ($entity->institution) {
+                $institutionId = $entity->institution->id;
+            }
+        }
+
+        $Admission = '';
+        if ($studentId && $academicPeriod && $institutionId) {
+
+            $Admission = $StudentAdmission
+                        ->find()
+                        ->where([
+                            $StudentAdmission->aliasField('student_id') => $studentId,
+                            $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
+                            $StudentAdmission->aliasField('academic_period_id') => $academicPeriod,
+                            $StudentAdmission->aliasField('type') => 2, //transfer type
+                            $StudentAdmission->aliasField('status') => 1 //status is approved
+                        ])
+                        ->contain('Institutions')
+                        ->order($StudentAdmission->aliasField('created DESC'))
+                        ->first();
+        }
+
+        $this->transferred = [];
+        if (!empty($Admission)) {
+            $this->transferred = [true, $Admission->institution->code_name];
+            return  __('Yes');
+        } else {
+            return __('No');
+        }
+    }
+
+    public function onGetTooltipColumn(Event $event, Entity $entity)
+    {
+        if (!empty($this->transferred)) {
+            $tooltipMessage = __('Student has been transferred to') . ' (' . $this->transferred[1] . ') ' . __('after registration');
+            return  "<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='left' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>";
+        } else {
+            return '-';
+        }
+    }
+
+    public function onGetNationality(Event $event, Entity $entity)
+    {   
+        if ($this->_table->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('main_nationality') && !empty($entity->user->main_nationality)) {
+                    return $entity->user->main_nationality->name;
+                }
+            }
+        }
+    }
+
+    public function onGetIdentityType(Event $event, Entity $entity)
+    {   
+        if ($this->_table->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('main_identity_type') && !empty($entity->user->main_identity_type)) {
+                    return $entity->user->main_identity_type->name;
+                }
+            }
+        }
+    }
+
+    public function onGetIdentityNumber(Event $event, Entity $entity)
+    {
+        if (!empty($entity)) {
+            if ($entity->user->has('identity_number') && !empty($entity->user->identity_number)) {
+                return $entity->user->identity_number;
+            }
+        }
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -433,110 +540,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return implode(", ", $specialNeeds);
     }
 
-    public function onGetCustomSubjectsElement(Event $event, $action, $entity, $attr, $options=[]) {
-        $model = $this->_table;
-
-        $action = $model->action == 'unregister' ? 'view' : $action;
-        if ($action == 'view') {
-            $tableHeaders = [__('Name'), __('Code'), __('Examination Centre')];
-            $tableCells = [];
-
-            $examinationStudents = $model->find()
-                ->matching('EducationSubjects')
-                ->matching('ExaminationCentres')
-                ->where([
-                    $model->aliasField('academic_period_id') => $entity->academic_period_id,
-                    $model->aliasField('examination_id') => $entity->examination_id,
-                    $model->aliasField('student_id') => $entity->student_id
-                ])
-                ->order(['EducationSubjects.order'])
-                ->toArray();
-
-            foreach ($examinationStudents as $key => $obj) {
-                $rowData = [];
-                $rowData[] = $obj->_matchingData['EducationSubjects']->name;
-                $rowData[] = $obj->_matchingData['EducationSubjects']->code;
-                $rowData[] = $obj->_matchingData['ExaminationCentres']->name;
-                $tableCells[] = $rowData;
-            }
-
-            $attr['tableHeaders'] = $tableHeaders;
-            $attr['tableCells'] = $tableCells;
-        } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
-
-            $tableHeaders = [__('Name'), __('Code'), __('Examination Centre')];
-            $tableCells = [];
-            $cellCount = 0;
-
-            $form->unlockField($attr['model'] . '.education_subjects');
-            $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
-            $arraySubjects = $ExaminationItems->find()
-                ->select([
-                    'education_subject_id' => 'EducationSubjects.id',
-                    'code' => 'EducationSubjects.code',
-                    'name' => 'EducationSubjects.name',
-                    'examination_centre_id' => $model->aliasField('examination_centre_id')
-                ])
-                ->leftJoin(
-                    [$model->alias() => $model->table()],
-                    [
-                        $model->aliasField('education_subject_id = ') . $ExaminationItems->aliasField('education_subject_id'),
-                        $model->aliasField('examination_id') => $entity->examination_id
-                    ]
-                )
-                ->matching('EducationSubjects')
-                ->where([$ExaminationItems->aliasField('examination_id') => $entity->examination_id])
-                ->group([$ExaminationItems->aliasField('education_subject_id')])
-                ->order(['EducationSubjects.order'])
-                ->toArray();
-
-            foreach ($arraySubjects as $key => $obj) {
-                $fieldPrefix = $attr['model'] . '.education_subjects.' . $cellCount++;
-
-                $subjectId = $obj->education_subject_id;
-                $examinationCentreId = $obj->examination_centre_id;
-                $selectedAcademicPeriod = $entity->academic_period_id;
-                $selectedExamination = $entity->examination_id;
-                $ExaminationCentres = TableRegistry::get('Examination.ExaminationCentres');
-                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
-
-                $examinationCentreOptions = $ExaminationCentres->find('list')
-                    ->matching('ExaminationCentreSubjects', function ($q) use ($subjectId) {
-                        return $q->where(['education_subject_id' => $subjectId]);
-                    })
-                    ->where([
-                        $ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                        $ExaminationCentres->aliasField('examination_id') => $selectedExamination
-                    ])
-                    ->toArray();
-
-                if (empty($examinationCentreOptions)) {
-                    $examinationCentreOptions = ['' => $model->getMessage('general.select.noOptions')];
-                } else {
-                    $examinationCentreOptions = ['' => '-- '.__('Select').' --'] + $examinationCentreOptions;
-                }
-
-                $cellData = "";
-                $cellData .= $form->input($fieldPrefix.".examination_centre_id", ['label' => false, 'type' => 'select', 'options' => $examinationCentreOptions, 'value' => $examinationCentreId]);
-                $cellData .= $form->hidden($fieldPrefix.".education_subject_id", ['value' => $subjectId]);
-
-                $rowData = [];
-                $rowData[] = $obj->name;
-                $rowData[] = $obj->code;
-                $rowData[] = $cellData;
-                $tableCells[] = $rowData;
-            }
-
-            $attr['tableHeaders'] = $tableHeaders;
-            $attr['tableCells'] = $tableCells;
-        }
-
-        return $event->subject()->renderElement('Examination.subjects', ['attr' => $attr]);
-    }
-
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -549,7 +554,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -562,7 +567,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             $openemisNo = $entity->user->openemis_no;
@@ -576,7 +581,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -589,7 +594,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
             $dateOfBirth = $entity->user->date_of_birth;
 
@@ -603,7 +608,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldGenderId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -616,7 +621,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             if ($entity->has('institution')) {
@@ -635,7 +640,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             $specialNeeds = $this->extractSpecialNeeds($entity);
@@ -651,7 +656,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'edit' || $action == 'unregister') {
+        if ($action == 'unregister') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -671,7 +676,7 @@ class RegisteredStudentsBehavior extends Behavior {
             ->where([$model->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // in institutions, only show examinations for grades available in the institution
-        if ($model->alias() == 'InstitutionExaminationStudents' && !is_null($institutionId)) {
+        if (in_array($model->alias(), ['InstitutionExaminationStudents', 'ExaminationResults']) && !is_null($institutionId)) {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $availableGrades = $InstitutionGrades
                 ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
@@ -686,9 +691,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function setupFields(Entity $entity, ArrayObject $extra) {
         $model = $this->_table;
-        $model->field('education_subject_id', ['visible' => false]);
         $model->field('examination_centre_id', ['visible' => false]);
-        $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('examination_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('openemis_no', ['entity' => $entity]);
@@ -698,10 +701,19 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
         $model->field('registration_number', ['type' => 'string', 'entity' => $entity]);
-        // temporary hide subjects
-        // $model->field('subjects', ['type' => 'custom_subjects']);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'registration_number']);
+        $model->field('identity_number');
+        $model->field('repeated');
+        $model->field('transferred');
+
+        $model->field('nationalities', [
+            'type' => 'element',
+            'element' => 'Examination.nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
+
+        $model->setFieldOrder(['registration_number', 'academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'nationalities', 'identity_number', 'repeated', 'transferred']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {

@@ -5,33 +5,32 @@
 	$this->Form->unlockField('invigilator_id');
 ?>
 
-<?php if ($ControllerAction['action'] == 'view' || $ControllerAction['action'] == 'edit') : ?>
-	<?php if ($ControllerAction['action'] == 'edit') : ?>
-		<?php
-			$tableClass = 'table-responsive';
-			$url = $this->Url->build([
-				'plugin' => $this->request->params['plugin'],
-			    'controller' => $this->request->params['controller'],
-			    'action' => $this->request->params['action'],
-			    'ajaxInvigilatorAutocomplete',
-			    $this->ControllerAction->paramsEncode(['examination_id' => $attr['examination_id']])
-			]);
-			$alias = $ControllerAction['table']->alias();
+<?php if ($ControllerAction['action'] == 'add') : ?>
+	<?php
+		$tableClass = 'table-responsive';
+		$url = $this->Url->build([
+			'plugin' => $this->request->params['plugin'],
+		    'controller' => $this->request->params['controller'],
+		    'action' => $this->request->params['action'],
+		    'ajaxInvigilatorAutocomplete',
+		    'queryString' => $attr['queryString'],
+		    $this->ControllerAction->paramsEncode(['examination_id' => $attr['examination_id']])
+		]);
+		$alias = $ControllerAction['table']->alias();
 
-			echo $this->Form->input("$alias.invigilator_search", [
-				'label' => __('Add Invigilator'),
-				'type' => 'text',
-				'class' => 'autocomplete',
-				'value' => '',
-				'autocomplete-url' => $url,
-				'autocomplete-no-results' => __('No Invigilator found.'),
-				'autocomplete-class' => 'error-message',
-				'autocomplete-target' => 'invigilator_id',
-				'autocomplete-submit' => "$('#reload').val('addInvigilator').click();"
-			]);
-			echo $this->Form->hidden("$alias.invigilator_id", ['autocomplete-value' => 'invigilator_id']);
-		?>
-	<?php endif ?>
+		echo $this->Form->input("$alias.invigilator_search", [
+			'label' => __('Add Invigilator'),
+			'type' => 'text',
+			'class' => 'autocomplete',
+			'value' => '',
+			'autocomplete-url' => $url,
+			'autocomplete-no-results' => __('No Invigilator found.'),
+			'autocomplete-class' => 'error-message',
+			'autocomplete-target' => 'invigilator_id',
+			'autocomplete-submit' => "$('#reload').val('addInvigilator').click();"
+		]);
+		echo $this->Form->hidden("$alias.invigilator_id", ['autocomplete-value' => 'invigilator_id']);
+	?>
 
 	<div class="<?= $tableClass; ?>" autocomplete-ref="invigilator_id">
 		<table class="table">
@@ -39,7 +38,5 @@
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
 	</div>
-	<?php if ($ControllerAction['action'] == 'edit') : ?>
-		<br>
-	<?php endif ?>
+	<br>
 <?php endif ?>

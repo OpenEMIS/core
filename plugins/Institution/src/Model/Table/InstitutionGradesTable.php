@@ -44,6 +44,9 @@ class InstitutionGradesTable extends ControllerActionTable
             ->add('end_date', 'ruleCompareDateReverse', [
                     'rule' => ['compareDateReverse', 'start_date', true]
                 ])
+            ->add('end_date', 'ruleCheckStudentInEducationProgrammes', [
+                    'rule' => ['checkStudentInEducationProgrammes']
+                ])
             ->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
                     'rule' => ['compareWithInstitutionDateOpened']
                 ])
