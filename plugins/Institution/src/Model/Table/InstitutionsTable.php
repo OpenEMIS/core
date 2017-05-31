@@ -168,8 +168,14 @@ class InstitutionsTable extends AppTable  {
 				'rule' => ['lessThanToday', true]
 				])
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'date_opened', true]
+		            'rule' => ['compareDateReverse', 'date_opened', true],
+		            'last' => true
 	    	    ])
+ 	        ->add('date_closed', 'ruleCheckWorkbenchPending', [
+	            'rule' => 'checkWorkbenchPending',
+	            'last' => true
+    	    ])
+
 	        ->allowEmpty('longitude')
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
@@ -371,7 +377,6 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
 		$this->ControllerAction->field('date_opened');
-		$this->ControllerAction->field('date_closed');
 		$this->ControllerAction->field('modified', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
 		$this->ControllerAction->field('created', ['visible' => false]);
@@ -379,7 +384,6 @@ class InstitutionsTable extends AppTable  {
 
 		$this->ControllerAction->field('institution_locality_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_ownership_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_status_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true]);
 		if ($this->action == 'index' || $this->action == 'view') {
 			$this->ControllerAction->field('institution_provider_id', ['type' => 'select']);
@@ -536,11 +540,11 @@ class InstitutionsTable extends AppTable  {
 		$this->Session->delete('Institutions.id');
 
 		$this->ControllerAction->setFieldOrder([
-			'code', 'name', 'area_id', 'institution_type_id'
+			'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
 		]);
 
 		$this->ControllerAction->setFieldVisible(['index'], [
-			'code', 'name', 'area_id', 'institution_type_id'
+			'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
 		]);
 		$this->controller->set('ngController', 'AdvancedSearchCtrl');
 	}
@@ -605,10 +609,16 @@ class InstitutionsTable extends AppTable  {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		// the query options are setup so that Security.InstitutionBehavior can reuse it
 		$options['query'] = [
-			'contain' => ['Types'],
+			'contain' => ['Types', 'Statuses'],
 			'select' => [
-				$this->aliasField('id'), $this->aliasField('code'), $this->aliasField('name'),
-				$this->aliasField('area_id'), 'Areas.name', 'Types.name'
+				$this->aliasField('id'),
+				$this->aliasField('code'),
+				$this->aliasField('name'),
+				$this->aliasField('area_id'),
+				$this->aliasField('institution_status_id'),
+				'Areas.name',
+				'Types.name',
+				'Statuses.name'
 			],
 			'join' => [
 				[
@@ -623,14 +633,20 @@ class InstitutionsTable extends AppTable  {
 		$query->join($options['query']['join']);
 
 		$queryParams = $request->query;
-		$options['order'] = [$this->aliasField('name') => 'asc'];
+		$options['order'] = [
+			$this->aliasField('institution_status_id') => 'ASC',
+			$this->aliasField('name') => 'ASC'
+		];
 	}
 
 	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
 		$this->dashboardQuery = clone $query;
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function indexAfterAction(Event $event, $data)
+	{
+		$session = $this->request->session();
+
 		$search = $this->ControllerAction->getSearchKey();
 		if (empty($search)) {
 			// redirect to school dashboard if it is only one record and no add access
@@ -641,6 +657,13 @@ class InstitutionsTable extends AppTable  {
 				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
 				return $this->controller->redirect($action);
 			}
+		}
+
+		// to display message after redirect
+		$sessionKey = 'HideButton.warning';
+		if ($session->check($sessionKey)) {
+			$this->Alert->warning('security.noAccess');
+			$session->delete($sessionKey);
 		}
 	}
 
@@ -654,7 +677,7 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
 			'shift_section',
 			'shift_type', 'shift_details',
@@ -695,10 +718,12 @@ class InstitutionsTable extends AppTable  {
 ******************************************************************************************************************/
 
 	public function addBeforeAction(Event $event) {
+		$this->ControllerAction->field('date_closed', ['visible' => false]);
+
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'institution_status_id',
 
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -721,13 +746,31 @@ class InstitutionsTable extends AppTable  {
 
 		$data['userId'] = $userId;
 		$data['superAdmin'] = $superAdmin;
+
+		// date_closed earlier than today, status will be inactive
+		$codeValue = 'ACTIVE';
+
+		if (!empty($data[$this->alias()]['date_closed'])) {
+			$dateClosed = Date::createFromFormat('d-m-Y', $data[$this->alias()]['date_closed']);
+
+			if ($dateClosed < new Date()) {
+				$codeValue = 'INACTIVE';
+			}
+		}
+
+		$value = $this->Statuses->getIdByCode($codeValue);
+
+		$data['institution_status_id'] = $value;
+		// end status
 	}
 
 	public function editBeforeAction(Event $event) {
+		$this->ControllerAction->field('date_closed');
+
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
 			'location_section',
 			'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -741,6 +784,7 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('institution_status_id', ['visible' => false]);
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
 		$this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
@@ -1000,5 +1044,11 @@ class InstitutionsTable extends AppTable  {
 				;
 			return $query;
 		}
+	}
+
+	public function getStatusCode($institutionId)
+	{
+        $institutionStatusId = $this->get($institutionId)->institution_status_id;
+		return $this->Statuses->get($institutionStatusId)->code;
 	}
 }
