@@ -155,6 +155,8 @@ class StaffUserTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
+        $BaseUsers = TableRegistry::get('User.Users');
+        $validator = $BaseUsers->setUserValidation($validator, $this);
         $validator
             ->allowEmpty('username')
             ->allowEmpty('postal_code')
@@ -164,6 +166,26 @@ class StaffUserTable extends ControllerActionTable
                 'last' => true
             ])
             ->allowEmpty('photo_content')
+            ->add('staff_name', 'ruleInstitutionStaffId', [
+                'rule' => ['institutionStaffId'],
+                'on' => 'create'
+            ])
+            ->add('staff_assignment', 'ruleTransferRequestExists', [
+                'rule' => ['checkPendingStaffTransfer'],
+                'on' => 'create'
+            ])
+            ->add('staff_assignment', 'ruleCheckStaffAssignment', [
+                'rule' => ['checkStaffAssignment'],
+                'on' => 'create'
+            ])
+            ->notEmpty('FTE', null, 'create')
+            ->notEmpty('position_type', null, 'create')
+            ->notEmpty('institution_position_id', null, 'create')
+            ->notEmpty('staff_type_id', null, 'create')
+            ->requirePresence('FTE', 'create')
+            ->requirePresence('position_type', 'create')
+            ->requirePresence('institution_position_id', 'create')
+            ->requirePresence('staff_type_id', 'create')
             ;
         return $validator;
     }
