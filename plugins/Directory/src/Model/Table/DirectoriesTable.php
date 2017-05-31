@@ -599,9 +599,11 @@ class DirectoriesTable extends ControllerActionTable {
 
 		$this->setupTabElements($entity);
 
-        $this->fields['gender_id']['type'] = 'readonly';
-        $this->fields['gender_id']['attr']['value'] = $entity->has('gender') ? $entity->gender->name : '';
-        $this->fields['gender_id']['value'] = $entity->has('gender') ? $entity->gender->id : '';
+        if ($entity->is_student) {
+            $this->fields['gender_id']['type'] = 'readonly';
+            $this->fields['gender_id']['attr']['value'] = $entity->has('gender') ? $entity->gender->name : '';
+            $this->fields['gender_id']['value'] = $entity->has('gender') ? $entity->gender->id : '';
+        }
 
         $this->fields['nationality_id']['type'] = 'readonly';
         if (!empty($entity->main_nationality)) {
