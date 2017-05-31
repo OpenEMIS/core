@@ -149,7 +149,11 @@ class UsersTable extends AppTable
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
 	{
 		$options['auto_search'] = false;
-		$query->find('notSuperAdmin');
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($this->request->query['sort'])) {
+			$query->find('notSuperAdmin')->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
+		}
 
 		$search = $this->ControllerAction->getSearchKey();
 

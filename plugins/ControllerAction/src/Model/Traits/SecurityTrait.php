@@ -5,7 +5,8 @@ use Cake\Utility\Security;
 use Cake\Controller\Exception\SecurityException;
 use Cake\ORM\Table;
 
-trait SecurityTrait {
+trait SecurityTrait
+{
     public function urlsafeB64Encode($input)
     {
         return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
@@ -33,9 +34,9 @@ trait SecurityTrait {
 
         if (is_null($queryString)) {
             return $query;
-        } else if (is_array($queryString)) {
+        } elseif (is_array($queryString)) {
             return array_intersect_key($query, array_flip($queryString));
-        } else if (!isset($query[$queryString])) {
+        } elseif (!isset($query[$queryString])) {
             return null;
         } else {
             return $query[$queryString];
@@ -46,7 +47,7 @@ trait SecurityTrait {
     {
         if (is_array($url)) {
             $url[$name] = $this->paramsEncode($params);
-        } else if (is_string($url)) {
+        } elseif (is_string($url)) {
             if (strpos($url, '?')) {
                 $url .= '&'.$name.'='.$this->paramsEncode($params);
             } else {

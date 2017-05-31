@@ -74,7 +74,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
         $Rooms = TableRegistry::get('Examination.ExaminationCentreRooms');
 
         $query
-            ->contain(['Users.Genders', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions', 'Examinations.EducationGrades'])
+            ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions', 'Examinations.EducationGrades'])
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -92,7 +92,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
             ->leftJoin([$Rooms->alias() => $Rooms->table()], [
                 $Rooms->aliasField('id = ') . $RoomStudents->aliasField('examination_centre_room_id'),
             ])
-            ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name', 'education_grade' => 'EducationGrades.name'])
+            ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'nationality_name' => 'MainNationalities.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name', 'education_grade' => 'EducationGrades.name'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
             ->order([$this->aliasField('examination_centre_id'), 'ExaminationCentreRooms.id', $this->aliasField('institution_id')]);
 
@@ -186,6 +186,13 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
             'key' => 'Users.date_of_birth',
             'field' => 'dob',
             'type' => 'date',
+            'label' => '',
+        ];
+
+         $newFields[] = [
+            'key' => 'Users.nationality_id',
+            'field' => 'nationality_name',
+            'type' => 'string',
             'label' => '',
         ];
 

@@ -8,7 +8,7 @@ class RoomCustomFieldValuesTable extends CustomFieldValuesTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('CustomFields', ['className' => 'Infrastructure.InfrastructureCustomFields', 'foreignKey' => 'infrastructure_custom_field_id']);
+		$this->belongsTo('CustomFields', ['className' => 'Infrastructure.RoomCustomFields', 'foreignKey' => 'infrastructure_custom_field_id']);
 		$this->belongsTo('CustomRecords', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'institution_room_id']);
 	}
 }
