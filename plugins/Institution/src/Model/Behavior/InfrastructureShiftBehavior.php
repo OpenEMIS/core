@@ -6,20 +6,22 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 
-class InfrastructureShiftBehavior extends Behavior {
+class InfrastructureShiftBehavior extends Behavior
+{
     private $isOwner = false;
     private $isOccupier = false;
 
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
-		parent::initialize($config);
-	}
+        parent::initialize($config);
+    }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 100];
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 100];
         $events['Model.isRecordExists'] = 'isRecordExists';
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
@@ -32,24 +34,10 @@ class InfrastructureShiftBehavior extends Behavior {
 
     public function isRecordExists(Event $event)
     {
-        $callable = function($model, $params) {
+        $callable = function ($model, $params) {
             return true;
         };
         return $callable;
-    }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        // Occupier is not allow to edit/delete regardless permission
-        if ($this->isOccupier) {
-            if ($toolbarButtons->offsetExists('edit')) {
-                unset($toolbarButtons['edit']);
-            }
-
-            if ($toolbarButtons->offsetExists('remove')) {
-                unset($toolbarButtons['remove']);
-            }
-        }
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -70,7 +58,7 @@ class InfrastructureShiftBehavior extends Behavior {
         return $buttons;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
 
@@ -84,6 +72,17 @@ class InfrastructureShiftBehavior extends Behavior {
         $isOwnerCount = $InstitutionShifts->isOwner($institutionId, $academicPeriodId);
         $isOccupierCount = $InstitutionShifts->isOccupier($institutionId, $academicPeriodId);
 
+        if ($this->isOccupier) {
+            $toolbarButtons = $extra['toolbarButtons'];
+            if (isset($toolbarButtons['edit'])) {
+                unset($toolbarButtons['edit']);
+            }
+
+            if (isset($toolbarButtons['remove'])) {
+                unset($toolbarButtons['remove']);
+            }
+        }
+
         if ($isOwnerCount) {
             $this->isOwner = true;
         }
@@ -93,7 +92,7 @@ class InfrastructureShiftBehavior extends Behavior {
         }
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->session();
@@ -106,7 +105,7 @@ class InfrastructureShiftBehavior extends Behavior {
         }
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->session();
@@ -114,18 +113,18 @@ class InfrastructureShiftBehavior extends Behavior {
 
         if ($this->isOccupier) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierAddNotAllowed');
-            $url = $model->ControllerAction->url('index');
+            $url = $model->url('index');
             $event->stopPropagation();
             return $model->controller->redirect($url);
         } else if ($this->isOwner == false && $this->isOccupier == false) {
             $session->write($sessionKey, 'InstitutionInfrastructures.ownerAddNotAllowed');
-            $url = $model->ControllerAction->url('index');
+            $url = $model->url('index');
             $event->stopPropagation();
             return $model->controller->redirect($url);
         }
     }
 
-    public function editBeforeAction(Event $event)
+    public function editBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->session();
@@ -133,13 +132,13 @@ class InfrastructureShiftBehavior extends Behavior {
 
         if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierEditNotAllowed');
-            $url = $model->ControllerAction->url('index');
+            $url = $model->url('index');
             $event->stopPropagation();
             return $model->controller->redirect($url);
         }
     }
 
-    public function deleteBeforeAction(Event $event)
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->session();
@@ -147,7 +146,7 @@ class InfrastructureShiftBehavior extends Behavior {
 
         if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false)) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierDeleteNotAllowed');
-            $url = $model->ControllerAction->url('index');
+            $url = $model->url('index');
             $event->stopPropagation();
             return $model->controller->redirect($url);
         }
