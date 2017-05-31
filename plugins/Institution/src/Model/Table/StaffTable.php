@@ -1204,7 +1204,7 @@ class StaffTable extends ControllerActionTable
         $staffByPositions = $query
                 ->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
                 ->contain(['Users.Genders','Positions.StaffPositionTitles'])
-                ->matching('Institutions')
+                ->matching('Institutions.Areas')
                 ->select([
                     'Positions.id',
                     'StaffPositionTitles.id',
@@ -1324,10 +1324,10 @@ class StaffTable extends ControllerActionTable
                         'valueField' => 'total'
                     ])
                     ->matching('Users.Genders')
-                    ->matching('Institutions')
+                    ->matching('Institutions.Areas')
                     ->select([
                         'gender_name' => 'Genders.name',
-                        'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('id'))
+                        'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('staff_id'))
                     ])
                     ->where($queryCondition)
                     ->group(['gender_name'])
