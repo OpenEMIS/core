@@ -145,4 +145,18 @@ class StaffTransfer extends ControllerActionTable {
 		}
 		return $value;
 	}
+
+	public function getPendingRecords($institutionId = null, $academicPeriodId = null)
+    {
+        $count = $this
+            ->find()
+            ->where([
+                $this->aliasField('status') => 0,
+                $this->aliasField('institution_id') => $institutionId,
+            ])
+            ->count()
+        ;
+
+        return $count;
+    }
 }

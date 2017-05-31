@@ -664,7 +664,7 @@ class ValidationBehavior extends Behavior {
 	}
 
     public static function compareStudentGenderWithInstitution($field, array $globalData)
-    {	
+    {
     	$model = $globalData['providers']['table'];
     	$registryAlias = $model->registryAlias();
 
@@ -699,7 +699,7 @@ class ValidationBehavior extends Behavior {
                 $userGender = '';
                 $Users = TableRegistry::get('User.Users');
                 $UserGenders = TableRegistry::get('User.Genders');
-                if ($fieldType == 'institution_id') { 
+                if ($fieldType == 'institution_id') {
 
                 	if (array_key_exists('student_id', $globalData['data'])) {
                 		$studentId = $globalData['data']['student_id'];
@@ -717,11 +717,11 @@ class ValidationBehavior extends Behavior {
                             ->first();
                     	$userGender = $query->Genders->code;
                 	}
-                    
+
                 } else if ($fieldType == 'gender_id') { //if validate gender, then can straight away get its code.
                     $userGender = $UserGenders->get($globalData['data'][$fieldType])->code;
                 }
-                
+
                 if ($userGender != $institutionGenderCode) {
                 	return $model->getMessage("$registryAlias.$fieldType.compareStudentGenderWithInstitution", ['sprintf' => [$institutionGender]]);
                 } else {
@@ -2118,5 +2118,69 @@ class ValidationBehavior extends Behavior {
             }
         }
         return true;
+    }
+
+    public static function checkWorkbenchPending($field, array $globalData)
+    {
+		$data = $globalData['data'];
+		if (isset($data['id'])) {
+
+			$institutionId = $data['id'];
+			$dateClosed = new Date($field);
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($dateClosed);
+
+			// fixed workflow
+			$models = [
+				'Institution.TransferApprovals',
+				'Institution.StudentAdmission',
+				'Institution.StudentWithdraw',
+				'Institution.StaffTransferApprovals',
+				'Institution.StaffTransferRequests'
+			];
+
+			foreach ($models as $model) {
+				$subject = TableRegistry::get($model);
+				$method = 'getPendingRecords';
+				if (method_exists($subject, $method)) {
+					$count = $subject->$method($institutionId, $academicPeriodId);
+
+					if ($count > 0) {
+						return false;
+						break;
+					}
+				}
+			}
+
+			// school_based workflow
+			$WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+			$schoolBasedModels = $WorkflowModels
+				->find()
+				->where([
+					$WorkflowModels->aliasField('is_school_based') => 1
+				])
+				->all();
+
+			foreach ($schoolBasedModels as $workflowModelEntity) {
+				$subject = TableRegistry::get($workflowModelEntity->model);
+				$method = 'getPendingRecords';
+				$params = [
+					'institution_id' => $institutionId,
+					'academic_period_id' => $academicPeriodId,
+					'model_registry_alias' => $subject->registryAlias()
+				];
+
+				$event = $subject->dispatchEvent('Model.Validation.getPendingRecords', [$params], $subject);
+	        	if ($event->isStopped()) { return $event->result; }
+	        	$count = $event->result;
+
+				if ($count > 0) {
+					return false;
+					break;
+				}
+			}
+		}
+
+		return true;
     }
 }
