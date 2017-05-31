@@ -46,9 +46,7 @@ class TrainingNeedsTable extends AppTable
         $selectedStatus = $requestData->status;
         $selectedNeedType = $requestData->training_need_type;
 
-        $query
-            ->leftJoinWith('Staff.InstitutionStaff.Institutions')
-            ->contain(['TrainingNeedSubStandards.TrainingNeedStandards', 'Courses.TrainingRequirements']);
+        $query->contain(['TrainingNeedSubStandards.TrainingNeedStandards', 'Courses.TrainingRequirements']);
 
         if ($selectedStatus != '-1') {
             $query->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
@@ -57,14 +55,10 @@ class TrainingNeedsTable extends AppTable
         }
 
         $query->select([
-            'institution_id' => 'Institutions.id',
-            'institution_name' => 'Institutions.name',
-            'institution_code' => 'Institutions.code',
             'course_code' => 'Courses.code',
             'course_description' => 'Courses.description',
             'course_requirement' => 'TrainingRequirements.name',
-            'training_standard' => 'TrainingNeedStandards.name',
-            'openemis_no' => 'Staff.openemis_no'
+            'training_standard' => 'TrainingNeedStandards.name'
         ]);
 
         if ($selectedNeedType == 'CATALOGUE') {
@@ -82,13 +76,27 @@ class TrainingNeedsTable extends AppTable
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'Institutions.institution',
+            'key' => 'Institutions.institution_code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.institution_name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => ''
         ];
 
         if ($selectedNeedType == 'CATALOGUE') {
+
+            $newFields[] = [
+                'key' => 'Courses.course_code',
+                'field' => 'course_code',
+                'type' => 'string',
+                'label' => ''
+            ];
 
             $newFields[] = [
                 'key' => 'TrainingNeeds.course_id',
@@ -159,6 +167,13 @@ class TrainingNeedsTable extends AppTable
         ];
 
         $newFields[] = [
+            'key' => 'Staff.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS No')
+        ];
+
+        $newFields[] = [
             'key' => 'TrainingNeeds.staff_id',
             'field' => 'staff_id',
             'type' => 'integer',
@@ -170,7 +185,7 @@ class TrainingNeedsTable extends AppTable
             $newFields[] = [
                 'key' => 'StaffSubjects.subjects',
                 'field' => 'staff_subjects',
-                'type' => 'string',
+                'type' => 'text',
                 'label' => ''
             ];
 
@@ -179,53 +194,53 @@ class TrainingNeedsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
+    public function onExcelGetInstitutionCode(Event $event, Entity $entity)
+    {
+        // pr($entity);die;
+        if ($entity->has('staff') && !empty($entity->staff)) {
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+
+            $statuses = $StaffStatuses->findCodeList();
+
+            $query = $InstitutionStaff->find('all')
+                    ->contain(['Institutions'])
+                    ->where([
+                        $InstitutionStaff->aliasField('staff_id') => $entity->staff->id,
+                        $InstitutionStaff->aliasField('staff_status_id') => $statuses['ASSIGNED']
+                    ])
+                    ->order([
+                        $InstitutionStaff->aliasField('start_date DESC'),
+                        $InstitutionStaff->aliasField('created DESC')
+                    ])
+                    ->first();
+
+            if (!empty($query)) {
+                $entity->institution_id = $query->institution->id;
+                $entity->institution_name = $query->institution->name;
+                return $query->institution->code;
+            }
+        }
+    }
+
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
-        if ($entity->has('institution_name') && $entity->has('institution_code')) {
-            if (!empty($entity->institution_code)) {
-                $institution_code_name = $entity->institution_code . ' - ';
-            }
-
-            if (!empty($entity->institution_name)) {
-                $institution_code_name .= $entity->institution_name;
-            }
-
-            return $institution_code_name;
+        if ($entity->has('institution_name')) {
+            return $entity->institution_name;
         }
     }
 
-    public function onExcelGetCourseId(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
     {
-        if ($entity->has('course') && $entity->has('course_code')) {
-            if (!empty($entity->course_code)) {
-                $course_code_name = $entity->course_code . ' - ';
-            }
-
-            if (!empty($entity->course)) {
-                $course_code_name .= $entity->course->name;
-            }
-
-            return $course_code_name;
-        }
-    }
-
-    public function onExcelGetStaffId(Event $event, Entity $entity)
-    {
-        if ($entity->has('openemis_no') && $entity->has('staff')) {
-            if (!empty($entity->openemis_no)) {
-                $staff_details = $entity->openemis_no . ' - ';
-            }
-
-            if (!empty($entity->staff)) {
-                $staff_details .= $entity->staff->name;
-            }
-
-            return $staff_details;
+        if ($entity->has('staff') && !empty($entity->staff)) {
+            return  $entity->staff->openemis_no;
         }
     }
 
     public function onExcelGetStaffSubjects(Event $event, Entity $entity)
     {
+        $return = [];
+        
         if ($entity->has('institution_id') && $entity->has('staff')) {
             if(!empty($entity->institution_id) && !empty($entity->staff)) {
                 $StaffSubjects = TableRegistry::get('Staff.StaffSubjects');
@@ -248,8 +263,11 @@ class TrainingNeedsTable extends AppTable
                     }
                 }
 
-                return implode(', ', $subjects);
+                $return['value'] = "=\"" . implode("\n", $subjects) . "\"";
             }
         }
+
+        $return['style'] = ['wrap_text' => true];
+        return $return;
     }
 }
