@@ -241,6 +241,7 @@ class InstitutionClassStudentsTable extends AppTable
                     'field' => 'assessment_item',
                     'type' => 'subject',
                     'label' => $label,
+                    'institutionId' => $institutionId,
                     'assessmentId' => $assessmentId,
                     'subjectId' => $subjectId,
                     'assessmentPeriodWeight' => $period->weight,
@@ -359,6 +360,7 @@ class InstitutionClassStudentsTable extends AppTable
         $subjectId = $attr['subjectId'];
         $assessmentId = $attr['assessmentId'];
         $academicPeriodId = $attr['academicPeriodId'];
+        $institutionId = $attr['institutionId'];
         $resultType = $attr['resultType'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
         $assessmentItemResults = $this->assessmentItemResults;
