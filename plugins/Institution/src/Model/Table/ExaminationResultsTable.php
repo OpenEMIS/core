@@ -19,7 +19,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->table('examination_centres_examinations_students');
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
