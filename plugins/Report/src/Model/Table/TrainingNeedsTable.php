@@ -196,13 +196,13 @@ class TrainingNeedsTable extends AppTable
 
     public function onExcelGetInstitutionCode(Event $event, Entity $entity)
     {
-        // pr($entity);die;
         if ($entity->has('staff') && !empty($entity->staff)) {
             $InstitutionStaff = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
 
             $statuses = $StaffStatuses->findCodeList();
 
+            //get the latest institution which staff assigned on.
             $query = $InstitutionStaff->find('all')
                     ->contain(['Institutions'])
                     ->where([
@@ -263,11 +263,12 @@ class TrainingNeedsTable extends AppTable
                     }
                 }
 
+                //enable change line for each of the subjects
                 $return['value'] = "=\"" . implode("\n", $subjects) . "\"";
+                $return['style'] = ['wrap_text' => true];
             }
         }
 
-        $return['style'] = ['wrap_text' => true];
         return $return;
     }
 }
