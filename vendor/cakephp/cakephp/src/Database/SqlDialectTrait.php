@@ -49,6 +49,7 @@ trait SqlDialectTrait
         if (preg_match('/^[\w-]+\.[^ \*]*$/', $identifier)) {
 // string.string
             $items = explode('.', $identifier);
+
             return $this->_startQuote . implode($this->_endQuote . '.' . $this->_startQuote, $items) . $this->_endQuote;
         }
 
@@ -103,6 +104,7 @@ trait SqlDialectTrait
                     }
                 }
             });
+
             return $query;
         };
     }
@@ -143,6 +145,7 @@ trait SqlDialectTrait
             $query->group($query->clause('distinct'), true);
             $query->distinct(false);
         }
+
         return $query;
     }
 
@@ -175,6 +178,43 @@ trait SqlDialectTrait
         if (!$hadAlias) {
             return $query;
         }
+
+        return $this->_removeAliasesFromConditions($query);
+    }
+
+    /**
+     * Apply translation steps to update queries.
+     *
+     * Chops out aliases on update query conditions as not all database dialects do support
+     * aliases in update queries.
+     *
+     * Just like for delete queries, joins are currently not supported for update queries.
+     *
+     * @param \Cake\Database\Query $query The query to translate
+     * @return \Cake\Database\Query The modified query
+     */
+    protected function _updateQueryTranslator($query)
+    {
+        return $this->_removeAliasesFromConditions($query);
+    }
+
+    /**
+     * Removes aliases from the `WHERE` clause of a query.
+     *
+     * @param \Cake\Database\Query $query The query to process.
+     * @return \Cake\Database\Query The modified query.
+     * @throws \RuntimeException In case the processed query contains any joins, as removing
+     *  aliases from the conditions can break references to the joined tables.
+     */
+    protected function _removeAliasesFromConditions($query)
+    {
+        if ($query->clause('join')) {
+            throw new \RuntimeException(
+                'Aliases are being removed from conditions for UPDATE/DELETE queries, ' .
+                'this can break references to joined tables.'
+            );
+        }
+
         $conditions = $query->clause('where');
         if ($conditions) {
             $conditions->traverse(function ($condition) {
@@ -189,21 +229,11 @@ trait SqlDialectTrait
 
                 list(, $field) = explode('.', $field);
                 $condition->setField($field);
+
                 return $condition;
             });
         }
 
-        return $query;
-    }
-
-    /**
-     * Apply translation steps to update queries.
-     *
-     * @param \Cake\Database\Query $query The query to translate
-     * @return \Cake\Database\Query The modified query
-     */
-    protected function _updateQueryTranslator($query)
-    {
         return $query;
     }
 

@@ -26,7 +26,6 @@ class FieldOptionComponent extends Component
     private $controller;
     private $fieldOptions = [
     // Institution
-        'Genders' => ['className' => 'Institution.Genders', 'parent' => 'Institution'],
         'NetworkConnectivities' => ['className' => 'Institution.NetworkConnectivities', 'parent' => 'Institution'],
         'Localities' => ['className' => 'Institution.Localities', 'parent' => 'Institution'],
         'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
@@ -66,7 +65,7 @@ class FieldOptionComponent extends Component
 
     // Qualification
         'QualificationLevels' => ['className' => 'FieldOption.QualificationLevels', 'parent' => 'Qualification'],
-        'QualificationSpecialisations' => ['className' => 'FieldOption.QualificationSpecialisations', 'parent' => 'Qualification'],
+        'QualificationTitles' => ['className' => 'FieldOption.QualificationTitles', 'parent' => 'Qualification'],
 
     // Quality
         'QualityVisitTypes' => ['className' => 'FieldOption.QualityVisitTypes', 'parent' => 'Quality'],

@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,6 +14,7 @@ namespace Psy\CodeCleaner;
 use PhpParser\Node;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified as FullyQualifiedName;
+use PhpParser\Node\Stmt\GroupUse as GroupUseStmt;
 use PhpParser\Node\Stmt\Namespace_ as NamespaceStmt;
 use PhpParser\Node\Stmt\Use_ as UseStmt;
 
@@ -68,6 +69,17 @@ class UseStatementPass extends NamespaceAwarePass
             // them in a bit.
             foreach ($node->uses as $use) {
                 $this->aliases[strtolower($use->alias)] = $use->name;
+            }
+
+            return false;
+        } elseif ($node instanceof GroupUseStmt) {
+            // Expand every "use" statement in the group into a full, standalone
+            // "use" and store 'em with the others.
+            foreach ($node->uses as $use) {
+                $this->aliases[strtolower($use->alias)] = Name::concat($node->prefix, $use->name, array(
+                    'startLine' => $node->prefix->getAttribute('startLine'),
+                    'endLine'   => $use->name->getAttribute('endLine'),
+                ));
             }
 
             return false;
