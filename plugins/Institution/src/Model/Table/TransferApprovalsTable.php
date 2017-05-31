@@ -670,4 +670,19 @@ class TransferApprovalsTable extends AppTable
 
         return $query;
     }
+
+    public function getPendingRecords($institutionId = null, $academicPeriodId = null)
+    {
+        $count = $this
+            ->find()
+            ->where([
+                $this->aliasField('status') => 0,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+            ])
+            ->count()
+        ;
+
+        return $count;
+    }
 }

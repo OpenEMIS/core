@@ -512,7 +512,7 @@ class StudentAdmissionTable extends AppTable {
 		}
 	}
 
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $errors = $entity->errors();
 
@@ -727,4 +727,19 @@ class StudentAdmissionTable extends AppTable {
 
 		return $query;
 	}
+
+    public function getPendingRecords($institutionId = null, $academicPeriodId = null)
+    {
+        $count = $this
+            ->find()
+            ->where([
+                $this->aliasField('status') => 0,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+            ])
+            ->count()
+        ;
+
+        return $count;
+    }
 }
