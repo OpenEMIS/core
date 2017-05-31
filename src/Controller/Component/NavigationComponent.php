@@ -523,6 +523,26 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Institution']
                     ],
 
+			'Institutions.ReportCards' => [
+				'title' => 'Report Cards',
+				'parent' => 'Institutions.Institutions.index',
+				'link' => false,
+			],
+
+				'Institutions.ReportCardComments' => [
+					'title' => 'Comments',
+					'parent' => 'Institutions.ReportCards',
+					'params' => ['plugin' => 'Institution'],
+					'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
+				],
+
+				'Institutions.ReportCardStatuses' => [
+					'title' => 'Statuses',
+					'parent' => 'Institutions.ReportCards',
+					'params' => ['plugin' => 'Institution'],
+					'selected' => ['Institutions.ReportCardStatuses'],
+				],
+
             'Institutions.Positions' => [
                 'title' => 'Positions',
                 'parent' => 'Institutions.Institutions.index',
@@ -625,7 +645,7 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.Awards',
+                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                     'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
             'Students.BankAccounts' => [
                 'title' => 'Finance',
@@ -781,7 +801,7 @@ class NavigationComponent extends Component
                     'parent' => 'Directories.Student',
                     'params' => ['plugin' => 'Directory'],
                     'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-                        'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
+                        'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
                 ],
                 'Directories.StudentBankAccounts' => [
                     'title' => 'Finance',
@@ -1111,6 +1131,12 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'Textbook'],
                 'selected' => ['Textbooks.Textbooks']
+            ],
+            'ReportCards.Templates' => [
+                'title' => 'Report Cards',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'ReportCard'],
+                'selected' => ['ReportCards.Templates']
             ],
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
