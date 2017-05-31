@@ -146,7 +146,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (1060, 'Publish/Unpublish', 'Institutions', 'Institutions', 'Report Cards', 1000, NULL, NULL, NULL, NULL, 'ReportCardStatuses.publish|ReportCardStatuses.publishAll|ReportCardStatuses.unpublish|ReportCardStatuses.unpublishAll', 1053, 1, NULL, NULL, NULL, 1, NOW()),
 (2034, 'Report Cards', 'Students', 'Institutions', 'Students - Academic', 1000, 'ReportCards.index|ReportCards.view', NULL, NULL, NULL, 'ReportCards.download', 2018, 1, NULL, NULL, NULL, 1, NOW()),
 (5072, 'Templates', 'ReportCards', 'Administration', 'Report Cards', 5000, 'Templates.index|Templates.view', 'Templates.edit', 'Templates.add', 'Templates.remove', 'Templates.download', 5067, 1, NULL, NULL, NULL, 1, NOW()),
-(7052, 'Report Cards', 'Directories', 'Directory', 'Students - Academic', 7000, 'StudentReportCards.index|StudentReportCards.view', NULL, NULL, NULL, 'StudentReportCards.download', 7017, 1, NULL, NULL, NULL, 1, NOW());
+(7053, 'Report Cards', 'Directories', 'Directory', 'Students - Academic', 7000, 'StudentReportCards.index|StudentReportCards.view', NULL, NULL, NULL, 'StudentReportCards.download', 7017, 1, NULL, NULL, NULL, 1, NOW());
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES
