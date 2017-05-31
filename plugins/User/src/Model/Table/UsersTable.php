@@ -252,8 +252,11 @@ class UsersTable extends AppTable
         }
         return $query
             ->innerJoinWith('InstitutionStudents')
-            ->leftJoinWith('InstitutionClassStudents', function ($q) use ($academicPeriodId) {
-                return $q->where(['InstitutionClassStudents.academic_period_id' => $academicPeriodId]);
+            ->leftJoinWith('InstitutionClassStudents', function ($q) use ($academicPeriodId, $institutionId) {
+                return $q->where([
+                    'InstitutionClassStudents.academic_period_id' => $academicPeriodId,
+                    'InstitutionClassStudents.institution_id' => $institutionId
+                ]);
             })
             ->innerJoinWith('InstitutionStudents.StudentStatuses')
             ->innerJoinWith('InstitutionStudents.AcademicPeriods')
