@@ -19,6 +19,7 @@
 		$eventSelectOptions = isset($attr['attr']['eventSelectOptions']) ? $attr['attr']['eventSelectOptions'] : [];
 		$this->Form->unlockField("WorkflowActions.post_events");
 	?>
+	<div class="clearfix"></div>
 	<h3><?= isset($attr['label']) ? $attr['label'] : $attr['field']; ?></h3>
 	<div class="clearfix">
 		<div class="input select">

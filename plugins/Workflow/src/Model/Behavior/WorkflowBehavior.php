@@ -445,7 +445,7 @@ class WorkflowBehavior extends Behavior {
                 $tableCells = [];
                 $transitionResults = $this->WorkflowTransitions
                     ->find()
-                    ->contain(['ModifiedUser', 'CreatedUser'])
+                    ->contain(['CreatedUser'])
                     ->where([
                         $this->WorkflowTransitions->aliasField('workflow_model_id') => $workflow->workflow_model_id,
                         $this->WorkflowTransitions->aliasField('model_reference') => $entity->id
@@ -614,12 +614,23 @@ class WorkflowBehavior extends Behavior {
 
         if (!empty($workflowModel)) {
             // Find all Workflow setup for the model
-            $workflowIds = $this->Workflows
+            $workflowIdsQuery = $this->Workflows
                 ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                 ->where([
                     $this->Workflows->aliasField('workflow_model_id') => $workflowModel->id
-                ])
-                ->toArray();
+                ]);
+
+            $excludedModels = $this->Workflows->getExcludedModels();
+            if (in_array($workflowModel->model, $excludedModels) && !is_null($entity) && $entity->has('workflow_rule_id') && !empty($entity->workflow_rule_id)) {
+                $workflowRuleId = $entity->workflow_rule_id;
+                $workflowIdsQuery->matching('WorkflowRules', function ($q) use ($workflowRuleId) {
+                    return $q->where([
+                        'WorkflowRules.id' => $workflowRuleId
+                    ]);
+                });
+            }
+
+            $workflowIds = $workflowIdsQuery->toArray();
 
             $workflowQuery = $this->Workflows
                 ->find()

@@ -7,7 +7,7 @@ angular.module('utils.svc', [])
 
 		isAppendLoader: function(_isAppend, _percent) {
 	        var hasClass = angular.element('div').hasClass('load-page');
-	        if(_isAppend){
+	        if (_isAppend) {
 	            if (angular.isDefined(_percent)) {
 	                if (_percent == false) {
 	                    angular.element('div').remove(".load-page");
@@ -30,7 +30,7 @@ angular.module('utils.svc', [])
 	                var loaderElement = angular.element('<div class="load-page"><div class="loader-text"><i class="fa kd-openemis"></i><div class="loader lt-ie9"></div><p>Loading...</p></div></div>');
 	                angular.element(document.body).prepend(loaderElement);
 	            }
-	        }else{
+	        } else {
 	            angular.element('div').remove(".load-page");
 	        }
 	    },
@@ -38,14 +38,18 @@ angular.module('utils.svc', [])
 	    isAppendSpinner: function(_isAppend, _querySelector) {
 	        var spinnerId = _querySelector + '-spinner';
 	        var hasClass = angular.element(document.getElementById(spinnerId)).hasClass('spinner-wrapper');
-	        if(_isAppend){
+	        if (_isAppend) {
 	            if(!hasClass){
 	                var spinnerElement = angular.element('<div id="'+ spinnerId +'" ' + 'class="spinner-wrapper"><div class="spinner-text"><div class="spinner lt-ie9"></div></div></div>');
 	                angular.element(document.getElementById(_querySelector)).prepend(spinnerElement);
-	            }        
-	        }else{
+	            }
+	        } else{
 	            angular.element(document.getElementById(spinnerId)).remove('.spinner-wrapper');
 	        }
+	    },
+
+	    urlsafeBase64Encode: function(jsonString) {
+	    	return encodeURI(btoa(jsonString)).replace(/=/gi, "");
 	    }
 	}
 });

@@ -10,6 +10,12 @@ $settings = array (
     // Enable debug mode (to print errors)
     'debug' => false,
 
+    // Set a BaseURL to be used instead of try to guess 
+    // the BaseURL of the view that process the SAML Message.
+    // Ex. http://sp.example.com/
+    //     http://example.com/sp/ 
+    'baseurl' => null,
+
     // Service Provider Data that we are deploying
     'sp' => array (
         // Identifier of the SP entity  (must be a URI)
@@ -23,6 +29,22 @@ $settings = array (
             // message.  Onelogin Toolkit supports for this endpoint the
             // HTTP-Redirect binding only
             'binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+        ),
+        // If you need to specify requested attributes, set a
+        // attributeConsumingService. nameFormat, attributeValue and
+        // friendlyName can be omitted. Otherwise remove this section. 
+        "attributeConsumingService"=> array(
+                "ServiceName" => "SP test",
+                "serviceDescription" => "Test Service",
+                "requestedAttributes" => array(
+                    array(
+                        "name" => "",
+                        "isRequired" => false,
+                        "nameFormat" => "",
+                        "friendlyName" => "",
+                        "attributeValue" => ""
+                    )
+                )
         ),
         // Specifies info about where and how the <Logout Response> message MUST be
         // returned to the requester, in this case our SP.

@@ -80,6 +80,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
         return 	$IdentityTypes
                 ->find('list')
                 ->find('visible')
+                ->order('order')
                 ->toArray();
     }
 

@@ -382,7 +382,7 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
         if (is_string($default) && 'CURRENT_TIMESTAMP' !== $default) {
             $default = $this->getConnection()->quote($default);
         } elseif (is_bool($default)) {
-            $default = (int) $default;
+            $default = $this->castToBool($default);
         }
         return isset($default) ? ' DEFAULT ' . $default : '';
     }
@@ -760,6 +760,9 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
                 break;
             case static::PHINX_TYPE_BINARY:
                 return array('name' => 'binary', 'limit' => $limit ? $limit : 255);
+                break;
+            case static::PHINX_TYPE_VARBINARY:
+                return array('name' => 'varbinary', 'limit' => $limit ? $limit : 255);
                 break;
             case static::PHINX_TYPE_BLOB:
                 if ($limit) {

@@ -16,19 +16,34 @@ class ExaminationResultsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('examination_centre_students');
+        $this->table('examination_centres_examinations_students');
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
-
-        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
+        $this->belongsTo('ExaminationCentresExaminations', [
+            'className' => 'Examination.ExaminationCentresExaminations',
+            'foreignKey' => ['examination_centre_id', 'examination_id']
+        ]);
+        $this->belongsToMany('ExaminationCentresExaminationsSubjects', [
+            'className' => 'Examination.ExaminationCentresExaminationsSubjects',
+            'joinTable' => 'examination_centres_examinations_subjects_students',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', [
+            'className' => 'Examination.ExaminationCentreRoomsExaminationsStudents',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'dependent' => true,
+            'cascadeCallBacks' => true
+        ]);
 
         $this->addBehavior('Examination.RegisteredStudents');
 

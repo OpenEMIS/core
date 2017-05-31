@@ -120,7 +120,7 @@ class HtmlFieldHelper extends Helper
         if (!is_null($table)) {
             // trigger event to update inclusion of css/js files
             $eventKey = 'ControllerAction.Model.onUpdateIncludes';
-            $this->dispatchEvent($table, $eventKey, null, [$includes, $action]);
+            $event = $this->dispatchEvent($table, $eventKey, null, [$includes, $action]);
         }
 
         foreach ($includes as $include) {

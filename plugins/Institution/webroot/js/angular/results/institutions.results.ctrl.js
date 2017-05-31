@@ -1,5 +1,5 @@
-angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institutions.results.svc'])
-.controller('InstitutionsResultsCtrl', function($scope, $filter, UtilsSvc, AlertSvc, InstitutionsResultsSvc) {
+angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.results.svc'])
+.controller('InstitutionsResultsCtrl', function($scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
     $scope.gradingTypes = null;
@@ -22,7 +22,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             $scope.assessment = assessment;
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
-            
+
             return InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
         }, function(error) {
             // No Assessment
@@ -64,72 +64,157 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     });
 
     $scope.initGrid = function(subject) {
-        $scope.gridOptions = {
-            context: {
-                institution_id: $scope.institution_id,
-                class_id: $scope.class_id,
-                assessment_id: $scope.assessment_id,
-                academic_period_id: $scope.academic_period_id,
-                education_grade_id: $scope.education_grade_id,
-                education_subject_id: 0
-            },
-            columnDefs: [],
-            rowData: [],
-            headerHeight: 38,
-            rowHeight: 38,
-            minColWidth: 200,
-            enableColResize: false,
-            enableSorting: true,
-            unSortIcon: true,
-            enableFilter: true,
-            suppressMenuHide: true,
-            suppressCellSelection: true,
-            suppressMovableColumns: true,
-            singleClickEdit: true,
-            onCellValueChanged: function(params) {
-                if (params.newValue != params.oldValue) {
-                    var index = params.colDef.field.replace(/period_(\d+)/, '$1');
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            $scope.gridOptions = {
+                context: {
+                    institution_id: $scope.institution_id,
+                    class_id: $scope.class_id,
+                    assessment_id: $scope.assessment_id,
+                    academic_period_id: $scope.academic_period_id,
+                    education_grade_id: $scope.education_grade_id,
+                    education_subject_id: 0
+                },
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                singleClickEdit: true,
+                localeText: localeText,
+                onCellValueChanged: function(params) {
+                    if (params.newValue != params.oldValue) {
+                        var index = params.colDef.field.replace(/period_(\d+)/, '$1');
 
-                    if (angular.isUndefined($scope.results[params.data.student_id])) {
-                        $scope.results[params.data.student_id] = {};
+                        if (angular.isUndefined($scope.results[params.data.student_id])) {
+                            $scope.results[params.data.student_id] = {};
+                        }
+
+                        if (angular.isUndefined($scope.results[params.data.student_id][index])) {
+                            $scope.results[params.data.student_id][index] = {marks: ''};
+                        }
+
+                        $scope.results[params.data.student_id][index]['marks'] = params.newValue;
+
+                        params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
+                        // marked as dirty
+                        params.data.is_dirty = true;
+
+                        var subject = $scope.subject;
+                        var gradingTypes = $scope.gradingTypes;
+                        var extra = {
+                            subject: subject,
+                            gradingTypes: gradingTypes
+                        };
+                        InstitutionsResultsSvc.saveSingleRecordData(params, extra)
+                        .then(function(response) {
+                        }, function(error) {
+                            console.log(error);
+                        });
+                        // Important: to refresh the grid after data is modified
+                        $scope.gridOptions.api.refreshView();
                     }
-
-                    if (angular.isUndefined($scope.results[params.data.student_id][index])) {
-                        $scope.results[params.data.student_id][index] = {marks: ''};
-                    }
-
-                    $scope.results[params.data.student_id][index]['marks'] = params.newValue;
-
-                    params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
-                    // marked as dirty
-                    params.data.is_dirty = true;
-                    // Important: to refresh the grid after data is modified
-                    $scope.gridOptions.api.refreshView();
+                },
+                onGridReady: function() {
+                    $scope.onChangeSubject(subject);
                 }
-            },
-            onGridReady: function() {
-                $scope.onChangeSubject(subject);
-            }
-        };
+            };
+        }, function(error){
+            $scope.gridOptions = {
+                context: {
+                    institution_id: $scope.institution_id,
+                    class_id: $scope.class_id,
+                    assessment_id: $scope.assessment_id,
+                    academic_period_id: $scope.academic_period_id,
+                    education_grade_id: $scope.education_grade_id,
+                    education_subject_id: 0
+                },
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                singleClickEdit: true,
+                onCellValueChanged: function(params) {
+                    if (params.newValue != params.oldValue) {
+                        var index = params.colDef.field.replace(/period_(\d+)/, '$1');
+
+                        if (angular.isUndefined($scope.results[params.data.student_id])) {
+                            $scope.results[params.data.student_id] = {};
+                        }
+
+                        if (angular.isUndefined($scope.results[params.data.student_id][index])) {
+                            $scope.results[params.data.student_id][index] = {marks: ''};
+                        }
+
+                        $scope.results[params.data.student_id][index]['marks'] = params.newValue;
+
+                        params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
+                        // marked as dirty
+                        params.data.is_dirty = true;
+
+                        var subject = $scope.subject;
+                        var gradingTypes = $scope.gradingTypes;
+                        var extra = {
+                            subject: subject,
+                            gradingTypes: gradingTypes
+                        };
+                        InstitutionsResultsSvc.saveSingleRecordData(params, extra)
+                        .then(function(response) {
+                        }, function(error) {
+                            console.log(error);
+                        });
+                        // Important: to refresh the grid after data is modified
+                        $scope.gridOptions.api.refreshView();
+                    }
+                },
+                onGridReady: function() {
+                    $scope.onChangeSubject(subject);
+                }
+            };
+        });
     };
 
-    $scope.resetColumnDefs = function(action, subject, periods, gradingTypes) {
+    $scope.resetColumnDefs = function (action, subject, periods, gradingTypes) {
         var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes, $scope.results, $scope.enrolledStatus);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
-            console.log(response.error);
             AlertSvc.warning($scope, response.error);
-
             return false;
         } else {
             if ($scope.gridOptions != null) {
-                $scope.gridOptions.api.setColumnDefs(response.data);
-                if (Object.keys(response.data).length < 15) {
-                    $scope.gridOptions.api.sizeColumnsToFit();
-                }
+                var textToTranslate = [];
+                angular.forEach(response.data, function(value, key) {
+                    textToTranslate.push(value.headerName);
+                });
+                InstitutionsResultsSvc.translate(textToTranslate)
+                .then(function(res){
+                    angular.forEach(res, function(value, key) {
+                        response.data[key]['headerName'] = value;
+                    });
+                    $scope.gridOptions.api.setColumnDefs(response.data);
+                    if (Object.keys(response.data).length < 15) {
+                        $scope.gridOptions.api.sizeColumnsToFit();
+                    }
+                }, function(error){
+                    console.log(error);
+                });
             }
-
             return true;
         }
     };
@@ -191,38 +276,12 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
     $scope.onEditClick = function() {
         $scope.action = 'edit';
+        AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
     };
 
     $scope.onBackClick = function() {
         $scope.action = 'view';
         $scope.onChangeSubject($scope.subject);
-    };
-
-    $scope.onSaveClick = function() {
-        if ($scope.gridOptions != null) {
-            var resultTypes = InstitutionsResultsSvc.getResultTypes();
-
-            var assessmentId = $scope.gridOptions.context.assessment_id;
-            var educationSubjectId = $scope.gridOptions.context.education_subject_id;
-            var educationGradeId = $scope.gridOptions.context.education_grade_id;
-            var institutionId = $scope.gridOptions.context.institution_id;
-            var academicPeriodId = $scope.gridOptions.context.academic_period_id;
-            var classId = $scope.gridOptions.context.class_id;
-
-            UtilsSvc.isAppendSpinner(true, 'institution-result-table');
-            InstitutionsResultsSvc.saveRowData($scope.subject, $scope.gradingTypes, $scope.results, assessmentId, educationSubjectId, educationGradeId, institutionId, academicPeriodId)
-            .then(function(response) {
-            }, function(error) {
-                console.log(error);
-            })
-            .finally(function() {
-                $scope.action = 'view';
-                // reset results object
-                $scope.results = {};
-                UtilsSvc.isAppendSpinner(false, 'institution-result-table');
-            });
-        } else {
-            $scope.action = 'view';
-        }
+        AlertSvc.reset($scope);
     };
 });

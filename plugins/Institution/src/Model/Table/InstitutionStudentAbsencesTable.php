@@ -7,6 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -334,6 +335,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			'options' => $absenceTypeOptions
 		]);
 
+		$this->fields['student_id']['sort'] = ['field' => 'Users.first_name']; // POCOR-2547 adding sort
 		$this->fields['full_day']['visible'] = false;
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
@@ -343,6 +345,24 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 		$this->_fieldOrder = ['date', 'student_id', 'absence_type_id', 'student_absence_reason_id'];
 	}
+
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
+        // POCOR-2547 Adding sortWhiteList to $options
+    	$query->contain(['Users']);
+
+		$sortList = ['Users.first_name'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($this->request->query['sort'])) {
+            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        }
+        // end POCOR-2547
+    }
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// Temporary fix for error on view page
@@ -740,6 +760,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				$Students->aliasField('institution_class_id') => $selectedClass
 			])
 			->contain(['Users'])
+			->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
 			->toArray();
 		$selectedStudent = !is_null($this->request->query('student')) ? $this->request->query('student') : key($studentOptions);
 		// End
@@ -830,7 +851,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return $reference;
 	}
 
-	public function getUnexcusedAbsenceData($threshold)
+	public function getModelAlertData($threshold)
 	{
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$currentAcademicPeriodId = $AcademicPeriods->getCurrent();

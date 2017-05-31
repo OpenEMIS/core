@@ -65,8 +65,8 @@ trait OptionsTrait {
 			'RoomTypes' => [
 				'classifications' => [0 => __('Non-Classroom'), 1 => __('Classroom')]
 			],
-			'InstitutionRooms' => [
-				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Room Type')]
+			'InstitutionInfrastructure' => [
+				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
 			],
 			'Shifts' => [
 				'types' => [
@@ -89,12 +89,68 @@ trait OptionsTrait {
 	    			3 => __('Done')
 	    		]
         	],
+        	'WorkflowRules' => [
+        		'features' => [
+        			'StaffBehaviours' => [
+						'className' => 'Institution.StaffBehaviours',
+						'url' => [
+							'plugin' => 'Institution',
+	                        'controller' => 'Institutions',
+	                        'action' => 'StaffBehaviours'
+						]
+					]
+        		]
+        	],
         	'AlertLogs' => [
         		'feature_grouping' => [
         			'general' => __('General'),
         			'workflow' => __('Workflow')
         		]
         	],
+        	'Alert' => [
+        		'status_types' => [
+	    			0 => __('Stop'),
+	    			1 => __('Running')
+	    		]
+        	],
+        	'AlertRules' => [
+                'LicenseRenewal' => [
+                    'before_after' => [
+                        1 => __('Days before expiry date'),
+                        // 2 => __('Days after expiry date')
+                    ]
+                ],
+                'LicenseValidity' => [
+                    'before_after' => [
+                        1 => __('Days before expiry date'),
+                        2 => __('Days after expiry date')
+                    ]
+                ],
+                'RetirementWarning' => [
+                    'before_after' => [
+                        // 1 => __('Age before retirement value'),
+                        2 => __('Age after retirement value')
+                    ]
+                ],
+                'StaffEmployment' => [
+                    'before_after' => [
+                        1 => __('Days before employment date'),
+                        2 => __('Days after employment date')
+                    ]
+                ],
+                'StaffLeave' => [
+                    'before_after' => [
+                        1 => __('Days before end of leave date'),
+                        // 2 => __('Days after end of leave date')
+                    ]
+                ],
+                'StaffType' => [
+                    'before_after' => [
+                        1 => __('Days before staff end date'),
+                        2 => __('Days after staff end date')
+                    ]
+                ]
+        	]
 		];
 
 		$index = explode('.', $code);

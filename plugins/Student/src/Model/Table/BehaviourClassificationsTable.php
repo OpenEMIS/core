@@ -41,6 +41,22 @@ class BehaviourClassificationsTable extends ControllerActionTable
         $this->field('national_code', ['visible' => false]);
     }
 
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+
+        $search = sprintf('%%"%s":"%s"%%', 'behaviour_classification_id', $entity->id);
+        $WorkflowRuleResults = $WorkflowRules
+            ->find()
+            ->where([
+                $WorkflowRules->aliasField('rule LIKE ') => $search
+            ])
+            ->all();
+        $workflowRuleCount = $WorkflowRuleResults->count();
+
+        $extra['associatedRecords'][] = ['model' => $WorkflowRules->alias(), 'count' => $workflowRuleCount];
+    }
+
     public function getThresholdOptions()
     {
         return $this

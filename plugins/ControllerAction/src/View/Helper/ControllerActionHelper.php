@@ -43,7 +43,7 @@ class ControllerActionHelper extends Helper
         }
     }
 
-    public function dispatchEvent($subject, $eventKey, $method=null, $params=[])
+    public function dispatchEvent($subject, $eventKey, $method = null, $params = [])
     {
         $this->onEvent($subject, $eventKey, $method);
         $event = new Event($eventKey, $this, $params);
@@ -130,13 +130,13 @@ class ControllerActionHelper extends Helper
         if (is_resource($haystack)) {
             return $haystack;
         }
-
-        $ind = stripos($haystack, $needle);
+        $tmpHaystack = strip_tags($haystack);
+        $ind = stripos($tmpHaystack, $needle);
         $len = strlen($needle);
         $value = $haystack;
         if ($ind !== false) {
-            $value = substr($haystack, 0, $ind) . "<span class=\"highlight\">" . substr($haystack, $ind, $len) . "</span>" .
-                $this->highlight($needle, substr($haystack, $ind + $len));
+            $newHaystack = substr($tmpHaystack, 0, $ind) . "<span class=\"highlight\">" . substr($tmpHaystack, $ind, $len) . "</span>" . $this->highlight($needle, substr($tmpHaystack, $ind + $len));
+            $value = str_replace($tmpHaystack, $newHaystack, $haystack);
         }
         return $value;
     }
@@ -282,7 +282,6 @@ class ControllerActionHelper extends Helper
                 } else {
                     $associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
                 }
-
                 if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
                     $value = __($entity->$associatedObject->name);
                     $associatedFound = true;
@@ -323,12 +322,12 @@ class ControllerActionHelper extends Helper
         return $row;
     }
 
-    public function getLabel($model, $field, $attr=array())
+    public function getLabel($model, $field, $attr = array())
     {
         return $this->Label->getLabel($model, $field, $attr);
     }
 
-    public function getPaginatorButtons($type='prev')
+    public function getPaginatorButtons($type = 'prev')
     {
         $icon = array('prev' => '', 'next' => '');
         $html = $this->Paginator->{$type}(
@@ -625,6 +624,11 @@ class ControllerActionHelper extends Helper
         }
         $this->HtmlField->includes('view', $table);
         return $html;
+    }
+
+    private function isHtml($string)
+    {
+        return preg_match("/<[^<]+>/", $string, $m) != 0;
     }
 
     public function isForeignKey($model, $field)
