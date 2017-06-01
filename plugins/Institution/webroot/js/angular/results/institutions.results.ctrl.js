@@ -91,7 +91,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                 singleClickEdit: true,
                 localeText: localeText,
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue) {
+                    if (params.newValue != params.oldValue || params.data.save_error) {
                         var index = params.colDef.field.replace(/period_(\d+)/, '$1');
 
                         if (angular.isUndefined($scope.results[params.data.student_id])) {
