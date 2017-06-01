@@ -690,18 +690,18 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 durationAsFloat = $filter('number')(duration, 2);
             }
 
+            if (angular.isUndefined(_results[studentId])) {
+                _results[studentId] = {};
+            }
+
+            if (angular.isUndefined(_results[studentId][periodId])) {
+                _results[studentId][periodId] = {duration: ''};
+            }
+
+            params.data[params.colDef.field] = durationAsFloat;
+            _results[studentId][periodId]['duration'] = durationAsFloat;
+
             if (durationAsFloat != oldValue || params.data.save_error) {
-                if (angular.isUndefined(_results[studentId])) {
-                    _results[studentId] = {};
-                }
-
-                if (angular.isUndefined(_results[studentId][periodId])) {
-                    _results[studentId][periodId] = {duration: ''};
-                }
-
-                params.data[params.colDef.field] = durationAsFloat;
-                _results[studentId][periodId]['duration'] = durationAsFloat;
-
                 var scope = params.context._scope;
                 vm.saveSingleRecordData(params, extra)
                 .then(function(response) {
