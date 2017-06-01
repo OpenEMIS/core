@@ -1037,7 +1037,7 @@ class NavigationComponent extends Component
                     'title' => 'Sessions',
                     'parent' => 'Administration.Training',
                     'params' => ['plugin' => 'Training'],
-                    'selected' => ['Trainings.Sessions', 'Trainings.Applications']
+                    'selected' => ['Trainings.Sessions', 'Trainings.Applications', 'Trainings.ImportTrainingSessionsTrainees']
                 ],
 
                 'Trainings.Results' => [
