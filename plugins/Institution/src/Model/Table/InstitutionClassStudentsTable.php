@@ -107,8 +107,8 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings)
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $classId = $settings['class_id'];
+        $institutionId = $settings['institution_id'];
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $className = $this->InstitutionClasses->get($classId)->name;
         $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'-'.str_replace(' ', '_', $className).'_Results', $settings['file']);
@@ -116,11 +116,12 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-        $AccessControl = $this->AccessControl;
-        $userId = $this->Session->read('Auth.User.id');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $classId = $settings['class_id'];
+        $assessmentId = $settings['assessment_id'];
+
+        $AccessControl = $settings['AccessControl'];
+        $userId = $settings['user_id'];
+        $institutionId = $settings['institution_id'];
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         $allSubjectsPermission = true;
         $mySubjectsPermission = true;
