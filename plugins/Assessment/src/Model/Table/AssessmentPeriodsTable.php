@@ -139,7 +139,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function onGetAssessmentPeriodsElement(Event $event, $action, $entity, $attr, $options = [])
     {
-        $tableHeaders = [__('Name') , __('Start Date'), __('End Date'), 'Academic Term'];
+        $tableHeaders = [__('Name') , __('Start Date'), __('End Date'), __('Academic Term')];
         $assessmentPeriods = $entity->assessment_periods;
         $form = $event->subject()->Form;
         $tableRows = [];
@@ -177,7 +177,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
                     'title' => __('Back')
                 ]
             ];
-        $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
 
         // Before action logic
