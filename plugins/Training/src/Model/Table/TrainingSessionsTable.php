@@ -59,8 +59,6 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
-        $this->addBehavior('Import.ImportLink');
     }
 
     public function validationDefault(Validator $validator)
@@ -93,8 +91,6 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->setFieldOrder([
             'code', 'name', 'start_date', 'end_date', 'training_course_id', 'training_provider_id'
         ]);
-
-        
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -703,16 +699,14 @@ class TrainingSessionsTable extends ControllerActionTable
         $excelFile = 'OpenEMIS_Core_Import_Training_Session_Trainees.xlsx';
         $excelPath = $folder . DS . $excelFile;
 
-        $header = ['OpenEMIS ID', 'Identity Type', 'Identity Number'];
+        $header = ['OpenEMIS ID'];
         $dataSheetName = __('Training Session Trainees');
 
         $objPHPExcel = new \PHPExcel();
         $autoTitle = false;
         $titleColumn = 'F';
         // setImportDataTemplate() resides in ImportTrait
-        $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, $autoTitle, $titleColumn);
-
-        $this->setCodesDataTemplate($objPHPExcel);
+        $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, $autoTitle, $titleColumn );
 
         $objPHPExcel->setActiveSheetIndex(0);
         $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
@@ -721,64 +715,6 @@ class TrainingSessionsTable extends ControllerActionTable
         // performDownload() resides in ImportTrait
         $this->performDownload($excelFile);
         die;
-    }
-
-    public function excelGetCodesData() {
-        // $survey_form = $this->institutionSurvey->survey_form;
-        // $questions = $survey_form->custom_fields;
-        // $data = [];
-        // $data[0] = [
-        //     'data' => [
-        //         [__('Name'), __('Code')],
-        //         [$survey_form->name, $survey_form->code]
-        //     ],
-        //     'sheetName' => __('Survey Form'),
-        //     'noDropDownList' => true
-        // ];
-        // foreach ($questions as $question) {
-        //     if ($question->field_type == 'DROPDOWN' || $question->field_type == 'CHECKBOX') {
-        //         $sheetName = $question->code;
-        //         $columnOrder = $question->_joinData->order;
-        //         $data[$columnOrder] = [
-        //             'data' => [],
-        //             'sheetName' => '( '. $question->code .' ) '. $question->name . "\n\n"
-        //         ];
-        //         $data[$columnOrder]['lookupColumn'] = 2;
-        //         $data[$columnOrder]['data'][] = [__('Answer Name'), __('Answer Code')];
-        //         if ($question->field_type == 'DROPDOWN') {
-        //             $data[$columnOrder]['sheetName'] .= __('(Use only one of the answer codes)');
-        //             foreach($question->custom_field_options as $key=>$row) {
-        //                 if ($row->visible) {
-        //                     $data[$columnOrder]['data'][] = [$row->name, $row->id];
-        //                 }
-        //             }
-        //         } elseif ($question->field_type == 'CHECKBOX') {
-        //             $data[$columnOrder]['sheetName'] .= __('(Multiple codes can be selected and seperated by comma and a space. Example: 1, 2)');
-        //             $data[$columnOrder]['noDropDownList'] = true;
-        //             foreach($question->custom_field_options as $key=>$row) {
-        //                 if ($row->visible) {
-        //                     $data[$columnOrder]['data'][] = [$row->name, $row->id];
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-        // return $data;
-
-        $data = new ArrayObject;
-
-        $data[2] = [
-            'data'=>[],
-            'sheetName'=>'Identity Type'
-        ];
-
-        $data[2]['lookupColumn'] = 2;
-        $data[2]['data'][] = [__('Identity Type'), __('ID')];
-        $data[2]['data'][] = ['Birth Certificate', '160'];
-        $data[2]['data'][] = ['Driver\'s License', '162'];
-        $data[2]['data'][] = ['Passport', '163'];
-
-        return $data;
     }
 
     public function addEditOnMassAddTrainees(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
