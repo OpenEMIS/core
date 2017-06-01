@@ -480,15 +480,18 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     _results[studentId][periodId] = {gradingOptionId: ''};
                                 }
                                 _results[studentId][periodId]['gradingOptionId'] = newValue;
+
+                                var scope = params.context._scope;
                                 vm.saveSingleRecordData(params, extra)
                                 .then(function(response) {
                                     params.data.save_error = false;
+                                    AlertSvc.reset(scope);
                                     params.api.refreshView();
 
                                 }, function(error) {
                                     params.data.save_error = true;
                                     console.log(error);
-                                    AlertSvc.error(params.context._scope, 'There was an error when saving the result');
+                                    AlertSvc.error(scope, 'There was an error when saving the result');
                                     params.api.refreshView();
                                 });
                             });
@@ -667,15 +670,18 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                                 params.data[params.colDef.field] = durationAsFloat;
                                 _results[studentId][periodId]['duration'] = durationAsFloat;
+
+                                var scope = params.context._scope;
                                 vm.saveSingleRecordData(params, extra)
                                 .then(function(response) {
                                     params.data.save_error = false;
+                                    AlertSvc.reset(scope);
                                     params.api.refreshView();
 
                                 }, function(error) {
                                     params.data.save_error = true;
                                     console.log(error);
-                                    AlertSvc.error(params.context._scope, 'There was an error when saving the result');
+                                    AlertSvc.error(scope, 'There was an error when saving the result');
                                     params.api.refreshView();
                                 });
                             });

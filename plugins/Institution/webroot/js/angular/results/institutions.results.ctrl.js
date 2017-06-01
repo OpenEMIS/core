@@ -117,6 +117,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error = false;
+                            AlertSvc.reset($scope);
 
                             // Important: to refresh the grid after data is modified
                             $scope.gridOptions.api.refreshView();
@@ -185,6 +186,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error = false;
+                            AlertSvc.reset($scope);
 
                             // Important: to refresh the grid after data is modified
                             $scope.gridOptions.api.refreshView();
