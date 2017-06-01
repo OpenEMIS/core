@@ -757,6 +757,11 @@ class InstitutionsTable extends ControllerActionTable
             $this->field('shift_type', ['visible' => false]);
             $this->field('shift_details', ['visible' => false]);
         }
+
+        // POCOR-3983 Add info message to display message inactive status
+        if ($entity->has('status') && $entity->status->code == 'INACTIVE') {
+            $this->Alert->info('general.inactive_message');
+        }
     }
 
 /******************************************************************************************************************
