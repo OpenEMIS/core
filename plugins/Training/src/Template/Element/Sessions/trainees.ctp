@@ -32,16 +32,24 @@
 		]);
 		echo $this->Form->hidden("$alias.trainee_id", ['autocomplete-value' => 'trainee_id']);
 
-		$importAttr = [
-		    'model' => $attr['model'],
-		    'field' => 'trainees_import',
-		    'className' => $attr['className'],
+		// $importAttr = [
+		//     'model' => $attr['model'],
+		//     'field' => 'trainees_import',
+		//     'className' => $attr['className'],
+		// 	'label' => __('Import Trainees'),
+		// 	'comment' => isset($attr['comment']) ? $attr['comment'] : '',
+		// 	'startWithOneLeftButton' => 'download',
+		// 	'alwaysShowOneButton' => false
+		// ];
+		// echo $this->HtmlField->binary($ControllerAction['action'], $data, $importAttr);
+
+		echo $this->Form->input('<i class="fa kd-import"></i> <span>'.__('Import Trainees').'</span>', [
 			'label' => __('Import Trainees'),
-			'comment' => isset($attr['comment']) ? $attr['comment'] : '',
-			'startWithOneLeftButton' => 'download',
-			'alwaysShowOneButton' => false
-		];
-		echo $this->HtmlField->binary($ControllerAction['action'], $data, $importAttr);
+			'type' => 'button',
+			'class' => 'btn btn-default',
+			'aria-expanded' => 'true',
+			'onclick' => "$('#reload').val('addTrainer').click();"
+		]);
 	?>
 	<div class="clearfix"></div>
 	<hr>
