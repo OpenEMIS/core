@@ -8,8 +8,50 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Controller\AppController;
 
-class StaffController extends AppController {
-	public function initialize() {
+class StaffController extends AppController
+{
+	private $features = [
+		// General
+		'Identities',
+		'UserNationalities',
+		'Contacts',
+		'UserLanguages',
+		'SpecialNeeds',
+		'Attachments',
+		'Comments',
+
+		// academic
+		'Employments',
+		'StaffClasses',
+		'StaffSubjects',
+		'Awards',
+		'Memberships',
+		'Licenses',
+
+		// qualification
+		'Qualifications',
+		'Extracurriculars',
+
+		// finance
+		'BankAccounts',
+		'Salaries',
+
+		// training
+		'StaffTrainings',
+
+		// health
+		'Healths',
+		'Allergies',
+		'Consultations',
+		'Families',
+		'Histories',
+		'Immunizations',
+		'Medications',
+		'Tests',
+	];
+
+	public function initialize()
+	{
 		parent::initialize();
 
 		$this->ControllerAction->model('Staff.Staff');
@@ -124,6 +166,9 @@ class StaffController extends AppController {
 
 			// $params = $this->request->params;
 			$this->set('contentHeader', $header);
+
+			// POCOR-3983 to disable add/edit/remove action on the model when institution status is inactive
+            $this->getStatusPermission($model);
 
 			if ($model->hasField('security_user_id')) {
 				$model->fields['security_user_id']['type'] = 'hidden';
@@ -303,4 +348,34 @@ class StaffController extends AppController {
 		$this->ControllerAction->autoRender = false;
 		$this->Image->getUserImage($id);
 	}
+
+	public function getStatusPermission($model)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $institutionStatusCode = $Institutions->getStatusCode($institutionId);
+
+        // institution status is INACTIVE
+        if ($institutionStatusCode == 'INACTIVE') {
+            if (in_array($model->alias(), $this->features)) { // check the feature list
+
+            	// off the import action
+                if ($model->behaviors()->has('ImportLink')) {
+                    $model->removeBehavior('ImportLink');
+                }
+
+                if ($model instanceof \App\Model\Table\ControllerActionTable) {
+                    // CAv4 off the add/edit/remove action
+                    $model->toggle('add', false);
+                    $model->toggle('edit', false);
+                    $model->toggle('remove', false);
+                } else if ($model instanceof \App\Model\Table\AppTable) {
+                    // CAv3 hide button and redirect when user change the Url
+                    $model->addBehavior('ControllerAction.HideButton');
+                }
+            }
+        }
+    }
 }

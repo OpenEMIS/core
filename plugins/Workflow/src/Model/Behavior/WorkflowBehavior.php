@@ -102,6 +102,7 @@ class WorkflowBehavior extends Behavior {
             $events[$event['value']] = $event['method'];
         }
         $events['Model.WorkflowSteps.afterSave'] = 'workflowStepAfterSave';
+        $events['Model.Validation.getPendingRecords'] = 'getPendingRecords';
         return $events;
     }
 
@@ -244,7 +245,8 @@ class WorkflowBehavior extends Behavior {
         }
     }
 
-    public function afterAction(Event $event) {
+    public function afterAction(Event $event)
+    {
         if ($this->isCAv4()) {
             $extra = func_get_arg(1);
 
@@ -256,8 +258,27 @@ class WorkflowBehavior extends Behavior {
                 'data-placement' => 'bottom',
                 'escape' => false
             ];
-            $this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
-            $extra['toolbarButtons'] = $toolbarButtons;
+
+            // POCOR-3983 if the model is school based and institution status is ACTIVE then toolbar button will be set.
+            $isSchoolBased = $this->isSchoolBasedModels($this->_table);
+
+            if ($isSchoolBased) {
+                if ($action == 'view' && $this->getRecord()->has('institution_id')) {
+                    $institutionId = $this->getRecord()->institution_id;
+                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $institutionStatusCode = $Institutions->getStatusCode($institutionId);
+
+                    if ($institutionStatusCode == 'ACTIVE') {
+                        $this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
+                        $extra['toolbarButtons'] = $toolbarButtons;
+                    }
+                }
+            } else {
+                $this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
+                $extra['toolbarButtons'] = $toolbarButtons;
+            }
+            // end POCOR-3983
+
         }
     }
 
@@ -1356,4 +1377,45 @@ class WorkflowBehavior extends Behavior {
 		}
 		return $filterKey;
 	}
+
+    public function getPendingRecords(Event $event, $params = [])
+    {
+        $model = TableRegistry::get($params['model_registry_alias']);
+        $doneStatus = self::DONE;
+        $institutionId = $params['institution_id'];
+
+        $count = $model
+            ->find()
+             ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
+            ->where([
+                $model->aliasField('institution_id') => $institutionId,
+            ])
+            ->count()
+        ;
+
+        return $count;
+    }
+
+    public function isSchoolBasedModels($model)
+    {
+        // boolean, check if the model is an school based workflow model
+        $isSchoolBased = false;
+
+        $workflowSchoolBasedModels = $this->WorkflowModels
+            ->find('list', [
+                'keyField' => 'model',
+                'valueField' => 'name'
+            ])
+            ->where([$this->WorkflowModels->aliasField('is_school_based') => 1])
+            ->toArray()
+        ;
+
+        if (array_key_exists($model->registryAlias(), $workflowSchoolBasedModels)) {
+            $isSchoolBased = true;
+        }
+
+        return $isSchoolBased;
+    }
 }

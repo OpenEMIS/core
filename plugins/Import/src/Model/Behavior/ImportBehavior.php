@@ -1379,6 +1379,23 @@ class ImportBehavior extends Behavior
 
             $tempRow['userId'] = $userId;
             $tempRow['superAdmin'] = $superAdmin;
+
+            // POCOR-3983 status depend on date_closed.
+            $Statuses = TableRegistry::get('Institution.Statuses');
+            $codeValue = 'ACTIVE';
+
+            if (!empty($tempRow['date_closed'])) {
+                $dateClosed = Date::createFromFormat('d/m/Y', $tempRow['date_closed']);
+
+                if ($dateClosed < new Date()) {
+                    $codeValue = 'INACTIVE';
+                }
+            }
+
+            $value = $Statuses->getIdByCode($codeValue);
+
+            $tempRow['institution_status_id'] = $value;
+            // end POCOR-3983
         }
 
         if ($rowPass) {
