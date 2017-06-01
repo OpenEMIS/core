@@ -1373,10 +1373,10 @@ class InstitutionsController extends AppController
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
 
-        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
-        $statusId = $this->Institutions->get($institutionId)->institution_status_id;
+        $institutionStatusCode = $this->Institutions->getStatusCode($institutionId);
+
         // institution status is INACTIVE
-        if ($InstitutionStatuses->get($statusId)->code == 'INACTIVE') {
+        if ($institutionStatusCode == 'INACTIVE') {
             if (in_array($model->alias(), $this->features)) { // check the feature list
 
                 // off the import action
@@ -1386,14 +1386,11 @@ class InstitutionsController extends AppController
 
                 if ($model instanceof \App\Model\Table\ControllerActionTable) {
                     // CAv4 off the add/edit/remove action
-pr('CAv4 - disabled the add/edit/remove');
                     $model->toggle('add', false);
                     $model->toggle('edit', false);
                     $model->toggle('remove', false);
                 } else if ($model instanceof \App\Model\Table\AppTable) {
-pr('CAv3 - disabled the add/edit/remove');
-                    // CAv3 off the add/edit/remove action
-                    // hide button and redirect when user change the Url
+                    // CAv3 hide button and redirect when user change the Url
                     $model->addBehavior('ControllerAction.HideButton');
                 }
             }

@@ -375,6 +375,20 @@ class InstitutionsTable extends ControllerActionTable
     public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
     {
         $attr['default_date'] = false;
+
+        if ($action == 'add') {
+            $attr['visible'] = false;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionStatusId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['visible'] = false;
+        }
+
         return $attr;
     }
 
@@ -394,6 +408,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('security_group_id', ['visible' => false]);
         // $this->field('institution_site_area_id', ['visible' => false]);
         $this->field('date_opened');
+        $this->field('date_closed');
         $this->field('modified', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -401,6 +416,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->field('institution_locality_id', ['type' => 'select']);
         $this->field('institution_ownership_id', ['type' => 'select']);
+        $this->field('institution_status_id');
         $this->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true]);
         if ($this->action == 'index' || $this->action == 'view') {
             $this->field('institution_provider_id', ['type' => 'select']);
@@ -682,9 +698,9 @@ class InstitutionsTable extends ControllerActionTable
 
         // to display message after redirect
         $sessionKey = 'HideButton.warning';
-        if ($session->check($sessionKey)) {
+        if ($this->Session->check($sessionKey)) {
             $this->Alert->warning('security.noAccess');
-            $session->delete($sessionKey);
+            $this->Session->delete($sessionKey);
         }
     }
 
@@ -709,7 +725,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setFieldOrder([
             'information_section',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id'
+            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'shift_section',
             'shift_type', 'shift_details',
@@ -778,7 +794,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setFieldOrder([
             'information_section',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'location_section',
             'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -797,10 +813,10 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
         $this->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 
-        $this->setFieldOrder([
+         $this->setFieldOrder([
             'information_section',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id'
+            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'location_section',
             'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
