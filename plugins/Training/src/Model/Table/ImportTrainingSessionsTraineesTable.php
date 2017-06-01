@@ -71,12 +71,13 @@ class ImportTrainingSessionsTraineesTable extends AppTable
 
         if (!empty($tempRow['trainee_id'])) {
 
-            //check against target population, staff status
+            //check against target population
             $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
             $Staff = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $Users = TableRegistry::get('User.Users');
             $Positions = TableRegistry::get('Institution.InstitutionPositions');
+
+            $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
 
             $targetPopulationIds = $TargetPopulations
                                 ->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
@@ -84,12 +85,40 @@ class ImportTrainingSessionsTraineesTable extends AppTable
                                 ->where(['TrainingSessions.id' => $this->trainingSessionId])
                                 ->toArray();
 
-            // pr($targetPopulationIds);die;
+            if (!empty($targetPopulationIds)) {
+                $query = $Staff->find()
+                        ->matching('Positions', function ($q) use ($Positions, $targetPopulationIds) {
+                            return $q
+                                ->find('all')
+                                ->where([
+                                    'Positions.staff_position_title_id IN' => $targetPopulationIds
+                                ]);
+                        })
+                        ->where([
+                            $Staff->aliasField('staff_id') => $tempRow['trainee_id']
+                        ]);
 
-            
-            // $tempRow['training_session_id'] = $this->trainingSessionId;
-            // $tempRow['status'] = 1;
+                if ($query->count() < 1) {
+                    $rowInvalidCodeCols['trainee'] = __('Trainee Position not in Training Course Target Population');
+                    return false;
+                } else {
+                    //check assigned status
+                    $query->where([
+                        $Staff->aliasField('staff_status_id') => $assignedStatus
+                    ]);
+
+                    if ($query->count() < 1) {
+                        $rowInvalidCodeCols['trainee'] = __('Trainee does not have Assigned status');
+                        return false;
+                    }
+                }
+            }
+
+            $tempRow['training_session_id'] = $this->trainingSessionId;
+            $tempRow['status'] = 1;
         }
+
+        pr(111);die;
 
         return true;
     }
