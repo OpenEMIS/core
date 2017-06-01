@@ -14,10 +14,6 @@ angular.module('alert.svc', [])
                 }
                 scope.message = message;
             }, function(error) {
-                var message = response.data.translated_text;
-                for (var i=0; i < args.length; i++ ) {
-                    message = message.replace( /%s/, args[i] );
-                }
                 scope.message = message;
             });
         },
