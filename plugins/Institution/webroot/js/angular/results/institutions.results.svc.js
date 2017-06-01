@@ -468,32 +468,35 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                             eSelect.value = params.value;
 
-                            eSelect.addEventListener('change', function () {
+                            eSelect.addEventListener('blur', function () {
                                 var newValue = eSelect.value;
-                                params.data[params.colDef.field] = newValue;
 
-                                if (angular.isUndefined(_results[studentId])) {
-                                    _results[studentId] = {};
+                                if (newValue != oldValue || params.data.save_error) {
+                                    params.data[params.colDef.field] = newValue;
+
+                                    if (angular.isUndefined(_results[studentId])) {
+                                        _results[studentId] = {};
+                                    }
+
+                                    if (angular.isUndefined(_results[studentId][periodId])) {
+                                        _results[studentId][periodId] = {gradingOptionId: ''};
+                                    }
+                                    _results[studentId][periodId]['gradingOptionId'] = newValue;
+
+                                    var scope = params.context._scope;
+                                    vm.saveSingleRecordData(params, extra)
+                                    .then(function(response) {
+                                        params.data.save_error = false;
+                                        AlertSvc.reset(scope);
+                                        params.api.refreshView();
+
+                                    }, function(error) {
+                                        params.data.save_error = true;
+                                        console.log(error);
+                                        AlertSvc.error(scope, 'There was an error when saving the result');
+                                        params.api.refreshView();
+                                    });
                                 }
-
-                                if (angular.isUndefined(_results[studentId][periodId])) {
-                                    _results[studentId][periodId] = {gradingOptionId: ''};
-                                }
-                                _results[studentId][periodId]['gradingOptionId'] = newValue;
-
-                                var scope = params.context._scope;
-                                vm.saveSingleRecordData(params, extra)
-                                .then(function(response) {
-                                    params.data.save_error = false;
-                                    AlertSvc.reset(scope);
-                                    params.api.refreshView();
-
-                                }, function(error) {
-                                    params.data.save_error = true;
-                                    console.log(error);
-                                    AlertSvc.error(scope, 'There was an error when saving the result');
-                                    params.api.refreshView();
-                                });
                             });
 
                             eCell.appendChild(eSelect);
@@ -546,7 +549,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
-            var periodId = extra.period.id;
             var enrolledStatus = extra.enrolledStatus;
             var vm = this;
 
@@ -587,12 +589,10 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         return (studentStatusId == enrolledStatus) ? highlightClass : false;
                     },
                     cellRenderer: function(params) {
-                        var value = params.data[params.colDef.field];
+                        var oldValue = params.data[params.colDef.field];
                         var studentStatusId = params.data.student_status_id;
 
                         if (studentStatusId == enrolledStatus) {
-                            var studentId = params.data.student_id;
-
                             var eCell = document.createElement('div');
                             eCell.setAttribute("class", "ag-grid-dir-ltr");
 
@@ -620,70 +620,18 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             eCell.appendChild(text);
                             eCell.appendChild(secondInput);
 
-                            if (value) {
-                                var duration = String(value).split(".");
+                            if (oldValue) {
+                                var duration = String(oldValue).split(".");
                                 minuteInput.value = duration[0];
                                 secondInput.value = duration[1];
                             }
 
-                            eCell.addEventListener('change', function() {
-                                var minuteInt = parseInt(minuteInput.value);
-                                var secondInt = parseInt(secondInput.value);
-                                // Minute Input
-                                if (minuteInput.value.length > 0) {
-                                    if (isNaN(minuteInt) || (minuteInt < 0 || minuteInt > 999)) {
-                                        minuteInput.value = '';
-                                        secondInput.value = '';
-                                    } else {
-                                        minuteInput.value = minuteInt;
-                                    }
-                                }
-                                // End
+                            minuteInput.addEventListener('blur', function() {
+                                vm.parseDuration(minuteInput, secondInput, oldValue, params, _results, extra);
+                            });
 
-                                // Second Input
-                                if (secondInput.value.length > 0) {
-                                    if (isNaN(secondInt) || (secondInt < 0 || secondInt > 59)) {
-                                        minuteInput.value = '';
-                                        secondInput.value = '';
-                                    } else if (secondInput.value.length == 1) {
-                                        // for padding
-                                        secondInput.value = '0' + secondInt;
-                                    } else {
-                                        secondInput.value = secondInt;
-                                    }
-                                }
-                                // End
-
-                                if (angular.isUndefined(_results[studentId])) {
-                                    _results[studentId] = {};
-                                }
-
-                                if (angular.isUndefined(_results[studentId][periodId])) {
-                                    _results[studentId][periodId] = {duration: ''};
-                                }
-
-                                var durationAsFloat = '';
-                                if (minuteInput.value.length > 0 || secondInput.value.length > 0) {
-                                    var duration = minuteInput.value + '.' + secondInput.value;
-                                    durationAsFloat = $filter('number')(duration, 2);
-                                }
-
-                                params.data[params.colDef.field] = durationAsFloat;
-                                _results[studentId][periodId]['duration'] = durationAsFloat;
-
-                                var scope = params.context._scope;
-                                vm.saveSingleRecordData(params, extra)
-                                .then(function(response) {
-                                    params.data.save_error = false;
-                                    AlertSvc.reset(scope);
-                                    params.api.refreshView();
-
-                                }, function(error) {
-                                    params.data.save_error = true;
-                                    console.log(error);
-                                    AlertSvc.error(scope, 'There was an error when saving the result');
-                                    params.api.refreshView();
-                                });
+                            secondInput.addEventListener('blur', function() {
+                                vm.parseDuration(minuteInput, secondInput, oldValue, params, _results, extra);
                             });
                             return eCell;
 
@@ -701,6 +649,73 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 });
             }
             return cols;
+        },
+
+        parseDuration: function(minuteInput, secondInput, oldValue, params, _results, extra) {
+            var studentId = params.data.student_id;
+            var periodId = extra.period.id;
+            var vm = this;
+
+            var minuteInt = parseInt(minuteInput.value);
+            var secondInt = parseInt(secondInput.value);
+
+            // Minute Input
+            if (minuteInput.value.length > 0) {
+                if (isNaN(minuteInt) || (minuteInt < 0 || minuteInt > 999)) {
+                    minuteInput.value = '';
+                    secondInput.value = '';
+                } else {
+                    minuteInput.value = minuteInt;
+                }
+            }
+            // End
+
+            // Second Input
+            if (secondInput.value.length > 0) {
+                if (isNaN(secondInt) || (secondInt < 0 || secondInt > 59)) {
+                    minuteInput.value = '';
+                    secondInput.value = '';
+                } else if (secondInput.value.length == 1) {
+                    // for padding
+                    secondInput.value = '0' + secondInt;
+                } else {
+                    secondInput.value = secondInt;
+                }
+            }
+            // End
+
+            var durationAsFloat = '';
+            if (minuteInput.value.length > 0 || secondInput.value.length > 0) {
+                var duration = minuteInput.value + '.' + secondInput.value;
+                durationAsFloat = $filter('number')(duration, 2);
+            }
+
+            if (durationAsFloat != oldValue || params.data.save_error) {
+                if (angular.isUndefined(_results[studentId])) {
+                    _results[studentId] = {};
+                }
+
+                if (angular.isUndefined(_results[studentId][periodId])) {
+                    _results[studentId][periodId] = {duration: ''};
+                }
+
+                params.data[params.colDef.field] = durationAsFloat;
+                _results[studentId][periodId]['duration'] = durationAsFloat;
+
+                var scope = params.context._scope;
+                vm.saveSingleRecordData(params, extra)
+                .then(function(response) {
+                    params.data.save_error = false;
+                    AlertSvc.reset(scope);
+                    params.api.refreshView();
+
+                }, function(error) {
+                    params.data.save_error = true;
+                    console.log(error);
+                    AlertSvc.error(scope, 'There was an error when saving the result');
+                    params.api.refreshView();
+                });
+            }
         },
 
         getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
