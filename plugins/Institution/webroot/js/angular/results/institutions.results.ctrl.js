@@ -130,6 +130,9 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                             // Important: to refresh the grid after data is modified
                             $scope.gridOptions.api.refreshView();
                         });
+
+                        // Important: to refresh the grid after data is modified
+                        $scope.gridOptions.api.refreshView();
                     }
                 },
                 onGridReady: function() {
@@ -160,7 +163,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue) {
+                    if (params.newValue != params.oldValue || params.data.save_error) {
                         var index = params.colDef.field.replace(/period_(\d+)/, '$1');
 
                         if (angular.isUndefined($scope.results[params.data.student_id])) {
@@ -199,6 +202,9 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                             // Important: to refresh the grid after data is modified
                             $scope.gridOptions.api.refreshView();
                         });
+
+                        // Important: to refresh the grid after data is modified
+                        $scope.gridOptions.api.refreshView();
                     }
                 },
                 onGridReady: function() {
