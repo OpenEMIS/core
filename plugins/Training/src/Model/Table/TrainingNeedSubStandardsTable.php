@@ -3,6 +3,7 @@ namespace Training\Model\Table;
 
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use ArrayObject;
 
@@ -20,6 +21,18 @@ class TrainingNeedSubStandardsTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
 
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $parentFieldOptions = $this->TrainingNeedStandards->find('list')->toArray();
+        $selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
+
+        if (!empty($selectedParentFieldOption)) {
+            $query->where([$this->aliasField('training_need_standard_id') => $selectedParentFieldOption]);
+        }
+
+        $this->controller->set(compact('parentFieldOptions', 'selectedParentFieldOption'));
     }
 
     public function afterAction(Event $event)
