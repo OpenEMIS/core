@@ -18,6 +18,7 @@ class StudentsController extends AppController
 		'UserNationalities',
 		'Contacts',
 		'Guardians',
+		'GuardianUser',
 		'UserLanguages',
 		'SpecialNeeds',
 		'Attachments',
@@ -392,24 +393,18 @@ class StudentsController extends AppController
         $institutionId = $session->read('Institution.Institutions.id');
 
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
-        $statusId = $Institutions->get($institutionId)->institution_status_id;
+        $institutionStatusCode = $Institutions->getStatusCode($institutionId);
 
         // institution status is INACTIVE
-        if ($InstitutionStatuses->get($statusId)->code == 'INACTIVE') {
+        if ($institutionStatusCode == 'INACTIVE') {
             if (in_array($model->alias(), $this->features)) { // check the feature list
                 if ($model instanceof \App\Model\Table\ControllerActionTable) {
                     // CAv4 off the add/edit/remove action
-pr('CAv4 - disabled the add/edit/remove');
                     $model->toggle('add', false);
                     $model->toggle('edit', false);
                     $model->toggle('remove', false);
                 } else if ($model instanceof \App\Model\Table\AppTable) {
-pr('CAv3 - disabled the add/edit/remove');
-                    // CAv3
-                    $currentAction = $model->ControllerAction->action();
-
-                    // hide button and redirect when user change the Url
+                    // CAv3 hide button and redirect when user change the Url
                     $model->addBehavior('ControllerAction.HideButton');
                 }
             }
