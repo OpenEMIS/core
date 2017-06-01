@@ -586,7 +586,8 @@ class NavigationComponent extends Component
             'Institutions.VisitRequests' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution']
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.VisitRequests', 'Institutions.Visits']
             ],
 
             'Institutions.Cases' => [

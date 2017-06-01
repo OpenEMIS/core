@@ -112,7 +112,8 @@ trait MessagesTrait
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
-            'custom_validation_pattern' => 'Please enter a valid format'
+            'custom_validation_pattern' => 'Please enter a valid format',
+            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
