@@ -415,14 +415,15 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => false]);
 
         $this->field('institution_locality_id', ['type' => 'select']);
-        $this->field('institution_ownership_id', ['type' => 'select']);
-        $this->field('institution_status_id');
-        $this->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true]);
+        $this->field('institution_ownership_id', ['type' => 'select', 'attr' => ['label' => __('Ownership')]]);
+        $this->field('institution_status_id', ['attr' => ['label' => __('Status')]]);
+        $this->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true , 'attr' => ['label' => __('Sector')]]);
         if ($this->action == 'index' || $this->action == 'view') {
             $this->field('institution_provider_id', ['type' => 'select']);
         }
-        $this->field('institution_gender_id', ['type' => 'select']);
-        $this->field('institution_network_connectivity_id', ['type' => 'select']);
+        $this->field('institution_type_id',['attr' => ['label' => __('Type')]]);
+        $this->field('institution_gender_id', ['type' => 'select', 'attr' => ['label' => __('Gender')]]);
+        $this->field('institution_network_connectivity_id', ['type' => 'select', 'attr' => ['label' => __('Network Connectivity')]]);
         $this->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
 
@@ -865,6 +866,7 @@ class InstitutionsTable extends ControllerActionTable
                 ->toArray();
         }
 
+        $attr['attr']['label'] = __('Provider');
         $attr['options'] = $providerOptions;
         $attr['empty'] = true;
         return $attr;
