@@ -73,7 +73,8 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                     assessment_id: $scope.assessment_id,
                     academic_period_id: $scope.academic_period_id,
                     education_grade_id: $scope.education_grade_id,
-                    education_subject_id: 0
+                    education_subject_id: 0,
+                    _scope: $scope
                 },
                 columnDefs: [],
                 rowData: [],
@@ -90,7 +91,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                 singleClickEdit: true,
                 localeText: localeText,
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue) {
+                    if (params.newValue != params.oldValue || params.data.save_error) {
                         var index = params.colDef.field.replace(/period_(\d+)/, '$1');
 
                         if (angular.isUndefined($scope.results[params.data.student_id])) {
@@ -115,11 +116,20 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         };
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
+                            params.data.save_error = false;
+                            AlertSvc.reset($scope);
+
+                            // Important: to refresh the grid after data is modified
+                            $scope.gridOptions.api.refreshView();
+
                         }, function(error) {
+                            params.data.save_error = true;
                             console.log(error);
+                            AlertSvc.error($scope, 'There was an error when saving the result');
+
+                            // Important: to refresh the grid after data is modified
+                            $scope.gridOptions.api.refreshView();
                         });
-                        // Important: to refresh the grid after data is modified
-                        $scope.gridOptions.api.refreshView();
                     }
                 },
                 onGridReady: function() {
@@ -175,11 +185,20 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         };
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
+                            params.data.save_error = false;
+                            AlertSvc.reset($scope);
+
+                            // Important: to refresh the grid after data is modified
+                            $scope.gridOptions.api.refreshView();
+
                         }, function(error) {
+                            params.data.save_error = true;
                             console.log(error);
+                            AlertSvc.error($scope, 'There was an error when saving the result');
+
+                            // Important: to refresh the grid after data is modified
+                            $scope.gridOptions.api.refreshView();
                         });
-                        // Important: to refresh the grid after data is modified
-                        $scope.gridOptions.api.refreshView();
                     }
                 },
                 onGridReady: function() {
