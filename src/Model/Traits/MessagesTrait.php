@@ -112,7 +112,8 @@ trait MessagesTrait
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
-            'custom_validation_pattern' => 'Please enter a valid format'
+            'custom_validation_pattern' => 'Please enter a valid format',
+            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -769,7 +770,8 @@ trait MessagesTrait
                     'ruleLessThanToday' => 'Date should not be later than today'
                 ],
                 'date_closed' => [
-                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened',
+                    'ruleCheckWorkbenchPending' => 'There is still pending item in institution workbench, please clear the workbench before proceed.'
                 ],
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email',
