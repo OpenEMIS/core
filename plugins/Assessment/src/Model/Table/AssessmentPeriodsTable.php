@@ -7,6 +7,7 @@ use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\ResultSet;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\Utility\Text;
@@ -203,16 +204,35 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if ($entity) {
             if ($request->is(['post', 'put'])) {
                 $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
-                $patchOptions = new ArrayObject(['validate' => 'updateAcademicTerm', 'associated' => ['AssessmentPeriods' => ['validate' => 'updateAcademicTerm']]]);
-                $requestData = new ArrayObject($request->data);
-
-                $params = [$entity, $requestData, $patchOptions, $extra];
-
+                $patchOptions = new ArrayObject(['validate' => false, 'associated' => ['AssessmentPeriods' => ['validate' => false]]]);
+                
                 if ($submit == 'save') {
+
+                    //logic to check if all empty / filled based on the 1st field.
+                    $emptyMode = false;
+                    foreach ($request->data['assessment_periods'] as $key => $value) {
+                        if (empty($value['academic_term'])) {
+                            $emptyMode = true;
+                        }
+                        break;
+                    }
+
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
+                    
                     if ($extra['patchEntity']) {
                         $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                    }
+
+                    foreach ($entity->assessment_periods as $key => $value) {
+                        if ($emptyMode) {
+                            if (!empty($value->academic_term)) {
+                                $entity->assessment_periods[$key]->errors('academic_term', [__('Please remove an academic term for this record')]);
+                            }
+                        } else {
+                            if (empty($value->academic_term)) {
+                                $entity->assessment_periods[$key]->errors('academic_term', [__('Please enter an academic term for this record')]);
+                            }
+                        }
                     }
 
                     $process = function ($model, $entity) {
@@ -317,6 +337,14 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['EducationSubjects']);
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        //disable edit academic term if no period
+        if ($data->count() < 1) {
+            unset($extra['toolbarButtons']['editAcademicTerm']);
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -483,6 +511,15 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+        }
+
+        return $attr;
+    }
+
     public function addEditOnChangeAssessmentId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         //remove default validation because of foreign key
@@ -571,6 +608,8 @@ class AssessmentPeriodsTable extends ControllerActionTable
             ],
             'entity' => $entity
         ]);
+
+        $this->field('academic_term');
 
         $this->field('education_subjects', [
             'type' => 'element',
