@@ -2196,34 +2196,4 @@ class ValidationBehavior extends Behavior
         }
         return $nullCounter == $arrLength || $nullCounter == 0;
     }
-
-    public static function checkAcademicTerm($field, array $globalData)
-    {
-        $model = $globalData['providers']['table'];
-        $record = $model
-            ->find()
-            ->select([
-                $model->aliasField('academic_term')
-            ])
-            ->where([
-                $model->aliasField('assessment_id') => $globalData['data']['assessment_id']
-            ])
-            ->hydrate(false)
-            ->toArray();
-        $record = array_column($record, 'academic_term');
-        $arrLength = count($record);
-        $nullCounter = 0;
-        foreach ($record as $value) {
-            if (empty($value)) {
-                $nullCounter++;
-            }
-        }
-        if (is_null($field)) {
-            return $nullCounter == $arrLength && $field == null;
-        } elseif ($arrLength > 0) {
-            return $nullCounter == 0 && !is_null($field);
-        } else {
-            return $nullCounter == 0;
-        }
-    }
 }
