@@ -9,7 +9,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
     $scope.roles = [];
     $scope.enrolledStatus = null;
     $scope.academicTermOptions = [];
-    $scope.selectedAcademicTerm = null;
+    $scope.selectedAcademicTerm = undefined;
 
     angular.element(document).ready(function () {
         // init

@@ -95,6 +95,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
         return $query
             ->distinct('academic_term')
+            ->where([$this->aliasField('academic_term IS NOT NULL')])
             ->formatResults(function ($results) {
                 $results = $results->toArray();
                 $returnArr = [];
