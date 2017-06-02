@@ -19,13 +19,40 @@ class ImportTrainingSessionsTraineesTable extends AppTable
         $this->table('import_mapping');
         parent::initialize($config);
 
-       $this->addBehavior('Import.Import', ['plugin'=>'Training', 'model'=>'TrainingSessionsTrainees']);
+        $this->addBehavior('Import.Import', [
+            'plugin'=>'Training', 
+            'model'=>'TrainingSessionsTrainees'
+        ]);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
+        ];
+        $events = array_merge($events, $newEvent);
+        return $events;
     }
 
     public function beforeAction($event) 
     {
         $paramPass = $this->request->params['pass'][1];
         $this->trainingSessionId = $this->paramsDecode($paramPass)['id'];
+    }
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) 
+    {
+        if ($action == 'add' || $action == 'results') {
+            $backUrl = [
+                'plugin' => 'Training',
+                'controller' => 'Trainings',
+                'action' => 'Sessions',
+                0 => 'edit',
+                1 => $this->request->params['pass'][1]
+            ];
+            $toolbarButtons['back']['url'] = $backUrl;
+        }
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
@@ -117,8 +144,6 @@ class ImportTrainingSessionsTraineesTable extends AppTable
             $tempRow['training_session_id'] = $this->trainingSessionId;
             $tempRow['status'] = 1;
         }
-
-        pr(111);die;
 
         return true;
     }
