@@ -7,12 +7,8 @@ DROP TABLE IF EXISTS `institutions`;
 RENAME TABLE `z_3983_institutions` TO `institutions`;
 
 -- import_mapping
-UPDATE `import_mapping` SET `id` = `id`+1, `order` = `order`+1
-WHERE `model` = 'Institution.Institutions' AND `id` >= 20
-ORDER BY `id` DESC;
-
-INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`)
-VALUES ('20', 'Institution.Institutions', 'institution_status_id', 'Code', '20', '1', 'Institution', 'Statuses', 'national_code');
+DROP TABLE IF EXISTS `import_mapping`;
+RENAME TABLE `z_3983_import_mapping` TO `import_mapping`;
 
 
 -- db_patches
