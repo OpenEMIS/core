@@ -34,7 +34,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
-        $this->extra = new ArrayObject(['limit' => 30, 'page' => 1]);
+        $this->extra = new ArrayObject([]);
         $this->serialize = new ArrayObject([]);
     }
 
@@ -222,6 +222,10 @@ class RestfulV2Component extends Component implements RestfulInterface
         $query = $table->find('all', $extra->getArrayCopy());
         $this->processRequestQueries($query, $extra);
 
+        if (!$extra->offsetExists('page')) {
+            $extra->offsetSet('page', 1);
+        }
+
         try {
             $total = $query->count();
             if ($extra->offsetExists('limit') && $extra->offsetExists('page')) {
@@ -287,7 +291,13 @@ class RestfulV2Component extends Component implements RestfulInterface
         $controller = $this->controller;
         $extra = $this->extra;
         $serialize = $this->serialize;
+
         $table = $this->initTable($this->model);
+        $schemaTable = $table;
+
+        if ($extra->offsetExists('model')) {
+            $table = $this->initTable($extra->offsetGet('model')); // change main model dynamically
+        }
 
         $idKeys = $id;
         if (json_decode($this->urlsafeB64Decode($id), true)) {
@@ -299,6 +309,12 @@ class RestfulV2Component extends Component implements RestfulInterface
             // process the queries sent through the request url
             $this->processRequestQueries(null, $extra, 'view');
 
+            if ($extra->offsetExists('finder')) {
+                $finder = $extra->offsetGet('finder');
+                if (!$table->hasFinder($finder)) {
+                    $extra->offsetUnset('finder');
+                }
+            }
             $entity = $table->get($primaryKeyValues, $extra->getArrayCopy());
 
             $data = $this->formatResultSet($table, $entity, $extra);
@@ -307,13 +323,13 @@ class RestfulV2Component extends Component implements RestfulInterface
             }
             $serialize->offsetSet('data', $data);
 
-            if ($table instanceof RestfulAppTable) {
+            if ($schemaTable instanceof RestfulAppTable) {
                 $action = $extra['action'];
-                if ($action == 'view') {
-                    $table->dispatchEvent('Restful.Model.view.updateSchema', [$table->getSchema(), $entity, $extra], $controller);
-                } else {
-                    $table->dispatchEvent('Restful.Model.' . $action . '.updateSchema', [$table->getSchema(), $entity, $extra], $controller);
+                $eventKey = 'Restful.Model.view.updateSchema';
+                if ($action != 'view') {
+                    $eventKey = 'Restful.Model.' . $action . '.updateSchema';
                 }
+                $schemaTable->dispatchEvent($eventKey, [$schemaTable->getSchema(), $entity, $extra], $controller);
             }
         } else {
             $this->_outputError('Record does not exists');
@@ -416,9 +432,13 @@ class RestfulV2Component extends Component implements RestfulInterface
             }
         }
 
-        // may have problems with complicated conditions
-        if (!empty($OR)) {
-            $query->where(['OR' => $OR]);
+        if ($table->hasFinder('search')) {
+            $query->find('search', ['OR' => $OR]);
+        } else {
+            // may have problems with complicated conditions
+            if (!empty($OR)) {
+                $query->where(['OR' => $OR]);
+            }
         }
     }
 
@@ -461,7 +481,7 @@ class RestfulV2Component extends Component implements RestfulInterface
                     if (!is_null($query)) { // for index
                         $options['_controller'] = $this->controller;
                         $query->find($name, $options);
-                    } elseif (!array_key_exists('finder', $extra)) { // for view
+                    } elseif (!array_key_exists('finder', $extra)) { // for view／edit
                         $extra['_controller'] = $this->controller;
                         $extra['finder'] = $name;
                     }
@@ -483,6 +503,11 @@ class RestfulV2Component extends Component implements RestfulInterface
                 $innerJoinAssoc = explode(',', $value);
             }
 
+            if (!is_null($query)) {
+                foreach ($innerJoinAssoc as $assoc) {
+                    $query->innerJoinWith($assoc);
+                }
+            }
             $extra['innerJoinWith'] = $innerJoinAssoc;
         }
     }
@@ -625,10 +650,17 @@ class RestfulV2Component extends Component implements RestfulInterface
 
     private function _limit($query, $value, ArrayObject $extra)
     {
-        if (empty($value)) {
-            $value = 30; // default to 30
+        /*
+        1. query does not contain _limit
+        2. query contains _limit=0
+        3. query contains _limit=-1
+        3. query contains _limit=10
+        */
+        if ($value > 0) {
+            $extra['limit'] = $value;
+        } elseif ($value < 0) {
+            $extra['limit'] = 30;
         }
-        $extra['limit'] = $value; // used in _page
     }
 
     private function _page($query, $value, ArrayObject $extra)
@@ -657,6 +689,15 @@ class RestfulV2Component extends Component implements RestfulInterface
             $queryString = $this->urlsafeB64Decode($requestQueries['_querystring']);
             unset($this->request->query['_querystring']);
             $this->extra['querystring'] = json_decode($queryString, true);
+        }
+
+        if (array_key_exists('_search', $requestQueries)) {
+            $search = $this->urlsafeB64Decode($requestQueries['_search']);
+            $this->extra['search'] = $search;
+        }
+
+        if (!array_key_exists('_limit', $requestQueries)) {
+            $this->extra['limit'] = 30;
         }
 
         if (array_key_exists('_schema', $requestQueries) && $requestQueries['_schema'] == 'true') {
