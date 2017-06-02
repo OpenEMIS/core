@@ -135,13 +135,16 @@ class ReportCardCommentsTable extends ControllerActionTable
                 $ReportCards->aliasField('id')
             ]);
 
-        $extra['options']['order'] = [
-            $EducationProgrammes->aliasField('order') => 'asc',
-            $EducationGrades->aliasField('order') => 'asc',
-            $ReportCards->aliasField('code') => 'asc',
-            $ReportCards->aliasField('name') => 'asc',
-            $this->aliasField('name') => 'asc'
-        ];
+        if (is_null($this->request->query('sort'))) {
+            $query->order([
+                $EducationProgrammes->aliasField('order'),
+                $EducationGrades->aliasField('order'),
+                $this->aliasField('name'),
+                $ReportCards->aliasField('code'),
+                $ReportCards->aliasField('name')
+            ]);
+        }
+
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
@@ -197,7 +200,7 @@ class ReportCardCommentsTable extends ControllerActionTable
     {
         $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
         $count = $ReportCardSubjects
-            ->find('MatchingClassSubjects', [
+            ->find('matchingClassSubjects', [
                 'report_card_id' => $entity->report_card_id,
                 'institution_class_id' => $entity->institution_class_id
             ])
