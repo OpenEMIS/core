@@ -85,10 +85,18 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ->add('date_enabled', 'ruleCompareDate', [
             'rule' => ['compareDate', 'date_disabled', true]
         ])
-        ->allowEmpty('academic_term')
-        ->add('academic_term', 'ruleCheckAcademicTerm', [
-            'rule' => ['checkAcademicTerm']
-        ]);
+        ->allowEmpty('academic_term', function ($context) {
+            if (array_key_exists('assessment_id', $context['data'])) {
+                $query = $this
+                        ->find()
+                        ->where([
+                            $this->aliasField('assessment_id') => $context['data']['assessment_id'],
+                            $this->aliasField('academic_term IS NOT NULL')
+                        ]);
+                return $query->count() == 0;
+            }
+        })
+        ;
     }
 
     public function findUniqueAssessmentTerms(Query $query, array $options)
@@ -113,15 +121,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $query;
     }
 
-    public function validationUpdateAcademicTerm(Validator $validation)
-    {
-        return $validation
-            ->allowEmpty('academic_term')
-            ->add('academic_term', 'ruleCheckAcademicTerm', [
-                'rule' => ['checkAcademicTerm']
-            ]);
-    }
-
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -132,7 +131,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('academic_term')) {
-            if ($data['academic_term'] == '') {
+            if (trim($data['academic_term']) == '') {
                 $data['academic_term'] = null;
             }
         }
@@ -513,6 +512,22 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, Request $request)
     {
+        if ($action == 'add') {
+            if (array_key_exists('template', $request->query)) { //if all academic term is null, then hide
+                $query = $this
+                        ->find()
+                        ->where([
+                            $this->aliasField('assessment_id') => $request->query['template'],
+                            $this->aliasField('academic_term IS NOT NULL')
+                        ])
+                        ->count();
+
+                if ($query < 1) {
+                    $attr['visible'] = false;
+                }
+            }
+        }
+
         if ($action == 'edit') {
             $attr['type'] = 'readonly';
         }
