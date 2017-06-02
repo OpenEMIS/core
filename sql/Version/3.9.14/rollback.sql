@@ -1,7 +1,4 @@
 -- POCOR-3937
--- system_patches
-DELETE FROM `system_patches` WHERE `issue`='POCOR-3937';
-
 -- import_mapping
 DELETE FROM `import_mapping`
 WHERE `id` IN (112, 113, 114);
@@ -22,6 +19,9 @@ UPDATE `security_functions`
 SET `order` = `order` - 1
 WHERE `order` > 7038
 AND `order` < 8000;
+
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue`='POCOR-3937';
 
 
 -- POCOR-3853
