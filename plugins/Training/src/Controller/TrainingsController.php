@@ -13,6 +13,10 @@ class TrainingsController extends AppController
         parent::initialize();
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
+
+        $this->ControllerAction->models = [
+            'ImportTrainingSessionsTrainees'    => ['className' => 'Training.ImportTrainingSessionsTrainees', 'actions' => ['add']],
+        ];
     }
 
     // CAv4
