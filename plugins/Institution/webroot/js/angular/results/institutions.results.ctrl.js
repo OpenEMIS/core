@@ -91,7 +91,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                 singleClickEdit: true,
                 localeText: localeText,
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue || params.data.save_error) {
+                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         var index = params.colDef.field.replace(/period_(\d+)/, '$1');
 
                         if (angular.isUndefined($scope.results[params.data.student_id])) {
@@ -116,14 +116,14 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         };
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
-                            params.data.save_error = false;
+                            params.data.save_error[params.colDef.field] = false;
                             AlertSvc.reset($scope);
 
                             // Important: to refresh the grid after data is modified
                             $scope.gridOptions.api.refreshView();
 
                         }, function(error) {
-                            params.data.save_error = true;
+                            params.data.save_error[params.colDef.field] = true;
                             console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
 
@@ -163,7 +163,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue || params.data.save_error) {
+                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         var index = params.colDef.field.replace(/period_(\d+)/, '$1');
 
                         if (angular.isUndefined($scope.results[params.data.student_id])) {
@@ -188,14 +188,14 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         };
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
-                            params.data.save_error = false;
+                            params.data.save_error[params.colDef.field] = false;
                             AlertSvc.reset($scope);
 
                             // Important: to refresh the grid after data is modified
                             $scope.gridOptions.api.refreshView();
 
                         }, function(error) {
-                            params.data.save_error = true;
+                            params.data.save_error[params.colDef.field] = true;
                             console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
 
