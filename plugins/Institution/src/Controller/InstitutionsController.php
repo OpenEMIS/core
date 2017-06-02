@@ -24,6 +24,14 @@ class InstitutionsController extends AppController
 
     public function initialize()
     {
+        // Start: remove this logic after upgrading to v3.4.x
+        $version = \Cake\Core\Configure::version();
+        if (strpos($version, '3.4') !== false) {
+            $msg = 'To change ResultsExport $response->type to $response->withType and $response->download to $response->withDownload';
+            pr($msg);die;
+        }
+        // End
+
         parent::initialize();
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
@@ -274,8 +282,7 @@ class InstitutionsController extends AppController
         $url = $this->ControllerAction->url('index');
         $url['plugin'] = 'Institution';
         $url['controller'] = 'Institutions';
-        $url['action'] = 'ClassStudents';
-        $url[0] = 'excel';
+        $url['action'] = 'resultsExport';
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
@@ -294,6 +301,46 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
     // End
+
+    public function resultsExport()
+    {
+        $classId = $this->ControllerAction->getQueryString('class_id');
+        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $userId = $this->Auth->user('id');
+
+        $settings = [
+            'class_id' => $classId, 
+            'assessment_id' => $assessmentId, 
+            'institution_id' => $institutionId,
+            'user_id' => $userId,
+            'AccessControl' => $this->AccessControl,
+            'download' => false,
+            'purge' => false
+        ];
+
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        
+        $results = $ClassStudents->generateXLXS($settings);
+        $fileName = $results['file'];
+        $filePath = $results['path'] . $fileName;
+        
+        $response = $this->response;
+        $response->body(function() use ($filePath) {
+            $content = file_get_contents($filePath);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+            return $content;
+        });
+
+        // Syntax will change in v3.4.x
+        $pathInfo = pathinfo($fileName);
+        $response->type($pathInfo['extension']);
+        $response->download($fileName);
+
+        return $response;
+    }
 
     public function StudentCompetencies($subaction = 'index')
     {

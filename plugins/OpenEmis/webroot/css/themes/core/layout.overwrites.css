@@ -967,3 +967,16 @@ a,
 }
 
 /* End of fix for normal table sorting */
+<<<<<<< HEAD
+=======
+
+/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
+
+.ag-fresh .ag-cell-no-focus.oe-cell-error,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error {
+    border: 2px solid #CC5C5C !important;
+    border-radius: 0px !important;
+}
+
+/* End of fix for adding error border */
+>>>>>>> f1330ea86079c997a8526834494fd9e327169c2a
