@@ -383,7 +383,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 field: "total_mark",
                 filter: "number",
                 valueGetter: function(params) {
-                    var value = params.data[params.colDef.field];
+                    var value = ResultsSvc.calculateTotal(params.data);
+                    params.data[params.colDef.field] = value;
 
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
@@ -797,7 +798,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                                     student_id: currentStudentId,
                                     student_status_id: subjectStudent.student_status_id,
                                     student_status_name: subjectStudent.student_status.name,
-                                    total_mark: subjectStudent.total_mark,
+                                    total_mark: '',
                                     is_dirty: false,
                                     save_error: {}
                                 };
