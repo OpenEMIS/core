@@ -14,17 +14,14 @@ CREATE TABLE IF NOT EXISTS `z_3961_tmp` (
 ALTER TABLE `z_3961_tmp` ADD KEY `assessment_id` (`assessment_id`);
 
 INSERT INTO z_3961_tmp
-SELECT
-    a.assessment_id
-FROM assessment_periods a
-WHERE EXISTS (
-    SELECT 1 FROM assessment_periods b
-    WHERE b.assessment_id = a.assessment_id
-    GROUP BY assessment_id
-    HAVING COUNT(1) > 1
-)
-AND (academic_term = '' or academic_term IS NULL)
-GROUP BY a.assessment_id;
+SELECT assessment_id
+FROM (
+    SELECT b.assessment_id, b.academic_term
+    FROM assessment_periods b
+    GROUP BY b.assessment_id, b.academic_term
+) a
+GROUP BY assessment_id
+HAVING COUNT(1) > 1;
 
 UPDATE `assessment_periods`
 SET `academic_term` = 'Others'
