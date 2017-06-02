@@ -39,6 +39,7 @@ class ReportCardsTable extends AppTable
                 'Institutions',
                 'Principal',
                 'InstitutionClasses',
+                'InstitutionSubjectStudents',
                 'StudentBehaviours',
                 'InstitutionStudentAbsences',
                 'CompetencyTemplates',
@@ -65,6 +66,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyTemplates'] = 'onExcelTemplateInitialiseCompetencyTemplates';
@@ -156,6 +158,8 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $dateFormat = $ConfigItems->value('date_format');
 
             $entity = $StudentsReportCards->find()
                 ->contain([
@@ -170,6 +174,11 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
                 ->first();
+
+            if (!empty($entity) && $entity->has('student')) {
+                $birthdate = $entity->student->date_of_birth;
+                $entity->student->date_of_birth = $birthdate->format($dateFormat);
+            }
             return $entity;
         }
     }
@@ -214,15 +223,15 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params)) {
             $Staff = TableRegistry::get('Institution.Staff');
+            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $principalRoleId = $SecurityRoles->getPrincipalRoleId();
 
             $entity = $Staff->find()
-                ->innerJoinWith('Positions.StaffPositionTitles.SecurityRoles')
-                ->innerJoinWith('StaffStatuses')
+                ->innerJoinWith('SecurityGroupUsers')
                 ->contain('Users')
                 ->where([
                     $Staff->aliasField('institution_id') => $params['institution_id'],
-                    'StaffStatuses.code' => 'ASSIGNED',
-                    'SecurityRoles.code' => 'PRINCIPAL'
+                    'SecurityGroupUsers.security_role_id' => $principalRoleId
                 ])
                 ->first();
             return $entity;
@@ -234,6 +243,24 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('institution_class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['institution_class_id'], ['contain' => ['Staff']]);
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionSubjectStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $entity = $SubjectStudents->find()
+                ->where([
+                    $SubjectStudents->aliasField('student_id') => $params['student_id'],
+                    $SubjectStudents->aliasField('institution_class_id') => $params['institution_class_id'],
+                    $SubjectStudents->aliasField('institution_id') => $params['institution_id'],
+                    $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
+                ])
+                ->hydrate(false)
+                ->toArray();
             return $entity;
         }
     }
@@ -262,7 +289,7 @@ class ReportCardsTable extends AppTable
 
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             $studentAbsenceResults = $InstitutionStudentAbsences
-                ->find('InDateRange', ['start_date' => $extra['report_card_start_date'], 'end_date' => $extra['report_card_end_date']])
+                ->find('inDateRange', ['start_date' => $extra['report_card_start_date'], 'end_date' => $extra['report_card_end_date']])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
                     [
@@ -324,7 +351,9 @@ class ReportCardsTable extends AppTable
                 ])
                 ->group($CompetencyTemplates->aliasField('id'));
 
-            $extra['competency_templates_ids'] = $entity->extract('id')->toArray();
+            if ($entity->count() > 0) {
+                $extra['competency_templates_ids'] = $entity->extract('id')->toArray();
+            }
             return $entity->toArray();
         }
     }
@@ -342,7 +371,9 @@ class ReportCardsTable extends AppTable
                     $CompetencyPeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
                 ]);
 
-            $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+            if ($entity->count() > 0) {
+                $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+            }
             return $entity->toArray();
         }
     }
@@ -419,7 +450,9 @@ class ReportCardsTable extends AppTable
                 ])
                 ->first();
 
-            $extra['assessment_id'] = $entity->id;
+            if (!empty($entity)) {
+                $extra['assessment_id'] = $entity->id;
+            }
             return $entity;
         }
     }
@@ -435,10 +468,11 @@ class ReportCardsTable extends AppTable
                     $AssessmentPeriods->aliasField('start_date >= ') => $extra['report_card_start_date'],
                     $AssessmentPeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
                 ])
-                ->order([$AssessmentPeriods->aliasField('start_date')])
-                ->all();
+                ->order([$AssessmentPeriods->aliasField('start_date')]);
 
-            $extra['assessment_period_ids'] = $entity->extract('id')->toArray();
+            if ($entity->count() > 0) {
+                $extra['assessment_period_ids'] = $entity->extract('id')->toArray();
+            }
             return $entity->toArray();
         }
     }
