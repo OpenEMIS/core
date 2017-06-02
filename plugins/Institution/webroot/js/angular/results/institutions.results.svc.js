@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd.access.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdDataSvc, KdSessionSvc, KdAccessSvc) {
-=======
-angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc', 'alert.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc, AlertSvc) {
->>>>>>> f1330ea86079c997a8526834494fd9e327169c2a
+angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd.access.svc', 'alert.svc'])
+.service('InstitutionsResultsSvc', function($http, $q, $filter, KdDataSvc, KdSessionSvc, KdAccessSvc, AlertSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
