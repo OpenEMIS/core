@@ -434,7 +434,7 @@ class ReportCardsTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         if (empty($entity->errors())) {
             if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
