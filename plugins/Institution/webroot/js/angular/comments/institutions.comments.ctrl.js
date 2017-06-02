@@ -7,9 +7,11 @@ InstitutionCommentsController.$inject = ['$scope', '$anchorScroll', '$filter', '
 function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, UtilsSvc, AlertSvc, InstitutionsCommentsSvc) {
     var vm = this;
     $scope.action = 'view';
-    vm.commentCodeOptions = null;
+    vm.commentCodeOptions = {};
     vm.currentTab = {};
     vm.comments = {};
+    vm.currentUserName = null;
+    vm.currentUserId = null;
 
     // Functions
     vm.initGrid = initGrid;
@@ -50,10 +52,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             // get data of current user
             if (angular.isObject(userData)) {
                 vm.currentUserName = userData.first_name + ' ' + userData.last_name;
-                vm.currentUserId = userData.id
-
-                return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired);
+                vm.currentUserId = userData.id;
             }
+
+            return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired);
         }, function(error)
         {
             // No current user

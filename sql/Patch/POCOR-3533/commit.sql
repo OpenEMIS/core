@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS `institution_students_report_cards_comments` (
 DROP TABLE IF EXISTS `report_card_comment_codes`;
 CREATE TABLE IF NOT EXISTS `report_card_comment_codes` (
  `id` int(11) NOT NULL AUTO_INCREMENT,
- `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+ `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
  `order` int(3) NOT NULL,
  `visible` int(1) NOT NULL DEFAULT '1',
  `editable` int(1) NOT NULL DEFAULT '1',
