@@ -401,7 +401,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     cellClass: function(params) {
                         studentStatusId = params.data.student_status_id;
                         var highlightClass = 'oe-cell-highlight';
-                        if (params.data.save_error) {
+                        if (params.data.save_error[params.colDef.field]) {
                             highlightClass += ' oe-cell-error';
                         }
                         return (studentStatusId == enrolledStatus) ? highlightClass : false;
@@ -436,7 +436,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 cols = angular.merge(cols, {
                     cellClass: function(params) {
                         var errorClass = 'oe-cell-error';
-                        return (params.data.save_error) ? errorClass : false;
+                        return (params.data.save_error[params.colDef.field]) ? errorClass : false;
                     },
                     cellRenderer: function(params) {
                         studentStatusId = params.data.student_status_id;
@@ -471,7 +471,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             eSelect.addEventListener('blur', function () {
                                 var newValue = eSelect.value;
 
-                                if (newValue != oldValue || params.data.save_error) {
+                                if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
                                     params.data[params.colDef.field] = newValue;
 
                                     if (angular.isUndefined(_results[studentId])) {
@@ -486,12 +486,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     var scope = params.context._scope;
                                     vm.saveSingleRecordData(params, extra)
                                     .then(function(response) {
-                                        params.data.save_error = false;
+                                        params.data.save_error[params.colDef.field] = false;
                                         AlertSvc.reset(scope);
                                         params.api.refreshView();
 
                                     }, function(error) {
-                                        params.data.save_error = true;
+                                        params.data.save_error[params.colDef.field] = true;
                                         console.log(error);
                                         AlertSvc.error(scope, 'There was an error when saving the result');
                                         params.api.refreshView();
@@ -583,7 +583,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     cellClass: function(params) {
                         studentStatusId = params.data.student_status_id;
                         var highlightClass = 'oe-cell-highlight';
-                        if (params.data.save_error == true) {
+                        if (params.data.save_error[params.colDef.field]) {
                             highlightClass += ' oe-cell-error';
                         }
                         return (studentStatusId == enrolledStatus) ? highlightClass : false;
@@ -675,7 +675,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 if (isNaN(secondInt) || (secondInt < 0 || secondInt > 59)) {
                     minuteInput.value = '';
                     secondInput.value = '';
-                } else if (secondInput.value.length == 1) {
+                } else if (secondInput.value.length == 1 || secondInput.value < 10) {
                     // for padding
                     secondInput.value = '0' + secondInt;
                 } else {
@@ -701,16 +701,16 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             params.data[params.colDef.field] = durationAsFloat;
             _results[studentId][periodId]['duration'] = durationAsFloat;
 
-            if (durationAsFloat != oldValue || params.data.save_error) {
+            if (durationAsFloat != oldValue || params.data.save_error[params.colDef.field]) {
                 var scope = params.context._scope;
                 vm.saveSingleRecordData(params, extra)
                 .then(function(response) {
-                    params.data.save_error = false;
+                    params.data.save_error[params.colDef.field] = false;
                     AlertSvc.reset(scope);
                     params.api.refreshView();
 
                 }, function(error) {
-                    params.data.save_error = true;
+                    params.data.save_error[params.colDef.field] = true;
                     console.log(error);
                     AlertSvc.error(scope, 'There was an error when saving the result');
                     params.api.refreshView();
@@ -766,7 +766,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     student_status_name: subjectStudent.student_status.name,
                                     total_mark: subjectStudent.total_mark,
                                     is_dirty: false,
-                                    save_error: false
+                                    save_error: {}
                                 };
 
                                 var periodWeight = 0;
@@ -782,6 +782,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                                     studentResults['period_' + parseInt(period.id)] = '';
                                     studentResults['weight_' + parseInt(period.id)] = periodWeight;
+
+                                    studentResults['save_error']['period_' + parseInt(period.id)] = false;
                                 });
 
                                 studentId = currentStudentId;
