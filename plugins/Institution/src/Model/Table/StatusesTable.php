@@ -1,9 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 
-class StatusesTable extends ControllerActionTable
+class StatusesTable extends AppTable
 {
     public function initialize(array $config)
     {

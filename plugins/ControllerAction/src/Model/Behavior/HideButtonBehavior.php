@@ -47,34 +47,21 @@ class HideButtonBehavior extends Behavior
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if (isset($toolbarButtons['add'])) {
-            unset($toolbarButtons['add']);
+            $toolbarButtons->offsetUnset('add');
         }
 
         if (isset($toolbarButtons['edit'])) {
-            unset($toolbarButtons['edit']);
+            $toolbarButtons->offsetUnset('edit');
         }
 
         if (isset($toolbarButtons['remove'])) {
-            unset($toolbarButtons['remove']);
-        }
-
-        // workflow toolbarButtons
-        if (isset($toolbarButtons['approve'])) {
-            unset($toolbarButtons['approve']);
-        }
-
-        if (isset($toolbarButtons['reject'])) {
-            unset($toolbarButtons['reject']);
+            $toolbarButtons->offsetUnset('remove');
         }
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-        $id = $this->_table->paramsEncode(['id' => $entity->id]);
-
-        if (isset($buttons['view'])) {
-            $buttons['view']['url'][1] = $id;
-        }
+        $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 
         if (isset($buttons['edit'])) {
             unset($buttons['edit']);

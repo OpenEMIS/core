@@ -358,13 +358,12 @@ class InstitutionsController extends AppController
 
         $this->set('_roles', $roles);
 
-        $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
-
         // POCOR-3983 check institution status
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $institutionStatusCode = $Institutions->getStatusCode($institutionId);
-
-        if ($institutionStatusCode == 'INACTIVE') {
+        $isActive = $Institutions->isActive($institutionId);
+        if ($isActive) {
+            $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+        } else {
             $_edit = false;
         }
         // end POCOR-3983
@@ -1372,13 +1371,11 @@ class InstitutionsController extends AppController
     {
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-
-        $institutionStatusCode = $this->Institutions->getStatusCode($institutionId);
+        $isActive = $this->Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
-        if ($institutionStatusCode == 'INACTIVE') {
+        if (!$isActive) {
             if (in_array($model->alias(), $this->features)) { // check the feature list
-
                 // off the import action
                 if ($model->behaviors()->has('ImportLink')) {
                     $model->removeBehavior('ImportLink');
