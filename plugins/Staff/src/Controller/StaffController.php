@@ -355,12 +355,11 @@ class StaffController extends AppController
         $institutionId = $session->read('Institution.Institutions.id');
 
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $institutionStatusCode = $Institutions->getStatusCode($institutionId);
+        $isActive = $Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
-        if ($institutionStatusCode == 'INACTIVE') {
+        if (!$isActive) {
             if (in_array($model->alias(), $this->features)) { // check the feature list
-
             	// off the import action
                 if ($model->behaviors()->has('ImportLink')) {
                     $model->removeBehavior('ImportLink');

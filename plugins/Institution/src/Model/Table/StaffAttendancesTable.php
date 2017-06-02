@@ -880,7 +880,7 @@ class StaffAttendancesTable extends ControllerActionTable
         // POCOR-3983 get the institution status
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $institutionStatusCode = $Institutions->getStatusCode($institutionId);
+        $isActive = $Institutions->isActive($institutionId);
         // end of getting the institution status
 
         $btnTemplate = [
@@ -928,8 +928,8 @@ class StaffAttendancesTable extends ControllerActionTable
                         unset($extra['toolbarButtons']['back']);
                     }
 
-                    // Edit button, only can edit if there is data and institutionstatus ACTIVE
-                    if ($dataCount > 0 && $institutionStatusCode == 'ACTIVE') {
+                    // Edit button, only can edit if there is data and if the institution is active
+                    if ($dataCount > 0 && $isActive) {
                         $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
                         $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Edit');
                         $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-edit"></i>';

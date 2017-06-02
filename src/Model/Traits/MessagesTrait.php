@@ -771,7 +771,7 @@ trait MessagesTrait
                 ],
                 'date_closed' => [
                     'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened',
-                    'ruleCheckWorkbenchPending' => 'There is still pending item in institution workbench, please clear the workbench before proceed.'
+                    'ruleCheckPendingWorkbench' => 'There is still pending item in institution workbench, please clear the workbench before proceed.'
                 ],
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email',

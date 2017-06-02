@@ -393,10 +393,10 @@ class StudentsController extends AppController
         $institutionId = $session->read('Institution.Institutions.id');
 
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $institutionStatusCode = $Institutions->getStatusCode($institutionId);
+        $isActive = $Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
-        if ($institutionStatusCode == 'INACTIVE') {
+        if (!$isActive) {
             if (in_array($model->alias(), $this->features)) { // check the feature list
                 if ($model instanceof \App\Model\Table\ControllerActionTable) {
                     // CAv4 off the add/edit/remove action
