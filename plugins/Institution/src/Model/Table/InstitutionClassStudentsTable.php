@@ -123,6 +123,7 @@ class InstitutionClassStudentsTable extends AppTable
         $userId = $settings['user_id'];
         $institutionId = $settings['institution_id'];
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+
         $allSubjectsPermission = true;
         $mySubjectsPermission = true;
         if (!$AccessControl->isAdmin()) {
@@ -364,11 +365,18 @@ class InstitutionClassStudentsTable extends AppTable
         $institutionId = $attr['institutionId'];
         $resultType = $attr['resultType'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
-        $assessmentItemResults = $this->assessmentItemResults;
-        if (!(isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId]))) {
+
+        if (!array_key_exists($studentId, $this->assessmentItemResults)) {
+            $this->assessmentItemResults[$studentId] = [];
+        }
+
+        if (!array_key_exists($subjectId, $this->assessmentItemResults[$studentId])) {
             $AssessmentItemResultsTable = TableRegistry::get('Assessment.AssessmentItemResults');
-            $this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId);
-            $assessmentItemResults = $this->assessmentItemResults;
+
+            $studentResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId);
+            if (isset($studentResults[$studentId][$subjectId])) {
+                $this->assessmentItemResults[$studentId][$subjectId] = $studentResults[$studentId][$subjectId];
+            }
         }
         $allSubjectsPermission = $this->allSubjectsPermission;
         $mySubjectsPermission = $this->mySubjectsPermission;
@@ -404,8 +412,8 @@ class InstitutionClassStudentsTable extends AppTable
         }
 
         if ($renderResult) {
-            if (isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
-                $result = $assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId];
+            if (isset($this->assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
+                $result = $this->assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId];
                 switch ($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
