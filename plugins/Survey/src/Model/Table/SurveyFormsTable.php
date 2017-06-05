@@ -112,7 +112,7 @@ class SurveyFormsTable extends CustomFormsTable
         unset($this->fields['custom_filters']);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $customModule = $this->CustomModules
             ->find()
@@ -142,6 +142,7 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $entity->is_deletable = true;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
