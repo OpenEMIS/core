@@ -147,6 +147,7 @@ class ExcelBehavior extends Behavior
         if ($_settings['purge']) {
             $this->purge($filepath);
         }
+        return $_settings;
     }
 
     public function generate($settings = [])
