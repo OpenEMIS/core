@@ -1527,6 +1527,11 @@ trait MessagesTrait
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
+            ],
+            'EducationAbsoluteGrades' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
             ]
         ],
         'Localization' => [
