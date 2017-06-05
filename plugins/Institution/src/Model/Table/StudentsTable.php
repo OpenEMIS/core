@@ -57,8 +57,8 @@ class StudentsTable extends ControllerActionTable
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
-            'number_of_students_by_grade' => [
-                '_function' => 'getNumberOfStudentsByGrade',
+            'number_of_students_by_absolute_grade' => [
+                '_function' => 'getNumberOfStudentsByAbsoluteGrade',
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
@@ -1208,7 +1208,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // For Dashboard (Home Page and Institution Dashboard page)
-    public function getNumberOfStudentsByGrade($params=[])
+    public function getNumberOfStudentsByAbsoluteGrade($params=[])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
@@ -1237,17 +1237,20 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('institution_id'),
                 $this->aliasField('education_grade_id'),
                 'EducationGrades.name',
+                'EducationGrades.education_absolute_grade_id',
+                'EducationAbsoluteGrades.name',
                 'Users.id',
                 'Genders.name',
                 'total' => $query->func()->count($this->aliasField('id'))
             ])
             ->contain([
+                'EducationGrades.EducationAbsoluteGrades',
                 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
                 'Users.Genders'
             ])
             ->where($studentsByGradeConditions)
             ->group([
-                $this->aliasField('education_grade_id'),
+                'education_absolute_grade_id',
                 'Genders.name'
             ])
             ->order(
@@ -1267,8 +1270,8 @@ class StudentsTable extends ControllerActionTable
         $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         foreach ($studentByGrades as $key => $studentByGrade) {
-            $gradeId = $studentByGrade->education_grade_id;
-            $gradeName = $studentByGrade->education_grade->name;
+            $gradeId = $studentByGrade->education_grade->education_absolute_grade_id;
+            $gradeName = $studentByGrade->education_grade->education_absolute_grade->name;
             $gradeGender = $studentByGrade->user->gender->name;
             $gradeTotal = $studentByGrade->total;
 
