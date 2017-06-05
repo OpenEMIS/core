@@ -129,22 +129,38 @@ class ImportTrainingSessionsTraineesTable extends AppTable
                     $rowInvalidCodeCols['trainee'] = __('Trainee Position not in Training Course Target Population');
                     return false;
                 } else {
-                    //check assigned status
-                    $query->where([
-                        $Staff->aliasField('staff_status_id') => $assignedStatus
-                    ]);
+                    //to store institution id for either single or multiple
+                    $institutionId  = [];
+                    foreach ($query->toArray() as $key => $value) {
+                        $institutionId[] = $value->institution_id;
+                    }
 
-                    if ($query->count() < 1) {
-                        $rowInvalidCodeCols['trainee'] = __('Trainee does not have Assigned status');
-                        return false;
+                    //check assigned status
+                    if (!empty($institutionId)) {
+                        $query = $Staff->find()
+                            ->where([
+                                $Staff->aliasField('staff_id') => $tempRow['trainee_id'],
+                                $Staff->aliasField('institution_id IN ') => $institutionId,
+                                $Staff->aliasField('staff_status_id') => $assignedStatus
+                            ]);
+
+                        if ($query->count() < 1) {
+                            $rowInvalidCodeCols['trainee'] = __('Trainee does not have Assigned status');
+                            return false;
+                        }
+
+                        $tempRow['training_session_id'] = $this->trainingSessionId;
+                        $tempRow['status'] = 1;
+                        return true;
                     }
                 }
+            } else {
+                $rowInvalidCodeCols['course'] = __('No Target Population defined on the Training Course');
+                return false;
             }
-
-            $tempRow['training_session_id'] = $this->trainingSessionId;
-            $tempRow['status'] = 1;
+        } else {
+            $rowInvalidCodeCols['trainee'] = __('Provided Trainee data is not valid');
+            return false;
         }
-
-        return true;
     }
 }
