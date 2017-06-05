@@ -56,3 +56,26 @@ SELECT `Z`.`id`, `Z`.`code`, `Z`.`name`, `Z`.`admission_age`, `Z`.`order`, `Z`.`
 FROM `z_1330_education_grades` AS `Z`
 INNER JOIN `education_absolute_grades` AS `EAG`
 ON `EAG`.`code` = `Z`.`code` AND `EAG`.`name` = `Z`.`name`;
+
+-- security_functions
+CREATE TABLE `z_1330_security_functions` LIKE `security_functions`;
+INSERT `z_1330_security_functions` SELECT * FROM `security_functions`;
+
+UPDATE `security_functions`
+SET `_view` = 'AbsoluteGrades.index|AbsoluteGrades.view|Subjects.index|Subjects.view|Certifications.index|Certifications.view|FieldOfStudies.index|FieldOfStudies.view|ProgrammeOrientations.index|ProgrammeOrientations.view',
+    `_edit` = 'AbsoluteGrades.edit|Subjects.edit|Certifications.edit|FieldOfStudies.edit|ProgrammeOrientations.edit',
+    `_add` = 'AbsoluteGrades.add|Subjects.add|Certifications.add|FieldOfStudies.add|ProgrammeOrientations.add',
+    `_delete` = 'AbsoluteGrades.remove|Subjects.remove|Certifications.remove|FieldOfStudies.remove|ProgrammeOrientations.remove'
+WHERE `security_functions`.`id` = 5009 ;
+
+
+
+
+
+
+
+
+
+
+
+
