@@ -67,15 +67,3 @@ SET `_view` = 'AbsoluteGrades.index|AbsoluteGrades.view|Subjects.index|Subjects.
     `_add` = 'AbsoluteGrades.add|Subjects.add|Certifications.add|FieldOfStudies.add|ProgrammeOrientations.add',
     `_delete` = 'AbsoluteGrades.remove|Subjects.remove|Certifications.remove|FieldOfStudies.remove|ProgrammeOrientations.remove'
 WHERE `security_functions`.`id` = 5009 ;
-
-
-
-
-
-
-
-
-
-
-
-
