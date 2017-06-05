@@ -71,6 +71,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+        $this->toggle('add', false);
     }
 
     public function implementedEvents()
