@@ -310,8 +310,8 @@ class InstitutionsController extends AppController
         $userId = $this->Auth->user('id');
 
         $settings = [
-            'class_id' => $classId, 
-            'assessment_id' => $assessmentId, 
+            'class_id' => $classId,
+            'assessment_id' => $assessmentId,
             'institution_id' => $institutionId,
             'user_id' => $userId,
             'AccessControl' => $this->AccessControl,
@@ -320,11 +320,11 @@ class InstitutionsController extends AppController
         ];
 
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        
+
         $results = $ClassStudents->generateXLXS($settings);
         $fileName = $results['file'];
         $filePath = $results['path'] . $fileName;
-        
+
         $response = $this->response;
         $response->body(function() use ($filePath) {
             $content = file_get_contents($filePath);
@@ -991,7 +991,7 @@ class InstitutionsController extends AppController
                 'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']])
             );
 
-            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_absolute_grade', $params);
 
             //Staffs By Position Type for current year, only shows assigned staff
             $params = array(
