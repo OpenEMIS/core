@@ -20,13 +20,10 @@ class ReportsController extends AppController {
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
 			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
-			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']]
+			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+			'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
 		];
 		$this->loadComponent('Training.Training');
-	}
-
-	public function Standard() {
-		$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.StandardReports']);
 	}
 
 	public function beforeFilter(Event $event) {
