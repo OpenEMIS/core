@@ -28,7 +28,8 @@
 			'autocomplete-no-results' => __('No Trainer found.'),
 			'autocomplete-class' => 'error-message',
 			'autocomplete-target' => 'trainer_id',
-			'autocomplete-submit' => "$('#reload').val('addTrainer').click();"
+			'autocomplete-submit' => "$('#reload').val('addTrainer').click();",
+			'autocomplete-before-search' => 'Autocomplete.extra["type"] = "Staff"'
 		]);
 		echo $this->Form->hidden("$alias.trainer_id", ['autocomplete-value' => 'trainer_id']);
 
