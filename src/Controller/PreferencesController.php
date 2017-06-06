@@ -17,7 +17,6 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->models = [
 			'Account' 				=> ['className' => 'UserAccounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
-			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 		];
 	}
@@ -42,6 +41,7 @@ class PreferencesController extends AppController {
     public function Contacts()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'UserContacts']); }
     public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Users()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Users']);}
+    public function Attachments() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
     // End
 
 	public function beforeFilter(Event $event) {

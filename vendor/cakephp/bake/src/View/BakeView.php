@@ -33,17 +33,21 @@ class BakeView extends View
      *
      * This config is read when evaluating a template file.
      *
-     * phpTagReplacements are applied to the contents of a bake template, to allow php tags
-     * to be treated as plain text
+     * - `phpTagReplacements` are applied to the contents of a bake template, to allow php tags
+     *   to be treated as plain text
+     * - `replacements` are applied in order on the template contents before the template is evaluated.
      *
-     * replacements are applied in order on the template contents before the template is evaluated
-     * In order these:
-     *     swallow leading whitespace for <%- tags
-     *     swallow trailing whitespace for -%> tags
-     *     Add an extra newline to <%=, to counteract php automatically removing a newline
-     *     Replace remaining <=% with php short echo tags
-     *     Replace <% with php open tags
-     *     Replace %> with php close tags
+     * The default replacements are (in the following order):
+     *
+     * - swallow leading whitespace for <%- tags
+     * - swallow trailing whitespace for -%> tags
+     * - Add an extra newline to <%=, to counteract php automatically removing a newline
+     * - Replace remaining <=% with php short echo tags
+     * - Replace <% with php open tags
+     * - Replace %> with php close tags
+     *
+     * Replacements that start with `/` will be treated as regex replacements.
+     * All other values will be treated used with str_replace()
      *
      * @var array
      */
@@ -164,6 +168,7 @@ class BakeView extends View
     public function dispatchEvent($name, $data = null, $subject = null)
     {
         $name = preg_replace('/^View\./', 'Bake.', $name);
+
         return parent::dispatchEvent($name, $data, $subject);
     }
 
@@ -201,6 +206,7 @@ class BakeView extends View
         $content = ob_get_clean();
 
         $unPhp = $this->config('phpTagReplacements');
+
         return str_replace(array_values($unPhp), array_keys($unPhp), $content);
     }
 
@@ -228,6 +234,7 @@ class BakeView extends View
         foreach ($paths as &$path) {
             $path .= 'Bake' . DS;
         }
+
         return $paths;
     }
 
@@ -241,10 +248,6 @@ class BakeView extends View
      */
     protected function _isRegex($maybeRegex)
     {
-        // @codingStandardsIgnoreStart
-        $isRegex = @preg_match($maybeRegex, '');
-        // @codingStandardsIgnoreEnd
-
-        return $isRegex !== false;
+        return substr($maybeRegex, 0, 1) === '/';
     }
 }

@@ -15,17 +15,34 @@ use Cake\I18n\Time;
 class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable {
 
     public function initialize(array $config) {
-        $this->table('examination_centre_students');
+        $this->table('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
-        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('ExaminationCentresExaminations', [
+            'className' => 'Examination.ExaminationCentresExaminations',
+            'foreignKey' => ['examination_centre_id', 'examination_id']
+        ]);
+        $this->belongsToMany('ExaminationCentresExaminationsSubjects', [
+            'className' => 'Examination.ExaminationCentresExaminationsSubjects',
+            'joinTable' => 'examination_centres_examinations_subjects_students',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', [
+            'className' => 'Examination.ExaminationCentreRoomsExaminationsStudents',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'dependent' => true,
+            'cascadeCallBacks' => true
+        ]);
+
         $this->toggle('index', false);
         $this->toggle('remove', false);
         $this->toggle('edit', false);
@@ -60,13 +77,10 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $this->field('examination_education_grade', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('student_id', ['entity' => $entity]);
-        $this->field('education_grade_id', ['type' => 'hidden']);
-        $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
-        $this->field('education_subject_id', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_class_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'institution_class_id', 'student_id'
         ]);
     }
 
@@ -90,9 +104,6 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             if (array_key_exists($this->alias(), $data)) {
                 if (array_key_exists('examination_id', $data[$this->alias()])) {
                     unset($data[$this->alias()]['examination_id']);
-                }
-                if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
-                    unset($data[$this->alias()]['examination_centre_id']);
                 }
                 if (array_key_exists('institution_class_id', $data[$this->alias()])) {
                     unset($data[$this->alias()]['institution_class_id']);
@@ -147,9 +158,6 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $data)) {
-                if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
-                    unset($data[$this->alias()]['examination_centre_id']);
-                }
                 if (array_key_exists('institution_class_id', $data[$this->alias()])) {
                     unset($data[$this->alias()]['institution_class_id']);
                 }
@@ -172,7 +180,8 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $this->request->data[$this->alias()]['education_grade_id'] = $Examinations['education_grade']['id'];
             }
         } else if ($action == 'reconfirm') {
-            $educationGrade = __($this->EducationGrades->get($attr['entity']->education_grade_id)->name);
+            $educationGradeId = $this->Examinations->get($attr['entity']->examination_id)->education_grade_id;
+            $educationGrade = __($this->Examinations->EducationGrades->get($educationGradeId)->name);
         }
         $attr['attr']['value'] = $educationGrade;
         return $attr;
@@ -219,7 +228,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
-                    ->leftJoin(['InstitutionExaminationStudents' => 'examination_centre_students'], [
+                    ->leftJoin(['InstitutionExaminationStudents' => 'examination_centres_examinations_students'], [
                         'InstitutionExaminationStudents.examination_id' => $examinationId,
                         'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
@@ -248,7 +257,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
-                    ->innerJoin(['InstitutionExaminationStudents' => 'examination_centre_students'], [
+                    ->innerJoin(['InstitutionExaminationStudents' => 'examination_centres_examinations_students'], [
                         'InstitutionExaminationStudents.examination_id' => $attr['entity']->examination_id,
                         'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
@@ -270,8 +279,6 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $requestData[$this->alias()]['student_id'] = 0;
-        $requestData[$this->alias()]['education_subject_id'] = 0;
-        $requestData[$this->alias()]['examination_item_id'] = 0;
         $requestData[$this->alias()]['examination_centre_id'] = 0;
     }
 
@@ -311,7 +318,6 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             if ($submit == 'save') {
                 $examStudents = $requestData[$this->alias()]['examination_students'];
                 $examinationId = $requestData[$this->alias()]['examination_id'];
-                $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
 
                 $students = [];
                 $entity->errors('student_id', 'No selected students');
@@ -321,7 +327,6 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
 
                     $deleteStudentEntity = $this->find()
                         ->where([$this->aliasField('student_id').' IN ' => $students, $this->aliasField('examination_id') => $examinationId])
-                        ->group([$this->aliasField('student_id')])
                         ->toArray();
 
                     $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
@@ -330,8 +335,8 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                     }
 
                     // event to delete all associated records for student
-                    $listeners[] = TableRegistry::get('Examination.ExaminationCentreStudents');
-                    $this->dispatchEventToModels('Model.Examinations.afterUnregister', [$students, $academicPeriodId, $examinationId, $examinationCentres], $this, $listeners);
+                    $listeners[] = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+                    $this->dispatchEventToModels('Model.Examinations.afterUnregister', [$students, $examinationId, $examinationCentres], $this, $listeners);
 
                     $this->Alert->success($this->aliasField('success'));
                     $session = $this->Session;
@@ -359,10 +364,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
 
         if ($entity->has('examination_students')) {
             $students = $entity->examination_students;
-            $newEntities = [];
 
-            $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-            $ExaminationCentreSubjects = $this->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
             $selectedStudents = [];
             foreach ($students as $key => $student) {
                 if ($student['selected'] == 1) {

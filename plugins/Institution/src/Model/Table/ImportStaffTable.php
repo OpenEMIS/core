@@ -319,6 +319,11 @@ class ImportStaffTable extends AppTable
         }
         $tempRow['start_year'] = $tempRow['start_date']->year;
 
+        if (!$this->checkInstitutionPosition($this->_institution->id, $tempRow['institution_position_id'])) {
+            $rowInvalidCodeCols['institution_position_id'] = __('Position is not Valid for the Current Institution');
+            return false;
+        }
+
         if (array_key_exists("position_type", $tempRow)) {
             if ($tempRow['position_type']=='PART_TIME') {
                 if ($tempRow['FTE']==1) {
@@ -337,5 +342,19 @@ class ImportStaffTable extends AppTable
         $flipped = array_flip($columns);
         $key = $flipped['staff_id'];
         $tempPassedRecord['data'][$key] = $originalRow[$key];
+    }
+
+    private function checkInstitutionPosition($institutionId, $positionId)
+    {
+        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $checkPosition = $InstitutionPositions
+                        ->find()
+                        ->where([
+                            $InstitutionPositions->aliasField('institution_id') => $institutionId,
+                            $InstitutionPositions->aliasField('id') => $positionId,
+
+                        ])
+                        ->count();
+        return $checkPosition;
     }
 }

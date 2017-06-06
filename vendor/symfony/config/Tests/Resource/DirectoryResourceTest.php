@@ -11,9 +11,10 @@
 
 namespace Symfony\Component\Config\Tests\Resource;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Resource\DirectoryResource;
 
-class DirectoryResourceTest extends \PHPUnit_Framework_TestCase
+class DirectoryResourceTest extends TestCase
 {
     protected $directory;
 
@@ -53,7 +54,7 @@ class DirectoryResourceTest extends \PHPUnit_Framework_TestCase
     public function testGetResource()
     {
         $resource = new DirectoryResource($this->directory);
-        $this->assertSame($this->directory, $resource->getResource(), '->getResource() returns the path to the resource');
+        $this->assertSame(realpath($this->directory), $resource->getResource(), '->getResource() returns the path to the resource');
     }
 
     public function testGetPattern()
@@ -110,8 +111,10 @@ class DirectoryResourceTest extends \PHPUnit_Framework_TestCase
     public function testIsFreshDeleteFile()
     {
         $resource = new DirectoryResource($this->directory);
+        $time = time();
+        sleep(1);
         unlink($this->directory.'/tmp.xml');
-        $this->assertFalse($resource->isFresh(time()), '->isFresh() returns false if an existing file is removed');
+        $this->assertFalse($resource->isFresh($time), '->isFresh() returns false if an existing file is removed');
     }
 
     public function testIsFreshDeleteDirectory()
@@ -166,7 +169,7 @@ class DirectoryResourceTest extends \PHPUnit_Framework_TestCase
 
         $unserialized = unserialize(serialize($resource));
 
-        $this->assertSame($this->directory, $resource->getResource());
+        $this->assertSame(realpath($this->directory), $resource->getResource());
         $this->assertSame('/\.(foo|xml)$/', $resource->getPattern());
     }
 
