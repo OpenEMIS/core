@@ -33,7 +33,8 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getAssessmentPeriods: getAssessmentPeriods,
         getColumnDefs: getColumnDefs,
         getRowData: getRowData,
-        calculateTotal: calculateTotal
+        calculateTotal: calculateTotal,
+        translate: translate
     };
 
     return service;
@@ -43,6 +44,15 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.controllerAction('Results');
         KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(models);
+    };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
     };
 
     function getAssessment(id) {
@@ -157,7 +167,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 deferred.resolve(assessmentPeriods);
             } else {
                 deferred.reject('You need to configure Assessment Periods first');
-            }   
+            }
         };
 
         return AssessmentPeriodsTable
@@ -175,20 +185,22 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         columnDefs.push({
             headerName: "Subject",
             field: "subject",
-            filterParams: filterParams
+            filterParams: filterParams,
+            pinned: 'left'
         });
 
         angular.forEach(assessmentPeriods, function(assessmentPeriod, key) {
             var assessmentPeriodField = 'period_' + assessmentPeriod.id;
             var weightField = 'weight_' + assessmentPeriod.id;
-
             var columnDef = {
-                headerName: assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
+                headerName: assessmentPeriod.academic_term + " - " + assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
                 field: assessmentPeriodField,
                 filter: "number",
                 filterParams: filterParams,
                 cellStyle: function(params) {
                     var subjectId = params.data['subject_id'];
+
+                    var resultType = '';
 
                     var passMark = 0;
                     if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'])) {
@@ -296,7 +308,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 if (angular.isUndefined(properties.subjects[subjectId][assessmentPeriodId])) {
                     properties.subjects[subjectId][assessmentPeriodId] = {assessment_grading_type: gradingType};
                 }
-                
+
                 var result = '';
                 var weight = '';
                 switch (resultType) {

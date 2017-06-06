@@ -15,41 +15,25 @@ class DirectoriesController extends AppController {
 		parent::initialize();
 		$this->ControllerAction->models = [
 			// Users
-			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
-
-
-			// Users - Health
-			'Healths' 				=> ['className' => 'Health.Healths'],
-			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
-			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
-			'HealthFamilies' 		=> ['className' => 'Health.Families'],
-			'HealthHistories' 		=> ['className' => 'Health.Histories'],
-			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
-			'HealthMedications' 	=> ['className' => 'Health.Medications'],
-			'HealthTests' 			=> ['className' => 'Health.Tests'],
-
 
 			// Student
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 
-
 			// Staff
-			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
 			'StaffPositions'		=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'StaffSections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffAbsences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'StaffBehaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
-			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
 			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
+			'ImportSalaries' 		=> ['className' => 'Staff.ImportSalaries', 'actions' => ['add']]
 		];
 
 		$this->loadComponent('Training.Training');
@@ -89,6 +73,22 @@ class DirectoriesController extends AppController {
 	public function StudentTextbooks() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
+	public function StudentReportCards() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
+	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+    public function Courses() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
+    public function StaffSalaries() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
+    public function StaffBehaviours() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
+
+	// health
+	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
+	public function HealthAllergies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']); }
+	public function HealthConsultations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']); }
+	public function HealthFamilies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']); }
+	public function HealthHistories()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']); }
+	public function HealthImmunizations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']); }
+	public function HealthMedications()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
+	public function HealthTests()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
+	// End Health
 	// End
 
 	// AngularJS
@@ -397,6 +397,7 @@ class DirectoriesController extends AppController {
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Assessments')],
 			'ExaminationResults' => ['text' => __('Examinations')],
+			'ReportCards' => ['text' => __('Report Cards')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 			'Textbooks' => ['text' => __('Textbooks')]
@@ -465,7 +466,6 @@ class DirectoriesController extends AppController {
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
-			'Trainings' => ['text' => __('Trainings')],
 			'Appraisals' => ['text' => __('Appraisals')],
 		];
 
@@ -498,8 +498,9 @@ class DirectoriesController extends AppController {
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [
-			'TrainingResults' => ['text' => __('Training Results')],
 			'TrainingNeeds' => ['text' => __('Training Needs')],
+			'TrainingResults' => ['text' => __('Training Results')],
+			'Courses' => ['text' => __('Courses')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);

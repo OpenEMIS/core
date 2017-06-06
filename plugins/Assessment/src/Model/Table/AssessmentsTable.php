@@ -27,7 +27,7 @@ class AssessmentsTable extends ControllerActionTable {
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-
+        $this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('GradingTypes', [
@@ -35,16 +35,6 @@ class AssessmentsTable extends ControllerActionTable {
             'joinTable' => 'assessment_items_grading_types',
             'foreignKey' => 'assessment_id',
             'targetForeignKey' => 'assessment_grading_type_id',
-            'through' => 'Assessment.AssessmentItemsGradingTypes',
-            'dependent' => true,
-            'cascadeCallbacks' => true
-        ]);
-
-        $this->belongsToMany('AssessmentPeriods', [
-            'className' => 'Assessment.AssessmentPeriods',
-            'joinTable' => 'assessment_items_grading_types',
-            'foreignKey' => 'assessment_id',
-            'targetForeignKey' => 'assessment_period_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -98,6 +88,16 @@ class AssessmentsTable extends ControllerActionTable {
             ])
             ->allowEmpty('excel_template');
     }
+
+    public function validationUpdateAcademicTerm(Validator $validation)
+    {
+        return $validation
+            ->add('assessment_periods', 'ruleNotEmptyAcademicTerm', [
+                'rule'  => ['notEmptyAcademicTerm']
+            ]);
+    }
+
+
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -393,5 +393,36 @@ class AssessmentsTable extends ControllerActionTable {
         }
 
         return $hasTemplate;
+    }
+
+    public function findByClass(Query $query, array $options)
+    {
+        if (array_key_exists('institution_class_id', $options) && !empty($options['institution_class_id'])) {
+            $classId = $options['institution_class_id'];
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $classResults = $InstitutionClasses
+                ->find()
+                ->contain(['ClassGrades'])
+                ->where([$InstitutionClasses->aliasField('id') => $classId])
+                ->all();
+
+            if (!$classResults->isEmpty()) {
+                $where = [];
+                $classEntity = $classResults->first();
+                $where[$this->aliasField('academic_period_id')] = $classEntity->academic_period_id;
+
+                $gradeIds = [];
+                foreach ($classEntity->class_grades as $key => $obj) {
+                    $gradeIds[$obj->education_grade_id] = $obj->education_grade_id;
+                }
+                if (!empty($gradeIds)) {
+                    $where[$this->aliasField('education_grade_id IN ')] = $gradeIds;
+                }
+
+                if (!empty($where)) {
+                    $query->where([$where]);
+                }
+            }
+        }
     }
 }

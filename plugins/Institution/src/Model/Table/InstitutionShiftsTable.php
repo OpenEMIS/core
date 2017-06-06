@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
-use ArrayObject; 
+use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -23,17 +23,20 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('AcademicPeriods',         ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('ShiftOptions',            ['className' => 'Institution.ShiftOptions']);
-        $this->belongsTo('Institutions',            ['className' => 'Institution.Institutions']);
-        $this->belongsTo('LocationInstitutions',    ['className' => 'Institution.LocationInstitutions']);
-        $this->belongsTo('PreviousShifts', 			['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('ShiftOptions', ['className' => 'Institution.ShiftOptions']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('LocationInstitutions', ['className' => 'Institution.LocationInstitutions']);
+        $this->belongsTo('PreviousShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'previous_shift_id']);
 
-        $this->hasMany('InstitutionClasses',        ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
+        $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_shift_id']);
 
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ClassStudents' => ['index']
+        ]);
 
         $this->behaviors()->get('ControllerAction')->config([
             'actions' => ['search' => false],
@@ -51,8 +54,9 @@ class InstitutionShiftsTable extends ControllerActionTable
                 ])
             ->add('start_time', 'ruleCheckShiftAvailable', [
                     'rule' => ['checkShiftAvailable'],
-                    'on' => function ($context) { //validate when only location_institution_id is not empty
-                        return !empty($context['data']['location_institution_id']);
+                    'on' => function ($context) {
+                         //validate when only location_institution_id is not empty
+                            return !empty($context['data']['location_institution_id']);
                     }
                 ])
             // ->add('location_institution_id', 'ruleCheckLocationInstitutionId', [
@@ -117,7 +121,6 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
-
             $query->where([
                         'OR' => [
                             [$this->aliasField('location_institution_id') => $institutionId],
@@ -146,12 +149,11 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-
         $institutionId = $this->Session->read('Institution.Institutions.id');
 
         if ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        } else if ($this->action == 'edit') {
+        } elseif ($this->action == 'edit') {
             $selectedAcademicPeriod = $entity->academic_period_id;
         }
 
@@ -211,7 +213,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
         $ControllerActionHelper = $event->subject();
-        return $event->subject()->Html->link($entity->institution->name , [
+        return $event->subject()->Html->link($entity->institution->name, [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'dashboard',
@@ -222,7 +224,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function onGetLocationInstitutionId(Event $event, Entity $entity)
     {
         $ControllerActionHelper = $event->subject();
-        return $event->subject()->Html->link($entity->location_institution->name , [
+        return $event->subject()->Html->link($entity->location_institution->name, [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'dashboard',
@@ -238,7 +240,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         if ($action == 'add') { //set the academic period to thecurrent and readonly
             $attr['attr']['value'] = $academicPeriodOptions[$this->getSelectedAcademicPeriod($this->request)];
             $attr['value'] = $this->getSelectedAcademicPeriod($this->request);
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $attr['attr']['value'] = $academicPeriodOptions[$attr['entity']->academic_period_id];
             $attr['value'] = $attr['entity']->academic_period_id;
         }
@@ -270,7 +272,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                     $this->Alert->warning('InstitutionShifts.allShiftsUsed');
                 }
             }
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             //for edit since it is read only, then no need to put conditions and get the value from the options populated.
             $options = $options->toArray();
             $attr['type'] = 'readonly';
@@ -316,7 +318,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             $attr['onChangeReload'] = 'changeLocation';
             $attr['default'] = 'CURRENT'; //set the default selected location as Current Institution
             $attr['select'] = false;
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $attr['type'] = 'hidden';
             if ($attr['entity']->institution_id != $attr['entity']->location_institution_id) {
                 $attr['attr']['value'] = $attr['options']['OTHER'];
@@ -333,7 +335,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($action == 'add') {
-            if($request->data){
+            if ($request->data) {
                 $data = $request->data[$this->alias()];
                 if ($data['location'] == 'OTHER') {
                     $attr['type'] = 'autocomplete';
@@ -349,12 +351,12 @@ class InstitutionShiftsTable extends ControllerActionTable
                         }
                     }
                     $attr['url'] = ['academicperiod' => $this->getSelectedAcademicPeriod($this->request), 'controller' => 'Institutions', 'action' => 'Shifts', 'ajaxInstitutionsAutocomplete'];
-                } else if ($data['location'] == 'CURRENT') {
+                } elseif ($data['location'] == 'CURRENT') {
                     $attr['type'] = 'hidden'; //default is hidden as location default also "CURRENT"
                     $attr['value'] = $institutionId; //default is current institution ID
                 }
             }
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
             $Institutions = TableRegistry::get('Institution.Institutions');
             $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
@@ -421,7 +423,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
             if ($ownerOwnedShift > 1) {
                 $shiftType = InstitutionsTable::MULTIPLE_OWNER;
-            } else if ($ownerOwnedShift == 1) {
+            } elseif ($ownerOwnedShift == 1) {
                 $shiftType = InstitutionsTable::SINGLE_OWNER;
             }
             $this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $owner]);
@@ -439,7 +441,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
                 if ($occupierOccupiedShift > 1) {
                     $shiftType = InstitutionsTable::MULTIPLE_OCCUPIER;
-                } else if ($occupierOccupiedShift == 1) {
+                } elseif ($occupierOccupiedShift == 1) {
                     $shiftType = InstitutionsTable::SINGLE_OCCUPIER;
                 }
                 $this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $occupier]);
@@ -464,7 +466,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
             if ($ownerOwnedShift > 1) {
                 $shiftType = InstitutionsTable::MULTIPLE_OWNER;
-            } else if ($ownerOwnedShift == 1) {
+            } elseif ($ownerOwnedShift == 1) {
                 $shiftType = InstitutionsTable::SINGLE_OWNER;
             }
             $this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $owner]);
@@ -482,7 +484,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
                 if ($occupierOccupiedShift > 1) {
                     $shiftType = InstitutionsTable::MULTIPLE_OCCUPIER;
-                } else if ($occupierOccupiedShift == 1) {
+                } elseif ($occupierOccupiedShift == 1) {
                     $shiftType = InstitutionsTable::SINGLE_OCCUPIER;
                 }
                 $this->Institutions->updateAll(['shift_type' => $shiftType], ['id' => $occupier]);
@@ -524,6 +526,42 @@ class InstitutionShiftsTable extends ControllerActionTable
                 ->first();
     }
 
+    public function findShiftOptions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        return $query
+            ->innerJoinWith('ShiftOptions')
+            ->innerJoinWith('Institutions')
+            ->select([
+                    'institutionShiftId' => 'InstitutionShifts.id',
+                    'institutionId' => 'Institutions.id',
+                    'institutionCode' => 'Institutions.code',
+                    'institutionName' => 'Institutions.name',
+                    'shiftOptionName' => 'ShiftOptions.name'
+                ])
+            ->where([
+                'location_institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId
+            ])
+            ->formatResults(function ($results) use ($institutionId) {
+                $returnArr = [];
+                foreach ($results as $result) {
+                    if ($result->institutionId == $institutionId) { //if the shift owned by itself, then no need to show the shift owner
+                        $shiftName = __($result->shiftOptionName);
+                    } else {
+                        $shiftName = $result->institutionCode . " - " . $result->institutionName . " - " . __($result->shiftOptionName);
+                    }
+                    $returnArr[] = [
+                        'id' => intval($result->institutionShiftId),
+                        'name' => $shiftName
+                    ];
+                }
+                return $returnArr;
+            });
+    }
+
     //this is to be called by institution class to get the available shift.
     public function getShiftOptions($institutionsId, $periodId)
     {
@@ -546,7 +584,6 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         $list = [];
         foreach ($data as $key => $obj) {
-
             if ($obj->institutionId == $institutionsId) { //if the shift owned by itself, then no need to show the shift owner
                 $shiftName = __($obj->shiftOptionName);
             } else {
@@ -614,7 +651,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
-        } else if ($this->action == 'add') {
+        } elseif ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }
 
@@ -627,7 +664,6 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->controller->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-
             $institutionId = $this->Session->read('Institution.Institutions.id');
             $Institutions = $this->Institutions;
 

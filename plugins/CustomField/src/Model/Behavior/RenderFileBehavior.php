@@ -33,8 +33,16 @@ class RenderFileBehavior extends RenderBehavior {
         'zip'   => 'application/zip'
     ];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+    {
         parent::initialize($config);
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.downloadFile'] = 'downloadFile';
+
+        return $events;
     }
 
 	public function onGetCustomFileElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -60,18 +68,10 @@ class RenderFileBehavior extends RenderBehavior {
         if ($action == 'view') {
             if (!is_null($savedValue)) {
                 $value = $savedValue;
-
-                $config = $model->ControllerAction->getVar('ControllerAction');
-                $buttons = $config['buttons'];
-                $url = $buttons['view']['url'];
-                if ($model->ControllerAction->getTriggerFrom() == 'Controller') {
-                    $url['action'] = 'downloadFile';
-                    $url[0] = $savedId;
-                } else {
-                    $url['action'] = $model->alias;
-                    $url[0] = 'downloadFile';
-                    $url[1] = $savedId;
-                }
+                $url = $model->url('view');
+                $url['action'] = $model->request->param('action');
+                $url[0] = 'downloadFile';
+                $url[1] = $model->paramsEncode(['id' => $savedId]);
 
                 $value = $event->subject()->Html->link($savedValue, $url);
             }
@@ -258,9 +258,9 @@ class RenderFileBehavior extends RenderBehavior {
         return ['fileName' => $fileName, 'fileContent' => $fileContent];
     }
 
-    public function downloadFile($id) {
-        $model = $this->_table->CustomFieldValues;
-        $ids = $model->paramsDecode($id);
+    public function downloadFile(Event $mainEvent, ArrayObject $extra) {
+        $model = $this->_table->CustomFieldValues->target();
+        $ids = $model->paramsDecode($this->_table->paramsPass(0));
         $idKey = $model->getIdKeys($model, $ids);
 
         if ($model->exists($idKey)) {

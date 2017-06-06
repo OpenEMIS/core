@@ -9,104 +9,114 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
+use OneLogin_Saml2_Constants;
+use OneLogin_Saml2_Error;
+use OneLogin_Saml2_Settings;
 
-require_once( ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
+class AuthenticationBehavior extends Behavior
+{
+    private $alias;
 
-class AuthenticationBehavior extends Behavior {
-	private $alias;
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+        $this->alias = $this->_table->alias();
+    }
 
-	public function initialize(array $config) {
-		parent::initialize($config);
-		$this->alias = $this->_table->alias();
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [
-			'ControllerAction.Model.beforeAction' => ['callable' => 'beforeAction', 'priority' => 11],
-			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
-			'ControllerAction.Model.edit.afterSave'	=> 'editAfterSave',
-			'ControllerAction.Model.afterAction'	=> 'afterAction',
-			'ControllerAction.Model.view.beforeAction'	=> 'viewBeforeAction',
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'ControllerAction.Model.beforeAction' => ['callable' => 'beforeAction', 'priority' => 11],
+            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+            'ControllerAction.Model.edit.afterSave'     => 'editAfterSave',
+            'ControllerAction.Model.afterAction'    => 'afterAction',
+            'ControllerAction.Model.view.beforeAction'  => 'viewBeforeAction',
             'ControllerAction.Model.edit.beforeAction'  => 'editBeforeAction',
-			'ControllerAction.Model.edit.beforePatch'	=> 'editBeforePatch'
-		];
-		$events = array_merge($events, $newEvent);
-		return $events;
-	}
+            'ControllerAction.Model.edit.beforePatch'   => 'editBeforePatch'
+        ];
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
 
-	public function beforeAction(Event $event) {
-		if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
-			$key = $this->_table->id;
-			if (!empty($key)) {
-				$configItem = $this->_table->get($key);
-				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-					if (isset($this->_table->request->data[$this->alias]['value']) && !empty($this->_table->request->data[$this->alias]['value'])) {
-						$value = $this->_table->request->data[$this->alias]['value'];
-					} else {
-						$value = $this->_table->authenticationType;
-						$this->_table->request->data[$this->alias]['value'] = $value;
-					}
-					if ($value != 'Local') {
-						$this->_table->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
-					}
-				}
-			}
-		}
-	}
-
-	public function afterAction(Event $event) {
-		if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
-			$key = $this->_table->id;
-			if (!empty($key)) {
-				$configItem = $this->_table->get($key);
-				if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
-					$this->_table->field('default_value', ['visible' => false]);
-					$value = $this->_table->request->data[$this->alias]['value'];
-				}
-			}
-		}
-	}
-
-	public function viewBeforeAction(Event $event, ArrayObject $extra) {
-        if (isset($extra['toolbarButtons']['back'])) {
-           unset($extra['toolbarButtons']['back']);
-        }
-	}
-
-    public function editBeforeAction(Event $event, ArrayObject $extra) {
-        if (isset($extra['toolbarButtons']['list'])) {
-           unset($extra['toolbarButtons']['list']);
+    public function beforeAction(Event $event)
+    {
+        if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
+            $key = $this->_table->id;
+            if (!empty($key)) {
+                $configItem = $this->_table->get($key);
+                if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
+                    if (isset($this->_table->request->data[$this->alias]['value']) && !empty($this->_table->request->data[$this->alias]['value'])) {
+                        $value = $this->_table->request->data[$this->alias]['value'];
+                    } else {
+                        $value = $this->_table->authenticationType;
+                        $this->_table->request->data[$this->alias]['value'] = $value;
+                    }
+                    if ($value != 'Local') {
+                        $this->_table->field('custom_authentication', ['type' => 'authentication_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
+                    }
+                }
+            }
         }
     }
 
-	protected function processAuthentication(&$attribute, $authenticationType) {
-		$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-		$attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
-		$attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
-		foreach ($attribute as $key => $values) {
-			$attributeValue = '';
-			if (array_search($key, $attributeFieldsArray) !== false) {
-				$attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
-			}
-			if (method_exists($this, strtolower($authenticationType).'ModifyValue')) {
-				$method = strtolower($authenticationType).'ModifyValue';
-				$result = $this->$method($key, $attributeValue);
-				if ($result !== false) {
-					$attributeValue = $result;
-				}
-			}
-			$attribute[$key]['value'] = $attributeValue;
-		}
-	}
+    public function afterAction(Event $event)
+    {
+        if ($this->_table->action == 'view' || $this->_table->action == 'edit') {
+            $key = $this->_table->id;
+            if (!empty($key)) {
+                $configItem = $this->_table->get($key);
+                if ($configItem->type == 'Authentication' && $configItem->code == 'authentication_type') {
+                    $this->_table->field('default_value', ['visible' => false]);
+                    $value = $this->_table->request->data[$this->alias]['value'];
+                }
+            }
+        }
+    }
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if (empty($entity->errors())) {
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        if (isset($extra['toolbarButtons']['back'])) {
+            unset($extra['toolbarButtons']['back']);
+        }
+    }
+
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        if (isset($extra['toolbarButtons']['list'])) {
+            unset($extra['toolbarButtons']['list']);
+        }
+    }
+
+    protected function processAuthentication(&$attribute, $authenticationType)
+    {
+        $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
+        $attributesArray = $AuthenticationTypeAttributesTable->find()->where([$AuthenticationTypeAttributesTable->aliasField('authentication_type') => $authenticationType])->toArray();
+        $attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
+        foreach ($attribute as $key => $values) {
+            $attributeValue = '';
+            if (array_search($key, $attributeFieldsArray) !== false) {
+                $attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
+            }
+            if (method_exists($this, strtolower($authenticationType).'ModifyValue')) {
+                $method = strtolower($authenticationType).'ModifyValue';
+                $result = $this->$method($key, $attributeValue);
+                if ($result !== false) {
+                    $attributeValue = $result;
+                }
+            }
+            $attribute[$key]['value'] = $attributeValue;
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (empty($entity->errors())) {
             $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-    		$authenticationType = $data[$this->alias]['value'];
-    		$AuthenticationTypeAttributesTable->deleteAll(
-    			['authentication_type' => $authenticationType]
-    		);
+            $authenticationType = $data[$this->alias]['value'];
+            $AuthenticationTypeAttributesTable->deleteAll(
+                ['authentication_type' => $authenticationType]
+            );
             if (!isset($data['AuthenticationTypeAttributes'])) {
                 $data['AuthenticationTypeAttributes'] = [];
             }
@@ -126,11 +136,11 @@ class AuthenticationBehavior extends Behavior {
                 $this->$method($data['AuthenticationTypeAttributes']);
             }
         }
-	}
+    }
 
-	public function saml2AfterSave($samlAttributes) {
-
-		$setting['sp'] = [
+    public function saml2AfterSave($samlAttributes)
+    {
+        $setting['sp'] = [
             'entityId' => $samlAttributes['sp_entity_id']['value'],
             'assertionConsumerService' => [
                 'url' => $samlAttributes['sp_acs']['value'],
@@ -141,79 +151,85 @@ class AuthenticationBehavior extends Behavior {
             'NameIDFormat' => $samlAttributes['sp_name_id_format']['value'],
         ];
 
-       	$message = $this->getSPMetaData($setting);
+        $message = $this->getSPMetaData($setting);
 
-       	$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-       	$entity = $AuthenticationTypeAttributesTable->find()->where([
-       			$AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
-       			$AuthenticationTypeAttributesTable->aliasField('attribute_field') => 'sp_metadata'
-       		])
-       		->first();
+        $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
+        $entity = $AuthenticationTypeAttributesTable->find()->where([
+                $AuthenticationTypeAttributesTable->aliasField('authentication_type') => 'Saml2',
+                $AuthenticationTypeAttributesTable->aliasField('attribute_field') => 'sp_metadata'
+            ])
+            ->first();
 
-       	if (!empty($entity)) {
-       		$entity->value = htmlentities($message);
-       		$AuthenticationTypeAttributesTable->save($entity);
-       	}
-	}
+        if (!empty($entity)) {
+            $entity->value = htmlentities($message);
+            $AuthenticationTypeAttributesTable->save($entity);
+        }
+    }
 
-    public function getSPMetaData($settingsInfo) {
+    public function getSPMetaData($settingsInfo)
+    {
         try {
             // Now we only validate SP settings
-            $settings = new \OneLogin_Saml2_Settings($settingsInfo, true);
+            $settings = new OneLogin_Saml2_Settings($settingsInfo, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
                 header('Content-Type: text/xml');
                 return $metadata;
             } else {
-                throw new \OneLogin_Saml2_Error(
+                throw new OneLogin_Saml2_Error(
                     'Invalid SP metadata: '.implode(', ', $errors),
-                    \OneLogin_Saml2_Error::METADATA_SP_INVALID
+                    OneLogin_Saml2_Error::METADATA_SP_INVALID
                 );
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $e->getMessage();
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-    	$configItem = $data[$this->_table->alias()];
-    	if ($configItem['type'] == 'Authentication') {
-    		$methodName = strtolower($configItem['value']).'AuthenticationValidation';
-    		if (method_exists($this, $methodName) && !$this->$methodName($data['AuthenticationTypeAttributes'])) {
-    			$this->_table->Alert->error('security.emptyFields', ['reset' => true]);;
-    			$entity->errors('error', ['There are invalid Authentication Attributes']);
-    		}
-    	}
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $configItem = $data[$this->_table->alias()];
+        if ($configItem['type'] == 'Authentication') {
+            $methodName = strtolower($configItem['value']).'AuthenticationValidation';
+            if (method_exists($this, $methodName) && !$this->$methodName($data['AuthenticationTypeAttributes'])) {
+                $this->_table->Alert->error('security.emptyFields', ['reset' => true]);
+                ;
+                $entity->errors('error', ['There are invalid Authentication Attributes']);
+            }
+        }
     }
 
-    public function saml2AuthenticationValidation($authenticationAttributes) {
-    	$attribute = [];
-    	$this->saml2Authentication($attribute);
-    	foreach ($attribute as $key => $values) {
-    		if (!isset($values['required'])) {
-    			if (empty($authenticationAttributes[$key]['value']) && $values['type'] != 'select') {
-    				return false;
-    			}
-    		}
-    	}
-    	return true;
+    public function saml2AuthenticationValidation($authenticationAttributes)
+    {
+        $attribute = [];
+        $this->saml2Authentication($attribute);
+        foreach ($attribute as $key => $values) {
+            if (!isset($values['required'])) {
+                if (empty($authenticationAttributes[$key]['value']) && $values['type'] != 'select') {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
-    public function googleAuthenticationValidation($authenticationAttributes) {
-    	$attribute = [];
-    	$this->googleAuthentication($attribute);
-    	foreach ($attribute as $key => $values) {
-    		if (!isset($values['required'])) {
-    			if (empty($authenticationAttributes[$key]['value']) && $values['type'] != 'select') {
-    				return false;
-    			}
-    		}
-    	}
-    	return true;
+    public function googleAuthenticationValidation($authenticationAttributes)
+    {
+        $attribute = [];
+        $this->googleAuthentication($attribute);
+        foreach ($attribute as $key => $values) {
+            if (!isset($values['required'])) {
+                if (empty($authenticationAttributes[$key]['value']) && $values['type'] != 'select') {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
-    public function oAuth2OpenIDConnectAuthenticationValidation($authenticationAttributes) {
+    public function oAuth2OpenIDConnectAuthenticationValidation($authenticationAttributes)
+    {
         $attribute = [];
         $this->oAuth2OpenIDConnectAuthentication($attribute);
         foreach ($attribute as $key => $values) {
@@ -226,8 +242,9 @@ class AuthenticationBehavior extends Behavior {
         return true;
     }
 
-	public function saml2Authentication(&$attribute) {
-		$attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
+    public function saml2Authentication(&$attribute)
+    {
+        $attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
         $attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
         $attribute['idp_sso_binding'] = ['label' => 'Identity Provider - Single Signon Service Binding', 'type' => 'text'];
         $attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
@@ -246,33 +263,37 @@ class AuthenticationBehavior extends Behavior {
         $attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
         $attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text', 'required' => false];
+        $attribute['saml_role_mapping'] = ['label' => 'Role mapping', 'type' => 'hidden', 'required' => false];
         $attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden', 'required' => false];
-	}
+    }
 
-	public function saml2ModifyValue($key, $attributeValue) {
-		if ($key == 'sp_entity_id') {
-			return Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
-		} else if ($key == 'sp_slo') {
-			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'],true);
-		} else if ($key == 'idp_sso_binding' && empty($attributeValue)) {
-			return \OneLogin_Saml2_Constants::BINDING_HTTP_POST;
-		} else if ($key == 'idp_slo_binding' && empty($attributeValue)) {
-			return \OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
-		} else if ($key == 'sp_acs') {
-			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-		}
-		return false;
-	}
+    public function saml2ModifyValue($key, $attributeValue)
+    {
+        if ($key == 'sp_entity_id') {
+            return Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
+        } elseif ($key == 'sp_slo') {
+            return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'], true);
+        } elseif ($key == 'idp_sso_binding' && empty($attributeValue)) {
+            return OneLogin_Saml2_Constants::BINDING_HTTP_POST;
+        } elseif ($key == 'idp_slo_binding' && empty($attributeValue)) {
+            return OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
+        } elseif ($key == 'sp_acs') {
+            return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
+        }
+        return false;
+    }
 
-	public function googleAuthentication(&$attribute) {
-		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
+    public function googleAuthentication(&$attribute)
+    {
+        $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
         $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
         $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
         $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
         $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'select', 'options' => $this->_table->getSelectOptions('Authentication.yesno')];
-	}
+    }
 
-    public function oAuth2OpenIDConnectAuthentication(&$attribute) {
+    public function oAuth2OpenIDConnectAuthentication(&$attribute)
+    {
         $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
         $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
         $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
@@ -288,36 +309,40 @@ class AuthenticationBehavior extends Behavior {
         $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['dob_mapping'] = ['label' => 'Date of Birth Mapping', 'type' => 'text', 'required' => false];
         $attribute['gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
+        $attribute['role_mapping'] = ['label' => 'Role Mapping', 'type' => 'hidden', 'required' => false];
     }
 
-	public function googleModifyValue($key, $attributeValue) {
-		if ($key == 'redirect_uri') {
-			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-		}
-		return false;
-	}
-
-    public function oAuth2OpenIDConnectModifyValue($key, $attributeValue) {
+    public function googleModifyValue($key, $attributeValue)
+    {
         if ($key == 'redirect_uri') {
-            return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
+            return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
         }
         return false;
     }
 
-	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
-		switch ($action){
-			case "view":
-				$authenticationType = $this->_table->request->data[$this->alias]['value'];
-				$attribute = [];
-				$methodName = strtolower($authenticationType).'Authentication';
-				if (method_exists($this, $methodName)) {
-					$this->$methodName($attribute);
-					$this->processAuthentication($attribute, $authenticationType);
-				}
+    public function oAuth2OpenIDConnectModifyValue($key, $attributeValue)
+    {
+        if ($key == 'redirect_uri') {
+            return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
+        }
+        return false;
+    }
 
-				$tableHeaders = [__('Attribute Name'), __('Value')];
-				$tableCells = [];
-				foreach ($attribute as $key => $value) {
+    public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options = [])
+    {
+        switch ($action) {
+            case "view":
+                $authenticationType = $this->_table->request->data[$this->alias]['value'];
+                $attribute = [];
+                $methodName = strtolower($authenticationType).'Authentication';
+                if (method_exists($this, $methodName)) {
+                    $this->$methodName($attribute);
+                    $this->processAuthentication($attribute, $authenticationType);
+                }
+
+                $tableHeaders = [__('Attribute Name'), __('Value')];
+                $tableCells = [];
+                foreach ($attribute as $value) {
                     $row = [];
                     $row[] = $value['label'];
                     if ($value['label'] == 'Allow User Creation') {
@@ -325,23 +350,23 @@ class AuthenticationBehavior extends Behavior {
                     }
                     $row[] = $value['value'];
                     $tableCells[] = $row;
-				}
-				$attr['tableHeaders'] = $tableHeaders;
-		    	$attr['tableCells'] = $tableCells;
-				break;
+                }
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
+                break;
 
-			case "edit":
-				$authenticationType = $this->_table->request->data[$this->alias]['value'];
-				$attribute = [];
-				$methodName = strtolower($authenticationType).'Authentication';
-				if (method_exists($this, $methodName)) {
-					$this->$methodName($attribute);
-					$this->processAuthentication($attribute, $authenticationType);
-				}
+            case "edit":
+                $authenticationType = $this->_table->request->data[$this->alias]['value'];
+                $attribute = [];
+                $methodName = strtolower($authenticationType).'Authentication';
+                if (method_exists($this, $methodName)) {
+                    $this->$methodName($attribute);
+                    $this->processAuthentication($attribute, $authenticationType);
+                }
 
-				$attr = $attribute;
-				break;
-		}
-		return $event->subject()->renderElement('Configuration.authentication', ['attr' => $attr]);
-	}
+                $attr = $attribute;
+                break;
+        }
+        return $event->subject()->renderElement('Configuration.authentication', ['attr' => $attr]);
+    }
 }

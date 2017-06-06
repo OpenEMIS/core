@@ -74,6 +74,7 @@
                 <table class="table table-checkable">
                     <thead>
                         <tr>
+                            <th><?= __('Registration Number') ?></th>
                             <th><?= __('OpenEMIS ID') ?></th>
                             <th><?= __('Student') ?></th>
                             <th><?= __('Current Grade') ?></th>
@@ -87,6 +88,7 @@
                                 foreach ($attr['data'] as $i => $obj) :
                             ?>
                                 <tr>
+                                    <td><?= $obj->registration_number ?></td>
                                     <td>
                                     <?php
                                             $alias = $ControllerAction['table']->alias();

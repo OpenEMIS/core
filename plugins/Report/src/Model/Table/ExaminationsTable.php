@@ -14,15 +14,32 @@ use App\Model\Table\AppTable;
 
 class ExaminationsTable extends AppTable
 {
-    public function initialize(array $config) {
-        $this->table('examinations');
+    public function initialize(array $config)
+    {
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
-        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents']);
+        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('ExaminationCentres', [
+            'className' => 'Examination.ExaminationCentres',
+            'joinTable' => 'examination_centres_examinations',
+            'foreignKey' => 'examination_id',
+            'targetForeignKey' => 'examination_centre_id',
+            'through' => 'Examination.ExaminationCentresExaminations',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->belongsToMany('ExaminationCentreRooms', [
+            'className' => 'Examination.ExaminationCentreRooms',
+            'joinTable' => 'examination_centre_rooms_examinations',
+            'foreignKey' => 'examination_id',
+            'targetForeignKey' => 'examination_centre_room_id',
+            'through' => 'Examination.ExaminationCentreRoomsExaminations',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
@@ -90,11 +107,7 @@ class ExaminationsTable extends AppTable
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['academic_period_id'])) {
-                $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
-            } else {
-                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            }
+             $selectedAcademicPeriod = !empty($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id']: $this->AcademicPeriods->getCurrent();
 
             $examinationOptions = $this->find('list')
                 ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
@@ -103,6 +116,7 @@ class ExaminationsTable extends AppTable
             $attr['options'] = $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';
             $attr['type'] = 'select';
+            $attr['select'] = false;
             return $attr;
         }
     }
@@ -125,20 +139,26 @@ class ExaminationsTable extends AppTable
             $feature = $request->data[$this->alias()]['feature'];
 
             if (in_array($feature, ['Report.RegisteredStudentsExaminationCentre'])) {
+                $selectedAcademicPeriod = !empty($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id']: $this->AcademicPeriods->getCurrent();
+
+                $examCentreQuery = $this->ExaminationCentres
+                    ->find('list' ,[
+                        'keyField' => 'id',
+                        'valueField' => 'code_name'
+                    ])
+                    ->where([$this->ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod])
+                    ->order([$this->ExaminationCentres->aliasField('code')]);
+
                 if (!empty($request->data[$this->alias()]['examination_id'])) {
-                    $selectedExamination = $request->data[$this->alias()]['examination_id'];
+                    $examinationId = $request->data[$this->alias()]['examination_id'];
+                    $examCentreQuery
+                        ->matching('Examinations')
+                        ->where([$this->aliasField('id') => $examinationId]);
+                }
 
-                    $examCentreOptions = $this->ExaminationCentres
-                        ->find('list' ,[
-                            'keyField' => 'id',
-                            'valueField' => 'code_name'
-                        ])
-                        ->where([$this->ExaminationCentres->aliasField('examination_id') => $selectedExamination])
-                        ->toArray();
-
-                    if (!empty($examCentreOptions)) {
-                        $examCentreOptions =  ['-1' => __('All Exam Centres')] + $examCentreOptions;
-                    }
+                $examCentreOptions = $examCentreQuery->toArray();
+                if (!empty($examCentreOptions)) {
+                    $examCentreOptions =  ['0' => __('All Exam Centres')] + $examCentreOptions;
                 }
 
                 $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
@@ -163,7 +183,7 @@ class ExaminationsTable extends AppTable
                 if (!empty($request->data[$this->alias()]['examination_id'])) {
                     $selectedExamination = $request->data[$this->alias()]['examination_id'];
 
-                    $ExamCentreStudents = $this->ExaminationCentreStudents;
+                    $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
                     $institutionOptions = $ExamCentreStudents
                         ->find('list' ,[
                             'keyField' => 'institution_id',
@@ -175,7 +195,7 @@ class ExaminationsTable extends AppTable
                         ->toArray();
 
                     if (!empty($institutionOptions)) {
-                        $institutionOptions =  ['-1' => __('All Institutions'), '0' => __('Private Candidate')] + $institutionOptions;
+                        $institutionOptions =  ['0' => __('All Institutions'), '-1' => __('Private Candidate')] + $institutionOptions;
                     }
                 }
 
@@ -205,7 +225,7 @@ class ExaminationsTable extends AppTable
                         ->toArray();
 
                     if (!empty($institutionOptions)) {
-                        $institutionOptions =  ['-1' => __('All Institutions')] + $institutionOptions;
+                        $institutionOptions =  ['0' => __('All Institutions')] + $institutionOptions;
                     }
                 }
 

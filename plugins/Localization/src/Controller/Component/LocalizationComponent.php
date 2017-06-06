@@ -23,8 +23,10 @@ use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\Core\App;
 use Cake\I18n\Time;
+use Cake\Filesystem\File;
 
-class LocalizationComponent extends Component {
+class LocalizationComponent extends Component
+{
     private $defaultLocale = 'en';
     private $autoCompile = true;
     private $controller;
@@ -42,14 +44,16 @@ class LocalizationComponent extends Component {
 
     public $components = ['Cookie', 'Auth'];
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Controller.initialize'] = 'beforeFilter';
         return $events;
     }
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $session = $this->request->session();
         $this->controller = $this->_registry->getController();
         $this->Cookie->name = str_replace(' ', '_', $config['productName']) . '_COOKIE';
@@ -63,17 +67,19 @@ class LocalizationComponent extends Component {
         return $this->Cookie;
     }
 
-    private function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
+    private function dispatchEvent($subject, $eventKey, $method = null, $params = [], $autoOff = false)
+    {
         $this->onEvent($subject, $eventKey, $method);
         $event = new Event($eventKey, $this, $params);
         $event = $subject->eventManager()->dispatch($event);
-        if(!is_null($method) && $autoOff) {
+        if (!is_null($method) && $autoOff) {
             $this->offEvent($subject, $eventKey, $method);
         }
         return $event;
     }
 
-    private function onEvent($subject, $eventKey, $method) {
+    private function onEvent($subject, $eventKey, $method)
+    {
         $eventMap = $subject->implementedEvents();
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method)) {
@@ -82,7 +88,8 @@ class LocalizationComponent extends Component {
         }
     }
 
-    private function offEvent($subject, $eventKey, $method) {
+    private function offEvent($subject, $eventKey, $method)
+    {
         $subject->eventManager()->off($eventKey, [$subject, $method]);
     }
 
@@ -124,8 +131,7 @@ class LocalizationComponent extends Component {
                 // This condition will only be reach if the user has not login and the cookie for the system language has not been set on the browser
                 $this->Cookie->write('System.language', $lang);
             }
-        }
-        // Language menu disabled
+        } // Language menu disabled
         else {
             // $lang = $session->read('System.language');
             $user = $this->Auth->user();
@@ -138,7 +144,8 @@ class LocalizationComponent extends Component {
         return [$lang, $showLanguage];
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         // Call to recompile the language if the translation files are affected
         if ($this->autoCompile()) {
             $this->updateLocaleFile($this->language);
@@ -147,7 +154,8 @@ class LocalizationComponent extends Component {
         I18n::locale($this->language);
     }
 
-    public function autoCompile($compile = null) {
+    public function autoCompile($compile = null)
+    {
         if (is_null($compile)) {
             return $this->autoCompile;
         } else {
@@ -155,7 +163,8 @@ class LocalizationComponent extends Component {
         }
     }
 
-    private function updateLocaleFile($lang) {
+    private function updateLocaleFile($lang)
+    {
         if ($this->defaultLocale != $lang) {
             $isChanged = $this->isChanged($lang);
             if ($isChanged) {
@@ -164,7 +173,8 @@ class LocalizationComponent extends Component {
         }
     }
 
-    private function getModifiedDate() {
+    private function getModifiedDate()
+    {
         $TranslationsTable = TableRegistry::get('Localization.Translations');
         $selectedColumns = [
             'modified' => '(
@@ -184,15 +194,16 @@ class LocalizationComponent extends Component {
         return $lastModified;
     }
 
-    private function isChanged($locale) {
+    private function isChanged($locale)
+    {
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
         $lastModified = $this->getModifiedDate();
         if (file_exists($fileLocation)) {
             $file = fopen($fileLocation, "r");
             while (!feof($file)) {
-               $line = fgets($file);
-               if (strpos($line, 'PO-Revision-Date: ')) {
+                $line = fgets($file);
+                if (strpos($line, 'PO-Revision-Date: ')) {
                     $line = str_replace('"PO-Revision-Date: ', '', $line);
                     $line = str_replace('\n"', '', $line);
                     try {
@@ -203,8 +214,8 @@ class LocalizationComponent extends Component {
                     } catch (\Exception $e) {
                         // default will return last modified date
                     }
-                    break;
-               }
+                      break;
+                }
             }
 
             fclose($file);
@@ -212,13 +223,14 @@ class LocalizationComponent extends Component {
         return $lastModified;
     }
 
-    private function convertPO($locale, $lastModified) {
+    private function convertPO($locale, $lastModified)
+    {
         $str = "";
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
         $TranslationsTable = TableRegistry::get('Localization.Translations');
         $data = $TranslationsTable
-            ->find('list' ,[
+            ->find('list', [
                 'keyField' => $this->defaultLocale,
                 'valueField' => $locale
             ])
@@ -241,25 +253,23 @@ class LocalizationComponent extends Component {
         $str .= '"Language: '.$locale.'\n"'."\n";
 
         //Replace the whole file
-        if(file_put_contents($fileLocation, $str, LOCK_EX)){
-            // For populating the translation list
-            foreach ($data as $key => $value) {
-                $msgid = $key;
-                $msgstr = $value;
-                $str = "\n";
-                $str .= 'msgid "'.$msgid.'"'."\n";
-                $str .= 'msgstr "'.$msgstr.'"'."\n";
-                //Append to current file
-                file_put_contents($fileLocation, $str, FILE_APPEND | LOCK_EX);
-            }
-            return true;
-        }else{
-            return false;
+        $file = new File($fileLocation, true);
+        $file->write($str);
+        foreach ($data as $key => $value) {
+            $msgid = $key;
+            $msgstr = $value;
+            $str = "\n";
+            $str .= 'msgid "'.$msgid.'"'."\n";
+            $str .= 'msgstr "'.$msgstr.'"'."\n";
+            //Append to current file
+            $file->append($str);
         }
+        return $file->close();
     }
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
-    public function startup(Event $event) {
+    public function startup(Event $event)
+    {
         $controller = $this->controller;
         $htmlLang = $this->language;
         $languages = $this->languages;
@@ -279,7 +289,8 @@ class LocalizationComponent extends Component {
         $controller->set(compact('htmlLang', 'htmlLangDir'));
     }
 
-    public function getOptions() {
+    public function getOptions()
+    {
         $languages = $this->languages;
         $options = [];
 
@@ -289,7 +300,8 @@ class LocalizationComponent extends Component {
         return $options;
     }
 
-    public function getLanguages() {
+    public function getLanguages()
+    {
         return $this->languages;
     }
 }

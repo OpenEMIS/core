@@ -11,23 +11,25 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use App\Model\Traits\OptionsTrait;
 
-class ConfigWebhooksTable extends ControllerActionTable {
+class ConfigWebhooksTable extends ControllerActionTable
+{
     use OptionsTrait;
 
     private $eventKeyOptions = [
         'logout' => 'Logout',
     ];
 
-	public function initialize(array $config) {
-		$this->table('webhooks');
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        $this->table('webhooks');
+        parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
 
         foreach ($this->eventKeyOptions as $key => $value) {
             $this->eventKeyOptions[$key] = __($value);
         }
-	}
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -43,7 +45,7 @@ class ConfigWebhooksTable extends ControllerActionTable {
                 'rule' => function ($value, $context) {
                     if (empty($value)) {
                         return false;
-                    } else if (isset($value['_ids']) && empty($value['_ids'])) {
+                    } elseif (isset($value['_ids']) && empty($value['_ids'])) {
                         return false;
                     }
                     return true;
@@ -118,7 +120,6 @@ class ConfigWebhooksTable extends ControllerActionTable {
     {
         $this->field('triggered_event');
         $this->setFieldOrder(['triggered_event', 'name', 'url', 'status', 'method']);
-        // $extra['elements']['indexElement'] = $this->buildSystemConfigFilters();
     }
 
     public function onGetTriggeredEvent(Event $event, Entity $entity)
@@ -128,20 +129,5 @@ class ConfigWebhooksTable extends ControllerActionTable {
             $returnString = $returnString . ', ' . __($this->eventKeyOptions[$event->event_key]);
         }
         return ltrim($returnString, ', ');
-    }
-
-    public function buildSystemConfigFilters() {
-        $toolbarElements = [
-            ['name' => 'Configuration.webhook_controls', 'data' => [], 'options' => []]
-        ];
-        $eventKeyOptions = $this->eventKeyOptions;
-        $selectedKey = $this->queryString('event_key', $eventKeyOptions);
-        $this->request->query['event_key'] = $eventKeyOptions[$selectedKey];
-        $this->advancedSelectOptions($eventKeyOptions, $selectedKey);
-        $eventKeyOptions = array_values($eventKeyOptions);
-        $controlElement = $toolbarElements[0];
-        $controlElement['data'] = ['eventKeyOptions' => $eventKeyOptions];
-        $controlElement['order'] = 2;
-        return $controlElement;
     }
 }

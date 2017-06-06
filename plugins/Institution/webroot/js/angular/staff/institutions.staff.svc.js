@@ -50,7 +50,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getPositionList: getPositionList,
         getStaffTypes: getStaffTypes,
         getInstitution: getInstitution,
-        addStaffTransferRequest: addStaffTransferRequest
+        addStaffTransferRequest: addStaffTransferRequest,
+        translate: translate
     };
 
     var models = {
@@ -86,6 +87,15 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         KdOrmSvc.controllerAction('ExternalAPI');
         KdOrmSvc.init(externalModels);
     };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
+    }
 
     function resetExternalVariable()
     {
@@ -294,7 +304,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                     'number': userRecord['identity_number']
                 }];
             }
-            console.log(userRecord);
             StaffUser.reset();
             StaffUser.save(userRecord)
             .then(function(studentRecord) {
@@ -358,10 +367,11 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         userData = response.data[0];
                         modifiedUser = userData;
                         delete modifiedUser['openemis_no'];
-                        console.log(modifiedUser);
+                        delete modifiedUser['created'];
+                        delete modifiedUser['modified'];
                         modifiedUser['is_staff'] = 1;
                         modifiedUser['start_date'] = userRecord['start_date'];
-                        StaffUser.save(modifiedUser)
+                        StaffUser.edit(modifiedUser)
                         .then(function(response) {
                             deferred.resolve([response.data, userData]);
                         }, function(error) {
