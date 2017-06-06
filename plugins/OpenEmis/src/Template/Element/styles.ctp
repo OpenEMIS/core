@@ -16,7 +16,7 @@ echo $this->Html->css('OpenEmis.../plugins/toggle-switch/toggle-switch');
 // echo $this->Html->css('OpenEmis.../plugins/ng-agGrid/css/ag-grid');
 // echo $this->Html->css('OpenEmis.../plugins/ng-agGrid/css/theme-fresh');
 
-echo $this->Resource->css('OpenEmis.master.min');
+echo $this->Resource->css('OpenEmis.master');
 
 if (isset($theme)) {
 	echo $this->Resource->css($theme);
