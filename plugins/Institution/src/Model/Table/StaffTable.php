@@ -1178,15 +1178,10 @@ class StaffTable extends ControllerActionTable
     // Function used by the Dashboard (For Institution Dashboard and Home Page)
     public function getNumberOfStaffByPosition($params = [])
     {
-        $_conditions = [];
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->alias().'.'.$key] = $value;
-        }
-
-        $associatedConditions = isset($params['associatedConditions']) ? $params['associatedConditions'] : [];
-        foreach ($associatedConditions as $key => $value) {
-            $_conditions[$key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -1204,7 +1199,6 @@ class StaffTable extends ControllerActionTable
         $staffByPositions = $query
                 ->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
                 ->contain(['Users.Genders','Positions.StaffPositionTitles'])
-                ->matching('Institutions.Areas')
                 ->select([
                     'Positions.id',
                     'StaffPositionTitles.id',
@@ -1269,15 +1263,10 @@ class StaffTable extends ControllerActionTable
     // For Dashboard (Institution Dashboard and Home Page)
     public function getNumberOfStaffByYear($params=[])
     {
-        $_conditions = [];
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->alias().'.'.$key] = $value;
-        }
-
-        $associatedConditions = isset($params['associatedConditions']) ? $params['associatedConditions'] : [];
-        foreach ($associatedConditions as $key => $value) {
-            $_conditions[$key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -1324,7 +1313,6 @@ class StaffTable extends ControllerActionTable
                         'valueField' => 'total'
                     ])
                     ->matching('Users.Genders')
-                    ->matching('Institutions.Areas')
                     ->select([
                         'gender_name' => 'Genders.name',
                         'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('staff_id'))
