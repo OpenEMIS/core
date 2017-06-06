@@ -16,7 +16,7 @@
 	$inputErrorCSS = (!empty($errorMsg))? 'form-error': '';
 	$inputWrapperStyle = (array_key_exists('inputWrapperStyle', $attr)) ? $attr['inputWrapperStyle'] : '';
 	?>
-	<div class="tree-form <?= isset($attr['class']) ? $attr['class'] : '' ?> <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>" ng-controller="SgTreeCtrl as SgTree" ng-init="SgTree.outputValue=<?= $attr['value']?>;">
+	<div class="tree-form <?= isset($attr['class']) ? $attr['class'] : '' ?> <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>" ng-controller="SgTreeCtrl as SgTree" ng-init="SgTree.model=<?= $attr['source_model'] ?>; SgTree.outputValue=<?= $attr['value']?>;">
 		<kd-tree-dropdown-ng id="<?=$attr['field'] ?>" input-model="SgTree.inputModelText" output-model="outputModelText" model-type="single"></kd-tree-dropdown-ng>
 		<?php
 			$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
