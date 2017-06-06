@@ -98,7 +98,8 @@ class TrainingSessionsTable extends ControllerActionTable
         $query->contain([
                 'Trainers' => [
                     'Users',
-                    'sort' => ['Trainers.type' => 'DESC', 'Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Trainers.name' => 'ASC']
+                    // 'sort' => ['Trainers.type' => 'DESC', 'Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Trainers.name' => 'ASC']
+                    'sort' => ['Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Trainers.name' => 'ASC']
                 ],
                 'Trainees' => [
                     'sort' => ['Trainees.first_name' => 'ASC', 'Trainees.last_name' => 'ASC']
@@ -430,7 +431,7 @@ class TrainingSessionsTable extends ControllerActionTable
                     $cell = $obj->user->name_with_id;
 
                     $rowData = [];
-                    $rowData[] = $trainerTypeOptions[$obj->type];
+                    $rowData[] = $trainerTypeOptions[$this->getTrainerType($obj)];
                     $rowData[] = $cell;
 
                     $tableCells[] = $rowData;
@@ -451,7 +452,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 $associated = $entity->extractOriginal([$fieldKey]);
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
-                        $trainerType = $obj['type'];
+                        $trainerType = $this->getTrainerType($obj);
                         $trainerId = $obj->trainer_id;
                         $name = $obj->name;
                         $trainerName = $obj->user->name_with_id;
@@ -595,6 +596,21 @@ class TrainingSessionsTable extends ControllerActionTable
         }
 
         return null;
+    }
+
+    public function getTrainerType($obj)
+    {
+        $trainerType = '';
+        $entity = $obj;
+
+        // (is_guardian == 1 or (is_staff == 0, is_student == 0, is_student == 0)) == OTHERS
+        if ($entity->user->is_guardian == 1 || ($entity->user->is_staff == 0 && $entity->user->is_student == 0 && $entity->user->is_guardian == 0)) {
+            $trainerType = self::OTHERS;
+        } else if ($entity->user->is_staff == 1) { // STAFF
+            $trainerType = self::STAFF;
+        }
+
+        return $trainerType;
     }
 
     public function setupFields(Event $event, Entity $entity)
