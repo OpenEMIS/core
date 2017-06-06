@@ -15,6 +15,7 @@ function kdTreeDropdown() {
                         data-output-model='outputModel' \
                         data-callback='selectionCallback(item, selectedItems)'\
                         data-expand-click='expandClicked()'\
+                        tree-id='{{elementId}}'\
                         ></multi-select-tree>\
                 </div>\
         ",
@@ -40,11 +41,11 @@ function kdTreeDropdown() {
     }
 
     function kdTreeDropdownLink(_scope, _element, _attrs) {
-        _scope.elementId = "#" + getElementId(_element);
+        _scope.elementId = getElementId(_element);
 
         angular.element(document).ready(function() {
             addInputText(_scope);
-            angular.element(document.querySelector(_scope.elementId + " .tree-input")).addClass("input-select-wrapper");
+            angular.element(document.querySelector("#" + _scope.elementId + " .tree-input")).addClass("input-select-wrapper");
         });
 
         _scope.selectionCallback = function(_item, _selectedItem) {
@@ -83,7 +84,7 @@ function kdTreeDropdown() {
     function addInputText(_scope) {
         var div = angular.element("<div class='tree-selection-text'></div>");
         div.text(generateSelectionText(_scope.outputModel));
-        angular.element(document.querySelector(_scope.elementId + " .tree-control")).append(div);
+        angular.element(document.querySelector("#" + _scope.elementId + " .tree-control")).append(div);
     }
 
     function getElementId(_element) {

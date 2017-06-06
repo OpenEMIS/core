@@ -40,12 +40,11 @@ class AreasTable extends ControllerActionTable
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StaffRoom' => ['index']
+            'StaffRoom' => ['index'],
+            'SgTree' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');
-        $authorisedAreaIds = [1];
-        $this->find('areaList', ['authorisedAreaIds' => $authorisedAreaIds])->toArray();
     }
 
     public function implementedEvents()
@@ -321,6 +320,7 @@ class AreasTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
+        $authorisedAreaIds = json_decode($this->urlsafeB64Decode($options['authorisedAreaIds']), true);
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
@@ -332,9 +332,8 @@ class AreasTable extends ControllerActionTable
                 $this->aliasField('parent_id')
             ])
             ->hydrate(false)
-            ->formatResults(function ($results) use ($options) {
+            ->formatResults(function ($results) use ($authorisedAreaIds) {
                 $results = $results->toArray();
-                $authorisedAreaIds = isset($options['authorisedAreaIds']) ? $options['authorisedAreaIds'] : [];
                 $this->unsetEmptyArr($results, $authorisedAreaIds);
                 return $results;
             });

@@ -20,7 +20,7 @@ angular.module('multi-select-tree').run(['$templateCache', function($templateCac
     "            <tree-item class=\"top-level\" ng-repeat=\"item in inputModel\" item=\"item\" ng-show=\"!item.isFiltered\"\n" +
     "                       use-callback=\"useCallback\" can-select-item=\"canSelectItem\"\n" +
     "                       multi-select=\"multiSelect\" item-selected=\"itemSelected(item)\"\n" +
-    "                       on-active-item=\"onActiveItem(item)\" select-only-leafs=\"selectOnlyLeafs\" is-radio=\"isRadio\"></tree-item>\n" +
+    "                       on-active-item=\"onActiveItem(item)\" select-only-leafs=\"selectOnlyLeafs\" is-radio=\"isRadio\" tree-id=\"{{treeId}}\"></tree-item>\n" +
     "        </ul>\n" +
     "    </div>\n" +
     "</div>\n"
@@ -36,7 +36,7 @@ angular.module('multi-select-tree').run(['$templateCache', function($templateCac
     "\n" +
     "        <div class=\"item-details\"> " +
     "           <input class=\"tree-checkbox\" type=\"checkbox\" ng-if=\"showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
-    "           <input class=\"tree-checkbox\" type=\"radio\" name=\"tree-radio\" ng-if=\"!showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
+    "           <input class=\"tree-checkbox\" type=\"radio\" name=\"{{treeId}}\" ng-if=\"!showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
     "           <label>{{item.name}}\n</label> " +
     "        </div>\n" +
     "    </div>\n" +
