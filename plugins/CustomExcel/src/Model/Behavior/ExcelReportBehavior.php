@@ -31,7 +31,8 @@ class ExcelReportBehavior extends Behavior
         'wrapText' => false,
         'lockSheets' => false,
         'templateTable' => null,
-        'templateTableKey' => null
+        'templateTableKey' => null,
+        'variableSource' => 'file'
     ];
 
     // function name and keyword pairs
@@ -69,15 +70,25 @@ class ExcelReportBehavior extends Behavior
     public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-        $params = $model->getQueryString();
-        $vars = $this->getVars($params, $extra);
 
+        if (array_key_exists('requestQuery', $extra)) {
+            $params = $extra['requestQuery'];
+        } else {
+            $params = $model->getQueryString();
+        }
+
+        $vars = $this->getVars($params, $extra);
         $results = Hash::flatten($vars);
         pr($results);
         die;
     }
 
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
+    {
+        $this->renderExcelTemplate($extra);
+    }
+
+    public function renderExcelTemplate(ArrayObject $extra)
     {
         ini_set('max_execution_time', 180);
 
@@ -328,17 +339,27 @@ class ExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $variables = $this->config('variables');
-
-        $variableValues = [];
-        foreach ($variables as $var) {            
-            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
+        $variableValues = new ArrayObject([]);
+        if ($this->config('variableSource') == 'database') {
+            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateGetQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) { return $event->result; }
             if ($event->result) {
-                $variableValues[$var] = $event->result;
+                $variableValues = $event->result;
+            }
+
+        } else if ($this->config('variableSource') == 'file') {
+            $variables = $this->config('variables');
+
+            foreach ($variables as $var) {
+                $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateGet'.$var, [$params, $extra], $this);
+                if ($event->isStopped()) { return $event->result; }
+                if ($event->result) {
+                    $variableValues[$var] = $event->result;
+                }
             }
         }
 
+        $variableValues = $variableValues->getArrayCopy();
         return $variableValues;
     }
 
