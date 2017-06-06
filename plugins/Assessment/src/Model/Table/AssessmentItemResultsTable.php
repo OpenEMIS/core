@@ -9,8 +9,10 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 
-class AssessmentItemResultsTable extends AppTable {
-    public function initialize(array $config) {
+class AssessmentItemResultsTable extends AppTable
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
@@ -27,13 +29,15 @@ class AssessmentItemResultsTable extends AppTable {
         $this->addBehavior('Indexes.Indexes');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
@@ -48,7 +52,8 @@ class AssessmentItemResultsTable extends AppTable {
         $this->dispatchEventToModels('Model.AssessmentResults.afterSave', [$entity], $this, $listeners);
     }
 
-    public function findResults(Query $query, array $options) {
+    public function findResults(Query $query, array $options)
+    {
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
         $session = $controller->request->session();
@@ -95,27 +100,34 @@ class AssessmentItemResultsTable extends AppTable {
     }
 
     /**
-     *  Function to get the assessment results base on the institution id and the academic period
+     *  Function to get the assessment results based academic period
      *
-     *  @param integer $institutionId The institution id
      *  @param integer $academicPeriodId The academic period id
      *
      *  @return array The assessment results group field - institution id, key field - student id
      *      value field - assessment item id with array containing marks, grade name and grade code
      */
-    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId) {
-        $results = $this
+    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
+    {
+        $query = $this
             ->find()
+            ->select([
+                'grade_name' => 'AssessmentGradingOptions.name',
+                'grade_code' => 'AssessmentGradingOptions.code',
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_period_id'),
+                $this->aliasField('marks')
+            ])
             ->contain(['AssessmentGradingOptions'])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('assessment_id') => $assessmentId,
-                $this->aliasField('education_subject_id') => $subjectId
+                $this->aliasField('education_subject_id') => $subjectId,
+                $this->aliasField('student_id') => $studentId,
             ])
-            ->select(['grade_name' => 'AssessmentGradingOptions.name', 'grade_code' => 'AssessmentGradingOptions.code'])
-            ->autoFields(true)
-            ->hydrate(false)
-            ->toArray();
+            ->hydrate(false);
+
+        $results = $query->toArray();
         $returnArray = [];
         foreach ($results as $result) {
             $returnArray[$result['student_id']][$subjectId][$result['assessment_period_id']] = [
@@ -189,7 +201,8 @@ class AssessmentItemResultsTable extends AppTable {
     //     return $reference;
     // }
 
-    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId) {
+    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId)
+    {
         $query = $this->find();
         $totalMarks = $query
             ->select([

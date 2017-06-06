@@ -116,7 +116,7 @@ class SingleGradeBehavior extends Behavior {
 			'type' 		=> 'element',
 			'element' 	=> 'Institution.Classes/single_grade',
 			'data' 		=> [	'numberOfClasses' 	=> $numberOfClasses,
-					 			'staffOptions' 		=> $model->getStaffOptions('add', $selectedAcademicPeriodId, $institutionId),
+					 			'staffOptions' 		=> $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId),
 					 			'existedClasses' 	=> $model->getExistedClasses($institutionId, $selectedAcademicPeriodId, $selectedEducationGradeId),
 					 			'grade' 			=> $grade
 			]

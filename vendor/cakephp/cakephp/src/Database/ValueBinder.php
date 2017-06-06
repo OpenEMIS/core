@@ -67,10 +67,35 @@ class ValueBinder
     public function placeholder($token)
     {
         $number = $this->_bindingsCount++;
-        if ($token[0] !== ':' || $token !== '?') {
-            $token = sprintf(':c%s', $number);
+        if ($token[0] !== ':' && $token !== '?') {
+            $token = sprintf(':%s%s', $token, $number);
         }
+
         return $token;
+    }
+
+    /**
+     * Creates unique named placeholders for each of the passed values
+     * and binds them with the specified type.
+     *
+     * @param array|\Traversable $values The list of values to be bound
+     * @param string $type The type with which all values will be bound
+     * @return array with the placeholders to insert in the query
+     */
+    public function generateManyNamed($values, $type = 'string')
+    {
+        $placeholders = [];
+        foreach ($values as $k => $value) {
+            $param = $this->placeholder('c');
+            $this->_bindings[$param] = [
+                'value' => $value,
+                'type' => $type,
+                'placeholder' => substr($param, 1),
+            ];
+            $placeholders[$k] = $param;
+        }
+
+        return $placeholders;
     }
 
     /**
@@ -117,11 +142,9 @@ class ValueBinder
         if (empty($bindings)) {
             return;
         }
-        $params = $types = [];
+
         foreach ($bindings as $b) {
-            $params[$b['placeholder']] = $b['value'];
-            $types[$b['placeholder']] = $b['type'];
+            $statement->bindValue($b['placeholder'], $b['value'], $b['type']);
         }
-        $statement->bind($params, $types);
     }
 }

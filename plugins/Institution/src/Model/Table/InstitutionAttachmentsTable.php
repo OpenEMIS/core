@@ -105,7 +105,11 @@ class InstitutionAttachmentsTable extends AppTable {
 
 		$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
 		$buttons['download']['attr'] = $indexAttr;
-		$buttons['download']['url']['action'] = $this->alias.'/download';
+		$buttons['download']['url']['plugin'] = 'Institution';
+		$buttons['download']['url']['controller'] = 'Institutions';
+		$buttons['download']['url']['institutionId'] = $this->request->param('institutionId');
+		$buttons['download']['url']['action'] = $this->alias;
+		$buttons['download']['url'][0] = 'download';
 		$buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
 
 		return $buttons;
