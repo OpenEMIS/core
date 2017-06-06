@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS `institution_students_report_cards_comments`;
 DROP TABLE IF EXISTS `report_card_comment_codes`;
 
 -- security_functions
-DELETE FROM `security_functions` WHERE `id` IN (1057, 1058, 1059, 1060, 2034, 5072, 7052);
+DELETE FROM `security_functions` WHERE `id` IN (1057, 1058, 1059, 1060, 2034, 5072, 7053);
 
 UPDATE `security_functions`
 SET `order` = `order` - 4

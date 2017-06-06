@@ -135,9 +135,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('status');
-        $this->field('openemis_no');
-        $this->field('student_id', ['type' => 'integer']);
+        $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
         $this->fields['student_status_id']['visible'] = false;
     }
@@ -197,6 +197,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         $Classes->aliasField('institution_id') => $institutionId,
                         'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
                     ])
+                    ->order([$Classes->aliasField('name')])
                     ->toArray();
             } else {
                 // if selected report card is not valid, do not show any students
@@ -227,7 +228,20 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->autoFields(true)
             ->where($where);
 
+        if (is_null($this->request->query('sort'))) {
+            $query
+                ->contain('Users')
+                ->order(['Users.first_name', 'Users.last_name']);
+        }
+
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        // sort
+        $sortList = ['report_card_status', 'Users.first_name', 'Users.openemis_no'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
 
         // search
         $search = $this->getSearchKey();
