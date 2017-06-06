@@ -11,35 +11,42 @@ use Cake\Network\Request;
 use Cake\I18n\I18n;
 use Cake\Network\Session;
 use Cake\I18n\Time;
+use Cake\Log\Log;
 
 class CustomReportBehavior extends Behavior
 {
+    private $Table = null;
+
     public function parseQuery ($jsonArray, array $params)
     {
         if (array_key_exists('model', $jsonArray)) {
             $model = $jsonArray['model'];
 
-            $Table = TableRegistry::get($model);
-            $query = $Table->find();
+            $this->Table = TableRegistry::get($model);
+            $query = $this->Table->find();
 
             if (array_key_exists('join', $jsonArray)) {
-                $joinData = $jsonArray['join'];
-                $this->_join($query, $params, $joinData);
+                $this->_join($query, $params, $jsonArray['join']);
             }
 
             if (array_key_exists('select', $jsonArray)) {
-                $selectData = $jsonArray['select'];
-                $this->_select($query, $params, $selectData);
+                $this->_select($query, $params, $jsonArray['select']);
+            }
+
+            if (array_key_exists('find', $jsonArray)) {
+                $this->_find($query, $params, $jsonArray['find']);
             }
 
             if (array_key_exists('where', $jsonArray)) {
-                $whereData = $jsonArray['where'];
-                $this->_where($query, $params, $whereData);
+                $this->_where($query, $params, $jsonArray['where']);
             }
 
             if (array_key_exists('group', $jsonArray)) {
-                $groupData = $jsonArray['group'];
-                $this->_group($query, $params, $groupData);
+                $this->_group($query, $params, $jsonArray['group']);
+            }
+
+            if (array_key_exists('order', $jsonArray)) {
+                $this->_order($query, $params, $jsonArray['order']);
             }
         }
 
@@ -93,18 +100,47 @@ class CustomReportBehavior extends Behavior
         }
     }
 
+    private function _find(Query $query, array $params, array $values)
+    {
+        if (!empty($values)) {
+            foreach($values as $data) {
+
+                if (isset($data['name']) && $this->Table->hasFinder($data['name'])) {
+                    $conditions = [];
+
+                    if (isset($data['conditions'])) {
+                        foreach($data['conditions'] as $field => $value) {
+                            $pos = strpos($value, '${');
+
+                            if ($pos !== false) {
+                                $placeholder = substr($value, $pos + 2, strlen($value) - 3);
+                                if (array_key_exists($placeholder, $params)) {
+                                    $conditions[$field] = $params[$placeholder];
+                                }
+                            } else {
+                                $conditions[$field] = $value;
+                            }
+                        }
+                    }
+                    $query->find($data['name'], $conditions);
+
+                } else {
+                    Log::write('debug', 'Finder (' . $data['name'] . ') does not exist.');
+                }
+            }
+        }
+    }
+
     private function _where(Query $query, array $params, array $values)
     {
         if (!empty($values)) {
             $conditions = [];
 
             foreach($values as $field => $value) {
-                $startPos = strpos($value, '${');
-                $endPos = strpos($value, '}');
+                $pos = strpos($value, '${');
 
-                if ($startPos !== false && $endPos !== false) {
-                    $placeholder = substr($value, $startPos + 2, $endPos - $startPos - 2);
-
+                if ($pos !== false) {
+                    $placeholder = substr($value, $pos + 2, strlen($value) - 3);
                     if (array_key_exists($placeholder, $params)) {
                         $conditions[$field] = $params[$placeholder];
                     }
@@ -121,6 +157,13 @@ class CustomReportBehavior extends Behavior
     {
         if (!empty($values)) {
             $query->group($values);
+        }
+    }
+
+    private function _order(Query $query, array $params, array $values)
+    {
+        if (!empty($values)) {
+            $query->order($values);
         }
     }
 }
