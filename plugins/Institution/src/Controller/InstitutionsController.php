@@ -310,8 +310,8 @@ class InstitutionsController extends AppController
         $userId = $this->Auth->user('id');
 
         $settings = [
-            'class_id' => $classId, 
-            'assessment_id' => $assessmentId, 
+            'class_id' => $classId,
+            'assessment_id' => $assessmentId,
             'institution_id' => $institutionId,
             'user_id' => $userId,
             'AccessControl' => $this->AccessControl,
@@ -320,11 +320,11 @@ class InstitutionsController extends AppController
         ];
 
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        
+
         $results = $ClassStudents->generateXLXS($settings);
         $fileName = $results['file'];
         $filePath = $results['path'] . $fileName;
-        
+
         $response = $this->response;
         $response->body(function() use ($filePath) {
             $content = file_get_contents($filePath);
@@ -704,6 +704,19 @@ class InstitutionsController extends AppController
         $action = $this->request->action;
 
         switch ($action) {
+            case 'Institutions':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'add' || $this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'multi-select-tree',
+                            // 'tree-item',
+                            'kd-angular-tree-dropdown',
+                            'sg.tree.ctrl',
+                            'sg.tree.svc'
+                        ]);
+                    }
+                }
+                break;
             case 'Results':
                 $this->Angular->addModules([
                     'alert.svc',

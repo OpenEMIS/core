@@ -11,6 +11,7 @@ echo $this->Html->script('OpenEmis.lib/angular/angular-animate.min');
 echo $this->Html->script('OpenEmis.angular/kd-angular-elem-sizes');
 echo $this->Html->script('OpenEmis.angular/kd-angular-checkbox-radio-button');
 echo $this->Html->script('OpenEmis.angular/kd-angular-multi-select/kd-angular-multi-select');
+echo $this->Html->script('OpenEmis.angular/kd-angular-treedropdown');
 echo $this->Html->script('OpenEmis.lib/holder');
 echo $this->Html->script('OpenEmis.lib/angular/ui-bootstrap-tpls.min');
 echo $this->Html->script('OpenEmis.angular/kd-angular-advanced-search.ctrl');
@@ -36,3 +37,7 @@ echo $this->Html->script('OpenEmis.../plugins/slider/js/bootstrap-slider');
 echo $this->Html->script('OpenEmis.../plugins/ng-scrolltabs/js/angular-ui-tab-scroll');
 echo $this->Html->script('OpenEmis.../plugins/ng-agGrid/js/ag-grid');
 // echo $this->Html->script('OpenEmis.../plugins/ag-grid-enterprise/dist/ag-grid-enterprise.min');
+
+//Tree Dropdown
+echo $this->Html->script('OpenEmis.../plugins/multi-select-tree/dist/angular-multi-select-tree-0.1.0');
+echo $this->Html->script('OpenEmis.../plugins/multi-select-tree/dist/angular-multi-select-tree-0.1.0.tpl');
