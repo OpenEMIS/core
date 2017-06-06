@@ -933,19 +933,19 @@ class InstitutionsController extends AppController
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
 
-            //Students By Year, excludes transferred and withdrawn students
-            $params = [
-                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
-            ];
-
-            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
-
             //Students By Grade for current year, excludes transferred and withdrawn students
             $params = [
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
             ];
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+
+            //Students By Year, excludes transferred and withdrawn students
+            $params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
+            ];
+
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
             //Staffs By Position Type for current year, only shows assigned staff
             $params = [
@@ -955,8 +955,7 @@ class InstitutionsController extends AppController
 
             //Staffs By Year, only shows assigned staff
             $params = [
-                'associatedConditions' => [$Areas->aliasField('lft >= ') => $lft, $Areas->aliasField('rght <= ') => $rght, $Institutions->aliasField('id != ') => $id],
-                'conditions' => ['staff_status_id' => $assignedStatus]
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
 
