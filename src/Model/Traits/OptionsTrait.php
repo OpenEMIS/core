@@ -41,7 +41,7 @@ trait OptionsTrait {
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			],
 			'TrainingSessions' => [
-				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
+				'trainer_types' => ['STAFF' => __('Staff'), 'OTHERS' => __('Others')]
 			],
 			'StaffTrainingNeeds' => [
 				'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
