@@ -50,8 +50,9 @@ class StudentReportCardsTable extends ControllerActionTable
     {
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $query
+            ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')
             ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
-            ->order([$this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id')]);
+            ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
