@@ -1239,6 +1239,7 @@ class StudentsTable extends ControllerActionTable
                 'EducationGrades.name',
                 'EducationGrades.education_absolute_grade_id',
                 'EducationAbsoluteGrades.name',
+                'EducationAbsoluteGrades.order',
                 'Users.id',
                 'Genders.name',
                 'total' => $query->func()->count($this->aliasField('id'))
@@ -1250,11 +1251,11 @@ class StudentsTable extends ControllerActionTable
             ])
             ->where($studentsByGradeConditions)
             ->group([
-                'education_absolute_grade_id',
+                'EducationGrades.education_absolute_grade_id',
                 'Genders.name'
             ])
             ->order(
-                ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order']
+                ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationAbsoluteGrades.order']
             )
             ->toArray()
             ;

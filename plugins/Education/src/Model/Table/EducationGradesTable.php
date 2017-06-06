@@ -299,7 +299,8 @@ class EducationGradesTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $absoluteGradeOptions = $this->EducationAbsoluteGrades
                 ->find('list')
-                ->order(['order'])
+                ->find('visible')
+                ->find('order')
                 ->all();
 
             $attr['type'] = 'select';
