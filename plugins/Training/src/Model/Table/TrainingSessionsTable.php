@@ -30,8 +30,8 @@ class TrainingSessionsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    const INTERNAL = 'INTERNAL';
-    const EXTERNAL = 'EXTERNAL';
+    const STAFF = 'STAFF';
+    const OTHERS = 'OTHERS';
 
     public function initialize(array $config)
     {
@@ -177,16 +177,16 @@ class TrainingSessionsTable extends ControllerActionTable
 
         if ($data->offsetExists($alias)) {
             if (array_key_exists('trainer_id', $data[$alias]) && !empty($data[$alias]['trainer_id'])) {
-                // Internal Trainer
                 $id = $data[$alias]['trainer_id'];
+                $trainerType = $data[$alias]['type'];
 
                 try {
                     $obj = $this->Trainers->Users->get($id);
 
                     $data[$alias][$fieldKey][] = [
-                        'type' => self::INTERNAL,
+                        'type' => $trainerType,
                         'trainer_id' => $obj->id,
-                        'name' => '',
+                        'name' => $obj->name,
                         'trainer_name' => $obj->name_with_id
                     ];
 
@@ -194,14 +194,6 @@ class TrainingSessionsTable extends ControllerActionTable
                 } catch (RecordNotFoundException $ex) {
                     Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
                 }
-            } else {
-                // External Trainer
-                $data[$alias][$fieldKey][] = [
-                    'type' => self::EXTERNAL,
-                    'trainer_id' => '',
-                    'name' => '',
-                    'trainer_name' => ''
-                ];
             }
         }
 
@@ -299,14 +291,19 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function ajaxTrainerAutocomplete()
     {
-        $this->controller->autoRender = false;
+        // $this->controller->autoRender = false;
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
-            $data = $this->Trainers->Users->autocomplete($term);
+            $extra = json_decode($this->request->query['extra'], true);
+
+            $data = $this->Trainers->Users->autocomplete($term, $extra);
             echo json_encode($data);
             die;
+            // $this->controller->body(json_encode($json, JSON_UNESCAPED_UNICODE));
+            // $this->response->type('json');
+            // return $this->response;
         }
     }
 
@@ -430,11 +427,7 @@ class TrainingSessionsTable extends ControllerActionTable
             if (!empty($associated[$fieldKey])) {
                 foreach ($associated[$fieldKey] as $i => $obj) {
                     $cell = '';
-                    if ($obj->type == self::INTERNAL) {
-                        $cell = $obj->user->name_with_id;
-                    } else if ($obj->type == self::EXTERNAL) {
-                        $cell = $obj->name;
-                    }
+                    $cell = $obj->user->name_with_id;
 
                     $rowData = [];
                     $rowData[] = $trainerTypeOptions[$obj->type];
@@ -459,16 +452,9 @@ class TrainingSessionsTable extends ControllerActionTable
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
                         $trainerType = $obj['type'];
-
-                        if ($trainerType == self::INTERNAL) {
-                            $trainerId = $obj->trainer_id;
-                            $name = '';
-                            $trainerName = $obj->user->name_with_id;
-                        } else if ($trainerType == self::EXTERNAL) {
-                            $trainerId = '';
-                            $name = $obj->name;
-                            $trainerName = '';
-                        }
+                        $trainerId = $obj->trainer_id;
+                        $name = $obj->name;
+                        $trainerName = $obj->user->name_with_id;
 
                         $this->request->data[$alias][$fieldKey][$key] = [
                             'id' => $obj->id,
@@ -489,20 +475,15 @@ class TrainingSessionsTable extends ControllerActionTable
                     $trainerType = $obj['type'];
                     $trainerId = $obj['trainer_id'];
                     $trainerName = $obj['trainer_name'];
+                    $name = $obj['name'];
 
                     $rowData = [];
-                    if ($trainerType == self::INTERNAL) {
-                        $cell = $trainerName;
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => '']);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.type", ['value' => $trainerType]);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_id", ['value' => $trainerId]);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_name", ['value' => $trainerName]);
-                    } else if ($trainerType == self::EXTERNAL) {
-                        $cell = $Form->input("$alias.$fieldKey.$key.name", ['label' => false]);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.type", ['value' => $trainerType]);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_id", ['value' => $trainerId]);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_name", ['value' => $trainerName]);
-                    }
+
+                    $cell = $trainerName;
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.type", ['value' => $trainerType]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_id", ['value' => $trainerId]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_name", ['value' => $trainerName]);
 
                     $rowData[] = [$trainerTypeOptions[$trainerType], ['autocomplete-exclude' => $trainerId]];
                     $rowData[] = $cell;
@@ -514,6 +495,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
+        $attr['trainerTypeOptions'] = $trainerTypeOptions;
 
         return $event->subject()->renderElement('Training.Sessions/' . $fieldKey, ['attr' => $attr]);
     }
