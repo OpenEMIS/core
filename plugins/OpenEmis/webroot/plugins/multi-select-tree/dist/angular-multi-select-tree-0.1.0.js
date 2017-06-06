@@ -243,7 +243,8 @@
         selectOnlyLeafs: '=?',
         callback: '&',
         defaultLabel: '@',
-        isRadio: '=?'
+        isRadio: '=?',
+        treeId: '@'
       },
       link: function (scope, element, attrs) {
         if (attrs.callback) {
@@ -421,7 +422,8 @@
           isActive: '=',
           useCallback: '=',
           canSelectItem: '=',
-          isRadio: '=?'
+          isRadio: '=?',
+          treeId: '@'
         },
         controller: 'treeItemCtrl',
         compile: function (element, attrs, link) {

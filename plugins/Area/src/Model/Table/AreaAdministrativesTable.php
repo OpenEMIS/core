@@ -33,7 +33,8 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StaffRoom' => ['index']
+            'StaffRoom' => ['index'],
+            'SgTree' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -78,6 +79,11 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
+        $authorisedAreaIds = json_decode($this->urlsafeB64Decode($options['authorisedAreaIds']), true);
+        if (isset($options['displayCountry']) && !$options['displayCountry']) {
+            $query = $query->where([$this->aliasField('is_main_country') => true]);
+        }
+
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
@@ -89,9 +95,10 @@ class AreaAdministrativesTable extends ControllerActionTable
                 $this->aliasField('parent_id')
             ])
             ->hydrate(false)
-            ->formatResults(function ($results) use ($options) {
+            // Remove world record
+            ->where([$this->aliasField('parent_id').' IS NOT NULL'])
+            ->formatResults(function ($results) use ($authorisedAreaIds) {
                 $results = $results->toArray();
-                $authorisedAreaIds = isset($options['authorisedAreaIds']) ? $options['authorisedAreaIds'] : [];
                 $this->unsetEmptyArr($results, $authorisedAreaIds);
                 return $results;
             });
