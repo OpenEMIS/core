@@ -734,27 +734,6 @@ class UsersTable extends AppTable
         return $buttons;
     }
 
-    public function findStaff(Query $query, array $options)
-    {
-        // is_staff == 1
-        return $query->where([$this->aliasField('is_staff') => 1]);
-    }
-
-    public function findOthers(Query $query, array $options)
-    {
-        // is_guardian == 1 or (is_staff == 0, is_student == 0, is_student == 0)
-        return $query->where([
-            'OR' => [
-                [$this->aliasField('is_guardian') => 1],
-                [
-                    $this->aliasField('is_staff') => 0,
-                    $this->aliasField('is_student') => 0,
-                    $this->aliasField('is_student') => 0,
-                ]
-            ]
-        ]);
-    }
-
     // autocomplete used for TrainingSessions
     // the same function is found in Security.Users
     public function autocomplete($search, $extra = [])
@@ -801,6 +780,27 @@ class UsersTable extends AppTable
             }
         }
         return $data;
+    }
+
+    public function findStaff(Query $query, array $options)
+    {
+        // is_staff == 1
+        return $query->where([$this->aliasField('is_staff') => 1]);
+    }
+
+    public function findOthers(Query $query, array $options)
+    {
+        // is_guardian == 1 or (is_staff == 0, is_student == 0, is_student == 0)
+        return $query->where([
+            'OR' => [
+                [$this->aliasField('is_guardian') => 1],
+                [
+                    $this->aliasField('is_staff') => 0,
+                    $this->aliasField('is_student') => 0,
+                    $this->aliasField('is_student') => 0,
+                ]
+            ]
+        ]);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
