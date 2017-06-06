@@ -18,10 +18,11 @@ class CustomReportsTable extends AppTable
 		parent::initialize($config);
 
         $this->addBehavior('Report.ReportList');
-        $this->addBehavior('CustomExcel.CustomReport');
+        $this->addBehavior('Report.CustomReport');
         $this->addBehavior('CustomExcel.ExcelReport', [
-            'templateTable' => 'CustomExcel.CustomReports',
+            'templateTable' => 'Report.CustomReports',
             'templateTableKey' => 'feature',
+            'download' => false,
             'variableSource' => 'database'
         ]);
 	}
@@ -63,6 +64,13 @@ class CustomReportsTable extends AppTable
                 if (array_key_exists('academic_period_id', $filters)) {
                      $this->ControllerAction->field('academic_period_id');
                      unset($filters['academic_period_id']);
+                }
+
+                $params = $this->request->data[$this->alias()];
+                foreach($filters as $field => $data) {
+                    $query = $this->parseQuery($data, $params);
+                    $entity = $query->toArray();
+                    $this->ControllerAction->field($field, ['type' => 'select', 'options' => $entity, 'select' => false]);
                 }
             }
         }
