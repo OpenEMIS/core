@@ -56,14 +56,14 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
         var principalPermission = StaffTable
             .select()
-            .find('PrincipalEditPermissions', {
+            .find('principalEditPermissions', {
                 institution_id: institutionId,
                 staff_id: currentUserId
             });
 
         var homeroomTeacherPermission = HomeroomStaffTable
             .select()
-            .find('HomeroomEditPermissions', {
+            .find('homeroomEditPermissions', {
                 institution_id: institutionId,
                 institution_class_id: classId,
                 staff_id: currentUserId
@@ -71,7 +71,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
         var teacherPermission = InstitutionSubjectStaffTable
             .select()
-            .find('TeacherEditPermissions', {
+            .find('teacherEditPermissions', {
                 report_card_id: reportCardId,
                 institution_id: institutionId,
                 institution_class_id: classId,
@@ -90,13 +90,18 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var deferred = $q.defer();
         var tabs = [];
 
+        var isSuperAdmin = {};
+        var principalPermission = {};
+        var homeroomTeacherPermission = {};
+        var teacherPermission = {};
+
         this.getEditPermissions(reportCardId, institutionId, classId, currentUserId)
         .then(function(response)
         {
-            var isSuperAdmin = response[0];
-            var principalPermission = response[1].data;
-            var homeroomTeacherPermission = response[2].data;
-            var teacherPermission = response[3].data;
+            isSuperAdmin = response[0];
+            principalPermission = response[1].data;
+            homeroomTeacherPermission = response[2].data;
+            teacherPermission = response[3].data;
 
             if (principalCommentsRequired) {
                 editable = (angular.isObject(principalPermission) && principalPermission.length > 0) || isSuperAdmin;
@@ -118,30 +123,28 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 });
             }
 
+            return getSubjects(reportCardId, classId);
+        }, function(error)
+        {
+            console.log(error);
+        })
+        .then(function(response)
+        {
             if (teacherCommentsRequired) {
-                getSubjects(reportCardId, classId)
-                .then(function(response)
-                {
-                    subjects = response.data;
-                    if (angular.isObject(subjects) && subjects.length > 0) {
-                        angular.forEach(subjects, function(subject, key)
-                        {
-                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin;
-                            this.push({
-                                tabName: subject.name + " Teacher",
-                                type: roles.TEACHER,
-                                education_subject_id: subject.education_subject_id,
-                                editable: editable
-                            });
-                        }, tabs);
-                    }
-                }, function(error)
-                {
-                    // No Subjects
-                    console.log(error);
-                });
+                subjects = response.data;
+                if (angular.isObject(subjects) && subjects.length > 0) {
+                    angular.forEach(subjects, function(subject, key)
+                    {
+                        editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin;
+                        this.push({
+                            tabName: subject.name + " Teacher",
+                            type: roles.TEACHER,
+                            education_subject_id: subject.education_subject_id,
+                            editable: editable
+                        });
+                    }, tabs);
+                }
             }
-
         }, function(error)
         {
             console.log(error);
@@ -161,7 +164,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     function getSubjects(reportCardId, classId) {
         return ReportCardSubjectsTable
             .select()
-            .find('MatchingClassSubjects', {
+            .find('matchingClassSubjects', {
                 report_card_id: reportCardId,
                 institution_class_id: classId
             })
@@ -249,9 +252,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     name: '-- Select --'
                 }
             };
-            angular.forEach(commentCodeOptions, function(obj, key) {
-                selectOptions[obj.id] = obj
-            });
+            for (var i = 0; i < commentCodeOptions.length; i++) {
+                selectOptions[i+1] = commentCodeOptions[i];
+            }
 
             extra = {
                 selectOptions: selectOptions,
@@ -339,7 +342,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     angular.forEach(options, function(obj, key) {
                         var eOption = document.createElement("option");
                         var labelText = obj.name;
-                        eOption.setAttribute("value", key);
+                        eOption.setAttribute("value", obj.id);
                         eOption.innerHTML = labelText;
                         eSelect.appendChild(eOption);
                         if (oldValue == obj.id) {
@@ -390,10 +393,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 cellRenderer: function(params) {
                     var cellValue = '';
                     if (params.value.length != 0 && params.value != 0) {
-                        // show option code and name only when it is a valid option from options list
-                        if (angular.isDefined(options[params.value])) {
-                            cellValue = options[params.value]['name'];
-                        }
+                        // show option name only when it is a valid option from options list
+                        angular.forEach(options, function(obj, key) {
+                            if (params.value == obj.id) {
+                                cellValue = options[key]['name'];
+                            }
+                        });
                     }
 
                     var eCell = document.createElement('div');
@@ -474,7 +479,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
         return InstitutionClassStudentsTable
             .select()
-            .find('ReportCardComments', {
+            .find('reportCardComments', {
                 academic_period_id: academicPeriodId,
                 institution_id: institutionId,
                 institution_class_id: institutionClassId,

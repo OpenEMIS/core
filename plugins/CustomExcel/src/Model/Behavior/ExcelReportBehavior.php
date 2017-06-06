@@ -29,7 +29,9 @@ class ExcelReportBehavior extends Behavior
         'download' => true,
         'save' => false,
         'wrapText' => false,
-        'lockSheets' => false
+        'lockSheets' => false,
+        'templateTable' => null,
+        'templateTableKey' => null
     ];
 
     // function name and keyword pairs
@@ -88,6 +90,8 @@ class ExcelReportBehavior extends Behavior
         }
 
         $extra['params'] = $params;
+        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this);
+
         $extra['vars'] = $this->getVars($params, $extra);
 
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
@@ -97,7 +101,6 @@ class ExcelReportBehavior extends Behavior
         $extra['file_path'] = $extra['path'] . $extra['file'];
 
         $objPHPExcel = $this->loadExcelTemplate($extra);
-        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this);
         $this->generateExcel($objPHPExcel, $extra);
 
         if ($this->config('format') == 'xlsx') {
@@ -646,7 +649,14 @@ class ExcelReportBehavior extends Behavior
         }
 
         $cellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($cellCoordinate);
+
+        if ($this->config('wrapText')) {
+            $cellStyle->getAlignment()->setWrapText(true);
+        }
+
         $objWorksheet->setCellValue($cellCoordinate, $search);
+        $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
     }
 
     private function row($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)

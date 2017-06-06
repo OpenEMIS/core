@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS `institution_students_report_cards_comments` (
 DROP TABLE IF EXISTS `report_card_comment_codes`;
 CREATE TABLE IF NOT EXISTS `report_card_comment_codes` (
  `id` int(11) NOT NULL AUTO_INCREMENT,
- `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+ `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
  `order` int(3) NOT NULL,
  `visible` int(1) NOT NULL DEFAULT '1',
  `editable` int(1) NOT NULL DEFAULT '1',
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `report_card_comment_codes` (
  `created_user_id` int(11) NOT NULL,
  `created` datetime NOT NULL,
  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This is a field option table containing the list of user-defined comment codes that can be used for student report cards';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This is a field option table containing the list of user-defined comment codes that can be used for student report cards';
 
 -- security_functions
 UPDATE `security_functions`
@@ -145,8 +145,8 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (1059, 'Generate/Download', 'Institutions', 'Institutions', 'Report Cards', 1000, NULL, NULL, NULL, NULL, 'ReportCardStatuses.generate|ReportCardStatuses.generateAll|InstitutionStudentsReportCards.download|ReportCardStatuses.downloadAll', 1052, 1, NULL, NULL, NULL, 1, NOW()),
 (1060, 'Publish/Unpublish', 'Institutions', 'Institutions', 'Report Cards', 1000, NULL, NULL, NULL, NULL, 'ReportCardStatuses.publish|ReportCardStatuses.publishAll|ReportCardStatuses.unpublish|ReportCardStatuses.unpublishAll', 1053, 1, NULL, NULL, NULL, 1, NOW()),
 (2034, 'Report Cards', 'Students', 'Institutions', 'Students - Academic', 1000, 'ReportCards.index|ReportCards.view', NULL, NULL, NULL, 'ReportCards.download', 2018, 1, NULL, NULL, NULL, 1, NOW()),
-(5072, 'Templates', 'ReportCards', 'Administration', 'Report Cards', 5000, 'Templates.index|Templates.view', 'Templates.edit', 'Templates.add', 'Templates.remove', 'Templates.download', 5067, 1, NULL, NULL, NULL, 1, NOW()),
-(7052, 'Report Cards', 'Directories', 'Directory', 'Students - Academic', 7000, 'StudentReportCards.index|StudentReportCards.view', NULL, NULL, NULL, 'StudentReportCards.download', 7017, 1, NULL, NULL, NULL, 1, NOW());
+(5072, 'Templates', 'ReportCards', 'Administration', 'Report Cards', 5000, 'Templates.index|Templates.view', 'Templates.edit|Templates.downloadTemplate', 'Templates.add', 'Templates.remove', 'Templates.download', 5067, 1, NULL, NULL, NULL, 1, NOW()),
+(7053, 'Report Cards', 'Directories', 'Directory', 'Students - Academic', 7000, 'StudentReportCards.index|StudentReportCards.view', NULL, NULL, NULL, 'StudentReportCards.download', 7017, 1, NULL, NULL, NULL, 1, NOW());
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES
