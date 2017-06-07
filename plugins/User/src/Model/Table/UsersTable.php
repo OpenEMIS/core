@@ -790,14 +790,14 @@ class UsersTable extends AppTable
 
     public function findOthers(Query $query, array $options)
     {
-        // is_guardian == 1 or (is_staff == 0, is_student == 0, is_student == 0)
+        // is_guardian == 1 or (is_staff == 0, is_student == 0, is_guardian == 0)
         return $query->where([
             'OR' => [
                 [$this->aliasField('is_guardian') => 1],
                 [
                     $this->aliasField('is_staff') => 0,
                     $this->aliasField('is_student') => 0,
-                    $this->aliasField('is_student') => 0,
+                    $this->aliasField('is_guardian') => 0,
                 ]
             ]
         ]);
