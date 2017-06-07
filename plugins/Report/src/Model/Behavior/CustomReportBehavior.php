@@ -136,9 +136,23 @@ class CustomReportBehavior extends Behavior
     {
         if (!empty($values)) {
             $contain = [];
-            foreach ($values as $associatedModel) {
-                if ($this->Table->associations()->has($associatedModel)) {
-                    $contain[] = $associatedModel;
+
+            foreach ($values as $value) {
+                $models = explode('.', $value);
+
+                $associated = true;
+                $table = $this->Table;
+                foreach ($models as $model) {
+                    if (!$table->associations()->has($model)) {
+                        $associated = false;
+                        break;
+                    } else {
+                        $table = $table->$model;
+                    }
+                }
+
+                if ($associated) {
+                    $contain[] = $value;
                 }
             }
 
@@ -150,9 +164,23 @@ class CustomReportBehavior extends Behavior
     {
         if (!empty($values)) {
             $matching = [];
-            foreach ($values as $associatedModel) {
-                if ($this->Table->associations()->has($associatedModel)) {
-                    $matching[] = $associatedModel;
+
+            foreach ($values as $value) {
+                $models = explode('.', $value);
+
+                $associated = true;
+                $table = $this->Table;
+                foreach ($models as $model) {
+                    if (!$table->associations()->has($model)) {
+                        $associated = false;
+                        break;
+                    } else {
+                        $table = $table->$model;
+                    }
+                }
+
+                if ($associated) {
+                    $matching[] = $value;
                 }
             }
 
