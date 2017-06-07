@@ -31,7 +31,6 @@ class FieldOptionComponent extends Component
         'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
         'Sectors' => ['className' => 'Institution.Sectors', 'parent' => 'Institution'],
         'Providers' => ['className' => 'Institution.Providers', 'parent' => 'Institution'],
-        'Statuses' => ['className' => 'Institution.Statuses', 'parent' => 'Institution'],
         'Types' => ['className' => 'Institution.Types', 'parent' => 'Institution'],
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
         'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
