@@ -185,20 +185,22 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         columnDefs.push({
             headerName: "Subject",
             field: "subject",
-            filterParams: filterParams
+            filterParams: filterParams,
+            pinned: 'left'
         });
 
         angular.forEach(assessmentPeriods, function(assessmentPeriod, key) {
             var assessmentPeriodField = 'period_' + assessmentPeriod.id;
             var weightField = 'weight_' + assessmentPeriod.id;
-
             var columnDef = {
-                headerName: assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
+                headerName: assessmentPeriod.academic_term + " - " + assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
                 field: assessmentPeriodField,
                 filter: "number",
                 filterParams: filterParams,
                 cellStyle: function(params) {
                     var subjectId = params.data['subject_id'];
+
+                    var resultType = '';
 
                     var passMark = 0;
                     if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'])) {

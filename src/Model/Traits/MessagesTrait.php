@@ -33,7 +33,8 @@ trait MessagesTrait
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
             'periodWeight' => 'Period Weight',
-            'classification' => 'Classification'
+            'classification' => 'Classification',
+            'academic_term' => 'Please check the academic terms to ensure that all the values are entered.'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -1674,6 +1675,9 @@ trait MessagesTrait
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
+                'academic_term' => [
+                    'ruleCheckAcademicTerm' => 'Please enter an academic term for this record'
+                ]
             ],
             'AssessmentItems' => [
                 'weight' => [
