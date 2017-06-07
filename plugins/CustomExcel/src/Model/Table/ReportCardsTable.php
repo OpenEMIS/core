@@ -29,7 +29,6 @@ class ReportCardsTable extends AppTable
             'templateTableKey' => 'report_card_id',
             'format' => $this->fileType,
             'download' => false,
-            'save' => true,
             'wrapText' => true,
             'lockSheets' => true,
             'variables' => [
@@ -59,7 +58,7 @@ class ReportCardsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
-        $events['ExcelTemplates.Model.onExcelTemplateSaveFile'] = 'onExcelTemplateSaveFile';
+        $events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportCards'] = 'onExcelTemplateInitialiseReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardsComments'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardsComments';
@@ -96,7 +95,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateSaveFile(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
     {
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $studentReportCardData = $StudentsReportCards->find()
