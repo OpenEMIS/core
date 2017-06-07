@@ -2,8 +2,8 @@
 DROP TABLE IF EXISTS `education_grades`;
 RENAME TABLE `z_1330_education_grades` TO `education_grades`;
 
--- education_absolute_grades
-DROP TABLE IF EXISTS `education_absolute_grades`;
+-- education_stages
+DROP TABLE IF EXISTS `education_stages`;
 
 -- security_functions
 DROP TABLE IF EXISTS `security_functions`;
