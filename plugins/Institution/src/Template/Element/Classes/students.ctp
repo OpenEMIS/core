@@ -3,6 +3,88 @@
 	<hr>
 
 	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
+	
+	<div class="dropdown-filter">
+		<div class="filter-label">
+			<i class="fa fa-filter"></i>
+			<label>Filter</label>
+		</div>
+
+		<?php 
+			if (!empty($attr['data']['filter']['education_grades']) && !empty($attr['data']['filter']['education_grades']['options'])) { 
+				$gradeOptions = $attr['data']['filter']['education_grades']['options'];
+				$selectedGrade = $attr['data']['filter']['education_grades']['selected'];
+		?>
+				<div class="select">
+					<label>Education Grade:</label>
+					<div class="input-select-wrapper">
+						<select>
+							<optgroup label="-- Filter by --">
+								<?php foreach ($gradeOptions as $key => $value) { ?>
+									<option 
+										value="<?=$key;?>" 
+										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+										<?php if ($selectedGrade == $key) { ?>
+											selected
+										<?php } ?>
+									><?=$value['name'];?></option>
+								<?php } ?>
+							</optgroup>
+						</select>
+					</div>
+				</div>
+		<?php } ?>
+
+		<?php 
+			if (!empty($attr['data']['filter']['student_status']) && !empty($attr['data']['filter']['student_status']['options'])) { 
+				$statusOptions = $attr['data']['filter']['student_status']['options'];
+				$selectedStatus = $attr['data']['filter']['student_status']['selected'];
+		?>
+				<div class="select">
+					<label>Student Status:</label>
+					<div class="input-select-wrapper">
+						<select>
+							<optgroup label="-- Filter by --">
+								<?php foreach ($statusOptions as $key => $value) { ?>
+									<option 
+										value="<?=$key;?>" 
+										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+										<?php if ($selectedStatus == $key) { ?>
+											selected
+										<?php } ?>
+									><?=$value['name'];?></option>
+								<?php } ?>
+							</optgroup>
+						</select>
+					</div>
+				</div>
+		<?php } ?>
+
+		<?php 
+			if (!empty($attr['data']['filter']['genders']) && !empty($attr['data']['filter']['genders']['options'])) { 
+				$genderOptions = $attr['data']['filter']['genders']['options'];
+				$selectedGender = $attr['data']['filter']['genders']['selected'];
+		?>
+				<div class="select">
+					<label>Student Gender:</label>
+					<div class="input-select-wrapper">
+						<select>
+							<optgroup label="-- Filter by --">
+								<?php foreach ($genderOptions as $key => $value) { ?>
+									<option 
+										value="<?=$key;?>" 
+										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+										<?php if ($selectedGender == $key) { ?>
+											selected
+										<?php } ?>
+									><?=$value['name'];?></option>
+								<?php } ?>
+							</optgroup>
+						</select>
+					</div>
+				</div>
+		<?php } ?>
+	</div>
 
 	<?php if ($action=='edit') :?>
 	<div class="clearfix">
