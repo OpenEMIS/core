@@ -192,7 +192,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $sessionId = $entity->training_session_id;
 		$selectedResultType = $this->request->query('result_type');
 
-		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Result')];
+		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'trainees';
