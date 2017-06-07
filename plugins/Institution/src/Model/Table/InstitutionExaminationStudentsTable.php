@@ -206,14 +206,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
     public function beforeAction(Event $event, ArrayObject $extra)
     {
          $this->institutionId = $this->Session->read('Institution.Institutions.id');
@@ -223,14 +215,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             if (isset($extra['toolbarButtons']['export'])) {
                 unset($extra['toolbarButtons']['export']);
             }
-        }
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('identity_number');
-            $this->setFieldOrder('registration_number', 'openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number');
         }
     }
 
@@ -266,11 +250,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 unset($extra['toolbarButtons']['export']);
             }
         }
-    }
-
-    public function onGetIdentityNumber(Event $event, Entity $entity)
-    {
-        return $entity->user->identity_number;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

@@ -8,23 +8,27 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 
-class InstitutionBehavior extends Behavior {
-	public function implementedEvents() {
+class InstitutionBehavior extends Behavior
+{
+	public function implementedEvents()
+	{
 		$events = parent::implementedEvents();
 
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
-		$events['ControllerAction.Model.index.beforePaginate'] = 'indexBeforePaginate';
+		$events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
 		return $events;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$query->find('byAccess', ['userId' => $userId]);
 		}
 	}
 
-	public function findByAccess(Query $query, array $options) {
+	public function findByAccess(Query $query, array $options)
+	{
 		$userId = $options['userId'];
 
 		$institutionTableClone1 = clone $this->_table;
@@ -35,7 +39,7 @@ class InstitutionBehavior extends Behavior {
 				'Areas.id = '. $institutionTableClone1->aliasField('area_id')
 			])
 			->innerJoin(['AreaAll' => 'areas'], [
-				'AreaAll.lft <= Areas.lft', 
+				'AreaAll.lft <= Areas.lft',
 				'AreaAll.rght >= Areas.rght'
 			])
 			->innerJoin(['SecurityGroupArea' => 'security_group_areas'], [
@@ -46,7 +50,7 @@ class InstitutionBehavior extends Behavior {
 				'SecurityGroupUser.security_user_id ='.$userId
 			])
 			->select(['id' => $institutionTableClone1->aliasField('id')]);
-		
+
 		$institutionTableClone2 = clone $this->_table;
 		$institutionTableClone2->alias('InstitutionSecurity');
 
