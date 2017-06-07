@@ -16,7 +16,7 @@ class TrainingNeedsTable extends AppTable
         $this->table('staff_training_needs');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'course_id']);
+        $this->belongsTo('TrainingCourses', ['className' => 'Training.TrainingCourses']);
         $this->belongsTo('TrainingNeedCategories', ['className' => 'Training.TrainingNeedCategories', 'foreignKey' => 'training_need_category_id']);
         $this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
         $this->belongsTo('TrainingNeedCompetencies', ['className' => 'Training.TrainingNeedCompetencies', 'foreignKey' => 'training_need_competency_id']);
@@ -46,7 +46,7 @@ class TrainingNeedsTable extends AppTable
         $selectedStatus = $requestData->status;
         $selectedNeedType = $requestData->training_need_type;
 
-        $query->contain(['TrainingNeedSubStandards.TrainingNeedStandards', 'Courses.TrainingRequirements']);
+        $query->contain(['TrainingNeedSubStandards.TrainingNeedStandards', 'TrainingCourses.TrainingRequirements']);
 
         if ($selectedStatus != '-1') {
             $query->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
@@ -55,8 +55,8 @@ class TrainingNeedsTable extends AppTable
         }
 
         $query->select([
-            'course_code' => 'Courses.code',
-            'course_description' => 'Courses.description',
+            'course_code' => 'TrainingCourses.code',
+            'course_description' => 'TrainingCourses.description',
             'course_requirement' => 'TrainingRequirements.name',
             'training_standard' => 'TrainingNeedStandards.name'
         ]);
@@ -92,7 +92,7 @@ class TrainingNeedsTable extends AppTable
         if ($selectedNeedType == 'CATALOGUE') {
 
             $newFields[] = [
-                'key' => 'Courses.course_code',
+                'key' => 'TrainingCourses.course_code',
                 'field' => 'course_code',
                 'type' => 'string',
                 'label' => ''
@@ -106,7 +106,7 @@ class TrainingNeedsTable extends AppTable
             ];
 
             $newFields[] = [
-                'key' => 'Courses.description',
+                'key' => 'TrainingCourses.description',
                 'field' => 'course_description',
                 'type' => 'text',
                 'label' => ''
