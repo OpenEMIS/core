@@ -98,8 +98,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $query->contain([
                 'Trainers' => [
                     'Users',
-                    // 'sort' => ['Trainers.type' => 'DESC', 'Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Trainers.name' => 'ASC']
-                    'sort' => ['Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Trainers.name' => 'ASC']
+                    'sort' => ['Users.is_staff' => 'DESC', 'Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Trainers.name' => 'ASC'] // staff-type followed by others-type
                 ],
                 'Trainees' => [
                     'sort' => ['Trainees.first_name' => 'ASC', 'Trainees.last_name' => 'ASC']
@@ -292,7 +291,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function ajaxTrainerAutocomplete()
     {
-        // $this->controller->autoRender = false;
+        $this->controller->autoRender = false;
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
@@ -302,9 +301,6 @@ class TrainingSessionsTable extends ControllerActionTable
             $data = $this->Trainers->Users->autocomplete($term, $extra);
             echo json_encode($data);
             die;
-            // $this->controller->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-            // $this->response->type('json');
-            // return $this->response;
         }
     }
 
@@ -603,7 +599,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $trainerType = '';
         $entity = $obj;
 
-        // (is_guardian == 1 or (is_staff == 0, is_student == 0, is_student == 0)) == OTHERS
+        // (is_guardian == 1 or (is_staff == 0, is_student == 0, is_guardian == 0)) == OTHERS
         if ($entity->user->is_guardian == 1 || ($entity->user->is_staff == 0 && $entity->user->is_student == 0 && $entity->user->is_guardian == 0)) {
             $trainerType = self::OTHERS;
         } else if ($entity->user->is_staff == 1) { // STAFF
