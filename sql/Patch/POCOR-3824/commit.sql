@@ -78,11 +78,12 @@ DROP TABLE IF EXISTS `staff_training_needs`;
 CREATE TABLE IF NOT EXISTS `staff_training_needs` (
   `id` int(11) NOT NULL,
   `reason` text COLLATE utf8mb4_unicode_ci,
-  `course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
+  `type` varchar(20) NOT NULL,
+  `training_course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
   `training_need_category_id` int(11) NOT NULL COMMENT 'links to training_need_categories.id',
+  `training_need_competency_id` int(11) NOT NULL COMMENT 'links to training_need_competencies.id',
+  `training_need_sub_standard_id` int(11) NOT NULL COMMENT 'links to training_need_sub_standards.id',
   `training_priority_id` int(11) NOT NULL COMMENT 'links to training_priorities.id',
-  `training_need_competency_id` int(11) NULL COMMENT 'links to training_need_competencies.id',
-  `training_need_sub_standard_id` int(11) NULL COMMENT 'links to training_need_sub_standards.id',
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
@@ -94,7 +95,7 @@ CREATE TABLE IF NOT EXISTS `staff_training_needs` (
 
 ALTER TABLE `staff_training_needs`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `course_id` (`course_id`),
+  ADD KEY `training_course_id` (`training_course_id`),
   ADD KEY `training_need_category_id` (`training_need_category_id`),
   ADD KEY `training_priority_id` (`training_priority_id`),
   ADD KEY `training_need_competency_id` (`training_need_competency_id`),
@@ -108,7 +109,6 @@ ALTER TABLE `staff_training_needs`
 ALTER TABLE `staff_training_needs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
-INSERT INTO `staff_training_needs`
-SELECT `id`, `comments`, `course_id`, `training_need_category_id`, `training_priority_id`, NULL, NULL, `staff_id`, `assignee_id`, `status_id`,
- `modified_user_id`, `modified`, `created_user_id`, `created`
+INSERT INTO `staff_training_needs` (`id`, `reason`, `type`, `training_course_id`, `training_need_category_id`, `training_need_competency_id`, `training_need_sub_standard_id`, `training_priority_id`, `staff_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `comments`, (IF(`course_id` > 0, 'CATALOGUE', 'NEED')), `course_id`, `training_need_category_id`, 0, 0, `training_priority_id`, `staff_id`, `assignee_id`, `status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3824_staff_training_needs`;
