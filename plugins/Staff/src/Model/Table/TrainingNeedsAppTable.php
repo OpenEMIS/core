@@ -52,12 +52,12 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
         return $validator
             // for future validation on each user can only submit need to one course at a time.
-            // ->add('course_id', [
+            // ->add('training_course_id', [
             //     'ruleUnique' => [
             //         'rule' => ['validateUnique', ['scope' => ['staff_id']]],
             //         'on' => function ($context) {
-            //             //validate when only course_id is not 0
-            //             return $context['data']['course_id'] != 0;
+            //             //validate when only training_course_id is not 0
+            //             return $context['data']['training_course_id'] != 0;
             //         },
             //         'provider' => 'table'
             //     ]
