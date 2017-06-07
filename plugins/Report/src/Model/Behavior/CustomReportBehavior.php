@@ -29,6 +29,14 @@ class CustomReportBehavior extends Behavior
                 $this->_join($query, $params, $jsonArray['join']);
             }
 
+            if (array_key_exists('contain', $jsonArray)) {
+                $this->_contain($query, $params, $jsonArray['contain']);
+            }
+
+            if (array_key_exists('matching', $jsonArray)) {
+                $this->_matching($query, $params, $jsonArray['matching']);
+            }
+
             if (array_key_exists('select', $jsonArray)) {
                 $this->_select($query, $params, $jsonArray['select']);
             }
@@ -48,18 +56,16 @@ class CustomReportBehavior extends Behavior
             if (array_key_exists('order', $jsonArray)) {
                 $this->_order($query, $params, $jsonArray['order']);
             }
-        }
 
-        return $query;
+            return $query;
+        }
     }
 
     private function _join(Query $query, array $params, array $values)
     {
         $joinTypes = [
             'inner' => 'INNER',
-            'left' => 'LEFT',
-            'assoc_inner' => 'ASSOC_INNER',
-            'assoc_left' => 'ASSOC_LEFT',
+            'left' => 'LEFT'
         ];
 
         if (!empty($values)) {
@@ -75,7 +81,7 @@ class CustomReportBehavior extends Behavior
                         if (array_key_exists('conditions', $obj)) {
                             $conditions = $obj['conditions'];
                             foreach($conditions as $field => $value) {
-                                $joinConditions[] = $field . ' = ' . $value;
+                                $joinConditions[] = $field . $value;
                             }
                         }
 
@@ -90,6 +96,34 @@ class CustomReportBehavior extends Behavior
                     }
                 }
             }
+        }
+    }
+
+    private function _contain(Query $query, array $params, array $values)
+    {
+        if (!empty($values)) {
+            $contain = [];
+            foreach ($values as $associatedModel) {
+                if ($this->Table->associations()->has($associatedModel)) {
+                    $contain[] = $associatedModel;
+                }
+            }
+
+            $query->contain($contain);
+        }
+    }
+
+    private function _matching(Query $query, array $params, array $values)
+    {
+        if (!empty($values)) {
+            $matching = [];
+            foreach ($values as $associatedModel) {
+                if ($this->Table->associations()->has($associatedModel)) {
+                    $matching[] = $associatedModel;
+                }
+            }
+
+            $query->matching($matching);
         }
     }
 
