@@ -26,6 +26,7 @@ class ReportListBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
 		$events['Model.excel.onExcelBeforeWrite'] = 'onExcelBeforeWrite';
+		$events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
 		return $events;
 	}
 
@@ -140,6 +141,17 @@ class ReportListBehavior extends Behavior {
 		$settings['purge'] = false; //for report, dont purge after download.
 	}
 
+	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
+    {
+        $process = $extra['process'];
+		$expiryDate = new Time();
+		$expiryDate->addDays(5);
+		$this->ReportProgress->updateAll(
+			['status' => Process::COMPLETED, 'file_path' => $extra['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['id' => $process->id]
+		);
+    }
+
 	protected function _generate($data) {
 		$alias = $this->_table->alias();
 		$featureList = $this->_table->fields['feature']['options'];
@@ -179,7 +191,14 @@ class ReportListBehavior extends Behavior {
 		$path = $entity->file_path;
 		if (!empty($path)) {
 			$filename = basename($path);
-			return $this->_table->controller->redirect("/export/$filename");
+
+			if ($entity->module == 'CustomReports') {
+				$url = "/export/customexcel/$filename";
+			} else {
+				$url = "/export/$filename";
+			}
+
+			return $this->_table->controller->redirect($url);
 		}
 	}
 }
