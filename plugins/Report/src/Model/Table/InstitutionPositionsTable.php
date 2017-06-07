@@ -16,9 +16,11 @@ class InstitutionPositionsTable extends AppTable  {
 		$this->table('institution_positions');
 		parent::initialize($config);
 
-		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
-		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
-		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
+		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
+        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
 		
 		$this->addBehavior('Excel');
 		$this->addBehavior('Report.ReportList');
@@ -57,5 +59,10 @@ class InstitutionPositionsTable extends AppTable  {
 
 	public function onExcelGetInstitutionId(Event $event, Entity $entity) {
 		return $entity->institution->code_name;
+	}
+
+	public function onExcelGetIsHomeroom(Event $event, Entity $entity) {
+		$options = $this->getSelectOptions('general.yesno');
+		return $options[$entity->is_homeroom];
 	}
 }
