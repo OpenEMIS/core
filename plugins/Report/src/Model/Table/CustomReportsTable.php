@@ -23,6 +23,7 @@ class CustomReportsTable extends AppTable
             'templateTable' => 'Report.CustomReports',
             'templateTableKey' => 'feature',
             'download' => false,
+            'purge' => false,
             'variableSource' => 'database'
         ]);
 	}

@@ -27,7 +27,7 @@ class ExcelReportBehavior extends Behavior
         'subfolder' => 'customexcel',
         'format' => 'xlsx',
         'download' => true,
-        'purge' => false,
+        'purge' => true,
         'wrapText' => false,
         'lockSheets' => false,
         'templateTable' => null,
