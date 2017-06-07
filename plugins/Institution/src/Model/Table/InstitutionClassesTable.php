@@ -505,17 +505,25 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // pr($this->paramsDecode($this->request->query['queryString']));
         $extra['selectedGrade'] = -1;
+        $extra['selectedStatus'] = -1;
+        $extra['selectedGender'] = -1;
         if (array_key_exists('queryString', $this->request->query)) {
             $queryString = $this->paramsDecode($this->request->query['queryString']);
             
             if (!empty($queryString) && array_key_exists('grade', $queryString)) {
                 $extra['selectedGrade'] = $queryString['grade'];
             }
+
+            if (!empty($queryString) && array_key_exists('status', $queryString)) {
+                $extra['selectedStatus'] = $queryString['status'];
+            }
+
+
+            if (!empty($queryString) && array_key_exists('gender', $queryString)) {
+                $extra['selectedGender'] = $queryString['gender'];
+            }
         }
-        
-        pr($extra['selectedGrade']);
 
         $query->contain([
             'AcademicPeriods',
@@ -534,36 +542,73 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // pr($entity->class_students);
-
         //generate student filter.
         $params = $this->getQueryString();
         $baseUrl = $this->url($this->action, true);
         
         $gradeOptions = [];
+        $statusOptions = [];
+        $genderOptions = [];
         foreach ($entity->class_students as $key => $value) {
-            if (!empty($value->education_grade)){
+            if (!empty($value->education_grade)){ //grade filter
                 $gradeOptions[$value->education_grade->id]['name'] = $value->education_grade->name;
                 $gradeOptions[$value->education_grade->id]['order'] = $value->education_grade->order;
 
                 $params['grade'] = $value->education_grade->id;
+                $params['status'] = $extra['selectedStatus']; //maintain current status selection
+                $params['gender'] = $extra['selectedGender'];
                 $url = $this->setQueryString($baseUrl, $params);
                 
                 $gradeOptions[$value->education_grade->id]['url'] = $url;
             }
 
+            if (!empty($value->student_status)){ //status filter
+                $statusOptions[$value->student_status->id]['name'] = $value->student_status->name;
+                $statusOptions[$value->student_status->id]['order'] = $value->student_status->id;
+
+                $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+                $params['status'] = $value->student_status->id;
+                $params['gender'] = $extra['selectedGender'];
+                $url = $this->setQueryString($baseUrl, $params);
+                
+                $statusOptions[$value->student_status->id]['url'] = $url;
+            }
+
+            if (!empty($value->user) && !empty($value->user->gender)){ //gender filter
+                $genderOptions[$value->user->gender->id]['name'] = $value->user->gender->name;
+                $genderOptions[$value->user->gender->id]['order'] = $value->user->gender->id;
+
+                $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+                $params['status'] = $extra['selectedStatus'];
+                $params['gender'] = $value->user->gender->id;
+                $url = $this->setQueryString($baseUrl, $params);
+                
+                $genderOptions[$value->user->gender->id]['url'] = $url;
+            }
+
+            //if student does not fullfil the filter, then unset from array
             if ($extra['selectedGrade'] != -1 && $value->education_grade->id != $extra['selectedGrade']) {
+                unset($entity->class_students[$key]);
+            }
+
+            if ($extra['selectedStatus'] != -1 && $value->student_status->id != $extra['selectedStatus']) {
+                unset($entity->class_students[$key]);
+            }
+
+            if ($extra['selectedGender'] != -1 && $value->user->gender->id != $extra['selectedGender']) {
                 unset($entity->class_students[$key]);
             }
         }
 
-        if (count($gradeOptions) > 1) { //only show All Grades options if there are more than one options
+        if (count($gradeOptions) > 0) { //only show All Grades options if there are more than one options
             //for all grades option
             $gradeOptions[-1]['id'] = -1;
             $gradeOptions[-1]['name'] = '-- ' . __('All Grades') . ' --';
             $gradeOptions[-1]['order'] = 0;
 
             $params['grade'] = -1;
+            $params['status'] = $extra['selectedStatus']; //maintain current status selection
+            $params['gender'] = $extra['selectedGender'];
             $url = $this->setQueryString($baseUrl, $params);
 
             $gradeOptions[-1]['url'] = $url;
@@ -574,8 +619,53 @@ class InstitutionClassesTable extends ControllerActionTable
             });
         }
 
+        if (count($statusOptions) > 0) { //only show All Statuses options if there are more than one options
+            //for all statuses option
+            $statusOptions[-1]['id'] = -1;
+            $statusOptions[-1]['name'] = '-- ' . __('All Statuses') . ' --';
+            $statusOptions[-1]['order'] = 0;
+
+            $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+            $params['status'] = -1;
+            $params['gender'] = $extra['selectedGender'];
+            $url = $this->setQueryString($baseUrl, $params);
+
+            $statusOptions[-1]['url'] = $url;
+
+            //order array by 'order' key
+            uasort($statusOptions, function ($a, $b) {
+                return $a['order']-$b['order'];
+            });
+        }
+
+        if (count($genderOptions) > 0) { //only show All Genders options if there are more than one options
+            //for all gender option
+            $genderOptions[-1]['id'] = -1;
+            $genderOptions[-1]['name'] = '-- ' . __('All Genders') . ' --';
+            $genderOptions[-1]['order'] = 0;
+
+            $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+            $params['status'] = $extra['selectedStatus'];
+            $params['gender'] = -1;
+            $url = $this->setQueryString($baseUrl, $params);
+
+            $genderOptions[-1]['url'] = $url;
+
+            //order array by 'order' key
+            uasort($genderOptions, function ($a, $b) {
+                return $a['order']-$b['order'];
+            });
+        }
+
+        //set option and selected filter value
         $this->fields['students']['data']['filter']['education_grades']['options'] = $gradeOptions;
         $this->fields['students']['data']['filter']['education_grades']['selected'] = $extra['selectedGrade'];
+
+        $this->fields['students']['data']['filter']['student_status']['options'] = $statusOptions;
+        $this->fields['students']['data']['filter']['student_status']['selected'] = $extra['selectedStatus'];
+
+        $this->fields['students']['data']['filter']['genders']['options'] = $genderOptions;
+        $this->fields['students']['data']['filter']['genders']['selected'] = $extra['selectedGender'];
 
         $this->fields['education_grades']['data']['grades'] = $entity->education_grades;
 

@@ -35,29 +35,55 @@
 				</div>
 		<?php } ?>
 
-		<!-- <div class="select">
-			<label>Student Status:</label>
-			<div class="input-select-wrapper">
-				<select>
-					<optgroup label="-- Filter by --">
-						<option value="Active">Active</option>
-						<option value="Inactive">Inactive</option>
-					</optgroup>
-				</select>
-			</div>
-		</div>
+		<?php 
+			if (!empty($attr['data']['filter']['student_status']) && !empty($attr['data']['filter']['student_status']['options'])) { 
+				$statusOptions = $attr['data']['filter']['student_status']['options'];
+				$selectedStatus = $attr['data']['filter']['student_status']['selected'];
+		?>
+				<div class="select">
+					<label>Student Status:</label>
+					<div class="input-select-wrapper">
+						<select>
+							<optgroup label="-- Filter by --">
+								<?php foreach ($statusOptions as $key => $value) { ?>
+									<option 
+										value="<?=$key;?>" 
+										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+										<?php if ($selectedStatus == $key) { ?>
+											selected
+										<?php } ?>
+									><?=$value['name'];?></option>
+								<?php } ?>
+							</optgroup>
+						</select>
+					</div>
+				</div>
+		<?php } ?>
 
-		<div class="select">
-			<label>Gender:</label>
-			<div class="input-select-wrapper">
-				<select>
-					<optgroup label="-- Filter by --">
-						<option value="Male">Male</option>
-						<option value="Female">Female</option>
-					</optgroup>
-				</select>
-			</div>
-		</div> -->
+		<?php 
+			if (!empty($attr['data']['filter']['genders']) && !empty($attr['data']['filter']['genders']['options'])) { 
+				$genderOptions = $attr['data']['filter']['genders']['options'];
+				$selectedGender = $attr['data']['filter']['genders']['selected'];
+		?>
+				<div class="select">
+					<label>Student Gender:</label>
+					<div class="input-select-wrapper">
+						<select>
+							<optgroup label="-- Filter by --">
+								<?php foreach ($genderOptions as $key => $value) { ?>
+									<option 
+										value="<?=$key;?>" 
+										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+										<?php if ($selectedGender == $key) { ?>
+											selected
+										<?php } ?>
+									><?=$value['name'];?></option>
+								<?php } ?>
+							</optgroup>
+						</select>
+					</div>
+				</div>
+		<?php } ?>
 	</div>
 
 	<?php if ($action=='edit') :?>
