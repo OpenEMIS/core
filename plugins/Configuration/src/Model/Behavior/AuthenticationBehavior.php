@@ -10,8 +10,8 @@ use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
 use OneLogin_Saml2_Constants;
-use OneLogin_Saml_Settings;
 use OneLogin_Saml2_Error;
+use OneLogin_Saml2_Settings;
 
 class AuthenticationBehavior extends Behavior
 {

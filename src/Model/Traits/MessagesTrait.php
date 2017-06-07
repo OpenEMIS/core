@@ -1,10 +1,12 @@
 <?php
 namespace App\Model\Traits;
+
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 
-trait MessagesTrait {
+trait MessagesTrait
+{
     public $messages = [
         'Areas' => [
             'noAccessToAreas' => 'You do not have access to any areas',
@@ -31,7 +33,8 @@ trait MessagesTrait {
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
             'periodWeight' => 'Period Weight',
-            'classification' => 'Classification'
+            'classification' => 'Classification',
+            'academic_term' => 'Please check the academic terms to ensure that all the values are entered.'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -132,6 +135,48 @@ trait MessagesTrait {
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
             'infrastructure_level_id' => 'Level Name'
+        ],
+        'InstitutionLands' => [
+            'noLand' => 'No Land found',
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_land_type' => [
+                'restrictEdit' => 'Not allowed to change land type in the same day.'
+            ]
+        ],
+        'InstitutionBuildings' => [
+            'noLand' => 'No Building found',
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_building_type' => [
+                'restrictEdit' => 'Not allowed to change building type in the same day.'
+            ]
+        ],
+        'InstitutionFloors' => [
+            'noFloors' => 'No Floor found',
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_floor_type' => [
+                'restrictEdit' => 'Not allowed to change floor type in the same day.'
+            ]
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -675,11 +720,30 @@ trait MessagesTrait {
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
         ],
+        'EducationStructure' => [
+            'noGradesSetup' => 'Please set up Education Grades before adding Grade Subjects'
+        ],
         'UserContacts' => [
             'noEmailRemain' => 'There should be at least one Email record'
         ],
         'Reports' => [
             'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
+        ],
+        'ReportCardComments' => [
+            'noProgrammes' => 'There is no programme set for this institution'
+        ],
+        'ReportCardStatuses' => [
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no template for this Report Card. Please contact the administrator for assistance.',
+            'noFilesToDownload' => 'There are no generated Report Cards to download',
+            'noFilesToPublish' => 'There are no generated Report Cards to publish',
+            'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
+            'generate' => 'The Report Card has been successfully generated',
+            'generateAll' => 'All Report Cards will be generated in the background',
+            'publish' => 'The Report Card has been successfully published',
+            'publishAll' => 'All generated Report Cards have been published successfully',
+            'unpublish' => 'The Report Card has been successfully unpublished',
+            'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
         'AlertRules' => [
             'Attendance' => [
@@ -990,6 +1054,51 @@ trait MessagesTrait {
                     'ruleUnique' => 'Please enter a unique code'
                 ]
             ],
+            'InstitutionLands' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
+            'InstitutionBuildings' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
+            'InstitutionFloors' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
             'InstitutionRooms' => [
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
@@ -1093,7 +1202,7 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ],
+                 ],
             ],
             'Accounts' => [
                 'username' => [
@@ -1566,6 +1675,9 @@ trait MessagesTrait {
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
+                'academic_term' => [
+                    'ruleCheckAcademicTerm' => 'Please enter an academic term for this record'
+                ]
             ],
             'AssessmentItems' => [
                 'weight' => [
@@ -1816,10 +1928,25 @@ trait MessagesTrait {
                 ]
             ],
         ],
+        'ReportCard' => [
+            'ReportCards' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ],
+        ],
     ];
 
 
-    public function getMessage($code, $options = []) {
+    public function getMessage($code, $options = [])
+    {
         $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
         $defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
 
@@ -1833,8 +1960,11 @@ trait MessagesTrait {
                 if (isset($message[$i])) {
                     $message = $message[$i];
                 } else {
-                    if (!$defaultMessage) return false;
+                    if (!$defaultMessage) {
+                        return false;
+                    }
                     $message = '[Message Not Found]';
+                    Log::write('error', 'MessagesTrait Message Not Found: '. $code);
                     break;
                 }
             }

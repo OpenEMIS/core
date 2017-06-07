@@ -252,8 +252,11 @@ class UsersTable extends AppTable
         }
         return $query
             ->innerJoinWith('InstitutionStudents')
-            ->leftJoinWith('InstitutionClassStudents', function ($q) use ($academicPeriodId) {
-                return $q->where(['InstitutionClassStudents.academic_period_id' => $academicPeriodId]);
+            ->leftJoinWith('InstitutionClassStudents', function ($q) use ($academicPeriodId, $institutionId) {
+                return $q->where([
+                    'InstitutionClassStudents.academic_period_id' => $academicPeriodId,
+                    'InstitutionClassStudents.institution_id' => $institutionId
+                ]);
             })
             ->innerJoinWith('InstitutionStudents.StudentStatuses')
             ->innerJoinWith('InstitutionStudents.AcademicPeriods')
@@ -276,6 +279,7 @@ class UsersTable extends AppTable
             ])
             ->autoFields(true)
             ->group([$this->aliasField('id')])
+            ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) use ($institutionClassId, $institutionId) {
                 $arrReturn = [];
                 foreach ($results as $result) {

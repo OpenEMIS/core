@@ -38,6 +38,7 @@ class SecurityAuthorize extends BaseAuthorize
                 }
             } else { // normal actions from Controller
                 $isCAv4 = ctype_upper(substr($action, 0, 1));
+                // CAv4 should use uppercase for action names
                 if ($isCAv4) {
                     $pass = $request->pass;
                     $model = $action;
