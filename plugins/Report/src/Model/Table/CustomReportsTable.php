@@ -68,9 +68,16 @@ class CustomReportsTable extends AppTable
 
                 $params = $this->request->data[$this->alias()];
                 foreach($filters as $field => $data) {
-                    $query = $this->parseQuery($data, $params);
-                    $entity = $query->toArray();
-                    $this->ControllerAction->field($field, ['type' => 'select', 'options' => $entity, 'select' => false]);
+                    $options = [];
+
+                    if (array_key_exists('options', $data)) {
+                        $options = $data['options'] + $options;
+                    } else {
+                        $query = $this->parseQuery($data, $params);
+                        $options = $query->toArray();
+                    }
+
+                    $this->ControllerAction->field($field, ['type' => 'select', 'options' => $options, 'select' => false]);
                 }
             }
         }
