@@ -52,7 +52,7 @@ if (isset($attr['alwaysShowOneButton'])) {
 	<?php endif; ?>
 
 	<?php if (!empty($attr['value'])) : ?>
-		<div class="fileinput fileinput-exists input-group <?= $wrapperClass ?>" data-provides="fileinput">
+		<div id="file-input-wrapper" class="fileinput fileinput-exists input-group <?= $wrapperClass ?>" data-provides="fileinput">
 	<?php else : ?>
 		<div id="file-input-wrapper" class="fileinput fileinput-new input-group <?= $wrapperClass ?>" data-provides="fileinput">
 	<?php endif ?>
@@ -67,7 +67,7 @@ if (isset($attr['alwaysShowOneButton'])) {
 						$downloadOnClick = "";
 					endif;
 				?>
-				<button class="btn <?= $downloadClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?= __('Download Template') ?>" type="reset" onclick="<?= $downloadOnClick ?>">
+				<button class="btn <?= $downloadClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?= __('Download Template') ?>" type="button" onclick="<?= $downloadOnClick ?>">
 					<i class="fa kd-download"></i>
 				</button>
 				
