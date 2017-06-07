@@ -15,6 +15,7 @@ class StudentCompetencyResultsTable extends AppTable
         $this->belongsTo('CompetencyItems', ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'academic_period_id', 'competency_template_id'], 'bindingKey' => ['id', 'academic_period_id', 'competency_template_id']]);
         $this->belongsTo('CompetencyCriterias', ['className' => 'Competency.CompetencyCriterias', 'foreignKey' => ['competency_criteria_id', 'academic_period_id', 'competency_item_id', 'competency_template_id'], 'bindingKey' => ['id', 'academic_period_id', 'competency_item_id', 'competency_template_id']]);
         $this->belongsTo('CompetencyPeriods', ['className' => 'Competency.CompetencyPeriods', 'foreignKey' => ['competency_period_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
+        $this->belongsTo('CompetencyGradingOptions', ['className' => 'Competency.CompetencyGradingOptions']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->addBehavior('Restful.RestfulAccessControl', [
