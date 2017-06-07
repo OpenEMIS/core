@@ -68,7 +68,7 @@ class ImportTrainingSessionsTraineesTable extends AppTable
                     ]);
 
             if ($query->count() < 1) {
-                $rowInvalidCodeCols['openemis_id'] = __('OpenEMIS ID could not be found');
+                $rowInvalidCodeCols['openemis_no'] = __('OpenEMIS ID could not be found');
                 return false;
             } else {
                  $tempRow['trainee_id'] = $query->first()->id;
@@ -91,7 +91,11 @@ class ImportTrainingSessionsTraineesTable extends AppTable
                      $tempRow['trainee_id'] = $query->first()->security_user_id;
                 }
             } else {
-                $rowInvalidCodeCols['openemis_id / identity'] = __('Please provide either OpenEMIS ID or Identity informations');
+                if (empty($tempRow['identity_type_id'])) {
+                    $rowInvalidCodeCols['identity_type_id'] = __('Identity Type cannot be empty');
+                } else if (empty($tempRow['identity_number'])) {
+                    $rowInvalidCodeCols['identity_number'] = __('Identity Number cannot be empty');
+                }
                 return false;
             }
         }
