@@ -68,7 +68,8 @@ class StaffTable extends ControllerActionTable
             'StaffRoom' => ['index', 'add'],
             'Staff' => ['index', 'add'],
             'ClassStudents' => ['index'],
-            'SubjectStudents' => ['index']
+            'SubjectStudents' => ['index'],
+            'ReportCardComments' => ['index']
         ]);
 
         $this->addBehavior('HighChart', [
@@ -82,6 +83,12 @@ class StaffTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByPosition',
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Position Title')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
+            'number_of_staff_by_year' => [
+                '_function' => 'getNumberOfStaffByYear',
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_staff_gender' => [
@@ -1254,6 +1261,79 @@ class StaffTable extends ControllerActionTable
         return $params;
     }
 
+    // For Dashboard (Institution Dashboard and Home Page)
+    public function getNumberOfStaffByYear($params=[])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $currentPeriodId = $AcademicPeriod->getCurrent();
+
+        $genderOptions = $this->Users->Genders->getList();
+        $dataSet = new ArrayObject();
+        foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = ['name' => __($value), 'data' => []];
+        }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+        // only show one year before and after the current academic period (if configured)
+        $academicPeriodList = [];
+        $found = false;
+        foreach ($AcademicPeriod->getYearList() as $periodId => $periodName) {
+            if ($found) {
+                $academicPeriodList[$periodId] = $periodName;
+                break;
+            }
+            if ($periodId == $currentPeriodId) {
+                $academicPeriodList[$periodId] = $periodName;
+                $found = true;
+            } else {
+                $academicPeriodList = [$periodId => $periodName];
+            }
+        }
+        $academicPeriodList = array_reverse($academicPeriodList, true);
+
+        foreach ($academicPeriodList as $periodId => $periodName) {
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$periodName] = 0;
+                }
+            }
+
+            foreach ($genderOptions as $genderId => $genderName) {
+                $queryCondition = array_merge(['Genders.id' => $genderId], $_conditions);
+
+                $staffByYear = $this->find()
+                    ->find('AcademicPeriod', ['academic_period_id'=> $periodId])
+                    ->find('list',[
+                        'keyField' => 'gender_name',
+                        'valueField' => 'total'
+                    ])
+                    ->matching('Users.Genders')
+                    ->select([
+                        'gender_name' => 'Genders.name',
+                        'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('staff_id'))
+                    ])
+                    ->where($queryCondition)
+                    ->group(['gender_name'])
+                    ->hydrate(false)
+                    ->toArray();
+
+                if (!empty($staffByYear)) {
+                    $dataSet[$genderName]['data'][$periodName] = $staffByYear[$genderName];
+                    $dataSet['Total']['data'][$periodName] += $staffByYear[$genderName];
+                }
+            }
+        }
+
+        $params['dataSet'] = $dataSet->getArrayCopy();
+        return $params;
+    }
+
 // Functions that are migrated over
 /******************************************************************************************************************
 **
@@ -1448,6 +1528,55 @@ class StaffTable extends ControllerActionTable
                     }
                     return $returnArr;
                 });
+    }
+
+    // used for student report cards
+    public function findPrincipalEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $principalRoleId = $SecurityRoles->getPrincipalRoleId();
+
+        return $query
+            ->innerJoinWith('SecurityGroupUsers')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_id') => $staffId,
+                'SecurityGroupUsers.security_role_id' => $principalRoleId
+            ]);
+    }
+
+    // used for student report cards
+    public function findHomeroomEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $classId = $options['institution_class_id'];
+        $staffId = $options['staff_id'];
+
+        $Institution = TableRegistry::get('Institution.Institutions');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+
+        $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
+        $securityGroupId = $Institution->get($institutionId)->security_group_id;
+
+        return $query
+            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                $InstitutionClasses->aliasField('id') => $classId
+            ])
+            ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+                $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+            ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_id') => $staffId
+            ]);
     }
 
     public function removeInactiveStaffSecurityRole()
