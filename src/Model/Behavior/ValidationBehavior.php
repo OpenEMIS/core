@@ -14,22 +14,14 @@ use Cake\Validation\Validator;
 use DateTime;
 use Cake\Routing\Router;
 
-<<<<<<< HEAD
-class ValidationBehavior extends Behavior {
-=======
 class ValidationBehavior extends Behavior
 {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
     use MessagesTrait;
 
     private $validationCode = [];
 
-<<<<<<< HEAD
-    public function buildValidator(Event $event, Validator $validator, $name) {
-=======
     public function buildValidator(Event $event, Validator $validator, $name)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
         $validator->provider('custom', get_class($this));
 
@@ -56,12 +48,8 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
-    private function attachDateValidation(Validator $validator) {
-=======
     private function attachDateValidation(Validator $validator)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $schema = $this->_table->schema();
         $columns = $schema->columns();
         foreach ($columns as $column) {
@@ -92,34 +80,21 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
-    public function setValidationCode($key, $code) {
-=======
     public function setValidationCode($key, $code)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $alias = $this->_table->registryAlias() . '.' . $key;
         $this->validationCode[$alias] = $code . '.' . $key;
     }
 
-<<<<<<< HEAD
-    private static function _getFieldType($compareField) {
-=======
     private static function _getFieldType($compareField)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $type = explode('_', $compareField);
         $count = count($type);
         return $type[($count - 1)];
     }
 
-<<<<<<< HEAD
-    public static function checkLongitude($check) {
-=======
     public static function checkLongitude($check)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
-
         $isValid = false;
         $longitude = trim($check);
 
@@ -129,13 +104,6 @@ class ValidationBehavior extends Behavior
         return $isValid;
     }
 
-<<<<<<< HEAD
-    public static function numericPositive($check, array $globalData) {
-        return ctype_digit($check);
-    }
-
-    public static function checkNotInvigilator($check, array $globalData) {
-=======
     public static function numericPositive($check, array $globalData)
     {
         return ctype_digit($check);
@@ -143,7 +111,6 @@ class ValidationBehavior extends Behavior
 
     public static function checkNotInvigilator($check, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $data = $globalData['data'];
 
         $Table = TableRegistry::get('Examination.ExaminationCentresExaminationsInvigilators');
@@ -187,11 +154,7 @@ class ValidationBehavior extends Behavior
                     $areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
 
                     if (count($areasByUser) > 0) {
-<<<<<<< HEAD
-                        foreach($areasByUser as $area) {
-=======
                         foreach ($areasByUser as $area) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
                             $areaCondition[] = [
                                 $Areas->aliasField('lft').' >= ' => $area['lft'],
                                 $Areas->aliasField('rght').' <= ' => $area['rght']
@@ -277,19 +240,11 @@ class ValidationBehavior extends Behavior
      *
      * @return [type]                [description]
      */
-
-<<<<<<< HEAD
-    public static function compareDateReverse($field, $compareField, $equals, array $globalData) {
-        $type = self::_getFieldType($compareField);
-        $endDate = new DateTime($field);
-        if($compareField) {
-=======
     public static function compareDateReverse($field, $compareField, $equals, array $globalData)
     {
         $type = self::_getFieldType($compareField);
         $endDate = new DateTime($field);
         if ($compareField) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             $options = ['equals' => $equals, 'reverse' => true, 'type' => $type];
             $result = self::doCompareDates($endDate, $compareField, $options, $globalData);
             return $result;
@@ -311,21 +266,12 @@ class ValidationBehavior extends Behavior
      *
      * @return [type]                [description]
      */
-
-<<<<<<< HEAD
-    public static function compareAbsenceTimeReverse($field, $compareField, $absenceTypeId, array $globalData) {
-        $type = self::_getFieldType($compareField);
-
-        $endTime = new DateTime($field);
-        if($compareField && $globalData['data']['absence_type_id'] == $absenceTypeId) {
-=======
     public static function compareAbsenceTimeReverse($field, $compareField, $absenceTypeId, array $globalData)
     {
         $type = self::_getFieldType($compareField);
 
         $endTime = new DateTime($field);
         if ($compareField && $globalData['data']['absence_type_id'] == $absenceTypeId) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             $options = ['equals' => true, 'reverse' => true, 'type' => $type];
             $result = self::doCompareDates($endTime, $compareField, $options, $globalData);
             return $result;
@@ -347,18 +293,11 @@ class ValidationBehavior extends Behavior
      *
      * @return mixed                 returns true if validation passed or the error message if it fails
      */
-<<<<<<< HEAD
-    public static function compareDate($field, $compareField, $equals, array $globalData) {
-        $type = self::_getFieldType($compareField);
-        $startDate = new DateTime($field);
-        if($compareField) {
-=======
     public static function compareDate($field, $compareField, $equals, array $globalData)
     {
         $type = self::_getFieldType($compareField);
         $startDate = new DateTime($field);
         if ($compareField) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             $options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
             $result = self::doCompareDates($startDate, $compareField, $options, $globalData);
             if (!is_bool($result)) {
@@ -378,22 +317,15 @@ class ValidationBehavior extends Behavior
      * @param  [type] $options      [description]
      * @return [type]               [description]
      */
-<<<<<<< HEAD
-    protected static function doCompareDates($dateOne, $compareField, $options, $globalData) {
-=======
     protected static function doCompareDates($dateOne, $compareField, $options, $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $type = $options['type'];
         $equals = $options['equals'];
         $reverse = $options['reverse'];
         $dateTwo = $globalData['data'][$compareField];
         $dateTwo = new DateTime($dateTwo);
-<<<<<<< HEAD
-        if($equals) {
-=======
+
         if ($equals) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             if ($reverse) {
                 return $dateOne >= $dateTwo;
             } else {
@@ -408,12 +340,8 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
-    public static function dateAfterEnrollment($check, array $globalData) {
-=======
     public static function dateAfterEnrollment($check, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $id = $globalData['data']['student_id'];
 
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -432,18 +360,11 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
-    public static function compareTime($field, $compareField, $equals, array $globalData) {
-        $type = self::_getFieldType($compareField);
-        $startTime = strtotime($field);
-        if($compareField) {
-=======
     public static function compareTime($field, $compareField, $equals, array $globalData)
     {
         $type = self::_getFieldType($compareField);
         $startTime = strtotime($field);
         if ($compareField) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             $options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
             $result = self::doCompareTimes($startTime, $compareField, $options, $globalData);
             if (!is_bool($result)) {
@@ -456,21 +377,14 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
-    protected static function doCompareTimes($timeOne, $compareField, $options, $globalData) {
-=======
     protected static function doCompareTimes($timeOne, $compareField, $options, $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $equals = $options['equals'];
         $reverse = $options['reverse'];
         $timeTwo = $globalData['data'][$compareField];
         $timeTwo = strtotime($timeTwo);
-<<<<<<< HEAD
-        if($equals) {
-=======
+
         if ($equals) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             if ($reverse) {
                 return $timeOne >= $timeTwo;
             } else {
@@ -485,12 +399,8 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
-    public static function compareWithInstitutionDateOpened($field, array $globalData) {
-=======
     public static function compareWithInstitutionDateOpened($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $model = $globalData['providers']['table'];
         $startDate = new Date($field);
         if (isset($globalData['data']['institution_id'])) {
@@ -514,20 +424,12 @@ class ValidationBehavior extends Behavior
      *
      * @return mixed                 returns true if validation passed or the error message if it fails
      */
-<<<<<<< HEAD
-    public static function lessThanToday($field, $equal = false, array $globalData) {
-        $label = Inflector::humanize($field);
-        $enteredDate = new DateTime($field);
-        $today = new DateTime('now');
-        if($equal) {
-=======
     public static function lessThanToday($field, $equal = false, array $globalData)
     {
         $label = Inflector::humanize($field);
         $enteredDate = new DateTime($field);
         $today = new DateTime('now');
         if ($equal) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             return $today >= $enteredDate;
         } else {
             return $today > $enteredDate;
@@ -546,20 +448,12 @@ class ValidationBehavior extends Behavior
      *
      * @return mixed                 returns true if validation passed or the error message if it fails
      */
-<<<<<<< HEAD
-    public static function moreThanToday($field, $equal = false, array $globalData) {
-        $label = Inflector::humanize($field);
-        $enteredDate = new DateTime($field);
-        $today = new DateTime('now');
-        if($equal) {
-=======
     public static function moreThanToday($field, $equal = false, array $globalData)
     {
         $label = Inflector::humanize($field);
         $enteredDate = new DateTime($field);
         $today = new DateTime('now');
         if ($equal) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             return $enteredDate >= $today;
         } else {
             return $enteredDate > $today;
@@ -572,12 +466,8 @@ class ValidationBehavior extends Behavior
      * @param  array  $globalData [description]
      * @return mixed              Boolean or String
      */
-<<<<<<< HEAD
-    public static function amPmValue($field, array $globalData) {
-=======
     public static function amPmValue($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $model = $globalData['providers']['table'];
         $explode = explode(' ', $field);
         if (isset($explode[1])) {
@@ -597,14 +487,9 @@ class ValidationBehavior extends Behavior
      * @param  array  $globalData [description]
      * @return [type]             [description]
      */
-<<<<<<< HEAD
-    public static function checkIfStringGotNoNumber($check, array $globalData) {
-        return !preg_match('#[0-9]#',$check);
-=======
     public static function checkIfStringGotNoNumber($check, array $globalData)
     {
         return !preg_match('#[0-9]#', $check);
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
     }
 
     /**
@@ -641,16 +526,6 @@ class ValidationBehavior extends Behavior
 
                 $query->where([$Contacts->aliasField('preferred') => 1]);
                 $count = $query->count();
-<<<<<<< HEAD
-
-                if ($count != 0) {
-                    $flag = true;
-                }
-            } else {
-                $flag = true;
-            }
-=======
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
 
                 if ($count != 0) {
                     $flag = true;
@@ -668,41 +543,7 @@ class ValidationBehavior extends Behavior
                 $flag = true;
             }
         }
-<<<<<<< HEAD
-        return $flag;
-    }
 
-    public static function validateNeeded($field, $fieldName, array $additionalParameters, array $globalData) {
-        $flag = false;
-
-        if($field == "0"){
-            $tableObj =  get_object_vars($globalData['providers']['table']);
-            if(!empty($tableObj)) {
-                $className = $tableObj['controller']->modelClass;
-                $newEntity = TableRegistry::get($className);
-                $recordWithField = $newEntity->find()
-                                            ->select([$fieldName])
-                                            ->where([$fieldName => 1]);
-
-                if (!$globalData['newRecord']) { //for edit, need to ensure that there is other record which is set as default, or else this one must be set as default.
-                    $recordWithField ->andWhere([$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
-                }
-
-                if(!empty($additionalParameters)) {
-                    $recordWithField->andWhere($additionalParameters);
-                }
-                $total = $recordWithField->count();
-                $flag = ($total > 0) ? true : false;
-            }
-        } else {
-            $flag = true;
-        }
-
-        return $flag;
-    }
-
-    public static function contactValueValidate($field, array $globalData) {
-=======
         return $flag;
     }
 
@@ -738,33 +579,21 @@ class ValidationBehavior extends Behavior
 
     public static function contactValueValidate($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $flag = false;
         $contactOption = $globalData['data']['contact_option_id'];
 
         return $flag;
     }
 
-<<<<<<< HEAD
-    public static function comparePasswords($field, $compareField, array $globalData) {
-        $fieldOne = $globalData['data'][$globalData['field']];
-        $fieldTwo = $globalData['data'][$compareField];
-        if(strcmp($fieldOne, $fieldTwo) == 0 ) {
-=======
     public static function comparePasswords($field, $compareField, array $globalData)
     {
         $fieldOne = $globalData['data'][$globalData['field']];
         $fieldTwo = $globalData['data'][$compareField];
         if (strcmp($fieldOne, $fieldTwo) == 0) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             return true;
         } else {
             return false;
         }
-<<<<<<< HEAD
-
-=======
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
     }
 
     public static function compareValues($field, $compareField, array $globalData)
@@ -772,11 +601,7 @@ class ValidationBehavior extends Behavior
         $max = $globalData['data'][$globalData['field']];
         $min = $globalData['data'][$compareField];
 
-<<<<<<< HEAD
-        if($max > $min) {
-=======
         if ($max > $min) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             return true;
         } else {
             return false;
@@ -789,22 +614,14 @@ class ValidationBehavior extends Behavior
      * @param  mixed    $start_date       start date field value
      * @param  mixed    $end_date        end date field value
      */
-<<<<<<< HEAD
-    public static function checkInputWithinRange($field, $field_name, $start_date, $end_date) {
-=======
     public static function checkInputWithinRange($field, $field_name, $start_date, $end_date)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $type = self::_getFieldType($field_name);
         $givenDate = new DateTime($field);
         $startDate = new DateTime($start_date);
         $endDate = new DateTime($end_date);
 
-<<<<<<< HEAD
-        if($givenDate > $startDate && $givenDate < $endDate) {
-=======
         if ($givenDate > $startDate && $givenDate < $endDate) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             return true;
         } else {
             return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
@@ -812,12 +629,8 @@ class ValidationBehavior extends Behavior
     }
 
     // Return false if not enrolled in other education system
-<<<<<<< HEAD
-    public static function checkInstitutionClassMaxLimit($class_id, array $globalData) {
-=======
     public static function checkInstitutionClassMaxLimit($class_id, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $ClassStudents = TableRegistry::get("Institution.InstitutionClassStudents");
         $currentNumberOfStudents = $ClassStudents->find()->where([
                 $ClassStudents->aliasField('institution_class_id') => $class_id,
@@ -830,12 +643,8 @@ class ValidationBehavior extends Behavior
         return ($currentNumberOfStudents < 100);
     }
 
-<<<<<<< HEAD
-    public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData) {
-=======
     public static function studentNotEnrolledInAnyInstitutionAndSameEducationSystem($field, $options = [], array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $data = $globalData['data'];
 
         // excluding data by field name
@@ -872,12 +681,8 @@ class ValidationBehavior extends Behavior
         return ($validateEnrolledInAnyInstitution === false)? true: $validateEnrolledInAnyInstitution;
     }
 
-<<<<<<< HEAD
-    public static function studentNotCompletedGrade($field, $options = [], array $globalData) {
-=======
     public static function studentNotCompletedGrade($field, $options = [], array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $Students = TableRegistry::get('Institution.Students');
         $educationGradeField = isset($options['educationGradeField']) ? $options['educationGradeField'] : 'education_grade_id';
         $studentIdField = isset($options['studentIdField']) ? $options['studentIdField'] : 'student_id';
@@ -921,10 +726,6 @@ class ValidationBehavior extends Behavior
                 $Users = TableRegistry::get('User.Users');
                 $UserGenders = TableRegistry::get('User.Genders');
                 if ($fieldType == 'institution_id') {
-<<<<<<< HEAD
-
-=======
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
                     if (array_key_exists('student_id', $globalData['data'])) {
                         $studentId = $globalData['data']['student_id'];
                     }
@@ -941,10 +742,6 @@ class ValidationBehavior extends Behavior
                             ->first();
                         $userGender = $query->Genders->code;
                     }
-<<<<<<< HEAD
-
-=======
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
                 } else if ($fieldType == 'gender_id') { //if validate gender, then can straight away get its code.
                     $userGender = $UserGenders->get($globalData['data'][$fieldType])->code;
                 }
@@ -956,21 +753,13 @@ class ValidationBehavior extends Behavior
                 }
             }
         } else {
-<<<<<<< HEAD
-            $model->log("[$registryAlias - compareStudentGenderWithInstitution - No Active Institution]" , 'debug');
-=======
             $model->log("[$registryAlias - compareStudentGenderWithInstitution - No Active Institution]", 'debug');
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             return false;
         }
     }
 
-<<<<<<< HEAD
-    public static function institutionStaffId($field, array $globalData) {
-=======
     public static function institutionStaffId($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $Staff = TableRegistry::get('Institution.Staff');
 
         $existingRecords = $Staff->find()
@@ -988,12 +777,8 @@ class ValidationBehavior extends Behavior
         return ($existingRecords->count() <= 0);
     }
 
-<<<<<<< HEAD
-    public static function studentGuardianId($field, array $globalData) {
-=======
     public static function studentGuardianId($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $Guardians = TableRegistry::get('Student.Guardians');
 
         $existingRecords = $Guardians->find()
@@ -1008,12 +793,8 @@ class ValidationBehavior extends Behavior
         return $existingRecords <= 0;
     }
 
-<<<<<<< HEAD
-    public static function checkInstitutionLocation($field, array $globalData) {
-=======
     public static function checkInstitutionLocation($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $data = $globalData['data'];
         if (array_key_exists('location_institution_id', $data)) {
             if (empty($data['location_institution_id'])) {
@@ -1025,12 +806,8 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-<<<<<<< HEAD
-    public static function checkShiftAvailable($field, array $globalData) {
-=======
     public static function checkShiftAvailable($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         // have to account for edit and itself... do not count itself into the query
         $existingId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
 
@@ -1038,17 +815,12 @@ class ValidationBehavior extends Behavior
         $institutionId = (array_key_exists('institution_id', $globalData['data']))? $globalData['data']['institution_id']: null;
         $locationInstitutionId = (array_key_exists('location_institution_id', $globalData['data']))? $globalData['data']['location_institution_id']: null;
         // no academic period or location fails
-<<<<<<< HEAD
-        if (empty($academicPeriodId)) return false;
-        if (empty($locationInstitutionId)) return false;
-=======
         if (empty($academicPeriodId)) {
             return false;
         }
         if (empty($locationInstitutionId)) {
             return false;
         }
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
 
         $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
         // find any shift with overlap
@@ -1071,17 +843,12 @@ class ValidationBehavior extends Behavior
         $startTime = (array_key_exists('start_time', $globalData['data']))? $globalData['data']['start_time']: null;
         $endTime = (array_key_exists('end_time', $globalData['data']))? $globalData['data']['end_time']: null;
         // no academic period or location fails
-<<<<<<< HEAD
-        if (empty($startTime)) return false;
-        if (empty($endTime)) return false;
-=======
         if (empty($startTime)) {
             return false;
         }
         if (empty($endTime)) {
             return false;
         }
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
 
         $format = 'H:i:s';
         $startTime = date($format, strtotime($startTime));
@@ -1118,14 +885,8 @@ class ValidationBehavior extends Behavior
         return ($query == 0);
     }
 
-
-
-<<<<<<< HEAD
-    public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData) {
-=======
     public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         // this function is ONLY catered for 'on' => 'create'
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
@@ -1133,13 +894,9 @@ class ValidationBehavior extends Behavior
 
         $educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
         // if no education grade. fail it
-<<<<<<< HEAD
-        if (empty($educationGradeId)) return $validationErrorMsg;
-=======
         if (empty($educationGradeId)) {
             return $validationErrorMsg;
         }
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
 
         if (array_key_exists('student_id', $data)) {
             // saving for existing students
@@ -1160,13 +917,9 @@ class ValidationBehavior extends Behavior
         }
 
         // for cases where date of birth is null, probably only in cases of data error
-<<<<<<< HEAD
-        if (is_null($dateOfBirth)) return $validationErrorMsg;
-=======
         if (is_null($dateOfBirth)) {
             return $validationErrorMsg;
         }
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
 
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $gradeEntity = $EducationGrades->find()
@@ -1185,13 +938,9 @@ class ValidationBehavior extends Behavior
             }
         }
         // academic period not set in form, return false because there is no way to validate
-<<<<<<< HEAD
-        if (!isset($academicStartYear)) return $validationErrorMsg;
-=======
         if (!isset($academicStartYear)) {
             return $validationErrorMsg;
         }
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
 
         $programmeId = $gradeEntity->education_programme_id;
 
@@ -1204,11 +953,7 @@ class ValidationBehavior extends Behavior
 
         // PHPOE-2284 - 'instead of defining admission age at grade level, please make sure the allowed age range changes according to the grade.'
        // PHPOE-2691 - 'instead of populating the list of grades by education cycle which is its grandparent, populate the list by its parent instead which is education programme.'
-<<<<<<< HEAD
-       $gradeList = $EducationGrades->find('list')
-=======
         $gradeList = $EducationGrades->find('list')
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
            ->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
            ->find('order')
            ->toArray()
@@ -1216,13 +961,10 @@ class ValidationBehavior extends Behavior
 
         $yearIncrement = 0;
         foreach ($gradeList as $key => $value) {
-<<<<<<< HEAD
-            if ($key == $educationGradeId) break;
-=======
             if ($key == $educationGradeId) {
                 break;
             }
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
+
             $yearIncrement++;
         }
 
@@ -1249,20 +991,12 @@ class ValidationBehavior extends Behavior
     }
 
     // To allow case sensitive entry
-<<<<<<< HEAD
-    public static function checkUniqueEnglishField($check, array $globalData) {
-        $condition = [];
-        $englishField = trim($check);
-        $Translation = TableRegistry::get('Localization.Translations');
-        if(!empty($globalData['data']['id'])) {
-=======
     public static function checkUniqueEnglishField($check, array $globalData)
     {
         $condition = [];
         $englishField = trim($check);
         $Translation = TableRegistry::get('Localization.Translations');
         if (!empty($globalData['data']['id'])) {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             $condition['NOT'] = [
                 $Translation->aliasField('id') => $globalData['data']['id']
             ];
@@ -1313,10 +1047,6 @@ class ValidationBehavior extends Behavior
     public static function uniqueCodeByForeignKeyAcademicPeriod($field, $foreignKeyModel, $foreignKeyField, $academicFieldName, $globalData)
     {
         if (array_key_exists($academicFieldName, $globalData['data'])) {
-<<<<<<< HEAD
-
-=======
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             $model = $globalData['providers']['table'];
 
             //if have record then return false.
@@ -1495,12 +1225,8 @@ class ValidationBehavior extends Behavior
         return false;
     }
 
-<<<<<<< HEAD
-    public static function noOverlappingAbsenceDate($field, $SearchTable, array $globalData) {
-=======
     public static function noOverlappingAbsenceDate($field, $SearchTable, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         if ($globalData['data']['start_date'] instanceof Time || $globalData['data']['start_date'] instanceof Date) {
             $startDate = $globalData['data']['start_date']->format('Y-m-d');
         } else {
@@ -1591,99 +1317,6 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('id', $globalData['data']) && !empty($globalData['data']['id'])) {
             $found->where([$SearchTable->aliasField('id').' != ' => $globalData['data']['id']]);
         }
-<<<<<<< HEAD
-
-        $found = $found->count();
-            // ->sql();
-            // return false;
-        // pr($found == 0);
-        return ($found == 0);
-    }
-
-    public static function checkStaffExistWithinPeriod($field, array $globalData) {
-        // The logic below will prevent duplicate record that will be produce if the user amend the start or end date for a staff that is inactive when there is an active staff
-        // in the same institution
-
-        $recordId = $globalData['data']['id'];
-        $institutionId = $globalData['data']['institution_id'];
-        $newEndDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
-        $newStartDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
-        $staffId = $globalData['data']['staff_id'];
-        $positionId = $globalData['data']['institution_position_id'];
-
-        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-
-        $condition = [
-            $InstitutionStaffTable->aliasField('staff_id') => $staffId,
-            $InstitutionStaffTable->aliasField('institution_position_id') => $positionId,
-            $InstitutionStaffTable->aliasField('id').' IS NOT' => $recordId,
-            $InstitutionStaffTable->aliasField('institution_id') => $institutionId
-        ];
-        $count = 0;
-
-        if ($newStartDate !== false) {
-            if (empty($newEndDate)) {
-                $count = $InstitutionStaffTable->find()
-                    ->where($condition)
-                    ->where([
-                            'OR' => [
-                                [$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate,
-                                ]
-                            ]
-                        ]);
-            } else {
-                $count = $InstitutionStaffTable->find()
-                    ->where($condition)
-                    ->where([
-                            'OR' => [
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                                ],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                                ],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' >=' => $newEndDate,
-                                ],
-                                [
-                                    $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                    $InstitutionStaffTable->aliasField('end_date').' >=' => $newStartDate,
-                                ],
-                            ]
-                        ]);
-            }
-            if ($count->count() > 0) {
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    public static function checkFTE($field, array $globalData) {
-        if (!empty($globalData['data']['start_date'])) {
-            $date = new DateTime($globalData['data']['start_date']);
-            $startDate = date_format($date, 'Y-m-d');
-        } else {
-            $startDate = null;
-        }
-
-        if (!empty($globalData['data']['end_date'])) {
-            $date = new DateTime($globalData['data']['end_date']);
-            $endDate = date_format($date, 'Y-m-d');
-        } else {
-            $endDate = null;
-        }
-
-
-=======
 
         $found = $found->count();
             // ->sql();
@@ -1776,8 +1409,6 @@ class ValidationBehavior extends Behavior
             $endDate = null;
         }
 
-
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $identicalPositionHolders = $InstitutionStaff->find()
             ->where(
@@ -1837,14 +1468,6 @@ class ValidationBehavior extends Behavior
         return $validationResult;
     }
 
-<<<<<<< HEAD
-    public static function checkNoSpaces($field, array $globalData) {
-        return !strrpos($field," ");
-    }
-
-    // move to
-    public static function checkNumberExists($field, array $globalData) {
-=======
     public static function checkNoSpaces($field, array $globalData)
     {
         return !strrpos($field, " ");
@@ -1853,42 +1476,22 @@ class ValidationBehavior extends Behavior
     // move to
     public static function checkNumberExists($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $match = preg_match('#\d#', $field);
         return !empty($match);
     }
 
-<<<<<<< HEAD
-    public static function checkUppercaseExists($field, array $globalData) {
-=======
     public static function checkUppercaseExists($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $match = preg_match('/[A-Z]/', $field);
         return !empty($match);
     }
 
-<<<<<<< HEAD
-    public static function checkLowercaseExists($field, array $globalData) {
-=======
     public static function checkLowercaseExists($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $match = preg_match('/[a-z]/', $field);
         return !empty($match);
     }
 
-<<<<<<< HEAD
-    public static function checkNonAlphanumericExists($field, array $globalData) {
-        return !ctype_alnum($field);
-    }
-
-    public static function checkUsername($field, array $globalData) {
-        return (filter_var($field, FILTER_VALIDATE_EMAIL)) || ctype_alnum($field);
-    }
-
-    public static function validateCustomText($field, array $globalData) {
-=======
     public static function checkNonAlphanumericExists($field, array $globalData)
     {
         return !ctype_alnum($field);
@@ -1901,7 +1504,6 @@ class ValidationBehavior extends Behavior
 
     public static function validateCustomText($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
@@ -1925,12 +1527,8 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
-    public static function validateCustomNumber($field, array $globalData) {
-=======
     public static function validateCustomNumber($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
@@ -1983,126 +1581,6 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $Indexes = TableRegistry::get('Indexes.Indexes');
-<<<<<<< HEAD
-
-        // only for operator '1' (less than equal to) and '2' (greater than equal to)
-        if ($globalData['data']['operator'] == '1' || $globalData['data']['operator'] == '2') {
-            $criteriaMin = $Indexes->getThresholdParams($globalData['data']['criteria'])['min'];
-            $criteriaMax = $Indexes->getThresholdParams($globalData['data']['criteria'])['max'];
-
-            if ($field < $criteriaMin || $field > $criteriaMax ) {
-                return $model->getMessage('Indexes.IndexesCriterias.threshold.criteriaThresholdRange', ['sprintf' => [$criteriaMin, $criteriaMax]]);
-            } else {
-                return true;
-            }
-        } else {
-            return true;
-        }
-    }
-
-    public static function checkDateRange($field, array $globalData) {
-        $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
-        $model = $globalData['providers']['table'];
-        $params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
-
-        if (array_key_exists('start_date', $params) && array_key_exists('end_date', $params)) {
-            return (strtotime($field) < strtotime($params['start_date']) || strtotime($field) > strtotime($params['end_date']))? $model->getMessage('CustomField.date.between', ['sprintf' => [date($systemDateFormat, strtotime($params['start_date'])), date($systemDateFormat, strtotime($params['end_date']))]]): true;
-        } else if (array_key_exists('start_date', $params)) {
-            return (strtotime($field) < strtotime($params['start_date']))? $model->getMessage('CustomField.date.later', ['sprintf' => date($systemDateFormat, strtotime($params['start_date']))]): true;
-        } else if (array_key_exists('end_date', $params)) {
-            return (strtotime($field) > strtotime($params['end_date']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => date($systemDateFormat, strtotime($params['end_date']))]): true;
-        } else {
-            return true;
-        }
-    }
-
-    public static function checkTimeRange($field, array $globalData) {
-        $systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
-        $model = $globalData['providers']['table'];
-        $params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'],true): [];
-
-        if (array_key_exists('start_time', $params) && array_key_exists('end_time', $params)) {
-            return (strtotime($field) < strtotime($params['start_time']) || strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time'])), date($systemTimeFormat, strtotime($params['end_time']))]]): true;
-        } else if (array_key_exists('start_time', $params)) {;
-            return (strtotime($field) < strtotime($params['start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time']))]]): true;
-        } else if (array_key_exists('end_time', $params)) {
-            return (strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [date($systemTimeFormat, strtotime($params['end_time']))]]): true;
-        } else {
-            return true;
-        }
-    }
-
-    public static function checkUniqueCode($code, $groupField, array $globalData) {
-        $model = $globalData['providers']['table'];
-        $count = 0;
-        if (is_null($groupField) || empty($groupField) || !$groupField) {
-            if (!$globalData['newRecord']) {
-                $count =  $model->find()
-                            ->where([
-                                $model->aliasField('id') .' != ' => $globalData['data']['id'],
-                                $model->aliasField('code') => $code,
-                            ])
-                            ->count();
-            } else {
-                $count =  $model->find()
-                            ->where([$model->aliasField('code') => $code])
-                            ->count();
-            }
-        } else {
-            if (!$globalData['newRecord']) {
-                $count =  $model->find()
-                            ->where([
-                                $model->aliasField('id') .' != ' => $globalData['data']['id'],
-                                $model->aliasField('code') => $code,
-                                $model->aliasField($groupField) => $globalData['data'][$groupField],
-                            ])
-                            ->count();
-            }
-        }
-        return $count==0;
-    }
-
-    // Function is deprecated, please do not use this validation function
-    public static function checkUniqueCodeWithinForm($code, $parentModel, array $globalData) {
-        $model = $globalData['providers']['table'];
-        $count = 0;
-        $modelAssociation = null;
-        foreach ($parentModel->associations() as $assoc) {
-            if ($assoc->name()==$model->alias()) {
-                $modelAssociation = $assoc;
-                break;
-            }
-        }
-        foreach ($parentModel->request->data[$parentModel->alias()][$modelAssociation->property()] as $key => $value) {
-            if ($value['code']==$code) {
-                $count++;
-            }
-        }
-        return $count<2;
-    }
-
-    public static function inParentAcademicPeriod($field, $parentModel, $globalData) {
-        $globalPostData = $parentModel->request->data;
-        $parentPostData = $globalPostData[$parentModel->alias()];
-        $modelPostData = $globalData['data'];
-
-        if (!empty($parentPostData['academic_period_id']) && !empty($field)) {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            if ($AcademicPeriods->exists($parentPostData['academic_period_id'])) {
-                $periodObj = $AcademicPeriods->get($parentPostData['academic_period_id']);
-                $date = strtotime($field);
-
-                $academicPeriodStartDate = (!is_null($periodObj['start_date'])) ? $periodObj['start_date']->toUnixString() : null;
-                $academicPeriodEndDate = (!is_null($periodObj['end_date'])) ? $periodObj['end_date']->toUnixString() : null;
-
-                $rangecheck = ($date >= $academicPeriodStartDate) &&
-                (is_null($academicPeriodEndDate) ||
-                    (!is_null($academicPeriodEndDate) && ($date <= $academicPeriodEndDate))
-                )
-                ;
-                return $rangecheck;
-
-=======
 
         // only for operator '1' (less than equal to) and '2' (greater than equal to)
         if ($globalData['data']['operator'] == '1' || $globalData['data']['operator'] == '2') {
@@ -2145,7 +1623,6 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('start_time', $params) && array_key_exists('end_time', $params)) {
             return (strtotime($field) < strtotime($params['start_time']) || strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time'])), date($systemTimeFormat, strtotime($params['end_time']))]]): true;
         } else if (array_key_exists('start_time', $params)) {
-            ;
             return (strtotime($field) < strtotime($params['start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time']))]]): true;
         } else if (array_key_exists('end_time', $params)) {
             return (strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [date($systemTimeFormat, strtotime($params['end_time']))]]): true;
@@ -2226,7 +1703,6 @@ class ValidationBehavior extends Behavior
                 )
                 ;
                 return $rangecheck;
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
             } else {
                 return __('Bad Academic Period Id');
             }
@@ -2289,12 +1765,8 @@ class ValidationBehavior extends Behavior
         return (!$error) ? true : $error;
     }
 
-<<<<<<< HEAD
-    public static function checkMinNotMoreThanMax($minValue, array $globalData) {
-=======
     public static function checkMinNotMoreThanMax($minValue, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         return intVal($minValue) <= intVal($globalData['data']['max']);
     }
 
@@ -2327,12 +1799,8 @@ class ValidationBehavior extends Behavior
         return ($count == 0);
     }
 
-<<<<<<< HEAD
-    public static function checkLinkedSector($field, array $globalData) {
-=======
     public static function checkLinkedSector($field, array $globalData)
     {
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
         $selectedSector = $globalData['data']['institution_sector_id'];
         $Providers = TableRegistry::get('Institution.Providers');
         $LinkedSector = $Providers->get($field)->institution_sector_id;
@@ -2713,7 +2181,6 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-<<<<<<< HEAD
     public static function checkPendingWorkbench($field, array $globalData)
     {
         $data = $globalData['data'];
@@ -2772,7 +2239,8 @@ class ValidationBehavior extends Behavior
         }
 
         return true;
-=======
+    }
+
     public static function notEmptyAcademicTerm($field, array $globalData)
     {
         $academicTerms = array_column($globalData['data']['assessment_periods'], 'assessment_term');
@@ -2784,6 +2252,5 @@ class ValidationBehavior extends Behavior
             }
         }
         return $nullCounter == $arrLength || $nullCounter == 0;
->>>>>>> 5f286eb74ce50d9df088d6c438a8d43164c0cb75
     }
 }
