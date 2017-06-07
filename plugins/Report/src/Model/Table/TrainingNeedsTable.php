@@ -61,11 +61,7 @@ class TrainingNeedsTable extends AppTable
             'training_standard' => 'TrainingNeedStandards.name'
         ]);
 
-        if ($selectedNeedType == 'CATALOGUE') {
-            $query->where([$this->aliasField('training_need_category_id') => 0]);
-        } elseif ($selectedNeedType == 'NEED') {
-            $query->where([$this->aliasField('course_id') => 0]);
-        }
+        $query->where([$this->aliasField('type') => $selectedNeedType]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
