@@ -57,7 +57,7 @@ class ImportTrainingSessionsTraineesTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        //validate OpenEMIS No
+        //validate OpenEMIS ID
         $tempRow['trainee_id'] = '';
         if (!empty($tempRow['openemis_no'])) {
             $Users = TableRegistry::get('User.Users');
@@ -68,7 +68,7 @@ class ImportTrainingSessionsTraineesTable extends AppTable
                     ]);
 
             if ($query->count() < 1) {
-                $rowInvalidCodeCols['openemis_no'] = __('OpenEMIS No could not be found');
+                $rowInvalidCodeCols['openemis_id'] = __('OpenEMIS ID could not be found');
                 return false;
             } else {
                  $tempRow['trainee_id'] = $query->first()->id;
@@ -91,7 +91,7 @@ class ImportTrainingSessionsTraineesTable extends AppTable
                      $tempRow['trainee_id'] = $query->first()->security_user_id;
                 }
             } else {
-                $rowInvalidCodeCols['openemis_no / identity'] = __('Please provide either OpenEMIS No or Identity informations');
+                $rowInvalidCodeCols['openemis_id / identity'] = __('Please provide either OpenEMIS ID or Identity informations');
                 return false;
             }
         }
