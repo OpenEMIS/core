@@ -27,7 +27,7 @@ class ExcelReportBehavior extends Behavior
         'subfolder' => 'customexcel',
         'format' => 'xlsx',
         'download' => true,
-        'save' => false,
+        'purge' => false,
         'wrapText' => false,
         'lockSheets' => false,
         'templateTable' => null,
@@ -123,16 +123,16 @@ class ExcelReportBehavior extends Behavior
             $this->deleteFile($extra['tmp_file_path']);
         }
 
-        if ($this->config('save')) {
-            $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSaveFile', [$params, $extra], $this);
-        }
+        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
         if ($this->config('download')) {
             $this->downloadFile($filepath);
         }
 
-        // delete excel file after save/download
-        $this->deleteFile($filepath);
+        if ($this->config('purge')) {
+            // delete excel file after download
+            $this->deleteFile($filepath);
+        }
     }
 
     public function loadExcelTemplate(ArrayObject $extra)
@@ -341,7 +341,7 @@ class ExcelReportBehavior extends Behavior
 
         $variableValues = new ArrayObject([]);
         if ($this->config('variableSource') == 'database') {
-            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateGetQueryVariables', [$params, $extra], $this);
+            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) { return $event->result; }
             if ($event->result) {
                 $variableValues = $event->result;
@@ -352,6 +352,7 @@ class ExcelReportBehavior extends Behavior
 
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateGet'.$var, [$params, $extra], $this);
+                $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
                 if ($event->isStopped()) { return $event->result; }
                 if ($event->result) {
                     $variableValues[$var] = $event->result;

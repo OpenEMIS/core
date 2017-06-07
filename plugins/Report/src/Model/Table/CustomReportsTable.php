@@ -31,7 +31,7 @@ class CustomReportsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
-        $events['ExcelTemplates.Model.onExcelTemplateGetQueryVariables'] = 'onExcelTemplateGetQueryVariables';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables'] = 'onExcelTemplateInitialiseQueryVariables';
 
         return $events;
     }
@@ -124,7 +124,7 @@ class CustomReportsTable extends AppTable
         ]);
     }
 
-    public function onExcelTemplateGetQueryVariables(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseQueryVariables(Event $event, array $params, ArrayObject $extra)
     {
         $customReportData = $this->get($params['feature']);
         $jsonQuery = json_decode($customReportData->query, true);
