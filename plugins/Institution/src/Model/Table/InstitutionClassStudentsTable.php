@@ -41,14 +41,8 @@ class InstitutionClassStudentsTable extends AppTable
 
         $this->hasMany('SubjectStudents', [
             'className' => 'Institution.InstitutionSubjectStudents',
-            'foreignKey' => [
-                'institution_class_id',
-                'student_id'
-            ],
-            'bindingKey' => [
-                'institution_class_id',
-                'student_id'
-            ]
+            'foreignKey' => ['institution_class_id', 'student_id'],
+            'bindingKey' => ['institution_class_id', 'student_id']
         ]);
 
         $this->addBehavior('Excel', [
@@ -59,7 +53,8 @@ class InstitutionClassStudentsTable extends AppTable
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index', 'view'],
-            'SubjectStudents' => ['index']
+            'SubjectStudents' => ['index'],
+            'ReportCardComments' => ['index']
         ]);
     }
 
@@ -107,8 +102,8 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings)
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $classId = $settings['class_id'];
+        $institutionId = $settings['institution_id'];
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $className = $this->InstitutionClasses->get($classId)->name;
         $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'-'.str_replace(' ', '_', $className).'_Results', $settings['file']);
@@ -116,12 +111,14 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-        $AccessControl = $this->AccessControl;
-        $userId = $this->Session->read('Auth.User.id');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $classId = $settings['class_id'];
+        $assessmentId = $settings['assessment_id'];
+
+        $AccessControl = $settings['AccessControl'];
+        $userId = $settings['user_id'];
+        $institutionId = $settings['institution_id'];
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+
         $allSubjectsPermission = true;
         $mySubjectsPermission = true;
         if (!$AccessControl->isAdmin()) {
@@ -363,11 +360,18 @@ class InstitutionClassStudentsTable extends AppTable
         $institutionId = $attr['institutionId'];
         $resultType = $attr['resultType'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
-        $assessmentItemResults = $this->assessmentItemResults;
-        if (!(isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId]))) {
+
+        if (!array_key_exists($studentId, $this->assessmentItemResults)) {
+            $this->assessmentItemResults[$studentId] = [];
+        }
+
+        if (!array_key_exists($subjectId, $this->assessmentItemResults[$studentId])) {
             $AssessmentItemResultsTable = TableRegistry::get('Assessment.AssessmentItemResults');
-            $this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId);
-            $assessmentItemResults = $this->assessmentItemResults;
+
+            $studentResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId);
+            if (isset($studentResults[$studentId][$subjectId])) {
+                $this->assessmentItemResults[$studentId][$subjectId] = $studentResults[$studentId][$subjectId];
+            }
         }
         $allSubjectsPermission = $this->allSubjectsPermission;
         $mySubjectsPermission = $this->mySubjectsPermission;
@@ -403,8 +407,8 @@ class InstitutionClassStudentsTable extends AppTable
         }
 
         if ($renderResult) {
-            if (isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
-                $result = $assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId];
+            if (isset($this->assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
+                $result = $this->assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId];
                 switch ($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
@@ -727,5 +731,93 @@ class InstitutionClassStudentsTable extends AppTable
         }
 
         return $studentList;
+    }
+
+    public function findReportCardComments(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionId = $options['institution_id'];
+        $classId = $options['institution_class_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $reportCardId = $options['report_card_id'];
+        $educationSubjectId = $options['education_subject_id'];
+        $type = $options['type'];
+
+        $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $StudentStatuses = $this->StudentStatuses;
+        $Users = $this->Users;
+
+        $query
+            ->select([
+                $this->aliasField('student_id'),
+                $Users->aliasField('openemis_no'),
+                $Users->aliasField('first_name'),
+                $Users->aliasField('middle_name'),
+                $Users->aliasField('third_name'),
+                $Users->aliasField('last_name'),
+                $Users->aliasField('preferred_name'),
+                $StudentStatuses->aliasField('name')
+            ])
+            ->matching('Users')
+            ->contain('StudentStatuses')
+            ->leftJoin([$StudentReportCards->alias() => $StudentReportCards->table()],
+                [
+                    $StudentReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $StudentReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $StudentReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $StudentReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $StudentReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $StudentReportCards->aliasField('report_card_id') => $reportCardId
+                ]
+            )
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('institution_class_id') => $classId,
+                $this->aliasField('education_grade_id') => $educationGradeId
+            ])
+            ->group([
+                $this->aliasField('student_id')
+            ])
+            ->order([
+                $Users->aliasField('first_name'), $Users->aliasField('last_name')
+            ]);
+
+
+        if ($type == 'PRINCIPAL') {
+            $query->select(['comments' => $StudentReportCards->aliasfield('principal_comments')]);
+
+        } else if ($type == 'HOMEROOM_TEACHER') {
+            $query->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')]);
+
+        } else if ($type == 'TEACHER') {
+            $ReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
+            $SubjectStudents = $this->SubjectStudents;
+            $Staff = $ReportCardsComments->Staff;
+
+            // only show students taking the subject
+            $query
+                ->select([
+                    'comments' => $ReportCardsComments->aliasField('comments'),
+                    'comment_code' => $ReportCardsComments->aliasField('report_card_comment_code_id'),
+                    $Staff->aliasField('first_name'),
+                    $Staff->aliasField('last_name')
+                ])
+                ->matching('SubjectStudents')
+                ->leftJoin([$ReportCardsComments->alias() => $ReportCardsComments->table()], [
+                    $ReportCardsComments->aliasField('report_card_id = ') . $StudentReportCards->aliasField('report_card_id'),
+                    $ReportCardsComments->aliasField('student_id = ') . $StudentReportCards->aliasField('student_id'),
+                    $ReportCardsComments->aliasField('institution_id = ') . $StudentReportCards->aliasField('institution_id'),
+                    $ReportCardsComments->aliasField('academic_period_id = ') . $StudentReportCards->aliasField('academic_period_id'),
+                    $ReportCardsComments->aliasField('education_grade_id = ') . $StudentReportCards->aliasField('education_grade_id'),
+                    $ReportCardsComments->aliasField('education_subject_id') => $educationSubjectId
+                ])
+                ->leftJoin([$Staff->alias() => $Staff->table()], [
+                    $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
+                ])
+                ->where([$SubjectStudents->aliasField('education_subject_id') => $educationSubjectId]);
+        }
+
+        return $query;
     }
 }
