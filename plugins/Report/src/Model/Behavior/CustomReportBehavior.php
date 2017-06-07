@@ -23,41 +23,74 @@ class CustomReportBehavior extends Behavior
             $model = $jsonArray['model'];
 
             $this->Table = TableRegistry::get($model);
-            $query = $this->Table->find();
 
-            if (array_key_exists('join', $jsonArray)) {
-                $this->_join($query, $params, $jsonArray['join']);
-            }
+            if (array_key_exists('get', $jsonArray)) {
+                $query = $this->_get($params, $jsonArray['get']);
 
-            if (array_key_exists('contain', $jsonArray)) {
-                $this->_contain($query, $params, $jsonArray['contain']);
-            }
+            } else {
+                $query = $this->Table->find();
 
-            if (array_key_exists('matching', $jsonArray)) {
-                $this->_matching($query, $params, $jsonArray['matching']);
-            }
+                if (array_key_exists('join', $jsonArray)) {
+                    $this->_join($query, $params, $jsonArray['join']);
+                }
 
-            if (array_key_exists('select', $jsonArray)) {
-                $this->_select($query, $params, $jsonArray['select']);
-            }
+                if (array_key_exists('contain', $jsonArray)) {
+                    $this->_contain($query, $params, $jsonArray['contain']);
+                }
 
-            if (array_key_exists('find', $jsonArray)) {
-                $this->_find($query, $params, $jsonArray['find']);
-            }
+                if (array_key_exists('matching', $jsonArray)) {
+                    $this->_matching($query, $params, $jsonArray['matching']);
+                }
 
-            if (array_key_exists('where', $jsonArray)) {
-                $this->_where($query, $params, $jsonArray['where']);
-            }
+                if (array_key_exists('select', $jsonArray)) {
+                    $this->_select($query, $params, $jsonArray['select']);
+                }
 
-            if (array_key_exists('group', $jsonArray)) {
-                $this->_group($query, $params, $jsonArray['group']);
-            }
+                if (array_key_exists('find', $jsonArray)) {
+                    $this->_find($query, $params, $jsonArray['find']);
+                }
 
-            if (array_key_exists('order', $jsonArray)) {
-                $this->_order($query, $params, $jsonArray['order']);
+                if (array_key_exists('where', $jsonArray)) {
+                    $this->_where($query, $params, $jsonArray['where']);
+                }
+
+                if (array_key_exists('group', $jsonArray)) {
+                    $this->_group($query, $params, $jsonArray['group']);
+                }
+
+                if (array_key_exists('order', $jsonArray)) {
+                    $this->_order($query, $params, $jsonArray['order']);
+                }
             }
 
             return $query;
+        }
+    }
+
+    private function _get(array $params, array $values)
+    {
+        if (!empty($values)) {
+            if (array_key_exists('id', $values)) {
+                $value = $values['id'];
+                $pos = strpos($value, '${');
+
+                if ($pos !== false) {
+                    $placeholder = substr($value, $pos + 2, strlen($value) - 3);
+                    if (array_key_exists($placeholder, $params)) {
+                        $id = $params[$placeholder];
+                    }
+                } else {
+                    $id = $value;
+                }
+
+                $contain = [];
+                if (array_key_exists('contain', $values) && !empty($values['contain'])) {
+                    $contain = $values['contain'];
+                }
+
+                $query = $this->Table->get($id, ['contain' => $contain]);
+                return $query;
+            }
         }
     }
 
