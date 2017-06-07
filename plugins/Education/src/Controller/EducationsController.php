@@ -19,8 +19,8 @@ class EducationsController extends AppController
     	parent::beforeFilter($event);
 
         $selectedAction = $this->request->action;
-        $setupTab = 'AbsoluteGrades';
-        if (in_array($selectedAction, ['AbsoluteGrades', 'Subjects', 'Certifications', 'ProgrammeOrientations', 'FieldOfStudies'])) {
+        $setupTab = 'Stages';
+        if (in_array($selectedAction, ['Stages', 'Subjects', 'Certifications', 'ProgrammeOrientations', 'FieldOfStudies'])) {
             $setupTab = $selectedAction;
         }
 
@@ -80,5 +80,5 @@ class EducationsController extends AppController
     public function Programmes()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammes']); }
     public function Grades() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGrades']); }
     public function GradeSubjects()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGradesSubjects']); }
-    public function AbsoluteGrades()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationAbsoluteGrades']); }
+    public function Stages()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationStages']); }
 }

@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 class EducationGradesTable extends ControllerActionTable
 {
     private $_contain = ['EducationSubjects._joinData'];
-    private $_fieldOrder = ['name', 'code', 'education_absolute_grade_id', 'admission_age', 'education_programme_id', 'visible'];
+    private $_fieldOrder = ['name', 'code', 'education_stage_id', 'admission_age', 'education_programme_id', 'visible'];
 
     public function initialize(array $config)
     {
@@ -30,7 +30,7 @@ class EducationGradesTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
         $this->belongsTo('EducationProgrammes',     ['className' => 'Education.EducationProgrammes']);
-        $this->belongsTo('EducationAbsoluteGrades', ['className' => 'Education.EducationAbsoluteGrades']);
+        $this->belongsTo('EducationStages',         ['className' => 'Education.EducationStages']);
         $this->hasMany('Assessments',               ['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionFees',           ['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Rubrics',                   ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -173,9 +173,9 @@ class EducationGradesTable extends ControllerActionTable
 
         $this->field('admission_age', ['visible' => false]);
         $this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
-        $this->field('education_absolute_grade_id');
+        $this->field('education_stage_id');
 
-        $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'education_absolute_grade_id', 'subjects'];
+        $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'education_stage_id', 'subjects'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -207,7 +207,7 @@ class EducationGradesTable extends ControllerActionTable
         $this->field('name');
         $this->field('code');
         $this->field('admission_age', ['entity' => $entity]);
-        $this->field('education_absolute_grade_id', ['entity' => $entity]);
+        $this->field('education_stage_id', ['entity' => $entity]);
         $this->field('education_programme_id', ['entity' => $entity]);
     }
 
@@ -294,17 +294,17 @@ class EducationGradesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationAbsoluteGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationStageId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $absoluteGradeOptions = $this->EducationAbsoluteGrades
+            $stageOptions = $this->EducationStages
                 ->find('list')
                 ->find('visible')
                 ->find('order')
                 ->all();
 
             $attr['type'] = 'select';
-            $attr['options'] = $absoluteGradeOptions;
+            $attr['options'] = $stageOptions;
         }
 
         return $attr;

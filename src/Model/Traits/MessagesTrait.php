@@ -1529,7 +1529,7 @@ trait MessagesTrait
                     'ruleUnique' => 'This code already exists in the system'
                 ]
             ],
-            'EducationAbsoluteGrades' => [
+            'EducationStages' => [
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
