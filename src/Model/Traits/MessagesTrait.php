@@ -33,7 +33,8 @@ trait MessagesTrait
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
             'periodWeight' => 'Period Weight',
-            'classification' => 'Classification'
+            'classification' => 'Classification',
+            'academic_term' => 'Please check the academic terms to ensure that all the values are entered.'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -727,6 +728,22 @@ trait MessagesTrait
         ],
         'Reports' => [
             'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
+        ],
+        'ReportCardComments' => [
+            'noProgrammes' => 'There is no programme set for this institution'
+        ],
+        'ReportCardStatuses' => [
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no template for this Report Card. Please contact the administrator for assistance.',
+            'noFilesToDownload' => 'There are no generated Report Cards to download',
+            'noFilesToPublish' => 'There are no generated Report Cards to publish',
+            'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
+            'generate' => 'The Report Card has been successfully generated',
+            'generateAll' => 'All Report Cards will be generated in the background',
+            'publish' => 'The Report Card has been successfully published',
+            'publishAll' => 'All generated Report Cards have been published successfully',
+            'unpublish' => 'The Report Card has been successfully unpublished',
+            'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
         'AlertRules' => [
             'Attendance' => [
@@ -1658,6 +1675,9 @@ trait MessagesTrait
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'
                 ],
+                'academic_term' => [
+                    'ruleCheckAcademicTerm' => 'Please enter an academic term for this record'
+                ]
             ],
             'AssessmentItems' => [
                 'weight' => [
@@ -1905,6 +1925,20 @@ trait MessagesTrait
             'AlertRules' => [
                 'name' => [
                     'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
+        ],
+        'ReportCard' => [
+            'ReportCards' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
         ],

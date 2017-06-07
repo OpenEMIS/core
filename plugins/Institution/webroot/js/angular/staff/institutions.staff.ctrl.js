@@ -953,6 +953,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             newStaffData['nationality_id'] = StaffController.Staff.nationality_id;
             newStaffData['identity_type_id'] = StaffController.Staff.identity_type_id;
         }
+        newStaffData['position_type'] = positionType;
+        newStaffData['institution_position_id'] = institutionPositionId;
+        newStaffData['staff_type_id'] = staffTypeId;
+        newStaffData['FTE'] = fte;
         InstitutionsStaffSvc.addUser(newStaffData)
         .then(function(user){
             if (user[0].error.length === 0) {
