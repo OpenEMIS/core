@@ -6,7 +6,6 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\ORM\ResultSet;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Event\Event;
@@ -27,20 +26,20 @@ class StaffTrainingNeedsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    private $course = null;
+    private $trainingCourse = null;
 
     public function initialize(array $config)
     {
-        $this->table('staff_training_needs');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'course_id']);
-        $this->belongsTo('TrainingNeedCategories', ['className' => 'Training.TrainingNeedCategories', 'foreignKey' => 'training_need_category_id']);
-        $this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
-        $this->belongsTo('TrainingNeedCompetencies', ['className' => 'Training.TrainingNeedCompetencies', 'foreignKey' => 'training_need_competency_id']);
-        $this->belongsTo('TrainingNeedSubStandards', ['className' => 'Training.TrainingNeedSubStandards', 'foreignKey' => 'training_need_sub_standard_id']);
+        $this->belongsTo('TrainingCourses', ['className' => 'Training.TrainingCourses']);
+        $this->belongsTo('TrainingNeedCategories', ['className' => 'Training.TrainingNeedCategories']);
+        $this->belongsTo('TrainingNeedCompetencies', ['className' => 'Training.TrainingNeedCompetencies']);
+        $this->belongsTo('TrainingNeedSubStandards', ['className' => 'Training.TrainingNeedSubStandards']);
+        $this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
+
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -64,7 +63,6 @@ class StaffTrainingNeedsTable extends ControllerActionTable
             //         'provider' => 'table'
             //     ]
             // ])
-            ->add('type', 'notBlank', ['rule' => 'notBlank'])
             ->allowEmpty('training_need_category_id', function ($context) {
                 if (array_key_exists('type', $context['data'])) {
                     $type = $context['data']['type'];
@@ -110,66 +108,91 @@ class StaffTrainingNeedsTable extends ControllerActionTable
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
     }
 
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
     public function onGetType(Event $event, Entity $entity)
     {
-        list($typeOptions) = array_values($this->_getSelectOptions());
-        $currentAction = $this->action;
-        if ($currentAction == 'index') {
-            $entity = $this->setupValues($entity);
-        }
+        $typeOptions = $this->getSelectOptions($this->aliasField('types'));
 
         return $typeOptions[$entity->type];
     }
 
-    public function onGetCourse(Event $event, Entity $entity)
+    public function onGetTrainingCourseId(Event $event, Entity $entity)
     {
-        $entity = $this->setupValues($entity);
+        $isCatalogue = $this->isCatalogue($entity);
 
-        if ($entity->type == 'CATALOGUE') {
-            return $entity->course->code_name;
+        $value = '';
+        if ($isCatalogue) {
+            return $entity->training_course->code_name;
         } else {
-            return '-';
+            $value = '<i class="fa fa-minus"></i>';
         }
+
+        return $value;
     }
 
     public function onGetCourseCode(Event $event, Entity $entity)
     {
-        return $entity->course->code;
+        return $entity->training_course->code;
     }
 
     public function onGetCourseName(Event $event, Entity $entity)
     {
-        return $entity->course->name;
+        return $entity->training_course->name;
     }
 
     public function onGetCourseDescription(Event $event, Entity $entity)
     {
-        return $entity->course->description;
+        return $entity->training_course->description;
     }
 
     public function onGetTrainingRequirementId(Event $event, Entity $entity)
     {
-        return $entity->course->training_requirement->name;
+        return $entity->training_course->training_requirement->name;
     }
 
     public function onGetTrainingNeedCategoryId(Event $event, Entity $entity)
     {
-        $entity = $this->setupValues($entity);
+        $isCatalogue = $this->isCatalogue($entity);
 
-        if ($entity->type == 'CATALOGUE') {
-            return '-';
+        $value = '';
+        if ($isCatalogue) {
+            $value = '<i class="fa fa-minus"></i>';
         } else {
-            return $entity->training_need_category->name;
+            $value = $entity->training_need_category->name;
         }
+
+        return $value;
     }
 
     public function onGetTrainingNeedStandardId(Event $event, Entity $entity)
     {
-        if ($entity->has('training_need_sub_standard') && !empty($entity->training_need_sub_standard)) {
-            return $entity->training_need_sub_standard->training_need_standard->name;
+        $isNeed = $this->isNeed($entity);
+
+        $value = '';
+        if ($isNeed) {
+            if ($entity->has('training_need_sub_standard') && !empty($entity->training_need_sub_standard)) {
+                $value = $entity->training_need_sub_standard->training_need_standard->name;
+            }
         } else {
-            return '-';
+            $value = '<i class="fa fa-minus"></i>';
         }
+
+        return $value;
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('training_need_competency_id', ['visible' => false]);
+        $this->field('training_need_sub_standard_id', ['visible' => false]);
+        $this->field('training_priority_id', ['visible' => false]);
+        $this->field('staff_id', ['visible' => false]);
+        $this->field('reason', ['visible' => false]);
+
+        $this->setFieldOrder(['type', 'training_course_id', 'training_need_category_id']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -181,68 +204,32 @@ class StaffTrainingNeedsTable extends ControllerActionTable
             $staffId = $session->read($sessionKey);
         }
 
-        $extra['auto_contain_fields'] = ['Courses' => ['code']];
+        $extra['auto_contain_fields'] = [
+            'TrainingCourses' => ['code']
+        ];
 
-        $query->contain(['TrainingNeedSubStandards.TrainingNeedStandards'])
+        $query
+            ->contain(['TrainingNeedSubStandards.TrainingNeedStandards'])
             ->where([$this->aliasField('staff_id') => $staffId])
             ->autoFields(true);
-    }
-
-    public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
-    {
-        $this->field('type');
-        $this->field('course');
-        $this->field('course_id', ['visible' => false]);
-        $this->field('training_need_competency_id', ['visible' => false]);
-        $this->field('training_need_sub_standard_id', ['visible' => false]);
-        $this->field('reason', ['visible' => false]);
-        $this->field('training_priority_id', ['visible' => false]);
-        $this->field('staff_id', ['visible' => false]);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'type', 'course', 'training_need_category_id']);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query->contain([
             'TrainingNeedSubStandards.TrainingNeedStandards',
-            'Courses.TrainingRequirements'
+            'TrainingCourses.TrainingRequirements'
         ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $entity = $this->setupValues($entity);
         $this->setupFields($entity);
-
-        if ($entity->type == self::NEED) {
-            $this->field('course_id', ['visible' => false]);
-            $this->field('course_code', ['visible' => false]);
-            $this->field('course_name', ['visible' => false]);
-            $this->field('course_description', ['visible' => false]);
-            $this->field('training_requirement_id', ['visible' => false]);
-        } else if ($entity->type == self::CATALOGUE) {
-            $this->field('training_need_competency_id', ['visible' => false]);
-            $this->field('training_need_standard_id', ['visible' => false]);
-            $this->field('training_need_sub_standard_id', ['visible' => false]);
-        }
-    }
-
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $entity = $this->setupValues($entity);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $entity = $this->setupValues($entity);
-    }
-
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        if (array_key_exists('course_id', $data[$this->alias()])) {
-            $courseId = $data[$this->alias()]['course_id'];
-            if (!empty($courseId)) {
-                $data[$this->alias()]['training_requirement_id'] = $this->Courses->get($courseId)->training_requirement_id;
-            }
+        if ($entity->has('training_need_sub_standard') && !empty($entity->training_need_sub_standard)) {
+            $entity->training_need_standard_id = $entity->training_need_sub_standard->training_need_standard_id;
         }
     }
 
@@ -253,87 +240,50 @@ class StaffTrainingNeedsTable extends ControllerActionTable
 
     public function onUpdateFieldType(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
-            list($typeOptions, $selectedType) = array_values($this->_getSelectOptions());
+        $typeOptions = $this->getSelectOptions($this->aliasField('types'));
 
+        if ($action == 'add') {
             $attr['type'] = 'select';
             $attr['onChangeReload'] = 'changeType';
             $attr['options'] = $typeOptions;
         } else if ($action == 'edit') {
-            list($typeOptions, $selectedType) = array_values($this->_getSelectOptions());
+            $entity = $attr['entity'];
+            $type = $entity->type;
+
             $attr['type'] = 'readonly';
-            $attr['attr']['value'] = $typeOptions[$selectedType];
+            $attr['value'] = $type;
+            $attr['attr']['value'] = $typeOptions[$type];
         }
 
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'view') {
-            $selectedType = $attr['attr']['type_value'];
-            if ($selectedType == self::CATALOGUE) {
-                $attr['visible'] = false;
-            }
-        } else if ($action == 'add' || $action == 'edit') {
-            list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isCatalogue = $this->isCatalogue($entity);
 
-            if ($selectedType == self::NEED) {
-                $attr['type'] = 'select';
-            } else {
-                $attr['visible'] = false;
-            }
-        }
-
-        return $attr;
-    }
-
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        $dataArray = $data->getArrayCopy();
-        if (array_key_exists('type', $dataArray) && $dataArray['type'] != self::NEED) {
-            $data['training_need_category_id'] = 0;
-        }
-    }
-
-    public function onUpdateFieldCourseId(Event $event, array $attr, $action, Request $request)
-    {
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
+            if ($isCatalogue) {
+                $trainingCourseOptions = $this->Training->getCourseList();
 
-            if ($action == 'edit') {
-                $attr['select'] = false;
-            }
-
-            list(, $selectedType) = array_values($this->_getSelectOptions());
-
-            if ($selectedType == self::CATALOGUE) {
-                $courseOptions = $this->Training->getCourseList();
-                $selectedCourse = (array_key_exists('course', $this->request->query) && array_key_exists($this->request->query['course'], $courseOptions))? $this->request->query['course']: null;
-
-                if (empty($selectedCourse)) {
-                    if (array_key_exists('entity', $attr)) {
-                        $entity = $attr['entity'];
-                        if ($entity->has('course_id') && !empty($entity->course_id)) {
-                            $selectedCourse = $entity->course_id;
-                        }
-                    }
+                $trainingCourseId = null;
+                if (isset($request->data[$this->alias()]['training_course_id'])) {
+                    $trainingCourseId = $request->data[$this->alias()]['training_course_id'];
+                } else if ($entity->has('training_course_id')) {
+                    $trainingCourseId = $entity->training_course_id;
                 }
 
-                if (!is_null($selectedCourse)) {
-                    $this->course = $this->Courses
-                        ->find()
-                        ->matching('TrainingRequirements')
-                        ->where([
-                            $this->Courses->aliasField('id') => $selectedCourse
-                        ])
-                        ->first();
+                if (!empty($trainingCourseId)) {
+                    $this->trainingCourse = $this->TrainingCourses->get($entity->training_course_id, ['contain' => 'TrainingRequirements']);
+                } else {
+                    $this->trainingCourse = null;
                 }
 
-                $attr['type'] = 'select';
                 $attr['onChangeReload'] = 'changeCourse';
-                $attr['options'] = $courseOptions;
+                $attr['options'] = $trainingCourseOptions;
             } else {
                 $attr['type'] = 'hidden';
                 $attr['attr']['value'] = 0;
@@ -345,15 +295,24 @@ class StaffTrainingNeedsTable extends ControllerActionTable
 
     public function onUpdateFieldCourseCode(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isCatalogue = $this->isCatalogue($entity);
 
-            if ($selectedType == self::CATALOGUE) {
-                $attr['attr']['disabled'] = 'disabled';
-                if (!is_null($this->course)) {
-                    $attr['value'] = $this->course->code;
-                    $attr['attr']['value'] = $this->course->code;
+        if ($action == 'view') {
+            if (!$isCatalogue) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if ($isCatalogue) {
+                if (!empty($this->trainingCourse)) {
+                    $trainingCourseCode = $this->trainingCourse->code;
+                } else {
+                    $trainingCourseCode = '';
                 }
+
+                $attr['value'] = $trainingCourseCode;
+                $attr['attr']['value'] = $trainingCourseCode;
+                $attr['attr']['disabled'] = 'disabled';
             } else {
                 $attr['visible'] = false;
             }
@@ -364,15 +323,24 @@ class StaffTrainingNeedsTable extends ControllerActionTable
 
     public function onUpdateFieldCourseName(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isCatalogue = $this->isCatalogue($entity);
 
-            if ($selectedType == self::CATALOGUE) {
-                $attr['attr']['disabled'] = 'disabled';
-                if (!is_null($this->course)) {
-                    $attr['value'] = $this->course->name;
-                    $attr['attr']['value'] = $this->course->name;
+        if ($action == 'view') {
+            if (!$isCatalogue) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if ($isCatalogue) {
+                if (!empty($this->trainingCourse)) {
+                    $trainingCourseName = $this->trainingCourse->name;
+                } else {
+                    $trainingCourseName = '';
                 }
+
+                $attr['value'] = $trainingCourseName;
+                $attr['attr']['value'] = $trainingCourseName;
+                $attr['attr']['disabled'] = 'disabled';
             } else {
                 $attr['visible'] = false;
             }
@@ -383,14 +351,24 @@ class StaffTrainingNeedsTable extends ControllerActionTable
 
     public function onUpdateFieldCourseDescription(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isCatalogue = $this->isCatalogue($entity);
 
-            if ($selectedType == self::CATALOGUE) {
-                $attr['attr']['disabled'] = 'disabled';
-                if (!is_null($this->course)) {
-                    $attr['attr']['value'] = $this->course->description;
+        if ($action == 'view') {
+            if (!$isCatalogue) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if ($isCatalogue) {
+                if (!empty($this->trainingCourse)) {
+                    $trainingCourseDescription = $this->trainingCourse->description;
+                } else {
+                    $trainingCourseDescription = '';
                 }
+
+                $attr['value'] = $trainingCourseDescription;
+                $attr['attr']['value'] = $trainingCourseDescription;
+                $attr['attr']['disabled'] = 'disabled';
             } else {
                 $attr['visible'] = false;
             }
@@ -401,14 +379,24 @@ class StaffTrainingNeedsTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingRequirementId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isCatalogue = $this->isCatalogue($entity);
 
-            if ($selectedType == self::CATALOGUE) {
-                $attr['type'] = 'readonly';
-                if (!is_null($this->course)) {
-                    $attr['attr']['value'] = $this->course->_matchingData['TrainingRequirements']->name;
+        if ($action == 'view') {
+            if (!$isCatalogue) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if ($isCatalogue) {
+                if (!empty($this->trainingCourse)) {
+                    $trainingRequirementName = $this->trainingCourse->training_requirement->name;
+                } else {
+                    $trainingRequirementName = '';
                 }
+
+                $attr['value'] = $trainingRequirementName;
+                $attr['attr']['value'] = $trainingRequirementName;
+                $attr['attr']['disabled'] = 'disabled';
             } else {
                 $attr['visible'] = false;
             }
@@ -417,96 +405,112 @@ class StaffTrainingNeedsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, Request $request)
+    {
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isNeed = $this->isNeed($entity);
+
+        if ($action == 'view') {
+            if (!$isNeed) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if (!$isNeed) {
+                $attr['type'] = 'hidden';
+                $attr['attr']['value'] = 0;
+            }
+        }
+
+        return $attr;
+    }
+
     public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action, Request $request)
     {
-        list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isNeed = $this->isNeed($entity);
 
-        if ($selectedType == self::NEED) {
-            $query = $this->TrainingNeedCompetencies
-                    ->find('list')
-                    ->find('visible')
-                    ->order($this->TrainingNeedCompetencies->aliasField('order'))
-                    ->toArray();
-
-            $attr['type'] = 'select';
-            $attr['options'] = $query;
-        } else {
-            $attr['visible'] = false;
+        if ($action == 'view') {
+            if (!$isNeed) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if (!$isNeed) {
+                $attr['type'] = 'hidden';
+                $attr['attr']['value'] = 0;
+            }
         }
+
         return $attr;
     }
 
     public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, Request $request)
     {
-        list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isNeed = $this->isNeed($entity);
 
-        if ($selectedType == self::NEED) {
-            $TrainingNeedStandards = TableRegistry::get('Training.TrainingNeedStandards');
-
-            $query = $TrainingNeedStandards
+        if ($action == 'view') {
+            if (!$isNeed) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if ($isNeed) {
+                $TrainingNeedStandards = TableRegistry::get('Training.TrainingNeedStandards');
+                $trainingNeedStandardOptions = $TrainingNeedStandards
                     ->find('list')
                     ->find('visible')
-                    ->order($TrainingNeedStandards->aliasField('order'))
+                    ->find('order')
                     ->toArray();
 
-            $selectedStandard = array_key_exists('standard', $this->request->query)? $this->request->query['standard']: '';
-            
-            $attr['type'] = 'select';
-            $attr['onChangeReload'] = 'changeStandard';
-            $attr['options'] = $query;
-
-            if ($action == 'edit') {
-                if (array_key_exists('entity', $attr)) {
-                    $entity = $attr['entity'];
-                    if ($entity->has('training_need_sub_standard') && !empty($entity->training_need_sub_standard)) {
-                        $attr['default'] = $attr['entity']->training_need_sub_standard->training_need_standard->id;
-                        $attr['select'] = false;
-                    }
-                }
+                $attr['options'] = $trainingNeedStandardOptions;
+                $attr['onChangeReload'] = 'changeTrainingNeedStandard';
+            } else {
+                $attr['visible'] = false;
             }
-        } else {
-            $attr['visible'] = false;
         }
-        
+
         return $attr;
     }
 
     public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action, Request $request)
     {
-        list(, $selectedType) = array_values($this->_getSelectOptions());
+        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $isNeed = $this->isNeed($entity);
 
-        if ($selectedType == self::NEED) {
-            $selectedStandard = array_key_exists('standard', $this->request->query)? $this->request->query['standard']: '';
-
-            if (empty($selectedStandard)) {
-                if (array_key_exists('entity', $attr)) {
-                    $entity = $attr['entity'];
-                    if ($entity->has('training_need_sub_standard') && !empty($entity->training_need_sub_standard)) {
-                        if ($entity->training_need_sub_standard->has('training_need_standard') && !empty($entity->training_need_sub_standard->training_need_standard)) {
-                            $selectedStandard = $entity->training_need_sub_standard->training_need_standard->id;
-                        }
-                    }
+        if ($action == 'view') {
+            if (!$isNeed) {
+                $attr['visible'] = false;
+            }
+        } else if ($action == 'add' || $action == 'edit') {
+            if ($isNeed) {
+                $trainingNeedStandardId = null;
+                if (isset($request->data[$this->alias()]['training_need_standard_id'])) {
+                    $trainingNeedStandardId = $request->data[$this->alias()]['training_need_standard_id'];
+                } else if ($entity->has('training_need_standard_id')) {
+                    $trainingNeedStandardId = $entity->training_need_standard_id;
                 }
-            }
 
-            $query = [];
-            if ($selectedStandard) {
-                $query = $this->TrainingNeedSubStandards
-                    ->find('list')
-                    ->find('visible')
-                    ->where([$this->TrainingNeedSubStandards->aliasField('training_need_standard_id') => $selectedStandard])
-                    ->order($this->TrainingNeedSubStandards->aliasField('order'))
-                    ->toArray();
-            }
+                if (!empty($trainingNeedStandardId)) {
+                    $trainingNeedSubStandardOptions = $this->TrainingNeedSubStandards
+                        ->find('list')
+                        ->find('visible')
+                        ->find('order')
+                        ->where([
+                            $this->TrainingNeedSubStandards->aliasField('training_need_standard_id') => $trainingNeedStandardId
+                        ])
+                        ->toArray();
+                } else {
+                    $trainingNeedSubStandardOptions = [];
+                }
 
-            $attr['type'] = 'select';
-            $attr['options'] = $query;
-        } else {
-            $attr['visible'] = false;
+                $attr['options'] = $trainingNeedSubStandardOptions;
+            } else {
+                $attr['type'] = 'hidden';
+                $attr['attr']['value'] = 0;
+            }
         }
+
         return $attr;
     }
-
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
@@ -522,119 +526,68 @@ class StaffTrainingNeedsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    private function setupFields(Entity $entity)
     {
-        $request = $this->request;
-        unset($request->query['type']);
-        unset($request->query['course']);
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('type', $request->data[$this->alias()])) {
-                    $request->query['type'] = $request->data[$this->alias()]['type'];
-                }
-            }
-            $data[$this->alias()]['status_id'] = $entity->status_id;
-        }
-    }
-
-    public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $request = $this->request;
-        unset($request->query['type']);
-        unset($request->query['course']);
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('type', $request->data[$this->alias()])) {
-                    $request->query['type'] = $request->data[$this->alias()]['type'];
-                }
-                if (array_key_exists('course_id', $request->data[$this->alias()])) {
-                    $request->query['course'] = $request->data[$this->alias()]['course_id'];
-                }
-            }
-            $data[$this->alias()]['status_id'] = $entity->status_id;
-        }
-    }
-
-    public function addEditOnChangeStandard(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $request = $this->request;
-        unset($request->query['standard']);
-        
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('training_need_standard_id', $request->data[$this->alias()])) {
-                    $request->query['standard'] = $request->data[$this->alias()]['training_need_standard_id'];
-                }
-            }
-        }
-    }
-
-    public function setupValues(Entity $entity)
-    {
-        if (!isset($entity->id)) {  // new record
-            // list(, $selectedType) = array_values($this->_getSelectOptions());
-            $entity->type = '';
-        } else {    // existing record
-            if ($entity->training_need_category_id == 0) {
-                $entity->type = self::CATALOGUE;
-                $course = $this->Courses->get($entity->course_id);
-            } else {
-                $entity->type = self::NEED;
-            }
-        }
-        $this->request->query['type'] = $entity->type;
-
-        return $entity;
-    }
-
-    public function setupFields(Entity $entity)
-    {
-        $this->field('type');
-        $this->field('training_need_category_id', [
-            'type' => 'select',
-            'attr' => ['type_value' => $entity->type]
+        $this->field('type', [
+            'entity' => $entity
         ]);
-        $this->field('course_id', [
+        $this->field('training_course_id', [
             'type' => 'select',
             'entity' => $entity
         ]);
-        $this->field('course_code');
-        $this->field('course_name');
-        $this->field('course_description', ['type' => 'text']);
-        $this->field('training_requirement_id', ['type' => 'select']);
-        $this->field('training_priority_id', ['type' => 'select']);
-
-        $this->field('training_need_competency_id', ['type' => 'select']);
+        $this->field('course_code', [
+            'type' => 'string',
+            'entity' => $entity
+        ]);
+        $this->field('course_name', [
+            'type' => 'string',
+            'entity' => $entity
+        ]);
+        $this->field('course_description', [
+            'type' => 'text',
+            'entity' => $entity
+        ]);
+        $this->field('training_requirement_id', [
+            'type' => 'string',
+            'entity' => $entity
+        ]);
+        $this->field('training_need_category_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+        $this->field('training_need_competency_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('training_need_standard_id', [
             'type' => 'select',
             'entity' => $entity
         ]);
         $this->field('training_need_sub_standard_id', [
             'type' => 'select',
-            'select' => false,
             'entity' => $entity
         ]);
-
+        $this->field('training_priority_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'type', 'training_need_category_id', 'course_id', 'course_code', 'course_name', 'course_description',
-            'training_need_competency_id', 'training_need_standard_id', 'training_need_sub_standard_id',
-            'training_requirement_id', 'training_priority_id',
-            'reason', 'staff_id'
+            'type', 'training_course_id', 'course_code', 'course_name', 'course_description', 'training_requirement_id',
+            'training_need_category_id', 'training_need_competency_id', 'training_need_standard_id', 'training_need_sub_standard_id', 'training_priority_id',
+            'staff_id', 'reason'
         ]);
     }
 
-    public function _getSelectOptions()
+    private function isCatalogue(Entity $entity = null)
     {
-        //Return all required options and their key
-        $typeOptions = $this->getSelectOptions($this->aliasField('types'));
-        // $selectedType = $this->queryString('type', $typeOptions);
-        $selectedType = array_key_exists('type', $this->request->query)? $this->request->query['type']: '';
+        return (!is_null($entity) && $entity->getOriginal('type') == self::CATALOGUE);
+    }
 
-        return compact('typeOptions', 'selectedType');
+    private function isNeed(Entity $entity = null)
+    {
+        return (!is_null($entity) && $entity->getOriginal('type') == self::NEED);
     }
 
     private function setupTabElements()
@@ -642,12 +595,6 @@ class StaffTrainingNeedsTable extends ControllerActionTable
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
-        // pr($this->fields);
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -669,8 +616,8 @@ class StaffTrainingNeedsTable extends ControllerActionTable
                 $this->aliasField('modified'),
                 $this->aliasField('created'),
                 $this->Statuses->aliasField('name'),
-                $this->Courses->aliasField('code'),
-                $this->Courses->aliasField('name'),
+                $this->TrainingCourses->aliasField('code'),
+                $this->TrainingCourses->aliasField('name'),
                 $this->CreatedUser->aliasField('openemis_no'),
                 $this->CreatedUser->aliasField('first_name'),
                 $this->CreatedUser->aliasField('middle_name'),
@@ -678,7 +625,7 @@ class StaffTrainingNeedsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Courses->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->TrainingCourses->alias(), $this->CreatedUser->alias()])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
