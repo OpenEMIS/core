@@ -1,3 +1,16 @@
+-- POCOR-3996
+-- `import_mapping`
+DELETE FROM `import_mapping`
+WHERE `model` = 'Training.TrainingSessionsTrainees';
+
+-- `labels`
+DELETE FROM `labels`
+WHERE `id` = '6c3d2497-4b27-11e7-9846-525400b263eb';
+
+-- `system_patches`
+DELETE FROM `system_patches` WHERE `issue`='POCOR-3996';
+
+
 -- POCOR-3983
 -- institution_statuses
 DROP TABLE IF EXISTS `institution_statuses`;
