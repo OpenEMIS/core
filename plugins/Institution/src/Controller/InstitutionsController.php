@@ -260,6 +260,18 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCases']);
     }
+    public function ReportCardComments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
+    }
+    public function ReportCardStatuses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
+    }
+    public function InstitutionStudentsReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
+    }
     // End
 
     // AngularJS
@@ -299,6 +311,12 @@ class InstitutionsController extends AppController
         $this->set('excelUrl', Router::url($url));
 
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function Comments()
+    {
+        $this->set('_edit', $this->AccessControl->check(['Institutions', 'Comments', 'edit']));
+        $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
     // End
 
@@ -739,6 +757,12 @@ class InstitutionsController extends AppController
                     }
                 }
                 break;
+            case 'Comments':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'institutions.comments.ctrl',
+                    'institutions.comments.svc'
+                ]);
             case 'Classes':
                 if (isset($this->request->pass[0])) {
                     if ($this->request->param('pass')[0] == 'edit') {
@@ -960,6 +984,7 @@ class InstitutionsController extends AppController
 
         $Institutions = TableRegistry::get('Institution.Institutions');
         $classification = $Institutions->get($id)->classification;
+
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
@@ -979,31 +1004,44 @@ class InstitutionsController extends AppController
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
 
-            //Students By Year, excludes transferred and withdrawn students
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']])
-            );
-
-            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
-
             //Students By Grade for current year, excludes transferred and withdrawn students
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']])
-            );
+            $params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
+            ];
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
 
+            //Students By Year, excludes transferred and withdrawn students
+            $params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
+            ];
+
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
+
             //Staffs By Position Type for current year, only shows assigned staff
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
-            );
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_type', $params);
-        } elseif ($classification == $Institutions::NON_ACADEMIC) {
+
+            //Staffs By Year, only shows assigned staff
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
+
+        } else if ($classification == $Institutions::NON_ACADEMIC) {
             //Staffs By Position Title for current year, only shows assigned staff
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
-            );
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_position', $params);
+
+            //Staffs By Year, only shows assigned staff
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
         }
 
         $this->set('highChartDatas', $highChartDatas);
@@ -1154,6 +1192,7 @@ class InstitutionsController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
+            'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],

@@ -57,7 +57,7 @@ class DownloadBehavior extends Behavior
             $file = $this->getFile($data->{$this->config('content')});
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
-                $this->fileTypes[$pathInfo['extension']];
+                $fileType = $this->fileTypes[$pathInfo['extension']];
             }
 
             // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
