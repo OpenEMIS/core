@@ -34,7 +34,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
-        $this->extra = new ArrayObject(['limit' => 30, 'page' => 1]);
+        $this->extra = new ArrayObject([]);
         $this->serialize = new ArrayObject([]);
     }
 
@@ -221,6 +221,10 @@ class RestfulV2Component extends Component implements RestfulInterface
 
         $query = $table->find('all', $extra->getArrayCopy());
         $this->processRequestQueries($query, $extra);
+
+        if (!$extra->offsetExists('page')) {
+            $extra->offsetSet('page', 1);
+        }
 
         try {
             $total = $query->count();
@@ -646,10 +650,17 @@ class RestfulV2Component extends Component implements RestfulInterface
 
     private function _limit($query, $value, ArrayObject $extra)
     {
-        if (empty($value)) {
-            $value = 30; // default to 30
+        /*
+        1. query does not contain _limit
+        2. query contains _limit=0
+        3. query contains _limit=-1
+        3. query contains _limit=10
+        */
+        if ($value > 0) {
+            $extra['limit'] = $value;
+        } elseif ($value < 0) {
+            $extra['limit'] = 30;
         }
-        $extra['limit'] = $value; // used in _page
     }
 
     private function _page($query, $value, ArrayObject $extra)
@@ -683,6 +694,10 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (array_key_exists('_search', $requestQueries)) {
             $search = $this->urlsafeB64Decode($requestQueries['_search']);
             $this->extra['search'] = $search;
+        }
+
+        if (!array_key_exists('_limit', $requestQueries)) {
+            $this->extra['limit'] = 30;
         }
 
         if (array_key_exists('_schema', $requestQueries) && $requestQueries['_schema'] == 'true') {
