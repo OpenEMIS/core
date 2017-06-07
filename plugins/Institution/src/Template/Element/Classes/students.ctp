@@ -3,6 +3,62 @@
 	<hr>
 
 	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
+	
+	<div class="dropdown-filter">
+		<div class="filter-label">
+			<i class="fa fa-filter"></i>
+			<label>Filter</label>
+		</div>
+
+		<?php 
+			if (!empty($attr['data']['filter']['education_grades']) && !empty($attr['data']['filter']['education_grades']['options'])) { 
+				$gradeOptions = $attr['data']['filter']['education_grades']['options'];
+				$selectedGrade = $attr['data']['filter']['education_grades']['selected'];
+		?>
+				<div class="select">
+					<label>Education Grade:</label>
+					<div class="input-select-wrapper">
+						<select>
+							<optgroup label="-- Filter by --">
+								<?php foreach ($gradeOptions as $key => $value) { ?>
+									<option 
+										value="<?=$key;?>" 
+										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+										<?php if ($selectedGrade == $key) { ?>
+											selected
+										<?php } ?>
+									><?=$value['name'];?></option>
+								<?php } ?>
+							</optgroup>
+						</select>
+					</div>
+				</div>
+		<?php } ?>
+
+		<!-- <div class="select">
+			<label>Student Status:</label>
+			<div class="input-select-wrapper">
+				<select>
+					<optgroup label="-- Filter by --">
+						<option value="Active">Active</option>
+						<option value="Inactive">Inactive</option>
+					</optgroup>
+				</select>
+			</div>
+		</div>
+
+		<div class="select">
+			<label>Gender:</label>
+			<div class="input-select-wrapper">
+				<select>
+					<optgroup label="-- Filter by --">
+						<option value="Male">Male</option>
+						<option value="Female">Female</option>
+					</optgroup>
+				</select>
+			</div>
+		</div> -->
+	</div>
 
 	<?php if ($action=='edit') :?>
 	<div class="clearfix">

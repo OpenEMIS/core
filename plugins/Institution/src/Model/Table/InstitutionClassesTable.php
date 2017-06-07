@@ -505,6 +505,18 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // pr($this->paramsDecode($this->request->query['queryString']));
+        $extra['selectedGrade'] = -1;
+        if (array_key_exists('queryString', $this->request->query)) {
+            $queryString = $this->paramsDecode($this->request->query['queryString']);
+            
+            if (!empty($queryString) && array_key_exists('grade', $queryString)) {
+                $extra['selectedGrade'] = $queryString['grade'];
+            }
+        }
+        
+        pr($extra['selectedGrade']);
+
         $query->contain([
             'AcademicPeriods',
             //'InstitutionShifts',
@@ -522,8 +534,52 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->fields['students']['data']['students'] = $entity->class_students;
+        // pr($entity->class_students);
+
+        //generate student filter.
+        $params = $this->getQueryString();
+        $baseUrl = $this->url($this->action, true);
+        
+        $gradeOptions = [];
+        foreach ($entity->class_students as $key => $value) {
+            if (!empty($value->education_grade)){
+                $gradeOptions[$value->education_grade->id]['name'] = $value->education_grade->name;
+                $gradeOptions[$value->education_grade->id]['order'] = $value->education_grade->order;
+
+                $params['grade'] = $value->education_grade->id;
+                $url = $this->setQueryString($baseUrl, $params);
+                
+                $gradeOptions[$value->education_grade->id]['url'] = $url;
+            }
+
+            if ($extra['selectedGrade'] != -1 && $value->education_grade->id != $extra['selectedGrade']) {
+                unset($entity->class_students[$key]);
+            }
+        }
+
+        if (count($gradeOptions) > 1) { //only show All Grades options if there are more than one options
+            //for all grades option
+            $gradeOptions[-1]['id'] = -1;
+            $gradeOptions[-1]['name'] = '-- ' . __('All Grades') . ' --';
+            $gradeOptions[-1]['order'] = 0;
+
+            $params['grade'] = -1;
+            $url = $this->setQueryString($baseUrl, $params);
+
+            $gradeOptions[-1]['url'] = $url;
+
+            //order array by 'order' key
+            uasort($gradeOptions, function ($a, $b) {
+                return $a['order']-$b['order'];
+            });
+        }
+
+        $this->fields['students']['data']['filter']['education_grades']['options'] = $gradeOptions;
+        $this->fields['students']['data']['filter']['education_grades']['selected'] = $extra['selectedGrade'];
+
         $this->fields['education_grades']['data']['grades'] = $entity->education_grades;
+
+        $this->fields['students']['data']['students'] = $entity->class_students;
 
         $academicPeriodOptions = $this->getAcademicPeriodOptions($entity->institution_id);
     }
