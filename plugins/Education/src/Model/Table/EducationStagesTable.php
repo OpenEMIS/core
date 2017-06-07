@@ -4,7 +4,7 @@ namespace Education\Model\Table;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
-class EducationAbsoluteGradesTable extends ControllerActionTable
+class EducationStagesTable extends ControllerActionTable
 {
 	public function initialize(array $config)
     {

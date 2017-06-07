@@ -57,8 +57,8 @@ class StudentsTable extends ControllerActionTable
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
-            'number_of_students_by_absolute_grade' => [
-                '_function' => 'getNumberOfStudentsByAbsoluteGrade',
+            'number_of_students_by_stage' => [
+                '_function' => 'getNumberOfStudentsByStage',
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
@@ -1208,7 +1208,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // For Dashboard (Home Page and Institution Dashboard page)
-    public function getNumberOfStudentsByAbsoluteGrade($params=[])
+    public function getNumberOfStudentsByStage($params=[])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
@@ -1237,25 +1237,25 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('institution_id'),
                 $this->aliasField('education_grade_id'),
                 'EducationGrades.name',
-                'EducationGrades.education_absolute_grade_id',
-                'EducationAbsoluteGrades.name',
-                'EducationAbsoluteGrades.order',
+                'EducationGrades.education_stage_id',
+                'EducationStages.name',
+                'EducationStages.order',
                 'Users.id',
                 'Genders.name',
                 'total' => $query->func()->count($this->aliasField('id'))
             ])
             ->contain([
-                'EducationGrades.EducationAbsoluteGrades',
+                'EducationGrades.EducationStages',
                 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
                 'Users.Genders'
             ])
             ->where($studentsByGradeConditions)
             ->group([
-                'EducationGrades.education_absolute_grade_id',
+                'EducationGrades.education_stage_id',
                 'Genders.name'
             ])
             ->order(
-                ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationAbsoluteGrades.order']
+                ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationStages.order']
             )
             ->toArray()
             ;
@@ -1271,8 +1271,8 @@ class StudentsTable extends ControllerActionTable
         $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         foreach ($studentByGrades as $key => $studentByGrade) {
-            $gradeId = $studentByGrade->education_grade->education_absolute_grade_id;
-            $gradeName = $studentByGrade->education_grade->education_absolute_grade->name;
+            $gradeId = $studentByGrade->education_grade->education_stage_id;
+            $gradeName = $studentByGrade->education_grade->education_stage->name;
             $gradeGender = $studentByGrade->user->gender->name;
             $gradeTotal = $studentByGrade->total;
 
