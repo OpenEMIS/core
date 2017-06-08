@@ -49,7 +49,7 @@ class TrainingNeedsTable extends AppTable
         $query->contain(['TrainingNeedSubStandards.TrainingNeedStandards', 'TrainingCourses.TrainingRequirements']);
 
         if ($selectedStatus != '-1') {
-            $query->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
+            $query->matching('Statuses.WorkflowStatuses', function ($q) use ($selectedStatus) {
                 return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
             });
         }
@@ -95,8 +95,8 @@ class TrainingNeedsTable extends AppTable
             ];
 
             $newFields[] = [
-                'key' => 'TrainingNeeds.course_id',
-                'field' => 'course_id',
+                'key' => 'TrainingNeeds.training_course_id',
+                'field' => 'training_course_id',
                 'type' => 'integer',
                 'label' => ''
             ];
@@ -260,7 +260,7 @@ class TrainingNeedsTable extends AppTable
                 }
 
                 //enable change line for each of the subjects
-                $return['value'] = "=\"" . implode("\n", $subjects) . "\"";
+                $return['value'] = "=\"" . implode(",\n", $subjects) . "\"";
                 $return['style'] = ['wrap_text' => true];
             }
         }
