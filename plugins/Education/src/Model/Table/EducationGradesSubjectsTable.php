@@ -25,13 +25,14 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
     {
         $validator = parent::validationDefault($validator);
         $validator
+            ->allowEmpty('hours_required')
             ->add('hours_required', 'ruleIsDecimal',  [
                 'rule' => ['decimal', null]
             ])
             ->add('hours_required', [
                 'ruleRange' => [
                     'rule' => ['range', 0, 999.99],
-                    'message' => __('Value must be positive and less than 1000')
+                    'message' => __('Value must be positive with maximum 2 decimal points and less than 1000')
                 ]
             ]);
 
