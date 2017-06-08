@@ -25,8 +25,15 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
     {
         $validator = parent::validationDefault($validator);
         $validator
-            ->add('hours_required', 'ruleValidateNumeric',  [
-                'rule' => ['numericPositive']
+            ->allowEmpty('hours_required')
+            ->add('hours_required', 'ruleIsDecimal',  [
+                'rule' => ['decimal', null]
+            ])
+            ->add('hours_required', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 999.99],
+                    'message' => __('Value must be positive with maximum 2 decimal points and less than 1000')
+                ]
             ]);
 
         return $validator;
@@ -39,6 +46,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $this->field('education_grade_id', ['entity' => $entity]);
         $this->field('education_programme_id', ['entity' => $entity]);
         $this->field('education_level_id', ['entity' => $entity]);
+        $this->field('hours_required', ['type' => 'float', 'attr'=>['step' => 0.01]]);
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
     }
 
@@ -102,6 +110,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $this->field('education_programme_id', ['selectedProgramme' => $selectedProgramme]);
         $this->field('education_grade_id', ['selectedGrade' => $selectedGrade]);
         $this->field('education_subject_id', ['selectedGrade' => $selectedGrade]);
+        $this->field('hours_required', ['type' => 'float', 'attr'=>['step' => 0.01]]);
         $this->setFieldOrder(['education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',  'hours_required']);
     }
 
