@@ -19,17 +19,15 @@
 					<label><?=__('Education Grade');?>:</label>
 					<div class="input-select-wrapper">
 						<select>
-							<optgroup label="<?=__('-- Filter by --');?>">
-								<?php foreach ($gradeOptions as $key => $value) { ?>
-									<option 
-										value="<?=$key;?>" 
-										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
-										<?php if ($selectedGrade == $key) { ?>
-											selected
-										<?php } ?>
-									><?=__($value['name']);?></option>
-								<?php } ?>
-							</optgroup>
+							<?php foreach ($gradeOptions as $key => $value) { ?>
+								<option 
+									value="<?=$key;?>" 
+									onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+									<?php if ($selectedGrade == $key) { ?>
+										selected
+									<?php } ?>
+								><?=__($value['name']);?></option>
+							<?php } ?>
 						</select>
 					</div>
 				</div>
@@ -44,17 +42,15 @@
 					<label><?=__('Student Status');?>:</label>
 					<div class="input-select-wrapper">
 						<select>
-							<optgroup label="<?=__('-- Filter by --');?>">
-								<?php foreach ($statusOptions as $key => $value) { ?>
-									<option 
-										value="<?=$key;?>" 
-										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
-										<?php if ($selectedStatus == $key) { ?>
-											selected
-										<?php } ?>
-									><?=__($value['name']);?></option>
-								<?php } ?>
-							</optgroup>
+							<?php foreach ($statusOptions as $key => $value) { ?>
+								<option 
+									value="<?=$key;?>" 
+									onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+									<?php if ($selectedStatus == $key) { ?>
+										selected
+									<?php } ?>
+								><?=__($value['name']);?></option>
+							<?php } ?>
 						</select>
 					</div>
 				</div>
@@ -69,17 +65,15 @@
 					<label><?=__('Gender');?>:</label>
 					<div class="input-select-wrapper">
 						<select>
-							<optgroup label="<?=__('-- Filter by --');?>">
-								<?php foreach ($genderOptions as $key => $value) { ?>
-									<option 
-										value="<?=$key;?>" 
-										onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
-										<?php if ($selectedGender == $key) { ?>
-											selected
-										<?php } ?>
-									><?=__($value['name']);?></option>
-								<?php } ?>
-							</optgroup>
+							<?php foreach ($genderOptions as $key => $value) { ?>
+								<option 
+									value="<?=$key;?>" 
+									onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+									<?php if ($selectedGender == $key) { ?>
+										selected
+									<?php } ?>
+								><?=__($value['name']);?></option>
+							<?php } ?>
 						</select>
 					</div>
 				</div>
