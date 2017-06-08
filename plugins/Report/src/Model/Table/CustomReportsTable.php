@@ -78,7 +78,12 @@ class CustomReportsTable extends AppTable
                         $options = $query->toArray();
                     }
 
-                    $this->ControllerAction->field($field, ['type' => 'select', 'options' => $options, 'select' => false]);
+                    $type = 'select';
+                    if (array_key_exists('type', $data)) {
+                        $type = $data['type'];
+                    }
+
+                    $this->ControllerAction->field($field, ['type' => $type, 'options' => $options, 'select' => false, 'onChangeReload' => true]);
                 }
             }
         }
