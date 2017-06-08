@@ -17,7 +17,7 @@ class CustomReportBehavior extends Behavior
 {
     private $Table = null;
 
-    public function parseQuery ($jsonArray, array $params)
+    public function parseQuery($jsonArray, array $params)
     {
         if (array_key_exists('model', $jsonArray)) {
             $model = $jsonArray['model'];
@@ -30,36 +30,12 @@ class CustomReportBehavior extends Behavior
             } else {
                 $query = $this->Table->find();
 
-                if (array_key_exists('join', $jsonArray)) {
-                    $this->_join($query, $params, $jsonArray['join']);
-                }
-
-                if (array_key_exists('contain', $jsonArray)) {
-                    $this->_contain($query, $params, $jsonArray['contain']);
-                }
-
-                if (array_key_exists('matching', $jsonArray)) {
-                    $this->_matching($query, $params, $jsonArray['matching']);
-                }
-
-                if (array_key_exists('select', $jsonArray)) {
-                    $this->_select($query, $params, $jsonArray['select']);
-                }
-
-                if (array_key_exists('find', $jsonArray)) {
-                    $this->_find($query, $params, $jsonArray['find']);
-                }
-
-                if (array_key_exists('where', $jsonArray)) {
-                    $this->_where($query, $params, $jsonArray['where']);
-                }
-
-                if (array_key_exists('group', $jsonArray)) {
-                    $this->_group($query, $params, $jsonArray['group']);
-                }
-
-                if (array_key_exists('order', $jsonArray)) {
-                    $this->_order($query, $params, $jsonArray['order']);
+                $methods = ['join', 'contain', 'matching', 'select', 'find', 'where', 'group', 'order'];
+                foreach ($methods as $method) {
+                    if (array_key_exists($method, $jsonArray)) {
+                        $methodName = '_' . $method;
+                        $this->$methodName($query, $params, $jsonArray[$method]);
+                    }
                 }
             }
 
@@ -75,7 +51,7 @@ class CustomReportBehavior extends Behavior
                 $pos = strpos($value, '${');
 
                 if ($pos !== false) {
-                    $placeholder = substr($value, $pos + 2, strlen($value) - 3);
+                    $placeholder = rtrim(ltrim($value,'${'), '}');
                     if (array_key_exists($placeholder, $params)) {
                         $id = $params[$placeholder];
                     }
@@ -208,7 +184,7 @@ class CustomReportBehavior extends Behavior
                             $pos = strpos($value, '${');
 
                             if ($pos !== false) {
-                                $placeholder = substr($value, $pos + 2, strlen($value) - 3);
+                                $placeholder = rtrim(ltrim($value,'${'), '}');
                                 if (array_key_exists($placeholder, $params)) {
                                     $conditions[$field] = $params[$placeholder];
                                 }
