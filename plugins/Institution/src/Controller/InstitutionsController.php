@@ -89,7 +89,9 @@ class InstitutionsController extends AppController
         'StudentFees',
 
         // infrastructures
-        'InstitutionInfrastructures',
+        'InstitutionLands',
+        'InstitutionBuildings',
+        'InstitutionFloors',
         'InstitutionRooms',
 
         // survey
