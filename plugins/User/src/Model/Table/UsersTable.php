@@ -743,12 +743,11 @@ class UsersTable extends AppTable
             $query = $this->find();
 
             // POCOR-3556 add the user type to finder
-            if (array_key_exists('type', $extra)) {
-                $userType = $extra['type'];
-                if ($userType == 'STAFF') {
-                    $query->find('staff');
-                } else if ($userType == 'OTHERS') {
-                    $query->find('others');
+            if (array_key_exists('finder', $extra)) {
+                $finders = $extra['finder'];
+
+                foreach ($finders as $finder) {
+                    $query->find($finder);
                 }
             }
 
