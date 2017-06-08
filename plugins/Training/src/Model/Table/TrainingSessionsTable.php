@@ -30,8 +30,8 @@ class TrainingSessionsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    const STAFF = 'STAFF';
-    const OTHERS = 'OTHERS';
+    const STAFF = 'Staff';
+    const OTHERS = 'Others';
 
     public function initialize(array $config)
     {
@@ -298,7 +298,7 @@ class TrainingSessionsTable extends ControllerActionTable
             $term = $this->request->query['term'];
             $extra = $this->request->query['extra'];
 
-            $data = $this->Trainers->Users->autocomplete($term, $extra);
+            $data = $this->Trainers->Users->autocomplete($term, ['finder' => [$extra['type']]]);
             echo json_encode($data);
             die;
         }
