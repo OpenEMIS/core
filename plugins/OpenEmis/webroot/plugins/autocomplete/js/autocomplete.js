@@ -147,7 +147,7 @@ var Autocomplete = {
 		            dataType: "json",
 		            data: {
 		                term: request.term,
-		                extra: JSON.stringify(Autocomplete.extra)
+		                extra: Autocomplete.extra
 		            },
 		            success: function(data) {
 		                response(data);

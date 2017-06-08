@@ -296,7 +296,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
-            $extra = json_decode($this->request->query['extra'], true);
+            $extra = $this->request->query['extra'];
 
             $data = $this->Trainers->Users->autocomplete($term, $extra);
             echo json_encode($data);
