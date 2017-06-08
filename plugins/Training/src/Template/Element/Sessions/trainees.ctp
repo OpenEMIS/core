@@ -35,9 +35,9 @@
         $url = $this->Url->build([
             'plugin' => $this->request->params['plugin'],
             'controller' => $this->request->params['controller'],
-            'action' => 'ImportTrainingSessionsTrainees',
-            0 => 'add',
-            1 => $this->request->params['pass'][1]
+            'action' => 'ImportTrainees',
+            'trainingId' => $this->request->params['pass'][1],
+            0 => 'add'
         ]);
 
         echo $this->Form->input('<i class="fa kd-import"></i> <span>'.__('Import Trainees').'</span>', [
