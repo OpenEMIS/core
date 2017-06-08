@@ -29,7 +29,7 @@
 		]);
 
 		$requestData = $this->request->data[$alias];
-		$trainerType = (array_key_exists('type', $requestData)) ? $requestData['type']: 'STAFF';
+		$trainerType = (array_key_exists('type', $requestData)) ? $requestData['type']: 'Staff';
 		// End POCOR-3556
 
 		echo $this->Form->input("$alias.trainer_search", [
