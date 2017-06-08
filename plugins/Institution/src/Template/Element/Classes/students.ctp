@@ -16,10 +16,10 @@
 				$selectedGrade = $attr['data']['filter']['education_grades']['selected'];
 		?>
 				<div class="select">
-					<label>Education Grade:</label>
+					<label><?=__('Education Grade');?>:</label>
 					<div class="input-select-wrapper">
 						<select>
-							<optgroup label="-- Filter by --">
+							<optgroup label="<?=__('-- Filter by --');?>">
 								<?php foreach ($gradeOptions as $key => $value) { ?>
 									<option 
 										value="<?=$key;?>" 
@@ -27,7 +27,7 @@
 										<?php if ($selectedGrade == $key) { ?>
 											selected
 										<?php } ?>
-									><?=$value['name'];?></option>
+									><?=__($value['name']);?></option>
 								<?php } ?>
 							</optgroup>
 						</select>
@@ -41,10 +41,10 @@
 				$selectedStatus = $attr['data']['filter']['student_status']['selected'];
 		?>
 				<div class="select">
-					<label>Student Status:</label>
+					<label><?=__('Student Status');?>:</label>
 					<div class="input-select-wrapper">
 						<select>
-							<optgroup label="-- Filter by --">
+							<optgroup label="<?=__('-- Filter by --');?>">
 								<?php foreach ($statusOptions as $key => $value) { ?>
 									<option 
 										value="<?=$key;?>" 
@@ -52,7 +52,7 @@
 										<?php if ($selectedStatus == $key) { ?>
 											selected
 										<?php } ?>
-									><?=$value['name'];?></option>
+									><?=__($value['name']);?></option>
 								<?php } ?>
 							</optgroup>
 						</select>
@@ -66,10 +66,10 @@
 				$selectedGender = $attr['data']['filter']['genders']['selected'];
 		?>
 				<div class="select">
-					<label>Student Gender:</label>
+					<label><?=__('Gender');?>:</label>
 					<div class="input-select-wrapper">
 						<select>
-							<optgroup label="-- Filter by --">
+							<optgroup label="<?=__('-- Filter by --');?>">
 								<?php foreach ($genderOptions as $key => $value) { ?>
 									<option 
 										value="<?=$key;?>" 
@@ -77,7 +77,7 @@
 										<?php if ($selectedGender == $key) { ?>
 											selected
 										<?php } ?>
-									><?=$value['name'];?></option>
+									><?=__($value['name']);?></option>
 								<?php } ?>
 							</optgroup>
 						</select>
