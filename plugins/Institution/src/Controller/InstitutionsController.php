@@ -89,7 +89,9 @@ class InstitutionsController extends AppController
         'StudentFees',
 
         // infrastructures
-        'InstitutionInfrastructures',
+        'InstitutionLands',
+        'InstitutionBuildings',
+        'InstitutionFloors',
         'InstitutionRooms',
 
         // survey
@@ -427,8 +429,8 @@ class InstitutionsController extends AppController
         $userId = $this->Auth->user('id');
 
         $settings = [
-            'class_id' => $classId, 
-            'assessment_id' => $assessmentId, 
+            'class_id' => $classId,
+            'assessment_id' => $assessmentId,
             'institution_id' => $institutionId,
             'user_id' => $userId,
             'AccessControl' => $this->AccessControl,
@@ -437,11 +439,11 @@ class InstitutionsController extends AppController
         ];
 
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        
+
         $results = $ClassStudents->generateXLXS($settings);
         $fileName = $results['file'];
         $filePath = $results['path'] . $fileName;
-        
+
         $response = $this->response;
         $response->body(function() use ($filePath) {
             $content = file_get_contents($filePath);
