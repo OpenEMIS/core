@@ -679,11 +679,14 @@ class InstitutionsTable extends ControllerActionTable
         $query->select($extra['query']['select']);
         $query->join($extra['query']['join']);
 
-        $queryParams = $this->request->query;
-        $extra['options']['order'] = [
-            $this->aliasField('institution_status_id') => 'ASC',
-            $this->aliasField('name') => 'ASC'
-        ];
+        // POCOR-3983 if no sort, active status will be followed by inactive status
+        if (!isset($this->request->query['sort'])) {
+            $query->order([
+                $this->aliasField('institution_status_id') => 'ASC',
+                $this->aliasField('name') => 'ASC'
+            ]);
+        }
+        // end POCOR-3983
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
