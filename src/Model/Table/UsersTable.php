@@ -92,7 +92,7 @@ class UsersTable extends ControllerActionTable {
 			'order' => 100
 		]);
 
-		$this->setFieldOrder(['username', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth', 'nationality_id', 'identity_type_id', 'identity_number', 'last_login', 'preferred_language', 'modified_user_id', 'modified', 'created_user_id', 'created', 'roles']);
+		$this->setFieldOrder(['username', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth', 'nationality_id', 'identity_type_id', 'identity_number', 'email', 'last_login', 'preferred_language', 'modified_user_id', 'modified', 'created_user_id', 'created', 'roles']);
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -110,17 +110,22 @@ class UsersTable extends ControllerActionTable {
 			]
 		);
 		$this->field('last_login', ['visible' => false]);
-
-		if ($this->action == 'edit') {
-			$this->field('identity_number', ['type' => 'readonly']);
-		}
 	}
+
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['MainNationalities', 'MainIdentityTypes']);
+    }
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->field('preferred_language', ['type' => 'select', 'entity' => $entity]);
-		$this->field('nationality_id', ['type' => 'select']);
-		$this->field('identity_type_id', ['type' => 'select']);
+
+        $this->field('nationality_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('identity_type_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('identity_number', ['type' => 'readonly']);
+        $this->field('email', ['type' => 'readonly']);
+
 		$this->setFieldOrder(['first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth', 'preferred_language', 'nationality_id', 'identity_type_id', 'identity_number']);
 	}
 
@@ -137,6 +142,32 @@ class UsersTable extends ControllerActionTable {
 
 		return $attr;
 	}
+
+    public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
+    {   
+        if ($action == 'edit') {
+            if (array_key_exists('entity', $attr)) {
+                if ($attr['entity']->has('main_nationality') && !empty($attr['entity']->main_nationality)) {
+                    $attr['value'] = $attr['entity']->nationality_id;
+                    $attr['attr']['value'] = $attr['entity']->main_nationality->name;
+                    return $attr;
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
+    {   
+        if ($action == 'edit') {
+            if (array_key_exists('entity', $attr)) {
+                if ($attr['entity']->has('main_identity_type') && !empty($attr['entity']->main_identity_type)) {
+                    $attr['value'] = $attr['entity']->identity_type_id;
+                    $attr['attr']['value'] = $attr['entity']->main_identity_type->name;
+                    return $attr;
+                }
+            }
+        }
+    }
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
