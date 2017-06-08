@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use PHPExcel_Worksheet;
 
-class ImportTrainingSessionsTraineesTable extends AppTable
+class ImportTraineesTable extends AppTable
 {
     private $trainingSessionId;
 
@@ -37,8 +37,8 @@ class ImportTrainingSessionsTraineesTable extends AppTable
 
     public function beforeAction($event) 
     {
-        $paramPass = $this->request->params['pass'][1];
-        $this->trainingSessionId = $this->paramsDecode($paramPass)['id'];
+        $trainingId = $this->request->params['trainingId'];
+        $this->trainingSessionId = $this->paramsDecode($trainingId)['id'];
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) 
@@ -49,7 +49,7 @@ class ImportTrainingSessionsTraineesTable extends AppTable
                 'controller' => 'Trainings',
                 'action' => 'Sessions',
                 0 => 'edit',
-                1 => $this->request->params['pass'][1]
+                1 => $this->request->params['trainingId']
             ];
             $toolbarButtons['back']['url'] = $backUrl;
         }
