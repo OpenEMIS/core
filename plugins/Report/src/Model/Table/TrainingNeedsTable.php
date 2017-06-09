@@ -259,9 +259,12 @@ class TrainingNeedsTable extends AppTable
                     }
                 }
 
-                //enable change line for each of the subjects
-                $return['value'] = "=\"" . implode(",\n", $subjects) . "\"";
-                $return['style'] = ['wrap_text' => true];
+                //for future implementation, enable change line for each of the subjects
+                // $return['value'] = "=\"" . implode(",\n", $subjects) . "\"";
+                // $return['style'] = ['wrap_text' => true];
+
+                $return = implode(", ", $subjects);
+
             }
         }
 
