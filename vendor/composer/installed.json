@@ -664,50 +664,6 @@
         }
     },
     {
-        "name": "mk-j/php_xlsxwriter",
-        "version": "0.32",
-        "version_normalized": "0.32.0.0",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
-            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/mk-j/PHP_XLSXWriter/zipball/94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
-            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
-            "shasum": ""
-        },
-        "require": {
-            "ext-zip": "*",
-            "php": ">=5.2.1"
-        },
-        "require-dev": {
-            "phpunit/phpunit": "4.3.*"
-        },
-        "time": "2017-03-09T16:25:31+00:00",
-        "type": "project",
-        "installation-source": "dist",
-        "autoload": {
-            "classmap": [
-                "xlsxwriter.class.php"
-            ]
-        },
-        "notification-url": "https://packagist.org/downloads/",
-        "license": [
-            "MIT"
-        ],
-        "description": "PHP Library to write XLSX files",
-        "homepage": "https://github.com/mk-j/PHP_XLSXWriter",
-        "keywords": [
-            "excel",
-            "library",
-            "php",
-            "xls",
-            "xlsx"
-        ]
-    },
-    {
         "name": "mobiledetect/mobiledetectlib",
         "version": "2.8.25",
         "version_normalized": "2.8.25.0",
@@ -3886,6 +3842,50 @@
         "keywords": [
             "bake",
             "cakephp"
+        ]
+    },
+    {
+        "name": "mk-j/php_xlsxwriter",
+        "version": "dev-2017-07-0.35-rc1",
+        "version_normalized": "dev-2017-07-0.35-rc1",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
+            "reference": "31baecd83b5ed19d53a82e8763ff79267eff591a"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/mk-j/PHP_XLSXWriter/zipball/31baecd83b5ed19d53a82e8763ff79267eff591a",
+            "reference": "31baecd83b5ed19d53a82e8763ff79267eff591a",
+            "shasum": ""
+        },
+        "require": {
+            "ext-zip": "*",
+            "php": ">=5.2.1"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "4.3.*"
+        },
+        "time": "2017-06-04T15:55:22+00:00",
+        "type": "project",
+        "installation-source": "source",
+        "autoload": {
+            "classmap": [
+                "xlsxwriter.class.php"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "description": "PHP Library to write XLSX files",
+        "homepage": "https://github.com/mk-j/PHP_XLSXWriter",
+        "keywords": [
+            "excel",
+            "library",
+            "php",
+            "xls",
+            "xlsx"
         ]
     }
 ]
