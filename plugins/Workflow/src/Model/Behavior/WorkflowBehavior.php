@@ -578,16 +578,27 @@ class WorkflowBehavior extends Behavior {
     }
 
     public function reorderFields() {
+        $order = 0;
         $fieldOrder = [];
         $fields = $this->_table->fields;
-        foreach ($fields as $fieldKey => $fieldAttr) {
-            if (!in_array($fieldKey, ['status_id', 'assignee_id'])) {
-                $fieldOrder[$fieldAttr['order']] = $fieldKey;
+        uasort($fields, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
+
+        foreach ($fields as $fieldName => $fieldAttr) {
+            if (!in_array($fieldName, ['status_id', 'assignee_id'])) {
+                $order = $fieldAttr['order'] > $order ? $fieldAttr['order'] : $order;
+                if (array_key_exists($order, $fieldOrder)) {
+                    $order++;
+                }
+                $fieldOrder[$order] = $fieldName;
             }
         }
+
         ksort($fieldOrder);
         array_unshift($fieldOrder, 'assignee_id');  // Set Status to second
         array_unshift($fieldOrder, 'status_id');    // Set Status to first
+
         if ($this->isCAv4()) {
             $this->_table->setFieldOrder($fieldOrder);
         } else {
