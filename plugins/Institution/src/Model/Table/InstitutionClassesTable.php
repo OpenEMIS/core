@@ -600,62 +600,56 @@ class InstitutionClassesTable extends ControllerActionTable
             }
         }
 
-        if (count($gradeOptions) > 0) { //only show All Grades options if there are more than one options
-            //for all grades option
-            $gradeOptions[-1]['id'] = -1;
-            $gradeOptions[-1]['name'] = '-- ' . __('All Grades') . ' --';
-            $gradeOptions[-1]['order'] = 0;
+        //for all grades / no option
+        $gradeOptions[-1]['name'] = count($gradeOptions) > 0 ? '-- ' . __('All Grades') . ' --' : '-- ' . __('No Options') . ' --';
+        $gradeOptions[-1]['id'] = -1;
+        $gradeOptions[-1]['order'] = 0;
 
-            $params['grade'] = -1;
-            $params['status'] = $extra['selectedStatus']; //maintain current status selection
-            $params['gender'] = $extra['selectedGender'];
-            $url = $this->setQueryString($baseUrl, $params);
+        $params['grade'] = -1;
+        $params['status'] = $extra['selectedStatus']; //maintain current status selection
+        $params['gender'] = $extra['selectedGender'];
+        $url = $this->setQueryString($baseUrl, $params);
 
-            $gradeOptions[-1]['url'] = $url;
+        $gradeOptions[-1]['url'] = $url;
 
-            //order array by 'order' key
-            uasort($gradeOptions, function ($a, $b) {
-                return $a['order']-$b['order'];
-            });
-        }
+        //order array by 'order' key
+        uasort($gradeOptions, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
 
-        if (count($statusOptions) > 0) { //only show All Statuses options if there are more than one options
-            //for all statuses option
-            $statusOptions[-1]['id'] = -1;
-            $statusOptions[-1]['name'] = '-- ' . __('All Statuses') . ' --';
-            $statusOptions[-1]['order'] = 0;
+        //for all statuses option
+        $statusOptions[-1]['name'] = count($statusOptions) > 0 ? '-- ' . __('All Statuses') . ' --' : '-- ' . __('No Options') . ' --';
+        $statusOptions[-1]['id'] = -1;
+        $statusOptions[-1]['order'] = 0;
 
-            $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
-            $params['status'] = -1;
-            $params['gender'] = $extra['selectedGender'];
-            $url = $this->setQueryString($baseUrl, $params);
+        $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+        $params['status'] = -1;
+        $params['gender'] = $extra['selectedGender'];
+        $url = $this->setQueryString($baseUrl, $params);
 
-            $statusOptions[-1]['url'] = $url;
+        $statusOptions[-1]['url'] = $url;
 
-            //order array by 'order' key
-            uasort($statusOptions, function ($a, $b) {
-                return $a['order']-$b['order'];
-            });
-        }
+        //order array by 'order' key
+        uasort($statusOptions, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
+        
+        //for all gender option
+        $genderOptions[-1]['name'] = count($genderOptions) > 0 ? '-- ' . __('All Genders') . ' --' : '-- ' . __('No Options') . ' --';
+        $genderOptions[-1]['id'] = -1;
+        $genderOptions[-1]['order'] = 0;
 
-        if (count($genderOptions) > 0) { //only show All Genders options if there are more than one options
-            //for all gender option
-            $genderOptions[-1]['id'] = -1;
-            $genderOptions[-1]['name'] = '-- ' . __('All Genders') . ' --';
-            $genderOptions[-1]['order'] = 0;
+        $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+        $params['status'] = $extra['selectedStatus'];
+        $params['gender'] = -1;
+        $url = $this->setQueryString($baseUrl, $params);
 
-            $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
-            $params['status'] = $extra['selectedStatus'];
-            $params['gender'] = -1;
-            $url = $this->setQueryString($baseUrl, $params);
+        $genderOptions[-1]['url'] = $url;
 
-            $genderOptions[-1]['url'] = $url;
-
-            //order array by 'order' key
-            uasort($genderOptions, function ($a, $b) {
-                return $a['order']-$b['order'];
-            });
-        }
+        //order array by 'order' key
+        uasort($genderOptions, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
 
         //set option and selected filter value
         $this->fields['students']['data']['filter']['education_grades']['options'] = $gradeOptions;
