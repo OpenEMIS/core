@@ -557,6 +557,7 @@ class UsersTable extends AppTable
                         'provider' => 'table',
                     ]
                 ])
+            ->requirePresence('username', 'create')
             ->add('username', [
                 'ruleMinLength' => [
                     'rule' => ['minLength', 6]
@@ -570,7 +571,7 @@ class UsersTable extends AppTable
                     'provider' => 'table',
                 ]
             ])
-            ->allowEmpty('username')
+            ->allowEmpty('username', 'update')
             ->allowEmpty('password')
             // password validation now in behavior
             ->allowEmpty('photo_content')
@@ -614,7 +615,8 @@ class UsersTable extends AppTable
                     'provider' => 'table',
                 ]
             ])
-            ->allowEmpty('username')
+            ->requirePresence('username', 'create')
+            ->allowEmpty('username', 'update')
             // password validation now in behavior
             ->allowEmpty('password')
             ->allowEmpty('photo_content')
