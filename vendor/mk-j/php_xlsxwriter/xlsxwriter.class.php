@@ -2,6 +2,7 @@
 /*
  * @license MIT License
  * */
+
 class XLSXWriter
 {
 	//http://www.ecma-international.org/publications/standards/Ecma-376.htm
@@ -16,7 +17,9 @@ class XLSXWriter
 	protected $temp_files = array();
 	protected $cell_styles = array();
 	protected $number_formats = array();
+
 	protected $current_sheet = '';
+
 	public function __construct()
 	{
 		if(!ini_get('date.timezone'))
@@ -29,8 +32,10 @@ class XLSXWriter
 		$this->addCellStyle($number_format='GENERAL', $style_string=null);
 		$this->addCellStyle($number_format='GENERAL', $style_string=null);
 	}
+
 	public function setAuthor($author='') { $this->author=$author; }
 	public function setTempDir($tempdir='') { $this->tempdir=$tempdir; }
+
 	public function __destruct()
 	{
 		if (!empty($this->temp_files)) {
@@ -39,6 +44,7 @@ class XLSXWriter
 			}
 		}
 	}
+
 	protected function tempFilename()
 	{
 		$tempdir = !empty($this->tempdir) ? $this->tempdir : sys_get_temp_dir();
@@ -46,12 +52,14 @@ class XLSXWriter
 		$this->temp_files[] = $filename;
 		return $filename;
 	}
+
 	public function writeToStdOut()
 	{
 		$temp_file = $this->tempFilename();
 		self::writeToFile($temp_file);
 		readfile($temp_file);
 	}
+
 	public function writeToString()
 	{
 		$temp_file = $this->tempFilename();
@@ -59,11 +67,13 @@ class XLSXWriter
 		$string = file_get_contents($temp_file);
 		return $string;
 	}
+
 	public function writeToFile($filename)
 	{
 		foreach($this->sheets as $sheet_name => $sheet) {
 			self::finalizeSheet($sheet_name);//making sure all footers have been written
 		}
+
 		if ( file_exists( $filename ) ) {
 			if ( is_writable( $filename ) ) {
 				@unlink( $filename ); //if the zip already exists, remove it
@@ -75,11 +85,14 @@ class XLSXWriter
 		$zip = new ZipArchive();
 		if (empty($this->sheets))                       { self::log("Error in ".__CLASS__."::".__FUNCTION__.", no worksheets defined."); return; }
 		if (!$zip->open($filename, ZipArchive::CREATE)) { self::log("Error in ".__CLASS__."::".__FUNCTION__.", unable to create zip."); return; }
+
 		$zip->addEmptyDir("docProps/");
 		$zip->addFromString("docProps/app.xml" , self::buildAppXML() );
 		$zip->addFromString("docProps/core.xml", self::buildCoreXML());
+
 		$zip->addEmptyDir("_rels/");
 		$zip->addFromString("_rels/.rels", self::buildRelationshipsXML());
+
 		$zip->addEmptyDir("xl/worksheets/");
 		foreach($this->sheets as $sheet) {
 			$zip->addFile($sheet->filename, "xl/worksheets/".$sheet->xmlname );
@@ -87,15 +100,18 @@ class XLSXWriter
 		$zip->addFromString("xl/workbook.xml"         , self::buildWorkbookXML() );
 		$zip->addFile($this->writeStylesXML(), "xl/styles.xml" );  //$zip->addFromString("xl/styles.xml"           , self::buildStylesXML() );
 		$zip->addFromString("[Content_Types].xml"     , self::buildContentTypesXML() );
+
 		$zip->addEmptyDir("xl/_rels/");
 		$zip->addFromString("xl/_rels/workbook.xml.rels", self::buildWorkbookRelsXML() );
 		$zip->close();
 	}
+
 	protected function initializeSheet($sheet_name, $col_widths=array() )
 	{
 		//if already initialized
 		if ($this->current_sheet==$sheet_name || isset($this->sheets[$sheet_name]))
 			return;
+
 		$sheet_filename = $this->tempFilename();
 		$sheet_xmlname = 'sheet' . (count($this->sheets) + 1).".xml";
 		$this->sheets[$sheet_name] = (object)array(
@@ -138,6 +154,7 @@ class XLSXWriter
 		$sheet->file_writer->write(  '</cols>');
 		$sheet->file_writer->write(  '<sheetData>');
 	}
+
 	private function addCellStyle($number_format, $cell_style_string)
 	{
 		$number_format_idx = self::add_to_list_get_index($this->number_formats, $number_format);
@@ -145,6 +162,7 @@ class XLSXWriter
 		$cell_style_idx = self::add_to_list_get_index($this->cell_styles, $lookup_string);
 		return $cell_style_idx;
 	}
+
 	private function initializeColumnTypes($header_types)
 	{
 		$column_types = array();
@@ -160,17 +178,20 @@ class XLSXWriter
 		}
 		return $column_types;
 	}
+
 	public function writeSheetHeader($sheet_name, array $header_types, $col_options = null)
 	{
 		if (empty($sheet_name) || empty($header_types) || !empty($this->sheets[$sheet_name]))
 			return;
-		$suppress_row = isset($col_options['suppress_row']) ? boolval($col_options['suppress_row']) : false;
+
+		$suppress_row = isset($col_options['suppress_row']) ? intval($col_options['suppress_row']) : false;
 		if (is_bool($col_options))
 		{
 			self::log( "Warning! passing $suppress_row=false|true to writeSheetHeader() is deprecated, this will be removed in a future version." );
-			$suppress_row = boolval($col_options);
+			$suppress_row = intval($col_options);
 		}
     $style = &$col_options;
+
 		$col_widths = isset($col_options['widths']) ? (array)$col_options['widths'] : array();
 		self::initializeSheet($sheet_name, $col_widths);
 		$sheet = &$this->sheets[$sheet_name];
@@ -178,6 +199,7 @@ class XLSXWriter
 		if (!$suppress_row)
 		{
 			$header_row = array_keys($header_types);      
+
 			$sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . (1) . '">');
 			foreach ($header_row as $c => $v) {
 				$cell_style_idx = empty($style) ? $sheet->columns[$c]['default_cell_style'] : $this->addCellStyle( 'GENERAL', json_encode(isset($style[0]) ? $style[$c] : $style) );
@@ -188,10 +210,12 @@ class XLSXWriter
 		}
 		$this->current_sheet = $sheet_name;
 	}
+
 	public function writeSheetRow($sheet_name, array $row, $row_options=null)
 	{
 		if (empty($sheet_name))
 			return;
+
 		self::initializeSheet($sheet_name);
 		$sheet = &$this->sheets[$sheet_name];
 		if (count($sheet->columns) < count($row)) {
@@ -211,6 +235,7 @@ class XLSXWriter
 		{
 			$sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . ($sheet->row_count + 1) . '">');
 		}
+
 		$style = &$row_options;
 		$c=0;
 		foreach ($row as $v) {
@@ -224,17 +249,22 @@ class XLSXWriter
 		$sheet->row_count++;
 		$this->current_sheet = $sheet_name;
 	}
+
 	public function countSheetRows($sheet_name = '')
 	{
 		$sheet_name = $sheet_name ?: $this->current_sheet;
 		return array_key_exists($sheet_name, $this->sheets) ? $this->sheets[$sheet_name]->row_count : 0;
 	}
+
 	protected function finalizeSheet($sheet_name)
 	{
 		if (empty($sheet_name) || $this->sheets[$sheet_name]->finalized)
 			return;
+
 		$sheet = &$this->sheets[$sheet_name];
+
 		$sheet->file_writer->write(    '</sheetData>');
+
 		if (!empty($sheet->merge_cells)) {
 			$sheet->file_writer->write(    '<mergeCells>');
 			foreach ($sheet->merge_cells as $range) {
@@ -242,6 +272,7 @@ class XLSXWriter
 			}
 			$sheet->file_writer->write(    '</mergeCells>');
 		}
+
 		$sheet->file_writer->write(    '<printOptions headings="false" gridLines="false" gridLinesSet="true" horizontalCentered="false" verticalCentered="false"/>');
 		$sheet->file_writer->write(    '<pageMargins left="0.5" right="0.5" top="1.0" bottom="1.0" header="0.5" footer="0.5"/>');
 		$sheet->file_writer->write(    '<pageSetup blackAndWhite="false" cellComments="none" copies="1" draft="false" firstPageNumber="1" fitToHeight="1" fitToWidth="1" horizontalDpi="300" orientation="portrait" pageOrder="downThenOver" paperSize="1" scale="100" useFirstPageNumber="true" usePrinterDefaults="false" verticalDpi="300"/>');
@@ -250,6 +281,7 @@ class XLSXWriter
 		$sheet->file_writer->write(        '<oddFooter>&amp;C&amp;&quot;Times New Roman,Regular&quot;&amp;12Page &amp;P</oddFooter>');
 		$sheet->file_writer->write(    '</headerFooter>');
 		$sheet->file_writer->write('</worksheet>');
+
 		$max_cell = self::xlsCell($sheet->row_count - 1, count($sheet->columns) - 1);
 		$max_cell_tag = '<dimension ref="A1:' . $max_cell . '"/>';
 		$padding_length = $sheet->max_cell_tag_end - $sheet->max_cell_tag_start - strlen($max_cell_tag);
@@ -258,16 +290,20 @@ class XLSXWriter
 		$sheet->file_writer->close();
 		$sheet->finalized=true;
 	}
+
 	public function markMergedCell($sheet_name, $start_cell_row, $start_cell_column, $end_cell_row, $end_cell_column)
 	{
 		if (empty($sheet_name) || $this->sheets[$sheet_name]->finalized)
 			return;
+
 		self::initializeSheet($sheet_name);
 		$sheet = &$this->sheets[$sheet_name];
+
 		$startCell = self::xlsCell($start_cell_row, $start_cell_column);
 		$endCell = self::xlsCell($end_cell_row, $end_cell_column);
 		$sheet->merge_cells[] = $startCell . ":" . $endCell;
 	}
+
 	public function writeSheet(array $data, $sheet_name='', array $header_types=array())
 	{
 		$sheet_name = empty($sheet_name) ? 'Sheet1' : $sheet_name;
@@ -282,9 +318,11 @@ class XLSXWriter
 		}
 		$this->finalizeSheet($sheet_name);
 	}
+
 	protected function writeCell(XLSXWriter_BuffererWriter &$file, $row_number, $column_number, $value, $num_format_type, $cell_style_idx)
 	{
 		$cell_name = self::xlsCell($row_number, $column_number);
+
 		if (!is_scalar($value) || $value==='') { //objects, array, empty
 			$file->write('<c r="'.$cell_name.'" s="'.$cell_style_idx.'"/>');
 		} elseif (is_string($value) && $value{0}=='='){
@@ -305,6 +343,7 @@ class XLSXWriter
 			}
 		}
 	}
+
 	protected function styleFontIndexes()
 	{
 		static $border_allowed = array('left','right','top','bottom');
@@ -321,6 +360,7 @@ class XLSXWriter
 			$number_format_idx = substr($cell_style_string, 0, $semi_colon_pos);
 			$style_json_string = substr($cell_style_string, $semi_colon_pos+1);
 			$style = @json_decode($style_json_string, $as_assoc=true);
+
 			$style_indexes[$i] = array('num_fmt_idx'=>$number_format_idx);//initialize entry
 			if (isset($style['border']) && is_string($style['border']))
 			{
@@ -350,6 +390,7 @@ class XLSXWriter
 				$style_indexes[$i]['alignment'] = true;
 				$style_indexes[$i]['wrap_text'] = $style['wrap_text'];
 			}
+
 			$font = $default_font;
 			if (isset($style['font-size']))
 			{
@@ -382,6 +423,7 @@ class XLSXWriter
 		}
 		return array('fills'=>$fills,'fonts'=>$fonts,'borders'=>$borders,'styles'=>$style_indexes );
 	}
+
 	protected function writeStylesXML()
 	{
 		$r = self::styleFontIndexes();
@@ -389,6 +431,7 @@ class XLSXWriter
 		$fonts = $r['fonts'];
 		$borders = $r['borders'];
 		$style_indexes = $r['styles'];
+
 		$temporary_filename = $this->tempFilename();
 		$file = new XLSXWriter_BuffererWriter($temporary_filename);
 		$file->write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'."\n");
@@ -402,11 +445,13 @@ class XLSXWriter
 		//$file->write(		'<numFmt formatCode="YYYY-MM-DD\ HH:MM:SS" numFmtId="166"/>');
 		//$file->write(		'<numFmt formatCode="YYYY-MM-DD" numFmtId="167"/>');
 		$file->write('</numFmts>');
+
 		$file->write('<fonts count="'.(count($fonts)).'">');
 		$file->write(		'<font><name val="Arial"/><charset val="1"/><family val="2"/><sz val="10"/></font>');
 		$file->write(		'<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
 		$file->write(		'<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
 		$file->write(		'<font><name val="Arial"/><family val="0"/><sz val="10"/></font>');
+
 		foreach($fonts as $font) {
 			if (!empty($font)) { //fonts have 4 empty placeholders in array to offset the 4 static xml entries above
 				$f = json_decode($font,true);
@@ -422,6 +467,7 @@ class XLSXWriter
 			}
 		}
 		$file->write('</fonts>');
+
 		$file->write('<fills count="'.(count($fills)).'">');
 		$file->write(	'<fill><patternFill patternType="none"/></fill>');
 		$file->write(	'<fill><patternFill patternType="gray125"/></fill>');
@@ -431,6 +477,7 @@ class XLSXWriter
 			}
 		}
 		$file->write('</fills>');
+
 		$file->write('<borders count="'.(count($borders)).'">');
         $file->write(    '<border diagonalDown="false" diagonalUp="false"><left/><right/><top/><bottom/><diagonal/></border>');
 		foreach($borders as $border) {
@@ -446,6 +493,7 @@ class XLSXWriter
 			}
 		}
 		$file->write('</borders>');
+
 		$file->write('<cellStyleXfs count="20">');
 		$file->write(		'<xf applyAlignment="true" applyBorder="true" applyFont="true" applyProtection="true" borderId="0" fillId="0" fontId="0" numFmtId="164">');
 		$file->write(		'<alignment horizontal="general" indent="0" shrinkToFit="false" textRotation="0" vertical="bottom" wrapText="false"/>');
@@ -471,6 +519,7 @@ class XLSXWriter
 		$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="42"/>');
 		$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="true" applyProtection="false" borderId="0" fillId="0" fontId="1" numFmtId="9"/>');
 		$file->write('</cellStyleXfs>');
+
 		$file->write('<cellXfs count="'.(count($style_indexes)).'">');
 		//$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="164" xfId="0"/>');
 		//$file->write(		'<xf applyAlignment="false" applyBorder="false" applyFont="false" applyProtection="false" borderId="0" fillId="0" fontId="0" numFmtId="165" xfId="0"/>');
@@ -481,7 +530,7 @@ class XLSXWriter
 			$applyAlignment = isset($v['alignment']) ? 'true' : 'false';
 			$wrapText = isset($v['wrap_text']) ? boolval($v['wrap_text']) : 'false';
 			$horizAlignment = isset($v['halign']) ? $v['halign'] : 'general';
-			$vertAlignment = isset($v['valign']) ? $v['valign'] : 'top';
+			$vertAlignment = isset($v['valign']) ? $v['valign'] : 'bottom';
 			$applyBorder = isset($v['border_idx']) ? 'true' : 'false';
 			$applyFont = 'true';
 			$borderIdx = isset($v['border_idx']) ? intval($v['border_idx']) : 0;
@@ -506,6 +555,7 @@ class XLSXWriter
 		$file->close();
 		return $temporary_filename;
 	}
+
 	protected function buildAppXML()
 	{
 		$app_xml="";
@@ -513,6 +563,7 @@ class XLSXWriter
 		$app_xml.='<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><TotalTime>0</TotalTime></Properties>';
 		return $app_xml;
 	}
+
 	protected function buildCoreXML()
 	{
 		$core_xml="";
@@ -524,6 +575,7 @@ class XLSXWriter
 		$core_xml.='</cp:coreProperties>';
 		return $core_xml;
 	}
+
 	protected function buildRelationshipsXML()
 	{
 		$rels_xml="";
@@ -536,6 +588,7 @@ class XLSXWriter
 		$rels_xml.='</Relationships>';
 		return $rels_xml;
 	}
+
 	protected function buildWorkbookXML()
 	{
 		$i=0;
@@ -554,6 +607,7 @@ class XLSXWriter
 		$workbook_xml.='<calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/></workbook>';
 		return $workbook_xml;
 	}
+
 	protected function buildWorkbookRelsXML()
 	{
 		$i=0;
@@ -569,6 +623,7 @@ class XLSXWriter
 		$wkbkrels_xml.='</Relationships>';
 		return $wkbkrels_xml;
 	}
+
 	protected function buildContentTypesXML()
 	{
 		$content_types_xml="";
@@ -587,6 +642,7 @@ class XLSXWriter
 		$content_types_xml.='</Types>';
 		return $content_types_xml;
 	}
+
 	//------------------------------------------------------------------
 	/*
 	 * @param $row_number int, zero based
@@ -661,6 +717,7 @@ class XLSXWriter
 	{
 		if ($num_format=='money') { $num_format='dollar'; }
 		if ($num_format=='number') { $num_format='integer'; }
+
 		if      ($num_format=='string')   $num_format='@';
 		else if ($num_format=='integer')  $num_format='0';
 		else if ($num_format=='date')     $num_format='YYYY-MM-DD';
@@ -704,6 +761,7 @@ class XLSXWriter
 		$seconds = 0;    # Time expressed as fraction of 24h hours in seconds
 		$year=$month=$day=0;
 		$hour=$min  =$sec=0;
+
 		$date_time = $date_input;
 		if (preg_match("/(\d{4})\-(\d{2})\-(\d{2})/", $date_time, $matches))
 		{
@@ -714,11 +772,14 @@ class XLSXWriter
 			list($junk,$hour,$min,$sec) = $matches;
 			$seconds = ( $hour * 60 * 60 + $min * 60 + $sec ) / ( 24 * 60 * 60 );
 		}
+
 		//using 1900 as epoch, not 1904, ignoring 1904 special case
+
 		# Special cases for Excel.
 		if ("$year-$month-$day"=='1899-12-31')  return $seconds      ;    # Excel 1900 epoch
 		if ("$year-$month-$day"=='1900-01-00')  return $seconds      ;    # Excel 1900 epoch
 		if ("$year-$month-$day"=='1900-02-29')  return 60 + $seconds ;    # Excel false leapday
+
 		# We calculate the date by calculating the number of days since the epoch
 		# and adjust for the number of leap days. We calculate the number of leap
 		# days by normalising the year in relation to the epoch. Thus the year 2000
@@ -727,13 +788,16 @@ class XLSXWriter
 		$offset = 0;
 		$norm   = 300;
 		$range  = $year - $epoch;
+
 		# Set month days and check for leap year.
 		$leap = (($year % 400 == 0) || (($year % 4 == 0) && ($year % 100)) ) ? 1 : 0;
 		$mdays = array( 31, ($leap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 );
+
 		# Some boundary checks
 		if($year < $epoch || $year > 9999) return 0;
 		if($month < 1     || $month > 12)  return 0;
 		if($day < 1       || $day > $mdays[ $month - 1 ]) return 0;
+
 		# Accumulate the number of days since the epoch.
 		$days = $day;    # Add days for current month
 		$days += array_sum( array_slice($mdays, 0, $month-1 ) );    # Add days for past months
@@ -742,17 +806,21 @@ class XLSXWriter
 		$days -= intval( ( $range + $offset ) / 100 ); # Subtract 100 year leapdays
 		$days += intval( ( $range + $offset + $norm ) / 400 );  # Add 400 year leapdays
 		$days -= $leap;                                      # Already counted above
+
 		# Adjust for Excel erroneously treating 1900 as a leap year.
 		if ($days > 59) { $days++;}
+
 		return $days + $seconds;
 	}
 	//------------------------------------------------------------------
 }
+
 class XLSXWriter_BuffererWriter
 {
 	protected $fd=null;
 	protected $buffer='';
 	protected $check_utf8=false;
+
 	public function __construct($filename, $fd_fopen_flags='w', $check_utf8=false)
 	{
 		$this->check_utf8 = $check_utf8;
@@ -761,6 +829,7 @@ class XLSXWriter_BuffererWriter
 			XLSXWriter::log("Unable to open $filename for writing.");
 		}
 	}
+
 	public function write($string)
 	{
 		$this->buffer.=$string;
@@ -768,6 +837,7 @@ class XLSXWriter_BuffererWriter
 			$this->purge();
 		}
 	}
+
 	protected function purge()
 	{
 		if ($this->fd) {
@@ -779,6 +849,7 @@ class XLSXWriter_BuffererWriter
 			$this->buffer='';
 		}
 	}
+
 	public function close()
 	{
 		$this->purge();
@@ -787,10 +858,12 @@ class XLSXWriter_BuffererWriter
 			$this->fd=null;
 		}
 	}
+
 	public function __destruct()
 	{
 		$this->close();
 	}
+
 	public function ftell()
 	{
 		if ($this->fd) {
@@ -799,6 +872,7 @@ class XLSXWriter_BuffererWriter
 		}
 		return -1;
 	}
+
 	public function fseek($pos)
 	{
 		if ($this->fd) {
@@ -807,6 +881,7 @@ class XLSXWriter_BuffererWriter
 		}
 		return -1;
 	}
+
 	protected static function isValidUTF8($string)
 	{
 		if (function_exists('mb_check_encoding'))
@@ -816,3 +891,7 @@ class XLSXWriter_BuffererWriter
 		return preg_match("//u", $string) ? true : false;
 	}
 }
+
+
+
+// vim: set filetype=php expandtab tabstop=4 shiftwidth=4 autoindent smartindent:
