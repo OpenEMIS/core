@@ -11,73 +11,67 @@
 		</div>
 
 		<?php 
-			if (!empty($attr['data']['filter']['education_grades']) && !empty($attr['data']['filter']['education_grades']['options'])) { 
-				$gradeOptions = $attr['data']['filter']['education_grades']['options'];
-				$selectedGrade = $attr['data']['filter']['education_grades']['selected'];
+			$gradeOptions = $attr['data']['filter']['education_grades']['options'];
+			$selectedGrade = $attr['data']['filter']['education_grades']['selected'];
 		?>
-				<div class="select">
-					<label><?=__('Education Grade');?>:</label>
-					<div class="input-select-wrapper">
-						<select>
-							<?php foreach ($gradeOptions as $key => $value) { ?>
-								<option 
-									value="<?=$key;?>" 
-									onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
-									<?php if ($selectedGrade == $key) { ?>
-										selected
-									<?php } ?>
-								><?=__($value['name']);?></option>
-							<?php } ?>
-						</select>
-					</div>
+			<div class="select">
+				<label><?=__('Education Grade');?>:</label>
+				<div class="input-select-wrapper">
+					<select>
+						<?php foreach ($gradeOptions as $key => $value) { ?>
+							<option 
+								value="<?=$key;?>" 
+								onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+								<?php if ($selectedGrade == $key) { ?>
+									selected
+								<?php } ?>
+							><?=__($value['name']);?></option>
+						<?php } ?>
+					</select>
 				</div>
-		<?php } ?>
+			</div>
 
 		<?php 
-			if (!empty($attr['data']['filter']['student_status']) && !empty($attr['data']['filter']['student_status']['options'])) { 
-				$statusOptions = $attr['data']['filter']['student_status']['options'];
-				$selectedStatus = $attr['data']['filter']['student_status']['selected'];
+			$statusOptions = $attr['data']['filter']['student_status']['options'];
+			$selectedStatus = $attr['data']['filter']['student_status']['selected'];
 		?>
-				<div class="select">
-					<label><?=__('Student Status');?>:</label>
-					<div class="input-select-wrapper">
-						<select>
-							<?php foreach ($statusOptions as $key => $value) { ?>
-								<option 
-									value="<?=$key;?>" 
-									onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
-									<?php if ($selectedStatus == $key) { ?>
-										selected
-									<?php } ?>
-								><?=__($value['name']);?></option>
-							<?php } ?>
-						</select>
-					</div>
+			<div class="select">
+				<label><?=__('Student Status');?>:</label>
+				<div class="input-select-wrapper">
+					<select>
+						<?php foreach ($statusOptions as $key => $value) { ?>
+							<option 
+								value="<?=$key;?>" 
+								onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+								<?php if ($selectedStatus == $key) { ?>
+									selected
+								<?php } ?>
+							><?=__($value['name']);?></option>
+						<?php } ?>
+					</select>
 				</div>
-		<?php } ?>
+			</div>
 
 		<?php 
-			if (!empty($attr['data']['filter']['genders']) && !empty($attr['data']['filter']['genders']['options'])) { 
-				$genderOptions = $attr['data']['filter']['genders']['options'];
-				$selectedGender = $attr['data']['filter']['genders']['selected'];
+			$genderOptions = $attr['data']['filter']['genders']['options'];
+			$selectedGender = $attr['data']['filter']['genders']['selected'];
 		?>
-				<div class="select">
-					<label><?=__('Gender');?>:</label>
-					<div class="input-select-wrapper">
-						<select>
-							<?php foreach ($genderOptions as $key => $value) { ?>
-								<option 
-									value="<?=$key;?>" 
-									onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
-									<?php if ($selectedGender == $key) { ?>
-										selected
-									<?php } ?>
-								><?=__($value['name']);?></option>
-							<?php } ?>
-						</select>
-					</div>
+			<div class="select">
+				<label><?=__('Gender');?>:</label>
+				<div class="input-select-wrapper">
+					<select>
+						<?php foreach ($genderOptions as $key => $value) { ?>
+							<option 
+								value="<?=$key;?>" 
+								onClick="window.location.href='<?= $this->Url->build($value['url']); ?>'"
+								<?php if ($selectedGender == $key) { ?>
+									selected
+								<?php } ?>
+							><?=__($value['name']);?></option>
+						<?php } ?>
+					</select>
 				</div>
-		<?php } ?>
+			</div>
 	</div>
 
 	<?php if ($action=='edit') :?>
