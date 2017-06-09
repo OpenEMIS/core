@@ -109,7 +109,8 @@ class InstitutionsTable extends AppTable
 		}
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+	{
 		$requestData = json_decode($settings['process']['params']);
 		$feature = $requestData->feature;
 		$filter = $requestData->institution_filter;
