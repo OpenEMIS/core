@@ -106,6 +106,11 @@ class InstitutionsController extends AppController
         // cases
         'InstitutionCases',
 
+        // report card
+        'ReportCardComments',
+        'ReportCardStatuses',
+        'InstitutionStudentsReportCards',
+
         // misc
         // 'IndividualPromotion',
         // 'TransferRequests',
