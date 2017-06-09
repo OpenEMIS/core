@@ -1537,7 +1537,8 @@ trait MessagesTrait
             ],
             'EducationGradesSubjects' => [
                 'hours_required' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                    'ruleIsDecimal' => 'Please enter a valid Decimal value',
+                    'ruleRange' => 'Value must be positive with maximum 2 decimal points and less than 1000'
                 ]
             ],
             'EducationSubjects' => [
