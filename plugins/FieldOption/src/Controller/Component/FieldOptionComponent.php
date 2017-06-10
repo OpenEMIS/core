@@ -115,16 +115,14 @@ class FieldOptionComponent extends Component
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
     ];
 
+    public $components = ['AccessControl'];
+
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config)
     {
-        $this->controller = $this->_registry->getController();
-        $controller = $this->controller->name;
-        $accessMap = [];
         foreach ($this->fieldOptions as $key => $className) {
-            $accessMap["$controller.$key"] = "$controller.%s";
+            $this->AccessControl->addAccessMap($key);
         }
-        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     public function getFieldOptions()

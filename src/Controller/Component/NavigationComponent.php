@@ -182,9 +182,9 @@ class NavigationComponent extends Component
 
         if (!empty($institutionId)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $currentInstitution = $Institutions->get($institutionId);
 
-            if ($currentInstitution) {
+            if ($Institutions->exists([$Institutions->primaryKey() => $institutionId])) {
+                $currentInstitution = $Institutions->get($institutionId);
                 $classification = $currentInstitution->classification;
 
                 if ($classification == $Institutions::NON_ACADEMIC) {
