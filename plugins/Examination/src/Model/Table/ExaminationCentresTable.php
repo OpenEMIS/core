@@ -564,8 +564,20 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
                 }
 
+                // POCOR-3983 Disabled(grey off) INACTIVE institutions
+                $options = [];
+                foreach ($institutionOptions as $key => $institution) {
+                    $options[$key]['value'] = $key;
+                    $options[$key]['text'] = $institution;
+
+                    if (!$this->Institutions->isActive($key)) {
+                        $options[$key][0] = 'disabled';
+                    }
+                }
+                // End POCOR-3983
+
                 $attr['type'] = 'chosenSelect';
-                $attr['options'] = $institutionOptions->toArray();
+                $attr['options'] = $options;
                 $attr['fieldName'] = $this->alias().'.institutions';
             }
 

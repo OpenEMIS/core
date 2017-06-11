@@ -31,6 +31,7 @@ class InstitutionsController extends AppController
         'InstitutionTextbooks',
 
         // students
+        'Programmes',
         'Students',
         'StudentUser',
         'StudentAccount',
@@ -421,7 +422,19 @@ class InstitutionsController extends AppController
 
     public function Comments()
     {
-        $this->set('_edit', $this->AccessControl->check(['Institutions', 'Comments', 'edit']));
+        // POCOR-3983 check institution status
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        if ($isActive) {
+            $_edit = $this->AccessControl->check(['Institutions', 'Comments', 'edit']);
+        } else {
+            $_edit = false;
+        }
+        // end POCOR-3983
+
+        $this->set('_edit', $_edit);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
     // End
