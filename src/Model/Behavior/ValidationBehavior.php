@@ -2189,7 +2189,6 @@ class ValidationBehavior extends Behavior
             $institutionId = $data['id'];
             $dateClosed = new Date($field);
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $academicPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($dateClosed);
 
             // fixed workflow
             $models = [
@@ -2204,7 +2203,7 @@ class ValidationBehavior extends Behavior
                 $subject = TableRegistry::get($model);
                 $method = 'getPendingRecords';
                 if (method_exists($subject, $method)) {
-                    $count = $subject->$method($institutionId, $academicPeriodId);
+                    $count = $subject->$method($institutionId);
 
                     if ($count > 0) {
                         return false;
