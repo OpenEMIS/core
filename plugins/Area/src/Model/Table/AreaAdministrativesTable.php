@@ -79,10 +79,49 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
-        $authorisedAreaIds = json_decode($this->urlsafeB64Decode($options['authorisedAreaIds']), true);
+        $authorisedAreaIds = [];
+        $worldId = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([$this->aliasField('parent_id').' IS NULL'])
+                ->first();
         if (isset($options['displayCountry']) && !$options['displayCountry']) {
-            $query = $query->where([$this->aliasField('is_main_country') => true]);
+            $authorisedAreaIds = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([
+                    $this->aliasField('is_main_country') => true,
+                    $this->aliasField('parent_id') => $worldId->id
+                ])
+                ->hydrate(false)
+                ->toArray();
+
+            $removeAreas = $authorisedAreaIds = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([
+                    $this->aliasField('is_main_country') => false,
+                    $this->aliasField('parent_id') => $worldId->id
+                ])
+                ->hydrate(false)
+                ->toArray();
+            $removeAreas = array_column($removeAreas, 'id');
+
+            if (!empty($removeAreas)) {
+                $query->where([$this->aliasField('id').' NOT IN ' => $removeAreas]);
+            }
+        } else {
+            $authorisedAreaIds = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([
+                    $this->aliasField('parent_id') => $worldId->id
+                ])
+                ->hydrate(false)
+                ->toArray();
         }
+
+        $authorisedAreaIds = array_column($authorisedAreaIds, 'id');
 
         return $query
             ->find('threaded', [
