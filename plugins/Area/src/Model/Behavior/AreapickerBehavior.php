@@ -83,8 +83,13 @@ class AreapickerBehavior extends Behavior
 
             $areaOptions = $areaOptions->toArray();
 
-            $authorisedArea = array_keys($areaOptions);
-            $attr['authorisedArea'] = $authorisedArea;
+            if ($targetModel == 'Area.Areas') {
+                $authorisedArea = array_keys($areaOptions);
+                $attr['authorisedArea'] = $authorisedArea;
+            } else {
+                $attr['authorisedArea'] = [];
+            }
+
 
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
