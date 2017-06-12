@@ -149,6 +149,13 @@ class AppController extends Controller
         if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
+
+        $this->Angular->addModules([
+            'multi-select-tree',
+            'kd-angular-tree-dropdown',
+            'sg.tree.ctrl',
+            'sg.tree.svc'
+        ]);
     }
 
     // Triggered from LocalizationComponent

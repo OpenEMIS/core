@@ -85,7 +85,6 @@ class InstitutionsController extends AppController
 
     public function Institutions()
     {
-
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Institutions']);
     }
 
@@ -703,21 +702,7 @@ class InstitutionsController extends AppController
     private function attachAngularModules()
     {
         $action = $this->request->action;
-
         switch ($action) {
-            case 'Institutions':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'add' || $this->request->param('pass')[0] == 'edit') {
-                        $this->Angular->addModules([
-                            'multi-select-tree',
-                            // 'tree-item',
-                            'kd-angular-tree-dropdown',
-                            'sg.tree.ctrl',
-                            'sg.tree.svc'
-                        ]);
-                    }
-                }
-                break;
             case 'Results':
                 $this->Angular->addModules([
                     'alert.svc',
