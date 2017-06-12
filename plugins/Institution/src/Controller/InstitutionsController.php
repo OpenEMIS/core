@@ -1144,7 +1144,7 @@ class InstitutionsController extends AppController
                 'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
             ];
 
-            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
 
             //Students By Year, excludes transferred and withdrawn students
             $params = [

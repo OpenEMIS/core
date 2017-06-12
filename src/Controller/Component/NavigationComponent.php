@@ -901,7 +901,7 @@ class NavigationComponent extends Component
                     'title' => 'Education Structure',
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Education'],
-                    'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
+                    'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Stages', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
                             'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
                 ],
                 'FieldOptions.index' => [
@@ -1058,7 +1058,7 @@ class NavigationComponent extends Component
                     'title' => 'Sessions',
                     'parent' => 'Administration.Training',
                     'params' => ['plugin' => 'Training'],
-                    'selected' => ['Trainings.Sessions', 'Trainings.Applications']
+                    'selected' => ['Trainings.Sessions', 'Trainings.Applications', 'Trainings.ImportTrainees']
                 ],
 
                 'Trainings.Results' => [
