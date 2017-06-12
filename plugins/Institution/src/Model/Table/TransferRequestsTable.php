@@ -501,6 +501,7 @@ class TransferRequestsTable extends ControllerActionTable
         $today = Date::now();
         if ($action == 'add') {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
             $institutionId = $this->Session->read('Institution.Institutions.id');
 
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -536,6 +537,7 @@ class TransferRequestsTable extends ControllerActionTable
                         ]
                     ]
                 ])
+                ->where([$this->Institutions->aliasField('institution_status_id') => $InstitutionStatuses->getIdByCode('ACTIVE')])
                 ->order([$this->Institutions->aliasField('code')]);
 
                 if (!empty($request->data[$this->alias()]['area_id'])) {
