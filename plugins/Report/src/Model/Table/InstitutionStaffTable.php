@@ -63,6 +63,7 @@ class InstitutionStaffTable extends AppTable  {
 		->contain([
 			'Users.Genders',
 			'Institutions.Areas',
+			'Institutions.AreaAdministratives',
 			'Positions.StaffPositionTitles',
 			'Institutions.Types'
         ])
@@ -76,6 +77,8 @@ class InstitutionStaffTable extends AppTable  {
 			'gender' => 'Genders.name',
 			'area_name' => 'Areas.name',
 			'area_code' => 'Areas.code',
+			'area_administrative_code' => 'AreaAdministratives.code',
+			'area_administrative_name' => 'AreaAdministratives.name',
 			'position_title_teaching' => 'StaffPositionTitles.type',
 			'institution_type' => 'Types.name'
 		]);
@@ -205,18 +208,32 @@ class InstitutionStaffTable extends AppTable  {
 		];
 
 		$newFields[] = [
-			'key' => 'Institutions.area_name',
+			'key' => 'Institutions.area',
 			'field' => 'area_name',
 			'type' => 'string',
-			'label' => ''
+			'label' => __('Area')
 		];
 
 		$newFields[] = [
 			'key' => 'Institutions.area_code',
 			'field' => 'area_code',
 			'type' => 'string',
-			'label' => ''
+			'label' => __('Area Code')
 		];
+
+		$newFields[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
+        ];
 
 		$newFields[] = [
 			'key' => 'Staff.FTE',
