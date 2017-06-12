@@ -22,6 +22,102 @@ class InstitutionsController extends AppController
     use UtilityTrait;
     public $activeObj = null;
 
+    private $features = [
+        // academic
+        'InstitutionShifts',
+        'InstitutionGrades',
+        'InstitutionClasses',
+        'InstitutionSubjects',
+        'InstitutionTextbooks',
+
+        // students
+        'Programmes',
+        'Students',
+        'StudentUser',
+        'StudentAccount',
+        // 'Textbooks',
+        // 'StudentIndexes',
+
+
+        // staff
+        'Staff',
+        'StaffUser',
+        'StaffAccount',
+        'StaffLeave',
+        'StaffAppraisals',
+        'StaffTrainingNeeds',
+        'StaffTrainingApplications',
+        'StaffTrainingResults',
+        // 'StaffTransferRequests',
+        // 'StaffTransferApprovals',
+        // 'StaffPositionProfiles',
+
+        // attendances
+        'StaffAbsences',
+        'StaffAttendances',
+        'InstitutionStudentAbsences',
+        'StudentAttendances',
+
+        // behaviours
+        'StaffBehaviours',
+        'StudentBehaviours',
+
+        // competencies
+        'StudentCompetencies',
+        'StudentCompetencyResults',
+
+        // assessments
+        'Results',
+        'AssessmentResults',
+        // 'InstitutionAssessments',
+
+        // indexes
+        // 'Indexes',
+        // 'InstitutionStudentIndexes',
+
+        // examinations
+        'ExaminationResults',
+        'InstitutionExaminations',
+        'InstitutionExaminationsUndoRegistration',
+        'InstitutionExaminationStudents',
+
+        // positions
+        'InstitutionPositions',
+
+        // finance
+        'InstitutionBankAccounts',
+        'InstitutionFees',
+        'StudentFees',
+
+        // infrastructures
+        'InstitutionLands',
+        'InstitutionBuildings',
+        'InstitutionFloors',
+        'InstitutionRooms',
+
+        // survey
+        'InstitutionSurveys',
+        'InstitutionRubrics',
+        'InstitutionRubricAnswers',
+
+        // visits
+        'VisitRequests',
+        'InstitutionQualityVisits',
+
+        // cases
+        'InstitutionCases',
+
+        // report card
+        'ReportCardComments',
+        'ReportCardStatuses',
+        'InstitutionStudentsReportCards',
+
+        // misc
+        // 'IndividualPromotion',
+        // 'TransferRequests',
+        // 'CourseCatalogue',
+    ];
+
     public function initialize()
     {
         // Start: remove this logic after upgrading to v3.4.x
@@ -289,7 +385,18 @@ class InstitutionsController extends AppController
         }
 
         $this->set('_roles', $roles);
-        $this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles));
+
+        // POCOR-3983 check institution status
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        if ($isActive) {
+            $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+        } else {
+            $_edit = false;
+        }
+        // end POCOR-3983
+
+        $this->set('_edit', $_edit);
         $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
         $url = $this->ControllerAction->url('index');
         $url['plugin'] = 'Institution';
@@ -315,7 +422,19 @@ class InstitutionsController extends AppController
 
     public function Comments()
     {
-        $this->set('_edit', $this->AccessControl->check(['Institutions', 'Comments', 'edit']));
+        // POCOR-3983 check institution status
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        if ($isActive) {
+            $_edit = $this->AccessControl->check(['Institutions', 'Comments', 'edit']);
+        } else {
+            $_edit = false;
+        }
+        // end POCOR-3983
+
+        $this->set('_edit', $_edit);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
     // End
@@ -838,6 +957,9 @@ class InstitutionsController extends AppController
             if ($action) {
                 $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
             }
+
+            // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
+            $this->getStatusPermission($model);
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
@@ -1362,5 +1484,32 @@ class InstitutionsController extends AppController
         }
 
         echo json_encode($options);
+    }
+
+    public function getStatusPermission($model)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $isActive = $this->Institutions->isActive($institutionId);
+
+        // institution status is INACTIVE
+        if (!$isActive) {
+            if (in_array($model->alias(), $this->features)) { // check the feature list
+                // off the import action
+                if ($model->behaviors()->has('ImportLink')) {
+                    $model->removeBehavior('ImportLink');
+                }
+
+                if ($model instanceof \App\Model\Table\ControllerActionTable) {
+                    // CAv4 off the add/edit/remove action
+                    $model->toggle('add', false);
+                    $model->toggle('edit', false);
+                    $model->toggle('remove', false);
+                } else if ($model instanceof \App\Model\Table\AppTable) {
+                    // CAv3 hide button and redirect when user change the Url
+                    $model->addBehavior('ControllerAction.HideButton');
+                }
+            }
+        }
     }
 }

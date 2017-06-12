@@ -670,4 +670,18 @@ class TransferApprovalsTable extends AppTable
 
         return $query;
     }
+
+    public function getPendingRecords($institutionId = null)
+    {
+        $count = $this
+            ->find()
+            ->where([
+                $this->aliasField('status') => self::NEW_REQUEST,
+                $this->aliasField('institution_id') => $institutionId,
+            ])
+            ->count()
+        ;
+
+        return $count;
+    }
 }
