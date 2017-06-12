@@ -19,7 +19,7 @@
 	$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
 	echo $this->Form->unlockField($fieldName);
 	?>
-	<div class="tree-form <?= isset($attr['class']) ? $attr['class'] : '' ?> <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>" ng-controller="SgTreeCtrl as SgTree" ng-init="SgTree.model='<?= $attr['source_model'] ?>'; SgTree.outputValue=<?= $attr['value']?>; SgTree.authorisedArea='<?= json_encode($attr['authorisedArea']) ?>'; SgTree.displayCountry=<?= isset($attr['displayCountry']) && $attr['displayCountry'] ? 1 : 0 ?>;	">
+	<div class="tree-form <?= isset($attr['class']) ? $attr['class'] : '' ?> <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>" ng-controller="SgTreeCtrl as SgTree" ng-init="SgTree.model='<?= $attr['source_model'] ?>'; <?= !is_null($attr['value']) ? 'SgTree.outputValue='.$attr['value'] : 'SgTree.outputValue=null'?>; SgTree.authorisedArea='<?= json_encode($attr['authorisedArea']) ?>'; SgTree.displayCountry=<?= isset($attr['displayCountry']) && $attr['displayCountry'] ? 1 : 0 ?>;">
 		<kd-tree-dropdown-ng id="<?=$attr['field'] ?>-tree" input-model="SgTree.inputModelText" output-model="outputModelText" model-type="single"></kd-tree-dropdown-ng>
 		<?php
 
