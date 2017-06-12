@@ -17,7 +17,7 @@ class CustomReportBehavior extends Behavior
 {
     private $Table = null;
 
-    public function parseQuery($jsonArray, array $params)
+    public function parseJson($jsonArray, array $params)
     {
         if (array_key_exists('model', $jsonArray)) {
             $model = $jsonArray['model'];
