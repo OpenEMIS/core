@@ -642,7 +642,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
                         'controller' => 'Directories',
                         'action' => 'TrainingNeeds',
                         'view',
-                        $this->paramsEncode(['id' => $row->id])
+                        $this->paramsEncode(['id' => $row->id]),
+                        'user_id' => $row->staff_id
                     ];
 
                     if (is_null($row->modified)) {
