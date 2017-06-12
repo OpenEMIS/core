@@ -40,7 +40,7 @@ class CustomReportsTable extends AppTable
 	public function beforeAction(Event $event)
 	{
 		$controllerName = $this->controller->name;
-		$reportName = __('Custom Reports');
+		$reportName = __('Custom');
 
 		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
@@ -74,8 +74,7 @@ class CustomReportsTable extends AppTable
                     if (array_key_exists('options', $data)) {
                         $options = $data['options'] + $options;
                     } else {
-                        $query = $this->parseQuery($data, $params);
-                        $options = $query->toArray();
+                        $options = $this->parseJson($data, $params);
                     }
 
                     $type = 'select';
@@ -137,8 +136,7 @@ class CustomReportsTable extends AppTable
 
         $variables = new ArrayObject([]);
         foreach($jsonQuery as $key => $obj) {
-            $query = $this->parseQuery($obj, $params);
-            $entity = $query->toArray();
+            $entity = $this->parseJson($obj, $params);
             $variables[$key] = $entity;
         }
 
