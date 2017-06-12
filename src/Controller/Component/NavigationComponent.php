@@ -606,7 +606,8 @@ class NavigationComponent extends Component
             'Institutions.VisitRequests' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution']
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.VisitRequests', 'Institutions.Visits']
             ],
 
             'Institutions.Cases' => [
@@ -640,7 +641,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
-                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull']],
+                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys']],
             'Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
