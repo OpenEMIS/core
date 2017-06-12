@@ -265,7 +265,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
 
-                <div class="input string">
+                <div class="input string required">
                     <label><?= __('Username') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" ng-init="InstitutionStaffController.selectedStaffData.username='';">
                     <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
