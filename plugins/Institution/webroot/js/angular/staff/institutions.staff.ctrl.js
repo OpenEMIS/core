@@ -89,6 +89,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.onChangePositionType = onChangePositionType;
     StaffController.onChangeFTE = onChangeFTE;
     StaffController.postTransferForm = postTransferForm;
+    StaffController.generatePassword = generatePassword;
     StaffController.initialLoad = true;
     StaffController.date_of_birth = '';
 
@@ -1022,6 +1023,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             remain = true;
         }
 
+        if (StaffController.Staff.username == '' || StaffController.Staff.username == undefined) {
+            StaffController.postResponse.error.username = empty;
+            remain = true;
+        }
+
         var arrNumber = [{}];
 
         if (StaffController.StaffIdentities == 1 && (StaffController.selectedStaffData.identity_number == '' || StaffController.selectedStaffData.identity_number == undefined)) {
@@ -1052,6 +1058,19 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         InstitutionsStaffSvc.getUniqueOpenEmisId()
         .then(function(response) {
             StaffController.selectedStaffData.openemis_no = response;
+            StaffController.Staff.username = response;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function generatePassword() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStaffSvc.generatePassword()
+        .then(function(response) {
+            StaffController.Staff.password = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -1092,12 +1111,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.createNewStaff = true;
             StaffController.step = 'create_user';
             StaffController.getUniqueOpenEmisId();
+            StaffController.generatePassword();
             InstitutionsStaffSvc.resetExternalVariable();
         }
         // Step 4 - Add Staff
         else if (data.step == 4) {
             if (StaffController.externalSearch) {
                 StaffController.getUniqueOpenEmisId();
+                StaffController.generatePassword();
             }
             // Work around for alert reset
             StaffController.createNewInternalDatasource(StaffController.internalGridOptions, true);

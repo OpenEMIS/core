@@ -51,6 +51,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getStaffTypes: getStaffTypes,
         getInstitution: getInstitution,
         addStaffTransferRequest: addStaffTransferRequest,
+        generatePassword: generatePassword,
         translate: translate
     };
 
@@ -715,6 +716,18 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.openemis_no);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function generatePassword() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/generatePassword';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response.data.password);
         }, function(error) {
             deferred.reject(error);
         });
