@@ -14,11 +14,27 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         $this->addBehavior('Workflow.Workflow');
     }
 
-    public function beforeAction()
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $modelAlias = 'Needs';
         $userType = 'StaffUser';
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
+
+        // redirect to staff index page if session not found
+        $session = $this->request->session();
+        $sessionKey = 'Staff.Staff.id';
+
+        if (!$session->check($sessionKey)) {
+            $url = $this->url('index');
+            $url['plugin'] = 'Institution';
+            $url['controller'] = 'Institutions';
+            $url['action'] = 'Staff';
+
+            $event->stopPropagation();
+            $this->Alert->warning('general.notExists');
+            return $this->controller->redirect($url);
+        }
+        // End
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
