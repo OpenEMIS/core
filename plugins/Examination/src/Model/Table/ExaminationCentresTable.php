@@ -551,33 +551,34 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             } else {
                 $academicPeriodId = isset($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id'] : 0;
-                $institutionOptions = $this->Institutions
-                    ->find('list', [
-                        'keyField' => 'id',
-                        'valueField' => 'code_name'
-                    ])
-                    ->find('NotExamCentres', ['academic_period_id' => $academicPeriodId]);
+                $institutionQuery = $this->Institutions
+                    ->find()
+                    ->find('NotExamCentres', ['academic_period_id' => $academicPeriodId])
+                    ->contain(['Statuses'])
+                    ->order([$this->Institutions->aliasField('name')]);
 
                 // if no institution type is selected, all institutions will be shown
                 if (!empty($request->data[$this->alias()]['institution_type'])) {
                     $type = $request->data[$this->alias()]['institution_type'];
-                    $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
+                    $institutionQuery->where([$this->Institutions->aliasField('institution_type_id') => $type]);
                 }
 
-                // POCOR-3983 Disabled(grey off) INACTIVE institutions
-                $options = [];
-                foreach ($institutionOptions as $key => $institution) {
-                    $options[$key]['value'] = $key;
-                    $options[$key]['text'] = $institution;
+                $institutionRecords = $institutionQuery->all();
 
-                    if (!$this->Institutions->isActive($key)) {
-                        $options[$key][0] = 'disabled';
+                // POCOR-3983 Disabled(grey off) INACTIVE institutions
+                $institutionOptions = [];
+                foreach ($institutionRecords as $institution) {
+                    $institutionOptions[$institution->id]['value'] = $institution->id;
+                    $institutionOptions[$institution->id]['text'] = $institution->code_name;
+
+                    if ($institution->status->code == 'INACTIVE') {
+                        $institutionOptions[$institution->id][0] = 'disabled';
                     }
                 }
                 // End POCOR-3983
 
                 $attr['type'] = 'chosenSelect';
-                $attr['options'] = $options;
+                $attr['options'] = $institutionOptions;
                 $attr['fieldName'] = $this->alias().'.institutions';
             }
 
