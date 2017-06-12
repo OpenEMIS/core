@@ -413,6 +413,8 @@ class StudentTransferTable extends AppTable {
     public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, Request $request) {
 		$nextPeriodId = $request->query('next_academic_period_id');
 		$nextGradeId = $request->query('next_education_grade_id');
+        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+
     	$institutionOptions = [];
 
     	if (!is_null($nextPeriodId) && !is_null($nextGradeId)) {
@@ -441,7 +443,10 @@ class StudentTransferTable extends AppTable {
 						]
 					]
 				])
-				->where([$this->Institutions->aliasField('id <>') => $institutionId])
+				->where([
+                    $this->Institutions->aliasField('id <>') => $institutionId,
+                    $this->Institutions->aliasField('institution_status_id') => $InstitutionStatuses->getIdByCode('ACTIVE')
+                ])
 				->order([$this->Institutions->aliasField('code')]);
 
 				if (!empty($request->data[$this->alias()]['area_id'])) {
