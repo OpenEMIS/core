@@ -156,6 +156,17 @@ class DirectoriesController extends AppController {
 		$header = __('Directory');
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
+
+		$query = $this->request->query;
+		if (array_key_exists('user_id', $query)) {
+			$userId = $query['user_id'];
+			$Directories = TableRegistry::get('Directory.Directories');
+			$entity = $Directories->get($userId);
+
+			$session->write('Directory.Directories.id', $userId);
+			$session->write('Directory.Directories.name', $entity->name);
+		}
+
 		if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
 			$session->delete('Directory.Directories');
 			$session->delete('Staff.Staff.id');
