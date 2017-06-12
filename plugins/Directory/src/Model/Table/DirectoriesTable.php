@@ -359,8 +359,20 @@ class DirectoriesTable extends ControllerActionTable
                 break;
         }
 
+        $openemisNo = $this->getUniqueOpenemisId();
+
+        $this->fields['openemis_no']['value'] = $openemisNo;
+        $this->fields['openemis_no']['attr']['value'] = $openemisNo;
+
+        if (!isset($this->request->data[$this->alias()]['username'])) {
+            $this->request->data[$this->alias()]['username'] = $openemisNo;
+        }
         $this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
-        $this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'attr' => ['value' => '', 'autocomplete' => 'off']]);
+
+        if (!isset($this->request->data[$this->alias()]['password'])) {
+            $this->request->data[$this->alias()]['password'] = $this->generatePassword(8, 1, 1, 1);
+        }
+        $this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'attr' => ['autocomplete' => 'off']]);
         $this->setFieldOrder([
                 'information_section', 'photo_content', 'user_type', 'openemis_no', 'first_name', 'middle_name',
                 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'nationality_id',
@@ -428,30 +440,6 @@ class DirectoriesTable extends ControllerActionTable
                 'SpecialNeeds' => ['validate' => false],
                 'Contacts' => ['validate' => false]
             ];
-        }
-    }
-
-    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $options = [];
-            if (isset($attr['user_type'])) {
-                switch ($attr['user_type']) {
-                    case self::STUDENT:
-                        $options['model'] = 'Student';
-                        break;
-                    case self::STAFF:
-                        $options['model'] = 'Staff';
-                        break;
-                    case self::GUARDIAN:
-                        $options['model'] = 'Guardian';
-                        break;
-                }
-            }
-            $value = $this->getUniqueOpenemisId($options);
-            $attr['attr']['value'] = $value;
-            $attr['value'] = $value;
-            return $attr;
         }
     }
 
