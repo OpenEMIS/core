@@ -501,13 +501,19 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             $session = $request->session();
             $sessionKey = 'Staff.Staff.id';
 
             if ($session->check($sessionKey)) {
                 $attr['attr']['value'] = $session->read($sessionKey);
             }
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $staffId = $entity->staff_id;
+
+            $attr['value'] = $staffId;
+            $attr['attr']['value'] = $staffId;
         }
 
         return $attr;
@@ -558,7 +564,10 @@ class TrainingNeedsAppTable extends ControllerActionTable
             'type' => 'select',
             'entity' => $entity
         ]);
-        $this->field('staff_id', ['type' => 'hidden']);
+        $this->field('staff_id', [
+            'type' => 'hidden',
+            'entity' => $entity
+        ]);
 
         $this->setFieldOrder([
             'type', 'training_course_id', 'course_code', 'course_name', 'course_description', 'training_requirement_id',
@@ -598,11 +607,18 @@ class TrainingNeedsAppTable extends ControllerActionTable
                 $this->aliasField('id'),
                 $this->aliasField('type'),
                 $this->aliasField('status_id'),
+                $this->aliasField('staff_id'),
                 $this->aliasField('training_course_id'),
                 $this->aliasField('training_need_category_id'),
                 $this->aliasField('modified'),
                 $this->aliasField('created'),
                 $this->Statuses->aliasField('name'),
+                $this->Staff->aliasField('openemis_no'),
+                $this->Staff->aliasField('first_name'),
+                $this->Staff->aliasField('middle_name'),
+                $this->Staff->aliasField('third_name'),
+                $this->Staff->aliasField('last_name'),
+                $this->Staff->aliasField('preferred_name'),
                 $this->TrainingCourses->aliasField('code'),
                 $this->TrainingCourses->aliasField('name'),
                 $this->TrainingNeedCategories->aliasField('name'),
@@ -613,7 +629,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->TrainingCourses->alias(), $this->CreatedUser->alias(), $this->TrainingNeedCategories->alias()])
+            ->contain([$this->TrainingCourses->alias(), $this->CreatedUser->alias(), $this->TrainingNeedCategories->alias(), $this->Staff->alias()])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -643,7 +659,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
-                    $row['request_title'] = sprintf(__('%s from %s'), $preTitle, __($typeOptions[$row->type]));
+                    $row['request_title'] = sprintf(__('%s from %s of %s'), $preTitle, __($typeOptions[$row->type]), $row->staff->name_with_id);
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
                     return $row;
