@@ -363,14 +363,40 @@ class DirectoriesTable extends ControllerActionTable
 
         $this->fields['openemis_no']['value'] = $openemisNo;
         $this->fields['openemis_no']['attr']['value'] = $openemisNo;
-
         if (!isset($this->request->data[$this->alias()]['username'])) {
+            $this->request->data[$this->alias()]['username'] = $openemisNo;
+        } else if (count($this->request->data[$this->alias()]['username']) == count($openemisNo)) {
             $this->request->data[$this->alias()]['username'] = $openemisNo;
         }
         $this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
 
         if (!isset($this->request->data[$this->alias()]['password'])) {
-            $this->request->data[$this->alias()]['password'] = $this->generatePassword(8, 1, 1, 1);
+            $UsersTable = TableRegistry::get('User.Users');
+
+            // Read the number of length of password from system config
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $passwordLength = intval($ConfigItems->value('password_min_length')) > 3 ? intval($ConfigItems->value('password_min_length')) : 4;
+
+            $numberOfGroup = 4;
+            $sumTo = $passwordLength;
+
+            // Group [0] - Number of lowercase character
+            // Group [1] - Number of uppercase character
+            // Group [2] - Number of numerical character
+            // Group [3] - Number of special character
+            $groups = [];
+            $group = 0;
+
+            while (array_sum($groups) != $sumTo) {
+                $groups[$group] = mt_rand(1, $sumTo/mt_rand(1, $numberOfGroup));
+                if (++$group == $numberOfGroup) {
+                    $group = 0;
+                }
+            }
+            $upperCase = intval($ConfigItems->value('password_has_uppercase')) ? $groups[1] : 0;
+            $numerical = intval($ConfigItems->value('password_has_number')) ? $groups[2] : 0;
+            $specialCharacter = intval($ConfigItems->value('password_has_non_alpha')) ? $groups[3] : 0;
+            $this->request->data[$this->alias()]['password'] = $UsersTable->generatePassword($passwordLength, $upperCase, $numerical, $specialCharacter);
         }
         $this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'attr' => ['autocomplete' => 'off']]);
         $this->setFieldOrder([
