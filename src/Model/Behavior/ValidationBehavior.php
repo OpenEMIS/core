@@ -95,7 +95,6 @@ class ValidationBehavior extends Behavior
 
     public static function checkLongitude($check)
     {
-
         $isValid = false;
         $longitude = trim($check);
 
@@ -241,7 +240,6 @@ class ValidationBehavior extends Behavior
      *
      * @return [type]                [description]
      */
-
     public static function compareDateReverse($field, $compareField, $equals, array $globalData)
     {
         $type = self::_getFieldType($compareField);
@@ -268,7 +266,6 @@ class ValidationBehavior extends Behavior
      *
      * @return [type]                [description]
      */
-
     public static function compareAbsenceTimeReverse($field, $compareField, $absenceTypeId, array $globalData)
     {
         $type = self::_getFieldType($compareField);
@@ -327,6 +324,7 @@ class ValidationBehavior extends Behavior
         $reverse = $options['reverse'];
         $dateTwo = $globalData['data'][$compareField];
         $dateTwo = new DateTime($dateTwo);
+
         if ($equals) {
             if ($reverse) {
                 return $dateOne >= $dateTwo;
@@ -385,6 +383,7 @@ class ValidationBehavior extends Behavior
         $reverse = $options['reverse'];
         $timeTwo = $globalData['data'][$compareField];
         $timeTwo = strtotime($timeTwo);
+
         if ($equals) {
             if ($reverse) {
                 return $timeOne >= $timeTwo;
@@ -544,6 +543,7 @@ class ValidationBehavior extends Behavior
                 $flag = true;
             }
         }
+
         return $flag;
     }
 
@@ -885,8 +885,6 @@ class ValidationBehavior extends Behavior
         return ($query == 0);
     }
 
-
-
     public static function checkAdmissionAgeWithEducationCycleGrade($field, array $globalData)
     {
         // this function is ONLY catered for 'on' => 'create'
@@ -966,6 +964,7 @@ class ValidationBehavior extends Behavior
             if ($key == $educationGradeId) {
                 break;
             }
+
             $yearIncrement++;
         }
 
@@ -1410,7 +1409,6 @@ class ValidationBehavior extends Behavior
             $endDate = null;
         }
 
-
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $identicalPositionHolders = $InstitutionStaff->find()
             ->where(
@@ -1625,7 +1623,6 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('start_time', $params) && array_key_exists('end_time', $params)) {
             return (strtotime($field) < strtotime($params['start_time']) || strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time'])), date($systemTimeFormat, strtotime($params['end_time']))]]): true;
         } else if (array_key_exists('start_time', $params)) {
-            ;
             return (strtotime($field) < strtotime($params['start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time']))]]): true;
         } else if (array_key_exists('end_time', $params)) {
             return (strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [date($systemTimeFormat, strtotime($params['end_time']))]]): true;
@@ -2181,6 +2178,65 @@ class ValidationBehavior extends Behavior
                 }
             }
         }
+        return true;
+    }
+
+    public static function checkPendingWorkbench($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        if (isset($data['id'])) {
+
+            $institutionId = $data['id'];
+            $dateClosed = new Date($field);
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+            // fixed workflow
+            $models = [
+                'Institution.TransferApprovals',
+                'Institution.StudentAdmission',
+                'Institution.StudentWithdraw',
+                'Institution.StaffTransferApprovals',
+                'Institution.StaffTransferRequests'
+            ];
+
+            foreach ($models as $model) {
+                $subject = TableRegistry::get($model);
+                $method = 'getPendingRecords';
+                if (method_exists($subject, $method)) {
+                    $count = $subject->$method($institutionId);
+
+                    if ($count > 0) {
+                        return false;
+                        break;
+                    }
+                }
+            }
+
+            // school_based workflow
+            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+            $schoolBasedModels = $WorkflowModels
+                ->find()
+                ->where([
+                    $WorkflowModels->aliasField('is_school_based') => 1
+                ])
+                ->all();
+
+            foreach ($schoolBasedModels as $workflowModelEntity) {
+                $subject = TableRegistry::get($workflowModelEntity->model);
+                $method = 'getPendingRecords';
+                $params = ['institution_id' => $institutionId];
+
+                $event = $subject->dispatchEvent('Model.Validation.getPendingRecords', [$params], $subject);
+                if ($event->isStopped()) { return $event->result; }
+                $count = $event->result;
+
+                if ($count > 0) {
+                    return false;
+                    break;
+                }
+            }
+        }
+
         return true;
     }
 
