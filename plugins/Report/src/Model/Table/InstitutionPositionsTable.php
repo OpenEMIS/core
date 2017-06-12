@@ -47,8 +47,6 @@ class InstitutionPositionsTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
 	{
-		$requestData = json_decode($settings['process']['params']);
-
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
@@ -83,9 +81,7 @@ class InstitutionPositionsTable extends AppTable  {
 				];
 			}
 		}
-
 		$fields->exchangeArray($newFields);
-
 	}
 
 	public function onExcelGetStatus(Event $event, Entity $entity) {
