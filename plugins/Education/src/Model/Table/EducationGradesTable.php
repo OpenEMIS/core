@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 class EducationGradesTable extends ControllerActionTable
 {
     private $_contain = ['EducationSubjects._joinData'];
-    private $_fieldOrder = ['name', 'code', 'education_programme_id', 'visible'];
+    private $_fieldOrder = ['name', 'code', 'education_stage_id', 'admission_age', 'education_programme_id', 'visible'];
 
     public function initialize(array $config)
     {
@@ -30,6 +30,7 @@ class EducationGradesTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
         $this->belongsTo('EducationProgrammes',     ['className' => 'Education.EducationProgrammes']);
+        $this->belongsTo('EducationStages',         ['className' => 'Education.EducationStages']);
         $this->hasMany('Assessments',               ['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionFees',           ['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Rubrics',                   ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -172,7 +173,9 @@ class EducationGradesTable extends ControllerActionTable
 
         $this->field('admission_age', ['visible' => false]);
         $this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
-        $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'subjects'];
+        $this->field('education_stage_id');
+
+        $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'education_stage_id', 'subjects'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -203,7 +206,8 @@ class EducationGradesTable extends ControllerActionTable
     {
         $this->field('name');
         $this->field('code');
-        $this->field('admission_age', ['after' => 'name', 'entity' => $entity]);
+        $this->field('admission_age', ['entity' => $entity]);
+        $this->field('education_stage_id', ['entity' => $entity]);
         $this->field('education_programme_id', ['entity' => $entity]);
     }
 
@@ -287,6 +291,22 @@ class EducationGradesTable extends ControllerActionTable
         }
 
         $attr['type'] = 'readonly';
+        return $attr;
+    }
+
+    public function onUpdateFieldEducationStageId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $stageOptions = $this->EducationStages
+                ->find('list')
+                ->find('visible')
+                ->find('order')
+                ->all();
+
+            $attr['type'] = 'select';
+            $attr['options'] = $stageOptions;
+        }
+
         return $attr;
     }
 
