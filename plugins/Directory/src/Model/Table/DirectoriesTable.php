@@ -41,6 +41,10 @@ class DirectoriesTable extends ControllerActionTable {
 		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
+        $this->hasMany('InstitutionStudents',   ['className' => 'Institution.Students', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaff',      ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UserNationalities',     ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+
 		$this->addBehavior('User.User');
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
 		$this->addBehavior('User.AdvancedIdentitySearch');
