@@ -79,6 +79,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.onAddNewStudentClick = onAddNewStudentClick;
     StudentController.onAddStudentClick = onAddStudentClick;
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
+    StudentController.generatePassword = generatePassword;
     StudentController.reloadInternalDatasource = reloadInternalDatasource;
     StudentController.reloadExternalDatasource = reloadExternalDatasource;
     StudentController.clearInternalSearchFilters = clearInternalSearchFilters;
@@ -908,6 +909,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             remain = true;
         }
 
+        if (StudentController.Student.username == '' || StudentController.Student.username == undefined) {
+            StudentController.postResponse.error.username = empty;
+            remain = true;
+        }
+
         var arrNumber = [{}];
 
         // if (StudentController.StudentIdentities == 1 && (StudentController.Student.identity_type_id == '' || StudentController.Student.identity_type_id == undefined)) {
@@ -943,6 +949,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
         .then(function(response) {
             StudentController.selectedStudentData.openemis_no = response;
+            StudentController.Student.username = response;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function generatePassword() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStudentsSvc.generatePassword()
+        .then(function(response) {
+            StudentController.Student.password = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -986,12 +1005,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.createNewStudent = true;
             StudentController.step = 'create_user';
             StudentController.getUniqueOpenEmisId();
+            StudentController.generatePassword();
             InstitutionsStudentsSvc.resetExternalVariable();
         }
         // Step 4 - Add Student
         else {
             if (StudentController.externalSearch) {
                 StudentController.getUniqueOpenEmisId();
+                StudentController.generatePassword();
             }
             studentData = StudentController.selectedStudentData;
             StudentController.completeDisabled = false;

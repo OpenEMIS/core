@@ -266,7 +266,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
                 <div class="input password">
                     <label><?= __('Password') ?></label>
-                    <input ng-model="InstitutionStudentController.Student.password" type="password" ng-init="InstitutionStudentController.Student.password='';">
+                    <input ng-model="InstitutionStudentController.Student.password" type="string" ng-init="InstitutionStudentController.Student.password='';">
                     <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
                     </div>
@@ -290,6 +290,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                     <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string" ng-show="InstitutionStudentController.StudentNationalities != 2 && StudentController.createNewStudent == true">

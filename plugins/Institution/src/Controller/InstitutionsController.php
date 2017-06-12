@@ -328,8 +328,8 @@ class InstitutionsController extends AppController
         $userId = $this->Auth->user('id');
 
         $settings = [
-            'class_id' => $classId, 
-            'assessment_id' => $assessmentId, 
+            'class_id' => $classId,
+            'assessment_id' => $assessmentId,
             'institution_id' => $institutionId,
             'user_id' => $userId,
             'AccessControl' => $this->AccessControl,
@@ -338,11 +338,11 @@ class InstitutionsController extends AppController
         ];
 
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        
+
         $results = $ClassStudents->generateXLXS($settings);
         $fileName = $results['file'];
         $filePath = $results['path'] . $fileName;
-        
+
         $response = $this->response;
         $response->body(function() use ($filePath) {
             $content = file_get_contents($filePath);
@@ -715,6 +715,35 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         echo $this->UserOpenEMISID->getUniqueOpenemisId();
+    }
+
+    public function generatePassword()
+    {
+        $this->autoRender = false;
+        $UsersTable = TableRegistry::get('User.Users');
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $passwordLength = intval($ConfigItems->value('password_min_length')) > 3 ? intval($ConfigItems->value('password_min_length')) : 4;
+
+        $numberOfGroup = 4;
+        $sumTo = $passwordLength;
+
+        // Group [0] - Number of lowercase character
+        // Group [1] - Number of uppercase character
+        // Group [2] - Number of numerical character
+        // Group [3] - Number of special character
+        $groups = [];
+        $group = 0;
+        while (array_sum($groups) != $sumTo) {
+            $groups[$group] = mt_rand(1, $sumTo/mt_rand(1, $numberOfGroup));
+            if (++$group == $numberOfGroup) {
+                $group = 0;
+            }
+        }
+        $upperCase = intval($ConfigItems->value('password_has_uppercase')) ? $groups[1] : 0;
+        $numerical = intval($ConfigItems->value('password_has_number')) ? $groups[2] : 0;
+        $specialCharacter = intval($ConfigItems->value('password_has_non_alpha')) ? $groups[3] : 0;
+        $arr = ['password' => $UsersTable->generatePassword($passwordLength, $upperCase, $numerical, $specialCharacter)];
+        echo json_encode($arr);
     }
 
     private function attachAngularModules()
