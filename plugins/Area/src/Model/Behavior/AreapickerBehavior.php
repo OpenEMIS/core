@@ -27,9 +27,10 @@ class AreapickerBehavior extends Behavior
     public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options)
     {
         $fieldName = $attr['model'] . '.' . $attr['field'];
-        $value = $entity->$attr['field'];
+        $HtmlField = $event->subject();
+        $data = $HtmlField->request->data;
+        $value = isset($data[$this->_table->alias()][$attr['field']]) ? $data[$this->_table->alias()][$attr['field']] : $entity->$attr['field'];
         if ($action == 'edit') {
-            $HtmlField = $event->subject();
             $Url = $HtmlField->Url;
             $Form = $HtmlField->Form;
             $attr['display-country'] = 1;
@@ -73,23 +74,20 @@ class AreapickerBehavior extends Behavior
             } // If there is a restriction on the area administrative's main country to display (Use in Institution only)
             else if ($targetModel == 'Area.AreaAdministratives' && isset($attr['displayCountry']) && !$attr['displayCountry']) {
                 $options['display-country'] = 1;
-                //this part cause problem during add process which cause options can retain its selection.
-                // if ($this->_table->action == 'add') {
-                    // $areaOptions = $areaOptions
-                    //  ->where([$targetTable->aliasField('is_main_country') => 1])
-                    //  ->order([$targetTable->aliasField('order')]);
-                // }
             }
 
             $areaOptions = $areaOptions->toArray();
+            $areaKeys = array_keys($areaOptions);
+            $areaKeys[] = null;
+            $session = $HtmlField->request->session();
+            $session->write('FormTampering.'.$fieldName, $areaKeys);
 
             if ($targetModel == 'Area.Areas') {
-                $authorisedArea = array_keys($areaOptions);
+                $authorisedArea = $areaKeys;
                 $attr['authorisedArea'] = $authorisedArea;
             } else {
                 $attr['authorisedArea'] = [];
             }
-
 
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
