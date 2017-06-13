@@ -7,7 +7,7 @@ use Cake\Utility\Inflector;
 use ArrayObject;
 
 class SetupBehavior extends Behavior {
-	private $setups = ['subjects', 'certifications', 'field_of_studies', 'programme_orientations'];
+	private $setups = ['stages', 'subjects', 'certifications', 'field_of_studies', 'programme_orientations'];
 
 	protected $_defaultConfig = [
 		'events' => [
