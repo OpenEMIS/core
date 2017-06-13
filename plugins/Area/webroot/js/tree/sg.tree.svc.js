@@ -17,7 +17,7 @@ function SgTreeSvc($q, KdDataSvc) {
         KdDataSvc.controllerAction('SgTree');
     }
 
-    function getRecords(model, areaIds = [], displayCountry = 0) {
+    function getRecords(model, areaIds = [], displayCountry = 0, selected) {
         KdDataSvc.init({area: model});
         var success = function(response, deferred) {
             var returnData = response.data.data;
@@ -25,7 +25,7 @@ function SgTreeSvc($q, KdDataSvc) {
         };
         return area
             .select()
-            .find('areaList', {'authorisedAreaIds': KdDataSvc.urlsafeB64Encode(JSON.stringify(areaIds)), 'displayCountry': displayCountry})
+            .find('areaList', {'authorisedAreaIds': KdDataSvc.urlsafeB64Encode(JSON.stringify(areaIds)), 'displayCountry': displayCountry, 'selected': selected})
             .ajax({success: success, defer:true});
     }
 };
