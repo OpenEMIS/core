@@ -17,19 +17,45 @@ use Cake\Utility\Inflector;
         foreach ($order as $key=>$field) {
             if (array_key_exists($field, $filters)) {
     ?>
-                <div class="select">
-                    <label><?= $filters[$field]['label'] ?>:</label>
-                    <div class="input-select-wrapper">
-                        <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $field ?>]">
-                            <option value=""><?= __('-- Select --'); ?></option>
-                            <?php foreach ($filters[$field]['options'] as $optKey=>$optVal): ?>
-                                <?php $selected = ($optKey==$filters[$field]['selected']) ? 'selected' : ''; ?>
-                                <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
-                            <?php endforeach; ?>
-                        </select>
+            <?php
+                if (isset($filters[$field]['type']) && $filters[$field]['type'] == 'areapicker') {
+            ?>
+                    <?= $this->Html->script('Area.tree/sg.tree.svc', ['block' => true]); ?>
+                    <div class="select">
+                        <label><?= $filters[$field]['label'] ?></label>
+                        <?php
+                        echo $this->Form->unlockField("AdvanceSearch.$model.belongsTo.$field");
+                        echo $this->Form->unlockField($field.'-tree');
+                        ?>
+                        <div
+                            class="tree-form"
+                            id="<?= $field ?>"
+                            ng-controller="SgTreeCtrl as SgTree"
+                            ng-init="SgTree.model='<?= $filters[$field]['source_model'] ?>'; <?= !empty($filters[$field]['selected']) ? 'SgTree.outputValue='.$filters[$field]['selected'] : 'SgTree.outputValue=null'?>; SgTree.authorisedArea='<?= json_encode($filters[$field]['authorisedAreas']) ?>'; SgTree.displayCountry=<?= isset($filters[$field]['displayCountry']) && !$filters[$field]['displayCountry'] ? 0 : 1 ?>;">
+
+                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" input-model="SgTree.inputModelText" output-model="outputModelText" model-type="single"></kd-tree-dropdown-ng>
+                            <?php
+                                echo $this->Form->hidden("AdvanceSearch.$model.belongsTo.$field", [
+                                    'ng-value' => 'SgTree.outputValue'
+                                ]);
+                             ?>
+                        </div>
                     </div>
-                </div>
+        <?php   } else { ?>
+                    <div class="select">
+                        <label><?= $filters[$field]['label'] ?>:</label>
+                        <div class="input-select-wrapper">
+                            <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $field ?>]">
+                                <option value=""><?= __('-- Select --'); ?></option>
+                                <?php foreach ($filters[$field]['options'] as $optKey=>$optVal): ?>
+                                    <?php $selected = ($optKey==$filters[$field]['selected']) ? 'selected' : ''; ?>
+                                    <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
     <?php
+                }
             } else if (array_key_exists($field, $searchables) || array_key_exists($field, $includedFields)) {
 
                 //to be used both by $searchable and $includedFields
@@ -40,7 +66,6 @@ use Cake\Utility\Inflector;
                     $varName = $includedFields;
                     $indexName = 'tableField';
                 }
-
                 if (array_key_exists('type', $varName[$field])) {
                     if ($varName[$field]['type'] == 'select') {
     ?>
