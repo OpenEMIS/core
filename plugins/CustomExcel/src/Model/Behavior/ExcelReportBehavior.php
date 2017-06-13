@@ -291,6 +291,23 @@ class ExcelReportBehavior extends Behavior
 
     public function saveExcel($objPHPExcel, $filepath)
     {
+        //set up for printing.
+        $objPHPExcel->setActiveSheetIndex(0)->getPageSetup()->setPaperSize(8); //A3 paper
+
+        $highestColumm = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
+        $colNumber = PHPExcel_Cell::columnIndexFromString($highestColumm);
+        $highestRow = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
+
+        $setPageFit = ceil($colNumber / 20); //20 columns per page
+
+        if ($setPageFit > 1) { //more than 20 columns, set as landscape.
+            $objPHPExcel->setActiveSheetIndex(0)->getPageSetup()->setOrientation('landscape');
+        }
+        
+        $objPHPExcel->setActiveSheetIndex(0)->getPageSetup()->setFitToPage(true);
+        $objPHPExcel->setActiveSheetIndex(0)->getPageSetup()->setFitToWidth($setPageFit);
+        $objPHPExcel->setActiveSheetIndex(0)->getPageSetup()->setFitToHeight(0);
+
         $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
         $objWriter->save($filepath);
     }
