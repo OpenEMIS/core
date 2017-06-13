@@ -135,7 +135,9 @@ class JsonView extends SerializedView
     {
         $data = $this->_dataToSerialize($serialize);
 
-        $jsonOptions = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+        $jsonOptions = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT |
+            JSON_PARTIAL_OUTPUT_ON_ERROR;
+
         if (isset($this->viewVars['_jsonOptions'])) {
             if ($this->viewVars['_jsonOptions'] === false) {
                 $jsonOptions = 0;
@@ -147,6 +149,7 @@ class JsonView extends SerializedView
         if (Configure::read('debug')) {
             $jsonOptions = $jsonOptions | JSON_PRETTY_PRINT;
         }
+
         return json_encode($data, $jsonOptions);
     }
 
@@ -182,6 +185,7 @@ class JsonView extends SerializedView
                     $data[$alias] = $this->viewVars[$key];
                 }
             }
+
             return !empty($data) ? $data : null;
         }
 

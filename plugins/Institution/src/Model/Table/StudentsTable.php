@@ -57,8 +57,8 @@ class StudentsTable extends ControllerActionTable
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
-            'number_of_students_by_grade' => [
-                '_function' => 'getNumberOfStudentsByGrade',
+            'number_of_students_by_stage' => [
+                '_function' => 'getNumberOfStudentsByStage',
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
@@ -636,6 +636,12 @@ class StudentsTable extends ControllerActionTable
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($request->query['sort'])) {
+            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        }
+
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
     }
 
@@ -1202,7 +1208,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // For Dashboard (Home Page and Institution Dashboard page)
-    public function getNumberOfStudentsByGrade($params=[])
+    public function getNumberOfStudentsByStage($params=[])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
@@ -1231,21 +1237,25 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('institution_id'),
                 $this->aliasField('education_grade_id'),
                 'EducationGrades.name',
+                'EducationGrades.education_stage_id',
+                'EducationStages.name',
+                'EducationStages.order',
                 'Users.id',
                 'Genders.name',
                 'total' => $query->func()->count($this->aliasField('id'))
             ])
             ->contain([
+                'EducationGrades.EducationStages',
                 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
                 'Users.Genders'
             ])
             ->where($studentsByGradeConditions)
             ->group([
-                $this->aliasField('education_grade_id'),
+                'EducationGrades.education_stage_id',
                 'Genders.name'
             ])
             ->order(
-                ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationGrades.order']
+                ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationStages.order']
             )
             ->toArray()
             ;
@@ -1261,8 +1271,8 @@ class StudentsTable extends ControllerActionTable
         $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         foreach ($studentByGrades as $key => $studentByGrade) {
-            $gradeId = $studentByGrade->education_grade_id;
-            $gradeName = $studentByGrade->education_grade->name;
+            $gradeId = $studentByGrade->education_grade->education_stage_id;
+            $gradeName = $studentByGrade->education_grade->education_stage->name;
             $gradeGender = $studentByGrade->user->gender->name;
             $gradeTotal = $studentByGrade->total;
 

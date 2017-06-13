@@ -2,7 +2,11 @@ angular.module('alert.svc', [])
 .service('AlertSvc', function($http) {
     return {
         getMessage: function(scope, message, args) {
-            console.log(message);
+            if (!angular.isString(message)) {
+                scope.class = 'alert-danger';
+                message = 'An unexpected error has been encounted. Please contact the administrator for assistance.';
+            }
+
             var url = angular.baseUrl + '/Translations/translate';
             if (args == undefined) {
                 args = [];
@@ -15,10 +19,6 @@ angular.module('alert.svc', [])
                 }
                 scope.message = message;
             }, function(error) {
-                var message = response.data.translated_text;
-                for (var i=0; i < args.length; i++ ) {
-                    message = message.replace( /%s/, args[i] );
-                }
                 scope.message = message;
             });
         },

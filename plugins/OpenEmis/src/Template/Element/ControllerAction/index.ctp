@@ -69,7 +69,7 @@ if ($this->request->params['action'] == 'index') {
 	$url[] = 'reorder';
 }
 
-$this->ControllerAction->HtmlField->includes($table, 'index');
+$this->ControllerAction->HtmlField->includes('index', $table);
 
 $baseUrl = $this->Url->build($url);
 ?>

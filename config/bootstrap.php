@@ -13,16 +13,32 @@
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
-/**
+// You can remove this if you are confident that your PHP version is sufficient.
+if (version_compare(PHP_VERSION, '5.6.0') < 0) {
+    trigger_error('Your PHP version must be equal or higher than 5.6.0 to use CakePHP.', E_USER_ERROR);
+}
+
+/*
+ *  You can remove this if you are confident you have intl installed.
+ */
+if (!extension_loaded('intl')) {
+    trigger_error('You must enable the intl extension to use CakePHP.', E_USER_ERROR);
+}
+
+/*
+ * You can remove this if you are confident you have mbstring installed.
+ */
+if (!extension_loaded('mbstring')) {
+    trigger_error('You must enable the mbstring extension to use CakePHP.', E_USER_ERROR);
+}
+
+/*
  * Configure paths required to find CakePHP + general filepath
  * constants
  */
 require __DIR__ . '/paths.php';
 
-// Use composer to load the autoloader.
-require ROOT . DS . 'vendor' . DS . 'autoload.php';
-
-/**
+/*
  * Bootstrap CakePHP.
  *
  * Does the various bits of setup that CakePHP needs to do.
@@ -32,21 +48,6 @@ require ROOT . DS . 'vendor' . DS . 'autoload.php';
  * - Setting the default application paths.
  */
 require CORE_PATH . 'config' . DS . 'bootstrap.php';
-
-// You can remove this if you are confident that your PHP version is sufficient.
-if (version_compare(PHP_VERSION, '5.5.9') < 0) {
-    trigger_error('You PHP version must be equal or higher than 5.5.9 to use CakePHP.', E_USER_ERROR);
-}
-
-// You can remove this if you are confident you have intl installed.
-if (!extension_loaded('intl')) {
-    trigger_error('You must enable the intl extension to use CakePHP.', E_USER_ERROR);
-}
-
-// You can remove this if you are confident you have mbstring installed.
-if (!extension_loaded('mbstring')) {
-    trigger_error('You must enable the mbstring extension to use CakePHP.', E_USER_ERROR);
-}
 
 use Cake\Cache\Cache;
 use Cake\Console\ConsoleErrorHandler;
@@ -60,7 +61,6 @@ use Cake\Error\ErrorHandler;
 use Cake\Log\Log;
 use Cake\Mailer\Email;
 use Cake\Network\Request;
-use Cake\Routing\DispatcherFactory;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Error\AppError;
@@ -89,12 +89,7 @@ try {
 
 
 
-// For unit testing
-try {
-    Configure::load('test_datasource', 'default');
-} catch (\Exception $e) {
-    // do nothing if test_datasource.php is not found
-}
+
 
 // Load an environment local configuration file.
 // You can use a file like app_local.php to provide local overrides to your
@@ -104,17 +99,25 @@ try {
 // When debug = false the metadata cache should last
 // for a very very long time, as we don't want
 // to refresh the cache while users are doing requests.
-if (!Configure::read('debug')) {
-    Configure::write('Cache._cake_model_.duration', '+1 years');
-    Configure::write('Cache._cake_core_.duration', '+1 years');
-    $errorHandler = new AppError();
-    $errorHandler->register();
+if (Configure::read('debug')) {
+    Configure::write('Cache._cake_model_.duration', '+2 minutes');
+    Configure::write('Cache._cake_core_.duration', '+2 minutes');
+} else {
+
+    // For unit testing
+    try {
+        Configure::load('test_datasource', 'default');
+    } catch (\Exception $e) {
+        // do nothing if test_datasource.php is not found
+    }
+
 }
 
 /**
  * Set server timezone to UTC. You can change it to another timezone of your
  * choice but using UTC makes time calculations / conversions easier.
  */
+// Default time zone is set in datasource.php, as timezone is set to the client's timezone
 // date_default_timezone_set('UTC');
 
 /**
@@ -131,11 +134,27 @@ ini_set('intl.default_locale', Configure::read('App.defaultLocale'));
 /**
  * Register application error and exception handlers.
  */
+
+$defaultErrorConfig = [
+        'errorLevel' => E_ALL,
+        'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
+        'skipLog' => [],
+        'log' => true,
+        'trace' => true,
+    ];
 $isCli = PHP_SAPI === 'cli';
 if ($isCli) {
-    (new ConsoleErrorHandler(Configure::read('Error')))->register();
+    (new ConsoleErrorHandler($defaultErrorConfig))->register();
 } else {
-    (new ErrorHandler(Configure::read('Error')))->register();
+
+    if (Configure::read('debug')) {
+        (new ErrorHandler($defaultErrorConfig))->register();
+    } else {
+        $defaultErrorConfig['exceptionRenderer'] = 'App\Error\AppExceptionRenderer';
+        $errorHandler = new AppError(Configure::read('Error'));
+        $errorHandler->register();
+    }
+
 }
 
 // Include the CLI bootstrap overrides.
@@ -169,24 +188,44 @@ Email::config(Configure::consume('Email'));
 Log::config(Configure::consume('Log'));
 Security::salt(Configure::consume('Security.salt'));
 
-/**
+/*
  * The default crypto extension in 3.0 is OpenSSL.
  * If you are migrating from 2.x uncomment this code to
  * use a more compatible Mcrypt based implementation
  */
 //Security::engine(new \Cake\Utility\Crypto\Mcrypt());
 
-/**
+/*
  * Setup detectors for mobile and tablet.
  */
 Request::addDetector('mobile', function ($request) {
     $detector = new \Detection\MobileDetect();
+
     return $detector->isMobile();
 });
 Request::addDetector('tablet', function ($request) {
     $detector = new \Detection\MobileDetect();
+
     return $detector->isTablet();
 });
+
+/*
+ * Enable immutable time objects in the ORM.
+ *
+ * You can enable default locale format parsing by adding calls
+ * to `useLocaleParser()`. This enables the automatic conversion of
+ * locale specific date formats. For details see
+ * @link http://book.cakephp.org/3.0/en/core-libraries/internationalization-and-localization.html#parsing-localized-datetime-data
+ */
+// Commented out as there is issue when saving RTL date
+// Type::build('time')
+//     ->useLocaleParser();
+// Type::build('date')
+//     ->useLocaleParser();
+// Type::build('datetime')
+//     ->useLocaleParser();
+// Type::build('timestamp')
+//     ->useLocaleParser();
 
 /**
  * Custom Inflector rules, can be set to correctly pluralize or singularize
@@ -198,6 +237,8 @@ Request::addDetector('tablet', function ($request) {
  * Inflector::rules('uninflected', ['dontinflectme']);
  * Inflector::rules('transliteration', ['/å/' => 'aa']);
  */
+
+// For Staff Module
  Inflector::rules('plural', ['/(S|s)taff$/i' => '\1taff']);
 
 /**
@@ -265,32 +306,10 @@ Plugin::load('Examination', ['routes' => true, 'autoload' => true]);
 Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomExcel', ['routes' => true, 'autoload' => true]);
 Plugin::load('Competency', ['routes' => true, 'autoload' => true]);
+Plugin::load('ReportCard', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
 if (Configure::read('debug')) {
     // Plugin::load('DebugKit', ['bootstrap' => true]);
 }
-
-/**
- * Connect middleware/dispatcher filters.
- */
-DispatcherFactory::add('Asset');
-DispatcherFactory::add('Routing');
-DispatcherFactory::add('ControllerFactory');
-
-/**
- * Enable default locale format parsing.
- * This is needed for matching the auto-localized string output of Time() class when parsing dates.
- *
- * Also enable immutable time objects in the ORM.
- */
-// Type::build('time')
-//     ->useImmutable()
-//     ->useLocaleParser();
-// Type::build('date')
-//     ->useImmutable()
-//     ->useLocaleParser();
-// Type::build('datetime')
-//     ->useImmutable()
-//     ->useLocaleParser();

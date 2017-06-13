@@ -12,6 +12,7 @@ class AccessControlComponent extends Component
     private $controller;
     private $action;
     private $Session;
+    private $accessMap;
 
     protected $_defaultConfig = [
         'operations' => ['_view', '_add', '_edit', '_delete', '_execute'],
@@ -26,6 +27,7 @@ class AccessControlComponent extends Component
         $this->controller = $this->_registry->getController();
         $this->action = $this->request->params['action'];
         $this->Session = $this->request->session();
+        $this->accessMap = [];
 
         if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
             if (!$this->Session->check('Permissions')) {
@@ -205,6 +207,7 @@ class AccessControlComponent extends Component
     public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
+
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
             return true;
         }
@@ -263,6 +266,7 @@ class AccessControlComponent extends Component
                 return true;
             }
         }
+
         if ($this->Session->check($permissionKey)) {
             if (!empty($roleIds)) {
                 $roles = $this->Session->read($permissionKey);
@@ -282,32 +286,36 @@ class AccessControlComponent extends Component
         return false;
     }
 
+    // the purpose of this function is to allow multiple actions linked to the same permission
+    public function addAccessMap($key)
+    {
+        $controller = $this->controller->name;
+        $this->accessMap["$controller.$key"] = "$controller.%s";
+    }
+
     public function checkAccessMap($url)
     {
         $urlValues = array_values($url);
         $key = implode('.', [$urlValues[0], $urlValues[1]]);
 
-        $paramKey = 'accessMap';
         $request = $this->request;
-        if (array_key_exists($paramKey, $request->params)) {
-            $accessMap = $request->params['accessMap'];
+        $accessMap = $this->accessMap;
 
-            if (array_key_exists($key, $accessMap)) {
-                $action = 'index';
-                if (isset($urlValues[2])) {
-                    if (!is_numeric($urlValues[2]) && !$this->isUuid($urlValues[2])) { // this is an action
-                        $action = $urlValues[2];
-                    }
-                } else {
-                    $paramsPass = $request->params['pass'];
-                    if (count($paramsPass) > 0) {
-                        if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
-                            $action = array_shift($paramsPass);
-                        }
+        if (array_key_exists($key, $accessMap)) {
+            $action = 'index';
+            if (isset($urlValues[2])) {
+                if (!is_numeric($urlValues[2]) && !$this->isUuid($urlValues[2])) { // this is an action
+                    $action = $urlValues[2];
+                }
+            } else {
+                $paramsPass = $request->params['pass'];
+                if (count($paramsPass) > 0) {
+                    if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
+                        $action = array_shift($paramsPass);
                     }
                 }
-                $url = explode('.', sprintf($accessMap[$key], $action));
             }
+            $url = explode('.', sprintf($accessMap[$key], $action));
         }
         return $url;
     }

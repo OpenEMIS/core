@@ -11,7 +11,8 @@ class InfrastructureOwnershipsTable extends ControllerActionTable
         $this->table('infrastructure_ownerships');
         parent::initialize($config);
 
-        $this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'foreignKey' => 'infrastructure_ownership_id']);
+        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'infrastructure_ownership_id']);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'infrastructure_ownership_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
