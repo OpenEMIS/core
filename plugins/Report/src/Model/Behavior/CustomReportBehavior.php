@@ -32,7 +32,7 @@ class CustomReportBehavior extends Behavior
                 } else {
                     $query = $this->Table->find();
 
-                    $methods = ['join', 'contain', 'matching', 'select', 'find', 'where', 'group', 'order'];
+                    $methods = ['join', 'joinWith', 'contain', 'matching', 'select', 'find', 'where', 'group', 'having', 'order'];
                     foreach ($methods as $method) {
                         if (array_key_exists($method, $jsonArray)) {
                             $methodName = '_' . $method;
@@ -149,6 +149,55 @@ class CustomReportBehavior extends Behavior
         }
     }
 
+    private function _joinWith(Query $query, array $params, array $values)
+    {
+        $joinTypes = [
+            'inner' => 'INNER',
+            'left' => 'LEFT'
+        ];
+
+        if (!empty($values)) {
+            foreach ($values as $obj) {
+                if (array_key_exists('name', $obj) && array_key_exists('type', $obj)) {
+                    $association = $obj['name'];
+                    $type = strtolower($obj['type']);
+                    $conditions = array_key_exists('conditions', $obj) ? $obj['conditions'] : [];
+
+                    if (array_key_exists($type, $joinTypes)) {
+                        $joinType = $joinTypes[$type];
+
+                        $associated = true;
+                        $table = $this->Table;
+                        $models = explode('.', $association);
+                        foreach ($models as $model) {
+                            if (!$table->associations()->has($model)) {
+                                $associated = false;
+                                break;
+                            } else {
+                                $table = $table->$model;
+                            }
+                        }
+
+                        if ($associated) {
+                            switch ($joinType) {
+                                case 'INNER':
+                                    $query->innerJoinWith($association, function($q) use ($conditions) {
+                                        return $q->where($conditions);
+                                    });
+                                    break;
+                                case 'LEFT':
+                                    $query->leftJoinWith($association, function($q) use ($conditions) {
+                                        return $q->where($conditions);
+                                    });
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private function _contain(Query $query, array $params, array $values)
     {
         if (!empty($values)) {
@@ -197,11 +246,9 @@ class CustomReportBehavior extends Behavior
                 }
 
                 if ($associated) {
-                    $matching[] = $value;
+                    $query->matching($value);
                 }
             }
-
-            $query->matching($matching);
         }
     }
 
@@ -269,6 +316,13 @@ class CustomReportBehavior extends Behavior
     {
         if (!empty($values)) {
             $query->group($values);
+        }
+    }
+
+    private function _having(Query $query, array $params, array $values)
+    {
+        if (!empty($values)) {
+            $query->having($values);
         }
     }
 
