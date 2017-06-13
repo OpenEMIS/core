@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "70ef7304c36673e7719408977a5025ca",
+    "content-hash": "c775449cdadc576d946061332eef09da",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -440,7 +440,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2017-05-12 02:37:19"
+            "time": "2017-05-12T02:37:19+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",

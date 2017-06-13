@@ -14,14 +14,15 @@ class EducationsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
     	parent::beforeFilter($event);
 
-		$selectedAction = $this->request->action;
-		$setupTab = 'Subjects';
-		if (in_array($selectedAction, ['Subjects', 'Certifications', 'ProgrammeOrientations', 'FieldOfStudies'])) {
-			$setupTab = $selectedAction;
-		}
+        $selectedAction = $this->request->action;
+        $setupTab = 'Stages';
+        if (in_array($selectedAction, ['Stages', 'Subjects', 'Certifications', 'ProgrammeOrientations', 'FieldOfStudies'])) {
+            $setupTab = $selectedAction;
+        }
 
 		$tabElements = [
 			'Systems' => [
@@ -58,7 +59,8 @@ class EducationsController extends AppController
         $this->set('selectedAction', $selectedAction);
 	}
 
-	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
 		$header = __('Education');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
@@ -78,4 +80,5 @@ class EducationsController extends AppController
     public function Programmes()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammes']); }
     public function Grades() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGrades']); }
     public function GradeSubjects()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGradesSubjects']); }
+    public function Stages()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationStages']); }
 }
