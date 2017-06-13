@@ -1058,6 +1058,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         InstitutionsStaffSvc.getUniqueOpenEmisId()
         .then(function(response) {
             StaffController.selectedStaffData.openemis_no = response;
+            StaffController.selectedStaffData.username = response;
             StaffController.Staff.username = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
@@ -1070,6 +1071,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.generatePassword()
         .then(function(response) {
+            StaffController.selectedStaffData.password = response;
             StaffController.Staff.password = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
