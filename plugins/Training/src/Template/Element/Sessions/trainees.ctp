@@ -32,16 +32,21 @@
 		]);
 		echo $this->Form->hidden("$alias.trainee_id", ['autocomplete-value' => 'trainee_id']);
 
-		$importAttr = [
-		    'model' => $attr['model'],
-		    'field' => 'trainees_import',
-		    'className' => $attr['className'],
-			'label' => __('Import Trainees'),
-			'comment' => isset($attr['comment']) ? $attr['comment'] : '',
-			'startWithOneLeftButton' => 'download',
-			'alwaysShowOneButton' => false
-		];
-		echo $this->HtmlField->binary($ControllerAction['action'], $data, $importAttr);
+        $url = $this->Url->build([
+            'plugin' => $this->request->params['plugin'],
+            'controller' => $this->request->params['controller'],
+            'action' => 'ImportTrainees',
+            'trainingId' => $this->request->params['pass'][1],
+            0 => 'add'
+        ]);
+
+        echo $this->Form->input('<i class="fa kd-import"></i> <span>'.__('Import Trainees').'</span>', [
+            'label' => __('Import Trainees'),
+            'type' => 'button',
+            'class' => 'btn btn-default',
+            'aria-expanded' => 'true',
+            'onclick' => "window.location.href = '$url'"
+        ]);
 	?>
 	<div class="clearfix"></div>
 	<hr>
