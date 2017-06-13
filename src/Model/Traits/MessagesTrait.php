@@ -372,6 +372,7 @@ trait MessagesTrait
                 'fail' => 'You have entered an invalid username or password.',
                 'inactive' => 'Your account has been disabled.',
                 'remoteFail' => 'Remote authentication failed, please try local login.',
+                'changePassword' => 'This is the first time that you are logging in, please change your password.'
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
