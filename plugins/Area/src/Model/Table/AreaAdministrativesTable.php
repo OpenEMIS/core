@@ -85,7 +85,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->select([$this->aliasField('id')])
                 ->where([$this->aliasField('parent_id').' IS NULL'])
                 ->first();
-        if (isset($options['displayCountry']) && $options['displayCountry']) {
+        if (isset($options['displayCountry']) && !$options['displayCountry']) {
             $authorisedAreaIds = $this
                 ->find()
                 ->select([$this->aliasField('id')])
