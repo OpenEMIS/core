@@ -265,7 +265,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
 
-                <div class="input string">
+                <div class="input string required">
                     <label><?= __('Username') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" ng-init="InstitutionStaffController.selectedStaffData.username='';">
                     <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
@@ -275,7 +275,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
                 <div class="input password">
                     <label><?= __('Password') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.password" type="password" ng-init="InstitutionStaffController.selectedStaffData.password='';">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.password" type="string" ng-init="InstitutionStaffController.selectedStaffData.password='';">
                     <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
                     </div>
@@ -299,6 +299,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.last_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string" ng-show="InstitutionStaffController.StaffNationalities != 2 && StaffController.createNewStaff == true">
