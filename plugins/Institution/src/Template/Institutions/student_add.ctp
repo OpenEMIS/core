@@ -258,7 +258,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="input string required">
                     <label><?= __('Username') ?></label>
-                    <input ng-model="InstitutionStudentController.Student.username" type="string" ng-init="InstitutionStudentController.Student.username='';">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.username" type="string" ng-init="InstitutionStudentController.selectedStudentData.username='';">
                     <div ng-if="InstitutionStudentController.postResponse.error.username" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.username">{{ error }}</p>
                     </div>
@@ -266,7 +266,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 
                 <div class="input password">
                     <label><?= __('Password') ?></label>
-                    <input ng-model="InstitutionStudentController.Student.password" type="string" ng-init="InstitutionStudentController.Student.password='';">
+                    <input ng-model="InstitutionStudentController.selectedStudentData.password" type="string" ng-init="InstitutionStudentController.selectedStudentData.password='';">
                     <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
                     </div>
@@ -281,6 +281,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <div ng-if="InstitutionStudentController.postResponse.error.openemis_no" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.openemis_no">{{ error }}</p>
                     </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input string" ng-model="InstitutionStudentController.postResponse">
                     <label><?= __('Student') ?></label>
@@ -290,9 +293,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                     <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
-                    </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string" ng-show="InstitutionStudentController.StudentNationalities != 2 && StudentController.createNewStudent == true">
