@@ -4,7 +4,7 @@ namespace Configuration\Controller;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 
 class ConfigurationsController extends AppController
 {
@@ -110,12 +110,12 @@ class ConfigurationsController extends AppController
             $response = $http->get($recordUri);
 
             if ($response->isOK()) {
-                echo json_encode($response->body('json_decode'), JSON_PRETTY_PRINT);
+                $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT));
             } else {
-                echo $noData;
+                $this->response->body($noData);
             }
         } else {
-            echo $noData;
+            $this->response->body($noData);
         }
     }
 

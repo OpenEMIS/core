@@ -31,7 +31,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->belongsTo('TrainingLevels', ['className' => 'Training.TrainingLevels', 'foreignKey' => 'training_level_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'training_course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('TargetPopulations', [
             'className' => 'Institution.StaffPositionTitles',
             'joinTable' => 'training_courses_target_populations',
@@ -99,6 +99,9 @@ class TrainingCoursesTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
+            ->requirePresence('target_populations')
+            ->requirePresence('training_providers')
+            ->requirePresence('result_types')
             ->add('duration', [
                 'num' => [
                     'rule'  => 'numeric',
@@ -184,7 +187,9 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes']);
+        $query->contain([
+            'TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes'
+        ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -195,6 +200,23 @@ class TrainingCoursesTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $keywords = ['target_populations', 'training_providers', 'result_types'];
+        foreach ($keywords as $key => $value) {
+            if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
+                if (array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
+                    $requestData[$this->alias()][$value] = [];
+                }
+            }
+        }
+
+        $newOptions = ['associated' => ['TargetPopulations' ,'TrainingProviders', 'ResultTypes', 'CoursePrerequisites', 'Specialisations']]; //so during patch entity, it can get the necessary datas
+        $arrayOptions = $patchOptions->getArrayCopy();
+        $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+        $patchOptions->exchangeArray($arrayOptions);
     }
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -277,13 +299,15 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->field('credit_hours', ['type' => 'select']);
         $this->field('target_populations', [
             'type' => 'chosenSelect',
-            'placeholder' => __('Select Target Populations, Leave Empty if Open for All Staff'),
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+            'placeholder' => __('Select Target Populations'),
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
+            'attr' => ['required' => true] // to add red asterisk
         ]);
         $this->field('training_providers', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select Providers'),
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
+            'attr' => ['required' => true] // to add red asterisk
         ]);
         $this->field('course_prerequisites', [
             'type' => 'chosenSelect',
@@ -298,7 +322,8 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->field('result_types', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select Result Types'),
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
+            'attr' => ['required' => true] // to add red asterisk
         ]);
 
         // Field order

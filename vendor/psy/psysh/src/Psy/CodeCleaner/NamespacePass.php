@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,7 @@
 namespace Psy\CodeCleaner;
 
 use PhpParser\Node\Name;
-use PhpParser\Node\Stmt\Namespace_ as NamespaceStmt;
+use PhpParser\Node\Stmt\Namespace_;
 use Psy\CodeCleaner;
 
 /**
@@ -50,14 +50,14 @@ class NamespacePass extends CodeCleanerPass
     public function beforeTraverse(array $nodes)
     {
         $first = reset($nodes);
-        if (count($nodes) === 1 && $first instanceof NamespaceStmt && empty($first->stmts)) {
+        if (count($nodes) === 1 && $first instanceof Namespace_ && empty($first->stmts)) {
             $this->setNamespace($first->name);
         } else {
             foreach ($nodes as $key => $node) {
-                if ($node instanceof NamespaceStmt) {
+                if ($node instanceof Namespace_) {
                     $this->setNamespace(null);
                 } elseif ($this->namespace !== null) {
-                    $nodes[$key] = new NamespaceStmt($this->namespace, array($node));
+                    $nodes[$key] = new Namespace_($this->namespace, array($node));
                 }
             }
         }

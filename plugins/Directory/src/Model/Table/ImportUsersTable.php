@@ -19,6 +19,9 @@ class ImportUsersTable extends AppTable {
 	    // register table once
 		$this->Users = TableRegistry::get('User.Users');
 	    $this->ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $this->Nationalities = TableRegistry::get('FieldOption.Nationalities');
+        $this->IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $this->UserIdentities = TableRegistry::get('User.Identities');
 
 	    $prefix = $this->ConfigItems->value('openemis_id_prefix');
 		$prefix = explode(",", $prefix);
@@ -185,9 +188,107 @@ class ImportUsersTable extends AppTable {
 		}
 	}
 
-	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
+    {   
+        //check combination of nationality and identity whether according to the setting on nationality field options
+        if ($tempRow->offsetExists('nationality_id') && !empty($tempRow['nationality_id'])) {
+            if ($tempRow->offsetExists('identity_type_id') && !empty($tempRow['identity_type_id'])) {
+                $query = $this->Nationalities
+                        ->find()
+                        ->contain('IdentityTypes')
+                        ->where([
+                            $this->Nationalities->aliasField('id') => $tempRow['nationality_id'],
+                        ])
+                        ->first();
+                
+                $identityTypeId = $query->identity_type_id;
+                $identityTypeName = $query->identity_type->name;
+
+                if ($identityTypeId != $tempRow['identity_type_id']) {
+                    $rowInvalidCodeCols['identity_type_id'] = $this->getMessage('Import.identity_type_doesnt_match', ['sprintf' => [$identityTypeName]]);
+                    return false;
+                }
+            }
+        }
+
+        //if identity type selected, then need to specify identity number
+        if ($tempRow->offsetExists('identity_type_id') && !empty($tempRow['identity_type_id'])) { 
+            if (!$tempRow->offsetExists('identity_number') || empty($tempRow['identity_number'])) {
+                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+                return false;
+            }
+        }
+
+        //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
+        if ($tempRow->offsetExists('identity_number') && !empty($tempRow['identity_number'])) { 
+            if (!$tempRow->offsetExists('identity_type_id') || empty($tempRow['identity_type_id'])) {
+                $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_required');
+                return false;
+            } else {
+                // check whether same identity number exist for the selected identity type
+                $query = $this->UserIdentities
+                        ->find()
+                        ->contain('IdentityTypes')
+                        ->where([
+                            $this->UserIdentities->aliasField('number') => $tempRow['identity_number'],
+                            $this->UserIdentities->aliasField('identity_type_id') => $tempRow['identity_type_id']
+                        ])
+                        ->first();
+                if (!empty($query)) {
+                    $identityTypeName = $query->identity_type->name;
+                    $rowInvalidCodeCols['identity_number'] = $this->getMessage('Import.identity_number_exist', ['sprintf' => [$identityTypeName]]);
+                    return false;
+                } else {
+                    // following validation pattern.
+                    $query = $this->IdentityTypes->find()
+                            ->where([
+                                $this->IdentityTypes->aliasField('id') => $tempRow['identity_type_id']
+                            ])
+                            ->first();
+                    $validationPattern = $query->validation_pattern;
+                    if (!empty($validationPattern)) {
+                        $validationPattern = '/' . $validationPattern . '/';
+                        if (!preg_match($validationPattern, $tempRow['identity_number'])) {
+                            $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_invalid_pattern');
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        //add identifier that later will be used on User afterSave
+        $tempRow['record_source'] = 'import_user';
+
 		return true;
 	}
+
+    public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+
+        $modelData = $lookedUpTable->find()
+                    ->contain('IdentityTypes')
+                    ->select([
+                        $lookedUpTable->aliasField($lookupColumn),
+                        $lookedUpTable->aliasField('name'), 
+                        'IdentityTypes.name'
+                    ])
+                    ->order($lookedUpTable->aliasField('order'));
+
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol, __('Identity Types')];
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->$lookupColumn,
+                    $row->identity_type->name
+                ];
+            }
+        }
+    }
 
 	protected function getNewOpenEmisNo(ArrayObject $importedUniqueCodes, $row, $accountType) {
 		$model = $this->accountTypes[$accountType]['model'];

@@ -147,6 +147,7 @@ class ExcelBehavior extends Behavior
         if ($_settings['purge']) {
             $this->purge($filepath);
         }
+        return $_settings;
     }
 
     public function generate($settings = [])
@@ -238,7 +239,6 @@ class ExcelBehavior extends Behavior
                 $headerRow = [];
                 $headerStyle = [];
                 $headerFormat = [];
-
                 foreach ($fields as $attr) {
                     $headerRow[] = $attr['label'];
                     $headerStyle[] = isset($attr['style']) ? $attr['style'] : [];

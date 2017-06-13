@@ -81,9 +81,11 @@ class ReportsController extends AppController {
 			];
 		} else if ($module == 'ProfessionalDevelopment') {
 			$options = [
+				'Report.TrainingNeeds' => __('Needs'),
 				'Report.TrainingCourses' => __('Courses'),
 				'Report.TrainingSessions' => __('Sessions'),
-				'Report.TrainingResults' => __('Results')
+				'Report.TrainingResults' => __('Results'),
+                'Report.StaffTrainingApplications' => __('Applications')
 			];
 		} else if ($module == 'Surveys') {
 			$options = [
