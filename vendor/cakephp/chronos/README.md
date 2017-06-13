@@ -70,7 +70,7 @@ find ./src -type f -exec sed -i '' 's/Carbon/Chronos/g' {} \;
 ```
 
 At this point your code should mostly work as it did before. The biggest
-different is that Chronos instances are immutable.
+difference is that Chronos instances are immutable.
 
 ## Immutable Object Changes
 
@@ -140,7 +140,7 @@ a mutable variant of `Date`.
 
 # Documentation
 
-A more descriptive documentation can be fount at http://book.cakephp.org/3.0/en/chronos.html
+A more descriptive documentation can be found at [book.cakephp.org/3.0/en/chronos.html](http://book.cakephp.org/3.0/en/chronos.html).
 
 # API Documentation
 

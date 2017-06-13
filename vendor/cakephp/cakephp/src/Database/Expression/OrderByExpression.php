@@ -28,8 +28,8 @@ class OrderByExpression extends QueryExpression
     /**
      * Constructor
      *
-     * @param array $conditions The sort columns
-     * @param array $types The types for each column.
+     * @param string|array|\Cake\Database\ExpressionInterface $conditions The sort columns
+     * @param array|\Cake\Database\TypeMap $types The types for each column.
      * @param string $conjunction The glue used to join conditions together.
      */
     public function __construct($conditions = [], $types = [], $conjunction = '')
@@ -52,6 +52,7 @@ class OrderByExpression extends QueryExpression
             }
             $order[] = is_numeric($k) ? $direction : sprintf('%s %s', $k, $direction);
         }
+
         return sprintf('ORDER BY %s', implode(', ', $order));
     }
 

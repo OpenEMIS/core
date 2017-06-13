@@ -111,6 +111,7 @@ class HasMany extends Association
             $msg = sprintf('Invalid save strategy "%s"', $strategy);
             throw new InvalidArgumentException($msg);
         }
+
         return $this->_saveStrategy = $strategy;
     }
 
@@ -180,11 +181,13 @@ class HasMany extends Association
             if (!empty($options['atomic'])) {
                 $original[$k]->errors($targetEntity->errors());
                 $entity->set($this->property(), $original);
+
                 return false;
             }
         }
 
         $entity->set($this->property(), $targetEntities);
+
         return $entity;
     }
 
@@ -228,7 +231,9 @@ class HasMany extends Association
 
         $sourceEntity->set($property, $currentEntities);
 
-        $savedEntity = $this->saveAssociated($sourceEntity, $options);
+        $savedEntity = $this->connection()->transactional(function () use ($sourceEntity, $options) {
+            return $this->saveAssociated($sourceEntity, $options);
+        });
 
         $ok = ($savedEntity instanceof EntityInterface);
 
@@ -289,6 +294,9 @@ class HasMany extends Association
             ];
         } else {
             $options += ['cleanProperty' => true];
+        }
+        if (count($targetEntities) === 0) {
+            return;
         }
 
         $foreignKey = (array)$this->foreignKey();
@@ -352,7 +360,7 @@ class HasMany extends Association
      * $author->articles = [$article1, $article2, $article3, $article4];
      * $authors->save($author);
      * $articles = [$article1, $article3];
-     * $authors->association('articles')->replaceLinks($author, $articles);
+     * $authors->association('articles')->replace($author, $articles);
      * ```
      *
      * `$author->get('articles')` will contain only `[$article1, $article3]` at the end
@@ -379,6 +387,7 @@ class HasMany extends Association
             $sourceEntity = $result;
         }
         $this->saveStrategy($saveStrategy);
+
         return $ok;
     }
 
@@ -450,15 +459,20 @@ class HasMany extends Association
                 foreach ($query as $assoc) {
                     $ok = $ok && $target->delete($assoc, $options);
                 }
+
                 return $ok;
             }
 
+            $conditions = array_merge($conditions, $this->conditions());
             $target->deleteAll($conditions);
+
             return true;
         }
 
         $updateFields = array_fill_keys($foreignKey, null);
+        $conditions = array_merge($conditions, $this->conditions());
         $target->updateAll($updateFields, $conditions);
+
         return true;
     }
 

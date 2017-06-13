@@ -21,13 +21,13 @@ class RestfulV1Component extends Component implements RestfulInterface
     use RestfulTrait;
     private $model = null;
     private $controller = null;
-    private $Auth = null;
+
+    public $components = ['Auth'];
 
     public function initialize(array $config)
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
-        $this->Auth = $this->controller->Auth;
         $this->model = $this->config('model');
     }
 
@@ -49,25 +49,11 @@ class RestfulV1Component extends Component implements RestfulInterface
                 $this->model = $model;
                 // Event to get allowed action and allowed table to be accessible via restful
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
+
                 if (is_array($event->result)) {
-                    $this->Auth->allow(true);
+                    $this->Auth->allow($event->result);
                 }
             }
-        }
-    }
-
-    // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
-
-    public function beforeRender(Event $event)
-    {
-        $controller = $this->controller;
-        if ($controller->isDebugMode()) {
-            $serialize = array_merge(['request_method', 'action'], $controller->viewVars['_serialize']);
-            $controller->set([
-                'request_method' => $this->request->method(),
-                'action' => $this->request->params['action'],
-                '_serialize' => $serialize
-            ]);
         }
     }
 
@@ -113,7 +99,7 @@ class RestfulV1Component extends Component implements RestfulInterface
     {
         $supportedMethods = ['GET', 'POST', 'PATCH', 'DELETE'];
         $allowedHeaders = ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'ControllerAction'];
-        $header = $this->response->header();
+        $header = $this->response->getHeaderLine();
         $origin = isset($header['Origin']) ? $header['Origin'] : [];
 
         $this->response->cors($this->request, $origin, $supportedMethods, $allowedHeaders);
@@ -122,7 +108,7 @@ class RestfulV1Component extends Component implements RestfulInterface
         $this->response->charset('UTF-8');
         $this->response->type('html');
 
-        Log::write('debug', $this->response->header());
+        Log::write('debug', $this->response->getHeaderLine());
 
         /*
         OPTIONS /cors HTTP/1.1

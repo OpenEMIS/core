@@ -7,14 +7,17 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\SetupBehavior;
 
-class SetupTableBehavior extends SetupBehavior {
-	public function initialize(array $config) {
+class SetupTableBehavior extends SetupBehavior
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
     }
 
-    public function onSetTableElements(Event $event, Entity $entity) {
-    	$fieldType = strtolower($this->fieldTypeCode);
-		$this->_table->ControllerAction->addField('tables', [
+    public function onSetTableElements(Event $event, Entity $entity)
+    {
+        $fieldType = strtolower($this->fieldTypeCode);
+        $this->_table->field('tables', [
             'type' => 'element',
             'order' => 0,
             'element' => 'CustomField.Setup/' . $fieldType,
@@ -24,7 +27,8 @@ class SetupTableBehavior extends SetupBehavior {
         $this->sortFieldOrder('tables');
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query) {
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         $queryCopy = clone($query);
         $entity = $queryCopy->first();
         if ($entity->field_type == $this->fieldTypeCode) {
@@ -32,7 +36,8 @@ class SetupTableBehavior extends SetupBehavior {
         }
     }
 
-    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $model = $this->_table;
         $request = $model->request;
         if ($request->is(['post', 'put'])) {
@@ -47,7 +52,8 @@ class SetupTableBehavior extends SetupBehavior {
         }
     }
 
-    public function addEditOnAddColumn(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditOnAddColumn(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $model = $this->_table;
         if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
             $columnOptions = [
@@ -64,7 +70,8 @@ class SetupTableBehavior extends SetupBehavior {
         }
     }
 
-    public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $model = $this->_table;
         if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
             $rowOptions = [

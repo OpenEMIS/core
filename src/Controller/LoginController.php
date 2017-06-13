@@ -37,7 +37,12 @@ class LoginController extends Controller
             'productName' => $this->productName,
             'theme' => 'core'
         ]);
-
+        $this->loadComponent('Security', [
+            'unlockedActions' => [
+                'postLogin'
+            ]
+        ]);
+        $this->loadComponent('Csrf');
         $this->Auth->allow('login');
         $this->loadComponent('Localization.Localization', [
             'productName' => $this->productName

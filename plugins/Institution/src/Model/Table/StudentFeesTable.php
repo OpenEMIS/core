@@ -237,13 +237,17 @@ class StudentFeesTable extends ControllerActionTable {
 ** view action methods
 **
 ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event, ArrayObject $extra) {
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
     	$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-    	$toolbarButtonsArray['addPayment'] = $toolbarButtonsArray['edit'];
-		$toolbarButtonsArray['addPayment']['url'][0] = 'add';
-		$toolbarButtonsArray['addPayment']['label'] = '<i class="fa kd-add"></i>';
-		$toolbarButtonsArray['addPayment']['attr']['title'] = __('Add Payment');
-    	unset($toolbarButtonsArray['edit']);
+        if (isset($toolbarButtonsArray['edit'])) {
+            $toolbarButtonsArray['addPayment'] = $toolbarButtonsArray['edit'];
+            $toolbarButtonsArray['addPayment']['url'][0] = 'add';
+            $toolbarButtonsArray['addPayment']['label'] = '<i class="fa kd-add"></i>';
+            $toolbarButtonsArray['addPayment']['attr']['title'] = __('Add Payment');
+            unset($toolbarButtonsArray['edit']);
+        }
+
     	$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 

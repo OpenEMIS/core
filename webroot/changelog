@@ -1,3 +1,23 @@
+v3.10.1
+- Implemented Student Report card feature
+
+v3.9.14.1
+- System now displays the total mark for each Academic Term
+- In Institution > Assessments, System will notify users when student's marks are not saved successfully
+- Added an Academic Term filter to Institution > Assessments feature
+- In Institution > Assessments, System locks the columns that contain students information for easier data entry.
+
+v3.9.14
+- Added an Export function to Institution > Assessments to only show marks based on user's permission
+- Added Report for Training Applications
+- User is now able to Import/Export Staff Salaries in Staff > Finance > Salaries
+- In Institution > Add Staff page, System displays Position Grades in the Position list
+- Added Nationality column in Administration> Examinations> Students> Registered/Not Registered
+- System now allows user to sort list of students/staff by name
+
+v3.9.13
+- Implemented freezing of header and column panes in Institution > Competencies edit page for easier transaction
+
 v3.9.12
 - Implemented decimal type for custom fields
 - Redevelop add multiple students to classes and subjects page

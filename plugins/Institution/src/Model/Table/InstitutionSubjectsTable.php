@@ -307,6 +307,24 @@ class InstitutionSubjectsTable extends ControllerActionTable
             });
     }
 
+    public function findSubjectDetails(Query $query, array $options)
+    {
+        // POCOR-2547 sort list of staff and student by name
+        // move the contain from institution.subject.student.ctrl.js since its using finder method
+        return $query
+            ->find('translateItem')
+            ->contain([
+                'SubjectStaff.Users',
+                'Rooms',
+                'EducationSubjects',
+                'AcademicPeriods',
+                'SubjectStudents' => ['sort' => ['Users.first_name', 'Users.last_name']],
+                'SubjectStudents.Users.Genders',
+                'SubjectStudents.StudentStatuses',
+                'ClassSubjects'
+            ]);
+    }
+
     public function findByClasses(Query $query, array $options)
     {
         return $query
@@ -367,7 +385,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'Rooms',
             'SubjectStudents' => [
                 'Users.Genders',
-                'StudentStatuses'
+                'StudentStatuses',
+                'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
             ]
         ]);
     }

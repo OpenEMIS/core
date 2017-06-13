@@ -41,7 +41,7 @@ trait OptionsTrait {
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			],
 			'TrainingSessions' => [
-				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
+				'trainer_types' => ['Staff' => __('Staff'), 'Others' => __('Others')]
 			],
 			'StaffTrainingNeeds' => [
 				'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
@@ -65,8 +65,8 @@ trait OptionsTrait {
 			'RoomTypes' => [
 				'classifications' => [0 => __('Non-Classroom'), 1 => __('Classroom')]
 			],
-			'InstitutionRooms' => [
-				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Room Type')]
+			'InstitutionInfrastructure' => [
+				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
 			],
 			'Shifts' => [
 				'types' => [

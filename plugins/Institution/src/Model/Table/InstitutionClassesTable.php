@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
+use Cake\I18n\Date;
 
 use Cake\Routing\Router;
 
@@ -69,6 +70,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'ClassStudents' => ['view', 'edit'],
+            'StudentCompetencies' => ['view'],
             'OpenEMIS_Classroom' => ['index', 'view']
         ]);
         $this->setDeleteStrategy('restrict');
@@ -335,15 +337,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
-            /**
-             * Added on PHPOE-1762 for PHPOE-1766
-             * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions()
-             * so as to avoid unadherence of User's Requirements.
-             */
-            $gradeOptions[-1] = 'All Grades';
-            // sort options by key
-            ksort($gradeOptions);
-            /**/
+            $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
         }
 
         $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
@@ -393,13 +387,16 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $sortable = !is_null($this->request->query('sort')) ? true : false;
+
         $query
-        ->find('byGrades', ['education_grade_id' => $extra['selectedEducationGradeId']])
-        ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+            ->find('byGrades', [
+                'education_grade_id' => $extra['selectedEducationGradeId'],
+                'sort' => $sortable
+            ])
+            ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+            ->order([$this->aliasField('name') => 'ASC'])
         ;
-        $extra['options']['order'] = [
-            $this->aliasField('name') => 'asc'
-        ];
     }
 
     public function findTranslateItem(Query $query, array $options)
@@ -418,8 +415,29 @@ class InstitutionClassesTable extends ControllerActionTable
             });
     }
 
+    public function findClassDetails(Query $query, array $options)
+    {
+        // POCOR-2547 sort list of staff and student by name
+        // move the contain from institution.class.student.ctrl.js since its using finder method
+        return $query
+            ->find('translateItem')
+            ->contain([
+                'ClassStudents' => [
+                    'sort' => ['Users.first_name', 'Users.last_name']
+                ],
+                'ClassStudents.Users.Genders',
+                'ClassStudents.StudentStatuses',
+                'ClassStudents.EducationGrades',
+                'AcademicPeriods',
+                'InstitutionSubjects'
+            ]);
+    }
+
     public function findByGrades(Query $query, array $options)
     {
+        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $gradeId = $options['education_grade_id'];
         $join = [
             'table' => 'institution_class_grades',
@@ -432,7 +450,24 @@ class InstitutionClassesTable extends ControllerActionTable
         if ($gradeId > 0) {
             $join['conditions']['InstitutionClassGrades.education_grade_id'] = $gradeId;
         }
-        return $query->join([$join])->group(['InstitutionClassGrades.institution_class_id']);
+
+        $query = $query
+            ->join([$join])
+            ->group(['InstitutionClassGrades.institution_class_id'])
+            ;
+
+        // if no sorting, order by grade then class name
+        if (!$sortable) {
+            $query = $query
+                ->innerJoin(
+                    [$EducationGrades->alias() => $EducationGrades->table()],
+                    [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
+                )
+                ->order(['EducationGrades.order' => 'ASC'])
+            ;
+        }
+
+        return $query;
     }
 
 
@@ -470,6 +505,26 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $extra['selectedGrade'] = -1;
+        $extra['selectedStatus'] = -1;
+        $extra['selectedGender'] = -1;
+        if (array_key_exists('queryString', $this->request->query)) {
+            $queryString = $this->paramsDecode($this->request->query['queryString']);
+            
+            if (!empty($queryString) && array_key_exists('grade', $queryString)) {
+                $extra['selectedGrade'] = $queryString['grade'];
+            }
+
+            if (!empty($queryString) && array_key_exists('status', $queryString)) {
+                $extra['selectedStatus'] = $queryString['status'];
+            }
+
+
+            if (!empty($queryString) && array_key_exists('gender', $queryString)) {
+                $extra['selectedGender'] = $queryString['gender'];
+            }
+        }
+
         $query->contain([
             'AcademicPeriods',
             //'InstitutionShifts',
@@ -479,15 +534,136 @@ class InstitutionClassesTable extends ControllerActionTable
             'ClassStudents' => [
                 'Users.Genders',
                 'EducationGrades',
-                'StudentStatuses'
+                'StudentStatuses',
+                'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
             ],
         ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->fields['students']['data']['students'] = $entity->class_students;
+        //generate student filter.
+        $params = $this->getQueryString();
+        $baseUrl = $this->url($this->action, true);
+        
+        $gradeOptions = [];
+        $statusOptions = [];
+        $genderOptions = [];
+        foreach ($entity->class_students as $key => $value) {
+            if (!empty($value->education_grade)){ //grade filter
+                $gradeOptions[$value->education_grade->id]['name'] = $value->education_grade->name;
+                $gradeOptions[$value->education_grade->id]['order'] = $value->education_grade->order;
+
+                $params['grade'] = $value->education_grade->id;
+                $params['status'] = $extra['selectedStatus']; //maintain current status selection
+                $params['gender'] = $extra['selectedGender'];
+                $url = $this->setQueryString($baseUrl, $params);
+                
+                $gradeOptions[$value->education_grade->id]['url'] = $url;
+            }
+
+            if (!empty($value->student_status)){ //status filter
+                $statusOptions[$value->student_status->id]['name'] = $value->student_status->name;
+                $statusOptions[$value->student_status->id]['order'] = $value->student_status->id;
+
+                $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+                $params['status'] = $value->student_status->id;
+                $params['gender'] = $extra['selectedGender'];
+                $url = $this->setQueryString($baseUrl, $params);
+                
+                $statusOptions[$value->student_status->id]['url'] = $url;
+            }
+
+            if (!empty($value->user) && !empty($value->user->gender)){ //gender filter
+                $genderOptions[$value->user->gender->id]['name'] = $value->user->gender->name;
+                $genderOptions[$value->user->gender->id]['order'] = $value->user->gender->id;
+
+                $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+                $params['status'] = $extra['selectedStatus'];
+                $params['gender'] = $value->user->gender->id;
+                $url = $this->setQueryString($baseUrl, $params);
+                
+                $genderOptions[$value->user->gender->id]['url'] = $url;
+            }
+
+            //if student does not fullfil the filter, then unset from array
+            if ($extra['selectedGrade'] != -1 && $value->education_grade->id != $extra['selectedGrade']) {
+                unset($entity->class_students[$key]);
+            }
+
+            if ($extra['selectedStatus'] != -1 && $value->student_status->id != $extra['selectedStatus']) {
+                unset($entity->class_students[$key]);
+            }
+
+            if ($extra['selectedGender'] != -1 && $value->user->gender->id != $extra['selectedGender']) {
+                unset($entity->class_students[$key]);
+            }
+        }
+
+        //for all grades / no option
+        $gradeOptions[-1]['name'] = count($gradeOptions) > 0 ? '-- ' . __('All Grades') . ' --' : '-- ' . __('No Options') . ' --';
+        $gradeOptions[-1]['id'] = -1;
+        $gradeOptions[-1]['order'] = 0;
+
+        $params['grade'] = -1;
+        $params['status'] = $extra['selectedStatus']; //maintain current status selection
+        $params['gender'] = $extra['selectedGender'];
+        $url = $this->setQueryString($baseUrl, $params);
+
+        $gradeOptions[-1]['url'] = $url;
+
+        //order array by 'order' key
+        uasort($gradeOptions, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
+
+        //for all statuses option
+        $statusOptions[-1]['name'] = count($statusOptions) > 0 ? '-- ' . __('All Statuses') . ' --' : '-- ' . __('No Options') . ' --';
+        $statusOptions[-1]['id'] = -1;
+        $statusOptions[-1]['order'] = 0;
+
+        $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+        $params['status'] = -1;
+        $params['gender'] = $extra['selectedGender'];
+        $url = $this->setQueryString($baseUrl, $params);
+
+        $statusOptions[-1]['url'] = $url;
+
+        //order array by 'order' key
+        uasort($statusOptions, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
+        
+        //for all gender option
+        $genderOptions[-1]['name'] = count($genderOptions) > 0 ? '-- ' . __('All Genders') . ' --' : '-- ' . __('No Options') . ' --';
+        $genderOptions[-1]['id'] = -1;
+        $genderOptions[-1]['order'] = 0;
+
+        $params['grade'] = $extra['selectedGrade']; //maintain current grade selection
+        $params['status'] = $extra['selectedStatus'];
+        $params['gender'] = -1;
+        $url = $this->setQueryString($baseUrl, $params);
+
+        $genderOptions[-1]['url'] = $url;
+
+        //order array by 'order' key
+        uasort($genderOptions, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
+
+        //set option and selected filter value
+        $this->fields['students']['data']['filter']['education_grades']['options'] = $gradeOptions;
+        $this->fields['students']['data']['filter']['education_grades']['selected'] = $extra['selectedGrade'];
+
+        $this->fields['students']['data']['filter']['student_status']['options'] = $statusOptions;
+        $this->fields['students']['data']['filter']['student_status']['selected'] = $extra['selectedStatus'];
+
+        $this->fields['students']['data']['filter']['genders']['options'] = $genderOptions;
+        $this->fields['students']['data']['filter']['genders']['selected'] = $extra['selectedGender'];
+
         $this->fields['education_grades']['data']['grades'] = $entity->education_grades;
+
+        $this->fields['students']['data']['students'] = $entity->class_students;
 
         $academicPeriodOptions = $this->getAcademicPeriodOptions($entity->institution_id);
     }
@@ -683,19 +859,18 @@ class InstitutionClassesTable extends ControllerActionTable
 ** essential functions
 **
 ******************************************************************************************************************/
-    public function getClassGradeOptions($entity)
+    public function getClassGradeOptions($institutionClassId)
     {
         $Grade = $this->ClassGrades;
         $gradeOptions = $Grade->find()
                             ->contain('EducationGrades')
                             ->where([
-                                $Grade->aliasField('institution_class_id') => $entity->id,
-                                $Grade->aliasField('status') => 1
+                                $Grade->aliasField('institution_class_id') => $institutionClassId
                             ])
                             ->toArray();
         $options = [];
         foreach ($gradeOptions as $value) {
-            $options[$value->education_grade->id] = $value->education_grade->name;
+            $options[] = $value->education_grade->id;
         }
         return $options;
     }
@@ -821,6 +996,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $academicPeriodObj = $this->AcademicPeriods->get($academicPeriodId);
             $startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
             $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
+            $todayDate = new Date();
 
             $Staff = $this->Institutions->Staff;
             $query = $Staff->find('all')
@@ -830,6 +1006,13 @@ class InstitutionClassesTable extends ControllerActionTable
                             })
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
+                            ->where([
+                                $Staff->aliasField('start_date <= ') => $todayDate,
+                                'OR' => [
+                                    [$Staff->aliasField('end_date >= ') => $todayDate],
+                                    [$Staff->aliasField('end_date IS NULL')]
+                                ]
+                            ])
                             ;
 
             foreach ($query->toArray() as $value) {

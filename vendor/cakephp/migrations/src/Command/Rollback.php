@@ -38,7 +38,14 @@ class Rollback extends RollbackCommand
             ->addOption('--date', '-d', InputOption::VALUE_REQUIRED, 'The date to migrate to')
             ->addOption('--plugin', '-p', InputOption::VALUE_REQUIRED, 'The plugin containing the migrations')
             ->addOption('--connection', '-c', InputOption::VALUE_REQUIRED, 'The datasource connection to use')
-            ->addOption('--source', '-s', InputOption::VALUE_REQUIRED, 'The folder where migrations are in');
+            ->addOption('--source', '-s', InputOption::VALUE_REQUIRED, 'The folder where migrations are in')
+            ->addOption('--force', '-f', InputOption::VALUE_NONE, 'Force rollback to ignore breakpoints')
+            ->addOption(
+                '--no-lock',
+                null,
+                InputOption::VALUE_NONE,
+                'Whether a lock file should be generated after rolling back'
+            );
     }
 
     /**

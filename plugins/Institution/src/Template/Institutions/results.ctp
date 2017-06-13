@@ -42,8 +42,10 @@ $this->start('toolbar');
         </button>
         <!-- End -->
     <?php endif; ?>
-
     <?php if ($_excel) : ?>
+        <?php if (isset($customExcel)) : ?>
+            <a href="<?=$customExcel ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-table"></i></button></a>
+        <?php endif;?>
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
     <?php endif; ?>
 <?php
@@ -60,6 +62,23 @@ $roles = '[' . implode(",", $_roles) . ']';
 ?>
     <div class="alert {{class}}" ng-hide="message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+    </div>
+
+    <div class="toolbar-responsive panel-toolbar" ng-show="academicTermOptions.length > 0">
+        <div class="toolbar-wrapper">
+            <div class="input select">
+                <div class="input-select-wrapper">
+                    <select
+                        class="form-control"
+                        ng-options="option.id as option.name for option in academicTermOptions"
+                        ng-model="selectedAcademicTerm"
+                        ng-change="changeAcademicTerm();"
+                        >
+                            <option value=""><?= '-- '. __('Select Academic Term').' --' ?></option>
+                    </select>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>;roles=<?=$roles; ?>">

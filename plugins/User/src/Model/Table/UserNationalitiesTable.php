@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\I18n\Time;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -34,6 +35,43 @@ class UserNationalitiesTable extends ControllerActionTable {
 
         $this->addBehavior('CompositeKey');
 	}
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.Users.afterSave' => 'afterSaveUsers'
+        ];
+
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
+
+    public function afterSaveUsers(Event $event, Entity $entity)
+    {
+        //check whether the combination user and nationality exist
+        $query = $this->find()
+                ->where([
+                    $this->aliasField('security_user_id') => $entity->id,
+                    $this->aliasField('nationality_id') => $entity->nationality_id
+                ]);
+
+        if ($query->count()) { //if exist then set as preferred.
+
+            //use save instead of update to trigger after save events
+            $userNationalityEntity = $this->patchEntity($query->first(), ['preferred' => 1], ['validate' =>false]);
+            $this->save($userNationalityEntity);
+            
+        } else { //not exist then add new record and set as preferred.
+            $userNationalityEntity = $this->newEntity([
+                'preferred' => 1,
+                'nationality_id' => $entity->nationality_id,
+                'security_user_id' => $entity->id,
+                'created_user_id' => 1,
+                'created' => new Time()
+            ]);
+            $this->save($userNationalityEntity);
+        }
+    }
 
 	public function beforeAction(Event $event) {
 		$this->fields['nationality_id']['type'] = 'select';
