@@ -96,7 +96,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->hydrate(false)
                 ->toArray();
 
-            $removeAreas = $authorisedAreaIds = $this
+            $removeAreas = $this
                 ->find()
                 ->select([$this->aliasField('id')])
                 ->where([
@@ -123,6 +123,8 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $authorisedAreaIds = array_column($authorisedAreaIds, 'id');
 
+        $selected = !empty($options['selected']) ? $options['selected'] : null;
+
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
@@ -136,18 +138,23 @@ class AreaAdministrativesTable extends ControllerActionTable
             ->hydrate(false)
             // Remove world record
             ->where([$this->aliasField('parent_id').' IS NOT NULL'])
-            ->formatResults(function ($results) use ($authorisedAreaIds) {
+            ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
                 $results = $results->toArray();
-                $this->unsetEmptyArr($results, $authorisedAreaIds);
+                $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
                 return $results;
             });
     }
 
-    private function unsetEmptyArr(&$array, &$authorisedAreaIds)
+    private function unsetEmptyArr(&$array, &$authorisedAreaIds, $selected)
     {
         foreach ($array as &$value) {
-            if (isset($value['id']) && !in_array($value['id'], $authorisedAreaIds)) {
-                $value['disabled'] = true;
+            if (isset($value['id'])) {
+                if (!in_array($value['id'], $authorisedAreaIds)) {
+                    $value['disabled'] = true;
+                }
+                if ($value['id'] == $selected) {
+                    $value['selected'] = true;
+                }
             }
             if (is_array($value) && empty($value)) {
                 unset($value);
@@ -156,7 +163,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 if (array_intersect($authorisedAreaIds, $parentIds)) {
                     $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
                 }
-                $this->unsetEmptyArr($value, $authorisedAreaIds);
+                $this->unsetEmptyArr($value, $authorisedAreaIds, $selected);
             }
         }
     }

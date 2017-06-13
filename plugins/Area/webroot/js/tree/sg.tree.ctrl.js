@@ -11,6 +11,7 @@ function SgTreeController($scope, $window, SgTreeSvc) {
     Controller.inputModelText = [];
     $scope.outputModelText = [];
     Controller.outputValue = null;
+    Controller.displayCountry = 0;
 
     angular.element(document).ready(function () {
         SgTreeSvc.init(angular.baseUrl);
@@ -20,7 +21,8 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         var authorisedArea = JSON.parse(Controller.authorisedArea);
         var authArea = [];
         var counter = 0;
-        SgTreeSvc.getRecords(Controller.model, authorisedArea)
+        console.log(Controller.displayCountry);
+        SgTreeSvc.getRecords(Controller.model, authorisedArea, Controller.displayCountry, Controller.outputValue)
         .then(function(response) {
             Controller.inputModelText = response;
         }, function(error){
