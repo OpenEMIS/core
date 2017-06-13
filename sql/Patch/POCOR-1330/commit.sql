@@ -19,11 +19,12 @@ CREATE TABLE IF NOT EXISTS `education_stages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the educational absolute grades';
 
 -- insert value to education_stages
-SET @order := 0;
-
 INSERT INTO `education_stages` (`name`, `code`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT DISTINCT `name`, `code`, @order := @order + 1, 1, NULL, NULL, 1, NOW()
+SELECT DISTINCT `name`, `code`, 1, 1, NULL, NULL, 1, NOW()
 FROM `education_grades`;
+
+UPDATE `education_stages`
+SET `order` = `id`;
 
 -- education_grades
 RENAME TABLE `education_grades` TO `z_1330_education_grades`;
