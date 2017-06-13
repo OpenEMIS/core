@@ -1,8 +1,3 @@
--- POCOR-4040
--- system_patches
-DELETE FROM `system_patches` WHERE `issue` = 'POCOR-4040';
-
-
 -- POCOR-3824
 -- field options
 DROP TABLE IF EXISTS `training_need_competencies`;
