@@ -135,12 +135,15 @@ class CustomReportBehavior extends Behavior
                             }
                         }
 
+                        // allow same table to be joined twice
+                        $alias = array_key_exists('alias', $obj) ? $obj['alias'] : $joinTable->alias();
+
                         switch ($joinType) {
                             case 'INNER':
-                                $query->innerJoin([$joinTable->alias() => $joinTable->table()], [$joinConditions]);
+                                $query->innerJoin([$alias => $joinTable->table()], [$joinConditions]);
                                 break;
                             case 'LEFT':
-                                $query->leftJoin([$joinTable->alias() => $joinTable->table()], [$joinConditions]);
+                                $query->leftJoin([$alias => $joinTable->table()], [$joinConditions]);
                                 break;
                         }
                     }
@@ -255,7 +258,12 @@ class CustomReportBehavior extends Behavior
     private function _select(Query $query, array $params, array $values)
     {
         if (!empty($values)) {
-            $query->select($values);
+            $select = [];
+            foreach($values as $value) {
+                $select = array_merge($value, $select);
+            }
+
+            $query->select($select);
         }
     }
 

@@ -872,7 +872,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Map'],
             ],
             'Reports.CustomReports' => [
-                'title' => 'Custom Reports',
+                'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
