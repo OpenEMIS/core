@@ -11,6 +11,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
 class InstitutionStaffTable extends AppTable  {
+<<<<<<< HEAD
 	use OptionsTrait;
 
 	public function initialize(array $config) {
@@ -107,28 +108,155 @@ class InstitutionStaffTable extends AppTable  {
 	}
 
 	public function onExcelGetEducationGrades(Event $event, Entity $entity)
+=======
+    use OptionsTrait;
+
+    public function initialize(array $config) {
+        $this->table('institution_staff');
+        parent::initialize($config);
+
+        $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Positions',       ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+        $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('StaffTypes',      ['className' => 'Staff.StaffTypes']);
+        $this->belongsTo('StaffStatuses',   ['className' => 'Staff.StaffStatuses']);
+        $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
+
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Excel', [
+            'excludes' => ['start_year', 'end_year', 'FTE', 'security_group_user_id'],
+            'pages' => false
+        ]);
+        $this->addBehavior('Report.InstitutionSecurity');
+    }
+
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+    }
+
+    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+        // Setting request data and modifying fetch condition
+        $requestData = json_decode($settings['process']['params']);
+        $statusId = $requestData->status;
+        $typeId = $requestData->type;
+
+        if ($statusId!=0) {
+            $query->where([
+                $this->aliasField('staff_status_id') => $statusId
+            ]);
+        }
+
+        if ($typeId!=0) {
+            $query->where([
+                $this->aliasField('staff_type_id') => $typeId
+            ]);
+        }
+
+        $query
+        ->contain([
+            'Users.Genders',
+            'Users.Identities.IdentityTypes',
+            'Institutions.Areas',
+            'Positions.StaffPositionTitles',
+            'Institutions.Types',
+            'Institutions.Sectors',
+            'Institutions.Providers'
+        ])
+        ->select([
+            'openemis_no' => 'Users.openemis_no',
+            'first_name' => 'Users.first_name',
+            'middle_name' => 'Users.middle_name',
+            'last_name' => 'Users.last_name',
+            'code' => 'Institutions.code',
+            'gender' => 'Genders.name',
+            'area_name' => 'Areas.name',
+            'area_code' => 'Areas.code',
+            'position_title_teaching' => 'StaffPositionTitles.type',
+            'position_title' => 'StaffPositionTitles.name',
+            'institution_type' => 'Types.name',
+            'institution_sector' => 'Sectors.name',
+            'institution_provider' => 'Providers.name'
+        ]);
+    }
+
+    public function onExcelGetFTE(Event $event, Entity $entity) {
+        return $entity->FTE*100;
+    }
+
+    public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity) {
+        $yesno = $this->getSelectOptions('general.yesno');
+        return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
+    }
+
+    public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
+        $age = '';
+        if ($entity->has('user')) {
+            if ($entity->user->has('date_of_birth')) {
+                if (!empty($entity->user->date_of_birth)) {
+                    $yearOfBirth = $entity->user->date_of_birth->format('Y');
+                    $age = date("Y")-$yearOfBirth;
+                }
+            }
+        }
+        return $age;
+    }
+
+    public function onExcelGetEducationGrades(Event $event, Entity $entity)
+>>>>>>> a9c858f8dafcd1f5aebc26f535f916a1f9a072fd
     {
-    	$ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
 
-    	$query = $ClassesTable
-    		->find()
-    		->contain(['EducationGrades'])
-    		->hydrate(false)
-    		->where([$ClassesTable->aliasField('staff_id') => $entity->staff_id]);
+        $query = $ClassesTable
+            ->find()
+            ->contain(['EducationGrades'])
+            ->hydrate(false)
+            ->where([$ClassesTable->aliasField('staff_id') => $entity->staff_id]);
 
-    	$classes = $query->toArray();
-    	$grades = [];
+        $classes = $query->toArray();
+        $grades = [];
 
-    	foreach ($classes as $class) {
-    		foreach ($class['education_grades'] as $grade) {
-    			$grades[$grade['id']] = $grade['name'];
-    		}
-    	}
+        foreach ($classes as $class) {
+            foreach ($class['education_grades'] as $grade) {
+                $grades[$grade['id']] = $grade['name'];
+            }
+        }
 
         return implode(', ', array_values($grades));
     }
 
+    public function onExcelGetUserIdentities(Event $event, Entity $entity)
+    {
+        if ($entity->has('user')) {
+            if ($entity->user->has('identities')) {
+                if (!empty($entity->user->identities)) {
+                    $return = [];
+                    $identities = $entity->user->identities;
+                    foreach ($identities as $key => $value) {
+                        $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
+                    }
+                }
+            }
+        }
 
+        return implode(', ', array_values($return));
+    }
+
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity = $IdentityType->getDefaultEntity();
+
+        $settings['identity'] = $identity;
+
+        // To update to this code when upgrade server to PHP 5.5 and above
+        // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
+
+<<<<<<< HEAD
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 		$identity = $IdentityType->getDefaultEntity();
@@ -250,6 +378,120 @@ class InstitutionStaffTable extends AppTable  {
 		];
 
 		$newFields[] = [
+=======
+        foreach ($fields as $key => $field) {
+            if ($field['field'] == 'institution_id' || $field['field'] == 'staff_id') {
+                unset($fields[$key]);
+            }
+        }
+
+        $newFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Staff.institution_id',
+            'field' => 'institution_id',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.institution_type_id',
+            'field' => 'institution_type',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.institution_sector_id',
+            'field' => 'institution_sector',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.institution_provider_id',
+            'field' => 'institution_provider',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.first_name',
+            'field' => 'first_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.identities',
+            'field' => 'user_identities',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.gender_id',
+            'field' => 'gender',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.area_name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Staff.FTE',
+            'field' => 'FTE',
+            'type' => 'integer',
+            'label' => 'FTE (%)',
+        ];
+
+        $newFields[] = [
+            'key' => 'Age',
+            'field' => 'Age',
+            'type' => 'Age',
+            'label' => __('Age'),
+        ];
+
+        $newFields[] = [
+>>>>>>> a9c858f8dafcd1f5aebc26f535f916a1f9a072fd
             'key' => 'InstitutionStaff.start_date',
             'field' => 'start_date',
             'type' => 'date',
@@ -291,13 +533,20 @@ class InstitutionStaffTable extends AppTable  {
             'label' => ''
         ];
 
-		$newFields[] = [
-			'key' => 'Positions.position_title_teaching',
-			'field' => 'position_title_teaching',
-			'type' => 'string',
-			'label' => __('Teaching')
-		];
+        $newFields[] = [
+            'key' => 'Positions.position_title',
+            'field' => 'position_title',
+            'type' => 'string',
+            'label' => ''
+        ];
 
-		$fields->exchangeArray($newFields);
-	}
+        $newFields[] = [
+            'key' => 'Positions.position_title_teaching',
+            'field' => 'position_title_teaching',
+            'type' => 'string',
+            'label' => __('Teaching')
+        ];
+
+        $fields->exchangeArray($newFields);
+    }
 }
