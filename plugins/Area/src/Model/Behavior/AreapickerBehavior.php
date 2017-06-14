@@ -10,12 +10,15 @@ use Cake\Utility\Inflector;
 
 class AreapickerBehavior extends Behavior
 {
+    private $areaByUser = [];
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         $events['ControllerAction.Model.edit.afterQuery'] = 'editAfterQuery';
+        $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         return $events;
     }
 
@@ -90,17 +93,26 @@ class AreapickerBehavior extends Behavior
             } else {
                 $attr['authorisedArea'] = [];
             }
-
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
         return $value;
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(Event $event, Entity $entity)
     {
         $userId = $this->_table->Auth->user('id');
         $areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
+        $this->areaByUser = $areasByUser;
 
+        // $areasByUser will always be empty for system groups because system groups are linked directly to schools
+        if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
+            $entity->area_restricted = true;
+        }
+    }
+
+    public function editAfterAction(Event $event, Entity $entity)
+    {
+        $areasByUser = $this->areaByUser;
         // $areasByUser will always be empty for system groups because system groups are linked directly to schools
         if (!$this->_table->AccessControl->isAdmin() && empty($areasByUser)) {
             foreach ($this->_table->fields as $field => $attr) {
@@ -114,15 +126,13 @@ class AreapickerBehavior extends Behavior
                         if ($this->isCAv4()) {
                             $this->_table->field($field.$key, [
                                 'type' => 'readonly',
-                                'attr' => ['label' => __($area['level_name'])],
-                                'value' => __($area['area_name']),
+                                'attr' => ['label' => __($area['level_name']), 'value' => __($area['area_name'])],
                                 'after' => $after
                             ]);
                         } else {
                             $this->_table->ControllerAction->field($field.$key, [
                                 'type' => 'disabled',
                                 'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
-                                'value' => __($area['area_name']),
                                 'after' => $after
                             ]);
                         }
@@ -130,11 +140,10 @@ class AreapickerBehavior extends Behavior
                     }
                 }
             }
-            $entity->area_restricted = true;
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity)
     {
         foreach ($this->_table->fields as $field => $attr) {
             if ($attr['type'] == 'areapicker') {
@@ -169,7 +178,7 @@ class AreapickerBehavior extends Behavior
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // to prevent html injection on area_id
         if ($entity->has('area_restricted') && $entity->area_restricted == true) {

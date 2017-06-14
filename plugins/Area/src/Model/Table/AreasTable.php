@@ -327,10 +327,12 @@ class AreasTable extends ControllerActionTable
                 'parentField' => 'parent_id',
                 'order' => ['lft' => 'ASC']
             ])
+            ->contain(['AreaLevels'])
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('name'),
-                $this->aliasField('parent_id')
+                $this->aliasField('parent_id'),
+                'AreaLevels.name'
             ])
             ->hydrate(false)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
@@ -360,6 +362,9 @@ class AreasTable extends ControllerActionTable
             if (is_array($value) && empty($value)) {
                 unset($value);
             } elseif (is_array($value)) {
+                if (isset($value['name']) && isset($value['area_level']) && isset($value['area_level']['name'])) {
+                    $value['name'] = $value['name'] . ' - ' . $value['area_level']['name'];
+                }
                 $parentIds = array_unique(array_column($value, 'parent_id'));
                 if (array_intersect($authorisedAreaIds, $parentIds)) {
                     $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
