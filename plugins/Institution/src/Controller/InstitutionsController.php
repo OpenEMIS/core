@@ -852,7 +852,6 @@ class InstitutionsController extends AppController
     private function attachAngularModules()
     {
         $action = $this->request->action;
-
         switch ($action) {
             case 'Results':
                 $this->Angular->addModules([
