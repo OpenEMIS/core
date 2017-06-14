@@ -909,7 +909,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             remain = true;
         }
 
-        if (StudentController.Student.username == '' || StudentController.Student.username == undefined) {
+        if (StudentController.selectedStudentData.username == '' || StudentController.selectedStudentData.username == undefined) {
             StudentController.postResponse.error.username = empty;
             remain = true;
         }
@@ -949,7 +949,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
         .then(function(response) {
             StudentController.selectedStudentData.openemis_no = response;
-            StudentController.Student.username = response;
+            StudentController.selectedStudentData.username = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -961,7 +961,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.generatePassword()
         .then(function(response) {
-            StudentController.Student.password = response;
+            StudentController.selectedStudentData.password = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);

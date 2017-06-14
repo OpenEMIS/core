@@ -1023,7 +1023,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             remain = true;
         }
 
-        if (StaffController.Staff.username == '' || StaffController.Staff.username == undefined) {
+        if (StaffController.selectedStaffData.username == '' || StaffController.selectedStaffData.username == undefined) {
             StaffController.postResponse.error.username = empty;
             remain = true;
         }
@@ -1059,7 +1059,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(response) {
             StaffController.selectedStaffData.openemis_no = response;
             StaffController.selectedStaffData.username = response;
-            StaffController.Staff.username = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -1072,7 +1071,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         InstitutionsStaffSvc.generatePassword()
         .then(function(response) {
             StaffController.selectedStaffData.password = response;
-            StaffController.Staff.password = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
