@@ -24,6 +24,7 @@ function kdTreeDropdown() {
         scope: {
             inputModel: '=',
             outputModel: '=?',
+            textConfig: '=?',
             modelType: '@?'
         }
     };
@@ -31,13 +32,11 @@ function kdTreeDropdown() {
 
 
     function kdTreeDropdownCtrl($scope) {
+        $scope.treePlaceholder = "%tree_no_of_item";
         $scope.selectedItem = [];
-        // $scope.selectionText = "Please select";
         $scope.isMultiple = (angular.isDefined($scope.modelType) && $scope.modelType == "single") ? false : true;
 
-        $scope.$watch('outputModel', function(_newSelectedList){
-            updateSelectionText(generateSelectionText(_newSelectedList), $scope.elementId);
-        })
+        $scope.selectionText = updateSelectionTextConfig($scope);
     }
 
     function kdTreeDropdownLink(_scope, _element, _attrs) {
@@ -53,21 +52,27 @@ function kdTreeDropdown() {
             //updateSelectionText(_selectedItem, _item, _scope.elementId);
             return true;
         }
+
+        _scope.$watch('outputModel', function(_newSelectedList){
+            if (angular.isUndefined(_scope.selectionText)) return;
+
+            updateSelectionText(generateSelectionText(_newSelectedList, _scope.selectionText, _scope.treePlaceholder), _scope.elementId);
+        })
     }
 
-    function generateSelectionText(_selectedList) {
-        var selectionText = "Please select";
+    function generateSelectionText(_selectedList, _selectionText, _placeholder) {
+        var selectionText = _selectionText.noSelection;
 
         if (angular.isDefined(_selectedList)) {
             if (_selectedList.length == 1) selectionText = _selectedList[0].name;
-            else if (_selectedList.length > 1) selectionText = _selectedList.length + " items selected";
+            else if (_selectedList.length > 1) selectionText = _selectionText.multipleSelection.replace(_placeholder, _selectedList.length);
         }
 
         return selectionText;
     }
 
     function updateSelectionText(_selectionText, _elementId) {
-        var selectionTextEle = angular.element(document.querySelector(_elementId + " .tree-selection-text"));
+        var selectionTextEle = angular.element(document.querySelector("#" + _elementId + " .tree-selection-text"));
         selectionTextEle.text(_selectionText);
     }
 
@@ -83,12 +88,29 @@ function kdTreeDropdown() {
 
     function addInputText(_scope) {
         var div = angular.element("<div class='tree-selection-text'></div>");
-        div.text(generateSelectionText(_scope.outputModel));
+        div.text(generateSelectionText(_scope.outputModel, _scope.selectionText, _scope.treePlaceholder));
         angular.element(document.querySelector("#" + _scope.elementId + " .tree-control")).append(div);
     }
 
     function getElementId(_element) {
         if (angular.isDefined(_element[0].id) && _element[0].id != "") return _element[0].id;
         return "tree-dropdown";
+    }
+
+    // selectionText = {
+    //      noSelection: "",
+    //      multipleSelection: ""
+    // }
+    function updateSelectionTextConfig(_scope) {
+        var selectionText = {
+            noSelection: "-- Select --",
+            multipleSelection: _scope.treePlaceholder + " items selected"
+        };
+
+        if (angular.isDefined(_scope.textConfig)) {
+            var selectionText = Object.merge(selectionText, _scope.textConfig);
+        }
+
+        return selectionText;
     }
 }

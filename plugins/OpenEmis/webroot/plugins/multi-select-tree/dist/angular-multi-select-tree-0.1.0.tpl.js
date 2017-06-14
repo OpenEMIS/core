@@ -29,14 +29,14 @@ angular.module('multi-select-tree').run(['$templateCache', function($templateCac
 
   $templateCache.put('src/tree-item.tpl.html',
     "<li>\n" +
-    "    <div class=\"item-container\" ng-class=\"{active: item.isActive, selected: item.selected, disableNode: item.disable}\"\n" +
+    "    <div class=\"item-container\" ng-class=\"{active: item.isActive, selected: item.selected, disableNode: item.disabled}\"\n" +
     "         ng-click=\"clickSelectItem(item, $event)\" ng-mouseover=\"onMouseOver(item, $event)\">\n" +
     "        <div ng-if=\"showExpand(item)\" class=\"expand fa fa-fw\" ng-class=\"{'expand-opened': item.isExpanded, 'fa-caret-down': item.isExpanded, 'fa-caret-right': !item.isExpanded}\"\n" +
     "              ng-click=\"onExpandClicked(item, $event)\"></div>\n" +
     "\n" +
     "        <div class=\"item-details\"> " +
-    "           <input class=\"tree-checkbox\" type=\"checkbox\" ng-if=\"showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
-    "           <input class=\"tree-checkbox\" type=\"radio\" name=\"{{treeId}}\" ng-if=\"!showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
+    "           <input class=\"tree-checkbox\" ng-disabled=\"item.disabled\" type=\"checkbox\" ng-if=\"showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
+    "           <input class=\"tree-checkbox\" ng-disabled=\"item.disabled\" type=\"radio\" name=\"{{treeId}}\" ng-if=\"!showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
     "           <label>{{item.name}}\n</label> " +
     "        </div>\n" +
     "    </div>\n" +
