@@ -446,13 +446,18 @@ class ConfigItemsTable extends AppTable
         // Group [2] - Number of numerical character
         // Group [3] - Number of special character
         $groups = [];
-        $group = 0;
-        while (array_sum($groups) != $sumTo) {
-            $groups[$group] = mt_rand(1, $sumTo/mt_rand(1, $numberOfGroup));
-            if (++$group == $numberOfGroup) {
-                $group = 0;
+
+        while (count($groups) != 4) {
+            $group = 0;
+            $groups = [];
+            while (array_sum($groups) != $sumTo) {
+                $groups[$group] = mt_rand(1, $sumTo/mt_rand(1, $numberOfGroup));
+                if (++$group == $numberOfGroup) {
+                    $group = 0;
+                }
             }
         }
+
         $upperCase = intval($ConfigItems->value('password_has_uppercase')) ? $groups[1] : 0;
         $numerical = intval($ConfigItems->value('password_has_number')) ? $groups[2] : 0;
         $specialCharacter = intval($ConfigItems->value('password_has_non_alpha')) ? $groups[3] : 0;
