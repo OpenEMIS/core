@@ -32,7 +32,7 @@ class BankAccountsTable extends ControllerActionTable {
 		$this->field('bank_branch_id', ['type' => 'select']);
 
 		$this->setFieldOrder(['bank_name', 'bank_branch_id', 'account_name', 'account_number', 'active']);
-		
+
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -60,13 +60,14 @@ class BankAccountsTable extends ControllerActionTable {
 
 	public function onGetActive(Event $event, Entity $entity) {
 		$icons = [
-			0 => '<i class="fa kd-cross red"></i>', 
+			0 => '<i class="fa kd-cross red"></i>',
 			1 => '<i class="fa kd-check green"></i>'
 		];
 		return $icons[$entity->active];
 	}
 
-	private function setupTabElements() {
+	private function setupTabElements()
+	{
 		switch ($this->controller->name) {
 			case 'Students':
 				$tabElements = $this->controller->getFinanceTabElements();
@@ -88,7 +89,21 @@ class BankAccountsTable extends ControllerActionTable {
 				} else {
 					$tabElements = $this->controller->getStaffFinanceTabElements($options);
 				}
-				
+
+				$this->controller->set('tabElements', $tabElements);
+				$this->controller->set('selectedAction', $this->alias());
+				break;
+			case 'Profiles':
+				$type = $this->request->query('type');
+				$options = [
+					'type' => $type
+				];
+				if ($type == 'student') {
+					$tabElements = $this->controller->getFinanceTabElements($options);
+				} else {
+					$tabElements = $this->controller->getStaffFinanceTabElements($options);
+				}
+
 				$this->controller->set('tabElements', $tabElements);
 				$this->controller->set('selectedAction', $this->alias());
 				break;
@@ -115,7 +130,7 @@ class BankAccountsTable extends ControllerActionTable {
 			if (!is_null($bankId)) {
 				$attr['attr']['value'] = $bankId;
 			}
-		}	
+		}
 		return $attr;
 	}
 
