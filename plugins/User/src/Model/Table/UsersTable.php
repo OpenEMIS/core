@@ -736,12 +736,22 @@ class UsersTable extends AppTable
 
     // autocomplete used for TrainingSessions
     // the same function is found in Security.Users
-    public function autocomplete($search)
+    public function autocomplete($search, $extra = [])
     {
         $data = [];
         if (!empty($search)) {
-            $query = $this
-                ->find()
+            $query = $this->find();
+
+            // POCOR-3556 add the user type to finder
+            if (array_key_exists('finder', $extra)) {
+                $finders = $extra['finder'];
+
+                foreach ($finders as $finder) {
+                    $query->find($finder);
+                }
+            }
+
+            $query = $query
                 ->select([
                     $this->aliasField('openemis_no'),
                     $this->aliasField('first_name'),
@@ -769,6 +779,27 @@ class UsersTable extends AppTable
             }
         }
         return $data;
+    }
+
+    public function findStaff(Query $query, array $options)
+    {
+        // is_staff == 1
+        return $query->where([$this->aliasField('is_staff') => 1]);
+    }
+
+    public function findOthers(Query $query, array $options)
+    {
+        // is_guardian == 1 or (is_staff == 0, is_student == 0, is_guardian == 0)
+        return $query->where([
+            'OR' => [
+                [$this->aliasField('is_guardian') => 1],
+                [
+                    $this->aliasField('is_staff') => 0,
+                    $this->aliasField('is_student') => 0,
+                    $this->aliasField('is_guardian') => 0,
+                ]
+            ]
+        ]);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)

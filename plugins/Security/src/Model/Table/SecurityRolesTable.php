@@ -491,4 +491,13 @@ class SecurityRolesTable extends AppTable {
 
 		return (!empty($homeroomData))? $homeroomData->id: null;
 	}
+
+	public function getPrincipalRoleId() {
+		$principalData = $this->find()
+			->select([$this->primaryKey()])
+			->where([$this->aliasField('code') => 'PRINCIPAL'])
+			->first();
+
+		return (!empty($principalData))? $principalData->id: null;
+	}
 }
