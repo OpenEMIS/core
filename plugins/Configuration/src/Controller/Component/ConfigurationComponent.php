@@ -33,16 +33,14 @@ class ConfigurationComponent extends Component
         'Webhooks'                  => ['className' => 'Configuration.Webhooks']
     ];
 
+    public $components = ['AccessControl'];
+
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config)
     {
-        $this->controller = $this->_registry->getController();
-        $controller = $this->controller->name;
-        $accessMap = [];
         foreach (array_keys($this->configOptions) as $key) {
-            $accessMap["$controller.$key"] = "$controller.%s";
+            $this->AccessControl->addAccessMap($key);
         }
-        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     public function getConfigurationOptions()
