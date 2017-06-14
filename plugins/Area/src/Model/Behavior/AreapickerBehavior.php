@@ -137,7 +137,7 @@ class AreapickerBehavior extends Behavior
     public function viewAfterAction(Event $event, Entity $entity)
     {
         foreach ($this->_table->fields as $field => $attr) {
-            if ($attr['type'] == 'area_tree') {
+            if ($attr['type'] == 'areapicker') {
                 $this->_table->fields[$field]['type'] = 'hidden';
                 $targetModel = $attr['source_model'];
                 $areaId = $entity->$field;
