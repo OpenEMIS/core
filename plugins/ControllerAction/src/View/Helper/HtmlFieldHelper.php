@@ -21,6 +21,7 @@ class HtmlFieldHelper extends Helper
 {
     use IdGeneratorTrait;
 
+
     public $table = null;
 
     public $helpers = ['ControllerAction', 'Html', 'Form', 'Url', 'Number'];
@@ -677,90 +678,6 @@ class HtmlFieldHelper extends Helper
             }
             $value = $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
             $this->includes['datepicker']['include'] = true;
-        }
-        return $value;
-    }
-
-    public function treeDropDown($action, Entity $data, $attr, $options = [])
-    {
-        $value = '';
-        $_options = [
-            'multiple' => true
-        ];
-        $value = '';
-        $field = $attr['field'];
-
-        if (!is_null($data)) {
-            $invalid = $data->invalid();
-            if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
-            } else {
-                $value = $data->$field;
-            }
-        }
-
-        if ($action == 'index' || $action == 'view') {
-            if (!empty($attr['options'])) {
-                if ($data->$field === '') {
-                    return '';
-                } else {
-                    if (array_key_exists($data->$field, $attr['options'])) {
-                        $value = $attr['options'][$data->$field];
-
-                        if (is_array($value)) {
-                            $value = $value['text'];
-                        } else {
-                            $value = $value;
-                        }
-                    }
-                }
-            }
-
-            if (empty($value)) {
-                $value = $data->$field;
-            }
-
-            if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
-                $value = __($value);
-            }
-        } elseif ($action == 'edit') {
-            // if (!array_key_exists('id', $attr)) {
-            //     $attr['id'] = $attr['model'] . '_' . $field;
-            //     if (array_key_exists('fieldName', $attr)) {
-            //         $attr['id'] = $this->_domId($attr['fieldName']);
-            //     }
-            // }
-
-            // $attr['date_options'] = array_merge($_options, $attr['date_options']);
-            // if (!array_key_exists('value', $attr)) {
-            //     if (!empty($value)) {
-            //         if (is_object($value)) {
-            //             $attr['value'] = $value->format('d-m-Y');
-            //         } else {
-            //             $attr['value'] = date('d-m-Y', strtotime($value));
-            //         }
-            //     } elseif ($attr['default_date']) {
-            //         $attr['value'] = date('d-m-Y');
-            //     }
-            // } else {
-            //     if (is_object($attr['value'])) {
-            //         $attr['value'] = $attr['value']->format('d-m-Y');
-            //     } elseif (!array_key_exists('special_value', $attr)) {
-            //         $attr['value'] = date('d-m-Y', strtotime($attr['value']));
-            //     }
-            //     // else $attr['value'] will be what was set before calling this function when $attr['special_value'] was set to true.
-            //     // this is added when datepicker input is being used with angularJs scope
-            // }
-
-            // if (!is_null($this->_View->get('datepicker'))) {
-            //     $datepickers = $this->_View->get('datepicker');
-            //     $datepickers[] = $attr;
-            //     $this->_View->set('datepicker', $datepickers);
-            // } else {
-            //     $this->_View->set('datepicker', [$attr]);
-            // }
-            // $value = $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
-            // $this->includes['datepicker']['include'] = true;
         }
         return $value;
     }
