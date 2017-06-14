@@ -19,20 +19,22 @@ class CustomReportBehavior extends Behavior
 
     public function parseJson($jsonArray, array $params)
     {
+        $result = [];
         if (array_key_exists('model', $jsonArray)) {
             $model = $jsonArray['model'];
             $this->Table = TableRegistry::get($model);
 
+            // default type is query
             $type = array_key_exists('type', $jsonArray) ? $jsonArray['type'] : 'query';
 
             if ($type == 'query') {
                 if (array_key_exists('get', $jsonArray)) {
-                    $entity = $this->_get($params, $jsonArray['get']);
+                    $result = $this->_get($params, $jsonArray['get']);
 
                 } else {
                     $query = $this->Table->find();
 
-                    $methods = ['join', 'joinWith', 'contain', 'matching', 'select', 'find', 'where', 'group', 'having', 'order'];
+                    $methods = ['join', 'contain', 'matching', 'select', 'find', 'where', 'group', 'having', 'order'];
                     foreach ($methods as $method) {
                         if (array_key_exists($method, $jsonArray)) {
                             $methodName = '_' . $method;
@@ -40,21 +42,24 @@ class CustomReportBehavior extends Behavior
                         }
                     }
 
-                    $entity = $query->toArray();
+                    $result = $query->toArray();
                 }
 
             } else if ($type == 'method') {
-                $method = $jsonArray['method'];
-                $arguments = [];
-                if (array_key_exists('arguments', $jsonArray)) {
-                    $arguments = $this->_arguments($params, $jsonArray['arguments']);
+                if (array_key_exists('method', $jsonArray)) {
+                    $method = $jsonArray['method'];
+
+                    $arguments = [];
+                    if (array_key_exists('arguments', $jsonArray)) {
+                        $arguments = $this->_arguments($params, $jsonArray['arguments']);
+                    }
+
+                    $result = call_user_func_array([$this->Table, $method], $arguments);
                 }
-
-                $entity = call_user_func_array([$this->Table, $method], $arguments);
             }
-
-            return $entity;
         }
+
+        return $result;
     }
 
     private function extractPlaceholder($str)
@@ -73,7 +78,7 @@ class CustomReportBehavior extends Behavior
 
                 if ($pos !== false) {
                     $placeholder = $this->extractPlaceholder($value);
-                    if (array_key_exists($placeholder, $params)) {
+                    if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
                         $conditions[] = $params[$placeholder];
                     }
                 } else {
@@ -86,115 +91,61 @@ class CustomReportBehavior extends Behavior
 
     private function _get(array $params, array $values)
     {
+        $query = [];
         if (!empty($values)) {
             if (array_key_exists('id', $values)) {
                 $value = $values['id'];
                 $pos = strpos($value, '${');
 
+                $id = '';
                 if ($pos !== false) {
                     $placeholder = $this->extractPlaceholder($value);
-                    if (array_key_exists($placeholder, $params)) {
+                    if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
                         $id = $params[$placeholder];
                     }
                 } else {
                     $id = $value;
                 }
 
-                $contain = [];
-                if (array_key_exists('contain', $values) && !empty($values['contain'])) {
-                    $contain = $values['contain'];
-                }
+                if (!empty($id)) {
+                    $contain = [];
+                    if (array_key_exists('contain', $values) && !empty($values['contain'])) {
+                        $contain = $values['contain'];
+                    }
 
-                $query = $this->Table->get($id, ['contain' => $contain]);
-                return $query;
+                    $query = $this->Table->get($id, ['contain' => $contain]);
+
+                }
             }
         }
+        return $query;
     }
 
     private function _join(Query $query, array $params, array $values)
     {
-        $joinTypes = [
-            'inner' => 'INNER',
-            'left' => 'LEFT'
-        ];
-
         if (!empty($values)) {
             foreach($values as $obj) {
                 if (array_key_exists('model', $obj) && array_key_exists('type', $obj)) {
                     $joinTable = TableRegistry::get($obj['model']);
-                    $type = strtolower($obj['type']);
+                    $type = strtoupper($obj['type']);
 
-                    if (array_key_exists($type, $joinTypes)) {
-                        $joinType = $joinTypes[$type];
-
-                        $joinConditions = [];
-                        if (array_key_exists('conditions', $obj)) {
-                            $conditions = $obj['conditions'];
-                            foreach($conditions as $field => $value) {
-                                $joinConditions[] = $field . $value;
-                            }
-                        }
-
-                        // allow same table to be joined twice
-                        $alias = array_key_exists('alias', $obj) ? $obj['alias'] : $joinTable->alias();
-
-                        switch ($joinType) {
-                            case 'INNER':
-                                $query->innerJoin([$alias => $joinTable->table()], [$joinConditions]);
-                                break;
-                            case 'LEFT':
-                                $query->leftJoin([$alias => $joinTable->table()], [$joinConditions]);
-                                break;
+                    $joinConditions = [];
+                    if (array_key_exists('conditions', $obj)) {
+                        foreach($obj['conditions'] as $field => $value) {
+                            $joinConditions[] = $field . $value;
                         }
                     }
-                }
-            }
-        }
-    }
 
-    private function _joinWith(Query $query, array $params, array $values)
-    {
-        $joinTypes = [
-            'inner' => 'INNER',
-            'left' => 'LEFT'
-        ];
+                    // allow same table to be joined twice
+                    $alias = array_key_exists('alias', $obj) ? $obj['alias'] : $joinTable->alias();
 
-        if (!empty($values)) {
-            foreach ($values as $obj) {
-                if (array_key_exists('name', $obj) && array_key_exists('type', $obj)) {
-                    $association = $obj['name'];
-                    $type = strtolower($obj['type']);
-                    $conditions = array_key_exists('conditions', $obj) ? $obj['conditions'] : [];
-
-                    if (array_key_exists($type, $joinTypes)) {
-                        $joinType = $joinTypes[$type];
-
-                        $associated = true;
-                        $table = $this->Table;
-                        $models = explode('.', $association);
-                        foreach ($models as $model) {
-                            if (!$table->associations()->has($model)) {
-                                $associated = false;
-                                break;
-                            } else {
-                                $table = $table->$model;
-                            }
-                        }
-
-                        if ($associated) {
-                            switch ($joinType) {
-                                case 'INNER':
-                                    $query->innerJoinWith($association, function($q) use ($conditions) {
-                                        return $q->where($conditions);
-                                    });
-                                    break;
-                                case 'LEFT':
-                                    $query->leftJoinWith($association, function($q) use ($conditions) {
-                                        return $q->where($conditions);
-                                    });
-                                    break;
-                            }
-                        }
+                    switch ($type) {
+                        case 'INNER':
+                            $query->innerJoin([$alias => $joinTable->table()], [$joinConditions]);
+                            break;
+                        case 'LEFT':
+                            $query->leftJoin([$alias => $joinTable->table()], [$joinConditions]);
+                            break;
                     }
                 }
             }
@@ -209,6 +160,7 @@ class CustomReportBehavior extends Behavior
             foreach ($values as $value) {
                 $models = explode('.', $value);
 
+                // check if models are associated
                 $associated = true;
                 $table = $this->Table;
                 foreach ($models as $model) {
@@ -237,6 +189,7 @@ class CustomReportBehavior extends Behavior
             foreach ($values as $value) {
                 $models = explode('.', $value);
 
+                // check if models are associated
                 $associated = true;
                 $table = $this->Table;
                 foreach ($models as $model) {
@@ -259,8 +212,13 @@ class CustomReportBehavior extends Behavior
     {
         if (!empty($values)) {
             $select = [];
-            foreach($values as $value) {
-                $select = array_merge($value, $select);
+
+            foreach($values as $field => $value) {
+                if (is_array($value)) {
+                    $select = array_merge($value, $select);
+                } else {
+                    $select[$field] = $value;
+                }
             }
 
             $query->select($select);
@@ -270,18 +228,19 @@ class CustomReportBehavior extends Behavior
     private function _find(Query $query, array $params, array $values)
     {
         if (!empty($values)) {
-            foreach($values as $data) {
+            foreach($values as $obj) {
+                $finder = $obj['name'];
 
-                if (isset($data['name']) && $this->Table->hasFinder($data['name'])) {
+                if (isset($finder) && $this->Table->hasFinder($finder)) {
                     $conditions = [];
 
-                    if (isset($data['conditions'])) {
-                        foreach($data['conditions'] as $field => $value) {
+                    if (isset($obj['conditions'])) {
+                        foreach($obj['conditions'] as $field => $value) {
                             $pos = strpos($value, '${');
 
                             if ($pos !== false) {
                                 $placeholder = $this->extractPlaceholder($value);
-                                if (array_key_exists($placeholder, $params)) {
+                                if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
                                     $conditions[$field] = $params[$placeholder];
                                 }
                             } else {
@@ -289,10 +248,10 @@ class CustomReportBehavior extends Behavior
                             }
                         }
                     }
-                    $query->find($data['name'], $conditions);
 
+                    $query->find($finder, $conditions);
                 } else {
-                    Log::write('debug', 'Finder (' . $data['name'] . ') does not exist.');
+                    Log::write('debug', 'Finder (' . $obj['name'] . ') does not exist.');
                 }
             }
         }
@@ -307,8 +266,8 @@ class CustomReportBehavior extends Behavior
                 $pos = strpos($value, '${');
 
                 if ($pos !== false) {
-                    $placeholder = substr($value, $pos + 2, strlen($value) - 3);
-                    if (array_key_exists($placeholder, $params)) {
+                    $placeholder = $this->extractPlaceholder($value);
+                    if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
                         $conditions[$field] = $params[$placeholder];
                     }
                 } else {
