@@ -143,7 +143,10 @@ class StudentsController extends AppController {
 			} else if ($session->check('Student.Students.id')) {
 				$id = $session->read('Student.Students.id');
 			} else if ($session->check('Institution.Students.id')) {
-				$id = $session->read('Institution.Students.id');
+				$institutionStudentId = $session->read('Institution.Students.id');
+				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+				$id = $InstitutionStudentsTable->get($institutionStudentId)->student_id;
+				$session->write('Student.Students.id', $id);
 			}
 
 			if (!empty($id)) {
