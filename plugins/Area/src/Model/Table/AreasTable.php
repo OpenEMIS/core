@@ -11,10 +11,11 @@ use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
+use Cake\Utility\Hash;
 
 class AreasTable extends ControllerActionTable
 {
-    private $_fieldOrder = ['visible', 'code', 'name', 'area_level_id'];
+    private $fieldsOrder = ['visible', 'code', 'name', 'area_level_id'];
 
     public function initialize(array $config)
     {
@@ -39,7 +40,8 @@ class AreasTable extends ControllerActionTable
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StaffRoom' => ['index']
+            'StaffRoom' => ['index'],
+            'SgTree' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -93,7 +95,6 @@ class AreasTable extends ControllerActionTable
             return $this->controller->redirect($url);
         } else {
             // API valid, run the process
-            $model = $this;
             $extra = [];
 
             $areasTableArray = $this->onGetAreasTableArrays();
@@ -115,7 +116,7 @@ class AreasTable extends ControllerActionTable
                     $this->controller->set('associatedRecords', $associatedRecords);
                     $this->controller->set('newAreaLists', $newAreaLists);
                 }
-            } else if ($this->request->is(['post', 'put'])) {
+            } elseif ($this->request->is(['post', 'put'])) {
                 // update the related table
                 $requestData = $this->request->data;
                 $this->doUpdateAssociatedRecord($requestData);
@@ -164,7 +165,7 @@ class AreasTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder($this->_fieldOrder);
+        $this->setfieldOrder($this->fieldsOrder);
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
@@ -191,7 +192,7 @@ class AreasTable extends ControllerActionTable
             ->toArray()
             ;
 
-        foreach ($results as $key => $obj) {
+        foreach ($results as $obj) {
             $areasTableArray[$obj->id] = [
                 'id' => $obj->id,
                 'parent_id' => $obj->parent_id,
@@ -212,10 +213,10 @@ class AreasTable extends ControllerActionTable
 
         $jsonArray = [];
         $orderArray = [];
-        foreach ($jsonAreaArray as $key => $obj) {
+        foreach ($jsonAreaArray as $obj) {
             // Null is the root parent id, as per cake update
             if ($obj['pnid'] === '-1') {
-                $obj['pnid'] = NULL;
+                $obj['pnid'] = null;
             }
             $level = $obj['lvl'];
             $orderArray[$level] = array_key_exists($level, $orderArray) ? ++$orderArray[$level] : 1;
@@ -236,7 +237,7 @@ class AreasTable extends ControllerActionTable
     {
         $jsonArray = $this->onGetJsonArrays($url);
         $newAreaLists = [];
-        foreach ($jsonArray as $key => $obj) {
+        foreach ($jsonArray as $obj) {
             $newAreaLists[$obj['id']] = $obj['name'];
         }
         return $newAreaLists;
@@ -317,10 +318,61 @@ class AreasTable extends ControllerActionTable
         }
     }
 
+    public function findAreaList(Query $query, array $options)
+    {
+        $authorisedAreaIds = json_decode($this->urlsafeB64Decode($options['authorisedAreaIds']), true);
+        $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
+        return $query
+            ->find('threaded', [
+                'parentField' => 'parent_id',
+                'order' => ['lft' => 'ASC']
+            ])
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name'),
+                $this->aliasField('parent_id')
+            ])
+            ->hydrate(false)
+            ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
+                $results = $results->toArray();
+                $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
+                $defaultSelect = ['id' => null, 'name' => __('-- Select --')];
+                if (is_null($selected)) {
+                    $defaultSelect['selected'] = true;
+                }
+                $results = $results + [1 => $defaultSelect];
+                $results = array_reverse($results);
+                return $results;
+            });
+    }
+
+    private function unsetEmptyArr(&$array, &$authorisedAreaIds, $selected)
+    {
+        foreach ($array as &$value) {
+            if (isset($value['id'])) {
+                if (!in_array($value['id'], $authorisedAreaIds)) {
+                    $value['disabled'] = true;
+                }
+                if ($value['id'] == $selected) {
+                    $value['selected'] = true;
+                }
+            }
+            if (is_array($value) && empty($value)) {
+                unset($value);
+            } elseif (is_array($value)) {
+                $parentIds = array_unique(array_column($value, 'parent_id'));
+                if (array_intersect($authorisedAreaIds, $parentIds)) {
+                    $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
+                }
+                $this->unsetEmptyArr($value, $authorisedAreaIds, $selected);
+            }
+        }
+    }
+
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
-        $this->_fieldOrder = ['area_level_id', 'code', 'name'];
+        $this->fieldsOrder = ['area_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
         $parentId = $this->request->query('parent');
@@ -346,7 +398,7 @@ class AreasTable extends ControllerActionTable
                 'attr' => ['value' => $parentPath]
             ]);
 
-            //array_unshift($this->_fieldOrder, "parent");
+            //array_unshift($this->fieldsOrder, "parent");
         }
     }
 
@@ -414,7 +466,7 @@ class AreasTable extends ControllerActionTable
             ->all();
 
         $data = array();
-        foreach($list as $obj) {
+        foreach ($list as $obj) {
             $data[] = [
                 'label' => sprintf('%s - %s (%s)', $obj->area_level->name, $obj->name, $obj->code),
                 'value' => $obj->id
@@ -492,7 +544,7 @@ class AreasTable extends ControllerActionTable
         return $associatedRecords;
     }
 
-    public function isApiValid($url=null)
+    public function isApiValid($url = null)
     {
         // check if API is valid, have value and contain expected keys.
         if (is_null($url)) {
@@ -517,9 +569,9 @@ class AreasTable extends ControllerActionTable
                 // will check if the json array contain the expected keys.
                 // if jsonArray have the key it will be removed.
                 // if $tempkeys not empty means the json array not in correct format.
-                foreach ($areas as $count => $area) {
+                foreach ($areas as $area) {
                     $tempKeys = $expectedKeys;
-                    foreach ($area as $key => $value) {
+                    foreach (array_keys($area) as $key) {
                         if (in_array($key, $tempKeys)) {
                             $tempKeys = array_diff($tempKeys, [$key]);
                         }
