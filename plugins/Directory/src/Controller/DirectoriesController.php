@@ -52,7 +52,7 @@ class DirectoriesController extends AppController {
 	public function StaffClasses() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function StaffSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
 	public function StaffEmployments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
-	public function StaffLeaves()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leaves']); }
+	public function StaffLeave()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']); }
 	public function StudentClasses() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function StudentSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
@@ -476,7 +476,7 @@ class DirectoriesController extends AppController {
 			'Classes' => ['text' => __('Classes')],
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
-			'Leaves' => ['text' => __('Leaves')],
+			'Leave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];
