@@ -123,7 +123,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $authorisedAreaIds = array_column($authorisedAreaIds, 'id');
 
-        $selected = !empty($options['selected']) ? $options['selected'] : null;
+        $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
 
         return $query
             ->find('threaded', [
@@ -141,6 +141,12 @@ class AreaAdministrativesTable extends ControllerActionTable
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
                 $results = $results->toArray();
                 $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
+                $defaultSelect = ['id' => null, 'name' => __('-- Select --')];
+                if (is_null($selected)) {
+                    $defaultSelect['selected'] = true;
+                }
+                $results = $results + [1 => $defaultSelect];
+                $results = array_reverse($results);
                 return $results;
             });
     }

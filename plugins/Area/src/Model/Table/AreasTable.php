@@ -321,7 +321,7 @@ class AreasTable extends ControllerActionTable
     public function findAreaList(Query $query, array $options)
     {
         $authorisedAreaIds = json_decode($this->urlsafeB64Decode($options['authorisedAreaIds']), true);
-        $selected = !empty($options['selected']) ? $options['selected'] : null;
+        $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
@@ -336,6 +336,12 @@ class AreasTable extends ControllerActionTable
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
                 $results = $results->toArray();
                 $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
+                $defaultSelect = ['id' => null, 'name' => __('-- Select --')];
+                if (is_null($selected)) {
+                    $defaultSelect['selected'] = true;
+                }
+                $results = $results + [1 => $defaultSelect];
+                $results = array_reverse($results);
                 return $results;
             });
     }
