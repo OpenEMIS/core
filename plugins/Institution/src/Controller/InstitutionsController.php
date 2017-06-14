@@ -22,6 +22,102 @@ class InstitutionsController extends AppController
     use UtilityTrait;
     public $activeObj = null;
 
+    private $features = [
+        // academic
+        'InstitutionShifts',
+        'InstitutionGrades',
+        'InstitutionClasses',
+        'InstitutionSubjects',
+        'InstitutionTextbooks',
+
+        // students
+        'Programmes',
+        'Students',
+        'StudentUser',
+        'StudentAccount',
+        // 'Textbooks',
+        // 'StudentIndexes',
+
+
+        // staff
+        'Staff',
+        'StaffUser',
+        'StaffAccount',
+        'StaffLeave',
+        'StaffAppraisals',
+        'StaffTrainingNeeds',
+        'StaffTrainingApplications',
+        'StaffTrainingResults',
+        // 'StaffTransferRequests',
+        // 'StaffTransferApprovals',
+        // 'StaffPositionProfiles',
+
+        // attendances
+        'StaffAbsences',
+        'StaffAttendances',
+        'InstitutionStudentAbsences',
+        'StudentAttendances',
+
+        // behaviours
+        'StaffBehaviours',
+        'StudentBehaviours',
+
+        // competencies
+        'StudentCompetencies',
+        'StudentCompetencyResults',
+
+        // assessments
+        'Results',
+        'AssessmentResults',
+        // 'InstitutionAssessments',
+
+        // indexes
+        // 'Indexes',
+        // 'InstitutionStudentIndexes',
+
+        // examinations
+        'ExaminationResults',
+        'InstitutionExaminations',
+        'InstitutionExaminationsUndoRegistration',
+        'InstitutionExaminationStudents',
+
+        // positions
+        'InstitutionPositions',
+
+        // finance
+        'InstitutionBankAccounts',
+        'InstitutionFees',
+        'StudentFees',
+
+        // infrastructures
+        'InstitutionLands',
+        'InstitutionBuildings',
+        'InstitutionFloors',
+        'InstitutionRooms',
+
+        // survey
+        'InstitutionSurveys',
+        'InstitutionRubrics',
+        'InstitutionRubricAnswers',
+
+        // visits
+        'VisitRequests',
+        'InstitutionQualityVisits',
+
+        // cases
+        'InstitutionCases',
+
+        // report card
+        'ReportCardComments',
+        'ReportCardStatuses',
+        'InstitutionStudentsReportCards',
+
+        // misc
+        // 'IndividualPromotion',
+        // 'TransferRequests',
+        // 'CourseCatalogue',
+    ];
+
     public function initialize()
     {
         // Start: remove this logic after upgrading to v3.4.x
@@ -260,6 +356,18 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCases']);
     }
+    public function ReportCardComments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']);
+    }
+    public function ReportCardStatuses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
+    }
+    public function InstitutionStudentsReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
+    }
     // End
 
     // AngularJS
@@ -277,7 +385,18 @@ class InstitutionsController extends AppController
         }
 
         $this->set('_roles', $roles);
-        $this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles));
+
+        // POCOR-3983 check institution status
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        if ($isActive) {
+            $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+        } else {
+            $_edit = false;
+        }
+        // end POCOR-3983
+
+        $this->set('_edit', $_edit);
         $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
         $url = $this->ControllerAction->url('index');
         $url['plugin'] = 'Institution';
@@ -299,6 +418,24 @@ class InstitutionsController extends AppController
         $this->set('excelUrl', Router::url($url));
 
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function Comments()
+    {
+        // POCOR-3983 check institution status
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        if ($isActive) {
+            $_edit = $this->AccessControl->check(['Institutions', 'Comments', 'edit']);
+        } else {
+            $_edit = false;
+        }
+        // end POCOR-3983
+
+        $this->set('_edit', $_edit);
+        $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
     // End
 
@@ -674,20 +811,33 @@ class InstitutionsController extends AppController
             } elseif ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
             }
+
+            $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
             if (!empty($id)) {
-                $this->activeObj = TableRegistry::get('Institution.Institutions')->get($id);
-                $name = $this->activeObj->name;
-                $session->write('Institution.Institutions.name', $name);
-                if ($action == 'view') {
-                    $header = $name .' - '.__('Overview');
-                } elseif ($action == 'Results') {
-                    $header = $name .' - '.__('Assessments');
+                if ($this->Institutions->exists([$this->Institutions->primaryKey() => $id])) {
+                    $this->activeObj = $this->Institutions->get($id);
+                    $name = $this->activeObj->name;
+                    $session->write('Institution.Institutions.name', $name);
+                    if ($action == 'view') {
+                        $header = $name .' - '.__('Overview');
+                    } elseif ($action == 'Results') {
+                        $header = $name .' - '.__('Assessments');
+                    } else {
+                        $header = $name .' - '.__(Inflector::humanize(Inflector::underscore($action)));
+                    }
+                    $crumb = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'dashboard',
+                        'institutionId' => $this->ControllerAction->paramsEncode(['id' => $id]),
+                        $this->ControllerAction->paramsEncode(['id' => $id])
+                    ];
+                    $this->Navigation->addCrumb($name, $crumb);
                 } else {
-                    $header = $name .' - '.__(Inflector::humanize(Inflector::underscore($action)));
+                    return $this->redirect($indexPage);
                 }
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $id]), $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
-                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
+                return $this->redirect($indexPage);
             }
         }
         $this->set('contentHeader', $header);
@@ -738,6 +888,12 @@ class InstitutionsController extends AppController
                     }
                 }
                 break;
+            case 'Comments':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'institutions.comments.ctrl',
+                    'institutions.comments.svc'
+                ]);
             case 'Classes':
                 if (isset($this->request->pass[0])) {
                     if ($this->request->param('pass')[0] == 'edit') {
@@ -800,6 +956,9 @@ class InstitutionsController extends AppController
             if ($action) {
                 $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
             }
+
+            // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
+            $this->getStatusPermission($model);
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
@@ -959,6 +1118,7 @@ class InstitutionsController extends AppController
 
         $Institutions = TableRegistry::get('Institution.Institutions');
         $classification = $Institutions->get($id)->classification;
+
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
@@ -978,31 +1138,44 @@ class InstitutionsController extends AppController
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
 
+            //Students By Grade for current year, excludes transferred and withdrawn students
+            $params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
+            ];
+
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
+
             //Students By Year, excludes transferred and withdrawn students
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']])
-            );
+            $params = [
+                'conditions' => ['institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]
+            ];
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_year', $params);
 
-            //Students By Grade for current year, excludes transferred and withdrawn students
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN']])
-            );
-
-            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
-
             //Staffs By Position Type for current year, only shows assigned staff
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
-            );
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_type', $params);
-        } elseif ($classification == $Institutions::NON_ACADEMIC) {
+
+            //Staffs By Year, only shows assigned staff
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
+
+        } else if ($classification == $Institutions::NON_ACADEMIC) {
             //Staffs By Position Title for current year, only shows assigned staff
-            $params = array(
-                'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
-            );
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_position', $params);
+
+            //Staffs By Year, only shows assigned staff
+            $params = [
+                'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
         }
 
         $this->set('highChartDatas', $highChartDatas);
@@ -1153,6 +1326,7 @@ class InstitutionsController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
+            'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
@@ -1309,5 +1483,32 @@ class InstitutionsController extends AppController
         }
 
         echo json_encode($options);
+    }
+
+    public function getStatusPermission($model)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $isActive = $this->Institutions->isActive($institutionId);
+
+        // institution status is INACTIVE
+        if (!$isActive) {
+            if (in_array($model->alias(), $this->features)) { // check the feature list
+                // off the import action
+                if ($model->behaviors()->has('ImportLink')) {
+                    $model->removeBehavior('ImportLink');
+                }
+
+                if ($model instanceof \App\Model\Table\ControllerActionTable) {
+                    // CAv4 off the add/edit/remove action
+                    $model->toggle('add', false);
+                    $model->toggle('edit', false);
+                    $model->toggle('remove', false);
+                } else if ($model instanceof \App\Model\Table\AppTable) {
+                    // CAv3 hide button and redirect when user change the Url
+                    $model->addBehavior('ControllerAction.HideButton');
+                }
+            }
+        }
     }
 }

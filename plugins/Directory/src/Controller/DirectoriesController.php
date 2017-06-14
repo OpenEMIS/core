@@ -73,6 +73,7 @@ class DirectoriesController extends AppController {
 	public function StudentTextbooks() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
+	public function StudentReportCards() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
 	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
     public function Courses() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
     public function StaffSalaries() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
@@ -155,6 +156,37 @@ class DirectoriesController extends AppController {
 		$header = __('Directory');
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
+
+		$query = $this->request->query;
+		// pass user id from request query and set to session
+		if (array_key_exists('user_id', $query)) {
+			$userId = $query['user_id'];
+			$Directories = TableRegistry::get('Directory.Directories');
+			$entity = $Directories->get($userId);
+
+			$session->write('Directory.Directories.id', $entity->id);
+			$session->write('Directory.Directories.name', $entity->name);
+
+			$isStudent = $entity->is_student;
+			$isStaff = $entity->is_staff;
+			$isGuardian = $entity->is_guardian;
+
+			$session->delete('Directory.Directories.is_student');
+			$session->delete('Directory.Directories.is_staff');
+			$session->delete('Directory.Directories.is_guardian');
+			if ($isStudent) {
+				$session->write('Directory.Directories.is_student', true);
+				$session->write('Student.Students.id', $entity->id);
+				$session->write('Student.Students.name', $entity->name);
+			}
+
+			if ($isStaff) {
+				$session->write('Directory.Directories.is_staff', true);
+				$session->write('Staff.Staff.id', $entity->id);
+				$session->write('Staff.Staff.name', $entity->name);
+			}
+		}
+
 		if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
 			$session->delete('Directory.Directories');
 			$session->delete('Staff.Staff.id');
@@ -396,6 +428,7 @@ class DirectoriesController extends AppController {
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Assessments')],
 			'ExaminationResults' => ['text' => __('Examinations')],
+			'ReportCards' => ['text' => __('Report Cards')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 			'Textbooks' => ['text' => __('Textbooks')]

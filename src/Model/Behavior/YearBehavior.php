@@ -2,6 +2,9 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
+
+use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -21,7 +24,11 @@ class YearBehavior extends Behavior
         $config = $this->config();
         foreach ($config as $date => $year) {
             if ($entity->has($date) && !empty($entity->$date)) {
-                $entity->$year = date('Y', strtotime($entity->$date));
+                if ($entity->$date instanceof Date || $entity->$date instanceof Time) {
+                    $entity->$year = $entity->$date->year;
+                } else {
+                    $entity->$year = date('Y', strtotime($entity->$date));
+                }
             } else {
                 $entity->$year = null;
             }

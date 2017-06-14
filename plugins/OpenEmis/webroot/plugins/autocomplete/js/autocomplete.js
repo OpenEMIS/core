@@ -6,6 +6,7 @@ var Autocomplete = {
 	loader: '<span class="autocomplete-loader"></span>',
 	text: '<span class="autocomplete-text"></span>',
 	timer: 0,
+	extra: {},
 
 	init: function() {
 		this.attachAutoComplete('.autocomplete');
@@ -145,7 +146,8 @@ var Autocomplete = {
 		            url: url,
 		            dataType: "json",
 		            data: {
-		                term: request.term
+		                term: request.term,
+		                extra: Autocomplete.extra
 		            },
 		            success: function(data) {
 		                response(data);
