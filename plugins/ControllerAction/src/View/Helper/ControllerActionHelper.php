@@ -287,6 +287,7 @@ class ControllerActionHelper extends Helper
                     $associatedFound = true;
                 }
             }
+
             if (!$associatedFound) {
                 $value = $this->HtmlField->render($type, 'index', $entity, $attr);
             }
