@@ -96,7 +96,7 @@ class AreapickerBehavior extends Behavior
         return $value;
     }
 
-    public function editAfterQuery(Event $event, Entity $entity)
+    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
     {
         $userId = $this->_table->Auth->user('id');
         $areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
@@ -134,7 +134,7 @@ class AreapickerBehavior extends Behavior
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         foreach ($this->_table->fields as $field => $attr) {
             if ($attr['type'] == 'areapicker') {
@@ -169,7 +169,7 @@ class AreapickerBehavior extends Behavior
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         // to prevent html injection on area_id
         if ($entity->has('area_restricted') && $entity->area_restricted == true) {
