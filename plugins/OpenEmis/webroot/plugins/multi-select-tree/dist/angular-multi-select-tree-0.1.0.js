@@ -201,7 +201,7 @@
         if ($scope.useCallback && $scope.canSelectItem(item) === false || $scope.selectOnlyLeafs && item.children && item.children.length > 0) {
           return;
         }
-        if (item.disable) {
+        if (item.disabled) {
           return;
         }
         if (!$scope.multiSelect) {
