@@ -40,7 +40,7 @@ class DashboardController extends AppController
     {
         parent::beforeFilter($event);
         $user = $this->Auth->user();
-        if (array_key_exists('last_login', $user) && is_null($user['last_login'])) {
+        if (is_array($user) && array_key_exists('last_login', $user) && is_null($user['last_login'])) {
             $this->Alert->warning('security.login.changePassword');
             $lastLogin = TableRegistry::get('User.Users')->get($user['id'])->last_login;
             $this->request->session()->write('Auth.User.last_login', $lastLogin);
