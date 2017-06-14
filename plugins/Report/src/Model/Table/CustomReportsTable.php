@@ -58,31 +58,41 @@ class CustomReportsTable extends AppTable
                 ->where([$this->aliasField('id') => $id])
                 ->first();
 
+            // filters
             if (!empty($customReportData) && !empty($customReportData->filter)) {
                 $jsonFilters = $customReportData->filter;
                 $filters = json_decode($jsonFilters, true);
 
+                // academic period filter
                 if (array_key_exists('academic_period_id', $filters)) {
                      $this->ControllerAction->field('academic_period_id');
                      unset($filters['academic_period_id']);
                 }
 
-                $params = $this->request->data[$this->alias()];
                 foreach($filters as $field => $data) {
-                    $options = [];
+                    $fieldType = 'select';
+                    if (array_key_exists('fieldType', $data)) {
+                        $fieldType = $data['fieldType'];
+                    }
 
-                    if (array_key_exists('options', $data)) {
-                        $options = $data['options'] + $options;
-                    } else {
+                    $parameters = ['type' => $fieldType];
+
+                    if ($fieldType == 'select') {
+                        $params = $this->request->data[$this->alias()];
+
                         $options = $this->parseJson($data, $params);
+                        if (array_key_exists('options', $data)) {
+                            $options = $data['options'] + $options;
+                        }
+
+                        $parameters = $parameters + ['options' => $options, 'select' => false, 'onChangeReload' => true];
+
+                        if (!(isset($this->request->data[$this->alias()][$field]))) {
+                            $this->request->data[$this->alias()][$field] = key($options);
+                        }
                     }
 
-                    $type = 'select';
-                    if (array_key_exists('type', $data)) {
-                        $type = $data['type'];
-                    }
-
-                    $this->ControllerAction->field($field, ['type' => $type, 'options' => $options, 'select' => false, 'onChangeReload' => true]);
+                    $this->ControllerAction->field($field, $parameters);
                 }
             }
         }
@@ -131,6 +141,7 @@ class CustomReportsTable extends AppTable
 
     public function onExcelTemplateInitialiseQueryVariables(Event $event, array $params, ArrayObject $extra)
     {
+        // get json query from reports database table
         $customReportData = $this->get($params['feature']);
         $jsonQuery = json_decode($customReportData->query, true);
 
