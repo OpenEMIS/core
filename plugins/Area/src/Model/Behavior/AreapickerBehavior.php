@@ -80,6 +80,8 @@ class AreapickerBehavior extends Behavior
             $areaKeys = array_keys($areaOptions);
             $areaKeys[] = null;
             $session = $HtmlField->request->session();
+
+            $areaKeys = array_merge($areaKeys, [$entity->$attr['field']]);
             $session->write('FormTampering.'.$fieldName, $areaKeys);
 
             if ($targetModel == 'Area.Areas') {

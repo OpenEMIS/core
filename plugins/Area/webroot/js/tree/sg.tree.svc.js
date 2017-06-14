@@ -7,6 +7,7 @@ SgTreeSvc.$inject = ['$q', 'KdDataSvc'];
 function SgTreeSvc($q, KdDataSvc) {
     var service = {
         init: init,
+        translate: translate,
         getRecords: getRecords
     };
 
@@ -15,6 +16,15 @@ function SgTreeSvc($q, KdDataSvc) {
     function init(baseUrl) {
         KdDataSvc.base(baseUrl);
         KdDataSvc.controllerAction('SgTree');
+    }
+
+    function translate(data) {
+        KdDataSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
     }
 
     function getRecords(model, areaIds = [], displayCountry = 0, selected) {

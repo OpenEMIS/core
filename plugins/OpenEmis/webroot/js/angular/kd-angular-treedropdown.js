@@ -57,7 +57,13 @@ function kdTreeDropdown() {
             if (angular.isUndefined(_scope.selectionText)) return;
 
             updateSelectionText(generateSelectionText(_newSelectedList, _scope.selectionText, _scope.treePlaceholder), _scope.elementId);
-        })
+        });
+
+        _scope.$watch('textConfig', function(_newTextConfig) {
+            _scope.selectionText = updateSelectionTextConfig(_scope);
+            updateSelectionText(generateSelectionText(_scope.outputModel, _scope.selectionText, _scope.treePlaceholder), _scope.elementId);
+            console.log("scope lalalala", _scope);
+        }, true);
     }
 
     function generateSelectionText(_selectedList, _selectionText, _placeholder) {
@@ -108,9 +114,8 @@ function kdTreeDropdown() {
         };
 
         if (angular.isDefined(_scope.textConfig)) {
-            var selectionText = Object.merge(selectionText, _scope.textConfig);
+            var selectionText = Object.assign(selectionText, _scope.textConfig);
         }
-
         return selectionText;
     }
 }
