@@ -182,9 +182,9 @@ class NavigationComponent extends Component
 
         if (!empty($institutionId)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $currentInstitution = $Institutions->get($institutionId);
 
-            if ($currentInstitution) {
+            if ($Institutions->exists([$Institutions->primaryKey() => $institutionId])) {
+                $currentInstitution = $Institutions->get($institutionId);
                 $classification = $currentInstitution->classification;
 
                 if ($classification == $Institutions::NON_ACADEMIC) {
@@ -523,6 +523,26 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Institution']
                     ],
 
+			'Institutions.ReportCards' => [
+				'title' => 'Report Cards',
+				'parent' => 'Institutions.Institutions.index',
+				'link' => false,
+			],
+
+				'Institutions.ReportCardComments' => [
+					'title' => 'Comments',
+					'parent' => 'Institutions.ReportCards',
+					'params' => ['plugin' => 'Institution'],
+					'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
+				],
+
+				'Institutions.ReportCardStatuses' => [
+					'title' => 'Statuses',
+					'parent' => 'Institutions.ReportCards',
+					'params' => ['plugin' => 'Institution'],
+					'selected' => ['Institutions.ReportCardStatuses'],
+				],
+
             'Institutions.Positions' => [
                 'title' => 'Positions',
                 'parent' => 'Institutions.Institutions.index',
@@ -586,7 +606,8 @@ class NavigationComponent extends Component
             'Institutions.VisitRequests' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution']
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.VisitRequests', 'Institutions.Visits']
             ],
 
             'Institutions.Cases' => [
@@ -620,12 +641,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
-                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull']],
+                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys']],
             'Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.Awards',
+                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                     'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
             'Students.BankAccounts' => [
                 'title' => 'Finance',
@@ -781,7 +802,7 @@ class NavigationComponent extends Component
                     'parent' => 'Directories.Student',
                     'params' => ['plugin' => 'Directory'],
                     'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-                        'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
+                        'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
                 ],
                 'Directories.StudentBankAccounts' => [
                     'title' => 'Finance',
@@ -880,7 +901,7 @@ class NavigationComponent extends Component
                     'title' => 'Education Structure',
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Education'],
-                    'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
+                    'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Stages', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
                             'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
                 ],
                 'FieldOptions.index' => [
@@ -1037,7 +1058,7 @@ class NavigationComponent extends Component
                     'title' => 'Sessions',
                     'parent' => 'Administration.Training',
                     'params' => ['plugin' => 'Training'],
-                    'selected' => ['Trainings.Sessions', 'Trainings.Applications']
+                    'selected' => ['Trainings.Sessions', 'Trainings.Applications', 'Trainings.ImportTrainees']
                 ],
 
                 'Trainings.Results' => [
@@ -1111,6 +1132,12 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'Textbook'],
                 'selected' => ['Textbooks.Textbooks']
+            ],
+            'ReportCards.Templates' => [
+                'title' => 'Report Cards',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'ReportCard'],
+                'selected' => ['ReportCards.Templates']
             ],
             'Workflows.Workflows' => [
                 'title' => 'Workflow',

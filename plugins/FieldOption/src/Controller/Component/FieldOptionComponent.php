@@ -31,10 +31,10 @@ class FieldOptionComponent extends Component
         'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
         'Sectors' => ['className' => 'Institution.Sectors', 'parent' => 'Institution'],
         'Providers' => ['className' => 'Institution.Providers', 'parent' => 'Institution'],
-        'Statuses' => ['className' => 'Institution.Statuses', 'parent' => 'Institution'],
         'Types' => ['className' => 'Institution.Types', 'parent' => 'Institution'],
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
         'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
+        'ReportCardCommentCodes' => ['className' => 'ReportCard.ReportCardCommentCodes', 'parent' => 'Institution'],
 
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
@@ -81,6 +81,9 @@ class FieldOptionComponent extends Component
         'TrainingLevels' => ['className' => 'Training.TrainingLevels', 'parent' => 'Training'],
         'TrainingModeDeliveries' => ['className' => 'Training.TrainingModeDeliveries', 'parent' => 'Training'],
         'TrainingNeedCategories' => ['className' => 'Training.TrainingNeedCategories', 'parent' => 'Training'],
+        'TrainingNeedCompetencies' => ['className' => 'Training.TrainingNeedCompetencies', 'parent' => 'Training'],
+        'TrainingNeedStandards' => ['className' => 'Training.TrainingNeedStandards', 'parent' => 'Training'],
+        'TrainingNeedSubStandards' => ['className' => 'Training.TrainingNeedSubStandards', 'parent' => 'Training'],
         'TrainingPriorities' => ['className' => 'Training.TrainingPriorities', 'parent' => 'Training'],
         'TrainingProviders' => ['className' => 'Training.TrainingProviders', 'parent' => 'Training'],
         'TrainingRequirements' => ['className' => 'Training.TrainingRequirements', 'parent' => 'Training'],
@@ -115,16 +118,14 @@ class FieldOptionComponent extends Component
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
     ];
 
+    public $components = ['AccessControl'];
+
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config)
     {
-        $this->controller = $this->_registry->getController();
-        $controller = $this->controller->name;
-        $accessMap = [];
         foreach ($this->fieldOptions as $key => $className) {
-            $accessMap["$controller.$key"] = "$controller.%s";
+            $this->AccessControl->addAccessMap($key);
         }
-        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     public function getFieldOptions()

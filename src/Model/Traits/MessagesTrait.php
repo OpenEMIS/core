@@ -113,7 +113,8 @@ trait MessagesTrait
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
-            'custom_validation_pattern' => 'Please enter a valid format'
+            'custom_validation_pattern' => 'Please enter a valid format',
+            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -729,6 +730,22 @@ trait MessagesTrait
         'Reports' => [
             'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
         ],
+        'ReportCardComments' => [
+            'noProgrammes' => 'There is no programme set for this institution'
+        ],
+        'ReportCardStatuses' => [
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no template for this Report Card. Please contact the administrator for assistance.',
+            'noFilesToDownload' => 'There are no generated Report Cards to download',
+            'noFilesToPublish' => 'There are no generated Report Cards to publish',
+            'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
+            'generate' => 'The Report Card has been successfully generated',
+            'generateAll' => 'All Report Cards will be generated in the background',
+            'publish' => 'The Report Card has been successfully published',
+            'publishAll' => 'All generated Report Cards have been published successfully',
+            'unpublish' => 'The Report Card has been successfully unpublished',
+            'unpublishAll' => 'All published Report Cards have been unpublished successfully'
+        ],
         'AlertRules' => [
             'Attendance' => [
                 'threshold' => 'Days within 1 to 30'
@@ -770,7 +787,8 @@ trait MessagesTrait
                     'ruleLessThanToday' => 'Date should not be later than today'
                 ],
                 'date_closed' => [
-                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened',
+                    'ruleCheckPendingWorkbench' => 'There is still pending item in institution workbench, please clear the workbench before proceed.'
                 ],
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email',
@@ -1528,6 +1546,11 @@ trait MessagesTrait
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
+            ],
+            'EducationStages' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
             ]
         ],
         'Localization' => [
@@ -1909,6 +1932,20 @@ trait MessagesTrait
             'AlertRules' => [
                 'name' => [
                     'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
+        ],
+        'ReportCard' => [
+            'ReportCards' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
         ],

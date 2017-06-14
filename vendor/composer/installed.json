@@ -613,7 +613,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "872ead27dc8916e1d4dac5463174820aea82c65a"
+            "reference": "d28f7fcc527597cd1c163f34a5078048082e4b62"
         },
         "require": {
             "admad/cakephp-jwt-auth": "^2.0",
@@ -623,7 +623,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-05-05T09:12:09+00:00",
+        "time": "2017-05-12T02:37:19+00:00",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
@@ -662,50 +662,6 @@
         "support": {
             "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
         }
-    },
-    {
-        "name": "mk-j/php_xlsxwriter",
-        "version": "0.32",
-        "version_normalized": "0.32.0.0",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
-            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/mk-j/PHP_XLSXWriter/zipball/94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
-            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
-            "shasum": ""
-        },
-        "require": {
-            "ext-zip": "*",
-            "php": ">=5.2.1"
-        },
-        "require-dev": {
-            "phpunit/phpunit": "4.3.*"
-        },
-        "time": "2017-03-09T16:25:31+00:00",
-        "type": "project",
-        "installation-source": "dist",
-        "autoload": {
-            "classmap": [
-                "xlsxwriter.class.php"
-            ]
-        },
-        "notification-url": "https://packagist.org/downloads/",
-        "license": [
-            "MIT"
-        ],
-        "description": "PHP Library to write XLSX files",
-        "homepage": "https://github.com/mk-j/PHP_XLSXWriter",
-        "keywords": [
-            "excel",
-            "library",
-            "php",
-            "xls",
-            "xlsx"
-        ]
     },
     {
         "name": "mobiledetect/mobiledetectlib",
@@ -763,17 +719,17 @@
     },
     {
         "name": "phpseclib/phpseclib",
-        "version": "2.0.4",
-        "version_normalized": "2.0.4.0",
+        "version": "2.0.5",
+        "version_normalized": "2.0.5.0",
         "source": {
             "type": "git",
             "url": "https://github.com/phpseclib/phpseclib.git",
-            "reference": "ab8028c93c03cc8d9c824efa75dc94f1db2369bf"
+            "reference": "f8dd0e18d2328c447dd4190fecd11ef52680d968"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/ab8028c93c03cc8d9c824efa75dc94f1db2369bf",
-            "reference": "ab8028c93c03cc8d9c824efa75dc94f1db2369bf",
+            "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/f8dd0e18d2328c447dd4190fecd11ef52680d968",
+            "reference": "f8dd0e18d2328c447dd4190fecd11ef52680d968",
             "shasum": ""
         },
         "require": {
@@ -791,7 +747,7 @@
             "ext-mcrypt": "Install the Mcrypt extension in order to speed up a few other cryptographic operations.",
             "ext-openssl": "Install the OpenSSL extension in order to speed up a wide variety of cryptographic operations."
         },
-        "time": "2016-10-04T00:57:04+00:00",
+        "time": "2017-05-08T05:58:35+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1476,17 +1432,17 @@
     },
     {
         "name": "psy/psysh",
-        "version": "v0.8.3",
-        "version_normalized": "0.8.3.0",
+        "version": "v0.8.4",
+        "version_normalized": "0.8.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/bobthecow/psysh.git",
-            "reference": "1dd4bbbc64d71e7ec075ffe82b42d9e096dc8d5e"
+            "reference": "17cf432bb80d9198df239b80d00a29155bd74d82"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/bobthecow/psysh/zipball/1dd4bbbc64d71e7ec075ffe82b42d9e096dc8d5e",
-            "reference": "1dd4bbbc64d71e7ec075ffe82b42d9e096dc8d5e",
+            "url": "https://api.github.com/repos/bobthecow/psysh/zipball/17cf432bb80d9198df239b80d00a29155bd74d82",
+            "reference": "17cf432bb80d9198df239b80d00a29155bd74d82",
             "shasum": ""
         },
         "require": {
@@ -1510,7 +1466,7 @@
             "ext-readline": "Enables support for arrow-key history navigation, and showing and manipulating command history.",
             "hoa/console": "A pure PHP readline implementation. You'll want this if your PHP install doesn't already support readline or libedit."
         },
-        "time": "2017-03-19T21:40:44+00:00",
+        "time": "2017-05-12T15:41:55+00:00",
         "bin": [
             "bin/psysh"
         ],
@@ -3886,6 +3842,50 @@
         "keywords": [
             "bake",
             "cakephp"
+        ]
+    },
+    {
+        "name": "mk-j/php_xlsxwriter",
+        "version": "0.32",
+        "version_normalized": "0.32.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
+            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/mk-j/PHP_XLSXWriter/zipball/94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
+            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
+            "shasum": ""
+        },
+        "require": {
+            "ext-zip": "*",
+            "php": ">=5.2.1"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "4.3.*"
+        },
+        "time": "2017-03-09T16:25:31+00:00",
+        "type": "project",
+        "installation-source": "source",
+        "autoload": {
+            "classmap": [
+                "xlsxwriter.class.php"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "description": "PHP Library to write XLSX files",
+        "homepage": "https://github.com/mk-j/PHP_XLSXWriter",
+        "keywords": [
+            "excel",
+            "library",
+            "php",
+            "xls",
+            "xlsx"
         ]
     }
 ]
