@@ -34,6 +34,7 @@ return [
         'Map' => $baseDir . '/plugins/Map/',
         'Migrations' => $baseDir . '/vendor/cakephp/migrations/',
         'OpenEmis' => $baseDir . '/plugins/OpenEmis/',
+        'Profile' => $baseDir . '/plugins/Profile/',
         'Report' => $baseDir . '/plugins/Report/',
         'ReportCard' => $baseDir . '/plugins/ReportCard/',
         'Rest' => $baseDir . '/plugins/Rest/',

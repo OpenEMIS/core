@@ -61,6 +61,13 @@ class ProgrammesTable extends ControllerActionTable
 	{
 		$session = $this->request->session();
 		$studentId = $session->read('Student.Students.id');
+
+		// POCOR-1893 Profile using loginId as studentId
+		if ($this->controller->name == 'Profiles') {
+			$studentId = $session->read('Auth.User.id');
+		}
+		// end POCOR-1893
+
         $query->where([$this->aliasField('student_id') => $studentId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
