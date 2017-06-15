@@ -10,7 +10,7 @@ use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
 
-class LeavesTable extends ControllerActionTable
+class LeaveTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
