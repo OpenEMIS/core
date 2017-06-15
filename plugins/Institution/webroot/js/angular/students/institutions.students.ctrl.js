@@ -947,8 +947,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
         .then(function(response) {
+            var username = StudentController.selectedStudentData.username;
+            if (username == StudentController.selectedStudentData.openemis_no || username == '' || typeof username == 'undefined') {
+                StudentController.selectedStudentData.username = response;
+            }
             StudentController.selectedStudentData.openemis_no = response;
-            StudentController.selectedStudentData.username = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -960,7 +963,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.generatePassword()
         .then(function(response) {
-            StudentController.selectedStudentData.password = response;
+            if (StudentController.selectedStudentData.password == '' || typeof StudentController.selectedStudentData.password == 'undefined') {
+                StudentController.selectedStudentData.password = response;
+            }
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -1011,7 +1016,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         else {
             if (StudentController.externalSearch) {
                 StudentController.getUniqueOpenEmisId();
-                StudentController.generatePassword();
             }
             studentData = StudentController.selectedStudentData;
             StudentController.completeDisabled = false;

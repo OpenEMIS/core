@@ -365,7 +365,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->fields['openemis_no']['attr']['value'] = $openemisNo;
         if (!isset($this->request->data[$this->alias()]['username'])) {
             $this->request->data[$this->alias()]['username'] = $openemisNo;
-        } else if (count($this->request->data[$this->alias()]['username']) == count($openemisNo)) {
+        } elseif ($this->request->data[$this->alias()]['username'] == $this->request->data[$this->alias()]['openemis_no']) {
             $this->request->data[$this->alias()]['username'] = $openemisNo;
         }
         $this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
