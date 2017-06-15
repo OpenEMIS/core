@@ -1,5 +1,3 @@
-
-<?= $this->Html->script('Area.tree/sg.tree.svc', ['block' => true]); ?>
 <?php $label = isset($attr['label']) ? $attr['label'] : $attr['field']; ?>
 <?php if ($label): ?>
 <div class="input select<?= $attr['null'] == false ? ' required' : '' ?>">
