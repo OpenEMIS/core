@@ -821,7 +821,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 delete studentData['address_area_id'];
                 delete studentData['birthplace_area_id'];
                 delete studentData['date_of_death'];
-                delete studentData['password'];
                 studentData['super_admin'] = 0;
                 studentData['status'] = 1;
                 delete studentData['last_login'];
