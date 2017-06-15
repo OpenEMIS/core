@@ -1057,8 +1057,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
         .then(function(response) {
+            var username = StaffController.selectedStaffData.username;
+            if (username == StaffController.selectedStaffData.openemis_no || username == '' || typeof username == 'undefined') {
+                StaffController.selectedStaffData.username = response;
+            }
             StaffController.selectedStaffData.openemis_no = response;
-            StaffController.selectedStaffData.username = response;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -1070,7 +1073,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.generatePassword()
         .then(function(response) {
-            StaffController.selectedStaffData.password = response;
+            if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
+                StaffController.selectedStaffData.password = response;
+            }
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -1118,7 +1123,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         else if (data.step == 4) {
             if (StaffController.externalSearch) {
                 StaffController.getUniqueOpenEmisId();
-                StaffController.generatePassword();
             }
             // Work around for alert reset
             StaffController.createNewInternalDatasource(StaffController.internalGridOptions, true);
