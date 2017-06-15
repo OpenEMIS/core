@@ -14,6 +14,22 @@ class ProfilesController extends AppController
 {
     public $activeObj = null;
 
+    private $redirectedViewFeature = [
+        // student academic
+        'Programmes',
+        'StudentClasses',
+        'StudentSubjects',
+        'StudentReportCards',
+
+        // staff career
+        'Positions',
+        'StaffClasses',
+        'StaffSubjects',
+        'StaffBehaviours',
+        'Licenses',
+        'Appraisals',
+    ];
+
     public function initialize()
     {
         parent::initialize();
@@ -56,7 +72,7 @@ class ProfilesController extends AppController
     public function StaffClasses()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
     public function StaffSubjects()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
     public function StaffEmployments()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
-    public function StaffLeave()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']); }
+    public function StaffLeaves()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leaves']); }
     public function StudentClasses()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
     public function StudentSubjects()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
@@ -75,10 +91,8 @@ class ProfilesController extends AppController
     public function TrainingNeeds()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
     public function StaffAppraisals()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
     public function StudentTextbooks()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
-
     public function ProfileGuardians()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Guardians']); }
     public function ProfileGuardianUser()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.GuardianUser']); }
-
     public function StudentReportCards()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
     public function Attachments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
     public function Courses()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
@@ -195,7 +209,30 @@ class ProfilesController extends AppController
     {
         $session = $this->request->session();
 
-        if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+            // off the import action
+            if ($model->behaviors()->has('ImportLink')) {
+                $model->removeBehavior('ImportLink');
+            }
+
+            $model->toggle('add', false);
+            $model->toggle('edit', false);
+            $model->toggle('remove', false);
+
+            $alias = $model->alias();
+
+            // redirected view feature is to cater for the link that redirected to institution
+            if (in_array($alias, $this->redirectedViewFeature)) {
+                $model->toggle('view', false);
+            }
+        } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
+            $alias = $model->alias();
+            $excludedModel = ['Accounts'];
+
+            if (!in_array($alias, $excludedModel)) {
+                $model->addBehavior('ControllerAction.HideButton');
+            }
+        } else if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
         } else if ($model->alias() == 'Guardians') {
             $model->editButtonAction('ProfileGuardianUser');
@@ -348,11 +385,6 @@ class ProfilesController extends AppController
         return $tabElements;
     }
 
-    // public function getStudentGuardianTabElements($options = [])
-    // {
-    //     return $tabElements = [];
-    // }
-
     public function getAcademicTabElements($options = [])
     {
         $id = (array_key_exists('id', $options))? $options['id']: 0;
@@ -378,7 +410,6 @@ class ProfilesController extends AppController
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
         }
-
         return $tabElements;
     }
 
@@ -419,7 +450,7 @@ class ProfilesController extends AppController
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
             'Absences' => ['text' => __('Absences')],
-            'Leave' => ['text' => __('Leave')],
+            'Leaves' => ['text' => __('Leaves')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Awards' => ['text' => __('Awards')],
         ];
