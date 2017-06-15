@@ -1375,6 +1375,18 @@ trait MessagesTrait
                 ],
             ],
         ],
+        'Profile' => [
+            'Guardians' => [
+                'guardian_id' => [
+                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                ]
+            ],
+            'Accounts' => [
+                'current_password' => [
+                    'ruleChangePassword' => 'The current password was not matched.'
+                ]
+            ],
+        ],
         'Staff' => [
             'transferExists' => 'There is an existing transfer request for that staff.',
             'date_of_birth' => 'Date Of Birth',
