@@ -31,22 +31,24 @@ class ImportSalariesTable extends AppTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) 
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
         $controller = $toolbarButtons['back']['url']['controller'];
-        if ($plugin == 'Directory') {
+        if ($plugin == 'Directory' || $plugin == 'Profile') {
             $toolbarButtons['back']['url']['action'] = 'StaffSalaries';
         } else if ($plugin == 'Staff') {
             $toolbarButtons['back']['url']['action'] = 'Salaries';
         }
     }
 
-    public function beforeAction($event) 
+    public function beforeAction($event)
     {
         $session = $this->request->session();
         if ($session->check('Staff.Staff.id')) {
             $this->staffId = $session->read('Staff.Staff.id');
+        } else if ($this->controller->name == 'Profiles') {
+            $this->staffId = $session->read('Auth.User.id');
         }
     }
 

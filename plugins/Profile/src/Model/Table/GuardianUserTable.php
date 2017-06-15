@@ -78,6 +78,8 @@ class GuardianUserTable extends UserTable
         }
 
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+
+        $extra['toolbarButtons']['list']['url']['action'] = 'ProfileGuardians';
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -89,7 +91,7 @@ class GuardianUserTable extends UserTable
         $this->field('identity_type_id', ['visible' => 'false']);
         $this->field('identity_number', ['visible' => 'false']);
 
-        $extra['toolbarButtons']['back']['url']['action'] = 'StudentGuardians';
+        $extra['toolbarButtons']['back']['url']['action'] = 'ProfileGuardians';
         $extra['toolbarButtons']['back']['url'][0] = 'add';
     }
 

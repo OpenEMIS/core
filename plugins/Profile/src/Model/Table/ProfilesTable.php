@@ -14,7 +14,8 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
-class ProfilesTable extends ControllerActionTable {
+class ProfilesTable extends ControllerActionTable
+{
     // public $InstitutionStudent;
 
     // these constants are being used in AdvancedPositionSearchBehavior as well
@@ -45,6 +46,8 @@ class ProfilesTable extends ControllerActionTable {
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $this->addBehavior('User.User');
+
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Auth.User.id']);
 
         $this->toggle('search', false);
         $this->toggle('remove', false);
@@ -88,6 +91,36 @@ class ProfilesTable extends ControllerActionTable {
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         $this->setupTabElements($entity);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // remove the list toolbarButton
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+        if (array_key_exists('list', $toolbarButtonsArray)) {
+            unset($toolbarButtonsArray['list']);
+        }
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+
+        if ($entity->is_student) {
+            $this->fields['gender_id']['type'] = 'readonly';
+            $this->fields['gender_id']['attr']['value'] = $entity->has('gender') ? $entity->gender->name : '';
+            $this->fields['gender_id']['value'] = $entity->has('gender') ? $entity->gender->id : '';
+        }
+
+        $this->fields['nationality_id']['type'] = 'readonly';
+        if (!empty($entity->main_nationality)) {
+            $this->fields['nationality_id']['attr']['value'] = $entity->main_nationality->name;
+        }
+
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        if (!empty($entity->main_identity_type)) {
+            $this->fields['identity_type_id']['attr']['value'] = $entity->main_identity_type->name;
+        }
+
+        $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
     }
 
     private function setupTabElements($entity) {

@@ -27,6 +27,8 @@ class UserActivitiesTable extends AppTable {
 				break;
 			case 'Directories':
 				break;
+			case 'Profiles':
+				break;
 		}
 		$tabElements = $this->controller->getUserTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
