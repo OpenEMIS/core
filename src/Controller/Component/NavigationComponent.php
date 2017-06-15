@@ -800,7 +800,7 @@ class NavigationComponent extends Component
                     'title' => 'Career',
                     'parent' => 'Profiles.Staff',
                     'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.StaffEmployments', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffAbsences', 'Profiles.StaffLeave', 'Profiles.StaffBehaviours', 'Profiles.StaffAwards']
+                    'selected' => ['Profiles.StaffEmployments', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffAbsences', 'Profiles.StaffLeaves', 'Profiles.StaffBehaviours', 'Profiles.StaffAwards']
                 ],
                 'Profiles.StaffQualifications' => [
                     'title' => 'Professional Development',

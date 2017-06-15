@@ -93,6 +93,30 @@ class PreferencesTable extends ControllerActionTable
         return $attr;
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // Remove the back toolbarButton
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+        if (array_key_exists('back', $toolbarButtonsArray)) {
+            unset($toolbarButtonsArray['back']);
+        }
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // remove the list toolbarButton
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+        if (array_key_exists('list', $toolbarButtonsArray)) {
+            unset($toolbarButtonsArray['list']);
+        }
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         // To change the language of the UI
