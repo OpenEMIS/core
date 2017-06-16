@@ -34,7 +34,7 @@ class CustomReportBehavior extends Behavior
                 } else {
                     $query = $this->Table->find();
 
-                    $methods = ['join', 'contain', 'matching', 'select', 'find', 'where', 'group', 'having', 'order'];
+                    $methods = ['join', 'contain', 'matching', 'select', 'selectExpression', 'find', 'where', 'group', 'having', 'order'];
                     foreach ($methods as $method) {
                         if (array_key_exists($method, $jsonArray)) {
                             $methodName = '_' . $method;
@@ -219,6 +219,18 @@ class CustomReportBehavior extends Behavior
                 } else {
                     $select[$field] = $value;
                 }
+            }
+
+            $query->select($select);
+        }
+    }
+
+    private function _selectExpression(Query $query, array $params, array $values)
+    {
+        if (!empty($values)) {
+            $select = [];
+            foreach($values as $field => $value) {
+                $select[$field] = $query->newExpr()->add($value);
             }
 
             $query->select($select);
