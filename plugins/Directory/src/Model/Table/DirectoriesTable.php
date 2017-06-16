@@ -363,9 +363,13 @@ class DirectoriesTable extends ControllerActionTable
 
         $this->fields['openemis_no']['value'] = $openemisNo;
         $this->fields['openemis_no']['attr']['value'] = $openemisNo;
+        // pr($this->request->data[$this->alias()]['username']);
         if (!isset($this->request->data[$this->alias()]['username'])) {
             $this->request->data[$this->alias()]['username'] = $openemisNo;
-        } elseif ($this->request->data[$this->alias()]['username'] == $this->request->data[$this->alias()]['openemis_no'] || empty($this->request->data[$this->alias()]['username'])) {
+        } elseif ($this->request->data[$this->alias()]['username'] == $this->request->data[$this->alias()]['openemis_no']) {
+            $this->request->data[$this->alias()]['username'] = $openemisNo;
+        } elseif (empty($this->request->data[$this->alias()]['username'])) {
+            $entity->invalid('username', $openemisNo, true);
             $this->request->data[$this->alias()]['username'] = $openemisNo;
         }
         $this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
