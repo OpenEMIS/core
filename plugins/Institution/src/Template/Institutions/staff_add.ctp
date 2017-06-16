@@ -300,9 +300,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <div ng-if="InstitutionStaffController.postResponse.error.last_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
                     </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
-                    </div>
                 </div>
                 <div class="input string" ng-show="InstitutionStaffController.StaffNationalities != 2 && StaffController.createNewStaff == true">
                     <label><?= __('Nationality') ?></label>
@@ -332,7 +329,21 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label><?= __('Gender') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.gender.name" type="string" disabled="disabled">
                 </div>
+                <div class="input string required">
+                    <label><?= __('Username') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.username">{{ error }}</p>
+                    </div>
+                </div>
 
+                <div class="input password">
+                    <label><?= __('Password') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.password" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
+                    </div>
+                </div>
                 <div class="input string" ng-show="!InstitutionStaffController.completeDisabled">
                     <label><?= __('Staff Status') ?></label>
                     <input type="string" value="<?= __('Assigned') ?>" disabled="disabled">
