@@ -39,6 +39,7 @@ class ExcelReportBehavior extends Behavior
     private $advancedTypes = [
         'row' => 'repeatRows',
         'column' => 'repeatColumns',
+        'table' => 'table',
         'match' => 'match',
         'dropdown' => 'dropdown',
         // 'image' => 'image'
@@ -453,6 +454,8 @@ class ExcelReportBehavior extends Behavior
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
         $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : null;
+        $attr['displayColumns'] = array_key_exists('displayColumns', $settings) ? $settings['displayColumns'] : [];
+        $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : null;
         // $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
 
         // Start attributes  for dropdown
@@ -838,6 +841,53 @@ class ExcelReportBehavior extends Behavior
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
 
+    }
+
+    private function table($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $rowValue = $attr['rowValue'];
+        $source = $attr['source'];
+        $displayColumns = $attr['displayColumns'];
+
+        if (array_key_exists($source, $extra['vars']) && !empty($extra['vars'][$source])) {
+            $sourceVars = $extra['vars'][$source];
+
+            foreach ($sourceVars as $vars) {
+                // reset columnIndex after every loop of row
+                $columnIndex = $attr['columnIndex'];
+
+                // skip first row don't need to auto insert new row
+                if ($rowValue != $attr['rowValue']) {
+                    $objWorksheet->insertNewRowBefore($rowValue);
+                    $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
+                }
+
+                foreach ($displayColumns as $column) {
+                    $value = null;
+                    if (array_key_exists('displayValue', $column)) {
+                        $field = $this->splitDisplayValue($column['displayValue'])[1];
+                        $value = Hash::get($vars, $field);
+                    }
+
+                    $attr['type'] = array_key_exists('type', $column) ? $column['type'] : null;
+                    $attr['format'] = array_key_exists('format', $column) ? $column['format'] : null;
+
+                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $cellCoordinate = $columnValue.$rowValue;
+                    $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+
+                    $columnIndex++;
+                }
+
+                $rowValue++;
+            }
+        } else {
+            // replace placeholder as blank if data is empty
+            $columnValue = $attr['columnValue'];
+            $cellCoordinate = $columnValue.$rowValue;
+            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+        }
     }
 
     private function match($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
