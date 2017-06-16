@@ -332,12 +332,16 @@ class AreasTable extends ControllerActionTable
                 $this->aliasField('id'),
                 $this->aliasField('name'),
                 $this->aliasField('parent_id'),
-                'AreaLevels.name'
+                'AreaLevels.name',
+                $this->aliasField('order')
             ])
             ->hydrate(false)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
                 $results = $results->toArray();
                 $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
+                $order = array_column($results, 'order');
+                array_multisort($order, SORT_ASC, $results);
+                unset($order);
                 $defaultSelect = ['id' => null, 'name' => __('-- Select --')];
                 if (is_null($selected)) {
                     $defaultSelect['selected'] = true;
@@ -363,6 +367,14 @@ class AreasTable extends ControllerActionTable
             } elseif (is_array($value)) {
                 if (isset($value['name']) && isset($value['area_level']) && isset($value['area_level']['name'])) {
                     $value['name'] = $value['name'] . ' - ' . $value['area_level']['name'];
+                }
+                if (isset($value['children'])) {
+                    $children = $value['children'];
+                    $order = array_column($children, 'order');
+                    array_multisort($order, SORT_ASC, $children);
+                    $value['children'] = $children;
+                    unset($children);
+                    unset($order);
                 }
                 $parentIds = array_unique(array_column($value, 'parent_id'));
                 if (array_intersect($authorisedAreaIds, $parentIds)) {
