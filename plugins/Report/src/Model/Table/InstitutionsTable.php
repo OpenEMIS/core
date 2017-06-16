@@ -124,7 +124,7 @@ class InstitutionsTable extends AppTable
 					'key' => 'Areas.code',
 					'field' => 'area_code',
 					'type' => 'string',
-					'label' => ''
+					'label' => __('Area Education Code')
 				];
 			}
 
@@ -142,7 +142,7 @@ class InstitutionsTable extends AppTable
 
 		if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
 			// Stop the customfieldlist behavior onExcelUpdateFields function
-			$includedFields = ['name', 'alternative_name', 'code', 'area_code', 'area_id', 'area_administrative_id', 'area_administrative_code'];
+			$includedFields = ['name', 'alternative_name', 'code', 'area_code', 'area_id', 'area_administrative_code', 'area_administrative_id'];
 			foreach ($newFields as $key => $value) {
 				if (!in_array($value['field'], $includedFields)) {
 					unset($newFields[$key]);
