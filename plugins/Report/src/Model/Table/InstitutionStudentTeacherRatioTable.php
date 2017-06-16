@@ -189,19 +189,19 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
         $newFields = [];
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if ($value['field'] == 'name') {
+            if ($value['field'] == 'code') {
                 $newFields[] = [
                     'key' => 'Areas.code',
                     'field' => 'area_code',
                     'type' => 'string',
-                    'label' => __('Area Code')
+                    'label' => __('Area Education Code')
                 ];
 
                 $newFields[] = [
                     'key' => 'Areas.name',
                     'field' => 'area_name',
                     'type' => 'string',
-                    'label' => __('Area')
+                    'label' => __('Area Education')
                 ];
 
                 $newFields[] = [
