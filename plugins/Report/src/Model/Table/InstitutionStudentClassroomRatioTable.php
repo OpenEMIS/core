@@ -22,7 +22,7 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_id', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
+			'excludes' => ['alternative_name','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_id', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
 			'pages' => false
 		]);
 		$this->addBehavior('Report.InstitutionSecurity');
@@ -181,19 +181,19 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
         $newFields = [];
         foreach ($cloneFields as $key => $value) {
             $newFields[] = $value;
-            if ($value['field'] == 'name') {
+            if ($value['field'] == 'code') {
                 $newFields[] = [
                     'key' => 'Areas.code',
                     'field' => 'area_code',
                     'type' => 'string',
-                    'label' => __('Area Code')
+                    'label' => __('Area Education Code')
                 ];
 
                 $newFields[] = [
                     'key' => 'Areas.name',
                     'field' => 'area_name',
                     'type' => 'string',
-                    'label' => __('Area')
+                    'label' => __('Area Education')
                 ];
 
                 $newFields[] = [

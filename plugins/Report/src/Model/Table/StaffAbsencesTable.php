@@ -85,14 +85,14 @@ class StaffAbsencesTable extends AppTable {
             'key' => 'Areas.code',
             'field' => 'area_code',
             'type' => 'string',
-            'label' => __('Area Code')
+            'label' => __('Area Education Code')
         ];
 
         $newArray[] = [
             'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area')
+            'label' => __('Area Education')
         ];
 
         $newArray[] = [
