@@ -599,7 +599,7 @@ class UsersTable extends AppTable
         if (!is_int($l) || !is_int($c) || !is_int($n) || !is_int($s)) {
             trigger_error('Argument(s) not an integer', E_USER_WARNING);
             return false;
-        } elseif ($l < 0 || $l > 20 || $c < 0 || $n < 0 || $s < 0) {
+        } elseif ($l < 0 || $c < 0 || $n < 0 || $s < 0) {
             trigger_error('Argument(s) out of range', E_USER_WARNING);
             return false;
         } elseif ($c > $l) {
