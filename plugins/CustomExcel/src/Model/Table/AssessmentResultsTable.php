@@ -173,8 +173,7 @@ class AssessmentResultsTable extends AppTable
                 )
                 ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
                 ->where([
-                    $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
-                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id']
+                    $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id']
                 ])
                 ->formatResults(function (ResultSetInterface $results) {
                     return $results->map(function ($row) {
@@ -401,10 +400,9 @@ class AssessmentResultsTable extends AppTable
                 )
                 ->contain([$AssessmentGradingOptions->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
                 ->where([
-                    $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
+                    $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id']
                 ])
                 ->group([
-                    $AssessmentItemResults->aliasField('institution_id'),
                     $AssessmentItemResults->aliasField('academic_period_id'),
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
