@@ -281,9 +281,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <div ng-if="InstitutionStudentController.postResponse.error.openemis_no" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.openemis_no">{{ error }}</p>
                     </div>
-                    <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
-                    </div>
                 </div>
                 <div class="input string" ng-model="InstitutionStudentController.postResponse">
                     <label><?= __('Student') ?></label>
@@ -324,6 +321,21 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStudentController.selectedStudentData.gender.name" type="string" disabled="disabled">
                     <div ng-if="InstitutionStudentController.postResponse.error.gender_id" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.gender_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string required">
+                    <label><?= __('Username') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.username" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.username" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.username">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input password">
+                    <label><?= __('Password') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.password" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input select required" ng-model="InstitutionStudentController.postResponse" ng-show="!InstitutionStudentController.completeDisabled">
