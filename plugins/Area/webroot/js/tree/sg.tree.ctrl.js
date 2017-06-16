@@ -31,7 +31,6 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         })
         .then(function(res) {
             $scope.textConfig = res;
-            console.log($scope.textConfig);
         }, function (error) {
             console.log(error);
         });
