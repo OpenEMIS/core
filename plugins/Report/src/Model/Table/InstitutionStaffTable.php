@@ -246,17 +246,17 @@ class InstitutionStaffTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Institutions.area',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('Area')
-        ];
-
-        $newFields[] = [
             'key' => 'Institutions.area_code',
             'field' => 'area_code',
             'type' => 'string',
-            'label' => __('Area Code')
+            'label' => __('Area Education Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.area',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
         ];
 
         $newFields[] = [
