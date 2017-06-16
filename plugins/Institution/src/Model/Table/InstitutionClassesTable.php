@@ -86,8 +86,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'rule' => 'uniqueNamePerAcademicPeriod',
                 'provider' => 'table',
             ])
-            ->add('staff_id', 'rulecheckClassGrade', [
-                'rule' => ['checkClassGrade'],
+            ->add('staff_id', 'ruleCheckHomeroomTeacher', [
+                'rule' => ['checkHomeroomTeacher'],
                 'provider' => 'table',
             ]);
         return $validator;
