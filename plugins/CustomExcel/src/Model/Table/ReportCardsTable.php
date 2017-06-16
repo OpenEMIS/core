@@ -35,6 +35,8 @@ class ReportCardsTable extends AppTable
             'variables' => [
                 'ReportCards',
                 'InstitutionStudentsReportCards',
+                'GuardianRelations',
+                'Guardians',
                 'InstitutionStudentsReportCardsComments',
                 'Institutions',
                 'Principal',
@@ -62,6 +64,8 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateSaveFile'] = 'onExcelTemplateSaveFile';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportCards'] = 'onExcelTemplateInitialiseReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGuardianRelations'] = 'onExcelTemplateInitialiseGuardianRelations';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGuardians'] = 'onExcelTemplateInitialiseGuardians';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardsComments'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardsComments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
@@ -163,7 +167,7 @@ class ReportCardsTable extends AppTable
 
             $entity = $StudentsReportCards->find()
                 ->contain([
-                    'Students' => ['BirthplaceAreas', 'MainNationalities'],
+                    'Students' => ['BirthplaceAreas', 'MainNationalities', 'AddressAreas'],
                     'EducationGrades'
                 ])
                 ->where([
@@ -179,9 +183,65 @@ class ReportCardsTable extends AppTable
                 $birthdate = $entity->student->date_of_birth;
                 $entity->student->date_of_birth = $birthdate->format($dateFormat);
             }
+            // pr($entity);die;
             return $entity;
         }
     }
+
+    public function onExcelTemplateInitialiseGuardianRelations(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params)) {
+            $studentGuardians = TableRegistry::get('Student.Guardians');
+            $entity = $studentGuardians->find()
+                    // ->contain('Users.Contacts.ContactTypes.ContactOptions')
+                    ->contain('GuardianRelations')
+                    ->where([
+                        $studentGuardians->aliasField('student_id') => $params['student_id']
+                    ]);
+                    
+
+            if ($entity->count() > 0) {
+                $extra['guardian_ids'] = $entity->extract('guardian_id')->toArray();
+            }
+            // pr($entity->toArray());die;
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseGuardians(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('guardian_ids', $extra) && !empty($extra['guardian_ids'])) {
+            $SecurityUsers = TableRegistry::get('Security.Users');
+
+            $entity = $SecurityUsers->find()
+                ->where([
+                    $SecurityUsers->aliasField('id IN ') => $extra['guardian_ids']
+                ]);
+
+            if ($entity->count() > 0) {
+                $extra['security_user_id'] = $entity->extract('id')->toArray();
+            }
+            // pr($entity->toArray());die;
+            return $entity->toArray();
+        }
+    }
+
+    // public function onExcelTemplateInitialiseContacts(Event $event, array $params, ArrayObject $extra)
+    // {
+    //     if (array_key_exists('security_user_id', $extra) && !empty($extra['security_user_id'])) {
+    //         $UserContacts = TableRegistry::get('User.Contacts');
+
+    //         $entity = $SecurityUsers->find()
+    //             ->where([
+    //                 $SecurityUsers->aliasField('id IN ') => $extra['guardian_ids']
+    //             ]);
+
+    //         if ($entity->count() > 0) {
+    //             $extra['security_user_id'] = $entity->extract('id')->toArray();
+    //         }
+    //         return $entity->toArray();
+    //     }
+    // }
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardsComments(Event $event, array $params, ArrayObject $extra)
     {
@@ -354,6 +414,7 @@ class ReportCardsTable extends AppTable
             if ($entity->count() > 0) {
                 $extra['competency_templates_ids'] = $entity->extract('id')->toArray();
             }
+            // pr($entity->toArray());die;
             return $entity->toArray();
         }
     }
