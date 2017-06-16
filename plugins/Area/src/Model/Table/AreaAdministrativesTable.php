@@ -147,8 +147,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 if (is_null($selected)) {
                     $defaultSelect['selected'] = true;
                 }
-                $results = $results + [1 => $defaultSelect];
-                $results = array_reverse($results);
+                array_unshift($results, $defaultSelect);
                 return $results;
             });
     }
