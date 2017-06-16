@@ -156,7 +156,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 suppressCellSelection: true,
                 suppressMovableColumns: true,
                 rowModelType: 'pagination',
-                localeText: localeText,
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
                 }
