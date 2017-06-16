@@ -122,7 +122,8 @@ class StudentsController extends AppController {
 		}
 	}
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event $event) 
+	{
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		$session = $this->request->session();
@@ -142,18 +143,16 @@ class StudentsController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Student.Students.id')) {
 				$id = $session->read('Student.Students.id');
-			} else if ($session->check('Institution.Students.id')) {
-				$institutionStudentId = $session->read('Institution.Students.id');
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				$id = $InstitutionStudentsTable->get($institutionStudentId)->student_id;
-				$session->write('Student.Students.id', $id);
 			}
-
-			if (!empty($id)) {
+			
+			if ($this->StudentUser->exists([$this->StudentUser->primaryKey() => $id])) {
 				$entity = $this->StudentUser->get($id);
 				$name = $entity->name;
 				$header = $action == 'Results' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+			} else {
+				$indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
+				return $this->redirect($indexPage);
 			}
 		}
 
