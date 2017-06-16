@@ -32,7 +32,7 @@ class InstitutionSubjectsTable extends AppTable  {
     {
         $query
             ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives'])
-            ->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name']);
+            ->select(['institution_code' => 'Institutions.code', 'area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name']);
     }
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -48,17 +48,24 @@ class InstitutionSubjectsTable extends AppTable  {
             $newFields[] = $value;
             if ($value['field'] == 'institution_id') {
                 $newFields[] = [
-                    'key' => 'Areas.code',
-                    'field' => 'area_code',
+                    'key' => 'Institutions.code',
+                    'field' => 'institution_code',
                     'type' => 'string',
-                    'label' => __('Area Code')
+                    'label' => ''
                 ];
 
                 $newFields[] = [
-                    'key' => 'Areas.name',
+                    'key' => 'Institutions.area_code',
+                    'field' => 'area_code',
+                    'type' => 'string',
+                    'label' => __('Area Education Code')
+                ];
+
+                $newFields[] = [
+                    'key' => 'Institutions.area',
                     'field' => 'area_name',
                     'type' => 'string',
-                    'label' => __('Area')
+                    'label' => __('Area Education')
                 ];
 
                 $newFields[] = [
