@@ -173,14 +173,14 @@ class AccountBehavior extends Behavior
     public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request)
     {
         $isAdmin = $this->_table->AccessControl->isAdmin();
-        $isAuthorised = $this->_table->AccessControl->check(['Directories', 'Accounts', 'edit']);
+        $permission = is_array($this->config('permission')) ? $this->config('permission') : [];
+        $isAuthorised = $this->_table->AccessControl->check($permission);
+        $controller = $this->_table->controller->name;
         $loginUserId = $this->_table->Auth->user('id');
         $id = $request->params['pass'][1];
-
-        if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAuthorised)) {
+        if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAuthorised || (!$isAdmin && $this->config('userRole') == 'Securities')) || $controller == 'Preferences') {
             $attr['type'] = 'readonly';
         }
-
         return $attr;
     }
 
