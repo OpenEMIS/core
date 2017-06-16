@@ -1,3 +1,11 @@
+-- POCOR-2785
+-- translations
+DELETE FROM `translations` WHERE `en` = '%tree_no_of_item items selected';
+
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue` = 'POCOR-2785';
+
+
 -- POCOR-3646
 -- security_users
 -- No rollback due to size of the records
