@@ -392,6 +392,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             newUserRecord['gender_id'] = promiseArr[0];
                             newUserRecord['nationality_id'] = promiseArr[1];
                             newUserRecord['identity_type_id'] = promiseArr[2];
+                            newUserRecord['username'] = newUserRecord['openemis_no'];
                             delete newUserRecord['password'];
                             var identityTypeId = promiseArr[2];
                             StudentUser.reset();

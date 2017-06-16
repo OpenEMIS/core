@@ -327,12 +327,14 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                 newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
                 newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
                 newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
-
-
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
                 newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];
                 newUserRecord['date_of_birth'] = userRecord[attr['date_of_birth_mapping']];
                 newUserRecord['external_reference'] = userRecord[attr['external_reference_mapping']];
+                newUserRecord['institution_position_id'] = userRecord['institution_position_id'];
+                newUserRecord['position_type'] = userRecord['position_type'];
+                newUserRecord['FTE'] = userRecord['FTE'];
+                newUserRecord['staff_type_id'] = userRecord['staff_type_id'];
                 genderName = userRecord[attr['gender_mapping']];
                 // By auto generated
                 newUserRecord['openemis_no'] = userRecord['openemis_no'];
@@ -359,8 +361,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                 if (typeof userRecord[attr['postal_mapping']] != 'undefined') {
                     newUserRecord['postal_code'] = userRecord[attr['postal_mapping']];
                 }
-
-                console.log(newUserRecord['external_reference']);
 
                 vm.getUserRecord(newUserRecord['external_reference'])
                 .then(function(response) {
@@ -390,6 +390,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                             newUserRecord['gender_id'] = promiseArr[0];
                             newUserRecord['nationality_id'] = promiseArr[1];
                             newUserRecord['identity_type_id'] = promiseArr[2];
+                            newUserRecord['username'] = newUserRecord['openemis_no'];
                             var identityTypeId = promiseArr[2];
                             StaffUser.reset();
                             StaffUser.save(newUserRecord)
