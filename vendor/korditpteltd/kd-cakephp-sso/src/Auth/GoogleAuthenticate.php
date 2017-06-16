@@ -6,8 +6,7 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
-
-require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
+use Google_Service_Oauth2;
 
 class GoogleAuthenticate extends BaseAuthenticate
 {
@@ -19,9 +18,9 @@ class GoogleAuthenticate extends BaseAuthenticate
         if ($session->check('Google.tokenData')) {
             $tokenData = $session->read('Google.tokenData');
             // Remove session for the token data after it has been used.
-            $session->delete('Google.tokenData');
-            $email = $tokenData['payload']['email'];
-            $emailArray = explode('@', $tokenData['payload']['email']);
+            // $session->delete('Google.tokenData');
+            $email = $tokenData['email'];
+            $emailArray = explode('@', $tokenData['email']);
             $userName = $emailArray[0];
             $hostedDomain = $emailArray[1];
             $configHD = $session->read('Google.hostedDomain');
@@ -37,7 +36,7 @@ class GoogleAuthenticate extends BaseAuthenticate
                 } else {
                     if ($this->config('createUser')) {
                         $client = $session->read('Google.client');
-                        $ServiceOAuth2Object = new \Google_Service_Oauth2($client);
+                        $ServiceOAuth2Object = new Google_Service_Oauth2($client);
                         $me = $ServiceOAuth2Object->userinfo->get();
                         $userInfo = [
                             'id' => $me->getId(),
