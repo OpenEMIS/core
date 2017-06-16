@@ -21,7 +21,7 @@
     "require": {
         "cakephp/cakephp": ">=3.3.0 <3.4",
         "firebase/php-jwt": "~3.0",
-        "google/apiclient": "1.1.7",
+        "google/apiclient": "^2.1",
         "onelogin/php-saml": "^2.9",
         "phpseclib/phpseclib": "^2.0"
     },
