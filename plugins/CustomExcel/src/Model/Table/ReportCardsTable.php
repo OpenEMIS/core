@@ -224,7 +224,7 @@ class ReportCardsTable extends AppTable
                         });
                     })
                     ->first();
-            return $entity->toArray();
+            return $entity;
         }
     }
 
