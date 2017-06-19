@@ -238,23 +238,22 @@ class ReportCardsTable extends AppTable
                     ->where([
                         $Extracurriculars->aliasField('security_user_id') => $params['student_id'],
                         'OR' => [
-                            'AND' => [
-                                $Extracurriculars->aliasField('start_date >= ') => $extra['report_card_start_date'],
-                                $Extracurriculars->aliasField('end_date <= ') => $extra['report_card_end_date']
-                            ],
-                            'AND' => [
-                                $Extracurriculars->aliasField('start_date >= ') => $extra['report_card_start_date'],
-                                $Extracurriculars->aliasField('end_date >= ') => $extra['report_card_end_date']
-                            ],
-                            'AND' => [
-                                $Extracurriculars->aliasField('start_date <= ') => $extra['report_card_start_date'],
-                                $Extracurriculars->aliasField('end_date <= ') => $extra['report_card_end_date']
-                            ],
-                            'AND' => [
-                                $Extracurriculars->aliasField('start_date <= ') => $extra['report_card_start_date'],
-                                $Extracurriculars->aliasField('end_date >= ') => $extra['report_card_end_date']
-                            ]
+                        [
+                            $Extracurriculars->aliasField('end_date') . ' IS NOT NULL',
+                            $Extracurriculars->aliasField('start_date') . ' <=' => $extra['report_card_start_date'],
+                            $Extracurriculars->aliasField('end_date') . ' >=' => $extra['report_card_start_date']
+                        ],
+                        [
+                            $Extracurriculars->aliasField('end_date') . ' IS NOT NULL',
+                            $Extracurriculars->aliasField('start_date') . ' <=' => $extra['report_card_end_date'],
+                            $Extracurriculars->aliasField('end_date') . ' >=' => $extra['report_card_end_date']
+                        ],
+                        [
+                            $Extracurriculars->aliasField('end_date') . ' IS NOT NULL',
+                            $Extracurriculars->aliasField('start_date') . ' >=' => $extra['report_card_start_date'],
+                            $Extracurriculars->aliasField('end_date') . ' <=' => $extra['report_card_end_date']
                         ]
+                    ],
                     ])
                     ->toArray();
 
