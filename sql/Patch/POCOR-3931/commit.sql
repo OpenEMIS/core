@@ -8,7 +8,6 @@ CREATE TABLE `system_authentications` (
   `name` VARCHAR(100) NOT NULL,
   `status` INT NOT NULL,
   `authentication_type_id` INT NOT NULL COMMENT 'links to authentication_types.id',
-  `authentication_types_id` INT NOT NULL COMMENT 'links to area_administratives.id',
   PRIMARY KEY (`id`),
   INDEX `authentication_type_id` (`authentication_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains user specified authentication';

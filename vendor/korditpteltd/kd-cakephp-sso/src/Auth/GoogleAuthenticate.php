@@ -6,6 +6,7 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
+use Google_Client;
 use Google_Service_Oauth2;
 
 class GoogleAuthenticate extends BaseAuthenticate
