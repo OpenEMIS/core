@@ -35,10 +35,7 @@ class ReportCardsTable extends AppTable
             'variables' => [
                 'ReportCards',
                 'InstitutionStudentsReportCards',
-                'GuardianRelations',
-                'Guardians',
-                'Contacts',
-                'ContactTypes',
+                'FirstGuardian',
                 'Extracurriculars',
                 'Awards',
                 'Admissions',
@@ -69,10 +66,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateSaveFile'] = 'onExcelTemplateSaveFile';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportCards'] = 'onExcelTemplateInitialiseReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGuardianRelations'] = 'onExcelTemplateInitialiseGuardianRelations';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGuardians'] = 'onExcelTemplateInitialiseGuardians';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseContacts'] = 'onExcelTemplateInitialiseContacts';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseContactTypes'] = 'onExcelTemplateInitialiseContactTypes';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseFirstGuardian'] = 'onExcelTemplateInitialiseFirstGuardian';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseExtracurriculars'] = 'onExcelTemplateInitialiseExtracurriculars';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAwards'] = 'onExcelTemplateInitialiseAwards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAdmissions'] = 'onExcelTemplateInitialiseAdmissions';
@@ -193,128 +187,44 @@ class ReportCardsTable extends AppTable
                 $birthdate = $entity->student->date_of_birth;
                 $entity->student->date_of_birth = $birthdate->format($dateFormat);
             }
-            // pr($entity);die;
+
             return $entity;
         }
     }
 
-    public function onExcelTemplateInitialiseGuardianRelations(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseFirstGuardian(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('student_id', $params)) {
             $StudentGuardians = TableRegistry::get('Student.Guardians');
             $entity = $StudentGuardians->find()
-                    ->contain('GuardianRelations')
+                    ->contain(['Users', 'GuardianRelations'])
                     ->where([
                         $StudentGuardians->aliasField('student_id') => $params['student_id']
                     ])
-                    // ->toArray();
+                    ->formatResults(function (ResultSetInterface $results) {
+                        return $results->map(function ($row) {
+                            $guardianId = $row['guardian_id'];
+
+                            $row['contact'] = [];
+
+                            $UserContacts = TableRegistry::get('User.Contacts');
+                            $userContactResults = $UserContacts
+                                ->find()
+                                ->contain(['ContactTypes.ContactOptions'])
+                                ->where([
+                                    $UserContacts->aliasField('security_user_id') => $guardianId
+                                ])
+                                ->all();
+                            if (!$userContactResults->isEmpty()) {
+                                $firstContact = $userContactResults->first();
+                                $row['contact'] = $firstContact;
+                            }
+
+                            return $row;
+                        });
+                    })
                     ->first();
-            
-            $results = [];
-
-            // foreach ($entity as $key => $obj) {
-            //     $results[$key]['id'] = $obj->guardian_id;
-            //     $extra['guardian_ids'][] = $obj->guardian_id;
-            //     $results[$key]['guardianRelationName'] = $obj->guardian_relation->name;
-            // }
-
-            if (!empty($entity)) {
-                $results['id'] = $entity->guardian_id;
-                $extra['guardian_ids'][] = $entity->guardian_id;
-                $results['guardianRelationName'] = $entity->guardian_relation->name;
-            }
-
-            return $results;
-        }
-    }
-
-    public function onExcelTemplateInitialiseGuardians(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('guardian_ids', $extra) && !empty($extra['guardian_ids'])) {
-            $SecurityUsers = TableRegistry::get('Security.Users');
-
-            $entity = $SecurityUsers->find()
-                ->select([
-                    'guardian_id' => 'id'
-                ])
-                ->where([
-                    $SecurityUsers->aliasField('id IN ') => $extra['guardian_ids']
-                ])
-                ->autoFields(true)
-                ->first();
-
-            // if ($entity->count() > 0) {
-            //     $extra['security_user_ids'] = $entity->extract('guardian_id')->toArray();
-            // }
-
-            if (!empty($entity)) {
-                $extra['security_user_ids'] = $entity->guardian_id;
-            }
             return $entity->toArray();
-        }
-    }
-
-    public function onExcelTemplateInitialiseContacts(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('security_user_ids', $extra) && !empty($extra['security_user_ids'])) {
-            $UserContacts = TableRegistry::get('User.Contacts');
-
-            $entity = $UserContacts->find()
-                ->where([
-                    $UserContacts->aliasField('security_user_id IN ') => $extra['security_user_ids']
-                ])
-                // ->toArray();
-                ->first();
-            
-            $results = [];
-            
-            // foreach ($entity as $key => $obj) {
-            //     $results[$key]['id'] = $obj->contact_type_id;
-            //     $extra['contact_type_ids'][] = $obj->contact_type_id;
-            //     $results[$key]['contactValue'] = $obj->value;
-            //     $results[$key]['security_user_id'] = $obj->security_user_id;
-            // }
-
-            if (!empty($entity)) {
-                $results['id'] = $entity->contact_type_id;
-                $extra['contact_type_ids'][] = $entity->contact_type_id;
-                $results['contactValue'] = $entity->value;
-                $results['security_user_id'] = $entity->security_user_id;
-            }
-
-            return $results;
-        }
-    }
-
-    public function onExcelTemplateInitialiseContactTypes(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('contact_type_ids', $extra) && !empty($extra['contact_type_ids'])) {
-            $UserContactTypes = TableRegistry::get('User.ContactTypes');
-
-            $entity = $UserContactTypes->find()
-                ->contain('ContactOptions')
-                ->where([
-                    $UserContactTypes->aliasField('id IN ') => $extra['contact_type_ids']
-                ])
-                // ->toArray();
-                ->first();
-
-            // foreach ($entity as $key => $obj) {
-            //     $contactOptionName = $obj->contact_option->name;
-            //     $contactTypeName = $obj->name;
-            //     $results[$key]['id'] = $obj->id;
-            //     $results[$key]['details'] = $contactOptionName . ' (' . $contactTypeName . ')';
-            // }
-
-            $results = [];
-            if (!empty($entity)) {
-                $contactOptionName = $entity->contact_option->name;
-                $contactTypeName = $entity->name;
-                $results['id'] = $entity->id;
-                $results['details'] = $contactOptionName . ' (' . $contactTypeName . ')';
-            }
-
-            return $results;
         }
     }
 
@@ -403,7 +313,6 @@ class ReportCardsTable extends AppTable
                     ])
                     ->autoFields(true)
                     ->first();
-            // pr($entity);die;
             return $entity;
         }
     }
@@ -555,7 +464,6 @@ class ReportCardsTable extends AppTable
                 $absenceType = $absenceTypes[$obj['absence_type_id']];
                 $results[$absenceType]['number_of_days'] += $numberOfDays;
             }
-
             return $results;
         }
     }
@@ -579,7 +487,6 @@ class ReportCardsTable extends AppTable
             if ($entity->count() > 0) {
                 $extra['competency_templates_ids'] = $entity->extract('id')->toArray();
             }
-            // pr($entity->toArray());die;
             return $entity->toArray();
         }
     }
