@@ -66,6 +66,7 @@ class InstitutionClassesTable extends AppTable  {
     {
         $query
         ->contain('Institutions.Areas')
+        ->contain('Institutions.AreaAdministratives')
         ->contain('Institutions.Types')
         ->contain('EducationGrades')
         ->contain('InstitutionShifts.ShiftOptions')
@@ -76,7 +77,9 @@ class InstitutionClassesTable extends AppTable  {
             'area_name' => 'Areas.name',
             'area_code' => 'Areas.code',
             'institution_type' => 'Types.name',
-            'shift_name' => 'ShiftOptions.name'
+            'shift_name' => 'ShiftOptions.name',
+            'area_administrative_code' => 'AreaAdministratives.code',
+            'area_administrative_name' => 'AreaAdministratives.name'
         ])
         ->order([
             'AcademicPeriods.order',
@@ -116,17 +119,31 @@ class InstitutionClassesTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Areas.area_code',
+            'key' => 'Areas.code',
             'field' => 'area_code',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Area Code')
         ];
 
         $newFields[] = [
-            'key' => 'Areas.area_name',
+            'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Area')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
         ];
 
         $newFields[] = [
