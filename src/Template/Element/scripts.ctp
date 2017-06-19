@@ -18,6 +18,8 @@ echo $this->Html->script('Restful.kd.data.svc');
 echo $this->Html->script('app/services/app/aggrid.locale.svc');
 echo $this->Html->script('app/services/app/kd.session.svc');
 echo $this->Html->script('app/services/app/kd.access.svc');
+echo $this->Html->script('Area.tree/sg.tree.ctrl');
+echo $this->Html->script('Area.tree/sg.tree.svc');
 
 echo $this->Html->script('angular/kdModule/controllers/kd.ctrl');
 echo $this->Html->script('angular/kdModule/directives/kd.drt');
