@@ -13,7 +13,7 @@ use App\Model\Table\AppTable;
 
 class StudentAccountTable extends AppTable {
 	public function initialize(array $config) {
-		$this->addBehavior('User.Account', ['userRole' => 'Students', 'isInstitution' => true]);
+		$this->addBehavior('User.Account', ['userRole' => 'Students', 'isInstitution' => true, 'permission' => ['Institutions', 'StudentAccount', 'edit']]);
 		parent::initialize($config);
 	}
 
