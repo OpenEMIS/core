@@ -6,8 +6,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Security;
-use Google_Client;
-use Google_Auth_Exception;
+
+require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
 
 class GoogleAuthComponent extends Component {
 
@@ -37,7 +37,7 @@ class GoogleAuthComponent extends Component {
         $this->session = $this->request->session();
         $this->session->write('Google.hostedDomain', $this->hostedDomain);
 
-        $client = new Google_Client();
+        $client = new \Google_Client();
         $client->setClientId($this->clientId);
         $client->setClientSecret($this->clientSecret);
         $client->setRedirectUri($this->redirectUri);
@@ -94,7 +94,7 @@ class GoogleAuthComponent extends Component {
         if ($this->request->query('code')) {
             try {
                 $client->authenticate($this->request->query('code'));
-            } catch (Google_Auth_Exception $e) {
+            } catch (\Google_Auth_Exception $e) {
                 return;
             }
             $this->session->write('Google.accessToken', $client->getAccessToken());
@@ -139,7 +139,7 @@ class GoogleAuthComponent extends Component {
             // Check if the access token is expired, if it is expired reauthenticate
             if (!$client->isAccessTokenExpired()) {
                 $this->session->write('Google.accessToken', $client->getAccessToken());
-                $tokenData = $client->verifyIdToken();
+                $tokenData = $client->verifyIdToken()->getAttributes();
             } else {
                 $authUrl = $client->createAuthUrl();
             }
@@ -156,10 +156,10 @@ class GoogleAuthComponent extends Component {
          ************************************************************************************************/
         if (isset($tokenData)) {
             if (!empty($this->hostedDomain)) {
-                if (isset($tokenData['hd'])) {
-                    if ($tokenData['hd'] == $this->hostedDomain) {
+                if (isset($tokenData['payload']['hd'])) {
+                    if ($tokenData['payload']['hd'] == $this->hostedDomain) {
                         $this->session->write('Google.tokenData', $tokenData);
-                        // $this->session->write('Google.client', $client);
+                        $this->session->write('Google.client', $client);
                     } else {
                         $this->session->write('Google.remoteFail', true);
                     }
@@ -168,7 +168,7 @@ class GoogleAuthComponent extends Component {
                 }
             } else {
                 $this->session->write('Google.tokenData', $tokenData);
-                // $this->session->write('Google.client', $client);
+                $this->session->write('Google.client', $client);
             }
         } else {
             $this->session->delete('Google.tokenData');
@@ -193,8 +193,8 @@ class GoogleAuthComponent extends Component {
             }
             if ($this->session->check('Google.tokenData')) {
                 $tokenData = $this->session->read('Google.tokenData');
-                $email = $tokenData['email'];
-                $username = explode('@', $tokenData['email'])[0];
+                $email = $tokenData['payload']['email'];
+                $username = explode('@', $tokenData['payload']['email'])[0];
             }
             return $this->checkLogin($username);
         } else {
