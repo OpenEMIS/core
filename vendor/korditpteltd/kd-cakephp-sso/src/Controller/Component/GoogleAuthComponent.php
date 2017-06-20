@@ -22,6 +22,44 @@ class GoogleAuthComponent extends Component {
     public $components = ['Auth'];
 
     public function initialize(array $config) {
+        $this->controller = $this->_registry->getController();
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Controller.Auth.authenticate'] = 'authenticate';
+        return $events;
+    }
+
+    public function beforeFilter(Event $event) {
+        if (!$this->request->session()->read('Google.remoteFail') && !$this->request->session()->read('Auth.fallback')) {
+            $this->controller->Auth->config('authenticate', [
+                'Form' => [
+                    'userModel' => $this->_config['userModel'],
+                    'passwordHasher' => [
+                        'className' => 'Fallback',
+                        'hashers' => ['Default', 'Legacy']
+                    ]
+                ],
+                'SSO.Google' => [
+                    'userModel' => $this->_config['userModel'],
+                    'createUser' => $this->createUser
+                ]
+            ]);
+        }
+    }
+
+    // public function startup(Event $event) {
+    //     if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+    //         $action = $this->request->params['action'];
+    //         if ($action == $this->config('loginAction') && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+    //             $this->session->delete('Google.accessToken');
+    //             $this->idpLogin();
+    //         }
+    //     }
+    // }
+
+    public function idpLogin() {
         $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
         $googleAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Google');
         $this->clientId = $googleAttributes['client_id'];
@@ -48,43 +86,6 @@ class GoogleAuthComponent extends Component {
         $this->controller = $this->_registry->getController();
 
         $this->retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$this->redirectUri.'?submit=retry">Click here</a> to try again';
-    }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        $events['Controller.Auth.authenticate'] = 'authenticate';
-        return $events;
-    }
-
-    public function beforeFilter(Event $event) {
-        if (!$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-            $this->controller->Auth->config('authenticate', [
-                'Form' => [
-                    'userModel' => $this->_config['userModel'],
-                    'passwordHasher' => [
-                        'className' => 'Fallback',
-                        'hashers' => ['Default', 'Legacy']
-                    ]
-                ],
-                'SSO.Google' => [
-                    'userModel' => $this->_config['userModel'],
-                    'createUser' => $this->createUser
-                ]
-            ]);
-        }
-    }
-
-    public function startup(Event $event) {
-        if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-            $action = $this->request->params['action'];
-            if ($action == $this->config('loginAction') && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-                $this->session->delete('Google.accessToken');
-                $this->idpLogin();
-            }
-        }
-    }
-
-    private function idpLogin() {
         $client = $this->client;
 
         /************************************************************************************************

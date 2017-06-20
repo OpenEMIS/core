@@ -39,19 +39,10 @@ class SSOComponent extends Component {
         $controller = $this->_registry->getController();
         $this->controller = $controller;
         $this->session = $this->request->session();
-
-        $ConfigItems = TableRegistry::get('ConfigItems');
-        $entity = $ConfigItems->findByCode('authentication_type')->first();
-        $authType = strlen($entity->value) ? $entity->value : $entity->default_value;
-        if (empty($authType)) {
-            $authType = 'Local';
-        }
-        $this->authType = $authType;
-        $type = 'SSO.' . ucfirst($authType) . 'Auth';
-        $this->controller->loadComponent('Cookie');
-        if (!in_array($authType, $this->_config['excludedAuthType'])) {
-            $this->controller->loadComponent($type, $this->_config);
-        }
+        $this->controller->loadComponent('SSO.LocalAuth', $this->_config);
+        $this->controller->loadComponent('SSO.GoogleAuth', $this->_config);
+        // $this->controller->loadComponent('SSO.Saml2Auth', $this->_config);
+        // $this->controller->loadComponent('SSO.OAuth2OpenIDConnectAuth', $this->_config);
     }
 
     public function getAuthenticationType()
@@ -60,6 +51,8 @@ class SSOComponent extends Component {
     }
 
     public function doAuthentication() {
+
+        $this->controller->GoogleAuth->idpLogin();
         $extra = new ArrayObject([]);
         // $this->controller->dispatchEvent('Controller.Auth.beforeAuthenticate', [$extra], $this);
 
