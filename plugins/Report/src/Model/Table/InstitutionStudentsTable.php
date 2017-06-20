@@ -68,10 +68,10 @@ class InstitutionStudentsTable extends AppTable  {
             ->toArray();
 		
 		$query
-			->contain(['Users.Genders', 'Users.MainNationalities', 'Institutions.Areas', 'Institutions.Types'])
+			->contain(['Users.Genders', 'Users.MainNationalities', 'Institutions.Areas', 'Institutions.AreaAdministratives', 'Institutions.Types'])
 			->select([
                 'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 'preferred_nationality' => 'MainNationalities.name', 
-                'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'institution_type' => 'Types.name'
+                'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'institution_type' => 'Types.name'
             ])
             ->formatResults(function (ResultSetInterface $results) use ($statusOptions, $statusId) {
                 return $results->map(function ($row) use ($statusOptions, $statusId) {
@@ -86,7 +86,7 @@ class InstitutionStudentsTable extends AppTable  {
                         case 'TRANSFERRED':
                             $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
                             $query = $StudentAdmission->find()
-                                    ->contain(['StudentTransferReasons', 'Institutions.Areas'])
+                                    ->contain(['StudentTransferReasons', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
                                     ->where([
                                         $StudentAdmission->aliasField('student_id') => $studentId,
                                         $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
@@ -100,6 +100,8 @@ class InstitutionStudentsTable extends AppTable  {
                                 $row['transfer_institution'] = $query->institution->code_name;
                                 $row['transfer_institution_area_name'] = $query->institution->area->name;
                                 $row['transfer_institution_area_code'] = $query->institution->area->code;
+                                $row['transfer_institution_area_administrative_name'] = $query->institution->area_administrative->name;
+                                $row['transfer_institution_area_administrative_code'] = $query->institution->area_administrative->code;
                                 $row['transfer_comment'] = $query->comment;
                                 $row['transfer_reason'] = $query->student_transfer_reason->name;
                             }
@@ -227,32 +229,62 @@ class InstitutionStudentsTable extends AppTable  {
 		];
 
         if ($statusId == $this->statuses['TRANSFERRED']) {
+            $extraField[] = [
+                'key' => 'Institutions.area_code',
+                'field' => 'area_code',
+                'type' => 'string',
+                'label' => __('Area Education Code Transferred From')
+            ];
+
     		$extraField[] = [
     			'key' => 'Institutions.area_name',
     			'field' => 'area_name',
     			'type' => 'string',
-    			'label' => __('Area Name Transferred From')
+    			'label' => __('Area Education Transferred From')
     		];
 
+            $extraField[] = [
+                'key' => 'Institutions.area_administrative_code',
+                'field' => 'area_administrativecode',
+                'type' => 'string',
+                'label' => __('Area Administrative Code Transferred From')
+            ];
+
     		$extraField[] = [
-    			'key' => 'Institutions.area_code',
-    			'field' => 'area_code',
-    			'type' => 'string',
-    			'label' => __('Area Code Transferred From')
-    		];
+                'key' => 'Institutions.area_administrative_name',
+                'field' => 'area_administrative_name',
+                'type' => 'string',
+                'label' => __('Area Administrative Transferred From')
+            ];
+
+
         } else {
+            $extraField[] = [
+                'key' => 'Institutions.area_code',
+                'field' => 'area_code',
+                'type' => 'string',
+                'label' => __('Area Education Code')
+            ];
+
             $extraField[] = [
                 'key' => 'Institutions.area_name',
                 'field' => 'area_name',
                 'type' => 'string',
-                'label' => ''
+                'label' => __('Area Education')
             ];
 
             $extraField[] = [
                 'key' => 'Institutions.area_code',
                 'field' => 'area_code',
                 'type' => 'string',
-                'label' => ''
+                'label' => __('Area Administrative Code')
+            ];
+
+            $extraField[] = [
+                'key' => 'Institutions.area_name',
+                'field' => 'area_name',
+                'type' => 'string',
+                'label' => __('Area Administrative')
             ];
         } 
 
@@ -315,17 +347,31 @@ class InstitutionStudentsTable extends AppTable  {
             ];
 
             $transferExtraField[] = [
-                'key' => 'StudentTransfer.institution_area_name',
-                'field' => 'transfer_institution_area_name',
-                'type' => 'string',
-                'label' => __('Area Name Transferred to')
-            ];
-
-            $transferExtraField[] = [
                 'key' => 'StudentTransfer.institution_area_code',
                 'field' => 'transfer_institution_area_code',
                 'type' => 'string',
-                'label' => __('Area Code Transferred to')
+                'label' => __('Area Education Code Transferred to')
+            ];
+
+            $transferExtraField[] = [
+                'key' => 'StudentTransfer.institution_area_name',
+                'field' => 'transfer_institution_area_name',
+                'type' => 'string',
+                'label' => __('Area Education Transferred to')
+            ];
+
+            $transferExtraField[] = [
+                'key' => 'StudentTransfer.institution_area_administrative_code',
+                'field' => 'transfer_institution_area_administrative_code',
+                'type' => 'string',
+                'label' => __('Area Administrative Code Transferred to')
+            ];
+
+            $transferExtraField[] = [
+                'key' => 'StudentTransfer.institution_area_administrative_name',
+                'field' => 'transfer_institution_area_administrative_name',
+                'type' => 'string',
+                'label' => __('Area Administrative Transferred to')
             ];
 
             $outputFields = array_merge($newFields, $transferExtraField);
