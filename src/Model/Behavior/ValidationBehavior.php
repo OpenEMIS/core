@@ -1504,20 +1504,6 @@ class ValidationBehavior extends Behavior
         return (filter_var($field, FILTER_VALIDATE_EMAIL)) || ctype_alnum($field);
     }
 
-    public static function checkHomeroomTeacher($field, array $globalData)
-    {
-        // no class number will be multigrade class
-        if (array_key_exists('class_number', $globalData['data']) && !empty($globalData['data']['class_number'])) {
-            return true;
-        } else {
-            if (!empty($field) && $field > 0) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
     public static function validateCustomText($field, array $globalData)
     {
         if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
