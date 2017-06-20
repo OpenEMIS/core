@@ -777,6 +777,7 @@ class StudentAttendancesTable extends AppTable
                     $Classes->aliasField('institution_id') => $institutionId,
                     $Classes->aliasField('academic_period_id') => $selectedPeriod
                 ])
+                ->order(['name'])
                 ->toArray();
 
             $selectedClass = $this->queryString('class_id', $classOptions);
@@ -784,7 +785,7 @@ class StudentAttendancesTable extends AppTable
             $this->controller->set(compact('classOptions', 'selectedClass'));
             // End setup classes
 
-            $settings['pagination'] = false;
+            // $settings['pagination'] = false; // POCOR-3324 Remove this code and add the indexBeforePaginate function
 
             if ($selectedDay == -1) {
                 $startDate = $weekStartDate->format('Y-m-d');
@@ -911,11 +912,38 @@ class StudentAttendancesTable extends AppTable
         }
     }
 
+    // POCOR-3324 Add this one and remove the paginate = false
+    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
+        $requestQuery = $request->query;
+        $selectedAcademicPeriodId = array_key_exists('academic_period_id', $requestQuery) ? $requestQuery['academic_period_id'] : null;
+        $selectedClassId = array_key_exists('class_id', $requestQuery) ? $requestQuery['class_id'] : null;
+
+        $order = [$this->aliasField('Users.first_name') => 'ASC'];
+
+        if (array_key_exists('sort', $requestQuery)) {
+            $sortDirection = $requestQuery['direction'];
+            $order = [$this->aliasField('Users.first_name') => $sortDirection];
+        }
+
+        $query
+            ->contain(['Users'])
+            ->find('withAbsence', ['date' => $this->selectedDate])
+            ->where([
+                $this->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+                $this->aliasField('institution_class_id') => $selectedClassId,
+                $this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT'),
+            ])
+            ->order($order)
+        ;
+    }
+    // End POCOR-3324
+
     public function indexAfterAction(Event $event, $data)
     {
         $this->dataCount = $data->count();
 
-        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string']);
+        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string', 'sort' => true]);
     }
 
     public function findWithAbsence(Query $query, array $options)
@@ -978,9 +1006,7 @@ class StudentAttendancesTable extends AppTable
                     'type' => 'LEFT',
                     'conditions' => $conditions
                 ]
-            ])
-            ->order(['Users.openemis_no'])
-            ;
+            ]);
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
