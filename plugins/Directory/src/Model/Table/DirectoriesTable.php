@@ -25,35 +25,6 @@ class DirectoriesTable extends ControllerActionTable
     const STUDENTNOTINSCHOOL = 5;
     const STAFFNOTINSCHOOL = 6;
 
-<<<<<<< HEAD
-	private $dashboardQuery;
-
-	public function initialize(array $config) {
-		$this->table('security_users');
-		$this->entityClass('User.User');
-		parent::initialize($config);
-
-		$this->belongsTo('Genders', ['className' => 'User.Genders']);
-		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-		$this->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('SpecialNeeds',      ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Contacts',          ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
-		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
-
-        $this->hasMany('InstitutionStudents',   ['className' => 'Institution.Students', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionStaff',      ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('UserNationalities',     ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-
-		$this->addBehavior('User.User');
-		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
-		$this->addBehavior('User.AdvancedIdentitySearch');
-		$this->addBehavior('User.AdvancedContactNumberSearch');
-		$this->addBehavior('User.AdvancedPositionSearch');
-		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
-=======
     private $dashboardQuery;
 
     public function initialize(array $config)
@@ -72,13 +43,16 @@ class DirectoriesTable extends ControllerActionTable
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
+        $this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UserNationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+
         $this->addBehavior('User.User');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
         $this->addBehavior('User.AdvancedIdentitySearch');
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
->>>>>>> 7a6d44c765e87b9443d81d7248f57a0d912b338f
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
