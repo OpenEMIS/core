@@ -828,9 +828,6 @@ trait MessagesTrait
                 'name' => [
                     'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
                 ],
-                'staff_id' => [
-                    'ruleCheckHomeroomTeacher' => 'This field cannot be left empty',
-                ],
             ],
 
             'InstitutionProgrammes' => [
