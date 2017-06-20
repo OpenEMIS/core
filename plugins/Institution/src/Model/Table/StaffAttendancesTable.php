@@ -260,7 +260,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Attendance');
 
         $this->field('openemis_no');
-        $this->field('staff_id', ['order' => 2]);
+        $this->field('staff_id', ['order' => 2, 'sort' => true]);
 
         $this->field('FTE', ['visible' => false]);
         $this->field('start_date', ['visible' => false]);
@@ -792,6 +792,17 @@ class StaffAttendancesTable extends ControllerActionTable
                 $endDate = $startDate;
             }
 
+            // POCOR-3324 Sorting by Users.first_name
+            $requestQuery = $this->request->query;
+            $sortable = array_key_exists('sort', $requestQuery) ? true : false;
+            if ($sortable) {
+                $sortDirection = $requestQuery['direction'];
+                $order = ['Users.first_name' => $sortDirection];
+            } else {
+                $order = ['Users.first_name' => 'ASC']; // no sorting request sort by Users.first_name
+            }
+            // end POCOR-3324
+
             $query
                 ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
                 ->find('inDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
@@ -799,6 +810,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 ->contain(['Users'])
                 ->find('withAbsence', ['date' => $this->selectedDate])
                 ->where([$this->aliasField('institution_id') => $institutionId])
+                ->order($order)
                 ->distinct()
                 ;
 
@@ -1006,7 +1018,6 @@ class StaffAttendancesTable extends ControllerActionTable
                     'conditions' => $conditions
                 ]
             ])
-            ->order(['Users.openemis_no'])
             ;
     }
 
