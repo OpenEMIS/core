@@ -37,10 +37,10 @@ class LocalAuthComponent extends Component {
     public function authenticate(Event $event, ArrayObject $extra) {
         $controller = $this->_registry->getController();
         if ($this->request->is('post')) {
-            if ($this->request->data['submit'] == 'login') {
+            if ($this->request->data('submit') == 'login') {
                 $username = $this->request->data('username');
                 return $this->checkLogin($username);
-            } else if ($this->request->data['submit'] == 'reload') {
+            } else if ($this->request->data('submit') == 'reload') {
                 $username = $this->request->data['username'];
                 $password = $this->request->data['password'];
                 $session = $this->request->session();
