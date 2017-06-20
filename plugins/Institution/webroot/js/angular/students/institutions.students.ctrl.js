@@ -79,6 +79,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.onAddNewStudentClick = onAddNewStudentClick;
     StudentController.onAddStudentClick = onAddStudentClick;
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
+    StudentController.generatePassword = generatePassword;
     StudentController.reloadInternalDatasource = reloadInternalDatasource;
     StudentController.reloadExternalDatasource = reloadExternalDatasource;
     StudentController.clearInternalSearchFilters = clearInternalSearchFilters;
@@ -820,7 +821,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 delete studentData['address_area_id'];
                 delete studentData['birthplace_area_id'];
                 delete studentData['date_of_death'];
-                delete studentData['password'];
                 studentData['super_admin'] = 0;
                 studentData['status'] = 1;
                 delete studentData['last_login'];
@@ -908,6 +908,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             remain = true;
         }
 
+        if (StudentController.selectedStudentData.username == '' || StudentController.selectedStudentData.username == undefined) {
+            StudentController.postResponse.error.username = empty;
+            remain = true;
+        }
+
         var arrNumber = [{}];
 
         // if (StudentController.StudentIdentities == 1 && (StudentController.Student.identity_type_id == '' || StudentController.Student.identity_type_id == undefined)) {
@@ -942,7 +947,25 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
         .then(function(response) {
+            var username = StudentController.selectedStudentData.username;
+            if (username == StudentController.selectedStudentData.openemis_no || username == '' || typeof username == 'undefined') {
+                StudentController.selectedStudentData.username = response;
+            }
             StudentController.selectedStudentData.openemis_no = response;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function generatePassword() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStudentsSvc.generatePassword()
+        .then(function(response) {
+            if (StudentController.selectedStudentData.password == '' || typeof StudentController.selectedStudentData.password == 'undefined') {
+                StudentController.selectedStudentData.password = response;
+            }
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -986,6 +1009,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.createNewStudent = true;
             StudentController.step = 'create_user';
             StudentController.getUniqueOpenEmisId();
+            StudentController.generatePassword();
             InstitutionsStudentsSvc.resetExternalVariable();
         }
         // Step 4 - Add Student
