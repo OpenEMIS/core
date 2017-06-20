@@ -83,10 +83,13 @@ class InstitutionClassesTable extends ControllerActionTable
         $validator
             ->requirePresence('name')
             ->add('name', 'ruleUniqueNamePerAcademicPeriod', [
-                    'rule' => 'uniqueNamePerAcademicPeriod',
-                    'provider' => 'table',
-                ])
-            ;
+                'rule' => 'uniqueNamePerAcademicPeriod',
+                'provider' => 'table',
+            ])
+            ->add('staff_id', 'ruleCheckHomeroomTeacher', [
+                'rule' => ['checkHomeroomTeacher'],
+                'provider' => 'table',
+            ]);
         return $validator;
     }
 
@@ -510,7 +513,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['selectedGender'] = -1;
         if (array_key_exists('queryString', $this->request->query)) {
             $queryString = $this->paramsDecode($this->request->query['queryString']);
-            
+
             if (!empty($queryString) && array_key_exists('grade', $queryString)) {
                 $extra['selectedGrade'] = $queryString['grade'];
             }
@@ -545,7 +548,7 @@ class InstitutionClassesTable extends ControllerActionTable
         //generate student filter.
         $params = $this->getQueryString();
         $baseUrl = $this->url($this->action, true);
-        
+
         $gradeOptions = [];
         $statusOptions = [];
         $genderOptions = [];
@@ -558,7 +561,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $params['status'] = $extra['selectedStatus']; //maintain current status selection
                 $params['gender'] = $extra['selectedGender'];
                 $url = $this->setQueryString($baseUrl, $params);
-                
+
                 $gradeOptions[$value->education_grade->id]['url'] = $url;
             }
 
@@ -570,7 +573,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $params['status'] = $value->student_status->id;
                 $params['gender'] = $extra['selectedGender'];
                 $url = $this->setQueryString($baseUrl, $params);
-                
+
                 $statusOptions[$value->student_status->id]['url'] = $url;
             }
 
@@ -582,7 +585,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $params['status'] = $extra['selectedStatus'];
                 $params['gender'] = $value->user->gender->id;
                 $url = $this->setQueryString($baseUrl, $params);
-                
+
                 $genderOptions[$value->user->gender->id]['url'] = $url;
             }
 
@@ -633,7 +636,7 @@ class InstitutionClassesTable extends ControllerActionTable
         uasort($statusOptions, function ($a, $b) {
             return $a['order']-$b['order'];
         });
-        
+
         //for all gender option
         $genderOptions[-1]['name'] = count($genderOptions) > 0 ? '-- ' . __('All Genders') . ' --' : '-- ' . __('No Options') . ' --';
         $genderOptions[-1]['id'] = -1;
