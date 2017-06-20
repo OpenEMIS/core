@@ -81,15 +81,13 @@ class InstitutionClassesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         $validator
+            ->allowEmpty('staff_id')
             ->requirePresence('name')
             ->add('name', 'ruleUniqueNamePerAcademicPeriod', [
                 'rule' => 'uniqueNamePerAcademicPeriod',
                 'provider' => 'table',
-            ])
-            ->add('staff_id', 'ruleCheckHomeroomTeacher', [
-                'rule' => ['checkHomeroomTeacher'],
-                'provider' => 'table',
             ]);
+
         return $validator;
     }
 
