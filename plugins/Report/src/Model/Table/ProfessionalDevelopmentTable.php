@@ -8,7 +8,12 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class ProfessionalDevelopmentTable extends AppTable {
+use App\Model\Traits\OptionsTrait;
+
+class ProfessionalDevelopmentTable extends AppTable 
+{
+    use OptionsTrait;
+
     public function initialize(array $config)
     {
         $this->table('training_courses');
@@ -37,6 +42,7 @@ class ProfessionalDevelopmentTable extends AppTable {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('training_course_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('training_need_type', ['type' => 'hidden']);
         $this->ControllerAction->field('status');
         $this->ControllerAction->field('format');
     }
@@ -52,6 +58,23 @@ class ProfessionalDevelopmentTable extends AppTable {
                 $this->request->data[$this->alias()]['feature'] = key($option);
             }
             return $attr;
+        }
+    }
+
+    public function onUpdateFieldTrainingNeedType(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
+
+                if (in_array($feature, ['Report.TrainingNeeds'])) {
+                    $options = $this->getSelectOptions('StaffTrainingNeeds.types');
+                    $attr['type'] = 'select';
+                    $attr['select'] = false;
+                    $attr['options'] = $options;
+                    return $attr;
+                }
+            }
         }
     }
 
@@ -79,6 +102,9 @@ class ProfessionalDevelopmentTable extends AppTable {
                 $feature = $this->request->data[$this->alias()]['feature'];
 
                 switch ($feature) {
+                    case 'Report.TrainingNeeds':
+                        $modelAlias = 'Institution.StaffTrainingNeeds';
+                        break;
                     case 'Report.TrainingCourses':
                         $modelAlias = 'Training.TrainingCourses';
                         break;
