@@ -125,25 +125,21 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                             subject: subject,
                             gradingTypes: gradingTypes
                         };
+
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
                             AlertSvc.reset($scope);
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
-
+                            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+                            params.api.refreshCells([params.node], [params.colDef.field]);
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
-                            console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
+                            params.api.refreshCells([params.node], [params.colDef.field]);
                         });
 
                         // Important: to refresh the grid after data is modified
-                        $scope.gridOptions.api.refreshView();
+                        params.api.refreshCells([params.node], ['total_mark']);
                     }
                 },
                 onGridReady: function() {
@@ -201,17 +197,10 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
                             AlertSvc.reset($scope);
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
-
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
                             console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
                         });
 
                         // Important: to refresh the grid after data is modified

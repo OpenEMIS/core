@@ -522,13 +522,14 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                                     .then(function(response) {
                                         params.data.save_error[params.colDef.field] = false;
                                         AlertSvc.reset(scope);
-                                        params.api.refreshView();
+                                        AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
+                                        params.api.refreshCells([params.node], [params.colDef.field]);
 
                                     }, function(error) {
                                         params.data.save_error[params.colDef.field] = true;
                                         console.log(error);
                                         AlertSvc.error(scope, 'There was an error when saving the result');
-                                        params.api.refreshView();
+                                        params.api.refreshCells([params.node], [params.colDef.field]);
                                     });
                                 }
                             });
@@ -741,13 +742,13 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 .then(function(response) {
                     params.data.save_error[params.colDef.field] = false;
                     AlertSvc.reset(scope);
-                    params.api.refreshView();
-
+                    AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
+                    params.api.refreshCells([params.node], [params.colDef.field]);
                 }, function(error) {
                     params.data.save_error[params.colDef.field] = true;
                     console.log(error);
                     AlertSvc.error(scope, 'There was an error when saving the result');
-                    params.api.refreshView();
+                    params.api.refreshCells([params.node], [params.colDef.field]);
                 });
             }
         },
