@@ -6,6 +6,7 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
+use OneLogin_Saml2_Auth;
 
 class SamlAuthenticate extends BaseAuthenticate
 {
@@ -13,8 +14,34 @@ class SamlAuthenticate extends BaseAuthenticate
     public function authenticate(Request $request, Response $response)
     {
         $session = $request->session();
-        if ($session->check('Saml.userAttribute')) {
-            $userAttribute = $session->read('Saml.userAttribute');
+        $samlAttributes = $this->config('authAttribute');
+        $setting['sp'] = [
+            'entityId' => $samlAttributes['sp_entity_id'],
+            'assertionConsumerService' => [
+                'url' => $samlAttributes['sp_acs'],
+            ],
+            'singleLogoutService' => [
+                'url' => $samlAttributes['sp_slo'],
+            ],
+            'NameIDFormat' => $samlAttributes['sp_name_id_format'],
+        ];
+
+        $setting['idp'] = [
+            'entityId' => $samlAttributes['idp_entity_id'],
+            'singleSignOnService' => [
+                'url' => $samlAttributes['idp_sso'],
+                'binding' => $samlAttributes['idp_sso_binding']
+            ],
+            'singleLogoutService' => [
+                'url' => $samlAttributes['idp_slo'],
+                'binding' => $samlAttributes['idp_slo_binding']
+            ],
+        ];
+        $this->addCertFingerPrintInformation($setting, $samlAttributes);
+        $saml = $this->saml = new OneLogin_Saml2_Auth($setting);
+        $saml->processResponse();
+        $userAttribute = $saml->getAttributes();
+        if ($userAttribute) {
             $fields = $this->config('mappedFields');
             if (isset($fields['mapped_username'])) {
                 $userNameField = $fields['mapped_username'];
@@ -48,6 +75,23 @@ class SamlAuthenticate extends BaseAuthenticate
             }
         } else {
             return false;
+        }
+    }
+
+    private function addCertFingerPrintInformation(&$setting, $attributes)
+    {
+        $arr = [
+            'certFingerprint' => 'idp_cert_fingerprint',
+            'certFingerprintAlgorithm' => 'idp_cert_fingerprint_algorithm',
+            'x509cert' => 'idp_x509cert',
+            'privateKey' => 'sp_private_key'
+        ];
+
+        foreach ($arr as $cert => $value) {
+            if (!empty($attributes[$value])) {
+                $type = explode('_', $value)[0];
+                $setting[$type][$cert] = $attributes[$value];
+            }
         }
     }
 }

@@ -91,10 +91,13 @@ class UsersController extends AppController
         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
     }
 
-    public function postLogin()
+    public function postLogin($authenticationType = 'Local', $recordKey = null)
     {
         $this->autoRender = false;
-        $this->SSO->doAuthentication();
+        if (is_null($recordKey)) {
+            $authenticationType = 'Local';
+        }
+        $this->SSO->doAuthentication($authenticationType, $recordKey);
     }
 
     public function logout($username = null)
@@ -149,10 +152,10 @@ class UsersController extends AppController
 
     public function afterAuthenticate(Event $event, ArrayObject $extra)
     {
-        if ($this->Cookie->check('Restful.Call')) {
-            $event->stopPropagation();
-            return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
-        } else {
+        // if ($this->Cookie->check('Restful.Call')) {
+        //     $event->stopPropagation();
+        //     return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+        // } else {
             $user = $this->Auth->user();
 
             if (!empty($user)) {
@@ -175,7 +178,7 @@ class UsersController extends AppController
                 $supportUrl = $ConfigItems->value('support_url');
                 $this->request->session()->write('System.help', $supportUrl);
             }
-        }
+        // }
     }
 
     public function generateToken() {

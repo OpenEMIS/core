@@ -27,12 +27,13 @@ class GoogleAuthComponent extends Component
         $this->controller = $this->_registry->getController();
         $this->session = $this->request->session();
         $IdpGoogleTable = TableRegistry::get('SSO.IdpGoogle');
-        $googleAttributes = $IdpGoogleTable->getAttributes($this->config('recordKey'));
+        $googleAttributes = $config['authAttribute'];
+        $mappingAttributes = $config['mappingAttribute'];
         $this->clientId = $googleAttributes['client_id'];
         $this->clientSecret = $googleAttributes['client_secret'];
         $this->redirectUri = $googleAttributes['redirect_uri'];
         $this->hostedDomain = $googleAttributes['hd'];
-        $this->createUser = $googleAttributes['system_authentication']['allow_create_user'];
+        $this->createUser = $mappingAttributes['allow_create_user'];
 
         $hashAttributes = $googleAttributes;
         unset($hashAttributes['redirect_uri']);
@@ -58,7 +59,9 @@ class GoogleAuthComponent extends Component
                 ],
                 'SSO.Google' => [
                     'userModel' => $config['userModel'],
-                    'createUser' => $this->createUser
+                    'createUser' => $this->createUser,
+                    'authAttribute' => $googleAttributes,
+                    'mappingAttribute' => $mappingAttributes
                 ]
             ]);
     }
@@ -72,9 +75,6 @@ class GoogleAuthComponent extends Component
 
     public function idpLogin()
     {
-
-
-        $this->retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$this->redirectUri.'?submit=retry">Click here</a> to try again';
         $client = $this->client;
 
         /************************************************************************************************
@@ -136,30 +136,8 @@ class GoogleAuthComponent extends Component
           data only if the hosted domain matches our setting.
          ************************************************************************************************/
         if (isset($tokenData)) {
-            if (!empty($this->hostedDomain)) {
-                if (isset($tokenData['payload']['hd'])) {
-                    if ($tokenData['payload']['hd'] == $this->hostedDomain) {
-                        $this->session->write('Google.tokenData', $tokenData);
-                        $this->session->write('Google.client', $client);
-                        $email = $tokenData['payload']['email'];
-                        $username = explode('@', $tokenData['payload']['email'])[0];
-                        return $this->checkLogin($username);
-                    } else {
-                        $this->session->write('Google.remoteFail', true);
-                    }
-                } else {
-                    $this->session->write('Google.remoteFail', true);
-                }
-            } else {
-                $this->session->write('Google.tokenData', $tokenData);
-                $this->session->write('Google.client', $client);
-                $email = $tokenData['payload']['email'];
-                $username = explode('@', $tokenData['payload']['email'])[0];
-                return $this->checkLogin($username);
-            }
-        } else {
-            $this->session->delete('Google.tokenData');
-            $this->session->delete('Google.client', $client);
+            $username = $tokenData['payload']['email'];
+            return $this->checkLogin($username);
         }
         return false;
     }
