@@ -919,12 +919,12 @@ class StudentAttendancesTable extends AppTable
         $selectedAcademicPeriodId = array_key_exists('academic_period_id', $requestQuery) ? $requestQuery['academic_period_id'] : null;
         $selectedClassId = array_key_exists('class_id', $requestQuery) ? $requestQuery['class_id'] : null;
 
-        $order = [$this->aliasField('Users.first_name') => 'ASC'];
-
-        if (array_key_exists('sort', $requestQuery)) {
-            $sortDirection = $requestQuery['direction'];
-            $order = [$this->aliasField('Users.first_name') => $sortDirection];
+        // sort
+        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        if (array_key_exists('sortWhitelist', $options)) {
+            $sortList = array_merge($options['sortWhitelist'], $sortList);
         }
+        $options['sortWhitelist'] = $sortList;
 
         $query
             ->contain(['Users'])
@@ -933,9 +933,12 @@ class StudentAttendancesTable extends AppTable
                 $this->aliasField('academic_period_id') => $selectedAcademicPeriodId,
                 $this->aliasField('institution_class_id') => $selectedClassId,
                 $this->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT'),
-            ])
-            ->order($order)
-        ;
+            ]);
+
+        $sortable = array_key_exists('sort', $requestQuery) ? $requestQuery['sort'] : false;
+        if (!$sortable) {
+            $query->order(['Users.first_name' => 'ASC']);
+        }
     }
     // End POCOR-3324
 
@@ -943,7 +946,8 @@ class StudentAttendancesTable extends AppTable
     {
         $this->dataCount = $data->count();
 
-        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string', 'sort' => true]);
+        $this->ControllerAction->field('openemis_no', ['visible' => true, 'type' => 'string', 'sort' => ['field' => 'Users.openemis_no']]);
+        $this->ControllerAction->field('student_id', ['visible' => true, 'type' => 'string', 'sort' => ['field' => 'Users.first_name']]);
     }
 
     public function findWithAbsence(Query $query, array $options)
