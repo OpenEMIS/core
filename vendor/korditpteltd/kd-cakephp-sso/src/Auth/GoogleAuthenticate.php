@@ -6,8 +6,8 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
-
-require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
+use Google_Service_Oauth2;
+use Google_Client;
 
 class GoogleAuthenticate extends BaseAuthenticate
 {
@@ -30,14 +30,13 @@ class GoogleAuthenticate extends BaseAuthenticate
                 return false;
             } else {
                 $isFound = $this->_findUser($userName);
-
                 // If user is found login, if not do create user logic
                 if ($isFound) {
                     return $isFound;
                 } else {
                     if ($this->config('createUser')) {
                         $client = $session->read('Google.client');
-                        $ServiceOAuth2Object = new \Google_Service_Oauth2($client);
+                        $ServiceOAuth2Object = new Google_Service_Oauth2($client);
                         $me = $ServiceOAuth2Object->userinfo->get();
                         $userInfo = [
                             'id' => $me->getId(),
@@ -51,7 +50,6 @@ class GoogleAuthenticate extends BaseAuthenticate
                             'picture' => $me->getPicture(),
                             'role' => ''
                         ];
-
                         $User = TableRegistry::get($this->_config['userModel']);
                         $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
                         if ($event->result === false) {

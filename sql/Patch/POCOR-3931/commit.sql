@@ -20,6 +20,7 @@ CREATE TABLE `system_authentications` (
   `mapped_last_name` VARCHAR(50) NULL,
   `mapped_date_of_birth` VARCHAR(50) NULL,
   `mapped_gender` VARCHAR(50) NULL,
+  `mapped_role` VARCHAR(50) NULL,
   PRIMARY KEY (`id`),
   INDEX `authentication_type_id` (`authentication_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains user specified authentication';
