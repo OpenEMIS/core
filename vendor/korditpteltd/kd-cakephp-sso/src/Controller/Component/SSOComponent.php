@@ -4,12 +4,9 @@ namespace SSO\Controller\Component;
 use ArrayObject;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
-use Cake\Utility\Security;
-use Cake\I18n\Time;
-use SSO\ProcessToken;
-use Cake\Event\Event;
 
-class SSOComponent extends Component {
+class SSOComponent extends Component
+{
     private $controller;
     private $authType = 'Local';
 
@@ -31,18 +28,16 @@ class SSOComponent extends Component {
             'encryption' => false
         ],
         'userModel' => 'Users',
-        'statusField' => 'status'
+        'statusField' => 'status',
+        'recordKey' => null,
     ];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $controller = $this->_registry->getController();
         $this->controller = $controller;
         $this->session = $this->request->session();
-        $this->controller->loadComponent('SSO.LocalAuth', $this->_config);
-        $this->controller->loadComponent('SSO.GoogleAuth', $this->_config);
-        // $this->controller->loadComponent('SSO.Saml2Auth', $this->_config);
-        // $this->controller->loadComponent('SSO.OAuth2OpenIDConnectAuth', $this->_config);
     }
 
     public function getAuthenticationType()
@@ -50,12 +45,31 @@ class SSOComponent extends Component {
         return $this->authType;
     }
 
-    public function doAuthentication() {
+    public function doAuthentication($authenticationType = 'Local', $recordKey = null)
+    {
+        // For testing only
+        $authenticationType = 'Google';
+        $recordKey = 1;
 
-        $this->controller->GoogleAuth->idpLogin();
+        if ($authenticationType != 'Local') {
+            $SystemAuthenticationsTable = TableRegistry::get('SSO.SystemAuthentications');
+            $attribute = $SystemAuthenticationsTable->get($recordKey, ['contain' => $authenticationType])->toArray();
+
+            if ($attribute['status']) {
+                $authAttribute = $attribute[strtolower($authenticationType)];
+                unset($attribute[strtolower($authenticationType)]);
+                $mappingAttribute = $attribute;
+                $this->_config['authAttribute'] = $authAttribute;
+                $this->_config['mappingAttribute'] = $mappingAttribute;
+                $this->_config['recordKey'] = $recordKey;
+            } else {
+                $authenticationType = 'Local';
+            }
+        }
+
+        $this->controller->loadComponent('SSO.'.$authenticationType.'Auth', $this->_config);
         $extra = new ArrayObject([]);
         // $this->controller->dispatchEvent('Controller.Auth.beforeAuthenticate', [$extra], $this);
-
         $event = $this->controller->dispatchEvent('Controller.Auth.authenticate', [$extra], $this);
         if ($event->result) {
             $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
@@ -63,10 +77,7 @@ class SSOComponent extends Component {
             if (!$event->result) {
                 $this->controller->redirect($this->_config['homePageURL']);
             }
-
-        } else {
-            $this->controller->Auth->logout();
-            $this->controller->redirect($this->_config['homePageURL']);
         }
+        $this->controller->redirect($this->_config['homePageURL']);
     }
 }

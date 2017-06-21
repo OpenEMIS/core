@@ -28,7 +28,8 @@ class SamlAuthComponent extends Component
         $logout = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'], true);
 
         $IdpSamlTable = TableRegistry::get('SSO.IdpSaml');
-        $samlAttributes = $IdpSamlTable->getAttributes($this->config('recordKey'));
+        $samlAttributes = $config['authAttribute'];
+        $mappingAttributes = $config['mappingAttribute'];
 
         $setting['sp'] = [
             'entityId' => $samlAttributes['sp_entity_id'],
@@ -55,13 +56,13 @@ class SamlAuthComponent extends Component
 
         $this->authType = Security::hash(serialize($setting['idp']), 'sha256');
 
-        $this->addCertFingerPrintInformation('idp', $setting, $samlAttributes);
+        $this->addCertFingerPrintInformation($setting, $samlAttributes);
 
         $this->clientId = $samlAttributes['idp_entity_id'];
 
-        $this->userNameField = $samlAttributes['system_authentication']['mapped_username'];
+        $this->userNameField = $mappingAttributes['mapped_username'];
 
-        $this->createUser = $samlAttributes['system_authentication']['allow_create_user'];
+        $this->createUser = $mappingAttributes['allow_create_user'];
 
         $this->saml = new OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
@@ -77,23 +78,25 @@ class SamlAuthComponent extends Component
                 'SSO.Saml' => [
                     'userModel' => $this->_config['userModel'],
                     'createUser' => $this->createUser,
-                    'mappedFields' => $samlAttributes['system_authentication']
+                    'authAttribute' => $samlAttributes,
+                    'mappedFields' => $mappingAttributes
                 ]
             ]);
     }
 
-    private function addCertFingerPrintInformation($type, &$setting, $attributes)
+    private function addCertFingerPrintInformation(&$setting, $attributes)
     {
         $arr = [
-            'certFingerprint',
-            'certFingerprintAlgorithm',
-            'x509cert',
-            'privateKey'
+            'certFingerprint' => 'idp_cert_fingerprint',
+            'certFingerprintAlgorithm' => 'idp_cert_fingerprint_algorithm',
+            'x509cert' => 'idp_x509cert',
+            'privateKey' => 'sp_private_key'
         ];
 
-        foreach ($arr as $cert) {
-            if (!empty($attributes[$type.'_'.$cert])) {
-                $setting[$type][$cert] = $attributes[$type.'_'.$cert];
+        foreach ($arr as $cert => $value) {
+            if (!empty($attributes[$value])) {
+                $type = explode('_', $value)[0];
+                $setting[$type][$cert] = $attributes[$value];
             }
         }
     }
