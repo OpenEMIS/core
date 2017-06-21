@@ -16,15 +16,18 @@ class GoogleAuthenticate extends BaseAuthenticate
     {
         $fields = $this->_config['fields'];
         $session = $request->session();
-        if ($session->check('Google.tokenData')) {
-            $tokenData = $session->read('Google.tokenData');
-            // Remove session for the token data after it has been used.
-            $session->delete('Google.tokenData');
+
+        if ($session->check('Google.accessToken')) {
+            $authAttribute = $this->config('authAttribute');
+            $client = new Google_Client();
+            $client->setClientId($authAttribute['client_id']);
+            $client->setAccessToken($session->read('Google.accessToken'));
+            $tokenData = $client->verifyIdToken()->getAttributes();
             $email = $tokenData['payload']['email'];
             $emailArray = explode('@', $tokenData['payload']['email']);
-            $userName = $emailArray[0];
+            $userName = $email;
             $hostedDomain = $emailArray[1];
-            $configHD = $session->read('Google.hostedDomain');
+            $configHD = $authAttribute['hd'];
             // Additional check just in case the hosted domain check fail
             if (!empty($configHD) && strtolower($hostedDomain) != strtolower($configHD)) {
                 return false;
@@ -35,7 +38,6 @@ class GoogleAuthenticate extends BaseAuthenticate
                     return $isFound;
                 } else {
                     if ($this->config('createUser')) {
-                        $client = $session->read('Google.client');
                         $ServiceOAuth2Object = new Google_Service_Oauth2($client);
                         $me = $ServiceOAuth2Object->userinfo->get();
                         $userInfo = [
