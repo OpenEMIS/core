@@ -84,9 +84,13 @@ class PreferencesTable extends ControllerActionTable
         if ($session->read('System.language_menu')) {
             $attr['options'] = $this->loginLanguages;
         } else {
+            $loginId = $this->Auth->user('id');
+            $entity = $this->get($loginId);
+            $preferredLanguage = $this->loginLanguages[$entity->preferred_language];
+
             $attr['type'] = 'disabled';
-            $entity = $attr['entity'];
-            $attr['attr']['value'] = $this->loginLanguages[$entity->preferred_language];
+            $attr['value'] = $preferredLanguage;
+            $attr['attr']['value'] = $preferredLanguage;
         }
         $attr['select'] = false;
 
@@ -97,6 +101,13 @@ class PreferencesTable extends ControllerActionTable
     {
         // Remove the back toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+        $session = $this->request->session();
+        if (!$session->read('System.language_menu')) {
+            if (array_key_exists('edit', $toolbarButtonsArray)) {
+                unset($toolbarButtonsArray['edit']);
+            }
+        }
 
         if (array_key_exists('back', $toolbarButtonsArray)) {
             unset($toolbarButtonsArray['back']);
