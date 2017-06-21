@@ -259,8 +259,8 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Attendance');
 
-        $this->field('openemis_no');
-        $this->field('staff_id', ['order' => 2, 'sort' => true]);
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('staff_id', ['order' => 2, 'sort' => ['field' => 'Users.first_name']]);
 
         $this->field('FTE', ['visible' => false]);
         $this->field('start_date', ['visible' => false]);
@@ -792,16 +792,12 @@ class StaffAttendancesTable extends ControllerActionTable
                 $endDate = $startDate;
             }
 
-            // POCOR-3324 Sorting by Users.first_name
-            $requestQuery = $this->request->query;
-            $sortable = array_key_exists('sort', $requestQuery) ? true : false;
-            if ($sortable) {
-                $sortDirection = $requestQuery['direction'];
-                $order = ['Users.first_name' => $sortDirection];
-            } else {
-                $order = ['Users.first_name' => 'ASC']; // no sorting request sort by Users.first_name
+            // sort
+            $sortList = ['Users.openemis_no', 'Users.first_name'];
+            if (array_key_exists('sortWhitelist', $extra['options'])) {
+                $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
             }
-            // end POCOR-3324
+            $extra['options']['sortWhitelist'] = $sortList;
 
             $query
                 ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
@@ -810,9 +806,15 @@ class StaffAttendancesTable extends ControllerActionTable
                 ->contain(['Users'])
                 ->find('withAbsence', ['date' => $this->selectedDate])
                 ->where([$this->aliasField('institution_id') => $institutionId])
-                ->order($order)
-                ->distinct()
-                ;
+                ->distinct();
+
+            // POCOR-3324 Check if no sorting will be sort by users first name
+            $requestQuery = $this->request->query;
+            $sortable = array_key_exists('sort', $requestQuery) ? true : false;
+            if (!$sortable) {
+                $query->order(['Users.first_name' => 'ASC']); // no sorting request sort by Users.first_name
+            }
+            // end POCOR-3324
 
             $InstitutionArray = [];
 
@@ -1017,8 +1019,7 @@ class StaffAttendancesTable extends ControllerActionTable
                     'type' => 'LEFT',
                     'conditions' => $conditions
                 ]
-            ])
-            ;
+            ]);
     }
 
     public function indexEdit()
