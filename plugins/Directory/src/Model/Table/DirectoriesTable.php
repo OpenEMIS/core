@@ -172,13 +172,6 @@ class DirectoriesTable extends ControllerActionTable
         ];
         $conditions = array_merge($conditions, $notSuperAdminCondition);
 
-        // POCOR-1893 current user should be excluded from Directory
-        $notLoginUserCondition = [
-            $this->aliasField('id') . ' <> ' => $this->Auth->user('id')
-        ];
-        $conditions = array_merge($conditions, $notLoginUserCondition);
-        // End POCOR-1893
-
         // POCOR-2547 sort list of staff and student by name
         $orders = [];
 
