@@ -11,7 +11,7 @@ use Cake\Utility\Security;
 use OneLogin_Saml2_Auth;
 use OneLogin_Saml2_Error;
 
-class Saml2AuthComponent extends Component
+class SamlAuthComponent extends Component
 {
 
     public $components = ['Auth'];
@@ -27,8 +27,8 @@ class Saml2AuthComponent extends Component
         $returnUrl = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
         $logout = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'], true);
 
-        $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-        $samlAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Saml2');
+        $IdpSamlTable = TableRegistry::get('SSO.IdpSaml');
+        $samlAttributes = $IdpSamlTable->getAttributes($this->config('recordKey'));
 
         $setting['sp'] = [
             'entityId' => $samlAttributes['sp_entity_id'],
@@ -59,12 +59,27 @@ class Saml2AuthComponent extends Component
 
         $this->clientId = $samlAttributes['idp_entity_id'];
 
-        $this->userNameField = $samlAttributes['saml_username_mapping'];
+        $this->userNameField = $samlAttributes['system_authentication']['mapped_username'];
 
-        $this->createUser = isset($samlAttributes['allow_create_user']) ?  $samlAttributes['allow_create_user'] : 0;
+        $this->createUser = $samlAttributes['system_authentication']['allow_create_user'];
 
         $this->saml = new OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
+
+        $this->controller->Auth->config('authenticate', [
+                'Form' => [
+                    'userModel' => $this->_config['userModel'],
+                    'passwordHasher' => [
+                        'className' => 'Fallback',
+                        'hashers' => ['Default', 'Legacy']
+                    ]
+                ],
+                'SSO.Saml' => [
+                    'userModel' => $this->_config['userModel'],
+                    'createUser' => $this->createUser,
+                    'mappedFields' => $samlAttributes['system_authentication']
+                ]
+            ]);
     }
 
     private function addCertFingerPrintInformation($type, &$setting, $attributes)
@@ -88,25 +103,6 @@ class Saml2AuthComponent extends Component
         $events = parent::implementedEvents();
         $events['Controller.Auth.authenticate'] = 'authenticate';
         return $events;
-    }
-
-    public function beforeFilter(Event $event)
-    {
-        if (!$this->session->read('Auth.fallback')) {
-            $this->controller->Auth->config('authenticate', [
-                'Form' => [
-                    'userModel' => $this->_config['userModel'],
-                    'passwordHasher' => [
-                        'className' => 'Fallback',
-                        'hashers' => ['Default', 'Legacy']
-                    ]
-                ],
-                'SSO.Saml2' => [
-                    'userModel' => $this->_config['userModel'],
-                    'createUser' => $this->createUser
-                ]
-            ]);
-        }
     }
 
     private function idpLogin()
@@ -208,12 +204,12 @@ class Saml2AuthComponent extends Component
         if ($this->controller->Auth->user()) {
             return true;
         }
-        if ($this->request->is('post') && !$this->session->read('Saml2.remoteFail')) {
+        if ($this->request->is('post') && !$this->session->read('Saml.remoteFail')) {
             if ($this->idpLogin()) {
                 $userData = $this->getAttributes();
                 if (isset($userData[$this->userNameField][0])) {
                     $userName = $userData[$this->userNameField][0];
-                    $this->session->write('Saml2.userAttribute', $userData);
+                    $this->session->write('Saml.userAttribute', $userData);
                     return $this->checkLogin($userName);
                 } else {
                     $this->session->write('Auth.fallback', true);
@@ -255,7 +251,7 @@ class Saml2AuthComponent extends Component
                 $extra['loginStatus'] = true;
             }
         } else {
-            $this->session->write('Saml2.remoteFail', true);
+            $this->session->write('Saml.remoteFail', true);
         }
 
         if ($this->session->read('Auth.fallback')) {
