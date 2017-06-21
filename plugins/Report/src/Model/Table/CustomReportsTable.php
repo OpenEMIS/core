@@ -101,7 +101,7 @@ class CustomReportsTable extends AppTable
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-        	$reportOptions = $this->find('list')->toArray();
+        	$reportOptions = $this->find('list')->order('name')->toArray();
 
             $attr['options'] = $reportOptions;
             $attr['onChangeReload'] = true;
