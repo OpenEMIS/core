@@ -34,7 +34,7 @@ class CustomReportBehavior extends Behavior
                 } else {
                     $query = $this->Table->find();
 
-                    $methods = ['join', 'contain', 'matching', 'select', 'selectExpression', 'find', 'where', 'group', 'having', 'order'];
+                    $methods = ['join', 'contain', 'matching', 'select', 'selectExpression', 'find', 'where', 'whereExpression', 'group', 'having', 'order'];
                     foreach ($methods as $method) {
                         if (array_key_exists($method, $jsonArray)) {
                             $methodName = '_' . $method;
@@ -132,7 +132,16 @@ class CustomReportBehavior extends Behavior
                     $joinConditions = [];
                     if (array_key_exists('conditions', $obj)) {
                         foreach($obj['conditions'] as $field => $value) {
-                            $joinConditions[] = $field . $value;
+                            $pos = strpos($value, '${');
+
+                            if ($pos !== false) {
+                                $placeholder = $this->extractPlaceholder($value);
+                                if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
+                                    $joinConditions[] = $field . $params[$placeholder];
+                                }
+                            } else {
+                                $joinConditions[] = $field . $value;
+                            }
                         }
                     }
 
@@ -288,6 +297,18 @@ class CustomReportBehavior extends Behavior
             }
 
             $query->where([$conditions]);
+        }
+    }
+
+    private function _whereExpression(Query $query, array $params, array $values)
+    {
+        if (!empty($values)) {
+            $conditions = [];
+            foreach($values as $value) {
+                $conditions[] = $query->newExpr()->add($value);
+            }
+
+             $query->where([$conditions]);
         }
     }
 
