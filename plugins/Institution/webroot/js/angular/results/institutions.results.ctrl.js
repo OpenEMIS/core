@@ -129,17 +129,10 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
                             AlertSvc.reset($scope);
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
-
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
                             console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
                         });
 
                         // Important: to refresh the grid after data is modified
@@ -201,17 +194,10 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
                             AlertSvc.reset($scope);
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
-
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
                             console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
-
-                            // Important: to refresh the grid after data is modified
-                            $scope.gridOptions.api.refreshView();
                         });
 
                         // Important: to refresh the grid after data is modified
