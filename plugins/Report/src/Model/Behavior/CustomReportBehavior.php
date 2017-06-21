@@ -7,10 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
-use Cake\I18n\I18n;
-use Cake\Network\Session;
-use Cake\I18n\Time;
 use Cake\Log\Log;
 
 class CustomReportBehavior extends Behavior
@@ -45,17 +41,6 @@ class CustomReportBehavior extends Behavior
                     $result = $query->toArray();
                 }
 
-            } else if ($type == 'method') {
-                if (array_key_exists('method', $jsonArray)) {
-                    $method = $jsonArray['method'];
-
-                    $arguments = [];
-                    if (array_key_exists('arguments', $jsonArray)) {
-                        $arguments = $this->_arguments($params, $jsonArray['arguments']);
-                    }
-
-                    $result = call_user_func_array([$this->Table, $method], $arguments);
-                }
             }
         }
 
@@ -66,27 +51,6 @@ class CustomReportBehavior extends Behavior
     {
         $placeholder = rtrim(ltrim($str,'${'), '}');
         return $placeholder;
-    }
-
-    private function _arguments(array $params, array $values)
-    {
-        if (!empty($values)) {
-            $conditions = [];
-
-            foreach ($values as $value) {
-                $pos = strpos($value, '${');
-
-                if ($pos !== false) {
-                    $placeholder = $this->extractPlaceholder($value);
-                    if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
-                        $conditions[] = $params[$placeholder];
-                    }
-                } else {
-                    $conditions[] = $value;
-                }
-            }
-            return $conditions;
-        }
     }
 
     private function _get(array $params, array $values)
