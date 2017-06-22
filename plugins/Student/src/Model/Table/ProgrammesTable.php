@@ -60,11 +60,12 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->session();
-		$studentId = $session->read('Student.Students.id');
 
 		// POCOR-1893 Profile using loginId as studentId
 		if ($this->controller->name == 'Profiles') {
 			$studentId = $session->read('Auth.User.id');
+		} else {
+			$studentId = $session->read('Student.Students.id');
 		}
 		// end POCOR-1893
 
