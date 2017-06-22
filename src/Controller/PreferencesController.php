@@ -14,11 +14,7 @@ class PreferencesController extends AppController {
 
 	public function initialize() {
 		parent::initialize();
-		$this->ControllerAction->models = [
-			'Account' 				=> ['className' => 'UserAccounts', 'actions' => ['view', 'edit']],
-			'Nationalities' 		=> ['className' => 'User.Nationalities'],
-			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
-		];
+		$this->ControllerAction->models = [];
 	}
 
 	public function implementedEvents()
@@ -34,14 +30,7 @@ class PreferencesController extends AppController {
     }
 
     // CAv4
-    public function Nationalities()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
-    public function Languages()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
-    public function SpecialNeeds()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.SpecialNeeds']); }
-    public function Comments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
-    public function Contacts()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'UserContacts']); }
-    public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
-    public function Users()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Users']);}
-    public function Attachments() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+    public function Preferences()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Preferences']); }
     // End
 
 	public function beforeFilter(Event $event) {
@@ -49,7 +38,7 @@ class PreferencesController extends AppController {
 		$header = __('Preferences');
 
 		$action = $this->request->params['action'];
-		$this->activeObj = TableRegistry::get('Users')->get($this->Auth->user('id'));
+		$this->activeObj = TableRegistry::get('Preferences')->get($this->Auth->user('id'));
 
 		$this->Navigation->addCrumb('Preferences', ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']);
 
@@ -67,60 +56,7 @@ class PreferencesController extends AppController {
 
 	public function index() {
 		$userId = $this->Auth->user('id');
-		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])]);
-	}
-
-	public function getUserTabElements() {
-		$Config = TableRegistry::get('Configuration.ConfigItems');
-		$canChangeAdminPassword = $Config->value('change_password');
-		$isSuperAdmin = $this->Auth->user('super_admin');
-		$userId = $this->Auth->user('id');
-		$tabElements = [
-			'General' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Users' ,'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
-				'text' => __('General')
-			],
-			'Account' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Account', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
-				'text' => __('Account')
-			],
-			'Contacts' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Contacts'],
-				'text' => __('Contacts')
-			],
-			'Identities' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Identities'],
-				'text' => __('Identities')
-			],
-			'UserNationalities' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Nationalities'],
-				'text' => __('Nationalities')
-			],
-			'Languages' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Languages'],
-				'text' => __('Languages')
-			],
-			'Comments' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Comments'],
-				'text' => __('Comments')
-			],
-			'Attachments' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Attachments'],
-				'text' => __('Attachments')
-			],
-			'SpecialNeeds' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'SpecialNeeds'],
-				'text' => __('Special Needs')
-			],
-			'History' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'History'],
-				'text' => __('History')
-			]
-		];
-		if (!$canChangeAdminPassword && $isSuperAdmin) {
-			unset($tabElements['Password']);
-		}
-		return $tabElements;
+		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Preferences', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])]);
 	}
 
 	public function beforePaginate(Event $event, $model, Query $query, ArrayObject $options) {
