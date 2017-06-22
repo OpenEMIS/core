@@ -74,7 +74,11 @@ class AlertLogsTable extends ControllerActionTable
             $query = $model->find()->where([$model->aliasField('id') => $recordEntity->id]);
 
             $extra = new ArrayObject([]);
-            $contain = $model->getContains('belongsTo', $extra);
+            if (isset($model->CAVersion) && $model->CAVersion == '4.0') {
+                $contain = $model->getContains('belongsTo', $extra);
+            } else {
+                $contain = $model->ControllerAction->getContains($model, 'belongsTo');
+            }
 
             if (!empty($contain)) {
                 $query->contain($contain);

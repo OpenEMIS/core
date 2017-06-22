@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AreaAdministrativesTable extends ControllerActionTable
 {
-    private $_fieldOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
+    private $fieldsOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
 
     public function initialize(array $config)
     {
@@ -33,7 +33,8 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StaffRoom' => ['index']
+            'StaffRoom' => ['index'],
+            'SgTree' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -65,7 +66,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder($this->_fieldOrder);
+        $this->setfieldOrder($this->fieldsOrder);
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
@@ -74,6 +75,119 @@ class AreaAdministrativesTable extends ControllerActionTable
         $query->where([
                 $this->aliasField('area_administrative_level_id') => $level
             ]);
+    }
+
+    public function findAreaList(Query $query, array $options)
+    {
+        $authorisedAreaIds = [];
+        $worldId = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([$this->aliasField('parent_id').' IS NULL'])
+                ->first();
+        if (isset($options['displayCountry']) && !$options['displayCountry']) {
+            $authorisedAreaIds = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([
+                    $this->aliasField('is_main_country') => true,
+                    $this->aliasField('parent_id') => $worldId->id
+                ])
+                ->hydrate(false)
+                ->toArray();
+
+            $removeAreas = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([
+                    $this->aliasField('is_main_country') => false,
+                    $this->aliasField('parent_id') => $worldId->id
+                ])
+                ->hydrate(false)
+                ->toArray();
+            $removeAreas = array_column($removeAreas, 'id');
+
+            if (!empty($removeAreas)) {
+                $query->where([$this->aliasField('id').' NOT IN ' => $removeAreas]);
+            }
+        } else {
+            $authorisedAreaIds = $this
+                ->find()
+                ->select([$this->aliasField('id')])
+                ->where([
+                    $this->aliasField('parent_id') => $worldId->id
+                ])
+                ->hydrate(false)
+                ->toArray();
+        }
+
+        $authorisedAreaIds = array_column($authorisedAreaIds, 'id');
+
+        $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
+
+        return $query
+            ->find('threaded', [
+                'parentField' => 'parent_id',
+                'order' => ['lft' => 'ASC']
+            ])
+            ->contain(['AreaAdministrativeLevels'])
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name'),
+                $this->aliasField('parent_id'),
+                'AreaAdministrativeLevels.name',
+                $this->aliasField('order')
+            ])
+            ->hydrate(false)
+            // Remove world record
+            ->where([$this->aliasField('parent_id').' IS NOT NULL'])
+            ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
+                $results = $results->toArray();
+                $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
+                $order = array_column($results, 'order');
+                array_multisort($order, SORT_ASC, $results);
+                unset($order);
+                $defaultSelect = ['id' => null, 'name' => __('-- Select --')];
+                if (is_null($selected)) {
+                    $defaultSelect['selected'] = true;
+                }
+                array_unshift($results, $defaultSelect);
+                return $results;
+            });
+    }
+
+    private function unsetEmptyArr(&$array, &$authorisedAreaIds, $selected)
+    {
+        foreach ($array as &$value) {
+            if (isset($value['id'])) {
+                if (!in_array($value['id'], $authorisedAreaIds)) {
+                    $value['disabled'] = true;
+                }
+                if ($value['id'] == $selected) {
+                    $value['selected'] = true;
+                }
+            }
+            if (is_array($value) && empty($value)) {
+                unset($value);
+            } elseif (is_array($value)) {
+                if (isset($value['name']) && isset($value['area_administrative_level']) && isset($value['area_administrative_level']['name'])) {
+                    $value['name'] = $value['name'] . ' - ' . $value['area_administrative_level']['name'];
+                }
+                if (isset($value['children'])) {
+                    $children = $value['children'];
+                    $order = array_column($children, 'order');
+                    array_multisort($order, SORT_ASC, $children);
+                    $value['children'] = $children;
+                    unset($children);
+                    unset($order);
+                }
+                $parentIds = array_unique(array_column($value, 'parent_id'));
+                if (array_intersect($authorisedAreaIds, $parentIds)) {
+                    $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
+                }
+                $this->unsetEmptyArr($value, $authorisedAreaIds, $selected);
+            }
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -139,7 +253,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
-        $this->_fieldOrder = ['area_administrative_level_id', 'code', 'name'];
+        $this->fieldsOrder = ['area_administrative_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
         $parentId = $this->request->query('parent');
@@ -166,7 +280,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 'attr' => ['value' => $parentPath]
             ]);
 
-            array_unshift($this->_fieldOrder, "parent");
+            array_unshift($this->fieldsOrder, "parent");
         }
     }
 
@@ -185,8 +299,8 @@ class AreaAdministrativesTable extends ControllerActionTable
     {
         if ($action=='add') {
             $attr['visible'] = true;
-            $areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
-            if ($areaAdministrativeLevelId == 1) {
+            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
             } else {
@@ -196,8 +310,8 @@ class AreaAdministrativesTable extends ControllerActionTable
             }
         } elseif ($action == 'edit') {
             $attr['visible'] = true;
-            $areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
-            if ($areaAdministrativeLevelId == 1) {
+            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
             } else {
