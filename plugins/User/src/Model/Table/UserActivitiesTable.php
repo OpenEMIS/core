@@ -26,7 +26,6 @@ class UserActivitiesTable extends AppTable {
 				$options['userRole'] = 'Staff';
 				break;
 			case 'Directories':
-				break;
 			case 'Profiles':
 				break;
 		}
