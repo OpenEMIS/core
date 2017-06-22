@@ -45,10 +45,11 @@ class ImportSalariesTable extends AppTable
     public function beforeAction($event)
     {
         $session = $this->request->session();
-        if ($session->check('Staff.Staff.id')) {
-            $this->staffId = $session->read('Staff.Staff.id');
-        } else if ($this->controller->name == 'Profiles') {
+
+        if ($this->controller->name == 'Profiles') {
             $this->staffId = $session->read('Auth.User.id');
+        } else if ($session->check('Staff.Staff.id')) {
+            $this->staffId = $session->read('Staff.Staff.id');
         }
     }
 
