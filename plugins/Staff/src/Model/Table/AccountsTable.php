@@ -12,7 +12,7 @@ use App\Model\Table\AppTable;
 
 class AccountsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->addBehavior('User.Account', ['userRole' => 'Staff']);
+		$this->addBehavior('User.Account', ['userRole' => 'Staff', 'permission' => ['Staff', 'Accounts', 'edit']]);
 		parent::initialize($config);
 	}
 

@@ -7,6 +7,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use ArrayObject;
 
 class NationalitiesTable extends ControllerActionTable
@@ -26,8 +27,34 @@ class NationalitiesTable extends ControllerActionTable
         ]);
     }
 
-    public function afterAction(Event $event) {
-        $this->field('identity_type_id', ['type' => 'select', 'after' => 'name']);
+    public function afterAction(Event $event, ArrayObject $extra) 
+    {
+        $this->field('identity_type_id', [
+            'type' => 'select', 
+            'after' => 'name',
+            'entity' => $extra['entity']
+        ]);
+    }
+
+    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        $Nationalities = $this;
+        $identityTypes = $this->IdentityTypes
+            ->find('list')
+            ->notMatching('Nationalities', function ($q) use ($Nationalities, $action, $attr) {
+                if ($action == 'edit') {
+                    $entity = $attr['entity'];
+
+                    $q->where([$Nationalities->aliasfield('id <> ') => $entity->id]);
+                }
+
+                return $q->where([$Nationalities->aliasfield('identity_type_id') . ' IS NOT NULL']);
+            })
+            ->toArray();
+
+        $attr['options'] = $identityTypes;
+
+        return $attr;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
