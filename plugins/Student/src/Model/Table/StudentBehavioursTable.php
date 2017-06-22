@@ -39,7 +39,14 @@ class StudentBehavioursTable extends AppTable {
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;
+
+			// POCOR-1893 unset the view button on profiles controller
+			if ($this->controller->name == 'Profiles') {
+				unset($buttons['view']);
+			}
+			// end POCOR-1893
 		}
+
 		return $buttons;
 	}
 

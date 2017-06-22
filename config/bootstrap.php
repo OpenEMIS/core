@@ -307,6 +307,7 @@ Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomExcel', ['routes' => true, 'autoload' => true]);
 Plugin::load('Competency', ['routes' => true, 'autoload' => true]);
 Plugin::load('ReportCard', ['routes' => true, 'autoload' => true]);
+Plugin::load('Profile', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
