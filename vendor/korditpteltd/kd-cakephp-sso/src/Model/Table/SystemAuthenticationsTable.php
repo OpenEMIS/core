@@ -12,6 +12,6 @@ class SystemAuthenticationsTable extends Table
         parent::initialize($config);
         $this->hasOne('Google', ['className' => 'SSO.IdpGoogle', 'foreignKey' => 'system_authentication_id']);
         $this->hasOne('Saml', ['className' => 'SSO.IdpSaml', 'foreignKey' => 'system_authentication_id']);
-        $this->hasOne('OAuth', ['className' => 'SSO.IdpOAuth', 'foreignKey' => 'system_authentication_id']);
+        $this->hasOne('OAuth', ['className' => 'SSO.IdpOauth', 'foreignKey' => 'system_authentication_id']);
     }
 }

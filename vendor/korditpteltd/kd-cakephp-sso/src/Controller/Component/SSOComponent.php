@@ -4,6 +4,7 @@ namespace SSO\Controller\Component;
 use ArrayObject;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 
 class SSOComponent extends Component
 {
@@ -48,15 +49,19 @@ class SSOComponent extends Component
     public function doAuthentication($authenticationType = 'Local', $recordKey = null)
     {
         // For testing only
-        $authenticationType = 'Google';
-        $recordKey = 1;
-
+        $authenticationType = 'OAuth';
+        $recordKey = 3;
         if ($authenticationType != 'Local') {
             $SystemAuthenticationsTable = TableRegistry::get('SSO.SystemAuthentications');
-            $attribute = $SystemAuthenticationsTable->get($recordKey, ['contain' => $authenticationType])->toArray();
+            $attribute = $SystemAuthenticationsTable
+                ->find()
+                ->contain([$authenticationType])
+                ->where([$SystemAuthenticationsTable->aliasField('code')])
+                ->hydrate(false)
+                ->first();
 
-            if ($attribute['status']) {
-                $authAttribute = $attribute[strtolower($authenticationType)];
+            if (!empty($attribute) && $attribute['status']) {
+                $authAttribute = $attribute[Inflector::underscore($authenticationType)];
                 unset($attribute[strtolower($authenticationType)]);
                 $mappingAttribute = $attribute;
                 $this->_config['authAttribute'] = $authAttribute;
