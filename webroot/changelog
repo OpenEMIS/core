@@ -1,7 +1,5 @@
 v3.10.4
-- Implemented the ability for user to login using different IDP
-- Implemented new reports module
-- Implemented survey question type called Institution > Staff list
+- Allows tabbing to next cell when entering Institution > Assessment results
 - System now allows user to easily access their own Profile from left navigation menu
 
 v3.10.3
