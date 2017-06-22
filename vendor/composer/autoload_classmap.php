@@ -3970,7 +3970,7 @@ return array(
     'PHP_Token_YIELD' => $vendorDir . '/phpunit/php-token-stream/src/Token.php',
     'PHP_Token_YIELD_FROM' => $vendorDir . '/phpunit/php-token-stream/src/Token.php',
     'SSO\\Auth\\GoogleAuthenticate' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Auth/GoogleAuthenticate.php',
-    'SSO\\Auth\\OAuth2OpenIDConnectAuthenticate' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Auth/OAuth2OpenIDConnectAuthenticate.php',
+    'SSO\\Auth\\OAuthAuthenticate' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Auth/OAuthAuthenticate.php',
     'SSO\\Auth\\SamlAuthenticate' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Auth/SamlAuthenticate.php',
     'SSO\\Controller\\Component\\GoogleAuthComponent' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/GoogleAuthComponent.php',
     'SSO\\Controller\\Component\\LocalAuthComponent' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/LocalAuthComponent.php',
