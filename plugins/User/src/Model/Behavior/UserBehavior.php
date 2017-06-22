@@ -263,6 +263,10 @@ class UserBehavior extends Behavior {
             switch ($this->_table->alias()) {
                 case 'Guardians':
                     $imageUrl =  ['plugin' => 'Student', 'controller' => 'Students', 'action' => $this->_table->alias(), 'image'];
+
+                    if ($name == 'Profiles') { // POCOR-1983 for profile guardian
+                        $imageUrl =  ['plugin' => 'Profile', 'controller' => $name, 'action' => 'ProfileGuardians', 'image'];
+                    }
                     break;
                 default:
                     $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
