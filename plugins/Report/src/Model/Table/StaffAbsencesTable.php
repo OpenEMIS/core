@@ -48,6 +48,10 @@ class StaffAbsencesTable extends AppTable {
 		$query
 			->select(['openemis_no' => 'Users.openemis_no', 'code' => 'Institutions.code'])
 			->order([$this->aliasField('staff_id'), $this->aliasField('institution_id'), $this->aliasField('start_date')]);
+
+        $query
+            ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives'])
+            ->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name']);
 	}
 
 	// To select another one more field from the containable data
@@ -77,6 +81,39 @@ class StaffAbsencesTable extends AppTable {
 			'type' => 'string',
 			'label' => ''
 		];
+        $newArray[] = [
+            'key' => 'Areas.code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Education Code')
+        ];
+
+        $newArray[] = [
+            'key' => 'Areas.name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
+
+        $newArray[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newArray[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
+        ];
+        $newArray[] = [
+            'key' => 'AreaLevels.name',
+            'field' => 'area_level_name',
+            'type' => 'string',
+            'label' => __('Area Level')
+        ];
 		$newArray[] = [
 			'key' => 'StaffAbsences.absences',
 			'field' => 'absences',
