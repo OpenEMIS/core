@@ -111,7 +111,7 @@ class OAuthAuthComponent extends Component
 
         $this->retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$this->redirectUri.'?submit=retry">Click here</a> to try again';
 
-        $this->controller->Auth->config('authenticate', [
+        $this->Auth->config('authenticate', [
                 'Form' => [
                     'userModel' => $this->_config['userModel'],
                     'passwordHasher' => [
@@ -148,24 +148,24 @@ class OAuthAuthComponent extends Component
             } catch (\Google_Auth_Exception $e) {
                 return;
             }
-            $this->session->write('OAuth2OpenIDConnect.accessToken', $client->getAccessToken());
+            $this->session->write('OAuth.accessToken', $client->getAccessToken());
         }
 
         /************************************************************************************************
           If we have an access token, we can make requests, else we generate an authentication URL.
          ************************************************************************************************/
-        if ($this->session->check('OAuth2OpenIDConnect.accessToken') && $this->session->read('OAuth2OpenIDConnect.accessToken')) {
+        if ($this->session->check('OAuth.accessToken') && $this->session->read('OAuth.accessToken')) {
             if ($this->Auth->user()) {
-                $client->setAccessToken($this->session->read('OAuth2OpenIDConnect.accessToken'));
+                $client->setAccessToken($this->session->read('OAuth.accessToken'));
             } else {
                 // revoke the access token if the user is not authorised
-                // $client->revokeToken($this->session->read('OAuth2OpenIDConnect.accessToken'));
-                $this->session->delete('OAuth2OpenIDConnect.accessToken');
-                $this->controller->Auth->logout();
+                // $client->revokeToken($this->session->read('OAuth.accessToken'));
+                $this->session->delete('OAuth.accessToken');
+                $this->Auth->logout();
 
-                if ($this->session->read('OAuth2OpenIDConnect.reLogin')) {
+                if ($this->session->read('OAuth.reLogin')) {
                     $authUrl = $client->createAuthUrl();
-                    $this->session->write('OAuth2OpenIDConnect.reLogin', false);
+                    $this->session->write('OAuth.reLogin', false);
                 }
             }
         } else {
@@ -181,13 +181,8 @@ class OAuthAuthComponent extends Component
             // Check if the access token is expired, if it is expired reauthenticate
             if (!$client->isAccessTokenExpired()) {
                 $accessToken = $client->getAccessToken();
-                $this->session->write('OAuth2OpenIDConnect.accessToken', $accessToken);
+                $this->session->write('OAuth.accessToken', $accessToken);
                 return $this->checkLogin();
-                if (isset(json_decode($accessToken, true)['id_token'])) {
-                    // Exception will be thrown if the token signature does not match. This is to prevent
-                    // man in the middle
-                    $tokenData = $client->verifyIdToken()->getAttributes();
-                }
             } else {
                 $authUrl = $client->createAuthUrl();
             }
@@ -197,16 +192,6 @@ class OAuthAuthComponent extends Component
             $this->controller->redirect($authUrl);
         }
 
-        /************************************************************************************************
-          We check if payload of the token data that was sent back to us. As an additional precaution, we
-          verify if the hosted domain is the one that we have set. We will set the session for the token
-          data only if the hosted domain matches our setting.
-         ************************************************************************************************/
-        if (isset($tokenData)) {
-            $this->session->write('OAuth2OpenIDConnect.tokenData', $tokenData);
-            $this->session->write('OAuth2OpenIDConnect.client', $client);
-
-        }
         return false;
     }
 
@@ -225,13 +210,13 @@ class OAuthAuthComponent extends Component
             if ($user[$this->_config['statusField']] != 1) {
                 $extra['status'] = true;
             } else {
-                $this->controller->Auth->setUser($user);
-                $this->session->delete('OAuth2OpenIDConnect.remoteFail');
+                $this->Auth->setUser($user);
+                $this->session->delete('OAuth.remoteFail');
                 $extra['loginStatus'] = true;
             }
         } else {
             $extra['loginStatus'] = false;
-            if ($this->session->read('Auth.fallback') || $this->session->read('OAuth2OpenIDConnect.remoteFail')) {
+            if ($this->session->read('Auth.fallback') || $this->session->read('OAuth.remoteFail')) {
                 $extra['fallback'] = true;
             }
         }

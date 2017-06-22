@@ -77,7 +77,7 @@ SET @id = 1;
 INSERT IGNORE INTO system_authentications
 SELECT
   @id,
-  LEFT(MD5(NOW()), 16),
+  CONCAT('IDP', LEFT(MD5(1), 13)),
     (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google'),
     1 as `authentication_type_id`,
     1 as `status`,
@@ -103,7 +103,7 @@ SET @id = 1 + (SELECT COUNT(id) FROM system_authentications);
 INSERT IGNORE INTO system_authentications
 SELECT
   @id,
-  LEFT(MD5(NOW()), 16),
+  CONCAT('IDP', LEFT(MD5(2), 13)),
   (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2'),
   2 as `authentication_type_id`,
   1 as `status`,
@@ -138,7 +138,7 @@ SET @id = 1 + (SELECT COUNT(id) FROM system_authentications);
 INSERT IGNORE INTO system_authentications
 SELECT
   @id,
-  LEFT(MD5(NOW()), 16),
+  CONCAT('IDP', LEFT(MD5(3), 13)),
   (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect'),
   3 as `authentication_type_id`,
   1 as `status`,

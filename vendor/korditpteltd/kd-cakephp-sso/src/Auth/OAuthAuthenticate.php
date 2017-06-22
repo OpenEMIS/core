@@ -18,21 +18,22 @@ class OAuthAuthenticate extends BaseAuthenticate
         $oAuthAttributes = $this->config('authAttribute');
         $mappingAttributes = $this->config('mappingAttribute');
         $session = $request->session();
-        if ($session->check('OAuth2OpenIDConnect.accessToken')) {
+        if ($session->check('OAuth.accessToken')) {
             $client = new Custom_Client(null, $oAuthAttributes);
             $client->setClientId($oAuthAttributes['client_id']);
             $client->setClientSecret($oAuthAttributes['client_secret']);
             $client->setScopes(['openid', 'email', 'profile']);
-            $accessToken = $session->read('OAuth2OpenIDConnect.accessToken');
+            $accessToken = $session->read('OAuth.accessToken');
             $client->setAccessToken($accessToken);
             $tokenData = $client->verifyIdToken()->getAttributes();
+
             $accessToken = json_decode($accessToken, true);
             $userInfo = [];
             if (isset($tokenData['payload'])) {
                 $userInfo = $tokenData['payload'];
             }
 
-            if (!empty($this->config('userInfoUri'))) {
+            if (!empty($oAuthAttributes['userinfo_endpoint'])) {
                 $http = new Client();
                 $responseBody = [];
                 $responseBody[] = $http->get($oAuthAttributes['userinfo_endpoint'], [], ['headers' => ['authorization' => $accessToken['token_type'].' '.$accessToken['access_token']], 'redirect' => 3]);
@@ -49,7 +50,6 @@ class OAuthAuthenticate extends BaseAuthenticate
 
             $userName = $this->getUserInfo($userInfo, $mappingAttributes['mapped_username']);
             Log::write('debug', '[' . $userName . '] Attempt to login as ' . $userName . '@' . $_SERVER['REMOTE_ADDR']);
-
             if (empty($userName)) {
                 return false;
             }
@@ -66,7 +66,7 @@ class OAuthAuthenticate extends BaseAuthenticate
                         'lastName' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_last_name']),
                         'gender' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_gender']),
                         'dateOfBirth' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_date_of_birth']),
-                        'role' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_role'])
+                        'role' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_roles'])
                     ];
 
                     $User = TableRegistry::get($this->_config['userModel']);

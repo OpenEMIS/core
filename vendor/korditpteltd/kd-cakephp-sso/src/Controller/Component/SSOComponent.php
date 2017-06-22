@@ -48,19 +48,11 @@ class SSOComponent extends Component
 
     public function doAuthentication($authenticationType = 'Local', $recordKey = null)
     {
-        // For testing only
-        $authenticationType = 'OAuth';
-        $recordKey = 3;
         if ($authenticationType != 'Local') {
             $SystemAuthenticationsTable = TableRegistry::get('SSO.SystemAuthentications');
-            $attribute = $SystemAuthenticationsTable
-                ->find()
-                ->contain([$authenticationType])
-                ->where([$SystemAuthenticationsTable->aliasField('code')])
-                ->hydrate(false)
-                ->first();
+            $attribute = $SystemAuthenticationsTable->get($recordKey, ['contain' => $authenticationType])->toArray();
 
-            if (!empty($attribute) && $attribute['status']) {
+            if ($attribute['status']) {
                 $authAttribute = $attribute[Inflector::underscore($authenticationType)];
                 unset($attribute[strtolower($authenticationType)]);
                 $mappingAttribute = $attribute;

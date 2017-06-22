@@ -48,7 +48,7 @@ class GoogleAuthComponent extends Component
         $client->setHostedDomain($this->hostedDomain);
         $this->client = $client;
         $this->controller = $this->_registry->getController();
-        $this->controller->Auth->config('authenticate', [
+        $this->Auth->config('authenticate', [
                 'Form' => [
                     'userModel' => $config['userModel'],
                     'passwordHasher' => [
@@ -99,7 +99,7 @@ class GoogleAuthComponent extends Component
                 // revoke the access token if the user is not authorised
                 $client->revokeToken($this->session->read('Google.accessToken'));
                 $this->session->delete('Google.accessToken');
-                $this->controller->Auth->logout();
+                $this->Auth->logout();
 
                 if ($this->session->read('Google.reLogin')) {
                     $authUrl = $client->createAuthUrl();
@@ -149,7 +149,7 @@ class GoogleAuthComponent extends Component
     private function checkLogin($username = null, $extra = [])
     {
         $this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
-        $user = $this->controller->Auth->identify();
+        $user = $this->Auth->identify();
         $extra['status'] = true;
         $extra['loginStatus'] = false;
         $extra['fallback'] = false;
@@ -157,7 +157,7 @@ class GoogleAuthComponent extends Component
             if ($user[$this->_config['statusField']] != 1) {
                 $extra['status'] = true;
             } else {
-                $this->controller->Auth->setUser($user);
+                $this->Auth->setUser($user);
                 $this->session->delete('Google.remoteFail');
                 $extra['loginStatus'] = true;
             }

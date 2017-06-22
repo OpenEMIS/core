@@ -1,5 +1,7 @@
 <?php
 namespace User\Controller;
+
+use Exception;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
@@ -17,6 +19,7 @@ class UsersController extends AppController
         parent::initialize();
         $this->ControllerAction->model('User.Users');
         $this->loadComponent('Paginator');
+        $this->loadComponent('Cookie');
     }
 
     public function beforeFilter(Event $event)
@@ -30,7 +33,6 @@ class UsersController extends AppController
             $this->eventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', [$action]);
         }
-
         // For fall back
         $this->set('_sso', false);
     }
@@ -152,10 +154,10 @@ class UsersController extends AppController
 
     public function afterAuthenticate(Event $event, ArrayObject $extra)
     {
-        // if ($this->Cookie->check('Restful.Call')) {
-        //     $event->stopPropagation();
-        //     return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
-        // } else {
+        if ($this->Cookie->check('Restful.Call')) {
+            $event->stopPropagation();
+            return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+        } else {
             $user = $this->Auth->user();
 
             if (!empty($user)) {
@@ -178,10 +180,11 @@ class UsersController extends AppController
                 $supportUrl = $ConfigItems->value('support_url');
                 $this->request->session()->write('System.help', $supportUrl);
             }
-        // }
+        }
     }
 
-    public function generateToken() {
+    public function generateToken()
+    {
         $user = $this->Auth->user();
 
         // Expiry change to 24 hours
@@ -215,7 +218,7 @@ class UsersController extends AppController
         try {
             $pid = exec($shellCmd);
             Log::write('debug', $shellCmd);
-        } catch(\Exception $ex) {
+        } catch (Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
         }
     }
