@@ -392,11 +392,31 @@ class InstitutionClassesTable extends ControllerActionTable
         $query
             ->find('byGrades', [
                 'education_grade_id' => $extra['selectedEducationGradeId'],
-                'sort' => $sortable
+            ])
+            ->select([
+                'id',
+                'name',
+                'class_number',
+                'staff_id',
+                'institution_shift_id',
+                'institution_id',
+                'academic_period_id',
+                'modified_user_id',
+                'modified',
+                'created_user_id',
+                'created',
+                'education_stage_order' => $query->func()->min('EducationStages.order'),
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
-            ->order([$this->aliasField('name') => 'ASC'])
-        ;
+            ->group([$this->aliasField('id')]);
+
+        if (!$sortable) {
+            $query
+                ->order([
+                    'education_stage_order',
+                    $this->aliasField('name') => 'ASC'
+                ]);
+        }
     }
 
     public function findTranslateItem(Query $query, array $options)
@@ -455,23 +475,15 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $query = $query
             ->join([$join])
-            ->group(['InstitutionClassGrades.institution_class_id'])
-            ;
 
-        // if no sorting, order by grade then class name
-        if (!$sortable) {
-            $query = $query
-                ->innerJoin(
-                    [$EducationGrades->alias() => $EducationGrades->table()],
-                    [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
-                )
-                ->innerJoin(
-                    [$EducationStages->alias() => $EducationStages->table()],
-                    [$EducationStages->aliasField('id = ') . 'EducationGrades.education_stage_id']
-                )
-                ->order(['EducationStages.order' => 'ASC'])
-            ;
-        }
+            ->innerJoin(
+                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
+            )
+            ->innerJoin(
+                [$EducationStages->alias() => $EducationStages->table()],
+                [$EducationStages->aliasField('id = ') . 'EducationGrades.education_stage_id']
+            );
 
         return $query;
     }
