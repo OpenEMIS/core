@@ -31,42 +31,15 @@ class PreferencesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('preferred_language');
+        $shownField = ['preferred_language'];
 
-        // Disabled all the field except preferred language
-        $this->field('id', ['visible' => false]);
-        $this->field('username', ['visible' => false]);
-        $this->field('password', ['visible' => false]);
-        $this->field('openemis_no', ['visible' => false]);
-        $this->field('first_name', ['visible' => false]);
-        $this->field('middle_name', ['visible' => false]);
-        $this->field('third_name', ['visible' => false]);
-        $this->field('last_name', ['visible' => false]);
-        $this->field('preferred_name', ['visible' => false]);
-        $this->field('email', ['visible' => false]);
-        $this->field('address', ['visible' => false]);
-        $this->field('postal_code', ['visible' => false]);
-        $this->field('address_area_id', ['visible' => false]);
-        $this->field('birthplace_area_id', ['visible' => false]);
-        $this->field('gender_id', ['visible' => false]);
-        $this->field('date_of_birth', ['visible' => false]);
-        $this->field('date_of_death', ['visible' => false]);
-        $this->field('nationality_id', ['visible' => false]);
-        $this->field('identity_type_id', ['visible' => false]);
-        $this->field('identity_number', ['visible' => false]);
-        $this->field('external_reference', ['visible' => false]);
-        $this->field('super_admin', ['visible' => false]);
-        $this->field('status', ['visible' => false]);
-        $this->field('last_login', ['visible' => false]);
-        $this->field('photo_name', ['visible' => false]);
-        $this->field('photo_content', ['visible' => false]);
-        $this->field('is_student', ['visible' => false]);
-        $this->field('is_staff', ['visible' => false]);
-        $this->field('is_guardian', ['visible' => false]);
-        $this->field('modified_user_id', ['visible' => false]);
-        $this->field('modified', ['visible' => false]);
-        $this->field('created_user_id', ['visible' => false]);
-        $this->field('created', ['visible' => false]);
+        foreach ($this->fields as $key => $field) {
+            if (in_array($key, $shownField)) {
+                $this->field($key);
+            } else {
+                $this->field($key, ['visible' => false]);
+            }
+        }
     }
 
     public function onGetPreferredLanguage(Event $event, Entity $entity)
