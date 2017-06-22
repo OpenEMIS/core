@@ -1,6 +1,5 @@
 v3.10.4
 - Implemented the ability for user to login using different IDP
-- Implemented feature to allow user to create customised report in excel format in Institution>Student Results module
 - Implemented new reports module
 - Implemented survey question type called Institution > Staff list
 - System now allows user to easily access their own Profile from left navigation menu
