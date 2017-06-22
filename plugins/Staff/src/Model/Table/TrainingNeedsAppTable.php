@@ -187,6 +187,10 @@ class TrainingNeedsAppTable extends ControllerActionTable
         $session = $this->request->session();
         $sessionKey = 'Staff.Staff.id';
 
+        if ($this->controller->name == 'Profiles') {
+            $sessionKey = 'Auth.User.id';
+        }
+
         if ($session->check($sessionKey)) {
             $staffId = $session->read($sessionKey);
         }
