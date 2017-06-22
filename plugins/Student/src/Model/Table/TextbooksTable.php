@@ -8,7 +8,7 @@ use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
 class TextbooksTable extends ControllerActionTable {
-    public function initialize(array $config) 
+    public function initialize(array $config)
     {
         $this->table('institution_textbooks');
         parent::initialize($config);
@@ -37,7 +37,7 @@ class TextbooksTable extends ControllerActionTable {
         $searchableFields[] = 'textbook_id';
     }
 
-    public function beforeAction() 
+    public function beforeAction()
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('institution_id', ['type' => 'select']);
@@ -48,7 +48,7 @@ class TextbooksTable extends ControllerActionTable {
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('comment', ['visible' => false]);
         $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
@@ -58,8 +58,15 @@ class TextbooksTable extends ControllerActionTable {
     {
         $session = $this->request->session();
         $studentId = $session->read('Student.Students.id');
+
+        // POCOR-1893 Profile using loginId as studentId
+        if ($this->controller->name == 'Profiles') {
+            $studentId = $session->read('Auth.User.id');
+        }
+        // end POCOR-1893
+
         $query->where([$this->aliasField('student_id') => $studentId]);
-        
+
         $searchKey = $this->getSearchKey();
         if (strlen($searchKey)) {
             $query->matching('MainTextbooks'); //to enable search by textbook title
@@ -78,12 +85,12 @@ class TextbooksTable extends ControllerActionTable {
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) 
+    public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    private function setupTabElements() 
+    private function setupTabElements()
     {
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
@@ -104,7 +111,7 @@ class TextbooksTable extends ControllerActionTable {
     }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
-    {   
+    {
         return $entity->institution->code_name;
     }
 }
