@@ -67,7 +67,7 @@ class SamlAuthComponent extends Component
         $this->saml = new OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
 
-        $this->controller->Auth->config('authenticate', [
+        $this->Auth->config('authenticate', [
                 'Form' => [
                     'userModel' => $this->_config['userModel'],
                     'passwordHasher' => [
@@ -204,7 +204,7 @@ class SamlAuthComponent extends Component
     public function authenticate(Event $event, ArrayObject $extra)
     {
         $extra['authType'] = $this->authType;
-        if ($this->controller->Auth->user()) {
+        if ($this->Auth->user()) {
             return true;
         }
         if ($this->request->is('post') && !$this->session->read('Saml.remoteFail')) {
@@ -250,7 +250,7 @@ class SamlAuthComponent extends Component
                 $this->session->write('Auth.fallback', true);
                 $extra['status'] = false;
             } else {
-                $this->controller->Auth->setUser($user);
+                $this->Auth->setUser($user);
                 $extra['loginStatus'] = true;
             }
         } else {

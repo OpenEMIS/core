@@ -4316,7 +4316,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'PHP_Token_YIELD' => __DIR__ . '/..' . '/phpunit/php-token-stream/src/Token.php',
         'PHP_Token_YIELD_FROM' => __DIR__ . '/..' . '/phpunit/php-token-stream/src/Token.php',
         'SSO\\Auth\\GoogleAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/GoogleAuthenticate.php',
-        'SSO\\Auth\\OAuth2OpenIDConnectAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/OAuth2OpenIDConnectAuthenticate.php',
+        'SSO\\Auth\\OAuthAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/OAuthAuthenticate.php',
         'SSO\\Auth\\SamlAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/SamlAuthenticate.php',
         'SSO\\Controller\\Component\\GoogleAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/GoogleAuthComponent.php',
         'SSO\\Controller\\Component\\LocalAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/LocalAuthComponent.php',
