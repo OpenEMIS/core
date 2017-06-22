@@ -11,6 +11,7 @@ CREATE TABLE `authentication_types` (
 
 CREATE TABLE `system_authentications` (
   `id` INT NOT NULL,
+  `code` CHAR(16) NOT NULL,
   `name` VARCHAR(100) NULL,
   `authentication_type_id` INT NOT NULL COMMENT 'links to authentication_types.id',
   `status` INT NOT NULL,
@@ -76,6 +77,7 @@ SET @id = 1;
 INSERT IGNORE INTO system_authentications
 SELECT
   @id,
+  LEFT(MD5(NOW()), 16),
     (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google'),
     1 as `authentication_type_id`,
     1 as `status`,
@@ -84,7 +86,8 @@ SELECT
     null as mapped_first_name,
     null as mapped_last_name,
     null as mapped_date_of_birth,
-    null as mapped_gender;
+    null as mapped_gender,
+    null as mapped_role;
 
 INSERT IGNORE INTO idp_google
 Select
@@ -100,6 +103,7 @@ SET @id = 1 + (SELECT COUNT(id) FROM system_authentications);
 INSERT IGNORE INTO system_authentications
 SELECT
   @id,
+  LEFT(MD5(NOW()), 16),
   (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2'),
   2 as `authentication_type_id`,
   1 as `status`,
@@ -108,7 +112,8 @@ SELECT
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_first_name_mapping') as mapped_first_name,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_last_name_mapping') as mapped_last_name,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_date_of_birth_mapping') as mapped_date_of_birth,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_gender_mapping') as mapped_gender;
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_gender_mapping') as mapped_gender,
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_role_mapping') as mapped_role;
 
 INSERT IGNORE INTO idp_saml
 Select
@@ -133,6 +138,7 @@ SET @id = 1 + (SELECT COUNT(id) FROM system_authentications);
 INSERT IGNORE INTO system_authentications
 SELECT
   @id,
+  LEFT(MD5(NOW()), 16),
   (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect'),
   3 as `authentication_type_id`,
   1 as `status`,
@@ -141,7 +147,8 @@ SELECT
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'firstName_mapping') as mapped_first_name,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'lastName_mapping') as mapped_last_name,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'dob_mapping') as mapped_date_of_birth,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'gender_mapping') as mapped_gender;
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'gender_mapping') as mapped_gender,
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'role_mapping') as mapped_role;
 
 INSERT IGNORE INTO idp_oauth
 Select
