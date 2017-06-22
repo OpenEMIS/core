@@ -185,13 +185,6 @@ class ProfilesController extends AppController
         $session = $this->request->session();
         $action = $this->request->params['action'];
 
-        $session->delete('Directories.advanceSearch');
-        $session->delete('Directory.Directories');
-        $session->delete('Staff.Staff.id');
-        $session->delete('Staff.Staff.name');
-        $session->delete('Student.Students.id');
-        $session->delete('Student.Students.name');
-
         $loginUserId = $this->Auth->user('id'); // login user
         $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
