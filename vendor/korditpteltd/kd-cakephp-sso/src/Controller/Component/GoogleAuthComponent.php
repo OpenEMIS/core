@@ -26,7 +26,6 @@ class GoogleAuthComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $this->session = $this->request->session();
-        $IdpGoogleTable = TableRegistry::get('SSO.IdpGoogle');
         $googleAttributes = $config['authAttribute'];
         $mappingAttributes = $config['mappingAttribute'];
         $this->clientId = $googleAttributes['client_id'];
@@ -73,7 +72,7 @@ class GoogleAuthComponent extends Component
         return $events;
     }
 
-    public function idpLogin()
+    private function idpLogin()
     {
         $client = $this->client;
 
