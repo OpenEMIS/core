@@ -44,7 +44,7 @@ class DashboardController extends AppController
             $this->Alert->warning('security.login.changePassword');
             $lastLogin = TableRegistry::get('User.Users')->get($user['id'])->last_login;
             $this->request->session()->write('Auth.User.last_login', $lastLogin);
-            $this->redirect(['controller' => 'Preferences', 'action' => 'Account', 'edit', $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
+            $this->redirect(['controller' => 'Profiles', 'action' => 'Accounts', 'edit', $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
         }
         $header = __('Home Page');
         $this->set('contentHeader', $header);
