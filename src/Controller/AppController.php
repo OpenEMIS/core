@@ -8,8 +8,8 @@
  * Redistributions of files must retain the above copyright notice.
  *
  * @copyright Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link	  http://cakephp.org CakePHP(tm) Project
- * @since	 0.2.9
+ * @link      http://cakephp.org CakePHP(tm) Project
+ * @since    0.2.9
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace App\Controller;
@@ -29,131 +29,130 @@ use Cake\Routing\Router;
  *
  * @link http://book.cakephp.org/3.0/en/controllers.html#the-app-controller
  */
-class AppController extends Controller {
-	use ControllerActionTrait;
+class AppController extends Controller
+{
+    use ControllerActionTrait;
 
-	private $productName = 'OpenEMIS Core';
-	public $helpers = [
-		'Text',
+    private $productName = 'OpenEMIS Core';
+    public $helpers = [
+        'Text',
 
-		// Custom Helper
-		'ControllerAction.ControllerAction',
-		'OpenEmis.Navigation',
-		'OpenEmis.Resource'
-	];
+        // Custom Helper
+        'ControllerAction.ControllerAction',
+        'OpenEmis.Navigation',
+        'OpenEmis.Resource'
+    ];
 
-	private $webhookListUrl = [
-			'plugin' => 'Webhook',
-			'controller' => 'Webhooks',
-			'action' => 'listWebhooks'
-		];
+    private $webhookListUrl = [
+            'plugin' => 'Webhook',
+            'controller' => 'Webhooks',
+            'action' => 'listWebhooks'
+        ];
 
-	/**
-	 * Initialization hook method.
-	 *
-	 * Use this method to add common initialization code like loading components.
-	 *
-	 * @return void
-	 */
-	public function initialize() {
-		parent::initialize();
+    /**
+     * Initialization hook method.
+     *
+     * Use this method to add common initialization code like loading components.
+     *
+     * @return void
+     */
+    public function initialize()
+    {
+        parent::initialize();
 
 
 
-		// ControllerActionComponent must be loaded before AuthComponent for it to work
-		$this->loadComponent('ControllerAction.ControllerAction', [
-			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
-		]);
+        // ControllerActionComponent must be loaded before AuthComponent for it to work
+        $this->loadComponent('ControllerAction.ControllerAction', [
+            'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
+        ]);
 
-		$this->loadComponent('Auth', [
-			'authenticate' => [
-				'Form' => [
-					'userModel' => 'User.Users',
-					'passwordHasher' => [
-						'className' => 'Fallback',
-						'hashers' => ['Default', 'Legacy']
-					]
-				],
-			],
-			'loginAction' => [
-				'plugin' => null,
-            	'controller' => 'Login',
-            	'action' => 'login'
+        $this->loadComponent('Auth', [
+            'authenticate' => [
+                'Form' => [
+                    'userModel' => 'User.Users',
+                    'passwordHasher' => [
+                        'className' => 'Fallback',
+                        'hashers' => ['Default', 'Legacy']
+                    ]
+                ],
             ],
-			'logoutRedirect' => [
-				'plugin' => null,
-				'controller' => 'Login',
-				'action' => 'login'
-			]
-		]);
+            'loginAction' => [
+                'plugin' => null,
+                'controller' => 'Login',
+                'action' => 'login'
+            ],
+            'logoutRedirect' => [
+                'plugin' => null,
+                'controller' => 'Login',
+                'action' => 'login'
+            ]
+        ]);
 
-		$this->loadComponent('Paginator');
+        $this->loadComponent('Paginator');
 
-		$this->Auth->config('authorize', ['Security']);
+        $this->Auth->config('authorize', ['Security']);
 
-		// Custom Components
-		$this->loadComponent('Navigation');
-		$this->loadComponent('Localization.Localization', [
-			'productName' => $this->productName
-		]);
-		$this->loadComponent('OpenEmis.OpenEmis', [
-			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
-			'headerMenu' => [
-				'Preferences' => [
-					'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
-				],
-				'Logout' => [
-					'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']
-				]
-			],
-			'productName' => $this->productName,
-			'theme' => 'core'
-		]);
+        // Custom Components
+        $this->loadComponent('Navigation');
+        $this->loadComponent('Localization.Localization', [
+            'productName' => $this->productName
+        ]);
+        $this->loadComponent('OpenEmis.OpenEmis', [
+            'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
+            'headerMenu' => [
+                'Preferences' => [
+                    'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
+                ],
+                'Logout' => [
+                    'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']
+                ]
+            ],
+            'productName' => $this->productName,
+            'theme' => 'core'
+        ]);
 
-		$this->loadComponent('OpenEmis.ApplicationSwitcher', [
-			'productName' => $this->productName
-		]);
+        $this->loadComponent('OpenEmis.ApplicationSwitcher', [
+            'productName' => $this->productName
+        ]);
 
-		// Angular initialization
-		$this->loadComponent('Angular.Angular', [
-			'app' => 'OE_Core',
-			'modules' => [
-				'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio'
-			]
-		]);
+        // Angular initialization
+        $this->loadComponent('Angular.Angular', [
+            'app' => 'OE_Core',
+            'modules' => [
+                'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio','multi-select-tree', 'kd-angular-tree-dropdown', 'sg.tree.ctrl', 'sg.tree.svc'
+            ]
+        ]);
 
-		$this->loadComponent('ControllerAction.Alert');
-		$this->loadComponent('AccessControl');
+        $this->loadComponent('ControllerAction.Alert');
+        $this->loadComponent('AccessControl');
 
-		$this->loadComponent('Workflow.Workflow');
-		$this->loadComponent('SSO.SSO', [
-			'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
-			'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
-			'userModel' => 'User.Users',
-			'cookieAuth' => [
-				'username' => 'openemis_no'
-			],
-			'cookie' => [
-				'domain' => Configure::read('domain')
-			]
-		]); // for single sign on authentication
-		$this->loadComponent('Security.SelectOptionsTampering');
-		$this->loadComponent('Security', [
-			'unlockedFields' => [
-				'area_picker'
-			],
-			'unlockedActions' => [
-				'postLogin'
-			]
-		]);
-		$this->loadComponent('Csrf');
-		if ($this->request->action == 'postLogin') {
+        $this->loadComponent('Workflow.Workflow');
+        $this->loadComponent('SSO.SSO', [
+            'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
+            'loginPageURL' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'],
+            'userModel' => 'User.Users',
+            'cookieAuth' => [
+                'username' => 'openemis_no'
+            ],
+            'cookie' => [
+                'domain' => Configure::read('domain')
+            ]
+        ]); // for single sign on authentication
+        $this->loadComponent('Security.SelectOptionsTampering');
+        $this->loadComponent('Security', [
+            'unlockedActions' => [
+                'postLogin'
+            ]
+        ]);
+        $this->loadComponent('Csrf');
+        if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
-	}
+    }
 
-	// Triggered from LocalizationComponent
-	// Controller.Localization.getLanguageOptions
+    // Triggered from LocalizationComponent
+    // Controller.Localization.getLanguageOptions
     public function getLanguageOptions(Event $event)
     {
         $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
@@ -162,17 +161,17 @@ class AppController extends Controller {
         $showLanguage = $languageArr['language_menu'];
         $session = $this->request->session();
         if (!$session->check('System.language_menu')) {
-        	$session->write('System.language', $systemLanguage);
-        	$session->write('System.language_menu', $showLanguage);
+            $session->write('System.language', $systemLanguage);
+            $session->write('System.language_menu', $showLanguage);
         }
         return [$showLanguage, $systemLanguage];
     }
 
-	// Triggered from Localization component
-	// Controller.Localization.updateLoginLanguage
-	public function updateLoginLanguage(Event $event, $user, $lang)
-	{
-		$UsersTable = TableRegistry::get('User.Users');
-		$UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
-	}
+    // Triggered from Localization component
+    // Controller.Localization.updateLoginLanguage
+    public function updateLoginLanguage(Event $event, $user, $lang)
+    {
+        $UsersTable = TableRegistry::get('User.Users');
+        $UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
+    }
 }

@@ -113,7 +113,8 @@ trait MessagesTrait
             'notTransferrable' => 'No other alternative options available to convert records.',
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
-            'custom_validation_pattern' => 'Please enter a valid format'
+            'custom_validation_pattern' => 'Please enter a valid format',
+            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -371,6 +372,7 @@ trait MessagesTrait
                 'fail' => 'You have entered an invalid username or password.',
                 'inactive' => 'Your account has been disabled.',
                 'remoteFail' => 'Remote authentication failed, please try local login.',
+                'changePassword' => 'This is the first time that you are logging in, please change your password.'
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
@@ -786,7 +788,8 @@ trait MessagesTrait
                     'ruleLessThanToday' => 'Date should not be later than today'
                 ],
                 'date_closed' => [
-                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened',
+                    'ruleCheckPendingWorkbench' => 'There is still pending item in institution workbench, please clear the workbench before proceed.'
                 ],
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email',
@@ -1537,10 +1540,16 @@ trait MessagesTrait
             ],
             'EducationGradesSubjects' => [
                 'hours_required' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                    'ruleIsDecimal' => 'Please enter a valid Decimal value',
+                    'ruleRange' => 'Value must be positive with maximum 2 decimal points and less than 1000'
                 ]
             ],
             'EducationSubjects' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
+            ],
+            'EducationStages' => [
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
@@ -1612,11 +1621,6 @@ trait MessagesTrait
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
-            ]
-        ],
-        'Report' => [
-            'InstitutionStudentsOutOfSchool' => [
-                'reportName' => 'Students Out of School'
             ]
         ],
         'CustomField' => [
