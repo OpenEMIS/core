@@ -404,8 +404,10 @@ class ExcelReportBehavior extends Behavior
 
             // check if data has id
             $idData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholderId) : [];
+            $valueData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+            $equal = count($idData) == count($valueData);
 
-            if (!empty($idData)) {
+            if (!empty($idData) && $equal) {
                 // get id and value as key-value pair
                 // selected field needs to be present in vars if not there will be a key-value number mismatch (be careful of using contain)
                 $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
