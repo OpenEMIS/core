@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Utility\Hash;
+use Cake\Utility\Inflector;
 use Cake\Collection\Collection;
 use Cake\Log\Log;
 
@@ -458,6 +459,8 @@ class ExcelReportBehavior extends Behavior
         $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : null;
         $attr['displayColumns'] = array_key_exists('displayColumns', $settings) ? $settings['displayColumns'] : [];
         $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : null;
+        $attr['showHeaders'] = array_key_exists('showHeaders', $settings) ? $settings['showHeaders'] : false;
+        $attr['insertRows'] = array_key_exists('insertRows', $settings) ? $settings['insertRows'] : false;
         // $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
 
         // Start attributes  for dropdown
@@ -848,8 +851,25 @@ class ExcelReportBehavior extends Behavior
     private function table($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
     {
         $rowValue = $attr['rowValue'];
+        $columnIndex = $attr['columnIndex'];
         $source = $attr['source'];
         $displayColumns = $attr['displayColumns'];
+        $showHeaders = $attr['showHeaders'];
+        $insertRows = $attr['insertRows'];
+
+        if ($showHeaders) {
+            foreach($displayColumns as $key => $column) {
+                $header = Inflector::humanize($key);
+
+                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $cellCoordinate = $columnValue.$rowValue;
+                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $header, $attr, $extra);
+                $columnIndex++;
+            }
+
+            $rowValue++;
+        }
 
         if (array_key_exists($source, $extra['vars']) && !empty($extra['vars'][$source])) {
             $sourceVars = $extra['vars'][$source];
@@ -859,7 +879,7 @@ class ExcelReportBehavior extends Behavior
                 $columnIndex = $attr['columnIndex'];
 
                 // skip first row don't need to auto insert new row
-                if ($rowValue != $attr['rowValue']) {
+                if ($insertRows && $rowValue != $attr['rowValue']) {
                     $objWorksheet->insertNewRowBefore($rowValue);
                     $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
                 }
