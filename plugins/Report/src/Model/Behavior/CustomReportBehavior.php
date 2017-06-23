@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
+use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 
 class CustomReportBehavior extends Behavior
@@ -40,8 +41,11 @@ class CustomReportBehavior extends Behavior
 
                     $result = $query->toArray();
                 }
-
             }
+
+        } else if (array_key_exists('sql', $jsonArray)) {
+            $stmtParameters = array_key_exists('parameters', $jsonArray) ? $jsonArray['parameters'] : [];
+            $result = $this->_sql($params, $jsonArray['sql'], $stmtParameters);
         }
 
         return $result;
@@ -51,6 +55,24 @@ class CustomReportBehavior extends Behavior
     {
         $placeholder = rtrim(ltrim($str,'${'), '}');
         return $placeholder;
+    }
+
+    private function _sql(array $params, $sqlStmt, $stmtParameters)
+    {
+        foreach ($stmtParameters as $key => $field) {
+            $pos = strpos($field, '${');
+
+            if ($pos !== false) {
+                $placeholder = $this->extractPlaceholder($field);
+                if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
+                    $stmtParameters[$key] = $params[$placeholder];
+                }
+            }
+        }
+
+        $connection = ConnectionManager::get('default');
+        $results = $connection->execute($sqlStmt, $stmtParameters)->fetchAll('assoc');
+        return $results;
     }
 
     private function _get(array $params, array $values)

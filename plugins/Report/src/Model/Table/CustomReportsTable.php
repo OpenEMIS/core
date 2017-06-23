@@ -8,7 +8,6 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
-use Cake\Utility\Inflector;
 
 class CustomReportsTable extends AppTable
 {
@@ -70,11 +69,7 @@ class CustomReportsTable extends AppTable
                 }
 
                 foreach($filters as $field => $data) {
-                    $fieldType = 'select';
-                    if (array_key_exists('fieldType', $data)) {
-                        $fieldType = $data['fieldType'];
-                    }
-
+                    $fieldType = array_key_exists('fieldType', $data) ? $data['fieldType'] : 'select';
                     $parameters = ['type' => $fieldType];
 
                     if ($fieldType == 'select') {
