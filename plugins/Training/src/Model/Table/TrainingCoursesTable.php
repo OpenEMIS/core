@@ -12,13 +12,21 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
 
 class TrainingCoursesTable extends ControllerActionTable
 {
+    use OptionsTrait;
+
     // Workflow Steps - category
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
+
+    CONST SELECT_TARGET_POPULATIONS = 1;
+    CONST SELECT_ALL_TARGET_POPULATIONS = 2;
+
+    private $targetPopulationSelection = [];
 
     public function initialize(array $config)
     {
@@ -86,6 +94,8 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+
+        $this->targetPopulationSelection = $this->getSelectOptions($this->aliasField('target_population_selection'));
     }
 
     public function validationDefault(Validator $validator)
@@ -240,10 +250,91 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            // $attr['options'] = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+            $attr['options'] = $this->targetPopulationSelection;
+            $attr['select'] = false;
+            $attr['onChangeReload'] = 'changeTargetPopulationSelection';
+
+        }
+
+        return $attr;
+    }
+
+    public function addEditOnChangeTargetPopulationSelection(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+// pr('addEditOnChangeTargetPopulationSelection');
+        $requestData = $this->request->data;
+
+        // $options = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+        // if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::ALL_TARGET_POPULATIONS) {
+        //     if (!empty($options)) {
+        //         foreach ($options as $key => $targetName) {
+        //             $requestData[$this->alias()]['target_populations']['_ids'][] = $key;
+        //             // $attr['value'][] = $key;
+        //             // $attr['attr']['value'][] = $targetName;
+        //             $attr['attr']['value'][] = $key;
+        //             // pr($key. ' ' . $targetName);
+        //         }
+        //     }
+        //     // $attr['type'] = 'readonly';
+        // }
+
+        // pr($requestData[$this->alias()]['target_populations']);
+        // die;
+
+        /*
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('subjects', $request->data[$this->alias()])) {
+                    unset($data[$this->alias()]['subjects']);
+                }
+            }
+        }
+        */
+    }
+
+    public function getAllTargetPopulations ($options)
+    {
+        $targetPopulation = [];
+        foreach ($options as $targetId => $targetName) {
+            // pr($targetId . ' ' . $targetName);
+            $targetPopulation [] = $targetId;
+        }
+        // pr($options);
+        // pr($targetPopulation);
+        // die;
+        return $targetPopulation;
+    }
+
     public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+            $options = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+            $attr['options'] = $options;
+            $entity = $attr['entity'];
+
+            $requestData = $this->request->data;
+            $targetPopulations = [];
+            if (!empty($entity->target_populations)) {
+                foreach ($entity->target_populations as $targetObj) {
+                    $targetPopulations[] = $targetObj->id;
+                }
+            }
+
+            if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::SELECT_ALL_TARGET_POPULATIONS) {
+                if (!empty($options)) {
+                    $targetPopulations = $this->getAllTargetPopulations($options);
+
+                }
+            } else if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::SELECT_TARGET_POPULATIONS) {
+                $targetPopulations = [];
+            }
+
+            $attr['value'] = $targetPopulations;
+            $attr['attr']['value'] = $targetPopulations;
         }
 
         return $attr;
@@ -297,11 +388,13 @@ class TrainingCoursesTable extends ControllerActionTable
     public function setupFields(Entity $entity)
     {
         $this->field('credit_hours', ['type' => 'select']);
+        $this->field('target_population_selection', ['type' => 'select']);
         $this->field('target_populations', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select Target Populations'),
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
-            'attr' => ['required' => true] // to add red asterisk
+            'attr' => ['required' => true], // to add red asterisk
+            'entity' => $entity
         ]);
         $this->field('training_providers', [
             'type' => 'chosenSelect',
@@ -329,7 +422,7 @@ class TrainingCoursesTable extends ControllerActionTable
         // Field order
         $this->setFieldOrder([
             'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months',
-            'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
+            'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id', 'target_population_selection',
             'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types',
             'file_name', 'file_content'
         ]);
