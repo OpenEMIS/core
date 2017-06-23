@@ -188,12 +188,17 @@ class ProfilesController extends AppController
         $loginUserId = $this->Auth->user('id'); // login user
         $this->Navigation->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
-        $entity = $this->Profiles->get($loginUserId);
-        $name = $entity->name;
-        $header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
-        $this->Navigation->addCrumb($name);
+        $header = '';
+        if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
+            $entity = $this->Profiles->get($loginUserId);
+            $name = $entity->name;
+            $header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
+            $this->Navigation->addCrumb($name);
 
-        $this->activeObj = $entity;
+            $this->activeObj = $entity;
+        } else {
+            // record not found
+        }
 
         $this->set('contentHeader', $header);
     }
