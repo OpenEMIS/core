@@ -10,8 +10,47 @@ use Cake\ORM\TableRegistry;
 
 use App\Controller\AppController;
 
-class StudentsController extends AppController {
-	public function initialize() {
+class StudentsController extends AppController
+{
+	private $features = [
+		// General
+		'Identities',
+		'UserNationalities',
+		'Contacts',
+		'Guardians',
+		'GuardianUser',
+		'UserLanguages',
+		'SpecialNeeds',
+		'Attachments',
+		'Comments',
+		// 'UserActivities',
+		// 'StudentSurveys',
+
+		// academic
+		// 'StudentClasses',
+		// 'StudentSubjects',
+		// 'Absences',
+		// 'StudentBehaviours',
+		'Awards',
+		'Extracurriculars',
+
+		// finance
+		'BankAccounts',
+		// 'StudentFees',
+
+		// health
+		'Healths',
+		'Allergies',
+		'Consultations',
+		'Families',
+		'Histories',
+		'Immunizations',
+		'Medications',
+		'Tests',
+	];
+
+	public function initialize()
+	{
 		parent::initialize();
 
 		$this->ControllerAction->model('Institution.StudentUser');
@@ -122,7 +161,8 @@ class StudentsController extends AppController {
 		}
 	}
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event $event) 
+	{
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		$session = $this->request->session();
@@ -142,15 +182,16 @@ class StudentsController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Student.Students.id')) {
 				$id = $session->read('Student.Students.id');
-			} else if ($session->check('Institution.Students.id')) {
-				$id = $session->read('Institution.Students.id');
 			}
-
-			if (!empty($id)) {
+			
+			if ($this->StudentUser->exists([$this->StudentUser->primaryKey() => $id])) {
 				$entity = $this->StudentUser->get($id);
 				$name = $entity->name;
 				$header = $action == 'Results' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+			} else {
+				$indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
+				return $this->redirect($indexPage);
 			}
 		}
 
@@ -184,6 +225,9 @@ class StudentsController extends AppController {
 					}
 				}
 			}
+
+			// POCOR-3983 to disable add/edit/remove action on the model when institution status is inactive
+            $this->getStatusPermission($model);
 
 			if ($session->check('Student.Students.name')) {
 				$header = $session->read('Student.Students.name');
@@ -345,4 +389,28 @@ class StudentsController extends AppController {
 		];
 		return $tabElements;
 	}
+
+	public function getStatusPermission($model)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+
+        // institution status is INACTIVE
+        if (!$isActive) {
+            if (in_array($model->alias(), $this->features)) { // check the feature list
+                if ($model instanceof \App\Model\Table\ControllerActionTable) {
+                    // CAv4 off the add/edit/remove action
+                    $model->toggle('add', false);
+                    $model->toggle('edit', false);
+                    $model->toggle('remove', false);
+                } else if ($model instanceof \App\Model\Table\AppTable) {
+                    // CAv3 hide button and redirect when user change the Url
+                    $model->addBehavior('ControllerAction.HideButton');
+                }
+            }
+        }
+    }
 }
