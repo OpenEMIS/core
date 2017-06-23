@@ -38,7 +38,13 @@ class PreferencesController extends AppController {
 		$header = __('Preferences');
 
 		$action = $this->request->params['action'];
-		$this->activeObj = TableRegistry::get('Preferences')->get($this->Auth->user('id'));
+
+        $Preferences = TableRegistry::get('Preferences');
+        $loginUserId = $this->Auth->user('id');
+
+        if ($Preferences->exists([$Preferences->primaryKey() => $loginUserId])) {
+            $this->activeObj = $Preferences->get($loginUserId);
+        }
 
 		$this->Navigation->addCrumb('Preferences', ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']);
 
