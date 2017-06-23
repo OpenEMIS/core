@@ -452,7 +452,7 @@ class UserGroupsTable extends ControllerActionTable
                 } else {
                     if (!$this->AccessControl->isAdmin()) {
                         $groupAdmin = $this->Roles->getGroupAdministratorEntity();
-                        $UserTable = TableRegistry::get('Users');
+                        $UserTable = TableRegistry::get('Preferences');
                         $user = $UserTable->get($userId);
                         if (empty($this->request->data[$alias][$key])) {
                             $this->request->data[$alias][$key][] = [
