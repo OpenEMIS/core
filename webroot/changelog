@@ -1,3 +1,7 @@
+v3.10.4
+- Allows tabbing to next cell when entering Institution > Assessment results
+- System now allows user to easily access their own Profile from left navigation menu
+
 v3.10.3
 - System Setup > Education Structure > Grade Subjects : Credit Hours can be entered in decimal form
 - Username/Password is now mandatory when adding new user

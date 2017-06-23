@@ -62,7 +62,9 @@ class MultiGradeBehavior extends Behavior
             'element' => 'Institution.Classes/multi_grade',
         ]);
         $model->fields['students']['visible'] = false;
-        $model->fields['staff_id']['options'] = $model->getStaffOptions('add', $institutionId, $selectedAcademicPeriodId);
+        $model->fields['staff_id']['options'] = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId);
+        $model->fields['staff_id']['select'] = false;
+
         $model->setFieldOrder([
             'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'multi_grade_field'
         ]);

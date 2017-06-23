@@ -54,7 +54,7 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_shift_id">{{ error }}</p>
         </div>
     </div>
-    <div class="input select required error">
+    <div class="input select">
         <label><?= __('Home Room Teacher') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[staff_id]" id="institutionclasses-staff-id"
