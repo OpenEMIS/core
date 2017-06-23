@@ -754,6 +754,8 @@ class WorkflowBehavior extends Behavior {
                     ->where([
                         $this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
                     ]);
+
+                return $query->first();
             } else {
                 // if is not super admin
                 if (!empty($roleIds)) {
@@ -784,8 +786,8 @@ class WorkflowBehavior extends Behavior {
                                 ->where([
                                     $this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
                                 ]);
-                        } else {
-                            return null;
+
+                            return $query->first();
                         }
                     } else {
                         // if login user roles is allow to access current step
@@ -809,14 +811,15 @@ class WorkflowBehavior extends Behavior {
                                     $this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
                                 ]
                             );
+
+                        return $query->first();
                     }
                 }
             }
-
-            return $query->first();
-        } else {
-            return null;
         }
+
+        // default return null
+        return null;
     }
 
     public function getModalOptions(Entity $entity) {
