@@ -17,7 +17,6 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
-        $this->addBehavior('Configuration.Authentication');
         $this->toggle('remove', false);
 
         $authenticationRecord = $this
@@ -31,7 +30,7 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
         $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
             ->where([
-                'ConfigItemOptions.option_type' => 'authentication_type',
+                'ConfigItemOptions.option_type' => 'yes_no',
                 'ConfigItemOptions.visible' => 1
             ])
             ->toArray();
@@ -45,10 +44,10 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         $this->field('option_type', ['visible' => false]);
         $this->field('code', ['visible' => false]);
         $this->field('name', ['visible' => ['index'=>true]]);
-        $this->field('default_value', ['visible' => ['view'=>true]]);
         $this->field('type', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
         $this->field('label', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
         $this->field('value', ['visible' => true]);
+        $this->field('default_value', ['visible' => ['view'=>true]]);
 
 
         if ($this->action == 'index') {
@@ -75,8 +74,13 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onGetValue($event, $entity)
+    public function onGetValue(Event $event, Entity $entity)
     {
         return __($this->options[$entity->value]);
+    }
+
+    public function onGetDefaultValue(Event $event, Entity $entity)
+    {
+        return __($this->options[$entity->default_value]);
     }
 }
