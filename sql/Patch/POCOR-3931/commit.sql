@@ -163,3 +163,11 @@ Select
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'issuer') as issuer,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'jwk_uri') as jwks_uri;
     ;
+
+-- config_items
+CREATE TABLE `z_3931_config_items` LIKE `config_items`;
+
+INSERT INTO `z_3931_config_items`
+SELECT * FROM `config_items` WHERE `id` = 1001;
+
+UPDATE `config_items` SET `name`='Enable Local Login', `code`='enable_local_login', `label`='Enable Local Login', `value`='1', `default_value`='1', `option_type`='yes_no' WHERE `id`='1001';
