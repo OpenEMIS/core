@@ -34,12 +34,11 @@ class AuthenticationBehavior extends Behavior
     {
         $authenticationType = $event->subject()->request->query('authentication_type');
         $model = $this->_table;
-        pr($this->_table->request->params);
         if ($authenticationType) {
             return $model->controller->redirect([
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
-                'action' => ucfirst(strtolower($authenticationType)),
+                'action' => 'Auth'.ucfirst(strtolower($authenticationType)),
                 'index'
             ]);
         } elseif ($model->table() != 'config_items') {

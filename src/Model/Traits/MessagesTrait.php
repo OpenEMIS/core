@@ -1916,6 +1916,11 @@ trait MessagesTrait
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ],
+            'ConfigAuthentication' => [
+                'value' => [
+                    'ruleLocalLogin' => 'You may only turn local login off if there are additional authentication method configured.'
+                ]
+            ],
             'ConfigWebhooks' => [
                 'triggered_event' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'

@@ -7,13 +7,16 @@ use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\Validation\Validator;
 
-class ConfigAuthenticationTable extends ControllerActionTable {
+class ConfigAuthenticationTable extends ControllerActionTable
+{
     public $id;
     public $authenticationType;
     private $options = [];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
@@ -35,6 +38,13 @@ class ConfigAuthenticationTable extends ControllerActionTable {
                 'ConfigItemOptions.visible' => 1
             ])
             ->toArray();
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        return $validator->add('value', 'ruleLocalLogin', [
+                    'rule' => 'checkLocalLogin'
+                ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -61,7 +71,8 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    {
         if (in_array($action, ['edit', 'add'])) {
             $id = $this->id;
             if (!empty($id)) {
