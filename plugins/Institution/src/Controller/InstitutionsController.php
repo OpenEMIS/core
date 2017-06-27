@@ -822,14 +822,14 @@ class InstitutionsController extends AppController
                     if ($action == 'view') {
                         $header = $name .' - '.__('Overview');
                     } elseif ($action == 'Results') {
-                        $header = $name .' - '.__('Assessments');
-
                         // POCOR-4066 - add class name to header
                         $classId = $this->ControllerAction->getQueryString('class_id');
                         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
                         if ($InstitutionClasses->exists([$InstitutionClasses->primaryKey() => $classId])) {
                             $classEntity = $InstitutionClasses->get($classId);
-                            $header .= ' - '. $classEntity->name;
+                            $header = $classEntity->name .' - '.__('Assessments');
+                        } else {
+                            $header = $name .' - '.__('Assessments');
                         }
                         // End
                     } else {
