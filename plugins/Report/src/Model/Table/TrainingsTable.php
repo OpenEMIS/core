@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 
 use App\Model\Traits\OptionsTrait;
 
-class ProfessionalDevelopmentTable extends AppTable 
+class TrainingsTable extends AppTable
 {
     use OptionsTrait;
 
@@ -35,7 +35,7 @@ class ProfessionalDevelopmentTable extends AppTable
     {
         // fix header and breadcrumbs
         $controllerName = $this->controller->name;
-        $reportName = __('Professional Development');
+        $reportName = __('Trainings');
         $this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
         $this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 
