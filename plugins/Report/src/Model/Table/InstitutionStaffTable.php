@@ -76,6 +76,8 @@ class InstitutionStaffTable extends AppTable  {
             'middle_name' => 'Users.middle_name',
             'last_name' => 'Users.last_name',
             'number' => 'Users.identity_number',
+            'username' => 'Users.username',
+            'dob' => 'Users.date_of_birth',
             'code' => 'Institutions.code',
             'gender' => 'Genders.name',
             'area_name' => 'Areas.name',
@@ -281,6 +283,13 @@ class InstitutionStaffTable extends AppTable  {
         ];
 
         $newFields[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'dob',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+        $newFields[] = [
             'key' => 'Age',
             'field' => 'Age',
             'type' => 'Age',
@@ -341,6 +350,13 @@ class InstitutionStaffTable extends AppTable  {
             'field' => 'position_title_teaching',
             'type' => 'string',
             'label' => __('Teaching')
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.username',
+            'field' => 'username',
+            'type' => 'string',
+            'label' => __('Username')
         ];
 
         $fields->exchangeArray($newFields);
