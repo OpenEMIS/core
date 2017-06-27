@@ -41,7 +41,7 @@ trait OptionsTrait {
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			],
             'TrainingCourses' => [
-                'target_population_selection' => [1 => __('Select Target Populations'), 2 => __('Select All Target Populations')]
+                'target_population_selection' => [1 => __('Select Target Populations'), '-1' => __('Select All Target Populations')]
             ],
 			'TrainingSessions' => [
 				'trainer_types' => ['Staff' => __('Staff'), 'Others' => __('Others')]
