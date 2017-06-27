@@ -17,6 +17,7 @@ class UsersController extends AppController
         parent::initialize();
         $this->ControllerAction->model('User.Users');
         $this->loadComponent('Paginator');
+        $this->loadComponent('Cookie');
     }
 
     public function beforeFilter(Event $event)

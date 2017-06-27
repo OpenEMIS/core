@@ -185,7 +185,14 @@ class TrainingNeedsAppTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->session();
-        $sessionKey = 'Staff.Staff.id';
+
+        // POCOR-1893
+        if ($this->controller->name == 'Profiles') {
+            $sessionKey = 'Auth.User.id';
+        } else {
+            $sessionKey = 'Staff.Staff.id';
+        }
+        // end POCOR-1893
 
         if ($session->check($sessionKey)) {
             $staffId = $session->read($sessionKey);
