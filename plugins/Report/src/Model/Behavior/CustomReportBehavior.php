@@ -21,29 +21,24 @@ class CustomReportBehavior extends Behavior
             $model = $jsonArray['model'];
             $this->Table = TableRegistry::get($model);
 
-            // default type is query
-            $type = array_key_exists('type', $jsonArray) ? $jsonArray['type'] : 'query';
+            if (array_key_exists('get', $jsonArray)) {
+                $result = $this->_get($params, $jsonArray['get']);
 
-            if ($type == 'query') {
-                if (array_key_exists('get', $jsonArray)) {
-                    $result = $this->_get($params, $jsonArray['get']);
+            } else {
+                $query = $this->Table->find();
 
-                } else {
-                    $query = $this->Table->find();
-
-                    $methods = ['join', 'contain', 'matching', 'select', 'selectExpression', 'find', 'where', 'whereExpression', 'group', 'having', 'order'];
-                    foreach ($methods as $method) {
-                        if (array_key_exists($method, $jsonArray)) {
-                            $methodName = '_' . $method;
-                            $this->$methodName($query, $params, $jsonArray[$method]);
-                        }
+                $methods = ['join', 'contain', 'matching', 'select', 'selectExpression', 'find', 'where', 'whereExpression', 'group', 'having', 'order'];
+                foreach ($methods as $method) {
+                    if (array_key_exists($method, $jsonArray)) {
+                        $methodName = '_' . $method;
+                        $this->$methodName($query, $params, $jsonArray[$method]);
                     }
-
-                    $result = $query->toArray();
                 }
-            }
 
+                $result = $query->toArray();
+            }
         } else if (array_key_exists('sql', $jsonArray)) {
+            // parameters for prepared statement
             $stmtParameters = array_key_exists('parameters', $jsonArray) ? $jsonArray['parameters'] : [];
             $result = $this->_sql($params, $jsonArray['sql'], $stmtParameters);
         }
@@ -115,6 +110,7 @@ class CustomReportBehavior extends Behavior
                     $joinTable = TableRegistry::get($obj['model']);
                     $type = strtoupper($obj['type']);
 
+                    // must supply '=' or other sign in $field for join conditions
                     $joinConditions = [];
                     if (array_key_exists('conditions', $obj)) {
                         foreach($obj['conditions'] as $field => $value) {
