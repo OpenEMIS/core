@@ -246,7 +246,12 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             };
             var columnDefs = [];
 
-            var direction = 'left';
+            var isMobile = document.querySelector("html").classList.contains("mobile");
+            if (isMobile) {
+                var direction = '';
+            } else {
+                var direction = 'left';
+            }
 
             columnDefs.push({
                 headerName: "OpenEMIS ID",
