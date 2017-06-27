@@ -7,7 +7,6 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use CustomExcel\Controller\CustomExcelsController;
 
 class GenerateAllReportCardsShell extends Shell
 {

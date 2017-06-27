@@ -68,7 +68,7 @@ class CustomReportsTable extends AppTable
                      unset($filters['academic_period_id']);
                 }
 
-                foreach($filters as $field => $data) {
+                foreach ($filters as $field => $data) {
                     $fieldType = array_key_exists('fieldType', $data) ? $data['fieldType'] : 'select';
                     $parameters = ['type' => $fieldType];
 

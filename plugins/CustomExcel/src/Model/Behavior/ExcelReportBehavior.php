@@ -352,7 +352,6 @@ class ExcelReportBehavior extends Behavior
             $variables = $this->config('variables');
 
             foreach ($variables as $var) {
-                $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateGet'.$var, [$params, $extra], $this);
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
                 if ($event->isStopped()) { return $event->result; }
                 if ($event->result) {
