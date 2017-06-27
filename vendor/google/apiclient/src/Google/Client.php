@@ -358,7 +358,6 @@ class Google_Client
   public function setClientId($clientId)
   {
     $this->config->setClientId($clientId);
-    pr($this->config);die;
   }
 
   /**

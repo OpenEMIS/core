@@ -20,6 +20,7 @@ class UsersController extends AppController
         $this->ControllerAction->model('User.Users');
         $this->loadComponent('Paginator');
         $this->loadComponent('Cookie');
+        $this->loadComponent('SSO.SLO');
     }
 
     public function beforeFilter(Event $event)
@@ -33,8 +34,15 @@ class UsersController extends AppController
             $this->eventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', [$action]);
         }
-        // For fall back
-        $this->set('_sso', false);
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $localLoginEnabled = $ConfigItems->value('enable_local_login');
+
+        // To show local login
+        $this->set('enableLocalLogin', $localLoginEnabled);
+
+        $SystemAuthentications = TableRegistry::get('SSO.SystemAuthentications');
+        $authentications = $SystemAuthentications->getActiveAuthentications();
+        $this->set('authentications', $authentications);
     }
 
     public function patchPasswords()
@@ -65,6 +73,9 @@ class UsersController extends AppController
             $password = '';
             $session = $this->request->session();
 
+            // SLO Login
+            $this->SLO->login();
+
             if ($this->Auth->user()) {
                 return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
             }
@@ -93,13 +104,18 @@ class UsersController extends AppController
         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
     }
 
-    public function postLogin($authenticationType = 'Local', $recordKey = null)
+    public function postLogin($authenticationType = 'Local', $code = null)
     {
         $this->autoRender = false;
-        if (is_null($recordKey)) {
+        $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
+        $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+        if (!$enableLocalLogin && count($authentications) == 1) {
+            $authenticationType = $authentications[0]['authentication_type'];
+            $code = $authentications[0]['code'];
+        } elseif (is_null($code)) {
             $authenticationType = 'Local';
         }
-        $this->SSO->doAuthentication($authenticationType, $recordKey);
+        $this->SSO->doAuthentication($authenticationType, $code);
     }
 
     public function logout($username = null)

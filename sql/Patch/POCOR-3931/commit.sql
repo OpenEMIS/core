@@ -69,7 +69,7 @@ CREATE TABLE `idp_saml` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains SAML authentication attributes';
 
 INSERT INTO `authentication_types` (`id`, `name`) VALUES (1, 'Google');
-INSERT INTO `authentication_types` (`id`, `name`) VALUES (2, 'SAML');
+INSERT INTO `authentication_types` (`id`, `name`) VALUES (2, 'Saml');
 INSERT INTO `authentication_types` (`id`, `name`) VALUES (3, 'OAuth');
 
 SET @id = 1;
