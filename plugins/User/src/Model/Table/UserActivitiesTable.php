@@ -26,6 +26,7 @@ class UserActivitiesTable extends AppTable {
 				$options['userRole'] = 'Staff';
 				break;
 			case 'Directories':
+			case 'Profiles':
 				break;
 		}
 		$tabElements = $this->controller->getUserTabElements($options);
