@@ -24,7 +24,7 @@ class TrainingCoursesTable extends ControllerActionTable
     const DONE = 3;
 
     CONST SELECT_TARGET_POPULATIONS = 1;
-    CONST SELECT_ALL_TARGET_POPULATIONS = 2;
+    CONST SELECT_ALL_TARGET_POPULATIONS = '-1';
 
     private $targetPopulationSelection = [];
 
@@ -110,6 +110,17 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->requirePresence('target_populations')
+            // ->requirePresence('target_populations', function ($context) {
+            //     pr('requirePresence');
+            //     pr($context);
+            //     die;
+            // })
+            // ->allowEmpty('target_populations', function ($context) {
+            //     if ($context['data']['target_population_selection'] == '-1') {
+            //         return true;
+            //     }
+            //     return false;
+            // })
             ->requirePresence('training_providers')
             ->requirePresence('result_types')
             ->add('duration', [
@@ -133,6 +144,38 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('file_content');
+    }
+
+    private function setAllTargetPopulations($entity)
+    {
+        if ($entity->has('target_population_selection') && $entity->target_population_selection == self::SELECT_ALL_TARGET_POPULATIONS) {
+            $TrainingCoursesTargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
+            $entityId = $entity->id;
+
+            $trainingCoursesTargetPopulationData = [
+                'training_course_id' => $entityId,
+                'target_population_id' => self::SELECT_ALL_TARGET_POPULATIONS
+            ];
+
+            $trainingCoursesTargetPopulationEntity = $TrainingCoursesTargetPopulations->newEntity($trainingCoursesTargetPopulationData);
+
+            if ($TrainingCoursesTargetPopulations->save($trainingCoursesTargetPopulationEntity)) {
+            } else {
+                $TrainingCoursesTargetPopulations->log($trainingCoursesTargetPopulationEntity->errors(), 'debug');
+            }
+        }
+    }
+
+    public function onGetTargetPopulations(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view' && empty($entity->target_populations)) {
+            // $entityId =
+            // pr('onGetTargetPopulations');
+            // pr($this->action);
+            // pr($entity);
+            // die;
+            return 'onGetTargetPopulations';
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -217,7 +260,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $keywords = ['target_populations', 'training_providers', 'result_types'];
         foreach ($keywords as $key => $value) {
             if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
-                if (array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
+                if (is_array($requestData[$this->alias()][$value]) && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
                     $requestData[$this->alias()][$value] = [];
                 }
             }
@@ -252,6 +295,12 @@ class TrainingCoursesTable extends ControllerActionTable
     }
     // End POCOR-3989
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // select all target population
+        $this->setAllTargetPopulations($entity);
+    }
+
     public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request)
     {
         $creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
@@ -276,78 +325,26 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeTargetPopulationSelection(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-// pr('addEditOnChangeTargetPopulationSelection');
-        $requestData = $this->request->data;
-
-        // $options = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
-        // if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::ALL_TARGET_POPULATIONS) {
-        //     if (!empty($options)) {
-        //         foreach ($options as $key => $targetName) {
-        //             $requestData[$this->alias()]['target_populations']['_ids'][] = $key;
-        //             // $attr['value'][] = $key;
-        //             // $attr['attr']['value'][] = $targetName;
-        //             $attr['attr']['value'][] = $key;
-        //             // pr($key. ' ' . $targetName);
-        //         }
-        //     }
-        //     // $attr['type'] = 'readonly';
-        // }
-
-        // pr($requestData[$this->alias()]['target_populations']);
-        // die;
-
-        /*
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('subjects', $request->data[$this->alias()])) {
-                    unset($data[$this->alias()]['subjects']);
-                }
-            }
-        }
-        */
-    }
-
-    public function getAllTargetPopulations ($options)
-    {
-        $targetPopulation = [];
-        foreach ($options as $targetId => $targetName) {
-            // pr($targetId . ' ' . $targetName);
-            $targetPopulation [] = $targetId;
-        }
-        // pr($options);
-        // pr($targetPopulation);
-        // die;
-        return $targetPopulation;
-    }
-
     public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
     {
+        $entity = $attr['entity'];
+
         if ($action == 'add' || $action == 'edit') {
             $options = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
             $attr['options'] = $options;
-            $entity = $attr['entity'];
 
             $requestData = $this->request->data;
             $targetPopulations = [];
-            if (!empty($entity->target_populations)) {
-                foreach ($entity->target_populations as $targetObj) {
-                    $targetPopulations[] = $targetObj->id;
-                }
-            }
 
             if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::SELECT_ALL_TARGET_POPULATIONS) {
-                if (!empty($options)) {
-                    $targetPopulations = $this->getAllTargetPopulations($options);
-
-                }
+                $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
+                $attr['attr']['value'] = __('All Target Populations Selected');
+                $attr['type'] = 'readonly';
             } else if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::SELECT_TARGET_POPULATIONS) {
                 $targetPopulations = [];
+                $attr['value'] = $targetPopulations;
+                $attr['attr']['value'] = $targetPopulations;
             }
-
-            $attr['value'] = $targetPopulations;
-            $attr['attr']['value'] = $targetPopulations;
         }
 
         return $attr;
@@ -401,7 +398,11 @@ class TrainingCoursesTable extends ControllerActionTable
     public function setupFields(Entity $entity)
     {
         $this->field('credit_hours', ['type' => 'select']);
-        $this->field('target_population_selection', ['type' => 'select']);
+        $this->field('target_population_selection', [
+            'type' => 'select',
+            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
+            'entity' => $entity
+        ]);
         $this->field('target_populations', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select Target Populations'),
