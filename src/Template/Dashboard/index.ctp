@@ -3,10 +3,19 @@
 <?= $this->Html->script('angular/dashboard/dashboard.svc', ['block' => true]); ?>
 
 <?php
-$this->extend('OpenEmis./Layout/Panel');
-$this->start('panelBody');
+$this->extend('OpenEmis./Layout/Container');
+$this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model._content_header")));
+
+$this->start('contentBody');
+$panelHeader = $this->fetch('panelHeader');
 ?>
-	<bg-splitter orientation="horizontal" class="content-splitter" collapse="{{DashboardController.collapse}}" elements="getSplitterElements" float-btn="false">
+
+<?= $this->element('OpenEmis.alert') ?>
+
+<div class="panel">
+	<div class="panel-body" style="position: relative;">
+		<?= $this->element('nav_tabs') ?>
+		<bg-splitter orientation="horizontal" class="content-splitter" collapse="{{DashboardController.collapse}}" elements="getSplitterElements" float-btn="false">
 		<bg-pane class="main-content">
 			<?= $this->element('Dashboard/notices'); ?>
 			<hr>
@@ -32,6 +41,8 @@ $this->start('panelBody');
 			</div>
 		</bg-pane>
 	</bg-splitter>
-<?php
-$this->end();
-?>
+	</div>
+</div>
+
+<?php $this->end() ?>
+

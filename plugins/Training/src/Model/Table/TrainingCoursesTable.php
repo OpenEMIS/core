@@ -229,6 +229,19 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->request->query['course'] = $entity->id;
     }
 
+    // POCOR-3989 Exclude the belongs to many model
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->TargetPopulations->alias(),
+            $this->TrainingProviders->alias(),
+            $this->CoursePrerequisites->alias(),
+            $this->Specialisations->alias(),
+            $this->ResultTypes->alias(),
+        ];
+    }
+    // End POCOR-3989
+
     public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request)
     {
         $creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
