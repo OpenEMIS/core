@@ -153,6 +153,34 @@ class InstitutionStaffTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
+    public function onExcelRenderContactOption(Event $event, Entity $entity, array $attr)
+    {
+        $staffId = $entity->staff_id;
+        $contactOptionId = $attr['contactOptionId'];
+
+        $ContactTypesTable = TableRegistry::get('User.ContactTypes');
+        $types = $ContactTypesTable->find()
+            ->where([$ContactTypesTable->aliasField('contact_option_id') => $contactOptionId])
+            ->extract('id')
+            ->toArray();
+
+        $result = '';
+        if (!empty($types)) {
+            $UserContactsTable = TableRegistry::get('User.Contacts');
+            $contacts = $UserContactsTable->find()
+                ->where([
+                    $UserContactsTable->aliasField('security_user_id') => $staffId,
+                    $UserContactsTable->aliasField('contact_type_id IN ') => $types
+                ])
+                ->order([$UserContactsTable->aliasField('preferred') => 'DESC'])
+                ->extract('value')
+                ->toArray();
+
+            $result = implode(', ', $contacts);
+        }
+
+        return $result;
+    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
@@ -358,6 +386,23 @@ class InstitutionStaffTable extends AppTable  {
             'type' => 'string',
             'label' => __('Username')
         ];
+
+        $displayContactOptions = ['MOBILE', 'PHONE', 'EMAIL'];
+        $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
+        $options = $ContactOptionsTable->find('list')
+            ->where([$ContactOptionsTable->aliasField('code IN') => $displayContactOptions])
+            ->order('order')
+            ->toArray();
+
+        foreach ($options as $id => $name) {
+            $newFields[] = [
+                'key' => 'contact_option',
+                'field' => 'contact_option',
+                'type' => 'contact_option',
+                'label' => __($name),
+                'contactOptionId' => $id
+            ];
+        }
 
         $fields->exchangeArray($newFields);
     }
