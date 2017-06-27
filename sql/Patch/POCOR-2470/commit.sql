@@ -1,5 +1,5 @@
 -- system_patches
-INSERT INTO `system_patches` VALUES ('POCOR-2470', NOW());
+INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-2470', NOW());
 
 -- reports
 DROP TABLE IF EXISTS `reports`;
@@ -19,3 +19,8 @@ CREATE TABLE IF NOT EXISTS `reports` (
  KEY `modified_user_id` (`modified_user_id`),
  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the information for the custom reports';
+
+-- security_functions
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+VALUES ('6012', 'Custom', 'Reports', 'Reports', 'Reports', '-1', 'CustomReports.index', NULL, 'CustomReports.add', NULL, 'CustomReports.download', '6010', '1', NULL, NULL, NULL, '1', NOW());
+
