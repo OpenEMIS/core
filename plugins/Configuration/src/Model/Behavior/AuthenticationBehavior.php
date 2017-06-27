@@ -22,14 +22,33 @@ class AuthenticationBehavior extends Behavior
         parent::initialize($config);
     }
 
+    public function implementedEvents()
+    {
+        $events = [
+            'ControllerAction.Model.beforeAction' => 'beforeAction'
+        ];
+        return $events;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $authenticationType = $event->subject()->request->query('authentication_type');
-        $event->subject()->redirect([
-            'plugin' => 'Configuration',
-            'controller' => 'Configurations',
-            'action' => 'Config' . ucfirst(strtolower($authenticationType)),
-            'index'
-        ]);
+        $model = $this->_table;
+        pr($this->_table->request->params);
+        if ($authenticationType) {
+            return $model->controller->redirect([
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => ucfirst(strtolower($authenticationType)),
+                'index'
+            ]);
+        } elseif ($model->table() != 'config_items') {
+            return $model->controller->redirect([
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'Authentications',
+                'index'
+            ]);
+        }
     }
 }

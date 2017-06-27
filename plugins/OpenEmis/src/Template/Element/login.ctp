@@ -57,7 +57,7 @@ $description = __d('open_emis', $_productName);
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin'],
 				'class' => 'form-horizontal'
 			]);
-			if (!$_sso) {
+			if ($enableLocalLogin) {
 				echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
 				echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
 			}
@@ -78,8 +78,19 @@ $description = __d('open_emis', $_productName);
 			<div class="form-group">
 				<?= $this->Form->button(__('Login'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
 				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
-			</div>
+
 			<?= $this->Form->end() ?>
+			<?php
+				if ($authentications) :
+			?>
+			<hr />
+				<?php
+					foreach ($authentications as $authentication) {
+						echo $this->Html->link(__($authentication['name']), ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', $authentication['authentication_type'], $authentication['code']], ['class' => 'btn btn-primary btn-login']);
+					}
+				?>
+			<?php endif; ?>
+			</div>
 		</div>
 
 		<?= $this->element('OpenEmis.footer') ?>

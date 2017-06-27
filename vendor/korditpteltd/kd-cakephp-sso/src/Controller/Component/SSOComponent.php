@@ -46,19 +46,25 @@ class SSOComponent extends Component
         return $this->authType;
     }
 
-    public function doAuthentication($authenticationType = 'Local', $recordKey = null)
+    public function doAuthentication($authenticationType = 'Local', $code = null)
     {
         if ($authenticationType != 'Local') {
             $SystemAuthenticationsTable = TableRegistry::get('SSO.SystemAuthentications');
-            $attribute = $SystemAuthenticationsTable->get($recordKey, ['contain' => $authenticationType])->toArray();
-
-            if ($attribute['status']) {
+            $attribute = $SystemAuthenticationsTable
+                ->find()
+                ->contain([$authenticationType])
+                ->where([
+                    $SystemAuthenticationsTable->aliasField('code') => $code
+                ])
+                ->first()
+                ->toArray();
+            if (!empty($attribute) && $attribute['status']) {
                 $authAttribute = $attribute[Inflector::underscore($authenticationType)];
                 unset($attribute[strtolower($authenticationType)]);
                 $mappingAttribute = $attribute;
                 $this->_config['authAttribute'] = $authAttribute;
                 $this->_config['mappingAttribute'] = $mappingAttribute;
-                $this->_config['recordKey'] = $recordKey;
+                $this->_config['recordKey'] = $attribute['id'];
             } else {
                 $authenticationType = 'Local';
             }
