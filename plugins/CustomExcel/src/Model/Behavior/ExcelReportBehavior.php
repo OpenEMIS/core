@@ -87,13 +87,12 @@ class ExcelReportBehavior extends Behavior
 
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
+        ini_set('max_execution_time', 180);
         $this->renderExcelTemplate($extra);
     }
 
     public function renderExcelTemplate(ArrayObject $extra)
     {
-        ini_set('max_execution_time', 180);
-
         $model = $this->_table;
 
         if (array_key_exists('requestQuery', $extra)) {
