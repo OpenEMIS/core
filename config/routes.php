@@ -51,7 +51,7 @@ Router::scope('/', function (RouteBuilder $routes) {
      */
 
     // For landing page
-    $routes->connect('/', ['controller' => 'Login', 'action' => 'login']);
+    $routes->connect('/', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
 
     // Standardised login route
     $routes->connect('/Login', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);

@@ -207,33 +207,18 @@ class SamlAuthComponent extends Component
         if ($this->Auth->user()) {
             return true;
         }
-        if ($this->request->is('post') && !$this->session->read('Saml.remoteFail')) {
-            if ($this->idpLogin()) {
-                $userData = $this->getAttributes();
-                if (isset($userData[$this->userNameField][0])) {
-                    $userName = $userData[$this->userNameField][0];
-                    $this->session->write('Saml.userAttribute', $userData);
-                    return $this->checkLogin($userName);
-                } else {
-                    $this->session->write('Auth.fallback', true);
-                    return false;
-                }
+        if ($this->idpLogin()) {
+            $userData = $this->getAttributes();
+            if (isset($userData[$this->userNameField][0])) {
+                $userName = $userData[$this->userNameField][0];
+                $this->session->write('Saml.userAttribute', $userData);
+                return $this->checkLogin($userName);
             } else {
                 $this->session->write('Auth.fallback', true);
                 return false;
             }
         } else {
-            if ($this->request->is('post') && isset($this->request->data['submit'])) {
-                if ($this->request->data['submit'] == 'login') {
-                    $extra['disableCookie'] = true;
-                    $username = $this->request->data('username');
-                    $checkLogin = $this->checkLogin($username);
-                    if ($checkLogin) {
-                        $this->session->write('Auth.fallback', true);
-                    }
-                    return $checkLogin;
-                }
-            }
+            $this->session->write('Auth.fallback', true);
             return false;
         }
     }
