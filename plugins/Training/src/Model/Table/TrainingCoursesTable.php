@@ -110,17 +110,6 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->requirePresence('target_populations')
-            // ->requirePresence('target_populations', function ($context) {
-            //     pr('requirePresence');
-            //     pr($context);
-            //     die;
-            // })
-            // ->allowEmpty('target_populations', function ($context) {
-            //     if ($context['data']['target_population_selection'] == '-1') {
-            //         return true;
-            //     }
-            //     return false;
-            // })
             ->requirePresence('training_providers')
             ->requirePresence('result_types')
             ->add('duration', [
@@ -144,38 +133,6 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('file_content');
-    }
-
-    private function setAllTargetPopulations($entity)
-    {
-        if ($entity->has('target_population_selection') && $entity->target_population_selection == self::SELECT_ALL_TARGET_POPULATIONS) {
-            $TrainingCoursesTargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
-            $entityId = $entity->id;
-
-            $trainingCoursesTargetPopulationData = [
-                'training_course_id' => $entityId,
-                'target_population_id' => self::SELECT_ALL_TARGET_POPULATIONS
-            ];
-
-            $trainingCoursesTargetPopulationEntity = $TrainingCoursesTargetPopulations->newEntity($trainingCoursesTargetPopulationData);
-
-            if ($TrainingCoursesTargetPopulations->save($trainingCoursesTargetPopulationEntity)) {
-            } else {
-                $TrainingCoursesTargetPopulations->log($trainingCoursesTargetPopulationEntity->errors(), 'debug');
-            }
-        }
-    }
-
-    public function onGetTargetPopulations(Event $event, Entity $entity)
-    {
-        if ($this->action == 'view' && empty($entity->target_populations)) {
-            // $entityId =
-            // pr('onGetTargetPopulations');
-            // pr($this->action);
-            // pr($entity);
-            // die;
-            return 'onGetTargetPopulations';
-        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -315,35 +272,63 @@ class TrainingCoursesTable extends ControllerActionTable
     public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            // $attr['options'] = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+            $entity = $attr['entity'];
+
+            if (!$entity->has('target_population_selection') && $entity->has('target_populations') && empty($entity->target_populations)) {
+                $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
+                $attr['attr']['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
+                $entity->target_population_selection = self::SELECT_ALL_TARGET_POPULATIONS;
+            }
+
             $attr['options'] = $this->targetPopulationSelection;
             $attr['select'] = false;
             $attr['onChangeReload'] = 'changeTargetPopulationSelection';
-
         }
 
         return $attr;
     }
 
+    public function addEditOnChangeTargetPopulationSelection(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        // target population selection
+        if (array_key_exists('target_population_selection', $data[$this->alias()])) {
+            $targetPopulationSelectionId = $data[$this->alias()]['target_population_selection'];
+            $entity->target_population_selection = $targetPopulationSelectionId;
+        }
+
+        // clear the target population when Select all options is chosen
+        if ($data[$this->alias()]['target_population_selection'] == self::SELECT_ALL_TARGET_POPULATIONS) {
+            unset($data[$this->alias()]['target_populations']);
+        }
+    }
+
     public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
     {
+        $requestData = $this->request->data;
         $entity = $attr['entity'];
+        $options = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+        $attr['options'] = $options;
 
-        if ($action == 'add' || $action == 'edit') {
-            $options = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
-            $attr['options'] = $options;
-
-            $requestData = $this->request->data;
+        if ($action == 'add') {
             $targetPopulations = [];
 
+            if (!empty($requestData) && array_key_exists('target_populations', $requestData[$this->alias()]) && !empty($requestData[$this->alias()]['target_populations']['_ids'])) {
+                $targetPopulations = $requestData[$this->alias()]['target_populations']['_ids'];
+            }
+
             if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::SELECT_ALL_TARGET_POPULATIONS) {
+                $targetPopulations = []; // reset the target population
                 $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
                 $attr['attr']['value'] = __('All Target Populations Selected');
                 $attr['type'] = 'readonly';
-            } else if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::SELECT_TARGET_POPULATIONS) {
-                $targetPopulations = [];
-                $attr['value'] = $targetPopulations;
-                $attr['attr']['value'] = $targetPopulations;
+            }
+        } else if ($action == 'edit') {
+            $targetPopulationSelectionId = !empty($entity->target_population_selection) ? $entity->target_population_selection : self::SELECT_TARGET_POPULATIONS;
+
+            if ($targetPopulationSelectionId == self::SELECT_ALL_TARGET_POPULATIONS) {
+                $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
+                $attr['attr']['value'] = __('All Target Populations Selected');
+                $attr['type'] = 'readonly';
             }
         }
 
@@ -501,5 +486,43 @@ class TrainingCoursesTable extends ControllerActionTable
             });
 
         return $query;
+    }
+
+    private function setAllTargetPopulations($entity)
+    {
+        if ($entity->has('target_population_selection') && $entity->target_population_selection == self::SELECT_ALL_TARGET_POPULATIONS) {
+            $TrainingCoursesTargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
+            $entityId = $entity->id;
+
+            $trainingCoursesTargetPopulationData = [
+                'training_course_id' => $entityId,
+                'target_population_id' => self::SELECT_ALL_TARGET_POPULATIONS
+            ];
+
+            $trainingCoursesTargetPopulationEntity = $TrainingCoursesTargetPopulations->newEntity($trainingCoursesTargetPopulationData);
+
+            if ($TrainingCoursesTargetPopulations->save($trainingCoursesTargetPopulationEntity)) {
+            } else {
+                $TrainingCoursesTargetPopulations->log($trainingCoursesTargetPopulationEntity->errors(), 'debug');
+            }
+        }
+    }
+
+    public function onGetTargetPopulations(Event $event, Entity $entity)
+    {
+        // Select all target populations
+        if ($this->action == 'view' && empty($entity->target_populations)) {
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $data = $StaffPositionTitles->find()
+                ->order([$StaffPositionTitles->aliasField('order')])
+                ->all();
+
+            $targetPopulations = [];
+            foreach ($data as $position) {
+                $targetPopulations[] = $position->name;
+            }
+
+            return (!empty($targetPopulations))? implode(', ', $targetPopulations): ' ';
+        }
     }
 }
