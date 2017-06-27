@@ -2254,4 +2254,14 @@ class ValidationBehavior extends Behavior
         }
         return $nullCounter == $arrLength || $nullCounter == 0;
     }
+
+    public static function checkLocalLogin($field, array $globalData)
+    {
+        if ($field == 1) {
+            return true;
+        } else {
+            $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+            return count($authentications) > 0;
+        }
+    }
 }
