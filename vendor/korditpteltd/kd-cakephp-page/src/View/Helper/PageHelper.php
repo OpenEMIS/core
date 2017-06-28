@@ -233,14 +233,19 @@ class PageHelper extends Helper
         $fields = $this->_View->get('elements');
         $data = $this->_View->get('data');
 
-        foreach ($fields as $field) {
-            $controlType = $field['controlType'];
-            if (method_exists($this, $controlType)) {
-                $html .= $this->$controlType($field, $data);
-            } else {
-                Log::write('error', $controlType);
+        if (!empty($fields)) {
+            foreach ($fields as $field) {
+                $controlType = $field['controlType'];
+                if (method_exists($this, $controlType)) {
+                    $html .= $this->$controlType($field, $data);
+                } else {
+                    Log::write('error', $controlType);
+                }
             }
+        } else {
+            pr('There are no elements');
         }
+
         return $html;
     }
 
