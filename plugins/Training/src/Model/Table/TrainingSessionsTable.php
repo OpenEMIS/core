@@ -26,12 +26,13 @@ class TrainingSessionsTable extends ControllerActionTable
     use ImportExcelTrait;
 
     // Workflow Steps - category
-    const TO_DO = 1;
-    const IN_PROGRESS = 2;
-    const DONE = 3;
+    CONST TO_DO = 1;
+    CONST IN_PROGRESS = 2;
+    CONST DONE = 3;
 
-    const STAFF = 'Staff';
-    const OTHERS = 'Others';
+    CONST STAFF = 'Staff';
+    CONST OTHERS = 'Others';
+    CONST SELECT_ALL_TARGET_POPULATIONS = '-1';
 
     public function initialize(array $config)
     {
@@ -319,7 +320,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
             $data = [];
             if ($session->check($sessionKey)) {
-                $id = $session->read($sessionKey);
+                $id = !empty($this->request->params['pass'][1]) ? $this->paramsDecode($this->request->params['pass'][1])['id'] : $session->read($sessionKey);
                 $entity = $this->get($id);
 
                 $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
@@ -333,6 +334,15 @@ class TrainingSessionsTable extends ControllerActionTable
                     ->find('list', ['keyField' => 'target_population_id', 'valueField' => 'target_population_id'])
                     ->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
                     ->toArray();
+
+                // POCOR-4060 if select all targetPopulations will get all the ids.
+                if (array_key_exists(self::SELECT_ALL_TARGET_POPULATIONS, $targetPopulationIds)) {
+                    $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                    $targetPopulationIds = $StaffPositionTitles
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                        ->toArray();
+                }
+                // end of POCOR-4060
 
                 $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
                 $query = $Staff
