@@ -358,6 +358,27 @@ class PageComponent extends Component
         return $this->paginateOptions;
     }
 
+    public function getUrl(array $url = [], $params = true /* 'PASS' | 'QUERY' | false */)
+    {
+        $controller = $this->controller;
+        $request = $this->request;
+        $_url = [
+            'plugin' => $controller->plugin,
+            'controller' => $controller->name
+        ];
+
+        $url = array_merge($_url, $url);
+
+        if ($params === true) {
+            $url = array_merge($url, $request->pass, $request->query);
+        } elseif ($params === 'PASS') {
+            $url = array_merge($url, $request->pass);
+        } elseif ($params === 'QUERY') {
+            $url = array_merge($url, $request->query);
+        }
+        return $url;
+    }
+
     public function showElements($show = null)
     {
         if (is_null($show)) {
