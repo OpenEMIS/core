@@ -92,8 +92,13 @@ class ReportListBehavior extends Behavior {
 		$data[$this->_table->alias()]['user_id'] = $session->read('Auth.User.id');
 		$data[$this->_table->alias()]['super_admin'] = $session->read('Auth.User.super_admin');
 		$process = function($model, $entity) use ($data) {
-			$this->_generate($data);
-			return true;
+			$errors = $entity->errors();
+			if (empty($errors)) {
+				$this->_generate($data);
+				return true;
+			} else {
+				return false;
+			}
 		};
 		return $process;
 	}
