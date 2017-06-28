@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
@@ -51,6 +52,9 @@ class InstitutionStudentsTable extends AppTable  {
 		$academicPeriodId = $requestData->academic_period_id;
 		$statusId = $requestData->status;
 
+        $Class = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+
 		if ($academicPeriodId!=0) {
 			$query->where([
 				$this->aliasField('academic_period_id') => $academicPeriodId
@@ -68,10 +72,21 @@ class InstitutionStudentsTable extends AppTable  {
             ->toArray();
 		
 		$query
-			->contain(['Users.Genders', 'Users.MainNationalities', 'Institutions.Areas', 'Institutions.AreaAdministratives', 'Institutions.Types'])
+			->contain(['Users.Genders', 'Users.MainNationalities', 'Users.Nationalities.NationalitiesLookUp', 'Institutions.Areas', 'Institutions.AreaAdministratives', 'Institutions.Types', 'Institutions.Providers'])
 			->select([
-                'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 'preferred_nationality' => 'MainNationalities.name', 
-                'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'institution_type' => 'Types.name'
+                'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'username' => 'Users.username', 'code' => 'Institutions.code', 'preferred_nationality' => 'MainNationalities.name',
+                'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'institution_type' => 'Types.name', 'institution_provider' => 'Providers.name',
+                'class_name' => 'InstitutionClasses.name'
+            ])
+            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
+                $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+            ])
+            ->leftJoin([$Class->alias() => $Class->table()], [
+                $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
             ->formatResults(function (ResultSetInterface $results) use ($statusOptions, $statusId) {
                 return $results->map(function ($row) use ($statusOptions, $statusId) {
@@ -156,7 +171,25 @@ class InstitutionStudentsTable extends AppTable  {
 			}
 		}
 		return $age;
-	}    
+	}
+
+    public function onExcelGetAllNationalities(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('nationalities')) {
+                if (!empty($entity->user->nationalities)) {
+                    foreach ($entity->user->nationalities as $userNationality) {
+                        if ($userNationality->has('nationalities_look_up')) {
+                            $return[] = $userNationality->nationalities_look_up->name;
+                        }
+                    }
+                }
+            }
+        }
+
+        return implode(', ', array_values($return));
+    }
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
@@ -207,12 +240,27 @@ class InstitutionStudentsTable extends AppTable  {
 			'label' => '',
 		];
 
+
+        $extraField[] = [
+            'key' => 'Institutions.institution_provider_id',
+            'field' => 'institution_provider',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
 		$extraField[] = [
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
 			'type' => 'string',
 			'label' => ''
 		];
+
+        $extraField[] = [
+            'key' => 'Users.username',
+            'field' => 'username',
+            'type' => 'string',
+            'label' => __('Username')
+        ];
 
 		$extraField[] = [
 			'key' => 'Users.identity_number',
@@ -296,12 +344,28 @@ class InstitutionStudentsTable extends AppTable  {
 		];
 
         $newFields = array_merge($extraField, $fields->getArrayCopy());
-        
+
+        if ($statusId == $this->statuses['CURRENT']) {
+            $enrolledExtraField[] = [
+                'key' => 'InstitutionClasses.name',
+                'field' => 'class_name',
+                'type' => 'string',
+                'label' => ''
+            ];
+        }
+
         $enrolledExtraField[] = [
             'key' => 'MainNationalities.name',
             'field' => 'preferred_nationality',
             'type' => 'string',
             'label' => __('Preferred Nationality')
+        ];
+
+        $enrolledExtraField[] = [
+            'key' => 'NationalitiesLookUp.name',
+            'field' => 'all_nationalities',
+            'type' => 'string',
+            'label' => __('All Nationalities')
         ];
 
         $newFields = array_merge($newFields, $enrolledExtraField);
@@ -378,9 +442,7 @@ class InstitutionStudentsTable extends AppTable  {
             $fields->exchangeArray($outputFields);
 
         } else {
-
             $fields->exchangeArray($newFields);
-
         }
 	}
 }
