@@ -21,6 +21,7 @@ class ReportsController extends AppController {
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
 			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
 			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+			'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
 		];
 		$this->loadComponent('Training.Training');
 	}
