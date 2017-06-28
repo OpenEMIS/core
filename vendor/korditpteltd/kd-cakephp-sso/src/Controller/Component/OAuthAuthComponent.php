@@ -34,8 +34,8 @@ class OAuthAuthComponent extends Component
 
         $http = new Client();
         $responseBody = [];
-        if (isset($oAuthAttributes['well-known_uri']) && !empty($oAuthAttributes['well-known_uri'])) {
-            $responseBody[] = $http->get($oAuthAttributes['well-known_uri'], [], ['redirect' => 3]);
+        if (isset($oAuthAttributes['well_known_uri']) && !empty($oAuthAttributes['well_known_uri'])) {
+            $responseBody[] = $http->get($oAuthAttributes['well_known_uri'], [], ['redirect' => 3]);
         }
 
         foreach ($responseBody as $response) {

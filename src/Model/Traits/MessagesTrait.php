@@ -1935,7 +1935,26 @@ trait MessagesTrait
             'ConfigGoogle' => [
                 'code' => [
                     'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
-                ]
+                ],
+                'name' => [
+                    'ruleUnique' => 'The name for the IDP has to be unique.'
+                ],
+            ],
+            'ConfigSaml' => [
+                'code' => [
+                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
+                ],
+                'name' => [
+                    'ruleUnique' => 'The name for the IDP has to be unique.'
+                ],
+            ],
+            'ConfigOAuth' => [
+                'code' => [
+                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
+                ],
+                'name' => [
+                    'ruleUnique' => 'The name for the IDP has to be unique.'
+                ],
             ]
         ],
         'Alert' => [
