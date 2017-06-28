@@ -107,12 +107,24 @@ class DirectoriesTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-4035 Check when the submit is not save then will not add the validation.
+        $submit = isset($data['submit']) ? $data['submit'] : 'save';
+
+        if ($submit == 'save') {
+            $nationalityValidation = 'AddByAssociation';
+            $identityValidation = 'AddByAssociation';
+        } else {
+            $nationalityValidation = false;
+            $identityValidation = false;
+        }
+
         $options['associated']['Nationalities'] = [
-            'validate' => 'AddByAssociation'
+            'validate' => $nationalityValidation
         ];
         $options['associated']['Identities'] = [
-            'validate' => 'AddByAssociation'
+            'validate' => $identityValidation
         ];
+        // end POCOR-4035
     }
 
     public function onModifyConditions(Event $events, $key, $value)
