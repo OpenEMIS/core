@@ -102,6 +102,7 @@ class WorkflowBehavior extends Behavior {
             $events[$event['value']] = $event['method'];
         }
         $events['Model.WorkflowSteps.afterSave'] = 'workflowStepAfterSave';
+        $events['Model.Validation.getPendingRecords'] = 'getPendingRecords';
         return $events;
     }
 
@@ -244,7 +245,8 @@ class WorkflowBehavior extends Behavior {
         }
     }
 
-    public function afterAction(Event $event) {
+    public function afterAction(Event $event)
+    {
         if ($this->isCAv4()) {
             $extra = func_get_arg(1);
 
@@ -256,6 +258,7 @@ class WorkflowBehavior extends Behavior {
                 'data-placement' => 'bottom',
                 'escape' => false
             ];
+
             $this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
             $extra['toolbarButtons'] = $toolbarButtons;
         }
@@ -575,16 +578,27 @@ class WorkflowBehavior extends Behavior {
     }
 
     public function reorderFields() {
+        $order = 0;
         $fieldOrder = [];
         $fields = $this->_table->fields;
-        foreach ($fields as $fieldKey => $fieldAttr) {
-            if (!in_array($fieldKey, ['status_id', 'assignee_id'])) {
-                $fieldOrder[$fieldAttr['order']] = $fieldKey;
+        uasort($fields, function ($a, $b) {
+            return $a['order']-$b['order'];
+        });
+
+        foreach ($fields as $fieldName => $fieldAttr) {
+            if (!in_array($fieldName, ['status_id', 'assignee_id'])) {
+                $order = $fieldAttr['order'] > $order ? $fieldAttr['order'] : $order;
+                if (array_key_exists($order, $fieldOrder)) {
+                    $order++;
+                }
+                $fieldOrder[$order] = $fieldName;
             }
         }
+
         ksort($fieldOrder);
         array_unshift($fieldOrder, 'assignee_id');  // Set Status to second
         array_unshift($fieldOrder, 'status_id');    // Set Status to first
+
         if ($this->isCAv4()) {
             $this->_table->setFieldOrder($fieldOrder);
         } else {
@@ -740,6 +754,8 @@ class WorkflowBehavior extends Behavior {
                     ->where([
                         $this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
                     ]);
+
+                return $query->first();
             } else {
                 // if is not super admin
                 if (!empty($roleIds)) {
@@ -770,8 +786,8 @@ class WorkflowBehavior extends Behavior {
                                 ->where([
                                     $this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
                                 ]);
-                        } else {
-                            return null;
+
+                            return $query->first();
                         }
                     } else {
                         // if login user roles is allow to access current step
@@ -795,14 +811,15 @@ class WorkflowBehavior extends Behavior {
                                     $this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
                                 ]
                             );
+
+                        return $query->first();
                     }
                 }
             }
-
-            return $query->first();
-        } else {
-            return null;
         }
+
+        // default return null
+        return null;
     }
 
     public function getModalOptions(Entity $entity) {
@@ -998,96 +1015,100 @@ class WorkflowBehavior extends Behavior {
                     }
                     // End
 
-                    foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
+                    $canAddButtons = $this->checkIfCanAddButtons($isSchoolBased, $entity);
 
-                        $eventKeys = $actionObj->event_key;
-                        $eventsObject = new ArrayObject();
-                        $subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
-                        if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
-                        $eventArray = $eventsObject->getArrayCopy();
+                    if ($canAddButtons) {
+                        foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
 
-                        $eventDescription = '';
-                        $events = explode(",", $eventKeys);
-                        $actionObj->assignee_required = 1;
-                        foreach ($events as $eventKey) {
-                            // assignee is required by default unless onAssignBack event is added
-                            if ($eventKey == 'Workflow.onAssignBack') {
-                                $actionObj->assignee_required = 0;
-                            }
-                            $key = array_search($eventKey, array_column($eventArray, 'value'));
-                            if ($key !== false) {
-                                if (isset($eventArray[$key]['description']) && $eventKey != 'Workflow.onAssignBack') {
-                                    $eventDescription .= $eventArray[$key]['description'];
-                                    $eventDescription .= '<br/>';
+                            $eventKeys = $actionObj->event_key;
+                            $eventsObject = new ArrayObject();
+                            $subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
+                            if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
+                            $eventArray = $eventsObject->getArrayCopy();
+
+                            $eventDescription = '';
+                            $events = explode(",", $eventKeys);
+                            $actionObj->assignee_required = 1;
+                            foreach ($events as $eventKey) {
+                                // assignee is required by default unless onAssignBack event is added
+                                if ($eventKey == 'Workflow.onAssignBack') {
+                                    $actionObj->assignee_required = 0;
+                                }
+                                $key = array_search($eventKey, array_column($eventArray, 'value'));
+                                if ($key !== false) {
+                                    if (isset($eventArray[$key]['description']) && $eventKey != 'Workflow.onAssignBack') {
+                                        $eventDescription .= $eventArray[$key]['description'];
+                                        $eventDescription .= '<br/>';
+                                    }
                                 }
                             }
-                        }
 
-                        $visibleField = [];
-                        $actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
-                        if ($actionEvent->result) {
-                            $visibleField[] = $actionEvent->result;
-                        }
-
-                        $actionType = $actionObj->action;
-                        $button = [
-                            'id' => $actionObj->id,
-                            'name' => $actionObj->name,
-                            'description' => $actionObj->description,
-                            'next_step_id' => $actionObj->next_workflow_step_id,
-                            'next_step_name' => $actionObj->next_workflow_step->name,
-                            'assignee_required' => $actionObj->assignee_required,
-                            'comment_required' => $actionObj->comment_required,
-                            'event_description' => $eventDescription,
-                            'is_school_based' => $isSchoolBased,
-                            'modal_visible_field' => $visibleField
-                        ];
-
-
-                        $json = json_encode($button, JSON_NUMERIC_CHECK);
-
-                        $buttonAttr = [
-                            'escapeTitle' => false,
-                            'escape' => true,
-                            'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
-                            'data-toggle' => 'modal',
-                            'data-target' => '#workflowTransition',
-
-                        ];
-                        $buttonAttr = array_merge($attr, $buttonAttr);
-
-                        if (is_null($actionType)) {
-                            if (array_key_exists('class', $buttonAttr)) {
-                                unset($buttonAttr['class']);
+                            $visibleField = [];
+                            $actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
+                            if ($actionEvent->result) {
+                                $visibleField[] = $actionEvent->result;
                             }
 
-                            $actionButton = [];
-                            $actionButton['label'] = __($actionObj->name);
-                            $actionButton['url'] = '#';
-                            $actionButton['attr'] = $buttonAttr;
-                            $actionButton['attr']['title'] = __($actionObj->name);
-                            $actionButton['attr']['role'] = 'menuitem';
+                            $actionType = $actionObj->action;
+                            $button = [
+                                'id' => $actionObj->id,
+                                'name' => $actionObj->name,
+                                'description' => $actionObj->description,
+                                'next_step_id' => $actionObj->next_workflow_step_id,
+                                'next_step_name' => $actionObj->next_workflow_step->name,
+                                'assignee_required' => $actionObj->assignee_required,
+                                'comment_required' => $actionObj->comment_required,
+                                'event_description' => $eventDescription,
+                                'is_school_based' => $isSchoolBased,
+                                'modal_visible_field' => $visibleField
+                            ];
 
-                            $actionButtons[] = $actionButton;
-                        } else {
-                            if ($actionType == 0) { // Approve
-                                $approveButton = [];
-                                $approveButton['type'] = 'button';
-                                $approveButton['label'] = '<i class="fa kd-approve"></i>';
-                                $approveButton['url'] = '#';
-                                $approveButton['attr'] = $buttonAttr;
-                                $approveButton['attr']['title'] = __($actionObj->name);
 
-                                $toolbarButtons['approve'] = $approveButton;
-                            } else if ($actionType == 1) { // Reject
-                                $rejectButton = [];
-                                $rejectButton['type'] = 'button';
-                                $rejectButton['label'] = '<i class="fa kd-reject"></i>';
-                                $rejectButton['url'] = '#';
-                                $rejectButton['attr'] = $buttonAttr;
-                                $rejectButton['attr']['title'] = __($actionObj->name);
+                            $json = json_encode($button, JSON_NUMERIC_CHECK);
 
-                                $toolbarButtons['reject'] = $rejectButton;
+                            $buttonAttr = [
+                                'escapeTitle' => false,
+                                'escape' => true,
+                                'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
+                                'data-toggle' => 'modal',
+                                'data-target' => '#workflowTransition',
+
+                            ];
+                            $buttonAttr = array_merge($attr, $buttonAttr);
+
+                            if (is_null($actionType)) {
+                                if (array_key_exists('class', $buttonAttr)) {
+                                    unset($buttonAttr['class']);
+                                }
+
+                                $actionButton = [];
+                                $actionButton['label'] = __($actionObj->name);
+                                $actionButton['url'] = '#';
+                                $actionButton['attr'] = $buttonAttr;
+                                $actionButton['attr']['title'] = __($actionObj->name);
+                                $actionButton['attr']['role'] = 'menuitem';
+
+                                $actionButtons[] = $actionButton;
+                            } else {
+                                if ($actionType == 0) { // Approve
+                                    $approveButton = [];
+                                    $approveButton['type'] = 'button';
+                                    $approveButton['label'] = '<i class="fa kd-approve"></i>';
+                                    $approveButton['url'] = '#';
+                                    $approveButton['attr'] = $buttonAttr;
+                                    $approveButton['attr']['title'] = __($actionObj->name);
+
+                                    $toolbarButtons['approve'] = $approveButton;
+                                } else if ($actionType == 1) { // Reject
+                                    $rejectButton = [];
+                                    $rejectButton['type'] = 'button';
+                                    $rejectButton['label'] = '<i class="fa kd-reject"></i>';
+                                    $rejectButton['url'] = '#';
+                                    $rejectButton['attr'] = $buttonAttr;
+                                    $rejectButton['attr']['title'] = __($actionObj->name);
+
+                                    $toolbarButtons['reject'] = $rejectButton;
+                                }
                             }
                         }
                     }
@@ -1356,4 +1377,43 @@ class WorkflowBehavior extends Behavior {
 		}
 		return $filterKey;
 	}
+
+    public function getPendingRecords(Event $event, $params = [])
+    {
+        $model = $this->_table;
+        $doneStatus = self::DONE;
+        $institutionId = $params['institution_id'];
+
+        $count = $model
+            ->find()
+             ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
+            ->where([
+                $model->aliasField('institution_id') => $institutionId
+            ])
+            ->count();
+
+        return $count;
+    }
+
+    private function checkIfCanAddButtons($isSchoolBased, Entity $entity)
+    {
+        $canAddButtons = true;
+
+        if ($isSchoolBased) {
+            $isActive = true;
+            if ($entity->has('institution_id')) {
+                $Institutions = TableRegistry::get('Institution.Institutions');
+                $institutionId = $entity->institution_id;
+                $isActive = $Institutions->isActive($institutionId);
+            }
+
+            if (!$isActive) {
+                $canAddButtons = false;
+            }
+        }
+
+        return $canAddButtons;
+    }
 }

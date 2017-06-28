@@ -88,6 +88,14 @@ class AttachmentsTable extends ControllerActionTable
                 $securityRoleIds[] = $value->security_role_id;
             }
 
+            $OR = [
+                [$AttachmentsRoles->aliasField('id IS NULL')]
+            ];
+
+            if (!empty($securityRoleIds)) {
+               $OR[] = [$AttachmentsRoles->aliasField('security_role_id IN') => $securityRoleIds];
+            }
+
             $query
                 ->leftJoin(
                     [$AttachmentsRoles->alias() => $AttachmentsRoles->table()],
@@ -95,10 +103,7 @@ class AttachmentsTable extends ControllerActionTable
                 )
                 ->where([
                     'OR' => [
-                        'OR' => [ //if share not set or has the active user security roles
-                            [$AttachmentsRoles->aliasField('id IS NULL')],
-                            [$AttachmentsRoles->aliasField('security_role_id IN') => $securityRoleIds]
-                        ],
+                        'OR' => $OR,
                         $this->aliasField('created_user_id') => $userId //show to the creator
                     ]
                 ])

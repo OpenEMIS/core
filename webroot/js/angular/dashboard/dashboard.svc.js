@@ -63,6 +63,10 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.InstitutionCases'
         },
+        StaffTrainingApplicationsTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Training.TrainingApplications'
+        },
         // NON_SCHOOL_BASED Workflow
         TrainingCoursesTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
@@ -79,10 +83,6 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         StaffTrainingNeedsTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
             model: 'Staff.TrainingNeeds'
-        },
-        StaffTrainingApplicationsTable: {
-            cols: workbenchItemTypes.SCHOOL_BASED,
-            model: 'Training.TrainingApplications'
         },
         StaffLicensesTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
