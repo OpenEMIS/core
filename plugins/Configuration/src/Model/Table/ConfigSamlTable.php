@@ -12,7 +12,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Routing\Router;
 use OneLogin_Saml2_Error;
 use OneLogin_Saml2_Settings;
-
+use Cake\ORM\TableRegistry;
 
 class ConfigSamlTable extends ControllerActionTable
 {
@@ -55,6 +55,10 @@ class ConfigSamlTable extends ControllerActionTable
             ->requirePresence('allow_create_user')
             ->notEmpty('allow_create_user')
             ->add('code', 'ruleUnique', [
+                'rule' => ['validateUnique'],
+                'provider' => 'table'
+            ])
+            ->add('name', 'ruleUnique', [
                 'rule' => ['validateUnique'],
                 'provider' => 'table'
             ]);
@@ -102,6 +106,8 @@ class ConfigSamlTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+        $this->checkController();
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
         $authenticationTypeId = $this->AuthenticationTypes->getId('Saml');
         $this->field('name');
@@ -114,7 +120,7 @@ class ConfigSamlTable extends ControllerActionTable
         $this->field('idp_sso_binding', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('idp_slo', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('idp_slo_binding', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
-        $this->field('idp_x509cert', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
+        $this->field('idp_x509cert', ['type' => 'text', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('idp_cert_fingerprint', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('idp_cert_fingerprint_algorithm', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('sp_entity_id', ['type' => 'readonly', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
@@ -125,13 +131,13 @@ class ConfigSamlTable extends ControllerActionTable
         $this->field('sp_metadata', ['type' => 'hidden', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
 
 
-        $this->field('mapped_username', ['after' => 'sp_metadata']);
+        $this->field('mapped_username', ['after' => 'sp_metadata', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('allow_create_user', ['after' => 'mapped_username', 'type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
-        $this->field('mapped_first_name', ['after' => 'allow_create_user']);
-        $this->field('mapped_last_name', ['after' => 'mapped_first_name']);
-        $this->field('mapped_date_of_birth', ['after' => 'mapped_last_name']);
-        $this->field('mapped_gender', ['after' => 'mapped_mapped_date_of_birth']);
-        $this->field('mapped_role', ['after' => 'mapped_mapped_gender']);
+        $this->field('mapped_first_name', ['after' => 'allow_create_user', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
+        $this->field('mapped_last_name', ['after' => 'mapped_first_name', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
+        $this->field('mapped_date_of_birth', ['after' => 'mapped_last_name', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
+        $this->field('mapped_gender', ['after' => 'mapped_mapped_date_of_birth', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
+        $this->field('mapped_role', ['after' => 'mapped_mapped_gender', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -253,6 +259,7 @@ class ConfigSamlTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->fields['name']['type'] = 'readonly';
         $this->fields['idp_entity_id']['attr']['value'] = $entity->saml->idp_entity_id;
         $this->fields['idp_sso']['attr']['value'] = $entity->saml->idp_sso;
         $this->fields['idp_sso_binding']['attr']['value'] = $entity->saml->idp_sso_binding;
@@ -262,7 +269,10 @@ class ConfigSamlTable extends ControllerActionTable
         $this->fields['idp_cert_fingerprint']['attr']['value'] = $entity->saml->idp_cert_fingerprint;
         $this->fields['idp_cert_fingerprint_algorithm']['attr']['value'] = $entity->saml->idp_cert_fingerprint_algorithm;
         $this->fields['sp_entity_id']['attr']['value'] = $entity->saml->sp_entity_id;
+        $this->fields['sp_entity_id']['value'] = $entity->saml->sp_entity_id;
+        $this->fields['sp_acs']['value'] = $entity->saml->sp_acs;
         $this->fields['sp_acs']['attr']['value'] = $entity->saml->sp_acs;
+        $this->fields['sp_slo']['value'] = $entity->saml->sp_slo;
         $this->fields['sp_slo']['attr']['value'] = $entity->saml->sp_slo;
         $this->fields['sp_name_id_format']['attr']['value'] = $entity->saml->sp_name_id_format;
         $this->fields['sp_private_key']['attr']['value'] = $entity->saml->sp_private_key;
@@ -278,29 +288,5 @@ class ConfigSamlTable extends ControllerActionTable
     {
         $query
             ->contain(['Saml']);
-    }
-
-    public function checkController()
-    {
-        $typeValue = $this->request->query['type_value'];
-        $typeValue = Inflector::camelize($typeValue, ' ');
-        $url = $this->url('index');
-        unset($url['authentication_type']);
-        $action = $this->request->params['action'];
-        if (method_exists($this->controller, $typeValue) && $action != $typeValue && $typeValue != 'Authentication') {
-            $url['action'] = $typeValue;
-            $this->controller->redirect($url);
-        } elseif ($action != $typeValue && $action != 'index' && $typeValue != 'Authentication') {
-            $this->controller->redirect([
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'index',
-                'type' => $this->selectedType]);
-        }
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->checkController();
     }
 }

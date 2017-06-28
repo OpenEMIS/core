@@ -10,6 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
 use Cake\Routing\Router;
+use Cake\ORM\TableRegistry;
 
 class ConfigGoogleTable extends ControllerActionTable
 {
@@ -46,6 +47,10 @@ class ConfigGoogleTable extends ControllerActionTable
             ->add('code', 'ruleUnique', [
                 'rule' => ['validateUnique'],
                 'provider' => 'table'
+            ])
+            ->add('name', 'ruleUnique', [
+                'rule' => ['validateUnique'],
+                'provider' => 'table'
             ]);
     }
 
@@ -66,16 +71,18 @@ class ConfigGoogleTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+        $this->checkController();
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
         $authenticationTypeId = $this->AuthenticationTypes->getId('Google');
         $this->field('name');
         $this->field('code', ['type' => 'hidden']);
         $this->field('authentication_type_id', ['type' => 'hidden', 'value' => $authenticationTypeId]);
         $this->field('status', ['type' => 'select', 'options' => $this->getSelectOptions('general.active')]);
-        $this->field('client_id');
+        $this->field('client_id', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('client_secret', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
-        $this->field('redirect_uri', ['type' => 'readonly']);
-        $this->field('hd');
+        $this->field('redirect_uri', ['type' => 'readonly', 'visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
+        $this->field('hd', ['visible' => ['add' => 'true', 'edit' => true, 'view' => true]]);
         $this->field('mapped_username', ['after' => 'hd', 'type' => 'hidden', 'value' => 'email']);
         $this->field('allow_create_user', ['after' => 'mapped_username', 'type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
         $this->field('mapped_first_name', ['after' => 'allow_create_user', 'type' => 'hidden']);
@@ -120,6 +127,7 @@ class ConfigGoogleTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->fields['name']['type'] = 'readonly';
         $this->fields['redirect_uri']['value'] = $entity->google->redirect_uri;
         $this->fields['redirect_uri']['attr']['value'] = $entity->google->redirect_uri;
         $this->fields['client_id']['attr']['value'] = $entity->google->client_id;
@@ -137,29 +145,5 @@ class ConfigGoogleTable extends ControllerActionTable
     {
         $query
             ->contain(['Google']);
-    }
-
-    public function checkController()
-    {
-        $typeValue = $this->request->query['type_value'];
-        $typeValue = Inflector::camelize($typeValue, ' ');
-        $url = $this->url('index');
-        unset($url['authentication_type']);
-        $action = $this->request->params['action'];
-        if (method_exists($this->controller, $typeValue) && $action != $typeValue && $typeValue != 'Authentication') {
-            $url['action'] = $typeValue;
-            $this->controller->redirect($url);
-        } elseif ($action != $typeValue && $action != 'index' && $typeValue != 'Authentication') {
-            $this->controller->redirect([
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'index',
-                'type' => $this->selectedType]);
-        }
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->checkController();
     }
 }

@@ -19,7 +19,6 @@ class ConfigAuthenticationTable extends ControllerActionTable
     {
         $this->table('config_items');
         parent::initialize($config);
-        $this->addBehavior('Configuration.ConfigItems');
         $this->addBehavior('Configuration.Authentication');
         $this->toggle('remove', false);
 
@@ -49,6 +48,8 @@ class ConfigAuthenticationTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+        $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
         $this->field('visible', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
         $this->field('field_type', ['visible' => false]);
@@ -69,6 +70,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
             $this->checkController();
         }
+        $this->checkController();
     }
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)

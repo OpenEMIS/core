@@ -9,9 +9,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
-use OneLogin_Saml2_Constants;
-use OneLogin_Saml2_Error;
-use OneLogin_Saml2_Settings;
+use Cake\Utility\Inflector;
 
 class AuthenticationBehavior extends Behavior
 {
@@ -20,6 +18,7 @@ class AuthenticationBehavior extends Behavior
     public function initialize(array $config)
     {
         parent::initialize($config);
+        $this->model = $this->_table;
     }
 
     public function implementedEvents()
@@ -55,6 +54,83 @@ class AuthenticationBehavior extends Behavior
                 'type_value' => 'Authentication',
                 'type' => $type
             ]);
+        }
+    }
+
+    public function buildSystemConfigFilters()
+    {
+        $toolbarElements = [
+            ['name' => 'Configuration.idp_controls', 'data' => [], 'options' => []]
+        ];
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $typeList = $ConfigItem
+            ->find('list', [
+                'keyField' => 'type',
+                'valueField' => 'type'
+            ])
+            ->order('type')
+            ->toArray();
+        $typeOptions = array_keys($typeList);
+
+        $selectedType = $this->model->queryString('type', $typeOptions);
+        $this->selectedType = $selectedType;
+        $buffer = $typeOptions;
+        foreach ($buffer as $key => $value) {
+            $result = $ConfigItem
+                ->find()
+                ->where([
+                    $ConfigItem->aliasField('type') => $value,
+                    $ConfigItem->aliasField('visible') => 1
+                ])
+                ->count();
+            if (!$result) {
+                unset($typeOptions[$key]);
+            }
+        }
+        $this->model->request->query['type_value'] = $typeOptions[$selectedType];
+        $this->model->advancedSelectOptions($typeOptions, $selectedType);
+        $this->model->controller->set('typeOptions', $typeOptions);
+
+        $AuthenticationTypes = TableRegistry::get('SSO.AuthenticationTypes');
+        $authenticationTypeOptions = $AuthenticationTypes
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->toArray();
+
+        $authenticationTypeOptions = [0 => 'Local'] + $authenticationTypeOptions;
+
+        foreach ($authenticationTypeOptions as &$options) {
+            $options = __($options);
+        }
+        $authenticationType = $this->model->queryString('authentication_type', $authenticationTypeOptions);
+        $this->model->advancedSelectOptions($authenticationTypeOptions, $authenticationType);
+        $authenticationTypeOptions = array_values($authenticationTypeOptions);
+        $this->model->controller->set('authenticationTypeOptions', $authenticationTypeOptions);
+        $controlElement = $toolbarElements[0];
+        $controlElement['data'] = ['typeOptions' => $typeOptions];
+        $controlElement['order'] = 1;
+
+        return $controlElement;
+    }
+
+    public function checkController()
+    {
+        $typeValue = $this->model->request->query['type_value'];
+        $typeValue = Inflector::camelize($typeValue, ' ');
+        $url = $this->model->url('index');
+        unset($url['authentication_type']);
+        $action = $this->model->request->params['action'];
+        if (method_exists($this->model->controller, $typeValue) && $action != $typeValue && $typeValue != 'Authentication') {
+            $url['action'] = $typeValue;
+            $this->model->controller->redirect($url);
+        } elseif ($action != $typeValue && $action != 'index' && $typeValue != 'Authentication') {
+            $this->model->controller->redirect([
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'index',
+                'type' => $this->selectedType]);
         }
     }
 }
