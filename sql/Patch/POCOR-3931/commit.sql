@@ -10,7 +10,7 @@ CREATE TABLE `authentication_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains list of authentication type in the system ';
 
 CREATE TABLE `system_authentications` (
-  `id` INT NOT NULL,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `code` CHAR(16) NOT NULL,
   `name` VARCHAR(100) NULL,
   `authentication_type_id` INT NOT NULL COMMENT 'links to authentication_types.id',
@@ -27,7 +27,7 @@ CREATE TABLE `system_authentications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains user specified authentication';
 
 CREATE TABLE `idp_google` (
-  `system_authentication_id` INT NOT NULL COMMENT 'links to system_authenticatons.id',
+  `system_authentication_id` INT NOT NULL 'links to system_authenticatons.id',
   `client_id` VARCHAR(150) NOT NULL,
   `client_secret` VARCHAR(150) NOT NULL,
   `redirect_uri` VARCHAR(150) NOT NULL,
@@ -171,3 +171,4 @@ INSERT INTO `z_3931_config_items`
 SELECT * FROM `config_items` WHERE `id` = 1001;
 
 UPDATE `config_items` SET `name`='Enable Local Login', `code`='enable_local_login', `label`='Enable Local Login', `value`='1', `default_value`='1', `option_type`='yes_no' WHERE `id`='1001';
+
