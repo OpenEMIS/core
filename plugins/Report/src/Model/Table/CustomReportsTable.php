@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class CustomReportsTable extends AppTable
@@ -34,6 +35,12 @@ class CustomReportsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables'] = 'onExcelTemplateInitialiseQueryVariables';
 
         return $events;
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator->notEmpty('feature');
     }
 
 	public function beforeAction(Event $event)
