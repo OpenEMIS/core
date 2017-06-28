@@ -15,7 +15,7 @@ class ReportsController extends AppController {
 			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
 			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
             'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
-            'ProfessionalDevelopment' => ['className' => 'Report.ProfessionalDevelopment', 'actions' => ['index', 'add']],
+            'Trainings' 	=> ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
 			'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
@@ -79,7 +79,7 @@ class ReportsController extends AppController {
 				'Report.Textbooks' => __('Textbooks'),
 				'Report.InstitutionTextbooks' => __('Institution Textbooks')
 			];
-		} else if ($module == 'ProfessionalDevelopment') {
+		} else if ($module == 'Trainings') {
 			$options = [
 				'Report.TrainingNeeds' => __('Needs'),
 				'Report.TrainingCourses' => __('Courses'),
