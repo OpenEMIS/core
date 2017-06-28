@@ -503,7 +503,7 @@ class TrainingCoursesTable extends ControllerActionTable
         }
     }
 
-    public function checkIsSelectAll($entity)
+    private function checkIsSelectAll($entity)
     {
         // will check if the training course is a select all target population
         $TrainingCoursesTargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
