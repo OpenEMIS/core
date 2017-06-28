@@ -46,8 +46,14 @@ class StaffLeaveTable extends AppTable {
         }
 
         $query
-            ->select(['openemis_no' => 'Users.openemis_no', 'code' => 'Institutions.code'])
-            ->contain(['Users', 'Institutions'])
+            ->select(['openemis_no' => 'Users.openemis_no', 
+                    'code' => 'Institutions.code', 
+                    'area_name' => 'Areas.name',
+                    'area_code' => 'Areas.code',
+                    'area_administrative_code' => 'AreaAdministratives.code',
+                    'area_administrative_name' => 'AreaAdministratives.name'
+            ])
+            ->contain(['Users', 'Institutions', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
             ->order([$this->aliasField('date_from')]);
     }
 
@@ -74,6 +80,34 @@ class StaffLeaveTable extends AppTable {
             'field' => 'institution_id',
             'type' => 'integer',
             'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.area_code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Education Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.area',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
         ];
 
         $newFields[] = [

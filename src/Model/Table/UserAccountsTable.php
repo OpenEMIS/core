@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 
 class UserAccountsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->addBehavior('User.Account', ['userRole' => 'Preferences', 'targetField' => 'new_password']);
+		$this->addBehavior('User.Account', ['userRole' => 'Preferences', 'targetField' => 'new_password', 'permission' => ['Preferences', 'UserAccounts', 'edit']]);
 		parent::initialize($config);
 	}
 
@@ -21,7 +21,7 @@ class UserAccountsTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$tabElements = $this->controller->getUserTabElements();
-		
+
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Account');
 	}
