@@ -4,7 +4,6 @@ namespace App\Model\Table;
 use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Cache\Cache;
 use Cake\Event\Event;
@@ -61,23 +60,10 @@ class LabelsTable extends AppTable {
 		}
 	}
 
-	public function editBeforeAction(Event $event) {
-		$this->ControllerAction->field('module_name', ['type' => 'readonly']);
-		$this->ControllerAction->field('field_name', ['type' => 'readonly']);
-	}
-
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$keyFetch = $entity->module.'.'.$entity->field;
 		$keyValue = self::concatenateLabel($entity);
 		Cache::write($keyFetch, $keyValue, $this->defaultConfig);
-	}
-
-	public function beforeAction(Event $event){
-		$this->ControllerAction->field('module', ['visible' => false]);
-		$this->ControllerAction->field('field', ['visible' => false]);
-		$this->ControllerAction->field('visible', ['visible' => false]);
-		$this->ControllerAction->field('created', ['visible' => false]);
-		$this->ControllerAction->field('created_user_id', ['visible' => false]);
 	}
 
 	public function concatenateLabel($entity){
@@ -99,8 +85,9 @@ class LabelsTable extends AppTable {
 			$entity->name = null;
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$query->where(['visible' => 1]);
+	public function findIndex(Query $query, array $options) 
+	{
+		return $query->where(['visible' => 1]);
 	}
 
 	public function getDefaultConfig(){

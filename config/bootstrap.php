@@ -259,6 +259,7 @@ Plugin::load('Migrations');
 Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
 Plugin::load('Angular', ['routes' => true, 'autoload' => true]);
+Plugin::load('Page');
 
 // Localizations
 Plugin::load('Localization', ['routes' => true, 'autoload' => true]);
