@@ -246,7 +246,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             };
             var columnDefs = [];
 
-            var isMobile = document.querySelector("html").classList.contains("mobile");
+            var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
             if (isMobile) {
                 var direction = '';
             } else {
