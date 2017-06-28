@@ -5,7 +5,7 @@ INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-2470', NOW());
 DROP TABLE IF EXISTS `reports`;
 CREATE TABLE IF NOT EXISTS `reports` (
  `id` int(11) NOT NULL AUTO_INCREMENT,
- `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+ `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
  `query` text COLLATE utf8mb4_unicode_ci NOT NULL,
  `filter` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
  `excel_template_name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
