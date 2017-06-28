@@ -251,8 +251,6 @@ class PageController extends AppController
                 try {
                     $extra['result'] = false;
                     $entity = $table->patchEntity($entity, $request->data, []);
-                    pr($entity->errors());
-                    pr($request->data);die;
                     $extra['result'] = $table->save($entity);
                 } catch (Exception $ex) {
                     Log::write('error', $ex->getMessage());
