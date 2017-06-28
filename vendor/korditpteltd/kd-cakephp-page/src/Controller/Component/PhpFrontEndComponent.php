@@ -80,6 +80,8 @@ class PhpFrontEndComponent extends Component
             $errors = $entity->errors();
             if (empty($errors)) {
                 $this->Alert->success('general.add.success');
+                $url = $this->Page->getUrl(['action' => 'index']);
+                return $this->controller->redirect($url);
             } else {
                 $this->Alert->error('general.add.failed');
             }
@@ -92,12 +94,8 @@ class PhpFrontEndComponent extends Component
             $errors = $entity->errors();
             if (empty($errors)) {
                 $this->Alert->success('general.edit.success');
-                $action = ['action' => 'view'];
-                $querystring = $this->Page->getQuerystring();
-                if (!empty($querystring)) {
-                    $action['querystring'] = $querystring;
-                }
-                return $this->controller->redirect($action);
+                $url = $this->Page->getUrl(['action' => 'view']);
+                return $this->controller->redirect($url);
             } else {
                 $this->Alert->error('general.edit.failed');
             }
