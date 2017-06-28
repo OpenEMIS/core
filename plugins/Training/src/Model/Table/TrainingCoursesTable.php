@@ -12,13 +12,21 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
 
 class TrainingCoursesTable extends ControllerActionTable
 {
+    use OptionsTrait;
+
     // Workflow Steps - category
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
+
+    CONST SELECT_TARGET_POPULATIONS = 1;
+    CONST SELECT_ALL_TARGET_POPULATIONS = '-1';
+
+    private $targetPopulationSelection = [];
 
     public function initialize(array $config)
     {
@@ -86,6 +94,8 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+
+        $this->targetPopulationSelection = $this->getSelectOptions($this->aliasField('target_population_selection'));
     }
 
     public function validationDefault(Validator $validator)
@@ -207,7 +217,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $keywords = ['target_populations', 'training_providers', 'result_types'];
         foreach ($keywords as $key => $value) {
             if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
-                if (array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
+                if ($requestData[$this->alias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
                     $requestData[$this->alias()][$value] = [];
                 }
             }
@@ -222,11 +232,21 @@ class TrainingCoursesTable extends ControllerActionTable
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         unset($this->request->query['course']);
+
+        $entity->target_population_selection = self::SELECT_TARGET_POPULATIONS;
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->query['course'] = $entity->id;
+
+        $isSelectAll = $this->checkIsSelectAll($entity);
+
+        if ($isSelectAll) {
+            $entity->target_population_selection = self::SELECT_ALL_TARGET_POPULATIONS;
+        } else {
+            $entity->target_population_selection = self::SELECT_TARGET_POPULATIONS;
+        }
     }
 
     // POCOR-3989 Exclude the belongs to many model
@@ -242,6 +262,12 @@ class TrainingCoursesTable extends ControllerActionTable
     }
     // End POCOR-3989
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // select all target population
+        $this->setAllTargetPopulations($entity);
+    }
+
     public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request)
     {
         $creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
@@ -253,10 +279,36 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+            $attr['options'] = $this->targetPopulationSelection;
+            $attr['select'] = false;
+            $attr['onChangeReload'] = true;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
+    {
+        $requestData = $request->data;
+        $entity = $attr['entity'];
+        $staffPositionTitleOptions = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+
+        $targetPopulationSelection = null;
+        if (isset($requestData[$this->alias()]['target_population_selection'])) {
+            $targetPopulationSelection = $requestData[$this->alias()]['target_population_selection'];
+        } else {
+            $targetPopulationSelection = $entity->target_population_selection;
+        }
+
+        if ($targetPopulationSelection == self::SELECT_ALL_TARGET_POPULATIONS) {
+            $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
+            $attr['attr']['value'] = __('All Target Populations Selected');
+            $attr['type'] = 'readonly';
+        } else {
+            $attr['options'] = $staffPositionTitleOptions;
         }
 
         return $attr;
@@ -310,11 +362,17 @@ class TrainingCoursesTable extends ControllerActionTable
     public function setupFields(Entity $entity)
     {
         $this->field('credit_hours', ['type' => 'select']);
+        $this->field('target_population_selection', [
+            'type' => 'select',
+            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
+            'entity' => $entity
+        ]);
         $this->field('target_populations', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select Target Populations'),
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
-            'attr' => ['required' => true] // to add red asterisk
+            'attr' => ['required' => true], // to add red asterisk
+            'entity' => $entity
         ]);
         $this->field('training_providers', [
             'type' => 'chosenSelect',
@@ -342,7 +400,7 @@ class TrainingCoursesTable extends ControllerActionTable
         // Field order
         $this->setFieldOrder([
             'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months',
-            'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
+            'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id', 'target_population_selection',
             'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types',
             'file_name', 'file_content'
         ]);
@@ -407,5 +465,57 @@ class TrainingCoursesTable extends ControllerActionTable
             });
 
         return $query;
+    }
+
+    public function onGetTargetPopulations(Event $event, Entity $entity)
+    {
+        // Select all target populations
+        $isSelectAll = $this->checkIsSelectAll($entity);
+
+        if ($this->action == 'view' && $isSelectAll) {
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $list = $StaffPositionTitles
+                ->find('list')
+                ->find('order')
+                ->toArray();
+
+            return (!empty($list))? implode(', ', $list) : ' ';
+        }
+    }
+
+    private function setAllTargetPopulations($entity)
+    {
+        if ($entity->has('target_population_selection') && $entity->target_population_selection == self::SELECT_ALL_TARGET_POPULATIONS) {
+            $TrainingCoursesTargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
+            $entityId = $entity->id;
+
+            $trainingCoursesTargetPopulationData = [
+                'training_course_id' => $entityId,
+                'target_population_id' => self::SELECT_ALL_TARGET_POPULATIONS
+            ];
+
+            $trainingCoursesTargetPopulationEntity = $TrainingCoursesTargetPopulations->newEntity($trainingCoursesTargetPopulationData);
+
+            if ($TrainingCoursesTargetPopulations->save($trainingCoursesTargetPopulationEntity)) {
+            } else {
+                $TrainingCoursesTargetPopulations->log($trainingCoursesTargetPopulationEntity->errors(), 'debug');
+            }
+        }
+    }
+
+    private function checkIsSelectAll($entity)
+    {
+        // will check if the training course is a select all target population
+        $TrainingCoursesTargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
+
+        $isSelectAll = $TrainingCoursesTargetPopulations
+            ->find()
+            ->where([
+                $TrainingCoursesTargetPopulations->aliasField('training_course_id') => $entity->id,
+                $TrainingCoursesTargetPopulations->aliasField('target_population_id') => self::SELECT_ALL_TARGET_POPULATIONS
+            ])
+            ->count();
+
+        return $isSelectAll;
     }
 }
