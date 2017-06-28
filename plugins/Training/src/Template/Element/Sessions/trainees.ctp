@@ -15,8 +15,10 @@
 			'plugin' => $this->request->params['plugin'],
 		    'controller' => $this->request->params['controller'],
 		    'action' => $this->request->params['action'],
-		    'ajaxTraineeAutocomplete'
+		    'ajaxTraineeAutocomplete',
+            $this->ControllerAction->paramsEncode(['id' => $data->id]) // encode the ID
 		]);
+
 		$alias = $ControllerAction['table']->alias();
 
 		echo $this->Form->input("$alias.trainee_search", [
