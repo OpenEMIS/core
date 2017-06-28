@@ -217,7 +217,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $keywords = ['target_populations', 'training_providers', 'result_types'];
         foreach ($keywords as $key => $value) {
             if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
-                if (is_array($requestData[$this->alias()][$value]) && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
+                if ($requestData[$this->alias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
                     $requestData[$this->alias()][$value] = [];
                 }
             }
@@ -232,11 +232,21 @@ class TrainingCoursesTable extends ControllerActionTable
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         unset($this->request->query['course']);
+
+        $entity->target_population_selection = self::SELECT_TARGET_POPULATIONS;
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->query['course'] = $entity->id;
+
+        $isSelectAll = $this->checkIsSelectAll($entity);
+
+        if ($isSelectAll) {
+            $entity->target_population_selection = self::SELECT_ALL_TARGET_POPULATIONS;
+        } else {
+            $entity->target_population_selection = self::SELECT_TARGET_POPULATIONS;
+        }
     }
 
     // POCOR-3989 Exclude the belongs to many model
@@ -272,64 +282,33 @@ class TrainingCoursesTable extends ControllerActionTable
     public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-
-            if (!$entity->has('target_population_selection') && $entity->has('target_populations') && empty($entity->target_populations)) {
-                $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
-                $attr['attr']['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
-                $entity->target_population_selection = self::SELECT_ALL_TARGET_POPULATIONS;
-            }
-
             $attr['options'] = $this->targetPopulationSelection;
             $attr['select'] = false;
-            $attr['onChangeReload'] = 'changeTargetPopulationSelection';
+            $attr['onChangeReload'] = true;
         }
 
         return $attr;
     }
 
-    public function addEditOnChangeTargetPopulationSelection(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        // target population selection
-        if (array_key_exists('target_population_selection', $data[$this->alias()])) {
-            $targetPopulationSelectionId = $data[$this->alias()]['target_population_selection'];
-            $entity->target_population_selection = $targetPopulationSelectionId;
-        }
-
-        // clear the target population when Select all options is chosen
-        if ($data[$this->alias()]['target_population_selection'] == self::SELECT_ALL_TARGET_POPULATIONS) {
-            unset($data[$this->alias()]['target_populations']);
-        }
-    }
-
     public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
     {
-        $requestData = $this->request->data;
+        $requestData = $request->data;
         $entity = $attr['entity'];
-        $options = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
-        $attr['options'] = $options;
+        $staffPositionTitleOptions = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
 
-        if ($action == 'add') {
-            $targetPopulations = [];
+        $targetPopulationSelection = null;
+        if (isset($requestData[$this->alias()]['target_population_selection'])) {
+            $targetPopulationSelection = $requestData[$this->alias()]['target_population_selection'];
+        } else {
+            $targetPopulationSelection = $entity->target_population_selection;
+        }
 
-            if (!empty($requestData) && array_key_exists('target_populations', $requestData[$this->alias()]) && !empty($requestData[$this->alias()]['target_populations']['_ids'])) {
-                $targetPopulations = $requestData[$this->alias()]['target_populations']['_ids'];
-            }
-
-            if (array_key_exists($this->alias(), $requestData) && $requestData[$this->alias()]['target_population_selection'] == self::SELECT_ALL_TARGET_POPULATIONS) {
-                $targetPopulations = []; // reset the target population
-                $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
-                $attr['attr']['value'] = __('All Target Populations Selected');
-                $attr['type'] = 'readonly';
-            }
-        } else if ($action == 'edit') {
-            $targetPopulationSelectionId = !empty($entity->target_population_selection) ? $entity->target_population_selection : self::SELECT_TARGET_POPULATIONS;
-
-            if ($targetPopulationSelectionId == self::SELECT_ALL_TARGET_POPULATIONS) {
-                $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
-                $attr['attr']['value'] = __('All Target Populations Selected');
-                $attr['type'] = 'readonly';
-            }
+        if ($targetPopulationSelection == self::SELECT_ALL_TARGET_POPULATIONS) {
+            $attr['value'] = self::SELECT_ALL_TARGET_POPULATIONS;
+            $attr['attr']['value'] = __('All Target Populations Selected');
+            $attr['type'] = 'readonly';
+        } else {
+            $attr['options'] = $staffPositionTitleOptions;
         }
 
         return $attr;
@@ -488,6 +467,22 @@ class TrainingCoursesTable extends ControllerActionTable
         return $query;
     }
 
+    public function onGetTargetPopulations(Event $event, Entity $entity)
+    {
+        // Select all target populations
+        $isSelectAll = $this->checkIsSelectAll($entity);
+
+        if ($this->action == 'view' && $isSelectAll) {
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $list = $StaffPositionTitles
+                ->find('list')
+                ->find('order')
+                ->toArray();
+
+            return (!empty($list))? implode(', ', $list) : ' ';
+        }
+    }
+
     private function setAllTargetPopulations($entity)
     {
         if ($entity->has('target_population_selection') && $entity->target_population_selection == self::SELECT_ALL_TARGET_POPULATIONS) {
@@ -508,21 +503,19 @@ class TrainingCoursesTable extends ControllerActionTable
         }
     }
 
-    public function onGetTargetPopulations(Event $event, Entity $entity)
+    public function checkIsSelectAll($entity)
     {
-        // Select all target populations
-        if ($this->action == 'view' && empty($entity->target_populations)) {
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-            $data = $StaffPositionTitles->find()
-                ->order([$StaffPositionTitles->aliasField('order')])
-                ->all();
+        // will check if the training course is a select all target population
+        $TrainingCoursesTargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
 
-            $targetPopulations = [];
-            foreach ($data as $position) {
-                $targetPopulations[] = $position->name;
-            }
+        $isSelectAll = $TrainingCoursesTargetPopulations
+            ->find()
+            ->where([
+                $TrainingCoursesTargetPopulations->aliasField('training_course_id') => $entity->id,
+                $TrainingCoursesTargetPopulations->aliasField('target_population_id') => self::SELECT_ALL_TARGET_POPULATIONS
+            ])
+            ->count();
 
-            return (!empty($targetPopulations))? implode(', ', $targetPopulations): ' ';
-        }
+        return $isSelectAll;
     }
 }
