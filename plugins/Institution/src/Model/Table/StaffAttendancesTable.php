@@ -259,8 +259,8 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Attendance');
 
-        $this->field('openemis_no');
-        $this->field('staff_id', ['order' => 2]);
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('staff_id', ['order' => 2, 'sort' => ['field' => 'Users.first_name']]);
 
         $this->field('FTE', ['visible' => false]);
         $this->field('start_date', ['visible' => false]);
@@ -792,6 +792,13 @@ class StaffAttendancesTable extends ControllerActionTable
                 $endDate = $startDate;
             }
 
+            // sort
+            $sortList = ['Users.openemis_no', 'Users.first_name'];
+            if (array_key_exists('sortWhitelist', $extra['options'])) {
+                $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+            }
+            $extra['options']['sortWhitelist'] = $sortList;
+
             $query
                 ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
                 ->find('inDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
@@ -799,8 +806,15 @@ class StaffAttendancesTable extends ControllerActionTable
                 ->contain(['Users'])
                 ->find('withAbsence', ['date' => $this->selectedDate])
                 ->where([$this->aliasField('institution_id') => $institutionId])
-                ->distinct()
-                ;
+                ->distinct();
+
+            // POCOR-3324 Check if no sorting will be sort by users first name
+            $requestQuery = $this->request->query;
+            $sortable = array_key_exists('sort', $requestQuery) ? true : false;
+            if (!$sortable) {
+                $query->order(['Users.first_name' => 'ASC']); // no sorting request sort by Users.first_name
+            }
+            // end POCOR-3324
 
             $InstitutionArray = [];
 
@@ -877,6 +891,12 @@ class StaffAttendancesTable extends ControllerActionTable
     {
         $dataCount = $resultSet->count();
 
+        // POCOR-3983 get the institution status
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        // end of getting the institution status
+
         $btnTemplate = [
             'type' => 'button',
             'attr' => [
@@ -922,8 +942,8 @@ class StaffAttendancesTable extends ControllerActionTable
                         unset($extra['toolbarButtons']['back']);
                     }
 
-                    // Edit button, only can edit if there is data
-                    if ($dataCount > 0) {
+                    // Edit button, only can edit if there is data and if the institution is active
+                    if ($dataCount > 0 && $isActive) {
                         $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
                         $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Edit');
                         $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-edit"></i>';
@@ -999,9 +1019,7 @@ class StaffAttendancesTable extends ControllerActionTable
                     'type' => 'LEFT',
                     'conditions' => $conditions
                 ]
-            ])
-            ->order(['Users.openemis_no'])
-            ;
+            ]);
     }
 
     public function indexEdit()

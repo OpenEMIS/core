@@ -52,11 +52,15 @@ class StudentAbsencesTable extends AppTable {
 			->select([
 				'openemis_no' => 'Users.openemis_no',
 				'code' => 'Institutions.code',
+				'area_code' => 'Areas.code',
 				'area_name' => 'Areas.name',
+				'area_administrative_code' => 'AreaAdministratives.code',
+				'area_administrative_name' => 'AreaAdministratives.name',
 				'area_level_name' => 'AreaLevels.name'
 			])
 			->contain([
-				'Institutions.Areas.AreaLevels'
+				'Institutions.Areas.AreaLevels',
+				'Institutions.AreaAdministratives'
 			])
 			->order([
 				$this->aliasField('student_id'),
@@ -92,12 +96,33 @@ class StudentAbsencesTable extends AppTable {
 			'type' => 'string',
 			'label' => ''
 		];
-		$newArray[] = [
-			'key' => 'Areas.name',
-			'field' => 'area_name',
-			'type' => 'string',
-			'label' => __('Area')
-		];
+        $newArray[] = [
+            'key' => 'Areas.code',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => __('Area Education Code')
+        ];
+
+        $newArray[] = [
+            'key' => 'Areas.name',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
+
+        $newArray[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newArray[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
+        ];
 		$newArray[] = [
 			'key' => 'AreaLevels.name',
 			'field' => 'area_level_name',

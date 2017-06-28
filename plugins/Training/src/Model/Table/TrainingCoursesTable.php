@@ -31,7 +31,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->belongsTo('TrainingLevels', ['className' => 'Training.TrainingLevels', 'foreignKey' => 'training_level_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'training_course_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('TargetPopulations', [
             'className' => 'Institution.StaffPositionTitles',
             'joinTable' => 'training_courses_target_populations',
@@ -228,6 +228,19 @@ class TrainingCoursesTable extends ControllerActionTable
     {
         $this->request->query['course'] = $entity->id;
     }
+
+    // POCOR-3989 Exclude the belongs to many model
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->TargetPopulations->alias(),
+            $this->TrainingProviders->alias(),
+            $this->CoursePrerequisites->alias(),
+            $this->Specialisations->alias(),
+            $this->ResultTypes->alias(),
+        ];
+    }
+    // End POCOR-3989
 
     public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request)
     {

@@ -37,6 +37,7 @@ class AwardsTable extends ControllerActionTable
 				$this->controller->set('selectedAction', $this->alias());
 				break;
 			case 'Directories':
+			case 'Profiles':
 				$type = $this->request->query('type');
 				$options['type'] = $type;
 				if ($type == 'student') {
