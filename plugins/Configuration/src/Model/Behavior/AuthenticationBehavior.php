@@ -25,28 +25,35 @@ class AuthenticationBehavior extends Behavior
     public function implementedEvents()
     {
         $events = [
-            'ControllerAction.Model.beforeAction' => 'beforeAction'
+            'ControllerAction.Model.afterAction' => 'afterAction'
         ];
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
         $authenticationType = $event->subject()->request->query('authentication_type');
+        $type = $event->subject()->request->query('type');
+        $typeValue = 'Authentication';
         $model = $this->_table;
-        if ($authenticationType) {
+        $alias = str_replace('Config', '', $model->alias());
+        if ($authenticationType && $authenticationType != $alias) {
             return $model->controller->redirect([
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
                 'action' => 'Auth'.ucfirst(strtolower($authenticationType)),
-                'index'
+                'authentication_type' => $authenticationType,
+                'type_value' => 'Authentication',
+                'type' => $type
             ]);
-        } elseif ($model->table() != 'config_items') {
+        } elseif ($model->table() != 'config_items' && !$authenticationType) {
             return $model->controller->redirect([
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
-                'action' => 'Authentications',
-                'index'
+                'action' => 'Authentication',
+                'view',
+                'type_value' => 'Authentication',
+                'type' => $type
             ]);
         }
     }

@@ -1931,6 +1931,11 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This webhook name already exists in the system',
                 ],
+            ],
+            'ConfigGoogle' => [
+                'code' => [
+                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
+                ]
             ]
         ],
         'Alert' => [

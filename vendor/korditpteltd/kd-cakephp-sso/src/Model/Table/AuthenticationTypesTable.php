@@ -12,4 +12,18 @@ class AuthenticationTypesTable extends Table
         parent::initialize($config);
         $this->hasMany('SystemAuthentications', ['className' => 'SSO.SystemAuthentications']);
     }
+
+    public function getId($authenticationName)
+    {
+        return $this
+            ->find()
+            ->select([
+                $this->aliasField('id')
+            ])
+            ->where([
+                $this->aliasField('name') => $authenticationName
+            ])
+            ->first()
+            ->id;
+    }
 }
