@@ -28,6 +28,9 @@
     "autoload": {
         "psr-4": {
             "SSO\\": "src"
-        }
+        },
+        "classmap": [
+            "src/"
+        ]
     }
 }

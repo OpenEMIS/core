@@ -60,8 +60,6 @@ class AppController extends Controller
     {
         parent::initialize();
 
-
-
         // ControllerActionComponent must be loaded before AuthComponent for it to work
         $this->loadComponent('ControllerAction.ControllerAction', [
             'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
@@ -78,13 +76,13 @@ class AppController extends Controller
                 ],
             ],
             'loginAction' => [
-                'plugin' => null,
-                'controller' => 'Login',
+                'plugin' => 'User',
+                'controller' => 'Users',
                 'action' => 'login'
             ],
             'logoutRedirect' => [
-                'plugin' => null,
-                'controller' => 'Login',
+                'plugin' => 'User',
+                'controller' => 'Users',
                 'action' => 'login'
             ]
         ]);
