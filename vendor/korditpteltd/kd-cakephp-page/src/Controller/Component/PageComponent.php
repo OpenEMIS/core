@@ -464,7 +464,7 @@ class PageComponent extends Component
                     if ($attr['null'] === false // not nullable
                         && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
                         && $key !== 'id' // not a primary key
-                        ) // fields not excluded
+                        && !in_array($key, $this->excludedFields)) // fields not excluded
                     {
                         $validator->add($key, 'notBlank', ['rule' => 'notBlank']);
                         if ($this->isForeignKey($table, $key)) {
