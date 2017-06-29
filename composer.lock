@@ -393,7 +393,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-                "reference": "e5b6aebb7fb09d7999e8c0999a36c6ce654c5321"
+                "reference": "04e3180809b7b0784e255fdaea970c6cb08ce114"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4"
@@ -427,7 +427,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
             },
-            "time": "2017-06-29 06:25:17"
+            "time": "2017-06-29 06:33:54"
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
