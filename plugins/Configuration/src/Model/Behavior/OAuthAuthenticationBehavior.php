@@ -33,15 +33,15 @@ class OAuthAuthenticationBehavior extends Behavior
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $entity->errors($entity->errors('o_auth'), null, true);
-        $this->model->field('client_id', ['attr' => ['required' => true]]);
+        $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
         $this->model->field('redirect_uri', ['attr' => ['required' => true], 'type' => 'readonly']);
-        $this->model->field('well_known_uri');
+        $this->model->field('well_known_uri', ['attr' => ['label' => __('Well-known Uri')]]);
         $this->model->field('authorization_endpoint', ['attr' => ['required' => true]]);
         $this->model->field('token_endpoint', ['attr' => ['required' => true]]);
-        $this->model->field('userinfo_endpoint', ['attr' => ['required' => true]]);
+        $this->model->field('userinfo_endpoint', ['attr' => ['required' => true, 'label' => __('User Information Endpoint')]]);
         $this->model->field('issuer', ['attr' => ['required' => true]]);
-        $this->model->field('jwks_uri', ['attr' => ['required' => true]]);
+        $this->model->field('jwks_uri', ['attr' => ['required' => true, 'label' => __('JSON Web Token Keys Uri')]]);
         if ($entity->errors('code')) {
             $code = uniqid('IDP');
             $this->model->request->data[$this->alias()]['code'] = $code;
@@ -59,27 +59,27 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->fields['mapped_gender']['type'] = 'string';
         $this->model->fields['mapped_role']['type'] = 'string';
 
-        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'mapped_username', 'allow_create_user', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
+        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->model->field('client_id');
+        $this->model->field('client_id', ['attr' => ['label' => __('Client ID')]]);
         $this->model->field('client_secret');
         $this->model->field('redirect_uri');
-        $this->model->field('well_known_uri');
+        $this->model->field('well_known_uri', ['attr' => ['label' => __('Well-Known Uri')]]);
         $this->model->field('authorization_endpoint');
         $this->model->field('token_endpoint');
-        $this->model->field('userinfo_endpoint');
+        $this->model->field('userinfo_endpoint', ['attr' => ['label' => __('User Information Endpoint')]]);
         $this->model->field('issuer');
-        $this->model->field('jwks_uri');
+        $this->model->field('jwks_uri', ['attr' => ['label' => __('JSON Web Token Keys Uri')]]);
         $this->model->fields['mapped_username']['type'] = 'string';
         $this->model->fields['mapped_first_name']['type'] = 'string';
         $this->model->fields['mapped_last_name']['type'] = 'string';
         $this->model->fields['mapped_date_of_birth']['type'] = 'string';
         $this->model->fields['mapped_gender']['type'] = 'string';
         $this->model->fields['mapped_role']['type'] = 'string';
-        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'mapped_username', 'allow_create_user', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
+        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
