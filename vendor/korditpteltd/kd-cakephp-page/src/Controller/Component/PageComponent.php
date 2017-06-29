@@ -39,7 +39,7 @@ class PageComponent extends Component
     private $limitOptions = [10 => 10, 20 => 20, 30 => 30, 40 => 40, 50 => 50];
     private $autoContain = true;
     private $autoRender = true;
-    private $allowedActions = [
+    private $actions = [
         'index' => true,
         'add' => true,
         'view' => true,
@@ -114,7 +114,7 @@ class PageComponent extends Component
                 $controller->set('tabs', $this->tabsToArray());
             }
 
-            // $controller->set('allowedActions', $this->allowedActions);
+            $controller->set('actions', $this->actions);
 
             if ($this->hasMainTable()) {
                 $table = $this->getMainTable();
@@ -139,8 +139,16 @@ class PageComponent extends Component
     public function disable($actions)
     {
         foreach ($actions as $action) {
-            $this->allowedActions[$action] = false;
+            // $this->actions[$action] = false;
+            if (array_key_exists($action, $this->actions)) {
+                unset($this->actions[$action]);
+            }
         }
+    }
+
+    public function action($action, $attr = [])
+    {
+        $this->actions[$action] = $attr;
     }
 
     public function throwMissingActionException()
@@ -156,7 +164,7 @@ class PageComponent extends Component
 
     public function isActionAllowed($action)
     {
-        return $this->allowedActions[$action];
+        return array_key_exists($action, $this->actions) && $this->actions[$action];
     }
 
     public function isAutoContain()

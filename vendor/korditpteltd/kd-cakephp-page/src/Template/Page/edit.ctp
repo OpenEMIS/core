@@ -1,6 +1,13 @@
 <?php
 $this->extend('Page.Layout/container');
 
+$this->start('toolbar');
+
+echo $this->element('Page.button', ['url' => ['action' => 'view', $data->primaryKey], 'iconClass' => 'fa kd-back', 'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']]);
+echo $this->element('Page.button', ['url' => ['action' => 'index'], 'iconClass' => 'fa kd-lists', 'linkOptions' => ['title' => __('List')]]);
+
+$this->end();
+
 $this->start('contentBody');
 ?>
 
