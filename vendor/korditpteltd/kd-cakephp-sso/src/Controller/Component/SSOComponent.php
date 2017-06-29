@@ -3,6 +3,7 @@ namespace SSO\Controller\Component;
 
 use ArrayObject;
 use Cake\Controller\Component;
+use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 
@@ -10,6 +11,7 @@ class SSOComponent extends Component
 {
     private $controller;
     private $authType = 'Local';
+    public $components = ['Auth'];
 
     protected $_defaultConfig = [
         'excludedAuthType' => [],
@@ -41,6 +43,13 @@ class SSOComponent extends Component
         $this->session = $this->request->session();
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
+        return $events;
+    }
+
     public function getAuthenticationType()
     {
         return $this->authType;
@@ -56,8 +65,8 @@ class SSOComponent extends Component
                 ->where([
                     $SystemAuthenticationsTable->aliasField('code') => $code
                 ])
-                ->first()
-                ->toArray();
+                ->hydrate(false)
+                ->first();
             if (!empty($attribute) && $attribute['status']) {
                 $authAttribute = $attribute[Inflector::underscore($authenticationType)];
                 unset($attribute[strtolower($authenticationType)]);
@@ -82,5 +91,16 @@ class SSOComponent extends Component
             }
         }
         $this->controller->redirect($this->_config['homePageURL']);
+    }
+
+    public function afterAuthenticate(Event $event, ArrayObject $extra)
+    {
+        $user = $this->Auth->user();
+        if ($user) {
+            $this->request->trustProxy = true;
+            $clientIp = $this->request->clientIp();
+            $sessionId = $this->request->session()->id();
+            TableRegistry::get('SSO.SecurityUserLogins')->addLoginEntry($user['id'], $clientIp, $sessionId);
+        }
     }
 }

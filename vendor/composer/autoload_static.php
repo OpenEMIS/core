@@ -4330,6 +4330,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'SSO\\Model\\Table\\IdpGoogleTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpGoogleTable.php',
         'SSO\\Model\\Table\\IdpOauthTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpOAuthTable.php',
         'SSO\\Model\\Table\\IdpSamlTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpSamlTable.php',
+        'SSO\\Model\\Table\\SecurityUserLoginsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserLoginsTable.php',
         'SSO\\Model\\Table\\SecurityUserSessionsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserSessionsTable.php',
         'SSO\\Model\\Table\\SingleLogoutTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SingleLogoutTable.php',
         'SSO\\Model\\Table\\SystemAuthenticationsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SystemAuthenticationsTable.php',

@@ -2,16 +2,15 @@
 namespace SSO\Controller\Component;
 
 use ArrayObject;
-use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Security;
-use Google_Client;
 use Google_Auth_Exception;
+use Google_Client;
 
 class GoogleAuthComponent extends Component
 {
-
     private $clientId;
     private $clientSecret;
     private $redirectUri;

@@ -1,7 +1,6 @@
 <?php
 namespace SSO\Model\Table;
 
-use ArrayObject;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
