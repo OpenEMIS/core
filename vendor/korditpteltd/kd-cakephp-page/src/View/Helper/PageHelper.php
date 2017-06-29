@@ -201,7 +201,7 @@ class PageHelper extends Helper
         return $toArray ? $url : $this->Url->build($url);
     }
 
-    private function getValue(Entity $entity, $field)
+    private function getValue($entity, $field)
     {
         $value = '';
         $controlType = $field['controlType'];
@@ -219,7 +219,12 @@ class PageHelper extends Helper
                 }
             }
         } else {
-            $value = $entity->$field['name'];
+            $key = $field['name'];
+            if ($entity instanceof Entity && $entity->has($key)) {
+                $value = $entity->$key;
+            } elseif (is_array($entity) && array_key_exists($key, $entity)) {
+                $value = $entity[$key];
+            }
         }
 
         if (in_array($controlType, ['date', 'time']) && array_key_exists('format', $field) && !empty($value)) {
