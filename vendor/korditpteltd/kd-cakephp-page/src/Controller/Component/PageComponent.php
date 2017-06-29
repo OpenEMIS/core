@@ -408,6 +408,8 @@ class PageComponent extends Component
         $schema = $table->schema();
         $columns = $schema->columns();
 
+        $this->attachDefaultValidation($table);
+
         foreach ($columns as $columnName) {
             if (!in_array($columnName, $this->excludedFields)) {
                 $attributes = $schema->column($columnName);
@@ -435,6 +437,42 @@ class PageComponent extends Component
         $primaryKey = $table->primaryKey();
         if (!is_array($primaryKey)) {
             $this->get($primaryKey)->setControlType('hidden');
+        }
+    }
+
+    public function attachDefaultValidation(Table $table)
+    {
+        $validator = $table->validator();
+        $schema = $table->schema();
+        $columns = $schema->columns();
+
+        foreach ($columns as $key) {
+            $attr = $schema->column($key);
+            if ($validator->hasField($key)) {
+                $set = $validator->field($key);
+
+                if (!$set->isEmptyAllowed()) {
+                    $set->add('notBlank', ['rule' => 'notBlank']);
+                }
+                if (!$set->isPresenceRequired()) {
+                    if ($this->isForeignKey($table, $key)) {
+                        $validator->requirePresence($key);
+                    }
+                }
+            } else { // field not presence in validator
+                if (array_key_exists('null', $attr)) {
+                    if ($attr['null'] === false // not nullable
+                        && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
+                        && $key !== 'id' // not a primary key
+                        && !in_array($key, $this->excludedFields)) // fields not excluded
+                    {
+                        $validator->add($key, 'notBlank', ['rule' => 'notBlank']);
+                        if ($this->isForeignKey($table, $key)) {
+                            $validator->requirePresence($key);
+                        }
+                    }
+                }
+            }
         }
     }
 
