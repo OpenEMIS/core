@@ -91,7 +91,7 @@ class AuthenticationBehavior extends Behavior
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
 
-        $authenticationTypeOptions = [0 => 'Local', 'SystemAuthentications' => __('Other IDPs')];
+        $authenticationTypeOptions = [0 => 'Local', 'SystemAuthentications' => __('Other Identity Providers')];
 
         foreach ($authenticationTypeOptions as &$options) {
             $options = __($options);
