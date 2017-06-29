@@ -2,12 +2,13 @@
 $url = ['plugin' => $this->request->params['plugin'], 'controller' => $this->request->params['controller']];
 
 $actionItem = '<li role="presentation"><a href="%s" role="menuitem" tabindex="-1"><i class="%s"></i>%s</a></li>';
+$primaryKey = !is_array($data) ? $data->primaryKey : $data['primaryKey']; // $data may be Entity or array
 
 $rowActions = [];
 
 if (array_key_exists('view', $actions)) {
     $rowActions[] = [
-        'href' => $this->Page->getUrl(array_merge($url, ['action' => 'view', $entity->primaryKey])),
+        'href' => $this->Page->getUrl(array_merge($url, ['action' => 'view', $primaryKey])),
         'icon' => 'fa fa-eye',
         'title' => __('View')
     ];
@@ -15,7 +16,7 @@ if (array_key_exists('view', $actions)) {
 
 if (array_key_exists('edit', $actions)) {
     $rowActions[] = [
-        'href' => $this->Page->getUrl(array_merge($url, ['action' => 'edit', $entity->primaryKey])),
+        'href' => $this->Page->getUrl(array_merge($url, ['action' => 'edit', $primaryKey])),
         'icon' => 'fa fa-pencil',
         'title' => __('Edit')
     ];
@@ -23,15 +24,11 @@ if (array_key_exists('edit', $actions)) {
 
 if (array_key_exists('delete', $actions)) {
     $rowActions[] = [
-        'href' => $this->Page->getUrl(array_merge($url, ['action' => 'delete', $entity->primaryKey])),
+        'href' => $this->Page->getUrl(array_merge($url, ['action' => 'delete', $primaryKey])),
         'icon' => 'fa fa-trash',
         'title' => __('Delete')
     ];
 }
-
-$view = $this->Page->getUrl(array_merge($url, ['action' => 'view', $entity->primaryKey]));
-$edit = $this->Page->getUrl(array_merge($url, ['action' => 'edit', $entity->primaryKey]));
-$delete = $this->Page->getUrl(array_merge($url, ['action' => 'delete', $entity->primaryKey]));
 ?>
 
 <div class="dropdown">
