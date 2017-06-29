@@ -41,12 +41,12 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         return $validator
-            ->requirePresence('name', 'create')
-            ->notEmpty('name', [], 'create')
-            ->requirePresence('status', 'create')
-            ->notEmpty('status', [], 'create')
-            ->requirePresence('code', 'create')
-            ->notEmpty('code', [], 'create')
+            ->requirePresence('name')
+            ->notEmpty('name')
+            ->requirePresence('status')
+            ->add('status', 'ruleLocalLogin', [
+                'rule' => 'checkLocalLogin'
+            ])
             ->requirePresence('mapped_username')
             ->notEmpty('mapped_username')
             ->requirePresence('allow_create_user')
@@ -158,7 +158,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['code'] = uniqid('IDP');
+        $this->request->data[$this->alias()]['code'] = $entity->code;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

@@ -3984,6 +3984,7 @@ return array(
     'SSO\\Model\\Table\\IdpGoogleTable' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpGoogleTable.php',
     'SSO\\Model\\Table\\IdpOauthTable' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpOAuthTable.php',
     'SSO\\Model\\Table\\IdpSamlTable' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpSamlTable.php',
+    'SSO\\Model\\Table\\SecurityUserLoginsTable' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserLoginsTable.php',
     'SSO\\Model\\Table\\SecurityUserSessionsTable' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserSessionsTable.php',
     'SSO\\Model\\Table\\SingleLogoutTable' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SingleLogoutTable.php',
     'SSO\\Model\\Table\\SystemAuthenticationsTable' => $vendorDir . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SystemAuthenticationsTable.php',

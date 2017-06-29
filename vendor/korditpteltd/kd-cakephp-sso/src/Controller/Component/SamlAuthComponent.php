@@ -2,10 +2,9 @@
 namespace SSO\Controller\Component;
 
 use ArrayObject;
-use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
-use Cake\Core\Configure;
+use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
 use OneLogin_Saml2_Auth;
@@ -13,7 +12,6 @@ use OneLogin_Saml2_Error;
 
 class SamlAuthComponent extends Component
 {
-
     public $components = ['Auth'];
     private $saml;
     private $clientId;

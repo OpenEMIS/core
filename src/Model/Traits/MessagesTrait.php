@@ -1921,6 +1921,17 @@ trait MessagesTrait
                     'ruleLocalLogin' => 'You may only turn local login off if there are additional authentication method configured.'
                 ]
             ],
+            'ConfigSystemAuthentications' => [
+                'status' => [
+                    'ruleLocalLogin' => 'You may only turn local login off if there are additional authentication method configured.'
+                ],
+                'code' => [
+                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
+                ],
+                'name' => [
+                    'ruleUnique' => 'The name for the IDP has to be unique.'
+                ],
+            ],
             'ConfigWebhooks' => [
                 'triggered_event' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'
@@ -1930,30 +1941,6 @@ trait MessagesTrait
                 ],
                 'name' => [
                     'ruleUnique' => 'This webhook name already exists in the system',
-                ],
-            ],
-            'ConfigGoogle' => [
-                'code' => [
-                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
-                ],
-                'name' => [
-                    'ruleUnique' => 'The name for the IDP has to be unique.'
-                ],
-            ],
-            'ConfigSaml' => [
-                'code' => [
-                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
-                ],
-                'name' => [
-                    'ruleUnique' => 'The name for the IDP has to be unique.'
-                ],
-            ],
-            'ConfigOAuth' => [
-                'code' => [
-                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
-                ],
-                'name' => [
-                    'ruleUnique' => 'The name for the IDP has to be unique.'
                 ],
             ]
         ],

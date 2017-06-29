@@ -1,14 +1,13 @@
 <?php
-
 namespace SSO\Auth;
 
+use Cake\Auth\BaseAuthenticate;
+use Cake\Http\Client;
+use Cake\Log\Log;
 use Cake\Network\Request;
 use Cake\Network\Response;
-use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
-use Cake\Http\Client;
 use SSO\OAuth\Custom_Client;
-use Cake\Log\Log;
 
 class OAuthAuthenticate extends BaseAuthenticate
 {
