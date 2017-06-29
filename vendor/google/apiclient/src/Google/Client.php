@@ -127,7 +127,7 @@ class Google_Client
     $this->authenticated = true;
     return $this->getAuth()->authenticate($code, $crossClient);
   }
-  
+
   /**
    * Loads a service account key and parameters from a JSON
    * file from the Google Developer Console. Uses that and the
