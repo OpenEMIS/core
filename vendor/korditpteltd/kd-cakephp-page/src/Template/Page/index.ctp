@@ -18,7 +18,7 @@ $this->start('contentBody');
 
 <div class="panel">
     <div class="panel-body">
-        <?= $this->element('OpenEmis.alert') ?>
+        <?= $this->element('Page.alert') ?>
         <?= $this->element('Page.tabs') ?>
         <?= $this->element('Page.filters') ?>
         <?= $this->element('Page.table') ?>

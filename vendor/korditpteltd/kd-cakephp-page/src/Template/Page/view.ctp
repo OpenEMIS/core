@@ -23,7 +23,7 @@ $this->start('contentBody');
 <div class="panel">
     <div class="panel-body">
         <?php
-        echo $this->element('OpenEmis.alert');
+        echo $this->element('Page.alert');
         echo $this->Page->renderViewElements();
         ?>
     </div>
