@@ -210,8 +210,10 @@ class PageHelper extends Helper
             $displayFrom = explode('.', $field['displayFrom']);
             $value = $entity;
             foreach ($displayFrom as $key) {
-                if ($value->has($key)) {
+                if ($value instanceof Entity && $value->has($key)) {
                     $value = $value->$key;
+                } elseif (is_array($value) && array_key_exists($key, $value)) {
+                    $value = $value[$key];
                 } else {
                     break;
                 }
@@ -304,7 +306,7 @@ EOT;
     private function string(array $field, $data)
     {
         $options = $this->extractHtmlAttributes($field);
-        $options['type'] = 'text';
+        $options['type'] = 'string';
 
         $value = $this->Form->input($field['aliasField'], $options);
         return $value;
