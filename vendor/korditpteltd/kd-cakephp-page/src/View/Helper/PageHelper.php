@@ -351,7 +351,7 @@ EOT;
         return $html;
     }
 
-    private function extractHtmlAttributes(array $field)
+    private function extractHtmlAttributes(array $field, $data)
     {
         $htmlAttr = [
             'label', 'readonly', 'disabled',
@@ -365,12 +365,17 @@ EOT;
                 $options[$attr] = $field[$attr];
             }
         }
+
+        if (is_array($data) && empty($options['value'])) {
+            $value = $this->getValue($data, $field);
+            $options['value'] = $value;
+        }
         return $options;
     }
 
     private function string(array $field, $data)
     {
-        $options = $this->extractHtmlAttributes($field);
+        $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'string';
 
         $value = $this->Form->input($field['aliasField'], $options);
@@ -379,7 +384,7 @@ EOT;
 
     private function integer(array $field, $data)
     {
-        $options = $this->extractHtmlAttributes($field);
+        $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'number';
         $html = '';
 
@@ -402,7 +407,7 @@ EOT;
 
     private function textarea(array $field, $data)
     {
-        $options = $this->extractHtmlAttributes($field);
+        $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'textarea';
 
         return $this->Form->input($field['aliasField'], $options);
@@ -410,7 +415,7 @@ EOT;
 
     private function dropdown(array $field, $data)
     {
-        $options = $this->extractHtmlAttributes($field);
+        $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'select';
 
         return $this->Form->input($field['aliasField'], $options);
@@ -418,7 +423,7 @@ EOT;
 
     private function hidden(array $field, $data)
     {
-        $options = $this->extractHtmlAttributes($field);
+        $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'hidden';
 
         return $this->Form->input($field['aliasField'], $options);
