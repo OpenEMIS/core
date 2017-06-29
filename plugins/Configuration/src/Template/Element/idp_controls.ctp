@@ -1,3 +1,5 @@
+<?= $this->Html->script('Configuration.authentication_config', ['block' => true]); ?>
+
 <div class="toolbar-responsive panel-toolbar">
 	<div class="toolbar-wrapper">
 		<?php

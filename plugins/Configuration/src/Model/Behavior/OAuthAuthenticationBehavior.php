@@ -36,7 +36,7 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
         $this->model->field('redirect_uri', ['attr' => ['required' => true], 'type' => 'readonly']);
-        $this->model->field('well_known_uri', ['attr' => ['label' => __('Well-known Uri')]]);
+        $this->model->field('well_known_uri', ['attr' => ['label' => __('Well-known Uri'), 'onblur' => 'Authentication.populate(this.value);']]);
         $this->model->field('authorization_endpoint', ['attr' => ['required' => true]]);
         $this->model->field('token_endpoint', ['attr' => ['required' => true]]);
         $this->model->field('userinfo_endpoint', ['attr' => ['required' => true, 'label' => __('User Information Endpoint')]]);
