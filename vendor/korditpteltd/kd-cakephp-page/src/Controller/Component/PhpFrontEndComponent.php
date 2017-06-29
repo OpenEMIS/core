@@ -76,29 +76,25 @@ class PhpFrontEndComponent extends Component
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($extra['result']) {
-            $errors = $entity->errors();
-            if (empty($errors)) {
-                $this->Alert->success('general.add.success');
-                $url = $this->Page->getUrl(['action' => 'index']);
-                return $this->controller->redirect($url);
-            } else {
-                $this->Alert->error('general.add.failed');
-            }
+        $errors = $entity->errors();
+        if (empty($errors)) {
+            $this->Alert->success('general.add.success');
+            $url = $this->Page->getUrl(['action' => 'index']);
+            return $this->controller->redirect($url);
+        } else {
+            $this->Alert->error('general.add.failed');
         }
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($extra['result']) {
-            $errors = $entity->errors();
-            if (empty($errors)) {
-                $this->Alert->success('general.edit.success');
-                $url = $this->Page->getUrl(['action' => 'view']);
-                return $this->controller->redirect($url);
-            } else {
-                $this->Alert->error('general.edit.failed');
-            }
+        $errors = $entity->errors();
+        if (empty($errors)) {
+            $this->Alert->success('general.edit.success');
+            $url = $this->Page->getUrl(['action' => 'view']);
+            return $this->controller->redirect($url);
+        } else {
+            $this->Alert->error('general.edit.failed');
         }
     }
 
