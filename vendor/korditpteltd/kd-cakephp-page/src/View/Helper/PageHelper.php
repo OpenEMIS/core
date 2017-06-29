@@ -157,7 +157,7 @@ class PageHelper extends Helper
             foreach ($fields as $field => $attr) {
                 $row[] = $this->getValue($entity, $attr);
             }
-            $row[] = $this->_View->element('Page.actions', ['entity' => $entity]);
+            $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
 
             $tableData[] = $row;
         }
@@ -201,7 +201,7 @@ class PageHelper extends Helper
         return $toArray ? $url : $this->Url->build($url);
     }
 
-    private function getValue(Entity $entity, $field)
+    private function getValue($entity, $field)
     {
         $value = '';
         $controlType = $field['controlType'];
@@ -210,14 +210,21 @@ class PageHelper extends Helper
             $displayFrom = explode('.', $field['displayFrom']);
             $value = $entity;
             foreach ($displayFrom as $key) {
-                if ($value->has($key)) {
+                if ($value instanceof Entity && $value->has($key)) {
                     $value = $value->$key;
+                } elseif (is_array($value) && array_key_exists($key, $value)) {
+                    $value = $value[$key];
                 } else {
                     break;
                 }
             }
         } else {
-            $value = $entity->$field['name'];
+            $key = $field['name'];
+            if ($entity instanceof Entity && $entity->has($key)) {
+                $value = $entity->$key;
+            } elseif (is_array($entity) && array_key_exists($key, $entity)) {
+                $value = $entity[$key];
+            }
         }
 
         if (in_array($controlType, ['date', 'time']) && array_key_exists('format', $field) && !empty($value)) {
@@ -304,7 +311,7 @@ EOT;
     private function string(array $field, $data)
     {
         $options = $this->extractHtmlAttributes($field);
-        $options['type'] = 'text';
+        $options['type'] = 'string';
 
         $value = $this->Form->input($field['aliasField'], $options);
         return $value;
