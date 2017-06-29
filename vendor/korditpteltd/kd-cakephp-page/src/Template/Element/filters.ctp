@@ -3,7 +3,7 @@
 <div class="toolbar-responsive panel-toolbar">
     <div class="toolbar-wrapper">
         <?php
-        $template = $this->ControllerAction->getFormTemplate();
+        $template = $this->Page->getFormTemplate();
         $this->Form->templates($template);
         $request = $this->request;
 
