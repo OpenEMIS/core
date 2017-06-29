@@ -27,7 +27,7 @@ CREATE TABLE `system_authentications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains user specified authentication';
 
 CREATE TABLE `idp_google` (
-  `system_authentication_id` INT NOT NULL 'links to system_authenticatons.id',
+  `system_authentication_id` INT NOT NULL COMMENT 'links to system_authenticatons.id',
   `client_id` VARCHAR(150) NOT NULL,
   `client_secret` VARCHAR(150) NOT NULL,
   `redirect_uri` VARCHAR(150) NOT NULL,
@@ -80,7 +80,7 @@ SELECT
   CONCAT('IDP', LEFT(MD5(1), 13)),
     (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google'),
     1 as `authentication_type_id`,
-    1 as `status`,
+    0 as `status`,
     'email' as mapped_username,
     (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'allow_create_user') as allow_create_user,
     null as mapped_first_name,
@@ -94,7 +94,7 @@ Select
   @id as system_authentication_id,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'client_id') as client_id,
     (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'client_secret') as client_secret,
-    (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'redirect_uri') as redirect_uri,
+    (SELECT CONCAT(`value`, '/Google/', CONCAT('IDP', LEFT(MD5(1), 13))) FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'redirect_uri') as redirect_uri,
     (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'hd') as hd
     ;
 
@@ -106,7 +106,7 @@ SELECT
   CONCAT('IDP', LEFT(MD5(2), 13)),
   (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2'),
   2 as `authentication_type_id`,
-  1 as `status`,
+  0 as `status`,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_username_mapping') as mapped_username,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'allow_create_user') as allow_create_user,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_first_name_mapping') as mapped_first_name,
@@ -126,7 +126,7 @@ Select
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'idp_x509cert') as idp_x509cert,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'idp_certFingerprint') as idp_cert_fingerprint,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'idp_certFingerprintAlgorithm') as idp_cert_fingerprint_algorithm,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_entity_id') as sp_entity_id,
+  (SELECT CONCAT(`value`, '/Saml/', CONCAT('IDP', LEFT(MD5(2), 13))) FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_entity_id') as sp_entity_id,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_acs') as sp_acs,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_slo') as sp_slo,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_name_id_format') as sp_name_id_format,
@@ -141,7 +141,7 @@ SELECT
   CONCAT('IDP', LEFT(MD5(3), 13)),
   (SELECT DISTINCT authentication_type FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect'),
   3 as `authentication_type_id`,
-  1 as `status`,
+  0 as `status`,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'username_mapping') as mapped_username,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'allow_create_user') as allow_create_user,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'firstName_mapping') as mapped_first_name,
@@ -155,7 +155,7 @@ Select
   @id as system_authentication_id,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'client_id') as client_id,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'client_secret') as client_secret,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'redirect_uri') as redirect_uri,
+  (SELECT CONCAT(`value`, '/OAuth/', CONCAT('IDP', LEFT(MD5(3), 13))) FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'redirect_uri') as redirect_uri,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'openid_configuration') as `well_known_uri`,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'auth_uri') as authorization_endpoint,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'token_uri') as token_endpoint,
@@ -164,11 +164,40 @@ Select
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'jwk_uri') as jwks_uri;
     ;
 
+UPDATE system_authentications
+SET status = 1
+WHERE name = (SELECT `value` FROM `config_items` WHERE `type` = 'Authentication');
+
 -- config_items
 CREATE TABLE `z_3931_config_items` LIKE `config_items`;
 
 INSERT INTO `z_3931_config_items`
 SELECT * FROM `config_items` WHERE `id` = 1001;
 
-UPDATE `config_items` SET `name`='Enable Local Login', `code`='enable_local_login', `label`='Enable Local Login', `value`='1', `default_value`='1', `option_type`='yes_no' WHERE `id`='1001';
+UPDATE `config_items` SET `name`='Enable Local Login', `code`='enable_local_login', `label`='Enable Local Login',
+`value`= (ABS((SELECT COUNT(`status`) FROM system_authentications WHERE status = 1)-1)),
+`default_value`='1', `option_type`='yes_no' WHERE `id`='1001';
+
+-- security_user_logins
+ALTER TABLE `security_user_logins`
+RENAME TO  `z_3931_security_user_logins` ;
+
+CREATE TABLE `security_user_logins` (
+  `id` BIGINT unsigned NOT NULL auto_increment,
+  `security_user_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
+  `login_date_time` datetime DEFAULT NULL,
+  `login_period` INT(6) NOT NULL,
+  `session_id` varchar(45) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`, `login_period`),
+  KEY `security_user_id` (`security_user_id`),
+  KEY `login_date_time` (`login_date_time`),
+  KEY `login_period` (`login_period`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all user logins'
+PARTITION BY HASH(login_period)
+PARTITIONS 101;
+
+INSERT INTO `security_user_logins` (`security_user_id`, `login_date_time`, `login_period`, `session_id`, `ip_address`)
+SELECT `security_user_id`, `login_date_time`, date_format(`login_date_time`, '%Y%m') as `login_period`, `session_id`, `ip_address`
+FROM `z_3931_security_user_logins`;
 
