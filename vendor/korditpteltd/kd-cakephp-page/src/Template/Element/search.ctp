@@ -14,9 +14,9 @@ $searchText = $this->Page->getQueryString('search');
                 <i class="fa fa-search"></i>
             </button>
 
-            <button id="search-toggle" class="btn btn-default btn-xs" ng-class="selectedState" data-toggle="tooltip" data-placement="bottom" type="button" ng-click="toggleAdvancedSearch()" data-original-title="Advanced Search">
+            <!-- <button id="search-toggle" class="btn btn-default btn-xs" ng-class="selectedState" data-toggle="tooltip" data-placement="bottom" type="button" ng-click="toggleAdvancedSearch()" data-original-title="Advanced Search">
                 <i class="fa fa-search-plus"></i>
-            </button>
+            </button> -->
         </span>
     </div>
 </div>
