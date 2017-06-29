@@ -37,17 +37,9 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAuthentication']);
     }
-    public function AuthGoogle()
+    public function AuthSystemAuthentications()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigGoogle']);
-    }
-    public function AuthSaml()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigSaml']);
-    }
-    public function AuthOAuth()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigOAuth']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigSystemAuthentications']);
     }
     public function ExternalDataSource()
     {

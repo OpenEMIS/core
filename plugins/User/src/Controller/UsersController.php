@@ -42,7 +42,27 @@ class UsersController extends AppController
 
         $SystemAuthentications = TableRegistry::get('SSO.SystemAuthentications');
         $authentications = $SystemAuthentications->getActiveAuthentications();
-        $this->set('authentications', $authentications);
+
+        $authenticationOptions = [];
+
+        foreach ($authentications as $auth) {
+            $authenticationOptions[$auth['name']] = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', $auth['authentication_type'], $auth['code']]);
+        }
+        $authentication = [];
+        if ($authenticationOptions) {
+            $authentication[] = [
+                'text' => __('Select Single Sign On Method'),
+                'value' => 0
+            ];
+            foreach ($authenticationOptions as $key => $value) {
+                $authentication[] = [
+                    'text' => $key,
+                    'value' => $value
+                ];
+            }
+        }
+
+        $this->set('authentications', $authentication);
     }
 
     public function patchPasswords()
