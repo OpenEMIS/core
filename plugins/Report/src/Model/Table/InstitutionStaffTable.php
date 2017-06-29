@@ -76,6 +76,8 @@ class InstitutionStaffTable extends AppTable  {
             'middle_name' => 'Users.middle_name',
             'last_name' => 'Users.last_name',
             'number' => 'Users.identity_number',
+            'username' => 'Users.username',
+            'dob' => 'Users.date_of_birth',
             'code' => 'Institutions.code',
             'gender' => 'Genders.name',
             'area_name' => 'Areas.name',
@@ -151,6 +153,34 @@ class InstitutionStaffTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
+    public function onExcelRenderContactOption(Event $event, Entity $entity, array $attr)
+    {
+        $staffId = $entity->staff_id;
+        $contactOptionId = $attr['contactOptionId'];
+
+        $ContactTypesTable = TableRegistry::get('User.ContactTypes');
+        $types = $ContactTypesTable->find()
+            ->where([$ContactTypesTable->aliasField('contact_option_id') => $contactOptionId])
+            ->extract('id')
+            ->toArray();
+
+        $result = '';
+        if (!empty($types)) {
+            $UserContactsTable = TableRegistry::get('User.Contacts');
+            $contacts = $UserContactsTable->find()
+                ->where([
+                    $UserContactsTable->aliasField('security_user_id') => $staffId,
+                    $UserContactsTable->aliasField('contact_type_id IN ') => $types
+                ])
+                ->order([$UserContactsTable->aliasField('preferred') => 'DESC'])
+                ->extract('value')
+                ->toArray();
+
+            $result = implode(', ', $contacts);
+        }
+
+        return $result;
+    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
@@ -281,6 +311,13 @@ class InstitutionStaffTable extends AppTable  {
         ];
 
         $newFields[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'dob',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+        $newFields[] = [
             'key' => 'Age',
             'field' => 'Age',
             'type' => 'Age',
@@ -342,6 +379,30 @@ class InstitutionStaffTable extends AppTable  {
             'type' => 'string',
             'label' => __('Teaching')
         ];
+
+        $newFields[] = [
+            'key' => 'Users.username',
+            'field' => 'username',
+            'type' => 'string',
+            'label' => __('Username')
+        ];
+
+        $displayContactOptions = ['MOBILE', 'PHONE', 'EMAIL'];
+        $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
+        $options = $ContactOptionsTable->find('list')
+            ->where([$ContactOptionsTable->aliasField('code IN') => $displayContactOptions])
+            ->order('order')
+            ->toArray();
+
+        foreach ($options as $id => $name) {
+            $newFields[] = [
+                'key' => 'contact_option',
+                'field' => 'contact_option',
+                'type' => 'contact_option',
+                'label' => __($name),
+                'contactOptionId' => $id
+            ];
+        }
 
         $fields->exchangeArray($newFields);
     }
