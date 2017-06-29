@@ -1,16 +1,14 @@
 <?php
-
 namespace SSO\Auth;
 
+use Cake\Auth\BaseAuthenticate;
 use Cake\Network\Request;
 use Cake\Network\Response;
-use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
 use OneLogin_Saml2_Auth;
 
 class SamlAuthenticate extends BaseAuthenticate
 {
-
     public function authenticate(Request $request, Response $response)
     {
         $session = $request->session();

@@ -1,17 +1,15 @@
 <?php
-
 namespace SSO\Auth;
 
+use Cake\Auth\BaseAuthenticate;
 use Cake\Network\Request;
 use Cake\Network\Response;
-use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
-use Google_Service_Oauth2;
 use Google_Client;
+use Google_Service_Oauth2;
 
 class GoogleAuthenticate extends BaseAuthenticate
 {
-
     public function authenticate(Request $request, Response $response)
     {
         $fields = $this->_config['fields'];

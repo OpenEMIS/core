@@ -74,3 +74,17 @@ CREATE TABLE `idp_saml` (
   PRIMARY KEY (`system_authentication_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains SAML authentication attributes';
 
+CREATE TABLE `security_user_logins` (
+  `id` BIGINT unsigned NOT NULL auto_increment,
+  `security_user_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
+  `login_date_time` datetime DEFAULT NULL,
+  `login_period` INT(6) NOT NULL,
+  `session_id` varchar(45) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`, `login_period`),
+  KEY `security_user_id` (`security_user_id`),
+  KEY `login_date_time` (`login_date_time`),
+  KEY `login_period` (`login_period`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all user logins'
+PARTITION BY HASH(login_period)
+PARTITIONS 101;

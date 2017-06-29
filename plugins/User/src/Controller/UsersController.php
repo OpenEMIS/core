@@ -198,7 +198,6 @@ class UsersController extends AppController
 
             if (!empty($user)) {
                 $listeners = [
-                    TableRegistry::get('Security.SecurityUserLogins'),
                     $this->Users
                 ];
                 $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);

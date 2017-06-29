@@ -43,15 +43,15 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->field('idp_sso_binding', ['attr' => ['required' => true]]);
         $this->model->field('idp_slo', ['attr' => ['required' => true]]);
         $this->model->field('idp_slo_binding', ['attr' => ['required' => true]]);
-        $this->model->field('idp_x509cert', ['attr' => ['required' => true]]);
+        $this->model->field('idp_x509cert', ['type' => 'text', 'attr' => ['required' => true]]);
         $this->model->field('idp_cert_fingerprint');
         $this->model->field('idp_cert_fingerprint_algorithm');
-        $this->model->field('sp_entity_id');
-        $this->model->field('sp_acs');
-        $this->model->field('sp_slo');
+        $this->model->field('sp_entity_id', ['type' => 'readonly']);
+        $this->model->field('sp_acs', ['type' => 'readonly']);
+        $this->model->field('sp_slo', ['type' => 'readonly']);
         $this->model->field('sp_name_id_format');
         $this->model->field('sp_private_key');
-        $this->model->field('sp_metadata');
+        // $this->model->field('sp_metadata', ['type' => 'hidden']);
         if ($entity->errors('code')) {
             $code = uniqid('IDP');
             $this->model->request->data[$this->alias()]['code'] = $code;
@@ -77,7 +77,7 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->fields['mapped_gender']['type'] = 'string';
         $this->model->fields['mapped_role']['type'] = 'string';
 
-        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'sp_metadata', 'mapped_username', 'allow_create_user', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
+        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'mapped_username', 'allow_create_user', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
     }
 
     public function onUpdateFieldIdpSsoBinding(Event $event, array $attr, $action, Request $request)

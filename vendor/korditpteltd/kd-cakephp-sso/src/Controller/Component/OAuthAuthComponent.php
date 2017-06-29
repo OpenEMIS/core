@@ -2,11 +2,11 @@
 namespace SSO\Controller\Component;
 
 use ArrayObject;
-use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
-use Cake\Utility\Security;
 use Cake\Http\Client;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Security;
 use Google_Auth_Exception;
 use SSO\OAuth\Custom_Client;
 
