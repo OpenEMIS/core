@@ -70,19 +70,6 @@ class PageController extends AppController
                 $query->contain($contains);
             }
 
-            if ($page->isActionAllowed('add')) {
-                $page->addToToolbar('add', [
-                    'element' => 'Page.button',
-                    'title' => __('Add'),
-                    'iconClass' => 'fa kd-add',
-                    'url' => ['action' => 'add']
-                ]);
-            }
-
-            if ($page->isActionAllowed('search')) {
-                $page->addToToolbar('search', ['element' => 'Page.search']);
-            }
-
             if ($page->hasSearchText()) {
                 $searchOptions = new ArrayObject([
                     'searchText' => $page->getSearchText(),
@@ -134,13 +121,6 @@ class PageController extends AppController
             $table = $page->getMainTable();
             $entity = $table->newEntity();
 
-            $page->addToToolbar('back', [
-                'element' => 'Page.button',
-                'title' => __('Back'),
-                'iconClass' => 'fa kd-back',
-                'url' => ['action' => 'index']
-            ]);
-
             if ($request->is(['post'])) {
                 try {
                     $extra['result'] = false;
@@ -172,20 +152,6 @@ class PageController extends AppController
 
         if ($request->is(['get', 'ajax']) && $page->hasMainTable()) {
             $primaryKeyValue = json_decode($page->hexToStr($id), true);
-
-            $page->addToToolbar('back', [
-                'element' => 'Page.button',
-                'title' => __('Back'),
-                'iconClass' => 'fa kd-back',
-                'url' => ['action' => 'index']
-            ])
-            ->addToToolbar('edit', [
-                'element' => 'Page.button',
-                'title' => __('Edit'),
-                'iconClass' => 'fa kd-edit',
-                'url' => ['action' => 'edit', $id]
-            ]);
-
             $table = $page->getMainTable();
             $primaryKey = $table->primaryKey();
             if (!is_array($primaryKey)) { // if primary key is not composite key, then hide from index page
@@ -225,12 +191,6 @@ class PageController extends AppController
 
         if ($page->hasMainTable()) {
             $primaryKeyValue = json_decode($page->hexToStr($id), true);
-            $page->addToToolbar('back', [
-                'element' => 'Page.button',
-                'title' => __('Back'),
-                'iconClass' => 'fa kd-back',
-                'url' => ['action' => 'view', $id]
-            ]);
             $table = $page->getMainTable();
             if ($table->exists($primaryKeyValue)) {
                 $queryOptions = $page->getQueryOptions();

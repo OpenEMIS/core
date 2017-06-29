@@ -103,13 +103,7 @@ String.prototype.hexDecode = function() {
     <div class="page-header">
         <h2 id="main-header"><?= $header ?></h2>
         <div class="toolbar toolbar-search">
-            <?php
-            if (isset($toolbar)) {
-                foreach ($toolbar as $element => $attr) {
-                    echo $this->element($attr['element'], $attr);
-                }
-            }
-            ?>
+            <?= $this->fetch('toolbar') ?>
         </div>
     </div>
 

@@ -92,11 +92,15 @@ class PageHelper extends Helper
 
         // cancel button
         $backBtn = null;//$this->_View->get('backButton');
-        $buttons[] = [
-            'name' => '<i class="fa fa-close"></i> ' . __('Cancel'),
-            'attr' => ['class' => 'btn btn-outline btn-cancel', 'escape' => false],
-            'url' => !is_null($backBtn) ? $backBtn['url'] : []
-        ];
+        // $buttons[] = [
+        //     'name' => '<i class="fa fa-close"></i> ' . __('Cancel'),
+        //     'attr' => [
+        //         'class' => 'btn btn-outline btn-cancel',
+        //         'onclick' => 'console.log("asd"); return false',
+        //         'escape' => false
+        //     ],
+        //     'url' => !is_null($backBtn) ? $backBtn['url'] : []
+        // ];
 
         // $config = $this->_View->get('ControllerAction');
         // $table = $config['table'];
@@ -116,7 +120,8 @@ class PageHelper extends Helper
                     $html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
                 }
             }
-            $html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
+            $html .= $this->_View->element('Page.cancel');
+            // $html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
             $html .= '</div>';
         }
         return $html;
@@ -189,13 +194,11 @@ class PageHelper extends Helper
         return $value;
     }
 
-    public function getUrl($route)
+    public function getUrl($route, $toArray = false)
     {
-        $query = $this->request->query;
-        if (!empty($query)) {
-            $route['?'] = $query;
-        }
-        return $this->Url->build($route);
+        $request = $this->request;
+        $url = array_merge($route, $request->query);
+        return $toArray ? $url : $this->Url->build($url);
     }
 
     private function getValue(Entity $entity, $field)
