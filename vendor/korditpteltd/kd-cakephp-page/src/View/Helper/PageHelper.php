@@ -157,7 +157,7 @@ class PageHelper extends Helper
             foreach ($fields as $field => $attr) {
                 $row[] = $this->getValue($entity, $attr);
             }
-            $row[] = $this->_View->element('Page.actions', ['entity' => $entity]);
+            $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
 
             $tableData[] = $row;
         }
