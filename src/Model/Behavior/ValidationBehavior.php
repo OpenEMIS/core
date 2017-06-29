@@ -2264,4 +2264,18 @@ class ValidationBehavior extends Behavior
             return count($authentications) > 0;
         }
     }
+
+    public static function checkIDPLogin($field, array $globalData)
+    {
+        if ($field == 1) {
+            return true;
+        } else {
+            $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+            $enabledLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
+            if ($enabledLocalLogin) {
+                return true;
+            }
+            return count($authentications) > 1;
+        }
+    }
 }

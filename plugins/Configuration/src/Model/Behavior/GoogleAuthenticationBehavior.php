@@ -35,10 +35,10 @@ class GoogleAuthenticationBehavior extends Behavior
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $entity->errors($entity->errors('google'), null, true);
-        $this->model->field('client_id', ['attr' => ['required' => true]]);
+        $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
         $this->model->field('redirect_uri', ['type' => 'readonly', 'attr' => ['required' => true]]);
-        $this->model->field('hd');
+        $this->model->field('hd', ['attr' => ['label' => __('Hosted Domain')]]);
         if ($entity->errors('code')) {
             $code = uniqid('IDP');
             $this->model->request->data[$this->alias()]['code'] = $code;
@@ -54,10 +54,10 @@ class GoogleAuthenticationBehavior extends Behavior
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->model->field('client_id', ['attr' => ['required' => true]]);
+        $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
         $this->model->field('redirect_uri', ['type' => 'readonly', 'attr' => ['required' => true]]);
-        $this->model->field('hd');
+        $this->model->field('hd', ['attr' => ['label' => __('Hosted Domain')]]);
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'hd', 'allow_create_user']);
     }
 

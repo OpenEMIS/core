@@ -45,7 +45,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
             ->notEmpty('name')
             ->requirePresence('status')
             ->add('status', 'ruleLocalLogin', [
-                'rule' => 'checkLocalLogin'
+                'rule' => 'checkIDPLogin'
             ])
             ->requirePresence('mapped_username')
             ->notEmpty('mapped_username')
@@ -169,13 +169,13 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $this->field('code', ['type' => 'hidden']);
         $this->field('authentication_type_id', ['type' => 'select', 'options' => $this->AuthenticationTypes->find('list')->toArray()]);
         $this->field('status', ['type' => 'select', 'options' => $this->getSelectOptions('general.active')]);
-        $this->field('mapped_username', ['type' => 'hidden']);
         $this->field('allow_create_user', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
-        $this->field('mapped_first_name', ['type' => 'hidden']);
-        $this->field('mapped_last_name', ['type' => 'hidden']);
-        $this->field('mapped_date_of_birth', ['type' => 'hidden']);
-        $this->field('mapped_gender', ['type' => 'hidden']);
-        $this->field('mapped_role', ['type' => 'hidden']);
+        $this->field('mapped_username', ['type' => 'hidden', 'attr' => ['label' => __('Username Mapping')]]);
+        $this->field('mapped_first_name', ['type' => 'hidden', 'attr' => ['label' => __('First Name Mapping')]]);
+        $this->field('mapped_last_name', ['type' => 'hidden', 'attr' => ['label' => __('Last Name Mapping')]]);
+        $this->field('mapped_date_of_birth', ['type' => 'hidden', 'attr' => ['label' => __('Date Of Birth Mapping')]]);
+        $this->field('mapped_gender', ['type' => 'hidden', 'attr' => ['label' => __('Gender Mapping')]]);
+        $this->field('mapped_role', ['type' => 'hidden', 'attr' => ['label' => __('Role Mapping')]]);
     }
 
     public function onUpdateFieldAuthenticationTypeId(Event $event, array $attr, $action, Request $request)
