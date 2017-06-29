@@ -61,12 +61,14 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->field('value', ['visible' => true]);
         $this->field('default_value', ['visible' => ['view'=>true]]);
 
-
         if ($this->action == 'index') {
             $url = $this->url('view');
             $url[1] = $this->paramsEncode(['id' => $this->id]);
             $this->controller->redirect($url);
-        } else if ($this->action == 'view') {
+        } elseif ($this->action == 'view') {
+            if (isset($extra['toolbarButtons']['back'])) {
+                unset($extra['toolbarButtons']['back']);
+            }
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
             $this->checkController();
         }

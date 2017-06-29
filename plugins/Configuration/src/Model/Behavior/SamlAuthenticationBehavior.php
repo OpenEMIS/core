@@ -38,19 +38,19 @@ class SamlAuthenticationBehavior extends Behavior
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $entity->errors($entity->errors('saml'), null, true);
-        $this->model->field('idp_entity_id', ['attr' => ['required' => true]]);
-        $this->model->field('idp_sso', ['attr' => ['required' => true]]);
-        $this->model->field('idp_sso_binding', ['attr' => ['required' => true]]);
-        $this->model->field('idp_slo', ['attr' => ['required' => true]]);
-        $this->model->field('idp_slo_binding', ['attr' => ['required' => true]]);
-        $this->model->field('idp_x509cert', ['type' => 'text', 'attr' => ['required' => true]]);
-        $this->model->field('idp_cert_fingerprint');
-        $this->model->field('idp_cert_fingerprint_algorithm');
-        $this->model->field('sp_entity_id', ['type' => 'readonly']);
-        $this->model->field('sp_acs', ['type' => 'readonly']);
-        $this->model->field('sp_slo', ['type' => 'readonly']);
-        $this->model->field('sp_name_id_format');
-        $this->model->field('sp_private_key');
+        $this->model->field('idp_entity_id', ['attr' => ['required' => true], 'label' => __('Identity Provider - Entity ID')]);
+        $this->model->field('idp_sso', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Signon Service')]]);
+        $this->model->field('idp_sso_binding', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Signon Service Binding')]]);
+        $this->model->field('idp_slo', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Logout Service')]]);
+        $this->model->field('idp_slo_binding', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Logout Service Binding')]]);
+        $this->model->field('idp_x509cert', ['type' => 'text', 'attr' => ['required' => true, 'label' => __('Identity Provider - X509 Certificate')]]);
+        $this->model->field('idp_cert_fingerprint', ['attr' => ['label' => __('Identity Provider - Certificate Fingerprint')]]);
+        $this->model->field('idp_cert_fingerprint_algorithm', ['attr' => ['label' => __('Identity Provider - Certificate Fingerprint Algorithm')]]);
+        $this->model->field('sp_entity_id', ['type' => 'readonly', 'attr' => ['label' => __('Service Provider - Entity ID')]]);
+        $this->model->field('sp_acs', ['type' => 'readonly', 'attr' => ['label' => __('Service Provider - Assertion Consumer Service')]]);
+        $this->model->field('sp_slo', ['type' => 'readonly', 'attr' => ['label' => __('Service Provider - Single Logout Service')]]);
+        $this->model->field('sp_name_id_format', ['attr' => ['label' => __('Service Provider - Name ID Format')]]);
+        $this->model->field('sp_private_key', ['attr' => ['label' => __('Service Provider - Private Key')]]);
         // $this->model->field('sp_metadata', ['type' => 'hidden']);
         if ($entity->errors('code')) {
             $code = uniqid('IDP');
@@ -77,7 +77,7 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model->fields['mapped_gender']['type'] = 'string';
         $this->model->fields['mapped_role']['type'] = 'string';
 
-        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'mapped_username', 'allow_create_user', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
+        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
     }
 
     public function onUpdateFieldIdpSsoBinding(Event $event, array $attr, $action, Request $request)
@@ -100,27 +100,27 @@ class SamlAuthenticationBehavior extends Behavior
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->model->field('idp_entity_id');
-        $this->model->field('idp_sso');
-        $this->model->field('idp_sso_binding');
-        $this->model->field('idp_slo');
-        $this->model->field('idp_slo_binding');
-        $this->model->field('idp_x509cert');
-        $this->model->field('idp_cert_fingerprint');
-        $this->model->field('idp_cert_fingerprint_algorithm');
-        $this->model->field('sp_entity_id');
-        $this->model->field('sp_acs');
-        $this->model->field('sp_slo');
-        $this->model->field('sp_name_id_format');
-        $this->model->field('sp_private_key');
-        $this->model->field('sp_metadata', ['type' => 'text']);
+        $this->model->field('idp_entity_id', ['attr' => ['label' => __('Identity Provider - Entity ID')]]);
+        $this->model->field('idp_sso', ['attr' => ['label' => __('Identity Provider - Single Signon Service')]]);
+        $this->model->field('idp_sso_binding', ['attr' => ['label' => __('Identity Provider - Single Signon Service Binding')]]);
+        $this->model->field('idp_slo', ['attr' => ['label' => __('dentity Provider - Single Logout Service')]]);
+        $this->model->field('idp_slo_binding', ['attr' => ['label' => __('Identity Provider - Single Logout Service Binding')]]);
+        $this->model->field('idp_x509cert', ['attr' => ['label' => __('Identity Provider - X509 Certificate')]]);
+        $this->model->field('idp_cert_fingerprint', ['attr' => ['label' => __('Identity Provider - Certificate Fingerprint')]]);
+        $this->model->field('idp_cert_fingerprint_algorithm', ['attr' => ['label' => __('Identity Provider - Certificate Fingerprint Algorithm')]]);
+        $this->model->field('sp_entity_id', ['attr' => ['label' => __('Service Provider - Entity ID')]]);
+        $this->model->field('sp_acs', ['attr' => ['label' => __('Service Provider - Assertion Consumer Service')]]);
+        $this->model->field('sp_slo', ['attr' => ['label' => __('Service Provider - Single Logout Service')]]);
+        $this->model->field('sp_name_id_format', ['attr' => ['label' => __('Service Provider - Name ID Format')]]);
+        $this->model->field('sp_private_key', ['attr' => ['label' => __('Service Provider - Private Key')]]);
+        $this->model->field('sp_metadata', ['type' => 'text', 'attr' => ['label' => __('Service Provider - Metadata')]]);
         $this->model->fields['mapped_username']['type'] = 'string';
         $this->model->fields['mapped_first_name']['type'] = 'string';
         $this->model->fields['mapped_last_name']['type'] = 'string';
         $this->model->fields['mapped_date_of_birth']['type'] = 'string';
         $this->model->fields['mapped_gender']['type'] = 'string';
         $this->model->fields['mapped_role']['type'] = 'string';
-        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'sp_metadata', 'mapped_username', 'allow_create_user', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
+        $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'sp_metadata', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
