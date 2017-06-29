@@ -40,7 +40,7 @@ class AuthenticationBehavior extends Behavior
             return $model->controller->redirect([
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
-                'action' => 'Auth'.ucfirst(strtolower($authenticationType)),
+                'action' => 'Auth'.$authenticationType,
                 'authentication_type' => $authenticationType,
                 'type_value' => 'Authentication',
                 'type' => $type
@@ -91,15 +91,7 @@ class AuthenticationBehavior extends Behavior
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
 
-        $AuthenticationTypes = TableRegistry::get('SSO.AuthenticationTypes');
-        $authenticationTypeOptions = $AuthenticationTypes
-            ->find('list', [
-                'keyField' => 'name',
-                'valueField' => 'name'
-            ])
-            ->toArray();
-
-        $authenticationTypeOptions = [0 => 'Local'] + $authenticationTypeOptions;
+        $authenticationTypeOptions = [0 => 'Local', 'SystemAuthentications' => __('Other IDPs')];
 
         foreach ($authenticationTypeOptions as &$options) {
             $options = __($options);
