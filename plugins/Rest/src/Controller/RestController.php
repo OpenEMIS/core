@@ -41,8 +41,8 @@ class RestController extends AppController
                 'TableCell' => 'Institution.InstitutionSurveyTableCells'
             ]
         ]);
-        $this->loadComponent('Cookie');
         $this->SecurityRestSessions = TableRegistry::get('Rest.SecurityRestSessions');
+        $this->loadComponent('Cookie');
     }
 
     public function beforeFilter(Event $event)

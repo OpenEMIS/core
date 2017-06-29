@@ -13,12 +13,13 @@ use Cake\Log\Log;
 
 class IdentityTypesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
-		$this->table('identity_types');
-		parent::initialize($config);
+        $this->table('identity_types');
+        parent::initialize($config);
 
-		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
+        $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
+        $this->hasMany('Nationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'identity_type_id']);
 
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -44,9 +45,9 @@ class IdentityTypesTable extends ControllerActionTable
         return $query->where([$this->aliasField('id') => $defaultId]);
     }
 
-	public function addEditBeforePatch(Event $event, Entity $entity)
-	{
-		$entity->prevDefaultIdentityType = $this->getDefaultValue(); //keep the current default value before it is being updated.
-	}
+    public function addEditBeforePatch(Event $event, Entity $entity)
+    {
+        $entity->prevDefaultIdentityType = $this->getDefaultValue(); //keep the current default value before it is being updated.
+    }
 
 }

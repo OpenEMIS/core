@@ -271,6 +271,9 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
+        if ($field == 'openemis_no') {
+            return 'OpenEMIS ID';
+        }
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
     }
 

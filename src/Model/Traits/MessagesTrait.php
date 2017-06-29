@@ -372,6 +372,7 @@ trait MessagesTrait
                 'fail' => 'You have entered an invalid username or password.',
                 'inactive' => 'Your account has been disabled.',
                 'remoteFail' => 'Remote authentication failed, please try local login.',
+                'changePassword' => 'This is the first time that you are logging in, please change your password.'
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
@@ -1375,6 +1376,18 @@ trait MessagesTrait
                 ],
             ],
         ],
+        'Profile' => [
+            'Guardians' => [
+                'guardian_id' => [
+                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                ]
+            ],
+            'Accounts' => [
+                'current_password' => [
+                    'ruleChangePassword' => 'The current password was not matched.'
+                ]
+            ],
+        ],
         'Staff' => [
             'transferExists' => 'There is an existing transfer request for that staff.',
             'date_of_birth' => 'Date Of Birth',
@@ -1539,7 +1552,8 @@ trait MessagesTrait
             ],
             'EducationGradesSubjects' => [
                 'hours_required' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                    'ruleIsDecimal' => 'Please enter a valid Decimal value',
+                    'ruleRange' => 'Value must be positive with maximum 2 decimal points and less than 1000'
                 ]
             ],
             'EducationSubjects' => [
@@ -1619,11 +1633,6 @@ trait MessagesTrait
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
-            ]
-        ],
-        'Report' => [
-            'InstitutionStudentsOutOfSchool' => [
-                'reportName' => 'Students Out of School'
             ]
         ],
         'CustomField' => [

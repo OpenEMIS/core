@@ -21,6 +21,7 @@ class HtmlFieldHelper extends Helper
 {
     use IdGeneratorTrait;
 
+
     public $table = null;
 
     public $helpers = ['ControllerAction', 'Html', 'Form', 'Url', 'Number'];
@@ -244,7 +245,6 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         $field = $attr['field'];
-        $arrayKeys = [];
         if ($action == 'index' || $action == 'view') {
             if (!empty($attr['options'])) {
                 if ($data->$field === '') {
@@ -530,7 +530,6 @@ class HtmlFieldHelper extends Helper
                                                                                             'showRemoveButton' => $showRemoveButton,
                                                                                             'defaultImgMsg' => $defaultImgMsg,
                                                                                             'defaultImgView' => $defaultImgView]);
-            $name = $attr['model'].'.'.$attr['field'];
         }
 
         return $value;
@@ -679,7 +678,6 @@ class HtmlFieldHelper extends Helper
             }
             $value = $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
             $this->includes['datepicker']['include'] = true;
-            $fieldName = $attr['model'] . '.' . $attr['field'];
         }
         return $value;
     }
@@ -754,7 +752,6 @@ class HtmlFieldHelper extends Helper
             }
             $value = $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
             $this->includes['timepicker']['include'] = true;
-            $fieldName = $attr['model'] . '.' . $attr['field'];
         }
 
         return $value;
@@ -858,7 +855,6 @@ class HtmlFieldHelper extends Helper
                 $attr['value'] = $data->$name;
             }
             $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
-            $fieldName = $attr['model'] . '.' . $attr['field'];
         }
         return $value;
     }

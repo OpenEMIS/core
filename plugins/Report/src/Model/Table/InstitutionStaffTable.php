@@ -11,7 +11,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
 class InstitutionStaffTable extends AppTable  {
-    use OptionsTrait;
+	use OptionsTrait;
 
     public function initialize(array $config) {
         $this->table('institution_staff');
@@ -62,25 +62,29 @@ class InstitutionStaffTable extends AppTable  {
         $query
         ->contain([
             'Users.Genders',
-            'Users.Identities.IdentityTypes',
             'Institutions.Areas',
+            'Institutions.AreaAdministratives',
             'Positions.StaffPositionTitles',
             'Institutions.Types',
             'Institutions.Sectors',
-            'Institutions.Providers'
+            'Institutions.Providers',
+            'Users.Identities.IdentityTypes'
         ])
         ->select([
             'openemis_no' => 'Users.openemis_no',
             'first_name' => 'Users.first_name',
             'middle_name' => 'Users.middle_name',
             'last_name' => 'Users.last_name',
+            'number' => 'Users.identity_number',
             'code' => 'Institutions.code',
             'gender' => 'Genders.name',
             'area_name' => 'Areas.name',
             'area_code' => 'Areas.code',
+            'area_administrative_code' => 'AreaAdministratives.code',
+            'area_administrative_name' => 'AreaAdministratives.name',
             'position_title_teaching' => 'StaffPositionTitles.type',
-            'position_title' => 'StaffPositionTitles.name',
             'institution_type' => 'Types.name',
+            'position_title' => 'StaffPositionTitles.name',
             'institution_sector' => 'Sectors.name',
             'institution_provider' => 'Providers.name'
         ]);
@@ -132,10 +136,10 @@ class InstitutionStaffTable extends AppTable  {
 
     public function onExcelGetUserIdentities(Event $event, Entity $entity)
     {
+        $return = [];
         if ($entity->has('user')) {
             if ($entity->user->has('identities')) {
                 if (!empty($entity->user->identities)) {
-                    $return = [];
                     $identities = $entity->user->identities;
                     foreach ($identities as $key => $value) {
                         $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
@@ -148,7 +152,8 @@ class InstitutionStaffTable extends AppTable  {
     }
 
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
@@ -241,17 +246,31 @@ class InstitutionStaffTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Institutions.area_name',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => ''
-        ];
-
-        $newFields[] = [
             'key' => 'Institutions.area_code',
             'field' => 'area_code',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Area Education Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'Institutions.area',
+            'field' => 'area_name',
+            'type' => 'string',
+            'label' => __('Area Education')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
         ];
 
         $newFields[] = [
