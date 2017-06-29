@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\I18n\Date;
+use Cake\I18n\I18n;
 use Cake\Log\Log;
 use Cake\View\Helper;
 
@@ -19,25 +20,25 @@ class PageHelper extends Helper
     public $includes = [
         'datepicker' => [
             'include' => false,
-            'css' => 'ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min',
-            'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min',
+            'css' => 'Page.../plugins/datepicker/css/bootstrap-datepicker.min',
+            'js' => 'Page.../plugins/datepicker/js/bootstrap-datepicker.min',
             'element' => 'Page.datepicker_js'
         ],
         'timepicker' => [
             'include' => false,
-            'css' => 'ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min',
-            'js' => 'ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min',
-            'element' => 'ControllerAction.bootstrap-timepicker/timepicker'
+            'css' => 'Page.../plugins/timepicker/css/bootstrap-timepicker.min',
+            'js' => 'Page.../plugins/timepicker/js/bootstrap-timepicker.min',
+            'element' => 'Page.bootstrap-timepicker/timepicker'
         ],
         'chosen' => [
             'include' => false,
-            'css' => 'ControllerAction.../plugins/chosen/css/chosen.min',
-            'js' => 'ControllerAction.../plugins/chosen/js/chosen.jquery.min'
+            'css' => 'Page.../plugins/chosen/css/chosen.min',
+            'js' => 'Page.../plugins/chosen/js/chosen.jquery.min'
         ],
         'jasny' => [
             'include' => false,
-            'css' => 'ControllerAction.../plugins/jasny/css/jasny-bootstrap.min',
-            'js' => 'ControllerAction.../plugins/jasny/js/jasny-bootstrap.min'
+            'css' => 'Page.../plugins/jasny/css/jasny-bootstrap.min',
+            'js' => 'Page.../plugins/jasny/js/jasny-bootstrap.min'
         ]
     ];
 
@@ -78,6 +79,29 @@ class PageHelper extends Helper
             'select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>',
             'radio'  => '<input type="radio" class = "iradio_minimal-grey icheck-input" name="{{name}}" value="{{value}}"{{attrs}}>'
         ];
+    }
+
+    public function getFormOptions()
+    {
+        $options = [
+            'id' => 'content-main-form',
+            'class' => 'form-horizontal',
+            'novalidate' => true,
+            'onSubmit' => '$(\'button[type="submit"]\').click(function() { return false; });'
+        ];
+
+        $elements = $this->_View->get('elements');
+        if (!empty($elements)) {
+            $types = ['binary', 'image'];
+            foreach ($elements as $key => $attr) {
+                if (in_array($attr['controlType'], $types)) {
+                    $options['type'] = 'file';
+                    break;
+                }
+            }
+        }
+
+        return $options;
     }
 
     public function getFormButtons()
@@ -127,6 +151,42 @@ class PageHelper extends Helper
         return $html;
     }
 
+    public function getPaginatorButtons($type = 'prev')
+    {
+        $icon = array('prev' => '', 'next' => '');
+        $html = $this->Paginator->{$type}(
+            $icon[$type],
+            array('tag' => 'li', 'escape' => false),
+            null,
+            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false)
+        );
+        return $html;
+    }
+
+    public function getPaginatorNumbers()
+    {
+        $html = $this->Paginator->numbers(array(
+            'tag' => 'li',
+            'currentTag' => 'a',
+            'currentClass' => 'active',
+            'separator' => '',
+            'modulus' => 4,
+            'first' => 2,
+            'last' => 2,
+            'ellipsis' => '<li><a>...</a></li>'
+        ));
+        return $html;
+    }
+
+    public function locale($locale = null)
+    {
+        if (!empty($locale)) {
+            return I18n::locale($locale);
+        } else {
+            return I18n::locale();
+        }
+    }
+
     public function getTableHeaders()
     {
         $headers = [];
@@ -157,7 +217,7 @@ class PageHelper extends Helper
             foreach ($fields as $field => $attr) {
                 $row[] = $this->getValue($entity, $attr);
             }
-            $row[] = $this->_View->element('Page.actions', ['entity' => $entity]);
+            $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
 
             $tableData[] = $row;
         }
