@@ -89,6 +89,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.onChangePositionType = onChangePositionType;
     StaffController.onChangeFTE = onChangeFTE;
     StaffController.postTransferForm = postTransferForm;
+    StaffController.generatePassword = generatePassword;
     StaffController.initialLoad = true;
     StaffController.date_of_birth = '';
 
@@ -1022,6 +1023,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             remain = true;
         }
 
+        if (StaffController.selectedStaffData.username == '' || StaffController.selectedStaffData.username == undefined) {
+            StaffController.postResponse.error.username = empty;
+            remain = true;
+        }
+
         var arrNumber = [{}];
 
         if (StaffController.StaffIdentities == 1 && (StaffController.selectedStaffData.identity_number == '' || StaffController.selectedStaffData.identity_number == undefined)) {
@@ -1051,7 +1057,25 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
         .then(function(response) {
+            var username = StaffController.selectedStaffData.username;
+            if (username == StaffController.selectedStaffData.openemis_no || username == '' || typeof username == 'undefined') {
+                StaffController.selectedStaffData.username = response;
+            }
             StaffController.selectedStaffData.openemis_no = response;
+            UtilsSvc.isAppendLoader(false);
+        }, function(error) {
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    function generatePassword() {
+        UtilsSvc.isAppendLoader(true);
+        InstitutionsStaffSvc.generatePassword()
+        .then(function(response) {
+            if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
+                StaffController.selectedStaffData.password = response;
+            }
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -1092,6 +1116,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.createNewStaff = true;
             StaffController.step = 'create_user';
             StaffController.getUniqueOpenEmisId();
+            StaffController.generatePassword();
             InstitutionsStaffSvc.resetExternalVariable();
         }
         // Step 4 - Add Staff
