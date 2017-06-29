@@ -76,20 +76,32 @@ $description = __d('open_emis', $_productName);
 				</div>
 			<?php endif;?>
 			<div class="form-group">
+				<?php if ($enableLocalLogin) : ?>
 				<?= $this->Form->button(__('Login'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
 				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
-
+				<?php endif; ?>
 			<?= $this->Form->end() ?>
+
 			<?php
 				if ($authentications) :
 			?>
+
+			<?php if ($authentications && $enableLocalLogin) : ?>
 			<hr />
+				<?= '<center>'.__('OR').'</center>'?>
+			<?php endif;?>
+			<hr />
+				<div class="input-select-wrapper sso-options">
 				<?php
-					foreach ($authentications as $authentication) {
-						echo $this->Html->link(__($authentication['name']), ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', $authentication['authentication_type'], $authentication['code']], ['class' => 'btn btn-primary btn-login']);
-					}
+					echo $this->Form->input('idp', [
+						'options' => $authentications,
+						'label' => false,
+						'onchange' => 'window.document.location.href=this.options[this.selectedIndex].value;'
+					]);
 				?>
+				</div>
 			<?php endif; ?>
+
 			</div>
 		</div>
 
