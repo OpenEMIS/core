@@ -13,7 +13,7 @@ use Cake\Utility\Inflector;
 
 class GoogleAuthenticationBehavior extends Behavior
 {
-    private $alias;
+    private $model;
 
     public function initialize(array $config)
     {

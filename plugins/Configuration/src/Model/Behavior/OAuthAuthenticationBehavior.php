@@ -13,6 +13,8 @@ use Cake\Validation\Validator;
 
 class OAuthAuthenticationBehavior extends Behavior
 {
+    private $model;
+
     public function initialize(array $config)
     {
         parent::initialize($config);

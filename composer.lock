@@ -448,7 +448,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "7d3b21efeef2daa83bdb53268a1b540e9e9dbcd8"
+                "reference": "c76bfcbd69846b02b641c65f2e4c93e5079fa09f"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -485,7 +485,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-06-29 08:01:21"
+            "time": "2017-06-30 02:53:16"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
@@ -1058,7 +1058,7 @@
                 "codesniffer",
                 "framework"
             ],
-            "time": "2017-03-01 21:51:12"
+            "time": "2017-03-01T21:51:12+00:00"
         },
         {
             "name": "cakephp/debug_kit",
@@ -3321,7 +3321,7 @@
                 "phpcs",
                 "standards"
             ],
-            "time": "2017-03-01 22:17:45"
+            "time": "2017-03-01T22:17:45+00:00"
         },
         {
             "name": "symfony/config",
