@@ -1,12 +1,12 @@
 <?php
 namespace App\Shell;
 
+use ArrayObject;
 use Exception;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use CustomExcel\Controller\CustomExcelsController;
 
 class GenerateAllReportCardsShell extends Shell
 {
@@ -14,7 +14,7 @@ class GenerateAllReportCardsShell extends Shell
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionClassStudents');
-        $this->CustomExcels = new CustomExcelsController();
+        $this->loadModel('CustomExcel.ReportCards');
     }
 
     public function main()
@@ -42,7 +42,7 @@ class GenerateAllReportCardsShell extends Shell
 
             $this->out($pid.': Generating report cards for '. count($classStudents) .' students ('. Time::now() .')');
 
-            $excelParams = [];
+            $excelParams = new ArrayObject([]);
             $excelParams['className'] = 'CustomExcel.ReportCards';
 
             foreach ($classStudents as $student) {
@@ -53,7 +53,7 @@ class GenerateAllReportCardsShell extends Shell
                 $excelParams['requestQuery'] = $studentObj;
 
                 try {
-                    $this->CustomExcels->ExcelReport->renderExcel($excelParams);
+                    $this->ReportCards->renderExcelTemplate($excelParams);
 
                 } catch (\Exception $e) {
                     $this->out($pid.': Error generating Report Card for student id ' . $student->student_id);

@@ -1,22 +1,34 @@
 <?php
 namespace App\Controller;
 
-use App\Controller\AppController;
 use Cake\Event\Event;
 
-class LabelsController extends AppController {
-	public function initialize() {
-		parent::initialize();
+use Page\Controller\PageController;
 
-		$this->ControllerAction->model('Labels', ['!remove', '!add']);
-		$this->loadComponent('Paginator');
+class LabelsController extends PageController
+{
+    public function initialize()
+    {
+        parent::initialize();
+
+        $this->Page->loadElementsFromTable($this->Labels);
+        $this->Page->disable(['add', 'delete']);
     }
 
-    public function beforeFilter(Event $event) {
-    	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Labels', ['plugin' => false, 'controller' => 'Labels', 'action' => 'index']);
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $this->Navigation->addCrumb('Labels', ['plugin' => false, 'controller' => 'Labels', 'action' => 'index']);
 
-    	$header = __('Labels');
-		$this->set('contentHeader', $header);	
+        $page = $this->Page;
+        $page->exclude(['module', 'field', 'visible']);
+    }
+
+    public function edit($id)
+    {
+        $page = $this->Page;
+        $page->get('module_name')->setDisabled(true);
+        $page->get('field_name')->setDisabled(true);
+        parent::edit($id);
     }
 }
