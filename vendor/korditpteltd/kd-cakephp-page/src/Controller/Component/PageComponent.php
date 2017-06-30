@@ -267,7 +267,7 @@ class PageComponent extends Component
         return $this->toolbar;
     }
 
-    public function attachPrimaryKey(Table $table, $entity)
+    public function attachPrimaryKey(Table $table, &$entity)
     {
         $primaryKey = $table->primaryKey();
 
