@@ -26,6 +26,8 @@ DROP TABLE security_user_logins;
 ALTER TABLE `z_3931_security_user_logins`
 RENAME TO  `security_user_logins` ;
 
+UPDATE `security_functions` SET `_add`=NULL, `_delete`=NULL WHERE `id`='5020';
+
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3931';
 
 
