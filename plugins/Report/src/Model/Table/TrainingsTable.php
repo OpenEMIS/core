@@ -97,6 +97,8 @@ class TrainingsTable extends AppTable
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {
+        $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers'];
+
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
@@ -119,12 +121,19 @@ class TrainingsTable extends AppTable
                         break;
                 }
 
-                $workflowStatuses = $this->Workflow->getWorkflowStatuses($modelAlias);
-                $workflowStatuses = ['-1' => __('All Statuses')] + $workflowStatuses;
+                // POCOR-4072 participant and trainer report doesnt need workflow status.
+                if (in_array($feature, $excludedFeature)) {
+                    $attr['visible'] = false;
+                } else {
+                    $workflowStatuses = $this->Workflow->getWorkflowStatuses($modelAlias);
+                    $workflowStatuses = ['-1' => __('All Statuses')] + $workflowStatuses;
 
-                $attr['type'] = 'select';
-                $attr['select'] = false;
-                $attr['options'] = $workflowStatuses;
+                    $attr['type'] = 'select';
+                    $attr['select'] = false;
+                    $attr['options'] = $workflowStatuses;
+                }
+                // End POCOR-4072
+
                 return $attr;
             }
         }
