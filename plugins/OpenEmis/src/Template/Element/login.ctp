@@ -89,8 +89,8 @@ $description = __d('open_emis', $_productName);
 			<?php if ($authentications && $enableLocalLogin) : ?>
 			<hr />
 				<?= '<center>'.__('OR').'</center>'?>
-			<?php endif;?>
 			<hr />
+			<?php endif;?>
 				<div class="input-select-wrapper sso-options">
 				<?php
 					echo $this->Form->input('idp', [
