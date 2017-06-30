@@ -65,7 +65,7 @@ class OAuthAuthenticate extends BaseAuthenticate
                         'lastName' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_last_name']),
                         'gender' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_gender']),
                         'dateOfBirth' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_date_of_birth']),
-                        'role' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_roles'])
+                        'role' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_role'])
                     ];
 
                     $User = TableRegistry::get($this->_config['userModel']);
