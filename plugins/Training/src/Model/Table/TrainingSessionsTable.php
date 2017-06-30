@@ -126,7 +126,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $newOptions = [];
         $newOptions = [
             'associated' => [
-                'Trainers',
+                'Trainers' => ['validate' => false],
                 'Trainees' => ['validate' => false],
                 'Trainees._joinData'
             ],
@@ -298,8 +298,7 @@ class TrainingSessionsTable extends ControllerActionTable
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
             $extra = $this->request->query['extra'];
-
-            $data = $this->Trainers->Users->autocomplete($term, ['finder' => [$extra['type']]]);
+            $data = $this->Trainers->Users->autocomplete($term, ['finder' => [$extra['type']], 'OR' => ['Identities.number LIKE' => $term.'%']]);
             echo json_encode($data);
             die;
         }
@@ -347,7 +346,8 @@ class TrainingSessionsTable extends ControllerActionTable
                 $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
                 $query = $Staff
                     ->find()
-                    ->matching('Users')
+                    ->contain(['Users.Identities'])
+                    ->leftJoinWith('Users.Identities')
                     ->matching('Positions', function ($q) use ($Positions, $targetPopulationIds) {
                         return $q
                             ->find('all')
@@ -360,11 +360,11 @@ class TrainingSessionsTable extends ControllerActionTable
                     ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')]);
 
                 // function from AdvancedNameSearchBehavior
-                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search, 'OR' => ['Identities.number LIKE' => $search]]);
                 $list = $query->toArray();
 
                 foreach ($list as $obj) {
-                    $_matchingData = $obj->_matchingData['Users'];
+                    $_matchingData = $obj->user;
                     $data[] = [
                         'label' => sprintf('%s - %s', $_matchingData->openemis_no, $_matchingData->name),
                         'value' => $_matchingData->id
@@ -372,7 +372,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 }
             }
             // End
-
+            // pr($query->sql());
             echo json_encode($data);
             die;
         }
