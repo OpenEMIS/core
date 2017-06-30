@@ -86,7 +86,9 @@ class ReportsController extends AppController {
 				'Report.TrainingCourses' => __('Courses'),
 				'Report.TrainingSessions' => __('Sessions'),
 				'Report.TrainingResults' => __('Results'),
-                'Report.StaffTrainingApplications' => __('Applications')
+                'Report.StaffTrainingApplications' => __('Applications'),
+                'Report.TrainingTrainers' => __('Trainers'),
+                'Report.TrainingSessionParticipants' => __('Session Participants')
 			];
 		} else if ($module == 'Surveys') {
 			$options = [
