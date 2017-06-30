@@ -16,11 +16,6 @@
  */
 
 use Cake\Http\Client;
-use Google_Auth_Abstract;
-use Google_Auth_Exception;
-use Google_Http_Request;
-use Google_Utils;
-use Google_Auth_LoginTicket;
 
 /**
  * Authentication class that deals with the OAuth 2 web-server authentication flow
