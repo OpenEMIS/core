@@ -269,12 +269,19 @@ class PageComponent extends Component
 
     public function attachPrimaryKey(Table $table, $entity)
     {
-        if ($entity instanceof Entity) {
-            $primaryKey = $table->primaryKey();
+        $primaryKey = $table->primaryKey();
 
-            if (!is_array($primaryKey)) {
+        if ($entity instanceof Entity) {
+            if (!is_array($primaryKey)) { // primary key is not composite key
                 $key = [$primaryKey => $entity->$primaryKey];
                 $entity->primaryKey = $this->strToHex(json_encode($key));
+            } else {
+                pr($primaryKey);die;
+            }
+        } else {
+            if (!is_array($primaryKey)) { // primary key is not composite key
+                $key = [$primaryKey => $entity[$primaryKey]];
+                $entity['primaryKey'] = $this->strToHex(json_encode($key));
             } else {
                 pr($primaryKey);die;
             }
