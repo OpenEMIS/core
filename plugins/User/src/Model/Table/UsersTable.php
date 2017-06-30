@@ -831,6 +831,7 @@ class UsersTable extends AppTable
             }
 
             $query = $query
+                ->leftJoinWith('Identities')
                 ->select([
                     $this->aliasField('openemis_no'),
                     $this->aliasField('first_name'),
@@ -844,10 +845,16 @@ class UsersTable extends AppTable
                     $this->aliasField('first_name'),
                     $this->aliasField('last_name')
                 ])
+                ->group([$this->aliasField('id')])
                 ->limit(100);
 
             // function from AdvancedNameSearchBehavior
-            $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+            if (isset($extra['OR'])) {
+                $query = $this->addSearchConditions($query, ['searchTerm' => $search, 'OR' => $extra['OR']]);
+            } else {
+                $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+            }
+
             $list = $query->toArray();
 
             foreach ($list as $obj) {
