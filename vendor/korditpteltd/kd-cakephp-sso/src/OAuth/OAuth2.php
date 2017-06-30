@@ -15,11 +15,6 @@
  * limitations under the License.
  */
 
-if (!class_exists('Google_Client')) {
-    require_once dirname(__FILE__) . '/../../../../google/apiclient/autoload.php';
-}
-require_once dirname(__FILE__).'/../../../../autoload.php';
-
 use Cake\Http\Client;
 
 /**
@@ -149,7 +144,6 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
         );
         $request->disableGzip();
         $response = $this->client->getIo()->makeRequest($request);
-
         if ($response->getResponseHttpCode() == 200) {
             $this->setAccessToken($response->getResponseBody());
             $this->token['created'] = time();

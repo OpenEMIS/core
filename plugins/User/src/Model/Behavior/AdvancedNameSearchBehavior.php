@@ -4,12 +4,16 @@ namespace User\Model\Behavior;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 
-class AdvancedNameSearchBehavior extends Behavior {
+class AdvancedNameSearchBehavior extends Behavior
+{
     // findByNames
     // advancedNameSearch Behavior
-    public function addSearchConditions(Query $query, $options = []) 
+    public function addSearchConditions(Query $query, $options = [])
     {
         $conditions = $this->getNameSearchConditions($options);
+        if (array_key_exists('OR', $options)) {
+            $conditions = array_merge($conditions, $options['OR']);
+        }
         $query->where(['OR' => $conditions]);
 
         return $query;

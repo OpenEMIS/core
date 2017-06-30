@@ -40,7 +40,8 @@ class AppController extends Controller
         // Custom Helper
         'ControllerAction.ControllerAction',
         'OpenEmis.Navigation',
-        'OpenEmis.Resource'
+        'OpenEmis.Resource',
+        'Page.Page'
     ];
 
     private $webhookListUrl = [
@@ -60,7 +61,7 @@ class AppController extends Controller
     {
         parent::initialize();
 
-
+        $this->loadComponent('Page.PhpFrontEnd');
 
         // ControllerActionComponent must be loaded before AuthComponent for it to work
         $this->loadComponent('ControllerAction.ControllerAction', [
@@ -78,13 +79,13 @@ class AppController extends Controller
                 ],
             ],
             'loginAction' => [
-                'plugin' => null,
-                'controller' => 'Login',
+                'plugin' => 'User',
+                'controller' => 'Users',
                 'action' => 'login'
             ],
             'logoutRedirect' => [
-                'plugin' => null,
-                'controller' => 'Login',
+                'plugin' => 'User',
+                'controller' => 'Users',
                 'action' => 'login'
             ]
         ]);
@@ -148,6 +149,21 @@ class AppController extends Controller
         $this->loadComponent('Csrf');
         if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
+        }
+    }
+
+    /**
+     * Before render callback.
+     *
+     * @param \Cake\Event\Event $event The beforeRender event.
+     * @return void
+     */
+    public function beforeRender(Event $event)
+    {
+        if (!array_key_exists('_serialize', $this->viewVars) &&
+            in_array($this->response->type(), ['application/json', 'application/xml'])
+        ) {
+            $this->set('_serialize', true);
         }
     }
 
