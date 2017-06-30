@@ -60,7 +60,7 @@ $this->start('panelBody');
 							}
 
 							if ($params['action'] == 'CustomReports') {
-								echo 'In Progress';
+								echo __('In Progress');
 							} else {
 								echo '<div class="progress progress-striped active" style="margin-bottom:0">';
 								echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '"></div>';
