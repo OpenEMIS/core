@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "de4db6978228894a5c5329b6c7468bc0",
+    "content-hash": "b163a21125ff27fcd7e00f4ea8fcb700",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -427,7 +427,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
             },
-            "time": "2017-06-29 06:57:42"
+            "time": "2017-06-29T06:57:42+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
@@ -490,7 +490,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "c76bfcbd69846b02b641c65f2e4c93e5079fa09f"
+                "reference": "a89e6d3717dd567bd5743ebeb5d5b8c861d56af7"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -527,7 +527,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-06-30T02:53:16+00:00"
+            "time": "2017-06-30 09:40:45"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
@@ -770,7 +770,7 @@
                 "xls",
                 "xlsx"
             ],
-            "time": "2015-05-05T00:10:25+00:00"
+            "time": "2015-05-05 00:10:25"
         },
         {
             "name": "phpseclib/phpseclib",
