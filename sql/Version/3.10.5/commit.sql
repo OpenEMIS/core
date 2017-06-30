@@ -16,8 +16,8 @@ CREATE TABLE `system_authentications` (
   `name` VARCHAR(100) NULL,
   `authentication_type_id` INT NOT NULL COMMENT 'links to authentication_types.id',
   `status` INT NOT NULL,
-  `mapped_username` VARCHAR(50) NOT NULL,
   `allow_create_user` INT(1) NOT NULL,
+  `mapped_username` VARCHAR(50) NOT NULL,
   `mapped_first_name` VARCHAR(50) NULL,
   `mapped_last_name` VARCHAR(50) NULL,
   `mapped_date_of_birth` VARCHAR(50) NULL,
@@ -88,7 +88,11 @@ SELECT
     null as mapped_last_name,
     null as mapped_date_of_birth,
     null as mapped_gender,
-    null as mapped_role;
+    null as mapped_role
+FROM `z_3931_authentication_type_attributes`
+WHERE `z_3931_authentication_type_attributes`.`authentication_type` = 'Google'
+GROUP BY `z_3931_authentication_type_attributes`.`authentication_type`
+HAVING COUNT(`z_3931_authentication_type_attributes`.`id`) > 0;
 
 INSERT IGNORE INTO idp_google
 Select
@@ -97,7 +101,10 @@ Select
     (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'client_secret') as client_secret,
     (SELECT CONCAT(`value`, '/Google/', CONCAT('IDP', LEFT(MD5(1), 13))) FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'redirect_uri') as redirect_uri,
     (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Google' AND attribute_field = 'hd') as hd
-    ;
+FROM `z_3931_authentication_type_attributes`
+WHERE `z_3931_authentication_type_attributes`.`authentication_type` = 'Google'
+GROUP BY `z_3931_authentication_type_attributes`.`authentication_type`
+HAVING COUNT(`z_3931_authentication_type_attributes`.`id`) > 0;
 
 SET @id = 1 + (SELECT COUNT(id) FROM system_authentications);
 
@@ -114,7 +121,11 @@ SELECT
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_last_name_mapping') as mapped_last_name,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_date_of_birth_mapping') as mapped_date_of_birth,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_gender_mapping') as mapped_gender,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_role_mapping') as mapped_role;
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'saml_role_mapping') as mapped_role
+FROM `z_3931_authentication_type_attributes`
+WHERE `z_3931_authentication_type_attributes`.`authentication_type` = 'Saml2'
+GROUP BY `z_3931_authentication_type_attributes`.`authentication_type`
+HAVING COUNT(`z_3931_authentication_type_attributes`.`id`) > 0;
 
 INSERT IGNORE INTO idp_saml
 Select
@@ -132,7 +143,11 @@ Select
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_slo') as sp_slo,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_name_id_format') as sp_name_id_format,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_privateKey') as sp_privateKey,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_metadata') as sp_metadata;
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'Saml2' AND attribute_field = 'sp_metadata') as sp_metadata
+FROM `z_3931_authentication_type_attributes`
+WHERE `z_3931_authentication_type_attributes`.`authentication_type` = 'Saml2'
+GROUP BY `z_3931_authentication_type_attributes`.`authentication_type`
+HAVING COUNT(`z_3931_authentication_type_attributes`.`id`) > 0;
 
 SET @id = 1 + (SELECT COUNT(id) FROM system_authentications);
 
@@ -149,7 +164,11 @@ SELECT
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'lastName_mapping') as mapped_last_name,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'dob_mapping') as mapped_date_of_birth,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'gender_mapping') as mapped_gender,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'role_mapping') as mapped_role;
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'role_mapping') as mapped_role
+FROM `z_3931_authentication_type_attributes`
+WHERE `z_3931_authentication_type_attributes`.`authentication_type` = 'OAuth2OpenIDConnect'
+GROUP BY `z_3931_authentication_type_attributes`.`authentication_type`
+HAVING COUNT(`z_3931_authentication_type_attributes`.`id`) > 0;
 
 INSERT IGNORE INTO idp_oauth
 Select
@@ -162,8 +181,11 @@ Select
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'token_uri') as token_endpoint,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'userInfo_uri') as userinfo_endpoint,
   (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'issuer') as issuer,
-  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'jwk_uri') as jwks_uri;
-    ;
+  (SELECT `value` FROM z_3931_authentication_type_attributes WHERE authentication_type = 'OAuth2OpenIDConnect' AND attribute_field = 'jwk_uri') as jwks_uri
+FROM `z_3931_authentication_type_attributes`
+WHERE `z_3931_authentication_type_attributes`.`authentication_type` = 'OAuth2OpenIDConnect'
+GROUP BY `z_3931_authentication_type_attributes`.`authentication_type`
+HAVING COUNT(`z_3931_authentication_type_attributes`.`id`) > 0;
 
 UPDATE system_authentications
 SET status = 1
