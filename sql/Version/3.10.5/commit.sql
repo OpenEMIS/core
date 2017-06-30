@@ -224,7 +224,12 @@ INSERT INTO `security_user_logins` (`security_user_id`, `login_date_time`, `logi
 SELECT `security_user_id`, `login_date_time`, date_format(`login_date_time`, '%Y%m') as `login_period`, `session_id`, `ip_address`
 FROM `z_3931_security_user_logins`;
 
-UPDATE `security_functions` SET `_add`='add', `_delete`='remove' WHERE `id`='5020';
+UPDATE `security_functions` SET `order` = `order` + 5 WHERE `order` > 5021 AND `order` < 6000;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (5073, 'Authentication', 'Configurations', 'Administration', 'System Configurations', 5000, 'AuthSystemAuthentications.index|AuthSystemAuthentications.view|Authentication.view', 'Authentication.edit|AuthSystemAuthentications.edit', 'AuthSystemAuthentications.add', 'AuthSystemAuthentications.remove', 5022, 1, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (5074, 'External Data Source', 'Configurations', 'Administration', 'System Configurations', 5000, 'ExternalDataSource.view', 'ExternalDataSource.edit', null, null, 5023, 1, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (5075, 'Product Lists', 'Configurations', 'Administration', 'System Configurations', 5000, 'ProductLists.index|ProductLists.view', 'ProductLists.edit', 'ProductLists.add', 'ProductLists.remove', 5024, 1, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `order`, `visible`, `created_user_id`, `created`) VALUES (5076, 'Webhooks', 'Configurations', 'Administration', 'System Configurations', 5000, 'Webhooks.index|Webhooks.view', 'Webhooks.edit', 'Webhooks.add', 'Webhooks.remove', 5025, 1, 1, NOW());
 
 
 -- POCOR-2470
