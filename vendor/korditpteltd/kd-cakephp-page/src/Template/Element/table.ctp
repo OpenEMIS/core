@@ -1,5 +1,5 @@
 <?php
-echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
+echo $this->Html->script('Page.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
 
 $tableClass = 'table table-curved table-sortable table-checkable';
 $displayReorder = false;
@@ -32,16 +32,16 @@ $totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
     ?>
     <ul class="pagination">
         <?php
-        echo $this->ControllerAction->getPaginatorButtons('prev');
-        echo $this->ControllerAction->getPaginatorNumbers();
-        echo $this->ControllerAction->getPaginatorButtons('next');
+        echo $this->Page->getPaginatorButtons('prev');
+        echo $this->Page->getPaginatorNumbers();
+        echo $this->Page->getPaginatorButtons('next');
         ?>
     </ul>
     <?php endif ?>
     <div class="counter">
         <?php
-        $defaultLocale = $this->ControllerAction->locale();
-        $this->ControllerAction->locale('en_US');
+        $defaultLocale = $this->Page->locale();
+        $this->Page->locale('en_US');
         ?>
         <?php
             $paginateCountString = $this->Paginator->counter([
@@ -49,7 +49,7 @@ $totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
             ]);
 
             $paginateCountArray = explode(' ', $paginateCountString);
-            $this->ControllerAction->locale($defaultLocale);
+            $this->Page->locale($defaultLocale);
             echo sprintf(__('Showing %s to %s of %s records'), $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
         ?>
     </div>

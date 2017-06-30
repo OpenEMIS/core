@@ -1,5 +1,7 @@
 <?php
 namespace User\Controller;
+
+use Exception;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
@@ -18,6 +20,7 @@ class UsersController extends AppController
         $this->ControllerAction->model('User.Users');
         $this->loadComponent('Paginator');
         $this->loadComponent('Cookie');
+        $this->loadComponent('SSO.SLO');
     }
 
     public function beforeFilter(Event $event)
@@ -31,9 +34,35 @@ class UsersController extends AppController
             $this->eventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', [$action]);
         }
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $localLoginEnabled = $ConfigItems->value('enable_local_login');
 
-        // For fall back
-        $this->set('_sso', false);
+        // To show local login
+        $this->set('enableLocalLogin', $localLoginEnabled);
+
+        $SystemAuthentications = TableRegistry::get('SSO.SystemAuthentications');
+        $authentications = $SystemAuthentications->getActiveAuthentications();
+
+        $authenticationOptions = [];
+
+        foreach ($authentications as $auth) {
+            $authenticationOptions[$auth['name']] = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', $auth['authentication_type'], $auth['code']]);
+        }
+        $authentication = [];
+        if ($authenticationOptions) {
+            $authentication[] = [
+                'text' => __('Select Single Sign On Method'),
+                'value' => 0
+            ];
+            foreach ($authenticationOptions as $key => $value) {
+                $authentication[] = [
+                    'text' => $key,
+                    'value' => $value
+                ];
+            }
+        }
+
+        $this->set('authentications', $authentication);
     }
 
     public function patchPasswords()
@@ -64,6 +93,9 @@ class UsersController extends AppController
             $password = '';
             $session = $this->request->session();
 
+            // SLO Login
+            $this->SLO->login();
+
             if ($this->Auth->user()) {
                 return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
             }
@@ -92,10 +124,18 @@ class UsersController extends AppController
         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
     }
 
-    public function postLogin()
+    public function postLogin($authenticationType = 'Local', $code = null)
     {
         $this->autoRender = false;
-        $this->SSO->doAuthentication();
+        $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
+        $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
+        if (!$enableLocalLogin && count($authentications) == 1) {
+            $authenticationType = $authentications[0]['authentication_type'];
+            $code = $authentications[0]['code'];
+        } elseif (is_null($code)) {
+            $authenticationType = 'Local';
+        }
+        $this->SSO->doAuthentication($authenticationType, $code);
     }
 
     public function logout($username = null)
@@ -158,7 +198,6 @@ class UsersController extends AppController
 
             if (!empty($user)) {
                 $listeners = [
-                    TableRegistry::get('Security.SecurityUserLogins'),
                     $this->Users
                 ];
                 $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
@@ -179,7 +218,8 @@ class UsersController extends AppController
         }
     }
 
-    public function generateToken() {
+    public function generateToken()
+    {
         $user = $this->Auth->user();
 
         // Expiry change to 24 hours
@@ -213,7 +253,7 @@ class UsersController extends AppController
         try {
             $pid = exec($shellCmd);
             Log::write('debug', $shellCmd);
-        } catch(\Exception $ex) {
+        } catch (Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
         }
     }

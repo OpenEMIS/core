@@ -16,11 +16,11 @@ $this->start('contentBody');
 <div class="panel">
     <div class="panel-body">
         <?php
-        echo $this->element('OpenEmis.alert');
-        $formOptions = $this->ControllerAction->getFormOptions();
+        echo $this->element('Page.alert');
+        $formOptions = $this->Page->getFormOptions();
         $template = $this->Page->getFormTemplate();
         $this->Form->templates($template);
-        echo $this->Form->create($data, $formOptions);
+        echo $this->Form->create(!is_array($data) ? $data : null, $formOptions);
         echo $this->Page->renderInputElements();
         echo $this->Page->getFormButtons();
         echo $this->Form->end();
