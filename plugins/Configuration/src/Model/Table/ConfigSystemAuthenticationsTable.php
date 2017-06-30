@@ -63,7 +63,9 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        switch ($this->authenticationTypeOptions[$data[$this->alias()]['authentication_type_id']]) {
+        $authenticationTypeId = $data[$this->alias()]['authentication_type_id'];
+        $idpType = isset($this->authenticationTypeOptions[$authenticationTypeId]) ? $this->authenticationTypeOptions[$authenticationTypeId] : '';
+        switch ($idpType) {
             case 'google':
                 $data[$this->alias()]['google'] = [
                     'client_id' => $data[$this->alias()]['client_id'],
@@ -183,8 +185,8 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $attr['onChangeReload'] = true;
         if (isset($request->data[$this->alias()]['authentication_type_id'])) {
             $authenticationTypeId = $request->data[$this->alias()]['authentication_type_id'];
-
-            switch ($this->authenticationTypeOptions[$authenticationTypeId]) {
+            $idpType = isset($this->authenticationTypeOptions[$authenticationTypeId]) ? $this->authenticationTypeOptions[$authenticationTypeId] : '';
+            switch ($idpType) {
                 case 'google':
                     $this->addBehavior('Configuration.GoogleAuthentication');
                     break;
