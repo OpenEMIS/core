@@ -38,7 +38,7 @@ class SamlAuthenticationBehavior extends Behavior
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $entity->errors($entity->errors('saml'), null, true);
-        $this->model->field('idp_entity_id', ['attr' => ['required' => true], 'label' => __('Identity Provider - Entity ID')]);
+        $this->model->field('idp_entity_id', ['attr' => ['required' => true, 'label' => __('Identity Provider - Entity ID')]]);
         $this->model->field('idp_sso', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Signon Service')]]);
         $this->model->field('idp_sso_binding', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Signon Service Binding')]]);
         $this->model->field('idp_slo', ['attr' => ['required' => true, 'label' => __('Identity Provider - Single Logout Service')]]);
