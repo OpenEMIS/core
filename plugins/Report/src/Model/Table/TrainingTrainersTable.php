@@ -37,9 +37,6 @@ class TrainingTrainersTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $requestData = json_decode($settings['process']['params']);
-        $selectedStatus = $requestData->status;
-
         $query
             ->select([
                 'session_code' => 'Sessions.code',
@@ -48,8 +45,7 @@ class TrainingTrainersTable extends AppTable
                 'session_end_date' => 'Sessions.end_date',
                 'openemis_no' => 'Trainers.openemis_no',
                 'identity_type_name' => 'IdentityTypes.name',
-                'identity_number' => 'Trainers.identity_number',
-                'name' => $this->aliasField('name')
+                'identity_number' => 'Trainers.identity_number'
             ])
             ->contain(['Sessions'])
             ->join([
@@ -127,10 +123,21 @@ class TrainingTrainersTable extends AppTable
         $newFields[] = [
             'key' => 'name',
             'field' => 'name',
-            'type' => 'string',
+            'type' => 'name',
             'label' => __('Name'),
         ];
 
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelRenderName(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->has('trainer_id')) {
+            $trainerId = $entity->trainer_id;
+
+            return $this->Trainers->get($trainerId)->name;
+        } else {
+            return ' ';
+        }
     }
 }
