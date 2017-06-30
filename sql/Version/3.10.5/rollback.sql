@@ -26,7 +26,7 @@ DROP TABLE security_user_logins;
 ALTER TABLE `z_3931_security_user_logins`
 RENAME TO  `security_user_logins` ;
 
-DELETE FROM `security_functions` WHERE `id` IN (5073, 5074, 5075, 5076)
+DELETE FROM `security_functions` WHERE `id` IN (5073, 5074, 5075, 5076);
 
 UPDATE `security_functions` SET `order` = `order` - 5 WHERE `order` > 5021 AND `order` < 6000;
 
