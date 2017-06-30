@@ -1,54 +1,90 @@
--- config_items
-CREATE TABLE IF NOT EXISTS `config_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `code` varchar(50) NOT NULL,
-  `type` varchar(50) NOT NULL,
-  `label` varchar(100) NOT NULL,
-  `value` varchar(500) NOT NULL,
-  `default_value` varchar(500) DEFAULT NULL,
-  `editable` int(1) NOT NULL DEFAULT '0',
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `field_type` varchar(50) NOT NULL,
-  `option_type` varchar(50) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
+-- authentication_types
+CREATE TABLE `authentication_types` (
+  `id` INT NOT NULL,
+  `name` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains list of authentication type in the system ';
+
+INSERT INTO `authentication_types` (`id`, `name`) VALUES (1, 'Google');
+INSERT INTO `authentication_types` (`id`, `name`) VALUES (2, 'SAML');
+INSERT INTO `authentication_types` (`id`, `name`) VALUES (3, 'OAuth');
+
+-- system_authentications
+CREATE TABLE `system_authentications` (
+  `id` INT NOT NULL,
+  `code` CHAR(16) NOT NULL,
+  `name` VARCHAR(100) NULL,
+  `authentication_type_id` INT NOT NULL COMMENT 'links to authentication_types.id',
+  `status` INT NOT NULL,
+  `mapped_username` VARCHAR(50) NOT NULL,
+  `allow_create_user` INT(1) NOT NULL,
+  `mapped_first_name` VARCHAR(50) NULL,
+  `mapped_last_name` VARCHAR(50) NULL,
+  `mapped_date_of_birth` VARCHAR(50) NULL,
+  `mapped_gender` VARCHAR(50) NULL,
+  `mapped_role` VARCHAR(50) NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `code` (`code`)
-) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  INDEX `authentication_type_id` (`authentication_type_id`),
+  UNIQUE INDEX `code` (`code`),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains user specified authentication';
 
--- Fixing the ID of authentication type to 1001
-INSERT IGNORE INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES (1001, 'Type', 'authentication_type', 'Authentication', 'Type', 'Local', 'Local', '1', '1', 'Dropdown', 'authentication_type', NULL, NULL, '1', NOW());
 
--- config_item_options
-CREATE TABLE IF NOT EXISTS `config_item_options` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `option_type` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
-  `option` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `value` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `order` int(3) NOT NULL DEFAULT '0',
-  `visible` int(3) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+-- idp_google - Table for storing authentication related information for Google
+CREATE TABLE `idp_google` (
+  `system_authentication_id` INT NOT NULL COMMENT 'links to system_authenticatons.id',
+  `client_id` VARCHAR(150) NOT NULL,
+  `client_secret` VARCHAR(150) NOT NULL,
+  `redirect_uri` VARCHAR(150) NOT NULL,
+  `hd` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`system_authentication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains Google authentication attributes';
 
-INSERT INTO `config_item_options` (`option_type`,`option`,`value`,`order`,`visible`) VALUES ('authentication_type','Local','Local',1,1);
-INSERT INTO `config_item_options` (`option_type`,`option`,`value`,`order`,`visible`) VALUES ('authentication_type','LDAP','LDAP',2,0);
-INSERT INTO `config_item_options` (`option_type`,`option`,`value`,`order`,`visible`) VALUES ('authentication_type','Google','Google',3,1);
-INSERT INTO `config_item_options` (`option_type`,`option`,`value`,`order`,`visible`) VALUES ('authentication_type','Saml2','Saml2',4,1);
+-- idp_oauth - Table for storing authentication related information for OAuth
+CREATE TABLE `idp_oauth` (
+  `system_authentication_id` INT NOT NULL COMMENT 'links to system_authenticatons.id',
+  `client_id` VARCHAR(150) NOT NULL,
+  `client_secret` VARCHAR(150) NOT NULL,
+  `redirect_uri` VARCHAR(200) NOT NULL,
+  `well-known_uri` VARCHAR(200) NULL,
+  `authorization_endpoint` VARCHAR(200) NOT NULL,
+  `token_endpoint` VARCHAR(200) NOT NULL,
+  `userinfo_endpoint` VARCHAR(200) NOT NULL,
+  `issuer` VARCHAR(200) NOT NULL,
+  `jwks_uri` VARCHAR(200) NOT NULL,
+  PRIMARY KEY (`system_authentication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains OAuth authentication attributes';
 
--- authentication_type_attributes
-CREATE TABLE IF NOT EXISTS `authentication_type_attributes` (
-  `id` char(36) NOT NULL,
-  `authentication_type` varchar(50) NOT NULL,
-  `attribute_field` varchar(50) NOT NULL,
-  `attribute_name` varchar(100) NOT NULL,
-  `value` text,
-  `modified` datetime DEFAULT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `created` datetime NOT NULL,
-  `created_user_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- idp_saml - Table for storing authentication related information for SAML
+CREATE TABLE `idp_saml` (
+  `system_authentication_id` INT NOT NULL COMMENT 'links to system_authenticatons.id',
+  `idp_entity_id` VARCHAR(200) NOT NULL,
+  `idp_sso` VARCHAR(200) NOT NULL,
+  `idp_sso_binding` VARCHAR(100) NOT NULL,
+  `idp_slo` VARCHAR(200) NOT NULL,
+  `idp_slo_binding` VARCHAR(100) NOT NULL,
+  `idp_x509cert` TEXT NOT NULL,
+  `idp_cert_fingerprint` VARCHAR(100) NULL,
+  `idp_cert_fingerprint_algorithm` VARCHAR(10) NULL,
+  `sp_entity_id` VARCHAR(200) NOT NULL,
+  `sp_acs` VARCHAR(200) NOT NULL,
+  `sp_slo` VARCHAR(100) NOT NULL,
+  `sp_name_id_format` VARCHAR(100) NULL,
+  `sp_private_key` TEXT NULL,
+  `sp_metadata` TEXT NOT NULL,
+  PRIMARY KEY (`system_authentication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains SAML authentication attributes';
+
+CREATE TABLE `security_user_logins` (
+  `id` BIGINT unsigned NOT NULL auto_increment,
+  `security_user_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
+  `login_date_time` datetime DEFAULT NULL,
+  `login_period` INT(6) NOT NULL,
+  `session_id` varchar(45) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`, `login_period`),
+  KEY `security_user_id` (`security_user_id`),
+  KEY `login_date_time` (`login_date_time`),
+  KEY `login_period` (`login_period`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all user logins'
+PARTITION BY HASH(login_period)
+PARTITIONS 101;
