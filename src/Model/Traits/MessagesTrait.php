@@ -1925,6 +1925,23 @@ trait MessagesTrait
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ],
+            'ConfigAuthentication' => [
+                'value' => [
+                    'ruleLocalLogin' => 'You may only turn local login off if there are additional authentication method configured.'
+                ]
+            ],
+            'ConfigSystemAuthentications' => [
+                'removeActive' =>'You are not allow to remove the only active IDP record. Please turn on local login or set another IDP to be the active IDP before removing.',
+                'status' => [
+                    'ruleLocalLogin' => 'You may only turn local login off if there are additional authentication method configured.'
+                ],
+                'code' => [
+                    'ruleUnique' => 'The redirect uri that has been generated before is invalid, please use the newly generated redirect uri.'
+                ],
+                'name' => [
+                    'ruleUnique' => 'The name for the IDP has to be unique.'
+                ],
+            ],
             'ConfigWebhooks' => [
                 'triggered_event' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'

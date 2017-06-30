@@ -247,8 +247,12 @@ class PageElement
 
     public function getAliasField()
     {
-        if (!empty($this->model) && empty($this->aliasField)) {
-            $this->aliasField = $this->model . '.' . $this->name;
+        if (empty($this->aliasField)) {
+            if (!empty($this->model)) {
+                $this->aliasField = $this->model . '.' . $this->name;
+            } else {
+                $this->aliasField = $this->name;
+            }
         }
         return $this->aliasField;
     }

@@ -486,11 +486,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "v1.1.2",
+            "version": "1.2.x-dev",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "48293cbfbb28b4d28efb46912e716a071c2e1e5e"
+                "reference": "c76bfcbd69846b02b641c65f2e4c93e5079fa09f"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -503,7 +503,10 @@
             "autoload": {
                 "psr-4": {
                     "SSO\\": "src"
-                }
+                },
+                "classmap": [
+                    "src/"
+                ]
             },
             "license": [
                 "GPL-2.0"
@@ -524,7 +527,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-04-27T07:04:39+00:00"
+            "time": "2017-06-30T02:53:16+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
@@ -660,16 +663,16 @@
         },
         {
             "name": "onelogin/php-saml",
-            "version": "2.10.5",
+            "version": "2.10.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/onelogin/php-saml.git",
-                "reference": "3319d7707f342e38291eee6b01a4a5f8df1b333b"
+                "reference": "b41f731803f303879f50fa76276908088197731c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/onelogin/php-saml/zipball/3319d7707f342e38291eee6b01a4a5f8df1b333b",
-                "reference": "3319d7707f342e38291eee6b01a4a5f8df1b333b",
+                "url": "https://api.github.com/repos/onelogin/php-saml/zipball/b41f731803f303879f50fa76276908088197731c",
+                "reference": "b41f731803f303879f50fa76276908088197731c",
                 "shasum": ""
             },
             "require": {
@@ -710,7 +713,7 @@
                 "onelogin",
                 "saml"
             ],
-            "time": "2017-03-13T09:56:49+00:00"
+            "time": "2017-05-19T10:32:03+00:00"
         },
         {
             "name": "phpoffice/phpexcel",
@@ -771,16 +774,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "2.0.5",
+            "version": "2.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "f8dd0e18d2328c447dd4190fecd11ef52680d968"
+                "reference": "34a7699e6f31b1ef4035ee36444407cecf9f56aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/f8dd0e18d2328c447dd4190fecd11ef52680d968",
-                "reference": "f8dd0e18d2328c447dd4190fecd11ef52680d968",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/34a7699e6f31b1ef4035ee36444407cecf9f56aa",
+                "reference": "34a7699e6f31b1ef4035ee36444407cecf9f56aa",
                 "shasum": ""
             },
             "require": {
@@ -859,7 +862,7 @@
                 "x.509",
                 "x509"
             ],
-            "time": "2017-05-08T05:58:35+00:00"
+            "time": "2017-06-05T06:31:10+00:00"
         },
         {
             "name": "psr/http-message",
@@ -3923,6 +3926,7 @@
     "stability-flags": {
         "phpoffice/phpexcel": 20,
         "korditpteltd/kd-cakephp-restful": 20,
+        "korditpteltd/kd-cakephp-sso": 20,
         "korditpteltd/kd-cakephp-page": 20,
         "psy/psysh": 0
     },
