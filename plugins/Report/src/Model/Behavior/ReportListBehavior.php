@@ -26,6 +26,7 @@ class ReportListBehavior extends Behavior {
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
 		$events['Model.excel.onExcelBeforeWrite'] = 'onExcelBeforeWrite';
+		$events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
 		$events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
 		return $events;
 	}
@@ -144,6 +145,13 @@ class ReportListBehavior extends Behavior {
 			['id' => $process->id]
 		);
 		$settings['purge'] = false; //for report, dont purge after download.
+	}
+
+	public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+	{
+		$requestData = json_decode($extra['process']['params']);
+		$locale = $requestData->locale;
+		I18n::locale($locale);
 	}
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
