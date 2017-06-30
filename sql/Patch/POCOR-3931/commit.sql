@@ -223,3 +223,5 @@ INSERT INTO `security_user_logins` (`security_user_id`, `login_date_time`, `logi
 SELECT `security_user_id`, `login_date_time`, date_format(`login_date_time`, '%Y%m') as `login_period`, `session_id`, `ip_address`
 FROM `z_3931_security_user_logins`;
 
+UPDATE `security_functions` SET `_add`='add', `_delete`='remove' WHERE `id`='5020';
+
