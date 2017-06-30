@@ -90,6 +90,22 @@ class ConfigAuthenticationTable extends ControllerActionTable
         return $attr;
     }
 
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->fields['type']['attr']['value'] = __($entity->type);
+        $this->fields['label']['attr']['value'] = __($entity->label);
+    }
+
+    public function onGetType(Event $event, Entity $entity)
+    {
+        return __($entity->type);
+    }
+
+    public function onGetLabel(Event $event, Entity $entity)
+    {
+        return __($entity->label);
+    }
+
     public function onGetValue(Event $event, Entity $entity)
     {
         return __($this->options[$entity->value]);
