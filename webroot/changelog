@@ -1,6 +1,7 @@
 v3.10.5
 - Implemented new reports module
 - Implemented the ability for user to login using different IDP
+- Added Report for Training Applications
 
 v3.10.4
 - Allows tabbing to next cell when entering Institution > Assessment results
