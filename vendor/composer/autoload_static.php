@@ -65,6 +65,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'Psr\\Http\\Message\\' => 17,
             'PhpParser\\' => 10,
             'Phinx\\' => 6,
+            'Page\\' => 5,
         ),
         'M' => 
         array (
@@ -217,6 +218,10 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'Phinx\\' => 
         array (
             0 => __DIR__ . '/..' . '/robmorgan/phinx/src/Phinx',
+        ),
+        'Page\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-page/src',
         ),
         'Migrations\\' => 
         array (
