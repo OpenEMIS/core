@@ -11,7 +11,6 @@ class SecurityUserLoginsTable extends Table
     {
         $now = Time::now();
         $data = [
-            'id' => Text::uuid(),
             'security_user_id' => $userId,
             'login_date_time' => $now,
             'login_period' => $now->format('Ym'),

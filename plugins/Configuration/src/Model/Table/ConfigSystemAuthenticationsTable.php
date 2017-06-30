@@ -203,4 +203,22 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         }
         return $attr;
     }
+
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $count = $this
+            ->find()
+            ->where([
+                $this->aliasField('status') => 1
+            ])
+            ->count();
+
+        $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
+
+        if (!$enableLocalLogin && $count == 1 && $entity->status == 1) {
+            $event->stopPropagation();
+            $this->Alert->error('Configuration.ConfigSystemAuthentications.removeActive', ['reset' => true]);
+            return false;
+        }
+    }
 }

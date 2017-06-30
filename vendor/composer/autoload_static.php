@@ -19,25 +19,25 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
     );
 
     public static $prefixLengthsPsr4 = array (
-        'p' =>
+        'p' => 
         array (
             'phpseclib\\' => 10,
             'phpDocumentor\\Reflection\\' => 25,
         ),
-        'Z' =>
+        'Z' => 
         array (
             'Zend\\Diactoros\\' => 15,
         ),
-        'X' =>
+        'X' => 
         array (
             'XdgBaseDir\\' => 11,
         ),
-        'W' =>
+        'W' => 
         array (
             'Webmozart\\Assert\\' => 17,
             'Webhook\\' => 8,
         ),
-        'S' =>
+        'S' => 
         array (
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Component\\Yaml\\' => 23,
@@ -53,12 +53,12 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'Seld\\CliPrompt\\' => 15,
             'SSO\\' => 4,
         ),
-        'R' =>
+        'R' => 
         array (
             'Restful\\Test\\Fixture\\' => 21,
             'Restful\\' => 8,
         ),
-        'P' =>
+        'P' => 
         array (
             'Psy\\' => 4,
             'Psr\\Log\\' => 8,
@@ -66,26 +66,26 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'PhpParser\\' => 10,
             'Phinx\\' => 6,
         ),
-        'M' =>
+        'M' => 
         array (
             'Migrations\\' => 11,
         ),
-        'J' =>
+        'J' => 
         array (
             'JsonSchema\\' => 11,
         ),
-        'F' =>
+        'F' => 
         array (
             'Firebase\\JWT\\' => 13,
         ),
-        'D' =>
+        'D' => 
         array (
             'Doctrine\\Instantiator\\' => 22,
             'DeepCopy\\' => 9,
             'DebugKit\\Test\\Fixture\\' => 22,
             'DebugKit\\' => 9,
         ),
-        'C' =>
+        'C' => 
         array (
             'ControllerAction\\Test\\' => 22,
             'ControllerAction\\' => 17,
@@ -98,11 +98,11 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'Cake\\Chronos\\' => 13,
             'Cake\\' => 5,
         ),
-        'B' =>
+        'B' => 
         array (
             'Bake\\' => 5,
         ),
-        'A' =>
+        'A' => 
         array (
             'Aura\\Intl\\_Config\\' => 18,
             'App\\Test\\' => 9,
@@ -112,239 +112,239 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
     );
 
     public static $prefixDirsPsr4 = array (
-        'phpseclib\\' =>
+        'phpseclib\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib',
         ),
-        'phpDocumentor\\Reflection\\' =>
+        'phpDocumentor\\Reflection\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpdocumentor/reflection-common/src',
             1 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
             2 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
         ),
-        'Zend\\Diactoros\\' =>
+        'Zend\\Diactoros\\' => 
         array (
             0 => __DIR__ . '/..' . '/zendframework/zend-diactoros/src',
         ),
-        'XdgBaseDir\\' =>
+        'XdgBaseDir\\' => 
         array (
             0 => __DIR__ . '/..' . '/dnoegel/php-xdg-base-dir/src',
         ),
-        'Webmozart\\Assert\\' =>
+        'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
         ),
-        'Webhook\\' =>
+        'Webhook\\' => 
         array (
             0 => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-webhooks/src',
         ),
-        'Symfony\\Polyfill\\Mbstring\\' =>
+        'Symfony\\Polyfill\\Mbstring\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
         ),
-        'Symfony\\Component\\Yaml\\' =>
+        'Symfony\\Component\\Yaml\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/yaml',
         ),
-        'Symfony\\Component\\VarDumper\\' =>
+        'Symfony\\Component\\VarDumper\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/var-dumper',
         ),
-        'Symfony\\Component\\Process\\' =>
+        'Symfony\\Component\\Process\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/process',
         ),
-        'Symfony\\Component\\Finder\\' =>
+        'Symfony\\Component\\Finder\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/finder',
         ),
-        'Symfony\\Component\\Filesystem\\' =>
+        'Symfony\\Component\\Filesystem\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/filesystem',
         ),
-        'Symfony\\Component\\Debug\\' =>
+        'Symfony\\Component\\Debug\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/debug',
         ),
-        'Symfony\\Component\\Console\\' =>
+        'Symfony\\Component\\Console\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/console',
         ),
-        'Symfony\\Component\\Config\\' =>
+        'Symfony\\Component\\Config\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/config',
         ),
-        'Seld\\PharUtils\\' =>
+        'Seld\\PharUtils\\' => 
         array (
             0 => __DIR__ . '/..' . '/seld/phar-utils/src',
         ),
-        'Seld\\JsonLint\\' =>
+        'Seld\\JsonLint\\' => 
         array (
             0 => __DIR__ . '/..' . '/seld/jsonlint/src/Seld/JsonLint',
         ),
-        'Seld\\CliPrompt\\' =>
+        'Seld\\CliPrompt\\' => 
         array (
             0 => __DIR__ . '/..' . '/seld/cli-prompt/src',
         ),
-        'SSO\\' =>
+        'SSO\\' => 
         array (
             0 => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src',
         ),
-        'Restful\\Test\\Fixture\\' =>
+        'Restful\\Test\\Fixture\\' => 
         array (
             0 => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-restful/tests/Fixture',
         ),
-        'Restful\\' =>
+        'Restful\\' => 
         array (
             0 => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-restful/src',
         ),
-        'Psy\\' =>
+        'Psy\\' => 
         array (
             0 => __DIR__ . '/..' . '/psy/psysh/src/Psy',
         ),
-        'Psr\\Log\\' =>
+        'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
         ),
-        'Psr\\Http\\Message\\' =>
+        'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
-        'PhpParser\\' =>
+        'PhpParser\\' => 
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
         ),
-        'Phinx\\' =>
+        'Phinx\\' => 
         array (
             0 => __DIR__ . '/..' . '/robmorgan/phinx/src/Phinx',
         ),
-        'Migrations\\' =>
+        'Migrations\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/migrations/src',
         ),
-        'JsonSchema\\' =>
+        'JsonSchema\\' => 
         array (
             0 => __DIR__ . '/..' . '/justinrainbow/json-schema/src/JsonSchema',
         ),
-        'Firebase\\JWT\\' =>
+        'Firebase\\JWT\\' => 
         array (
             0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
-        'Doctrine\\Instantiator\\' =>
+        'Doctrine\\Instantiator\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/instantiator/src/Doctrine/Instantiator',
         ),
-        'DeepCopy\\' =>
+        'DeepCopy\\' => 
         array (
             0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
         ),
-        'DebugKit\\Test\\Fixture\\' =>
+        'DebugKit\\Test\\Fixture\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/debug_kit/tests/Fixture',
         ),
-        'DebugKit\\' =>
+        'DebugKit\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/debug_kit/src',
         ),
-        'ControllerAction\\Test\\' =>
+        'ControllerAction\\Test\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/ControllerAction/tests',
         ),
-        'ControllerAction\\' =>
+        'ControllerAction\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/ControllerAction/src',
         ),
-        'Composer\\Spdx\\' =>
+        'Composer\\Spdx\\' => 
         array (
             0 => __DIR__ . '/..' . '/composer/spdx-licenses/src',
         ),
-        'Composer\\Semver\\' =>
+        'Composer\\Semver\\' => 
         array (
             0 => __DIR__ . '/..' . '/composer/semver/src',
         ),
-        'Composer\\CaBundle\\' =>
+        'Composer\\CaBundle\\' => 
         array (
             0 => __DIR__ . '/..' . '/composer/ca-bundle/src',
         ),
-        'Composer\\' =>
+        'Composer\\' => 
         array (
             0 => __DIR__ . '/..' . '/composer/composer/src/Composer',
         ),
-        'Cake\\Test\\' =>
+        'Cake\\Test\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/cakephp/tests',
         ),
-        'Cake\\Composer\\' =>
+        'Cake\\Composer\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/plugin-installer/src',
         ),
-        'Cake\\Chronos\\' =>
+        'Cake\\Chronos\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/chronos/src',
         ),
-        'Cake\\' =>
+        'Cake\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/cakephp/src',
         ),
-        'Bake\\' =>
+        'Bake\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/bake/src',
         ),
-        'Aura\\Intl\\_Config\\' =>
+        'Aura\\Intl\\_Config\\' => 
         array (
             0 => __DIR__ . '/..' . '/aura/intl/config',
         ),
-        'App\\Test\\' =>
+        'App\\Test\\' => 
         array (
             0 => __DIR__ . '/../..' . '/tests',
         ),
-        'App\\' =>
+        'App\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
-        'ADmad\\JwtAuth\\' =>
+        'ADmad\\JwtAuth\\' => 
         array (
             0 => __DIR__ . '/..' . '/admad/cakephp-jwt-auth/src',
         ),
     );
 
     public static $prefixesPsr0 = array (
-        'P' =>
+        'P' => 
         array (
-            'Prophecy\\' =>
+            'Prophecy\\' => 
             array (
                 0 => __DIR__ . '/..' . '/phpspec/prophecy/src',
             ),
-            'PHPExcel' =>
+            'PHPExcel' => 
             array (
                 0 => __DIR__ . '/..' . '/phpoffice/phpexcel/Classes',
             ),
         ),
-        'J' =>
+        'J' => 
         array (
-            'JakubOnderka\\PhpConsoleHighlighter' =>
+            'JakubOnderka\\PhpConsoleHighlighter' => 
             array (
                 0 => __DIR__ . '/..' . '/jakub-onderka/php-console-highlighter/src',
             ),
-            'JakubOnderka\\PhpConsoleColor' =>
+            'JakubOnderka\\PhpConsoleColor' => 
             array (
                 0 => __DIR__ . '/..' . '/jakub-onderka/php-console-color/src',
             ),
         ),
-        'D' =>
+        'D' => 
         array (
-            'Detection' =>
+            'Detection' => 
             array (
                 0 => __DIR__ . '/..' . '/mobiledetect/mobiledetectlib/namespaced',
             ),
         ),
-        'A' =>
+        'A' => 
         array (
-            'Aura\\Intl' =>
+            'Aura\\Intl' => 
             array (
                 0 => __DIR__ . '/..' . '/aura/intl/src',
             ),
-            'Aura\\Composer\\' =>
+            'Aura\\Composer\\' => 
             array (
                 0 => __DIR__ . '/..' . '/aura/installer-default/src',
             ),
@@ -4013,6 +4013,24 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'OneLogin_Saml_Response' => __DIR__ . '/..' . '/onelogin/php-saml/lib/Saml/Response.php',
         'OneLogin_Saml_Settings' => __DIR__ . '/..' . '/onelogin/php-saml/lib/Saml/Settings.php',
         'OneLogin_Saml_XmlSec' => __DIR__ . '/..' . '/onelogin/php-saml/lib/Saml/XmlSec.php',
+        'PEAR_Sniffs_Classes_ClassDeclarationSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Classes/ClassDeclarationSniff.php',
+        'PEAR_Sniffs_Commenting_ClassCommentSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Commenting/ClassCommentSniff.php',
+        'PEAR_Sniffs_Commenting_FileCommentSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Commenting/FileCommentSniff.php',
+        'PEAR_Sniffs_Commenting_FunctionCommentSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Commenting/FunctionCommentSniff.php',
+        'PEAR_Sniffs_Commenting_InlineCommentSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Commenting/InlineCommentSniff.php',
+        'PEAR_Sniffs_ControlStructures_ControlSignatureSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/ControlStructures/ControlSignatureSniff.php',
+        'PEAR_Sniffs_ControlStructures_MultiLineConditionSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/ControlStructures/MultiLineConditionSniff.php',
+        'PEAR_Sniffs_Files_IncludingFileSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Files/IncludingFileSniff.php',
+        'PEAR_Sniffs_Formatting_MultiLineAssignmentSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Formatting/MultiLineAssignmentSniff.php',
+        'PEAR_Sniffs_Functions_FunctionCallSignatureSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Functions/FunctionCallSignatureSniff.php',
+        'PEAR_Sniffs_Functions_FunctionDeclarationSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Functions/FunctionDeclarationSniff.php',
+        'PEAR_Sniffs_Functions_ValidDefaultValueSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/Functions/ValidDefaultValueSniff.php',
+        'PEAR_Sniffs_NamingConventions_ValidClassNameSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/NamingConventions/ValidClassNameSniff.php',
+        'PEAR_Sniffs_NamingConventions_ValidFunctionNameSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/NamingConventions/ValidFunctionNameSniff.php',
+        'PEAR_Sniffs_NamingConventions_ValidVariableNameSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/NamingConventions/ValidVariableNameSniff.php',
+        'PEAR_Sniffs_WhiteSpace_ObjectOperatorIndentSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/WhiteSpace/ObjectOperatorIndentSniff.php',
+        'PEAR_Sniffs_WhiteSpace_ScopeClosingBraceSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/WhiteSpace/ScopeClosingBraceSniff.php',
+        'PEAR_Sniffs_WhiteSpace_ScopeIndentSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PEAR/Sniffs/WhiteSpace/ScopeIndentSniff.php',
         'PHPUnit\\Framework\\Assert' => __DIR__ . '/..' . '/phpunit/phpunit/src/ForwardCompatibility/Assert.php',
         'PHPUnit\\Framework\\BaseTestListener' => __DIR__ . '/..' . '/phpunit/phpunit/src/ForwardCompatibility/BaseTestListener.php',
         'PHPUnit\\Framework\\TestCase' => __DIR__ . '/..' . '/phpunit/phpunit/src/ForwardCompatibility/TestCase.php',
@@ -4445,6 +4463,29 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'PSR2_Sniffs_Methods_MethodDeclarationSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PSR2/Sniffs/Methods/MethodDeclarationSniff.php',
         'PSR2_Sniffs_Namespaces_NamespaceDeclarationSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PSR2/Sniffs/Namespaces/NamespaceDeclarationSniff.php',
         'PSR2_Sniffs_Namespaces_UseDeclarationSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/PSR2/Sniffs/Namespaces/UseDeclarationSniff.php',
+        'SSO\\Auth\\GoogleAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/GoogleAuthenticate.php',
+        'SSO\\Auth\\OAuthAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/OAuthAuthenticate.php',
+        'SSO\\Auth\\SamlAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/SamlAuthenticate.php',
+        'SSO\\Controller\\Component\\GoogleAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/GoogleAuthComponent.php',
+        'SSO\\Controller\\Component\\LocalAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/LocalAuthComponent.php',
+        'SSO\\Controller\\Component\\OAuthAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/OAuthAuthComponent.php',
+        'SSO\\Controller\\Component\\SLOComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/SLOComponent.php',
+        'SSO\\Controller\\Component\\SSOComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/SSOComponent.php',
+        'SSO\\Controller\\Component\\SamlAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/SamlAuthComponent.php',
+        'SSO\\Controller\\LoginController' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/LoginController.php',
+        'SSO\\Model\\Table\\AuthenticationTypeAttributesTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/AuthenticationTypeAttributesTable.php',
+        'SSO\\Model\\Table\\AuthenticationTypesTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/AuthenticationTypesTable.php',
+        'SSO\\Model\\Table\\IdpGoogleTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpGoogleTable.php',
+        'SSO\\Model\\Table\\IdpOauthTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpOAuthTable.php',
+        'SSO\\Model\\Table\\IdpSamlTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpSamlTable.php',
+        'SSO\\Model\\Table\\SecurityUserLoginsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserLoginsTable.php',
+        'SSO\\Model\\Table\\SecurityUserSessionsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserSessionsTable.php',
+        'SSO\\Model\\Table\\SingleLogoutTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SingleLogoutTable.php',
+        'SSO\\Model\\Table\\SystemAuthenticationsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SystemAuthenticationsTable.php',
+        'SSO\\OAuth\\Custom_Client' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/OAuth/Client.php',
+        'SSO\\ProcessToken' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/ProcessToken.php',
+        'SSO\\Shell\\LoginShell' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Shell/LoginShell.php',
+        'SSO\\Shell\\LogoutShell' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Shell/LogoutShell.php',
         'SebastianBergmann\\CodeCoverage\\CodeCoverage' => __DIR__ . '/..' . '/phpunit/php-code-coverage/src/CodeCoverage.php',
         'SebastianBergmann\\CodeCoverage\\CoveredCodeNotExecutedException' => __DIR__ . '/..' . '/phpunit/php-code-coverage/src/Exception/CoveredCodeNotExecutedException.php',
         'SebastianBergmann\\CodeCoverage\\Driver\\Driver' => __DIR__ . '/..' . '/phpunit/php-code-coverage/src/Driver/Driver.php',
@@ -4524,29 +4565,6 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'SebastianBergmann\\RecursionContext\\InvalidArgumentException' => __DIR__ . '/..' . '/sebastian/recursion-context/src/InvalidArgumentException.php',
         'SebastianBergmann\\ResourceOperations\\ResourceOperations' => __DIR__ . '/..' . '/sebastian/resource-operations/src/ResourceOperations.php',
         'SebastianBergmann\\Version' => __DIR__ . '/..' . '/sebastian/version/src/Version.php',
-        'SSO\\Auth\\GoogleAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/GoogleAuthenticate.php',
-        'SSO\\Auth\\OAuthAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/OAuthAuthenticate.php',
-        'SSO\\Auth\\SamlAuthenticate' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Auth/SamlAuthenticate.php',
-        'SSO\\Controller\\Component\\GoogleAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/GoogleAuthComponent.php',
-        'SSO\\Controller\\Component\\LocalAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/LocalAuthComponent.php',
-        'SSO\\Controller\\Component\\OAuthAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/OAuthAuthComponent.php',
-        'SSO\\Controller\\Component\\SLOComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/SLOComponent.php',
-        'SSO\\Controller\\Component\\SSOComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/SSOComponent.php',
-        'SSO\\Controller\\Component\\SamlAuthComponent' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/Component/SamlAuthComponent.php',
-        'SSO\\Controller\\LoginController' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Controller/LoginController.php',
-        'SSO\\Model\\Table\\AuthenticationTypeAttributesTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/AuthenticationTypeAttributesTable.php',
-        'SSO\\Model\\Table\\AuthenticationTypesTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/AuthenticationTypesTable.php',
-        'SSO\\Model\\Table\\IdpGoogleTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpGoogleTable.php',
-        'SSO\\Model\\Table\\IdpOauthTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpOAuthTable.php',
-        'SSO\\Model\\Table\\IdpSamlTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/IdpSamlTable.php',
-        'SSO\\Model\\Table\\SecurityUserLoginsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserLoginsTable.php',
-        'SSO\\Model\\Table\\SecurityUserSessionsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SecurityUserSessionsTable.php',
-        'SSO\\Model\\Table\\SingleLogoutTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SingleLogoutTable.php',
-        'SSO\\Model\\Table\\SystemAuthenticationsTable' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Model/Table/SystemAuthenticationsTable.php',
-        'SSO\\OAuth\\Custom_Client' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/OAuth/Client.php',
-        'SSO\\ProcessToken' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/ProcessToken.php',
-        'SSO\\Shell\\LoginShell' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Shell/LoginShell.php',
-        'SSO\\Shell\\LogoutShell' => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-sso/src/Shell/LogoutShell.php',
         'SqlFormatter' => __DIR__ . '/..' . '/jdorn/sql-formatter/lib/SqlFormatter.php',
         'Squiz_Sniffs_Arrays_ArrayBracketSpacingSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/Squiz/Sniffs/Arrays/ArrayBracketSpacingSniff.php',
         'Squiz_Sniffs_Arrays_ArrayDeclarationSniff' => __DIR__ . '/..' . '/squizlabs/php_codesniffer/CodeSniffer/Standards/Squiz/Sniffs/Arrays/ArrayDeclarationSniff.php',

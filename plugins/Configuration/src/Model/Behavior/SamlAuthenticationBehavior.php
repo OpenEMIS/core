@@ -14,7 +14,7 @@ use Cake\Validation\Validator;
 
 class SamlAuthenticationBehavior extends Behavior
 {
-    private $alias;
+    private $model;
 
     public function initialize(array $config)
     {
