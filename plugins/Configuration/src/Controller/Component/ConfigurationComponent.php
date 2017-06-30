@@ -26,12 +26,7 @@ class ConfigurationComponent extends Component
     private $controller;
     private $configOptions = [
         'AdministrativeBoundaries'  => ['className' => 'Configuration.AdministrativeBoundaries'],
-        'Authentication'            => ['className' => 'Configuration.Authentication'],
-        'AuthSystemAuthentications' => ['className' => 'Configuration.AuthSystemAuthentications'],
-        'CustomValidation'          => ['className' => 'Configuration.CustomValidation'],
-        'ExternalDataSource'        => ['className' => 'Configuration.ExternalDataSource'],
-        'ProductLists'              => ['className' => 'Configuration.ProductLists'],
-        'Webhooks'                  => ['className' => 'Configuration.Webhooks']
+        'CustomValidation'          => ['className' => 'Configuration.CustomValidation']
     ];
 
     public $components = ['AccessControl'];
