@@ -406,7 +406,12 @@ class InstitutionClassesTable extends ControllerActionTable
                 'modified',
                 'created_user_id',
                 'created',
-                'education_stage_order' => $query->func()->min('EducationStages.order'),
+                'education_stage_order' => $query->func()->min('EducationStages.order')
+            ])
+            ->contain([
+                'Staff' => [
+                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
+                ]
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
