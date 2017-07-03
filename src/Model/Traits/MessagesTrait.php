@@ -1565,6 +1565,11 @@ trait MessagesTrait
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
+            ],
+            'EducationProgrammes' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
             ]
         ],
         'Localization' => [
