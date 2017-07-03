@@ -799,6 +799,9 @@ class InstitutionClassesTable extends ControllerActionTable
         } else {
             if ($entity->has('staff')) {
                 return $entity->staff->name_with_id;
+            } else if ($entity->has('staff_id') && $entity->staff_id > 0) {
+                $staffId = $entity->staff_id;
+                return $this->Staff->get($staffId)->name_with_id;
             } else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
             }
