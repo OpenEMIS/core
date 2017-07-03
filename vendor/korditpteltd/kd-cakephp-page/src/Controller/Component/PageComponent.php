@@ -136,6 +136,20 @@ class PageComponent extends Component
         $this->debug = $bool;
     }
 
+    public function getVar($name)
+    {
+        $controller = $this->controller;
+        if (array_key_exists($name, $controller->viewVars)) {
+            return $this->controller->viewVars[$name];
+        }
+        return null;
+    }
+
+    public function getData()
+    {
+        return $this->getVar('data');
+    }
+
     public function disable($actions)
     {
         foreach ($actions as $action) {
