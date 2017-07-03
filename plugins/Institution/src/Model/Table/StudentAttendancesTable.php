@@ -315,12 +315,7 @@ class StudentAttendancesTable extends AppTable
             // Compile the dataset
             $absenceForTheWeek = false;
             foreach ($userAbsenceType as $absenceType) {
-                $typeCode = '';
-                if (!empty($absenceType)) {
-                    $typeCode = $this->absenceCodeList[$absenceType];
-                }
-                
-                if (empty($absenceType) || $typeCode == 'LATE') {
+                if (empty($absenceType)) {
                     if (isset($data['Present'])) {
                         $data['Present'] = ++$data['Present'];
                     } else {
@@ -341,6 +336,12 @@ class StudentAttendancesTable extends AppTable
 
                     if ($typeName == 'Absence') {
                         $absenceForTheWeek = true;
+                    } else {
+                        if (isset($data['Present'])) {
+                            $data['Present'] = ++$data['Present'];
+                        } else {
+                            $data['Present'] = 1;
+                        }
                     }
                 }
             }
