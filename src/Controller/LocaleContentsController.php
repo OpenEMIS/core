@@ -119,16 +119,16 @@ class LocaleContentsController extends PageController
     {
         $page = $this->Page;
 
-        $allTranslatedLocales = $this->LocaleContents->find('allTranslatedLocale')->toArray()[0];
+        // $allTranslatedLocales = $this->LocaleContents->find('allTranslatedLocale')->toArray()[0];
 
         $localeNames = $this->getLocaleList();
         foreach($localeNames as $key => $value) {
             $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
         }
 
-        // parent::view($id);
-        $this->set('data', $allTranslatedLocales);
-        $this->render('Page.Page/view');
+        parent::view($id);
+        // $this->set('data', $allTranslatedLocales);
+        // $this->render('Page.Page/view');
     }
 
     public function add()
