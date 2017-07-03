@@ -18,15 +18,8 @@ if (array_key_exists('delete', $actions)) {
 $this->end();
 
 $this->start('contentBody');
+
+echo $this->Page->renderViewElements();
+
+$this->end();
 ?>
-
-<div class="panel">
-    <div class="panel-body">
-        <?php
-        echo $this->element('Page.alert');
-        echo $this->Page->renderViewElements();
-        ?>
-    </div>
-</div>
-
-<?php $this->end() ?>
