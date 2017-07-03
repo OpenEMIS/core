@@ -406,7 +406,12 @@ class InstitutionClassesTable extends ControllerActionTable
                 'modified',
                 'created_user_id',
                 'created',
-                'education_stage_order' => $query->func()->min('EducationStages.order'),
+                'education_stage_order' => $query->func()->min('EducationStages.order')
+            ])
+            ->contain([
+                'Staff' => [
+                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
+                ]
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
@@ -799,9 +804,6 @@ class InstitutionClassesTable extends ControllerActionTable
         } else {
             if ($entity->has('staff')) {
                 return $entity->staff->name_with_id;
-            } else if ($entity->has('staff_id') && $entity->staff_id > 0) {
-                $staffId = $entity->staff_id;
-                return $this->Staff->get($staffId)->name_with_id;
             } else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
             }
