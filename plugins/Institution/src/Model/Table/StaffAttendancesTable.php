@@ -347,6 +347,12 @@ class StaffAttendancesTable extends ControllerActionTable
 
                     if ($typeName == 'Absence') {
                         $absenceForTheWeek = true;
+                    } else {
+                        if (isset($data['Present'])) {
+                            $data['Present'] = ++$data['Present'];
+                        } else {
+                            $data['Present'] = 1;
+                        }
                     }
                 }
             }
