@@ -36,6 +36,10 @@ class LocalesController extends PageController
 
     public function edit($id)
     {
+        $page = $this->Page;
+        $page->get('direction')->setControlType('dropdown')->setOptions([
+                '0' => '-- Select --', '1' => 'Left to Right', '2' => 'Right to Left'
+                ]);
         parent::edit($id);
     }
 
@@ -47,6 +51,19 @@ class LocalesController extends PageController
 
     public function add()
     {
+        $page = $this->Page;
+        $page->exclude(['editable']);
+
+        $page->get('direction')->setControlType('dropdown')->setOptions([
+                '0' => '-- Select --', '1' => 'Left to Right', '2' => 'Right to Left'
+                    ]);
+
+        // $page->addFilter('direction')
+        //     ->setOptions([
+        //         '0' => '-- Select --', '1' => 'Left to Right', '2' => 'Right to Left'
+        //             ])
+        //     ;
+
         parent::add();
     }
 
