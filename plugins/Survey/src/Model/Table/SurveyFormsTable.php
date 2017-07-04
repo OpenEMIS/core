@@ -13,6 +13,8 @@ use Cake\Utility\Text;
 
 class SurveyFormsTable extends CustomFormsTable
 {
+    private $excludedCustomModules = ['Student', 'Staff'];
+
     public function initialize(array $config)
     {
         $config['extra'] = [
@@ -171,7 +173,8 @@ class SurveyFormsTable extends CustomFormsTable
             ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
             ->find('visible')
             ->where([
-                $this->CustomModules->aliasField('parent_id') => 0
+                $this->CustomModules->aliasField('parent_id') => 0,
+                $this->CustomModules->aliasField('code NOT IN') => $this->excludedCustomModules
             ]);
     }
 }
