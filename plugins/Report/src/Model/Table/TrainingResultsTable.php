@@ -9,8 +9,12 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class TrainingResultsTable extends AppTable  {
+class TrainingResultsTable extends AppTable
+{
     private $trainingSessionResults = [];
+    private $institutionDetails = [];
+
+    CONST ACTIVE_STATUS = 1;
 
     public function initialize(array $config)
     {
@@ -45,8 +49,17 @@ class TrainingResultsTable extends AppTable  {
         $selectedCourse = $requestData->training_course_id;
 
         $query
-            ->select(['workflow_step_name' => 'WorkflowSteps.name', 'openemis_no' => 'Trainees.openemis_no', 'course_code' => 'Courses.code', 'course_name' => 'Courses.name', 'credit_hours' => 'Courses.credit_hours', 'session_code' => 'Sessions.code'])
-            ->contain(['Trainees', 'Sessions.Courses'])
+            ->select([
+                'workflow_step_name' => 'WorkflowSteps.name',
+                'openemis_no' => 'Trainees.openemis_no',
+                'course_code' => 'Courses.code',
+                'course_name' => 'Courses.name',
+                'credit_hours' => 'Courses.credit_hours',
+                'session_code' => 'Sessions.code',
+                'identity_type_name' => 'IdentityTypes.name',
+                'identity_number' => 'Trainees.identity_number'
+            ])
+            ->contain(['Sessions.Courses'])
             ->innerJoin(
                 [$TrainingSessionResults->alias() => $TrainingSessionResults->table()],
                 [$TrainingSessionResults->aliasField('training_session_id = ') . $this->aliasField('training_session_id')]
@@ -55,8 +68,27 @@ class TrainingResultsTable extends AppTable  {
                 [$WorkflowSteps->alias() => $WorkflowSteps->table()],
                 [$WorkflowSteps->aliasField('id = ') . $TrainingSessionResults->aliasField('status_id')]
             )
+            ->join([
+                'Trainees' => [
+                    'type' => 'LEFT',
+                    'table' => 'security_user',
+                    'conditions' => [
+                        'Trainees.id = ' . $this->aliasField('trainee_id')
+                    ]
+                ],
+                'IdentityTypes' => [
+                    'type' => 'LEFT',
+                    'table' => 'identity_types',
+                    'conditions' => [
+                        'IdentityTypes.id = ' . $this->Trainees->aliasField('identity_type_id')
+                    ]
+                ],
+            ])
             ->where(['Courses.id' => $selectedCourse])
-            ->group([$this->aliasField('training_session_id'), $this->aliasField('trainee_id')])
+            ->group([
+                $this->aliasField('training_session_id'),
+                $this->aliasField('trainee_id')
+            ])
             ->order([$this->aliasField('training_session_id'), $this->aliasField('trainee_id')]);
 
         if ($selectedStatus != '-1') {
@@ -92,6 +124,34 @@ class TrainingResultsTable extends AppTable  {
             'field' => 'trainee_id',
             'type' => 'integer',
             'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'IdentityTypes.name',
+            'field' => 'identity_type_name',
+            'type' => 'string',
+            'label' => __('Identity Type'),
+        ];
+
+        $newFields[] = [
+            'key' => 'Trainess.identity_number',
+            'field' => 'identity_number',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'institution_code',
+            'field' => 'institution_code',
+            'type' => 'institution_code',
+            'label' => __('Institution Code'),
+        ];
+
+        $newFields[] = [
+            'key' => 'institution_name',
+            'field' => 'institution_name',
+            'type' => 'institution_name',
+            'label' => __('Institution Name'),
         ];
 
         $newFields[] = [
@@ -164,5 +224,50 @@ class TrainingResultsTable extends AppTable  {
 
         $result = $trainingSessionResults[$sessionId][$traineeId][$resultTypeId];
         return $result;
+    }
+
+    public function onExcelRenderInstitutionCode(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->has('trainee_id')) {
+            $traineeId = $entity->trainee_id;
+            $this->institutionDetails = $this->getInstitutionDetailByTraineeId($traineeId);
+
+            if (isset($this->institutionDetails) && array_key_exists('institution', $this->institutionDetails)) {
+                return $this->institutionDetails['institution']['code'];
+            } else {
+                return ' ';
+            }
+        } else {
+            return ' ';
+        }
+    }
+
+    public function onExcelRenderInstitutionName(Event $event, Entity $entity)
+    {
+        if (isset($this->institutionDetails) && array_key_exists('institution', $this->institutionDetails)) {
+            return $this->institutionDetails['institution']['name'];
+        } else {
+            return ' ';
+        }
+    }
+
+    public function getInstitutionDetailByTraineeId($traineeId)
+    {
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+
+        $institutionDetails = [];
+        $institutionDetails = $InstitutionStaff->find()
+            ->contain('Institutions')
+            ->where([
+                $InstitutionStaff->aliasField('staff_id') => $traineeId,
+                $InstitutionStaff->aliasField('staff_status_id') => self::ACTIVE_STATUS
+            ])
+            ->order([
+                $InstitutionStaff->aliasField('start_date') => 'DESC',
+            ])
+            ->first()
+        ;
+
+        return $institutionDetails->toArray();
     }
 }

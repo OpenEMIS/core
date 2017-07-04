@@ -46,7 +46,7 @@ class EmploymentsTable extends ControllerActionTable {
 
         $downloadAccess = $this->AccessControl->check([$this->controller->name, 'Attachments', 'download']);
 
-        if ($downloadAccess) {
+        if ($downloadAccess && !is_null($entity->file_content)) {
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
             $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');

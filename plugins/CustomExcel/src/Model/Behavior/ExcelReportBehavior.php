@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Utility\Hash;
+use Cake\Utility\Inflector;
 use Cake\Collection\Collection;
 use Cake\Log\Log;
 
@@ -27,17 +28,19 @@ class ExcelReportBehavior extends Behavior
         'subfolder' => 'customexcel',
         'format' => 'xlsx',
         'download' => true,
-        'save' => false,
+        'purge' => true,
         'wrapText' => false,
         'lockSheets' => false,
         'templateTable' => null,
-        'templateTableKey' => null
+        'templateTableKey' => null,
+        'variableSource' => 'file'
     ];
 
     // function name and keyword pairs
     private $advancedTypes = [
         'row' => 'repeatRows',
         'column' => 'repeatColumns',
+        'table' => 'table',
         'match' => 'match',
         'dropdown' => 'dropdown',
         // 'image' => 'image'
@@ -69,9 +72,14 @@ class ExcelReportBehavior extends Behavior
     public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-        $params = $model->getQueryString();
-        $vars = $this->getVars($params, $extra);
 
+        if (array_key_exists('requestQuery', $extra)) {
+            $params = $extra['requestQuery'];
+        } else {
+            $params = $model->getQueryString();
+        }
+
+        $vars = $this->getVars($params, $extra);
         $results = Hash::flatten($vars);
         pr($results);
         die;
@@ -80,7 +88,11 @@ class ExcelReportBehavior extends Behavior
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
         ini_set('max_execution_time', 180);
+        $this->renderExcelTemplate($extra);
+    }
 
+    public function renderExcelTemplate(ArrayObject $extra)
+    {
         $model = $this->_table;
 
         if (array_key_exists('requestQuery', $extra)) {
@@ -112,16 +124,16 @@ class ExcelReportBehavior extends Behavior
             $this->deleteFile($extra['tmp_file_path']);
         }
 
-        if ($this->config('save')) {
-            $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSaveFile', [$params, $extra], $this);
-        }
+        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
         if ($this->config('download')) {
             $this->downloadFile($filepath);
         }
 
-        // delete excel file after save/download
-        $this->deleteFile($filepath);
+        if ($this->config('purge')) {
+            // delete excel file after download
+            $this->deleteFile($filepath);
+        }
     }
 
     public function loadExcelTemplate(ArrayObject $extra)
@@ -220,7 +232,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         // set cell style to follow placeholder
-        $objWorksheet->setCellValue($cellCoordinate, $cellValue);
+        $objWorksheet->setCellValue($cellCoordinate, __($cellValue));
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
         // set column width to follow placeholder
@@ -328,17 +340,27 @@ class ExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $variables = $this->config('variables');
-
-        $variableValues = [];
-        foreach ($variables as $var) {            
-            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
+        $variableValues = new ArrayObject([]);
+        if ($this->config('variableSource') == 'database') {
+            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) { return $event->result; }
             if ($event->result) {
-                $variableValues[$var] = $event->result;
+                $variableValues = $event->result;
+            }
+
+        } else if ($this->config('variableSource') == 'file') {
+            $variables = $this->config('variables');
+
+            foreach ($variables as $var) {
+                $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
+                if ($event->isStopped()) { return $event->result; }
+                if ($event->result) {
+                    $variableValues[$var] = $event->result;
+                }
             }
         }
 
+        $variableValues = $variableValues->getArrayCopy();
         return $variableValues;
     }
 
@@ -381,8 +403,10 @@ class ExcelReportBehavior extends Behavior
 
             // check if data has id
             $idData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholderId) : [];
+            $valueData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+            $equal = count($idData) == count($valueData);
 
-            if (!empty($idData)) {
+            if (!empty($idData) && $equal) {
                 // get id and value as key-value pair
                 // selected field needs to be present in vars if not there will be a key-value number mismatch (be careful of using contain)
                 $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
@@ -431,6 +455,10 @@ class ExcelReportBehavior extends Behavior
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
         $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : null;
+        $attr['displayColumns'] = array_key_exists('displayColumns', $settings) ? $settings['displayColumns'] : [];
+        $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : null;
+        $attr['showHeaders'] = array_key_exists('showHeaders', $settings) ? $settings['showHeaders'] : false;
+        $attr['insertRows'] = array_key_exists('insertRows', $settings) ? $settings['insertRows'] : false;
         // $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
 
         // Start attributes  for dropdown
@@ -816,6 +844,70 @@ class ExcelReportBehavior extends Behavior
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
 
+    }
+
+    private function table($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $rowValue = $attr['rowValue'];
+        $columnIndex = $attr['columnIndex'];
+        $source = $attr['source'];
+        $displayColumns = $attr['displayColumns'];
+        $showHeaders = $attr['showHeaders'];
+        $insertRows = $attr['insertRows'];
+
+        if ($showHeaders) {
+            foreach($displayColumns as $key => $column) {
+                $header = Inflector::humanize($key);
+
+                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $cellCoordinate = $columnValue.$rowValue;
+                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $header, $attr, $extra);
+                $columnIndex++;
+            }
+
+            $rowValue++;
+        }
+
+        if (array_key_exists($source, $extra['vars']) && !empty($extra['vars'][$source])) {
+            $sourceVars = $extra['vars'][$source];
+
+            foreach ($sourceVars as $vars) {
+                // reset columnIndex after every loop of row
+                $columnIndex = $attr['columnIndex'];
+
+                // skip first row don't need to auto insert new row
+                if ($insertRows && $rowValue != $attr['rowValue']) {
+                    $objWorksheet->insertNewRowBefore($rowValue);
+                    $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
+                }
+
+                foreach ($displayColumns as $column) {
+                    $value = null;
+                    if (array_key_exists('displayValue', $column)) {
+                        $field = $this->splitDisplayValue($column['displayValue'])[1];
+                        $value = Hash::get($vars, $field);
+                    }
+
+                    $attr['type'] = array_key_exists('type', $column) ? $column['type'] : null;
+                    $attr['format'] = array_key_exists('format', $column) ? $column['format'] : null;
+
+                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $cellCoordinate = $columnValue.$rowValue;
+                    $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+
+                    $columnIndex++;
+                }
+
+                $rowValue++;
+            }
+        } else {
+            // replace placeholder as blank if data is empty
+            $columnValue = $attr['columnValue'];
+            $cellCoordinate = $columnValue.$rowValue;
+            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+        }
     }
 
     private function match($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)

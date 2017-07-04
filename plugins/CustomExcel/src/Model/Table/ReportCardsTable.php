@@ -29,12 +29,15 @@ class ReportCardsTable extends AppTable
             'templateTableKey' => 'report_card_id',
             'format' => $this->fileType,
             'download' => false,
-            'save' => true,
             'wrapText' => true,
             'lockSheets' => true,
             'variables' => [
                 'ReportCards',
                 'InstitutionStudentsReportCards',
+                'FirstGuardian',
+                'Extracurriculars',
+                'Awards',
+                'Admissions',
                 'InstitutionStudentsReportCardsComments',
                 'Institutions',
                 'Principal',
@@ -59,9 +62,13 @@ class ReportCardsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
-        $events['ExcelTemplates.Model.onExcelTemplateSaveFile'] = 'onExcelTemplateSaveFile';
+        $events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportCards'] = 'onExcelTemplateInitialiseReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseFirstGuardian'] = 'onExcelTemplateInitialiseFirstGuardian';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseExtracurriculars'] = 'onExcelTemplateInitialiseExtracurriculars';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAwards'] = 'onExcelTemplateInitialiseAwards';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAdmissions'] = 'onExcelTemplateInitialiseAdmissions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardsComments'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardsComments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
@@ -96,7 +103,7 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateSaveFile(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
     {
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $studentReportCardData = $StudentsReportCards->find()
@@ -144,7 +151,7 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('report_card_id', $params)) {
             $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-            $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades']]);
+            $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades.EducationStages']]);
 
             $extra['report_card_start_date'] = $entity->start_date;
             $extra['report_card_end_date'] = $entity->end_date;
@@ -163,7 +170,7 @@ class ReportCardsTable extends AppTable
 
             $entity = $StudentsReportCards->find()
                 ->contain([
-                    'Students' => ['BirthplaceAreas', 'MainNationalities'],
+                    'Students' => ['BirthplaceAreas', 'MainNationalities', 'AddressAreas'],
                     'EducationGrades'
                 ])
                 ->where([
@@ -179,6 +186,131 @@ class ReportCardsTable extends AppTable
                 $birthdate = $entity->student->date_of_birth;
                 $entity->student->date_of_birth = $birthdate->format($dateFormat);
             }
+
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseFirstGuardian(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params)) {
+            $StudentGuardians = TableRegistry::get('Student.Guardians');
+            $entity = $StudentGuardians->find()
+                    ->contain(['Users', 'GuardianRelations'])
+                    ->where([
+                        $StudentGuardians->aliasField('student_id') => $params['student_id']
+                    ])
+                    ->formatResults(function (ResultSetInterface $results) {
+                        return $results->map(function ($row) {
+                            $guardianId = $row['guardian_id'];
+
+                            $row['contact'] = [];
+
+                            $UserContacts = TableRegistry::get('User.Contacts');
+                            $userContactResults = $UserContacts
+                                ->find()
+                                ->contain(['ContactTypes.ContactOptions'])
+                                ->where([
+                                    $UserContacts->aliasField('security_user_id') => $guardianId
+                                ])
+                                ->all();
+                            if (!$userContactResults->isEmpty()) {
+                                $firstContact = $userContactResults->first();
+                                $row['contact'] = $firstContact;
+                            }
+
+                            return $row;
+                        });
+                    })
+                    ->first();
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseExtracurriculars(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+
+            $Extracurriculars = TableRegistry::get('Student.Extracurriculars');
+            $entity = $Extracurriculars->find()
+                    ->contain('ExtracurricularTypes')
+                    ->where([
+                        $Extracurriculars->aliasField('security_user_id') => $params['student_id'],
+                        'OR' => [
+                        [
+                            $Extracurriculars->aliasField('end_date') . ' IS NOT NULL',
+                            $Extracurriculars->aliasField('start_date') . ' <=' => $extra['report_card_start_date'],
+                            $Extracurriculars->aliasField('end_date') . ' >=' => $extra['report_card_start_date']
+                        ],
+                        [
+                            $Extracurriculars->aliasField('end_date') . ' IS NOT NULL',
+                            $Extracurriculars->aliasField('start_date') . ' <=' => $extra['report_card_end_date'],
+                            $Extracurriculars->aliasField('end_date') . ' >=' => $extra['report_card_end_date']
+                        ],
+                        [
+                            $Extracurriculars->aliasField('end_date') . ' IS NOT NULL',
+                            $Extracurriculars->aliasField('start_date') . ' >=' => $extra['report_card_start_date'],
+                            $Extracurriculars->aliasField('end_date') . ' <=' => $extra['report_card_end_date']
+                        ]
+                    ],
+                    ])
+                    ->toArray();
+
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseAwards(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+
+            $Awards = TableRegistry::get('User.Awards');
+
+            $query = $Awards->find();
+            $dateFormat = $query->func()->date_format([
+                            'issue_date' => 'literal',
+                            "'%m/%d/%y'" => 'literal'
+                        ]);
+
+            $entity = $Awards->find()
+                    ->select([
+                        'award_date' => $dateFormat
+                    ])
+                    ->where([
+                        $Awards->aliasField('security_user_id') => $params['student_id'],
+                        $Awards->aliasField('issue_date >= ') => $extra['report_card_start_date'],
+                        $Awards->aliasField('issue_date <= ') => $extra['report_card_end_date']
+                    ])
+                    ->autoFields(true)
+                    ->toArray();
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseAdmissions(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('student_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+
+            $query = $InstitutionStudents->find();
+            $dateFormat = $query->func()->date_format([
+                            'start_date' => 'literal',
+                            "'%m/%d/%y'" => 'literal'
+                        ]);
+
+            $entity = $InstitutionStudents->find()
+                    ->select([
+                        'admission_date' => $dateFormat
+                    ])
+                    ->where([
+                        $InstitutionStudents->aliasField('student_id') => $params['student_id'],
+                        $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                        $InstitutionStudents->aliasField('institution_id') => $params['institution_id'],
+                        $InstitutionStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    ])
+                    ->autoFields(true)
+                    ->first();
             return $entity;
         }
     }
@@ -330,7 +462,6 @@ class ReportCardsTable extends AppTable
                 $absenceType = $absenceTypes[$obj['absence_type_id']];
                 $results[$absenceType]['number_of_days'] += $numberOfDays;
             }
-
             return $results;
         }
     }

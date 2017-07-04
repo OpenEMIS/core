@@ -63,6 +63,8 @@ class InstitutionCasesTable extends AppTable
             ->select([
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'area_administrative_name' => 'AreaAdministratives.name',
                 'institution_code' => 'Institutions.code',
                 'status_from' => 'WorkflowTransitions.prev_workflow_step_name',
                 'status_to' => 'WorkflowTransitions.workflow_step_name',
@@ -85,7 +87,10 @@ class InstitutionCasesTable extends AppTable
             ->matching('Statuses.Workflows.WorkflowModels.WorkflowTransitions.CreatedUser', function ($q) {
                     return $q->where(['WorkflowTransitions.model_reference = ' . $this->aliasField('id')]);
             })
-            ->contain(['Institutions.Areas'])
+            ->contain([
+                'Institutions.Areas',
+                'Institutions.AreaAdministratives'
+            ])
             ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff')
             ->order([$this->aliasField('case_number')])
             ->formatResults(function ($results) {
@@ -108,17 +113,31 @@ class InstitutionCasesTable extends AppTable
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'Areas.area_code',
+            'key' => 'Areas.code',
             'field' => 'area_code',
-            'type' => 'integer',
-            'label' => ''
+            'type' => 'string',
+            'label' => __('Area Code')
         ];
 
         $newFields[] = [
-            'key' => 'Areas.area_name',
+            'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Area')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.code',
+            'field' => 'area_administrative_code',
+            'type' => 'string',
+            'label' => __('Area Administrative Code')
+        ];
+
+        $newFields[] = [
+            'key' => 'AreaAdministratives.name',
+            'field' => 'area_administrative_name',
+            'type' => 'string',
+            'label' => __('Area Administrative')
         ];
 
         $newFields[] = [
