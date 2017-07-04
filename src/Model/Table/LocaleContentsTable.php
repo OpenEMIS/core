@@ -86,7 +86,8 @@ class LocaleContentsTable extends AppTable
 
     public function findView(Query $query, array $options)
     {
-        return $query->find('allTranslatedLocale');
+        $query->contain(['LocaleContentTranslations.Locales']);
+        return $query;
     }
 
     public function findEdit(Query $query, array $options)
