@@ -109,7 +109,14 @@ String.prototype.hexDecode = function() {
 
     <div class="<?= $wrapperClass ?>">
         <div class="wrapper-child">
-            <?= $this->fetch('contentBody') ?>
+            <div class="panel">
+                <div class="panel-body">
+                    <?= $this->element('Page.alert') ?>
+                    <?= $this->element('Page.tabs') ?>
+                    <?= $this->element('Page.filters') ?>
+                    <?= $this->fetch('contentBody') ?>
+                </div>
+            </div>
         </div>
     </div>
 </div>
