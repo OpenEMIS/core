@@ -25,19 +25,13 @@ class LocalesTable extends AppTable
         $this->hasMany('LocaleContentTranslations', ['className' => 'LocaleContentTranslations']);
     }
 
-    public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-        return $validator           
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
                 ->add('iso', [
                     'ruleUnique' => [
                         'message' => 'This language already exist.',
-                        'rule' => 'validateUnique',
-                        'provider' => 'table',
-                    ]
-                ])
-              ->add('full_iso', [
-                    'ruleUnique' => [
-                        'message' => 'This full iso already exist.',
                         'rule' => 'validateUnique',
                         'provider' => 'table',
                     ]
@@ -50,7 +44,7 @@ class LocalesTable extends AppTable
                     ]
                 ])
             ;
-	}
+    }
 
     public function findAllEditableLocales(Query $query, array $options)
     {
@@ -64,11 +58,9 @@ class LocalesTable extends AppTable
             ->formatResults(function ($results) {
                 $returnResult = [];
                 $results = $results->toArray();
-                foreach($results as $key => $value)
-                {
+                foreach ($results as $key => $value) {
                     $returnResult[$key]['id'] = $value['id'];
                     $returnResult[$key]['iso'] = $value['iso'];
-                    $returnResult[$key]['full_iso'] = $value['full_iso'];
                     $returnResult[$key]['name'] = $value['name'];
                 }
                 return $returnResult;

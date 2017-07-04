@@ -13,27 +13,11 @@ use Cake\Log\Log;
 use App\Model\Table\AppTable;
 use Restful\Model\Entity\Schema;
 
-
-class LocaleContentsTable extends AppTable {
-
-    private $localeTable = null;
-    private $localeList = null;
-    private $localeName = null;
-
-	public function initialize(array $config) {
-		parent::initialize($config);
-
-		$this->localeTable = TableRegistry::get('Locales');
-    	$this->localeList = $this->localeTable->find('allLocale')->toArray();
-		$this->localeName = [];
-
-    	//data massaging 
-    	foreach($this->localeList as $localekey => $localevalue)
-    	{
-			//extracting locale name
-			//e.g. [zh] = Chinese
-			$this->localeName[$this->localeList[$localekey]['iso']] = $this->localeList[$localekey]['name'];
-    	}
+class LocaleContentsTable extends AppTable
+{
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
 
         // $this->belongsToMany('Locales', [
         //     'through' => 'LocaleContentTranslations',
@@ -44,142 +28,94 @@ class LocaleContentsTable extends AppTable {
         // ]);
 
         $this->hasMany('LocaleContentTranslations', ['className' => 'LocaleContentTranslations', 'saveStrategy' => 'replace']);
-	}
+    }
 
-	public function validationDefault(Validator $validator) {
-    	$validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
 
-		$validator
-			// ->add('en', 'ruleUnique', [
-  	// 			'rule' => 'checkUniqueEnglishField'
-  	// 		])
-  	// 		;
-
-  			->add('en', [
+        $validator
+            ->add('en', [
                     'ruleUnique' => [
-                    	'message' => 'This translation already exist.',
+                        'message' => 'This translation already exist.',
                         'rule' => 'validateUnique',
                         'provider' => 'table',
                     ]
                 ])
             ;
-		return $validator;
-	}
-
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) 
-    {
-    	foreach($data as $key => $value)
-    	{
-    		if($key != 'id' && $key != 'en' && !strpos($key, '_'))
-    		{
-	            foreach($this->localeList as $localekey => $localevalue)
-	            {
-	            	$currentLocale = $this->localeList[$localekey]['iso'];
-	            	if($currentLocale == $key)
-		            {
-		            	$data['locale_content_translations'][] = [
-		                'locale_content_id' => $data['id'],
-		                'locale_id' => $this->localeList[$localekey]['id'],
-			             'translation' => $data[$currentLocale]
-	            		];
-		            }
-            	}
-            	// pr($data);die;
-    		}
-
-    	}
+        return $validator;
     }
 
-  //   public function viewUpdateSchema(Event $event, Schema $schema, $entity, ArrayObject $extra)
-  //   {
-  //   	parent::viewUpdateSchema($event, $schema, $entity, $extra);
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $localeTable = TableRegistry::get('Locales');
+        $localeList = $localeTable->find('allLocale')->toArray();
 
-  //   	//populating schema dynamically
-		// foreach($this->localeName as $namekey => $namevalue)
-		// {
-		// 	$schema->addNew($namekey)->displayFrom($namekey)->label($namevalue);
-		// }
-  //   }
- 
+        foreach ($data as $key => $value) {
+            if ($key != 'id' && $key != 'en' && !strpos($key, '_')) {
+                foreach ($localeList as $localekey => $localevalue) {
+                    $currentLocale = $localeList[$localekey]['iso'];
+                    if ($currentLocale == $key) {
+                        $data['locale_content_translations'][] = [
+                        'locale_content_id' => $data['id'],
+                        'locale_id' => $localeList[$localekey]['id'],
+                         'translation' => $data[$currentLocale]
+                        ];
+                    }
+                }
+                // pr($data);die;
+            }
+        }
+    }
 
-  //   public function addUpdateSchema(Event $event, Schema $schema, ArrayObject $extra)
-  //   {
-  //   	//populating schema dynamically
-		// foreach($this->localeName as $namekey => $namevalue)
-		// {
-		// 	$schema->addNew($namekey)->label($namevalue);
-		// }
-  //   }
+    public function findIndex(Query $query, array $options)
+    {
+        $querystring = $options['querystring'];
 
- //    public function editUpdateSchema(Event $event, Schema $schema, $entity, ArrayObject $extra)
- //    {
-	// 	// $allLocaleResult = $this->find('allLocale')->where([$this->aliasField('id') => $entity->id])->toArray();
-	// 	// pr($allLocaleResult);die;
+        if(empty($querystring)) {
+            $querystring['locale_id'] = 1;
+        }
 
- //    	//populating schema dynamically
-	// 	foreach($this->localeName as $namekey => $namevalue)
-	// 	{
-	// 		$schema->addNew($namekey)->displayFrom($namekey)->label($namevalue);
-	// 	}
+        $query->select(['LocaleContentTranslations.translation', 'LocaleContents.en', 'LocaleContents.id'])
+            ->leftJoinWith('LocaleContentTranslations')
+            ->where(['LocaleContentTranslations.locale_id' => $querystring['locale_id']]);
 
-		
-	// }
+        Log::write('debug', $query->sql());
+        return $query;
+    }
 
-	public function findView(Query $query, array $options)
-	{
-		return $query->find('allTranslatedLocale');
-	}
+    public function findView(Query $query, array $options)
+    {
+        return $query->find('allTranslatedLocale');
+    }
 
-	public function findEdit(Query $query, array $options)
-	{
-		$query->find('allTranslatedLocale');
-		// $query->select(['LocaleContents.id', 'LocaleContents.en', 'Locales.id',  'Locales.name' => 'LocaleContentTranslations.translation', 'LocaleContentTranslations.id'])
-		// 			->from(['LocaleContents' => 'locale_contents'])
-		// 			->join(['Locales' => 'locales'])
-		// 			->leftJoin(['LocaleContentTranslations' => 'locale_content_translations'], 
-		// 				[
-		// 				'LocaleContentTranslations.locale_content_id = LocaleContents.id'
-		// 				 ])
-		// 			;
-			
-		// $query
-		// // ->from(['LocaleContents' => 'locale_contents'])
-		// // ->contain(['LocaleContentTranslations.Locales' => function($q)
-		// // 	{
-		// // 		$q->select(['LocaleContentTranslations.locale_content_id']);
-		// // 		return $q;
-		// // 	}])
-		// ->join(['Locales' => 'locales'])
-		// ->leftJoinWith('LocaleContentTranslations')
-		// ->where(['LocaleContentTranslations.locale_content_id ='.$this->aliasField('id'), 'LocaleContentTranslations.locale_id = Locales.id'])
-		// ->select(['test' => 'Locales.name','en','Translation' => 'LocaleContentTranslations.translation'])
-		// ;
+    public function findEdit(Query $query, array $options)
+    {
+        $query->find('allTranslatedLocale');
 
+        Log::write('debug', $query);
+        return $query;
+    }
 
-		Log::write('debug', $query);
-		return $query;
-	}
+    public function findAllTranslatedLocale(Query $query, array $options)
+    {
+        return $query
+            ->contain(['LocaleContentTranslations.Locales'])
+            ->hydrate(false)
+            ->formatResults(function ($results) {
+                $returnResult = [];
+                $results = $results->toArray()[0];
+                $returnResult['id'] = $results['id'];
+                $returnResult['en'] = $results['en'];
+                foreach ($results['locale_content_translations'] as $contentTranslation) {
+                    $iso = $contentTranslation['locale']['iso'];
+                    $name = $contentTranslation['locale']['name'];
 
-	public function findAllTranslatedLocale(Query $query, array $options)
-	{
-		return $query
-			->contain(['LocaleContentTranslations.Locales'])
-			->hydrate(false)
-			->formatResults(function ($results) {
-				$returnResult = [];
-				$results = $results->toArray()[0];
-				$returnResult['id'] = $results['id'];
-				$returnResult['en'] = $results['en'];
-				foreach ($results['locale_content_translations'] as $contentTranslation) {
-					$iso = $contentTranslation['locale']['iso'];
-					$name = $contentTranslation['locale']['name'];
-
-					$returnResult[$iso.'_'.$name] = $contentTranslation['locale']['name'];
-					$returnResult[$iso] = $contentTranslation['translation'];
-				}				
-				return [$returnResult];
-			})
-			;
-
-	}
+                    $returnResult[$iso.'_'.$name] = $contentTranslation['locale']['name'];
+                    $returnResult[$iso] = $contentTranslation['translation'];
+                }
+                return [$returnResult];
+            })
+            ;
+    }
 }
