@@ -335,6 +335,20 @@ class PageComponent extends Component
         }
     }
 
+    public function setQueryString($key, $value, $replace = false /* set value only if the key does not exists */)
+    {
+        $querystring = $this->request->query('querystring');
+        if ($querystring) {
+            $querystring = json_decode($this->hexToStr($querystring), true);
+            if ($replace || !array_key_exists($key, $querystring)) {
+                $querystring[$key] = $value;
+            }
+        } else {
+            $querystring = [$key => $value];
+        }
+        $this->request->query['querystring'] = $this->encode($querystring);
+    }
+
     public function getQueryString($key = null)
     {
         $querystring = $this->request->query('querystring');
