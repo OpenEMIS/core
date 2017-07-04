@@ -31,7 +31,7 @@ class LogsController extends AppController {
 	public function download($file) {
 		$this->autoRender = false;
 		$path = LOGS.$file;
-		
+
 		header("Pragma: public", true);
 		header("Expires: 0"); // set expiration time
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
@@ -41,5 +41,6 @@ class LogsController extends AppController {
 		header("Content-Disposition: attachment; filename=".$file);
 		header("Content-Length: ".filesize($path));
 		echo file_get_contents($path);
+		die;
 	}
 }
