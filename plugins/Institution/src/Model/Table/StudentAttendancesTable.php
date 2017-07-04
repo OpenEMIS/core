@@ -320,7 +320,6 @@ class StudentAttendancesTable extends AppTable
         }
         $studentAbsenceArray = $tempArr;
         
-        $dataSet = [];
         $data = [];
         
         foreach ($studentAbsenceArray as $key => $value) {
