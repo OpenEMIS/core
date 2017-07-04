@@ -19,13 +19,13 @@ class LocaleContentsTable extends AppTable
     {
         parent::initialize($config);
 
-        // $this->belongsToMany('Locales', [
-        //     'through' => 'LocaleContentTranslations',
-        //     'foreignKey' => 'locale_content_id',
-        //     'targetForeignKey' => 'locale_id',
-        //     'dependent' => true,
-        //     'cascadeCallbacks' => true
-        // ]);
+        $this->belongsToMany('Locales', [
+            'through' => 'LocaleContentTranslations',
+            'foreignKey' => 'locale_content_id',
+            'targetForeignKey' => 'locale_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->hasMany('LocaleContentTranslations', ['className' => 'LocaleContentTranslations', 'saveStrategy' => 'replace']);
     }
@@ -68,6 +68,12 @@ class LocaleContentsTable extends AppTable
         }
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // pr($entity);die;
+        return true;
+    }
+
     public function findIndex(Query $query, array $options)
     {
         $querystring = $options['querystring'];
@@ -82,7 +88,7 @@ class LocaleContentsTable extends AppTable
 
     public function findView(Query $query, array $options)
     {
-        $query->contain(['LocaleContentTranslations.Locales']);
+        $query->contain(['Locales']);
         return $query;
     }
 
