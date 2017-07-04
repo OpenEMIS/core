@@ -66,7 +66,7 @@ class LocaleContentsController extends PageController
             $page->addNew($localeOptions[$firstLocale])->setDisplayFrom('_matchingData.LocaleContentTranslations.translation');
         }
 
-        
+
         // $page->debug(true);
         parent::index();
     }
@@ -137,10 +137,10 @@ class LocaleContentsController extends PageController
 
         $data = $page->getData();
 
-        $translations = $data->locale_content_translations;
-        foreach ($translations as $translation) {
-            $lang = $translation->locale->iso;
-            $data->$lang = $translation->translation;
+        $locales = $data->locales;
+        foreach ($locales as $locale) {
+            $lang = $locale->iso;
+            $data->$lang = $locale->_joinData->translation;
         }
 
         $this->set('data', $data);
