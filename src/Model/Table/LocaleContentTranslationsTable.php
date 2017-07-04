@@ -11,7 +11,6 @@ use App\Model\Table\AppTable;
 
 class LocaleContentTranslationsTable extends AppTable
 {
-
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -20,8 +19,9 @@ class LocaleContentTranslationsTable extends AppTable
         $this->belongsTo('Locales', ['className' => 'Locales', 'foreignKey' => 'locale_id', 'joinType' => 'INNER']);
     }
 
-    public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		return $validator;
-	}
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator;
+    }
 }
