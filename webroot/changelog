@@ -1,3 +1,25 @@
+v3.10.5
+- Implemented new reports module
+- Implemented the ability for user to login using different IDP
+- Added Report for Training Applications
+
+v3.10.4
+- Allows tabbing to next cell when entering Institution > Assessment results
+- System now allows user to easily access their own Profile from left navigation menu
+
+v3.10.3
+- System Setup > Education Structure > Grade Subjects : Credit Hours can be entered in decimal form
+- Username/Password is now mandatory when adding new user
+- Included Area Education Name/Code and Area Administrative Name/Code in all Reports
+- Implement tree hierarchy for Area Administrative/Education dropdown lists
+
+v3.10.2
+- Administration > Training : System allow users to import Trainees using their identity
+- Add additional columns to Institution Staff Report (Sector, Provider, Position Title, All Identities)
+- Add additional fields to Staff > Training Needs (Competency, Standard, Sub Standard and Reason)
+- Ability to filter list of Students by Grade, Status and Gender in Institution > Classes
+- Implemented Education Stages for Education Grades that requires grouping in Administration > Education Structure
+
 v3.10.1
 - Implemented Student Report card feature
 

@@ -89,26 +89,40 @@ class AdvanceSearchBehavior extends Behavior
                             $value = __($value);
                         };
                         array_walk_recursive($list, $translate);
-                        $filters[$key] = [
-                            'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
-                            'options' => $list,
-                            'selected' => $selected
-                        ];
                         $relatedModelTable = $relatedModel->table();
-                        if ($relatedModelTable == 'area_administratives') {
-                            if (!$this->config('display_country')) {
-                                $worldId = $relatedModel->find()->where([$relatedModel->aliasField('code') => 'World'])->first()->id;
-                                $options = $relatedModel->find('list')
-                                    ->where([
-                                        'OR' => [
-                                            [$relatedModel->aliasField('is_main_country') => 1],
-                                            [$relatedModel->aliasField('parent_id').' IS NOT ' => $worldId]
-                                        ],
-                                        [$relatedModel->aliasField('id').' IS NOT ' => $worldId]
-                                    ]);
-                                $filters[$key]['options'] = $options;
+                        if ($relatedModelTable == 'areas' || $relatedModelTable == 'area_administratives') {
+                            switch ($relatedModelTable) {
+                                case 'areas':
+                                    $authorisedAreaIds = array_keys($list);
+                                    $filters[$key] = [
+                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                        'authorisedAreas' => $authorisedAreaIds,
+                                        'selected' => $selected,
+                                        'type' => 'areapicker',
+                                        'source_model' => 'Area.Areas'
+                                    ];
+                                    break;
+
+                                case 'area_administratives':
+                                    $filters[$key] = [
+                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                        'authorisedAreas' => [],
+                                        'displayCountry' => $this->config('display_country'),
+                                        'selected' => $selected,
+                                        'type' => 'areapicker',
+                                        'source_model' => 'Area.AreaAdministratives'
+                                    ];
+                                    break;
                             }
+                        } else {
+                            $filters[$key] = [
+                                'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                'options' => $list,
+                                'selected' => $selected,
+                                'type' => 'select'
+                            ];
                         }
+
                     }
 
                     $customFilter  = $this->_table->dispatchEvent('AdvanceSearch.getCustomFilter'); //get custom filter set by the table

@@ -55,7 +55,14 @@ class AbsencesTable extends AppTable {
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
+
+			// POCOR-1893 unset the view button on profiles controller
+			if ($this->controller->name == 'Profiles') {
+				unset($buttons['view']);
+			}
+			// end POCOR-1893
 		}
+
 		return $buttons;
 	}
 

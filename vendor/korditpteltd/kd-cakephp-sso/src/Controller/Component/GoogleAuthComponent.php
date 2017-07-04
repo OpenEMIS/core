@@ -2,15 +2,15 @@
 namespace SSO\Controller\Component;
 
 use ArrayObject;
-use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Security;
+use Google_Auth_Exception;
+use Google_Client;
 
-require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
-
-class GoogleAuthComponent extends Component {
-
+class GoogleAuthComponent extends Component
+{
     private $clientId;
     private $clientSecret;
     private $redirectUri;
@@ -21,23 +21,24 @@ class GoogleAuthComponent extends Component {
 
     public $components = ['Auth'];
 
-    public function initialize(array $config) {
-        $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-        $googleAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Google');
+    public function initialize(array $config)
+    {
+        $this->controller = $this->_registry->getController();
+        $this->session = $this->request->session();
+        $googleAttributes = $config['authAttribute'];
+        $mappingAttributes = $config['mappingAttribute'];
         $this->clientId = $googleAttributes['client_id'];
         $this->clientSecret = $googleAttributes['client_secret'];
         $this->redirectUri = $googleAttributes['redirect_uri'];
         $this->hostedDomain = $googleAttributes['hd'];
-        $this->createUser = isset($googleAttributes['allow_create_user']) ?  $googleAttributes['allow_create_user'] : 0;
+        $this->createUser = $mappingAttributes['allow_create_user'];
 
         $hashAttributes = $googleAttributes;
         unset($hashAttributes['redirect_uri']);
         $this->authType = Security::hash(serialize($hashAttributes), 'sha256');
-
-        $this->session = $this->request->session();
         $this->session->write('Google.hostedDomain', $this->hostedDomain);
 
-        $client = new \Google_Client();
+        $client = new Google_Client();
         $client->setClientId($this->clientId);
         $client->setClientSecret($this->clientSecret);
         $client->setRedirectUri($this->redirectUri);
@@ -46,45 +47,32 @@ class GoogleAuthComponent extends Component {
         $client->setHostedDomain($this->hostedDomain);
         $this->client = $client;
         $this->controller = $this->_registry->getController();
-
-        $this->retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$this->redirectUri.'?submit=retry">Click here</a> to try again';
-    }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        $events['Controller.Auth.authenticate'] = 'authenticate';
-        return $events;
-    }
-
-    public function beforeFilter(Event $event) {
-        if (!$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-            $this->controller->Auth->config('authenticate', [
+        $this->Auth->config('authenticate', [
                 'Form' => [
-                    'userModel' => $this->_config['userModel'],
+                    'userModel' => $config['userModel'],
                     'passwordHasher' => [
                         'className' => 'Fallback',
                         'hashers' => ['Default', 'Legacy']
                     ]
                 ],
                 'SSO.Google' => [
-                    'userModel' => $this->_config['userModel'],
-                    'createUser' => $this->createUser
+                    'userModel' => $config['userModel'],
+                    'createUser' => $this->createUser,
+                    'authAttribute' => $googleAttributes,
+                    'mappingAttribute' => $mappingAttributes
                 ]
             ]);
-        }
     }
 
-    public function startup(Event $event) {
-        if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-            $action = $this->request->params['action'];
-            if ($action == $this->config('loginAction') && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-                $this->session->delete('Google.accessToken');
-                $this->idpLogin();
-            }
-        }
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.Auth.authenticate'] = 'authenticate';
+        return $events;
     }
 
-    private function idpLogin() {
+    private function idpLogin()
+    {
         $client = $this->client;
 
         /************************************************************************************************
@@ -94,19 +82,10 @@ class GoogleAuthComponent extends Component {
         if ($this->request->query('code')) {
             try {
                 $client->authenticate($this->request->query('code'));
-            } catch (\Google_Auth_Exception $e) {
+            } catch (Google_Auth_Exception $e) {
                 return;
             }
             $this->session->write('Google.accessToken', $client->getAccessToken());
-
-            // Zack: To revisit this part
-
-            // if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-            //     $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            // } else {
-            //     $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            // }
-            // $this->controller->redirect($redirect);
         }
 
         /************************************************************************************************
@@ -119,7 +98,7 @@ class GoogleAuthComponent extends Component {
                 // revoke the access token if the user is not authorised
                 $client->revokeToken($this->session->read('Google.accessToken'));
                 $this->session->delete('Google.accessToken');
-                $this->controller->Auth->logout();
+                $this->Auth->logout();
 
                 if ($this->session->read('Google.reLogin')) {
                     $authUrl = $client->createAuthUrl();
@@ -155,65 +134,15 @@ class GoogleAuthComponent extends Component {
           data only if the hosted domain matches our setting.
          ************************************************************************************************/
         if (isset($tokenData)) {
-            if (!empty($this->hostedDomain)) {
-                if (isset($tokenData['payload']['hd'])) {
-                    if ($tokenData['payload']['hd'] == $this->hostedDomain) {
-                        $this->session->write('Google.tokenData', $tokenData);
-                        $this->session->write('Google.client', $client);
-                    } else {
-                        $this->session->write('Google.remoteFail', true);
-                    }
-                } else {
-                    $this->session->write('Google.remoteFail', true);
-                }
-            } else {
-                $this->session->write('Google.tokenData', $tokenData);
-                $this->session->write('Google.client', $client);
-            }
-        } else {
-            $this->session->delete('Google.tokenData');
-            $this->session->delete('Google.client', $client);
+            $username = $tokenData['payload']['email'];
+            return $this->checkLogin($username);
         }
+        return false;
     }
 
-    public function authenticate(Event $event, ArrayObject $extra) {
-        $extra['authType'] = $this->authType;
-        if ($this->request->is('get')) {
-            if ($this->request->query('submit') == 'retry') {
-                $this->session->delete('Google.remoteFail');
-                $this->session->delete('Auth.fallback');
-                $this->session->write('Google.reLogin', true);
-                return $this->controller->redirect($this->redirectUri);
-            }
-            $username = 'Not Google Authenticated';
-            if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-               $this->idpLogin();
-            } else {
-                return $this->checkLogin();
-            }
-            if ($this->session->check('Google.tokenData')) {
-                $tokenData = $this->session->read('Google.tokenData');
-                $email = $tokenData['payload']['email'];
-                $username = explode('@', $tokenData['payload']['email'])[0];
-            }
-            return $this->checkLogin($username);
-        } else {
-            if ($this->request->is('post') && isset($this->request->data['submit'])) {
-                if ($this->request->data['submit'] == 'login') {
-                    $extra['disableCookie'] = true;
-                    $username = $this->request->data('username');
-                    $checkLogin = $this->checkLogin($username);
-                    if ($checkLogin) {
-                        $this->session->write('Auth.fallback', true);
-                    }
-                    return $checkLogin;
-                }
-            } else {
-                return $this->checkLogin();
-            }
-            return false;
-        }
-
+    public function authenticate(Event $event, ArrayObject $extra)
+    {
+        return $this->idpLogin();
     }
 
     private function checkLogin($username = null, $extra = [])
@@ -227,7 +156,7 @@ class GoogleAuthComponent extends Component {
             if ($user[$this->_config['statusField']] != 1) {
                 $extra['status'] = true;
             } else {
-                $this->controller->Auth->setUser($user);
+                $this->Auth->setUser($user);
                 $this->session->delete('Google.remoteFail');
                 $extra['loginStatus'] = true;
             }

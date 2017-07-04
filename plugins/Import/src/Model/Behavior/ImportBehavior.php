@@ -20,6 +20,7 @@ use ControllerAction\Model\Traits\EventTrait;
 use PHPExcel_Worksheet;
 use PHPExcel_Style_NumberFormat;
 use PHPExcel_Shared_Date;
+use PHPExcel_IOFactory;
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -336,9 +337,6 @@ class ImportBehavior extends Behavior
 
             $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 
-            $controller = $model->controller;
-            $controller->loadComponent('PhpExcel');
-
             $mapping = $this->getMapping();
             $header = $this->getHeader($mapping);
             $columns = $this->getColumns($mapping);
@@ -348,8 +346,9 @@ class ImportBehavior extends Behavior
             $fileObj = $entity->select_file;
             $uploadedName = $fileObj['name'];
             $uploaded = $fileObj['tmp_name'];
-            $objPHPExcel = $controller->PhpExcel->loadWorksheet($uploaded);
-            $worksheets = $objPHPExcel->getWorksheetIterator();
+            $inputFileType = PHPExcel_IOFactory::identify($uploaded);
+            $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+            $objPHPExcel = $objReader->load($uploaded);
 
             $totalImported = 0;
             $totalUpdated = 0;
@@ -362,7 +361,7 @@ class ImportBehavior extends Behavior
             $activeModel->addBehavior('DefaultValidation');
 
             $maxRows = $this->config('max_rows');
-            $maxRows = $maxRows + 3;
+            $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
             if ($highestRow > $maxRows) {
