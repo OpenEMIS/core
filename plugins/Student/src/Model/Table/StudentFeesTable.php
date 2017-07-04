@@ -49,6 +49,8 @@ class StudentFeesTable extends ControllerActionTable {
 		$session = $this->Session;
 		if ($this->controller->name == 'Directories') {
 			$this->studentId = $session->read('Directory.Directories.id');
+		} else if ($this->controller->name == 'Profiles') {
+			$this->studentId = $session->read('Auth.User.id');
 		} else {
 			$this->studentId = $session->read('Student.Students.id');
 		}

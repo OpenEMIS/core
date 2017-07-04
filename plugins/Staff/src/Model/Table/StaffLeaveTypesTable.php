@@ -10,7 +10,7 @@ class StaffLeaveTypesTable extends ControllerActionTable
         $this->table('staff_leave_types');
         parent::initialize($config);
 
-        $this->hasMany('Leaves', ['className' => 'Staff.Leaves']);
+        $this->hasMany('Leave', ['className' => 'Staff.Leave']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }

@@ -15,10 +15,11 @@
 namespace App;
 
 use Cake\Core\Configure;
-use Cake\Error\Middleware\ErrorHandlerMiddleware;
 use Cake\Http\BaseApplication;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
+use Google\Auth\Middleware\SimpleMiddleware;
+use Google\Auth\Middleware\AuthTokenMiddleware;
 
 /**
  * Application setup class.

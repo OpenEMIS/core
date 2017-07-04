@@ -77,6 +77,11 @@ class UserBehavior extends Behavior {
         }
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $this->trimFields($data);
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
@@ -263,6 +268,10 @@ class UserBehavior extends Behavior {
             switch ($this->_table->alias()) {
                 case 'Guardians':
                     $imageUrl =  ['plugin' => 'Student', 'controller' => 'Students', 'action' => $this->_table->alias(), 'image'];
+
+                    if ($name == 'Profiles') { // POCOR-1983 for profile guardian
+                        $imageUrl =  ['plugin' => 'Profile', 'controller' => $name, 'action' => 'ProfileGuardians', 'image'];
+                    }
                     break;
                 default:
                     $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
@@ -494,6 +503,16 @@ class UserBehavior extends Behavior {
             } else {
                 $this->_table->controller->response->type('jpg');
                 $this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+            }
+        }
+    }
+
+    private function trimFields($data)
+    {
+        $list = ['first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name'];
+        foreach ($list as $value) {
+            if (array_key_exists($value, $data) && strlen($data[$value]) > 0) {
+                $data[$value] = trim($data[$value]);
             }
         }
     }

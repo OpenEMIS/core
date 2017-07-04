@@ -109,7 +109,8 @@ class InstitutionsTable extends AppTable
 		}
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+	{
 		$requestData = json_decode($settings['process']['params']);
 		$feature = $requestData->feature;
 		$filter = $requestData->institution_filter;
@@ -123,7 +124,16 @@ class InstitutionsTable extends AppTable
 					'key' => 'Areas.code',
 					'field' => 'area_code',
 					'type' => 'string',
-					'label' => ''
+					'label' => __('Area Education Code')
+				];
+			}
+
+			if ($value['field'] == 'area_administrative_id') {
+				$newFields[] = [
+					'key' => 'AreaAdministratives.code',
+					'field' => 'area_administrative_code',
+					'type' => 'string',
+					'label' => __('Area Administrative Code')
 				];
 			}
 		}
@@ -132,7 +142,7 @@ class InstitutionsTable extends AppTable
 
 		if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
 			// Stop the customfieldlist behavior onExcelUpdateFields function
-			$includedFields = ['name', 'alternative_name', 'code', 'area_code', 'area_id'];
+			$includedFields = ['name', 'alternative_name', 'code', 'area_code', 'area_id', 'area_administrative_code', 'area_administrative_id'];
 			foreach ($newFields as $key => $value) {
 				if (!in_array($value['field'], $includedFields)) {
 					unset($newFields[$key]);
@@ -332,8 +342,8 @@ class InstitutionsTable extends AppTable
 		$superAdmin = $requestData->super_admin;
 		$userId = $requestData->user_id;
 		$query
-			->contain(['Areas'])
-			->select(['area_code' => 'Areas.code']);
+			->contain(['Areas', 'AreaAdministratives'])
+			->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code']);
 		switch ($filter) {
 			case self::NO_STUDENT:
                 $StudentsTable = TableRegistry::get('Institution.Students');

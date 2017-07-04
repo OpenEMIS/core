@@ -57,7 +57,7 @@ $description = __d('open_emis', $_productName);
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin'],
 				'class' => 'form-horizontal'
 			]);
-			if (!$_sso) {
+			if ($enableLocalLogin) {
 				echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
 				echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
 			}
@@ -76,10 +76,33 @@ $description = __d('open_emis', $_productName);
 				</div>
 			<?php endif;?>
 			<div class="form-group">
+				<?php if ($enableLocalLogin) : ?>
 				<?= $this->Form->button(__('Login'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
 				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
-			</div>
+				<?php endif; ?>
 			<?= $this->Form->end() ?>
+
+			<?php
+				if ($authentications) :
+			?>
+
+			<?php if ($authentications && $enableLocalLogin) : ?>
+			<hr />
+				<?= '<center>'.__('OR').'</center>'?>
+			<hr />
+			<?php endif;?>
+				<div class="input-select-wrapper sso-options">
+				<?php
+					echo $this->Form->input('idp', [
+						'options' => $authentications,
+						'label' => false,
+						'onchange' => 'window.document.location.href=this.options[this.selectedIndex].value;'
+					]);
+				?>
+				</div>
+			<?php endif; ?>
+
+			</div>
 		</div>
 
 		<?= $this->element('OpenEmis.footer') ?>

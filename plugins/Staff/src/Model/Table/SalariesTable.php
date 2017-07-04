@@ -100,7 +100,7 @@ class SalariesTable extends ControllerActionTable {
         $fields->exchangeArray($newFields);
     }
 
-	public function beforeAction(Event $event, ArrayObject $extra) 
+	public function beforeAction(Event $event, ArrayObject $extra)
     {
         $session = $this->Session;
         if ($session->check('Staff.Staff.id')) {
@@ -111,7 +111,7 @@ class SalariesTable extends ControllerActionTable {
 		$this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
 		$totalAddition = 0;
 		$totalDeduction = 0;
@@ -268,8 +268,10 @@ class SalariesTable extends ControllerActionTable {
 		$this->fields['deductions']['type'] = 'float';
 	}
 
-	private function setupTabElements() {
-		if ($this->controller->name == 'Directories') {
+	private function setupTabElements()
+    {
+        $nonSchoolController = ['Directories', 'Profiles'];
+		if (in_array($this->controller->name, $nonSchoolController)) {
 			$options = [
 				'type' => 'staff'
 			];
