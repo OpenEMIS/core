@@ -2,7 +2,7 @@
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3941', NOW());
 
 -- patch wrong modified dates
-UPDATE `institution_class_students` SET `modified` = '1970-01-01 00:00:00' WHERE `modified` = '0000-00-00 00:00:00';
+UPDATE `institution_class_students` SET `modified` = '1970-01-01 00:00:00' WHERE `modified` < '0001-01-01 00:00:00';
 
 -- institution_class_students
 CREATE TABLE `z_3941_institution_class_students` LIKE `institution_class_students`;
