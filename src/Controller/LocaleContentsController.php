@@ -52,7 +52,21 @@ class LocaleContentsController extends PageController
         $page->addFilter('locale_id')
             ->setOptions($localeOptions);
             ;
-        $page->addNew('Translation')->setDisplayFrom('_matchingData.LocaleContentTranslations.translation');
+
+        $queryString = $page->getQueryString();
+        if(array_key_exists('locale_id', $queryString)) {
+            foreach($localeOptions as $key => $value) {
+                if($key == $queryString['locale_id']) {
+                    $page->addNew($value)->setDisplayFrom('_matchingData.LocaleContentTranslations.translation');
+                }
+            }
+        } else {
+            $firstLocale = key($localeOptions);
+            $page->setQueryString('locale_id', $firstLocale);
+            $page->addNew($localeOptions[$firstLocale])->setDisplayFrom('_matchingData.LocaleContentTranslations.translation');
+        }
+
+        
         // $page->debug(true);
         parent::index();
     }
@@ -84,7 +98,7 @@ class LocaleContentsController extends PageController
             if ($event->result instanceof Response) {
                 return $event->result;
             }
-
+            $page->attachPrimaryKey($model, $entity);
             $this->set('data', $entity);
             $this->render('Page.Page/edit');
         } else {
@@ -99,6 +113,7 @@ class LocaleContentsController extends PageController
             foreach ($localeNames as $key => $value) {
                 $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
             }
+            $page->attachPrimaryKey($model, $entity);
             $page->get('en')->setDisabled(true);
             $this->set('data', $localContentEntity);
             $this->render('Page.Page/edit');
