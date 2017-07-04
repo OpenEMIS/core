@@ -72,10 +72,6 @@ class LocaleContentsTable extends AppTable
     {
         $querystring = $options['querystring'];
 
-        if(empty($querystring)) {
-            $querystring['locale_id'] = 1;
-        }
-
         $query->select(['LocaleContentTranslations.translation', 'LocaleContents.en', 'LocaleContents.id'])
             ->leftJoinWith('LocaleContentTranslations')
             ->where(['LocaleContentTranslations.locale_id' => $querystring['locale_id']]);
