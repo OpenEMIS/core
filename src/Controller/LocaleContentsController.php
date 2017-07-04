@@ -68,7 +68,7 @@ class LocaleContentsController extends PageController
 
         $primaryKeyValue = json_decode($page->hexToStr($id), true); // locale content id
         $localContentEntity = $model->get($primaryKeyValue);
-        
+
         if ($request->is(['post', 'put'])) {
             try {
                 //retrieving data
@@ -108,23 +108,27 @@ class LocaleContentsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        $allTranslatedLocales = $this->LocaleContents->find('allTranslatedLocale')->toArray()[0];
+        $page->loadElementsFromTable($this->LocaleContents);
+        $page->setAutoRender(false);
+
+        $page->get('en')->setLabel('English');
 
         $localeNames = $this->getLocaleList();
-        $page->addNew('en')->setDisplayFrom('en')->setLabel('English');
         foreach ($localeNames as $key => $value) {
             $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
         }
 
-        $table = $this->LocaleContents;
-        // pr($id);die;
-        $primaryKeyValue = json_decode($page->hexToStr($id), true);
-        // pr($primaryKeyValue);die;
-        $entity = $table->get($primaryKeyValue);
-        $page->attachPrimaryKey($table, $entity);
-        $entity = $table->patchEntity($entity, $allTranslatedLocales, []);
+        parent::view($id);
 
-        $this->set('data', $entity);
+        $data = $page->getData();
+
+        $translations = $data->locale_content_translations;
+        foreach ($translations as $translation) {
+            $lang = $translation->locale->iso;
+            $data->$lang = $translation->translation;
+        }
+
+        $this->set('data', $data);
         $this->render('Page.Page/view');
     }
 }
