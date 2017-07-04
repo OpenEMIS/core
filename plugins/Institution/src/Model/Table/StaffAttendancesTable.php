@@ -863,7 +863,7 @@ class StaffAttendancesTable extends ControllerActionTable
             foreach ($dataSet as $key => $data) {
                 if ($key == 'Present') {
                     $present = $data;
-                } elseif ($key == __('Late')) {
+                } elseif ($key == 'Late') {
                     $late = $data;
                 } else {
                     $absent += $data;
