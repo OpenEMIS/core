@@ -307,46 +307,69 @@ class StaffAttendancesTable extends ControllerActionTable
         } else {
             $dateRangeCondition = [];
         }
+
         $StaffAttendancesQuery = clone $query;
+        
         $staffAbsenceArray = $StaffAttendancesQuery
-            ->find('list', [
-                'groupField' => 'staff_id',
-                'keyField' => 'absence_id',
-                'valueField' => 'absence_type'
+            ->select([
+                'absence_id' => 'StaffAbsences.id', 
+                'staff_id' => $this->aliasField('staff_id'), 
+                'absence_type' => 'StaffAbsences.absence_type_id',
+                'full_day' => 'StaffAbsences.full_day'
             ])
-            ->select(['absence_id' => 'StaffAbsences.id', 'staff_id' => $this->aliasField('staff_id'), 'absence_type' => 'StaffAbsences.absence_type_id'])
             ->group(['staff_id', 'absence_type'])
             ->where($dateRangeCondition)
             ->toArray();
 
-        // Creating the data set
-        $dataSet = [];
+        $tempArr = [];
+        foreach ($staffAbsenceArray as $key => $value) {
+            $tempArr[] = [
+                'absence_id' => $value->absence_id,
+                'student_id' => $value->staff_id,
+                'absence_type' => $value->absence_type,
+                'full_day' => $value->full_day
+            ];
+        }
+        $staffAbsenceArray = $tempArr;
+
         $data = [];
-        foreach ($staffAbsenceArray as $userAbsenceType) {
-            // Compile the dataset
-            $absenceForTheWeek = false;
-            foreach ($userAbsenceType as $absenceType) {
-                if (empty($absenceType)) {
+        
+        foreach ($staffAbsenceArray as $key => $value) {
+            if (empty($value['absence_id'])) {
+                if (isset($data['Present'])) {
+                    $data['Present'] = ++$data['Present'];
+                } else {
+                    $data['Present'] = 1;
+                }
+            } else {
+                $typeCode = $this->absenceCodeList[$value['absence_type']];
+                
+                if ($typeCode == 'LATE') {
+                    if (isset($data['Late'])) {
+                        $data['Late'] = ++$data['Late'];
+                    } else {
+                        $data['Late'] = 1;
+                    }
                     if (isset($data['Present'])) {
                         $data['Present'] = ++$data['Present'];
                     } else {
                         $data['Present'] = 1;
                     }
                 } else {
-                    $typeName = $this->absenceList[$absenceType];
-                    if ($typeName != __('Late')) {
-                        $typeName = 'Absence';
-                    }
-                    if (!$absenceForTheWeek || $typeName == __('Late')) {
-                        if (isset($data[$typeName])) {
-                            $data[$typeName] = ++$data[$typeName];
+                    
+                    if ($value['full_day'] == 0) {
+                        if (isset($data['Present'])) {
+                            $data['Present'] = ++$data['Present'];
                         } else {
-                            $data[$typeName] = 1;
+                            $data['Present'] = 1;
                         }
                     }
-
-                    if ($typeName == 'Absence') {
-                        $absenceForTheWeek = true;
+                    if ($value['full_day'] == 1) {
+                        if (isset($data['Absence'])) {
+                            $data['Absence'] = ++$data['Absence'];
+                        } else {
+                            $data['Absence'] = 1;
+                        }
                     }
                 }
             }
@@ -466,14 +489,24 @@ class StaffAttendancesTable extends ControllerActionTable
             $html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
         } else {
             $absenceTypeList = $this->absenceList;
-
+            $absenceCodeList = $this->absenceCodeList;
+            $fullDay = '';
             if (empty($entity->StaffAbsences['id'])) {
                 $type = '<i class="fa fa-check"></i>';
             } else {
                 $absenceTypeId = $entity->StaffAbsences['absence_type_id'];
                 $type = __($absenceTypeList[$absenceTypeId]);
+
+                if ($absenceCodeList[$absenceTypeId] != 'LATE') {
+                    if ($entity->StaffAbsences['full_day'] == 1) {
+                        $fullDay = ' ('. __('Full Day').')';
+                    } else {
+                        $fullDay = ' ('. __('Not Full Day').')';
+                    }
+                }
             }
-            $html .= $type;
+            
+            $html .= $type . $fullDay;
         }
 
         return $html;
@@ -1010,6 +1043,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 'StaffAbsences.start_time',
                 'StaffAbsences.end_time',
                 'StaffAbsences.absence_type_id',
+                'StaffAbsences.full_day',
                 'StaffAbsences.staff_absence_reason_id'
             ])
             ->join([
