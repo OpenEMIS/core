@@ -8,6 +8,7 @@ use Cake\I18n\Date;
 use Cake\I18n\I18n;
 use Cake\Log\Log;
 use Cake\View\Helper;
+use Cake\Utility\Hash;
 
 use Page\Traits\EncodingTrait;
 
@@ -265,7 +266,6 @@ class PageHelper extends Helper
     {
         $value = '';
         $controlType = $field['controlType'];
-
         if (array_key_exists('displayFrom', $field)) {
             $displayFrom = explode('.', $field['displayFrom']);
             $value = $entity;
@@ -280,8 +280,12 @@ class PageHelper extends Helper
             }
         } else {
             $key = $field['name'];
-            if ($entity instanceof Entity && $entity->has($key)) {
-                $value = $entity->$key;
+            if ($entity instanceof Entity) {
+                $arrEntity = Hash::flatten($entity->toArray());
+                if (isset($arrEntity[$key])) {
+                    $value = $arrEntity[$key];
+                }
+                unset($arrEntity);
             } elseif (is_array($entity) && array_key_exists($key, $entity)) {
                 $value = $entity[$key];
             }
@@ -345,7 +349,6 @@ EOT;
 
             $label = $attr['label'];
             $value = $this->getValue($data, $attr);
-
             $html .= sprintf($row, $label, $value);
         }
         return $html;

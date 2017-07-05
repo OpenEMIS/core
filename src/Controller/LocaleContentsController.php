@@ -70,8 +70,6 @@ class LocaleContentsController extends PageController
             $page->addNew($localeOptions[$firstLocale])->setDisplayFrom('_matchingData.LocaleContentTranslations.translation');
         }
 
-
-        // $page->debug(true);
         parent::index();
     }
 
@@ -79,107 +77,26 @@ class LocaleContentsController extends PageController
     {
         $page = $this->Page;
         $page->loadElementsFromTable($this->LocaleContents);
-        // $page->setAutoRender(false);
         $request = $this->request;
         $model = $this->LocaleContents;
-        // $extra = new ArrayObject();
 
         $page->get('en')->setLabel('English')->setDisabled(true);
         $modelAlias = $model->alias();
         $localeNames = $this->getLocaleList();
         $counter = 0;
         foreach ($localeNames as $key => $value) {
-            // pr($key);
             $page->addNew("$modelAlias.locales.$counter._joinData.translation")->setLabel($value['name']);
             $page->addNew("$modelAlias.locales.$counter.id")->setControlType('hidden')->setValue($value['id']);
             $counter++;
         }
 
         parent::edit($id);
-
-        // $data = $page->getData();
-        // pr($data);die;
-        // $page->debug(true);
-        // if ($request->is(['post', 'put'])) {
-            // pr($request);die;
-            // try {
-            //     // $locales = $data->locales;
-            //     // pr($locales);die;
-            //     $data = $model->patchEntity($data, $locales, []);
-            //     $extra['result'] = $model->save($entity);
-            // } catch (Exception $ex) {
-            //     Log::write('error', $ex->getMessage());
-            // }
-        // } 
-        // else {
-        //     // pr($data);die;
-        //     $locales = $data->locales;
-        //     foreach ($locales as $locale) {
-        //         //for setDisplayFrom to work
-        //         $lang = $locale->iso;
-        //         $data->$lang = $locale->_joinData->translation;
-
-        //         // updating existing data entity
-        //         foreach ($localeNames as $key => $value) {
-        //             if ($key == $lang) {
-        //                 $locale->_joinData->translation = $data->$lang;
-        //             }
-        //         }
-        //     }
-        // }
-        // pr($data);die;
-        // $this->set('data', $data);
-        // $this->render('Page.Page/edit');
-
-
-        
-        // $model = $this->LocaleContents;
-
-        // $primaryKeyValue = json_decode($page->hexToStr($id), true); // locale content id
-        // $localContentEntity = $model->get($primaryKeyValue);
-
-        // if ($request->is(['post', 'put'])) {
-        //     try {
-        //         //retrieving data
-        //         $data = $request->data;
-        //         $data['id'] = $primaryKeyValue;
-        //         $entity = $model->patchEntity($localContentEntity, $data, []);
-        //         //saving data
-        //         $extra['result'] = $model->save($entity);
-        //     } catch (Exception $ex) {
-        //         Log::write('error', $ex->getMessage());
-        //     }
-        //     $event = $this->dispatchEvent('Controller.Page.editAfterSave', [$entity, $extra], $this);
-        //     if ($event->result instanceof Response) {
-        //         return $event->result;
-        //     }
-        //     $page->attachPrimaryKey($model, $entity);
-        //     $this->set('data', $entity);
-        //     $this->render('Page.Page/edit');
-        // } else {
-        //     $allTranslatedLocales = $this->LocaleContents->find('allTranslatedLocale')->toArray()[0];
-
-        //     foreach ($allTranslatedLocales as $key => $value) {
-        //         if ($key != 'id' && $key != 'en' && !strpos($key, '_')) {
-        //             $localContentEntity[$key] = $value;
-        //         }
-        //     }
-        //     $page->addNew('en')->setDisplayFrom('en')->setLabel('English');
-        //     foreach ($localeNames as $key => $value) {
-        //         $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
-        //     }
-        //     $page->attachPrimaryKey($model, $entity);
-        //     $page->get('en')->setDisabled(true);
-        //     $this->set('data', $localContentEntity);
-        //     $this->render('Page.Page/edit');
-        // }
     }
 
     public function view($id)
     {
         $page = $this->Page;
         $page->loadElementsFromTable($this->LocaleContents);
-        // $page->setAutoRender(false);
         $model = $this->LocaleContents;
 
         $page->get('en')->setLabel('English');
@@ -187,27 +104,13 @@ class LocaleContentsController extends PageController
         $localeNames = $this->getLocaleList();
         $modelAlias = $model->alias();
         $counter = 0;
+
         foreach ($localeNames as $key => $value) {
-            pr($key);
-            // $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
-            $page->addNew("data.locales.$counter.translation")->setLabel($value['name']);
-            $page->addNew("data.locales.$counter.id")->setControlType('hidden')->setValue($value['id']);
+            $page->addNew("locales.$counter._joinData.translation")->setLabel($value['name']);
+
             $counter++;
         }
 
         parent::view($id);
-// 
-        // $data = $page->getData();
-        // // pr($data);
-
-        // $locales = $data->locales;
-        // foreach ($locales as $locale) {
-        //     $lang = $locale->iso;
-        //     $data->$lang = $locale->_joinData->translation;
-        // }
-        // pr($data);
-        // die;
-        // $this->set('data', $data);
-        // $this->render('Page.Page/view');
     }
 }
