@@ -94,9 +94,8 @@ class LocaleContentsTable extends AppTable
 
     public function findEdit(Query $query, array $options)
     {
-        $query->find('allTranslatedLocale');
-
-        Log::write('debug', $query);
+            $query->contain(['Locales']);
+        // Log::write('debug', $query);
         return $query;
     }
 
