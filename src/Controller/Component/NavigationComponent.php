@@ -956,8 +956,8 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            'Reports.ProfessionalDevelopment' => [
-                'title' => 'Professional Development',
+            'Reports.Trainings' => [
+                'title' => 'Trainings',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
@@ -985,6 +985,11 @@ class NavigationComponent extends Component
                 'title' => 'Map',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Map'],
+            ],
+            'Reports.CustomReports' => [
+                'title' => 'Custom',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
             ],
         ];
         return $navigation;
