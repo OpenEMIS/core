@@ -1,6 +1,7 @@
 <?php
 namespace App\Shell;
 
+use ArrayObject;
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -38,12 +39,25 @@ class ReportShell extends Shell {
 		try {
 			$params = json_decode($entity->params, true);
 			$feature = $params['feature'];
-			$table = TableRegistry::get($feature);
 			$name = $entity->name;
 
-			echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
-			$table->generateXLXS(['download' => false, 'process' => $entity]);
-			echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
+			if ($entity->module == 'CustomReports') {
+				$excelParams = new ArrayObject([]);
+				$excelParams['className'] = 'Report.CustomReports';
+				$excelParams['requestQuery'] = $params;
+				$excelParams['process'] = $entity;
+
+				$table = TableRegistry::get($excelParams['className']);
+				echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
+				$table->renderExcelTemplate($excelParams);
+				echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
+
+			} else {
+				$table = TableRegistry::get($feature);
+				echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
+				$table->generateXLXS(['download' => false, 'process' => $entity]);
+				echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
+			}
 
 		} catch (Exception $e) {
 			$error = $e->getMessage();
