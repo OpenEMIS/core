@@ -18,10 +18,8 @@ if (array_key_exists('delete', $actions)) {
 $this->end();
 
 $this->start('contentBody');
+?>
 
-<<<<<<< HEAD
-echo $this->Page->renderViewElements();
-=======
 <div class="panel">
     <div class="panel-body">
         <?php
@@ -30,7 +28,7 @@ echo $this->Page->renderViewElements();
         ?>
     </div>
 </div>
->>>>>>> 92ed69a6b777b6ce5d15390aea6b89cec6f2ec6c
 
+<?php
 $this->end();
 ?>
