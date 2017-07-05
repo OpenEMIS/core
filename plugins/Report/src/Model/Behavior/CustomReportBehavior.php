@@ -249,16 +249,17 @@ class CustomReportBehavior extends Behavior
         if (!empty($values)) {
             $conditions = [];
 
+            // must supply '=' or other sign in $field for where conditions
             foreach($values as $field => $value) {
                 $pos = strpos($value, '${');
 
                 if ($pos !== false) {
                     $placeholder = $this->extractPlaceholder($value);
                     if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
-                        $conditions[$field] = $params[$placeholder];
+                        $conditions[] = $field . $params[$placeholder];
                     }
                 } else {
-                    $conditions[$field] = $value;
+                    $conditions[] = $field . $value;
                 }
             }
 
