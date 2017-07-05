@@ -36,7 +36,11 @@ class LocaleContentsController extends PageController
         foreach ($result as $key => $value) {
             //extracting locale name
             //e.g. [zh] = Chinese
-            $locales[$value['iso']] = $value['name'];
+
+            $locales[$value['iso']] = [
+                'name' => $value['name'],
+                'id' => $value['id']
+            ];
         }
         return $locales;
     }
@@ -75,48 +79,57 @@ class LocaleContentsController extends PageController
     {
         $page = $this->Page;
         $page->loadElementsFromTable($this->LocaleContents);
-        $page->setAutoRender(false);
+        // $page->setAutoRender(false);
         $request = $this->request;
         $model = $this->LocaleContents;
-        $extra = new ArrayObject();
+        // $extra = new ArrayObject();
 
-        $page->get('en')->setLabel('English');
-
+        $page->get('en')->setLabel('English')->setDisabled(true);
+        $modelAlias = $model->alias();
         $localeNames = $this->getLocaleList();
+        $counter = 0;
         foreach ($localeNames as $key => $value) {
-            $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
+            // pr($key);
+            $page->addNew("$modelAlias.locales.$counter._joinData.translation")->setLabel($value['name']);
+            $page->addNew("$modelAlias.locales.$counter.id")->setControlType('hidden')->setValue($value['id']);
+            $counter++;
         }
 
         parent::edit($id);
 
-        $data = $page->getData();
-        pr($data);die;
-        $locales = $data->locales;
-
-        foreach ($locales as $locale) {
-            //for setDisplayFrom to work
-            $lang = $locale->iso;
-            $data->$lang = $locale->_joinData->translation;
-
-            // updating existing data entity
-            foreach ($localeNames as $key => $value) {
-                if ($key == $lang) {
-                    $locale->_joinData->translation = $data->$lang;
-                }
-            }
-        }
-
-        if ($request->is(['post', 'put'])) {
-            try {
-                $data = $model->patchEntity($data, $locales, []);
-                $extra['result'] = $model->save($entity);
-            } catch (Exception $ex) {
-                Log::write('error', $ex->getMessage());
-            }
-        }
+        // $data = $page->getData();
         // pr($data);die;
-        $this->set('data', $data);
-        $this->render('Page.Page/edit');
+        // $page->debug(true);
+        // if ($request->is(['post', 'put'])) {
+            // pr($request);die;
+            // try {
+            //     // $locales = $data->locales;
+            //     // pr($locales);die;
+            //     $data = $model->patchEntity($data, $locales, []);
+            //     $extra['result'] = $model->save($entity);
+            // } catch (Exception $ex) {
+            //     Log::write('error', $ex->getMessage());
+            // }
+        // } 
+        // else {
+        //     // pr($data);die;
+        //     $locales = $data->locales;
+        //     foreach ($locales as $locale) {
+        //         //for setDisplayFrom to work
+        //         $lang = $locale->iso;
+        //         $data->$lang = $locale->_joinData->translation;
+
+        //         // updating existing data entity
+        //         foreach ($localeNames as $key => $value) {
+        //             if ($key == $lang) {
+        //                 $locale->_joinData->translation = $data->$lang;
+        //             }
+        //         }
+        //     }
+        // }
+        // pr($data);die;
+        // $this->set('data', $data);
+        // $this->render('Page.Page/edit');
 
 
         
@@ -166,27 +179,35 @@ class LocaleContentsController extends PageController
     {
         $page = $this->Page;
         $page->loadElementsFromTable($this->LocaleContents);
-        $page->setAutoRender(false);
+        // $page->setAutoRender(false);
+        $model = $this->LocaleContents;
 
         $page->get('en')->setLabel('English');
 
         $localeNames = $this->getLocaleList();
+        $modelAlias = $model->alias();
+        $counter = 0;
         foreach ($localeNames as $key => $value) {
-            $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
+            pr($key);
+            // $page->addNew($key)->setDisplayFrom($key)->setLabel($value);
+            $page->addNew("data.locales.$counter.translation")->setLabel($value['name']);
+            $page->addNew("data.locales.$counter.id")->setControlType('hidden')->setValue($value['id']);
+            $counter++;
         }
 
         parent::view($id);
+// 
+        // $data = $page->getData();
+        // // pr($data);
 
-        $data = $page->getData();
-
-        $locales = $data->locales;
-        foreach ($locales as $locale) {
-            $lang = $locale->iso;
-            $data->$lang = $locale->_joinData->translation;
-        }
-        pr($data);
-        die;
-        $this->set('data', $data);
-        $this->render('Page.Page/view');
+        // $locales = $data->locales;
+        // foreach ($locales as $locale) {
+        //     $lang = $locale->iso;
+        //     $data->$lang = $locale->_joinData->translation;
+        // }
+        // pr($data);
+        // die;
+        // $this->set('data', $data);
+        // $this->render('Page.Page/view');
     }
 }
