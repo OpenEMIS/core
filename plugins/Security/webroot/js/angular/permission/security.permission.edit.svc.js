@@ -39,7 +39,7 @@ function SecurityPermissionEditSvc($http, $q, $filter, KdDataSvc) {
         };
         return SecurityFunctions
             .select()
-            .find('permission', {'roleId': roleId, 'module': module})
+            .find('permissions', {'roleId': roleId, 'module': module})
             .ajax({success: success, defer: true});
     }
 };

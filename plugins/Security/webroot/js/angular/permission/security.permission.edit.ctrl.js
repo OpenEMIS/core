@@ -39,18 +39,41 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module)
         .then(function(permissions) {
             var sections = {};
+            var previousCategory = '';
+            var counter = -1;
             angular.forEach(permissions, function(value, key) {
-                if (sections[value.module] == undefined) {
-                    sections[value.module] = [];
+                if (previousCategory != value.category) {
+                    counter++;
+                    previousCategory = value.category;
+                    sections[counter] = [];
+                    sections[counter] = {items: [value], name: value.category};
+                } else {
+                    sections[counter]['items'].push(value);
                 }
-                sections[value.module].push(value);
             });
-            console.log(sections);
         }, function(error) {
 
         });
     });
+
     function changeModule (module) {
-        console.log(module);
+        SecurityPermissionEditSvc.getPermissions(Controller.roleId, module)
+        .then(function(permissions) {
+            var sections = {};
+            var previousCategory = '';
+            var counter = -1;
+            angular.forEach(permissions, function(value, key) {
+                if (previousCategory != value.category) {
+                    counter++;
+                    previousCategory = value.category;
+                    sections[counter] = [];
+                    sections[counter] = {items: [value], name: value.category};
+                } else {
+                    sections[counter]['items'].push(value);
+                }
+            });
+        }, function(error) {
+
+        });
     }
 }
