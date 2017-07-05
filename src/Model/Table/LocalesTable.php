@@ -14,13 +14,13 @@ class LocalesTable extends AppTable
     {
         parent::initialize($config);
 
-        // $this->belongsToMany('LocaleContents', [
-        //     'through' => 'LocaleContentTranslations',
-        //     'foreignKey' => 'locale_id',
-        //     'targetForeignKey' => 'locale_content_id',
-        //     'dependent' => true,
-        //     'cascadeCallbacks' => true
-        // ]);
+        $this->belongsToMany('LocaleContents', [
+            'through' => 'LocaleContentTranslations',
+            'foreignKey' => 'locale_id',
+            'targetForeignKey' => 'locale_content_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->hasMany('LocaleContentTranslations', ['className' => 'LocaleContentTranslations']);
     }
