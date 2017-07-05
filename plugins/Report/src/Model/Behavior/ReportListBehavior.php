@@ -28,6 +28,7 @@ class ReportListBehavior extends Behavior {
 		$events['Model.excel.onExcelBeforeWrite'] = 'onExcelBeforeWrite';
 		$events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
 		$events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
+		$events['ExcelTemplates.Model.onCsvGenerateComplete'] = 'onCsvGenerateComplete';
 		return $events;
 	}
 
@@ -161,6 +162,17 @@ class ReportListBehavior extends Behavior {
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $extra['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['id' => $process->id]
+		);
+    }
+
+	public function onCsvGenerateComplete(Event $event, ArrayObject $settings)
+    {
+        $process = $settings['process'];
+		$expiryDate = new Time();
+		$expiryDate->addDays(5);
+		$this->ReportProgress->updateAll(
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
 			['id' => $process->id]
 		);
     }
