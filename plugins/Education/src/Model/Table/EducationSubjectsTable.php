@@ -70,14 +70,18 @@ class EducationSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         // To handle when delete all subjects
         if (!array_key_exists('field_of_studies', $data[$this->alias()])) {
             $data[$this->alias()]['field_of_studies'] = [];
         }
 
-        $newOptions['associated'] = ['FieldOfStudies._joinData'];
+        $newOptions['associated'] = [
+            'FieldOfStudies' => [
+                'validate' => false
+            ]
+        ];
 
         $arrayOptions = $options->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
@@ -144,8 +148,7 @@ class EducationSubjectsTable extends ControllerActionTable
                     foreach ($educationFieldOfStudies as $key => $obj) {
                         $arrayOptions[] = [
                             'id' => $obj['education_field_of_study']['id'],
-                            'name' => $obj['education_field_of_study']['name'],
-                            'education_programme_orientation_id' => $obj['education_field_of_study']['education_programme_orientation_id'],
+                            'name' => $obj['education_field_of_study']['name']
                         ];
                     }
                 }
@@ -155,8 +158,7 @@ class EducationSubjectsTable extends ControllerActionTable
                     foreach ($requestData[$this->alias()]['field_of_studies'] as $key => $obj) {
                         $arrayOptions[] = [
                             'id' => $obj['id'],
-                            'name' => $obj['name'],
-                            'education_programme_orientation_id' => $obj['education_programme_orientation_id']
+                            'name' => $obj['name']
                         ];
                     }
                 }
@@ -169,17 +171,15 @@ class EducationSubjectsTable extends ControllerActionTable
                 $cellData = "";
                 $cellData .= $Form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
                 $cellData .= $Form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
-                $cellData .= $Form->hidden($fieldPrefix.".education_programme_orientation_id", ['value' => $obj['education_programme_orientation_id']]);
-
 
                 $rowData = [];
                 $rowData[] = $obj['name'] . $cellData;
                 // do checking to disable delete button when used in staff qualification
-                // if ($obj['id'] == 1) {
-                //     $rowData[] = 'cannot delete';
-                // } else {
-                $rowData[] = $this->getDeleteButton(['onclick' => 'jsTable.doRemove(this); $(\'#reload\').click();']);
-                // }
+                if ($this->isUsedInStaffQualifications($entity, $obj['id'])) {
+                    $rowData[] = __('This field of study is in used'); // disable delete button
+                } else {
+                    $rowData[] = $this->getDeleteButton(['onclick' => 'jsTable.doRemove(this); $(\'#reload\').click();']);
+                }
 
                 $tableCells[] = $rowData;
 
@@ -198,6 +198,27 @@ class EducationSubjectsTable extends ControllerActionTable
         $attr['fieldOfStudiesOptions'] = $fieldOfStudiesOptions;
 
         return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);
+    }
+
+    public function isUsedInStaffQualifications(Entity $entity, $educationFieldOfStudyId)
+    {
+        // $StaffQualifications = TableRegistry::get('Staff.Qualifications');
+        $StaffQualificationsSubjects = TableRegistry::get('Staff.QualificationsSubjects');
+        $educationSubjectId = $entity->id;
+
+        $staffQualificationsData = $StaffQualificationsSubjects->find()
+            ->contain(['StaffQualifications'])
+            ->where([$StaffQualificationsSubjects->aliasField('education_subject_id') => $educationSubjectId])
+            ->all();
+
+        $count = 0;
+        foreach ($staffQualificationsData as $value) {
+            if ($value->staff_qualification->education_field_of_study_id == $educationFieldOfStudyId) {
+                $count++;
+            }
+        }
+
+        return $count > 0 ? true : false;
     }
 
     public function getFieldOfStudies($educationSubjectId)
@@ -223,8 +244,7 @@ class EducationSubjectsTable extends ControllerActionTable
 
             $data[$alias]['field_of_studies'][] = [
                 'id' => $selectedFieldOfStudy,
-                'name' => $fieldOfStudyEntity->name,
-                'education_programme_orientation_id' => $fieldOfStudyEntity->education_programme_orientation_id
+                'name' => $fieldOfStudyEntity->name
             ];
 
             unset($data[$alias][$fieldKey]);
@@ -232,7 +252,9 @@ class EducationSubjectsTable extends ControllerActionTable
 
         //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
         $options['associated'] = [
-            'FieldOfStudies' => ['validate' => false]
+            'FieldOfStudies' => [
+                'validate' => false
+            ]
         ];
     }
 }
