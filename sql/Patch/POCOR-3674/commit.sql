@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS  `locales` (
   `iso` varchar(6) NOT NULL,
   `name` varchar(50) NOT NULL,
   `editable` int(1) NOT NULL DEFAULT '1',
-  `direction` int(1) NOT NULL DEFAULT '1' COMMENT '1 = left to right, 2 = right to left',
+  `direction` char(3) NOT NULL DEFAULT 'lrt' COMMENT 'lrt = left to right, ltr = right to left',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL DEFAULT '1',
@@ -51,11 +51,11 @@ SELECT `id`, `en`, `created_user_id`, `created`
 FROM `z_3674_translations`;
 
 INSERT INTO `locales` (`id`, `iso`, `name`, `editable`, `direction`, `created_user_id`, `created`)
-VALUES (1, 'zh', 'Chinese',0,1, 1, NOW()),
-(2, 'ar', 'Arabic',0,2, 1, NOW()),
-(3, 'fr', 'French',0,1, 1, NOW()),
-(4, 'es', 'Spanish',0,1, 1, NOW()),
-(5, 'ru', 'Russian',0,1, 1, NOW());
+VALUES (1, 'zh', 'Chinese',0,'ltr', 1, NOW()),
+(2, 'ar', 'Arabic',0,'rtl', 1, NOW()),
+(3, 'fr', 'French',0,'ltr', 1, NOW()),
+(4, 'es', 'Spanish',0,'ltr', 1, NOW()),
+(5, 'ru', 'Russian',0,'ltr', 1, NOW());
 
 INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`) 
 SELECT `Z`.`zh`, `L`.`id`, 1, `Z`.`created_user_id`, `Z`.`created`
