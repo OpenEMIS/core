@@ -95,7 +95,7 @@ class CustomReportsTable extends AppTable
                     if ($fieldType == 'select' || $fieldType == 'chosenSelect') {
                         $params = $this->request->data[$this->alias()];
 
-                        $options = $this->parseJson($data, $params)->toArray();
+                        $options = $this->buildQuery($data, $params, false);
                         if (array_key_exists('options', $data)) {
                             $options = $data['options'] + $options;
                         }
@@ -193,7 +193,7 @@ class CustomReportsTable extends AppTable
 
         $variables = new ArrayObject([]);
         foreach($jsonQuery as $key => $obj) {
-            $entity = $this->parseJson($obj, $params)->toArray();
+            $entity = $this->buildQuery($obj, $params, false);
             $variables[$key] = $entity;
         }
 
@@ -202,16 +202,19 @@ class CustomReportsTable extends AppTable
 
     public function onCsvBeforeGenerate(Event $event, ArrayObject $settings)
     {
-        if (array_key_exists('requestQuery', $settings)) {
-            $params = $settings['requestQuery'];
+        $params = $settings['requestQuery'];
+        $customReportData = $this->get($params['feature']);
 
-            // get json query from reports database table
-            $customReportData = $this->get($params['feature']);
+        // set name of report
+        $reportName = str_replace(' ', '_', $customReportData->name). '_' . date('Ymd') . 'T' . date('His') . '.csv';
+        $settings['file'] = $reportName;
+
+        if (array_key_exists('requestQuery', $settings)) {
             $jsonQuery = json_decode($customReportData->query, true);
 
             // csvBehavior can only can handle one query
             $obj = current($jsonQuery);
-            $settings['query'] = $this->parseJson($obj, $params);
+            $settings['sql'] = $this->buildQuery($obj, $params, true);
         }
     }
 }
