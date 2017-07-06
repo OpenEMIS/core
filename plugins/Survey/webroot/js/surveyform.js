@@ -65,7 +65,7 @@ var SurveyForm = {
 				sName = sName.substr(0, sLength - 7);
 			}
 			sName = "Copy - " + sName;
-			return CustomForm.checkSectionExist(sName);
+			return SurveyForm.checkSectionExist(sName);
 		}
 	},
 
