@@ -186,6 +186,7 @@ class QualificationsTable extends ControllerActionTable
     {
         $fieldOfStudyOptions = $this->FieldOfStudies
             ->find('list')
+            ->find('visible')
             ->find('order')
             ->toArray();
 

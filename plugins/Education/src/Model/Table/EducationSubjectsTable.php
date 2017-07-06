@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -88,6 +89,11 @@ class EducationSubjectsTable extends ControllerActionTable
         $options->exchangeArray($arrayOptions);
     }
 
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['FieldOfStudies']);
+    }
+
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->field('field_of_studies', ['after' => 'visible', 'entity' => $entity, 'type' => 'custom_field_of_studies']);
@@ -123,13 +129,10 @@ class EducationSubjectsTable extends ControllerActionTable
         $fieldKey = 'field_of_studies';
 
         if ($action == 'view') {
-            if (isset($entity->id)) {
-                $educationSubjectId = $entity->id;
-                $educationFieldOfStudies = $this->getFieldOfStudies($educationSubjectId);
-
-                foreach ($educationFieldOfStudies as $key => $obj) {
+            if ($entity->has('field_of_studies')) {
+                foreach ($entity->field_of_studies as $key => $obj) {
                     $rowData = [];
-                    $rowData[] = $obj['education_field_of_study']['name'];
+                    $rowData[] = $obj->name;
                     $tableCells[] = $rowData;
                 }
             }
@@ -141,14 +144,11 @@ class EducationSubjectsTable extends ControllerActionTable
 
             $arrayOptions = [];
             if ($this->request->is(['get'])) {
-                if (isset($entity->id)) {
-                    $educationSubjectId = $entity->id;
-                    $educationFieldOfStudies = $this->getFieldOfStudies($educationSubjectId);
-
-                    foreach ($educationFieldOfStudies as $key => $obj) {
+                if ($entity->has('field_of_studies')) {
+                    foreach ($entity->field_of_studies as $key => $obj) {
                         $arrayOptions[] = [
-                            'id' => $obj['education_field_of_study']['id'],
-                            'name' => $obj['education_field_of_study']['name']
+                            'id' => $obj->id,
+                            'name' => $obj->name
                         ];
                     }
                 }
@@ -202,36 +202,18 @@ class EducationSubjectsTable extends ControllerActionTable
 
     public function isUsedInStaffQualifications(Entity $entity, $educationFieldOfStudyId)
     {
-        // $StaffQualifications = TableRegistry::get('Staff.Qualifications');
-        $StaffQualificationsSubjects = TableRegistry::get('Staff.QualificationsSubjects');
         $educationSubjectId = $entity->id;
 
-        $staffQualificationsData = $StaffQualificationsSubjects->find()
-            ->contain(['StaffQualifications'])
+        $StaffQualificationsSubjects = TableRegistry::get('Staff.QualificationsSubjects');
+        $count = $StaffQualificationsSubjects->find()
+            ->matching('StaffQualifications', function ($q) use ($educationFieldOfStudyId) {
+                return $q->where(['education_field_of_study_id' => $educationFieldOfStudyId]);
+            })
             ->where([$StaffQualificationsSubjects->aliasField('education_subject_id') => $educationSubjectId])
-            ->all();
-
-        $count = 0;
-        foreach ($staffQualificationsData as $value) {
-            if ($value->staff_qualification->education_field_of_study_id == $educationFieldOfStudyId) {
-                $count++;
-            }
-        }
+            ->count();
 
         return $count > 0 ? true : false;
     }
-
-    public function getFieldOfStudies($educationSubjectId)
-    {
-        $EducationSubjectsFieldOfStudies = TableRegistry::get('Education.EducationSubjectsFieldOfStudies');
-
-        return $EducationSubjectsFieldOfStudies
-            ->find('all')
-            ->contain(['EducationFieldOfStudies'])
-            ->where([$EducationSubjectsFieldOfStudies->aliasField('education_subject_id') => $educationSubjectId])
-            ->toArray();
-    }
-
 
     public function addEditOnAddFieldOfStudy(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {

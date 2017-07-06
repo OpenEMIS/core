@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `education_subjects_field_of_studies` (
     KEY `education_field_of_study_id` (`education_field_of_study_id`),
     KEY `modified_user_id` (`modified_user_id`),
     KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains information about the subjects of any class';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains information about the subjects and field of studies ';
 
 -- staff_qualifications
 RENAME TABLE `staff_qualifications` TO `z_4079_staff_qualifications`;
