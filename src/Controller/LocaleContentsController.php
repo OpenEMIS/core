@@ -61,7 +61,7 @@ class LocaleContentsController extends PageController
         $request = $this->request;
         $model = $this->LocaleContents;
 
-        $page->get('en')->setLabel('English')->setDisabled(true);
+        $page->get('en')->setDisabled(true);
         $modelAlias = $model->alias();
         $localeNames = $this->Locales->find('allLocale');
         $counter = 0;
@@ -77,7 +77,7 @@ class LocaleContentsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        $model = $this->LocaleContents;$page->get('en')->setLabel('English');
+        $model = $this->LocaleContents;
 
         $localeNames = $this->Locales->find('allLocale');
         $modelAlias = $model->alias();
