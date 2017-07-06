@@ -17,6 +17,7 @@ class StaffQualificationsTable extends AppTable  {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationTitles', 	['className' => 'FieldOption.QualificationTitles']);
 		$this->belongsTo('QualificationCountries', 	['className' => 'FieldOption.Countries', 'foreignKey' => 'qualification_country_id']);
+		$this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
 
 		$this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
@@ -56,13 +57,14 @@ class StaffQualificationsTable extends AppTable  {
 		$superAdmin = $requestData->super_admin;
 
 		$query
-			->contain(['QualificationTitles.QualificationLevels'])
+			->contain(['QualificationTitles.QualificationLevels', 'FieldOfStudies'])
 			->select([
 				'institution_name' => 'Institutions.name',
 				'institution_code' => 'Institutions.code',
 				'staff_position_name' => 'StaffPositionTitles.name',
 				'staff_type_name' => 'StaffTypes.name',
-				'qualification_level' => 'QualificationLevels.name'
+				'qualification_level' => 'QualificationLevels.name',
+				'field_of_study_name' => 'FieldOfStudies.name'
 			])
 			->innerJoin(
 				['InstitutionStaff' => 'institution_staff'],
@@ -129,6 +131,13 @@ class StaffQualificationsTable extends AppTable  {
 					'field' => 'qualification_level',
 					'type' => 'string',
 					'label' => __('Qualification Level')
+				];
+			} else if ($value['field'] == 'education_field_of_study_id') {
+				$newFields[] = [
+					'key' => 'FieldOfStudies.name',
+					'field' => 'field_of_study_name',
+					'type' => 'string',
+					'label' => __('Education Field Of Study')
 				];
 			}
 		}
