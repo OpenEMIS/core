@@ -73,7 +73,9 @@ $this->start('panelBody');
             </div>
             <div class="form-buttons">
                 <div class="button-label"></div>
-                <button class="btn btn-default btn-save" name="submit" value="save" type="button"><i class="fa fa-check"></i> <?= __('Save') ?></button>
+                <button class="btn btn-default btn-save" type="button" ng-click="SecurityPermissionEditController.postForm();">
+                    <i class="fa fa-check"></i> <?= __('Save') ?>
+                </button>
                 <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             </div>
         </div>
