@@ -132,13 +132,6 @@ class StaffQualificationsTable extends AppTable  {
 					'type' => 'string',
 					'label' => __('Qualification Level')
 				];
-			} else if ($value['field'] == 'education_field_of_study_id') {
-				$newFields[] = [
-					'key' => 'FieldOfStudies.name',
-					'field' => 'field_of_study_name',
-					'type' => 'string',
-					'label' => __('Education Field Of Study')
-				];
 			}
 		}
 
