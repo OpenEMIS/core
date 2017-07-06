@@ -1,17 +1,12 @@
 <?php
 namespace App\Model\Table;
 
-use ArrayObject;
-
 use Cake\Event\Event;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
 use Cake\Log\Log;
+use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
-use Restful\Model\Entity\Schema;
 
 class LocaleContentsTable extends AppTable
 {
@@ -52,9 +47,6 @@ class LocaleContentsTable extends AppTable
             ->contain(['Locales' => function($q) use ($querystring) {
                 return $q->where(['Locales.id' => $querystring['locale_id']]);
             }]);
-            // ->leftJoinWith('Locales')
-            // ->where(['Locales.id' => $querystring['locale_id']]);
-        Log::write('debug', $query->sql());
         return $query;
     }
 
