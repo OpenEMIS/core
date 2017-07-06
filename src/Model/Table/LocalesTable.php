@@ -21,8 +21,6 @@ class LocalesTable extends AppTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
-        $this->hasMany('LocaleContentTranslations', ['className' => 'LocaleContentTranslations']);
     }
 
     public function validationDefault(Validator $validator)
@@ -59,9 +57,13 @@ class LocalesTable extends AppTable
                 $returnResult = [];
                 $results = $results->toArray();
                 foreach ($results as $key => $value) {
-                    $returnResult[$key]['id'] = $value['id'];
-                    $returnResult[$key]['iso'] = $value['iso'];
-                    $returnResult[$key]['name'] = $value['name'];
+                    // $returnResult[$key]['id'] = $value['id'];
+                    // $returnResult[$key]['iso'] = $value['iso'];
+                    // $returnResult[$key]['name'] = $value['name'];
+                    $returnResult[$value['iso']] = [
+                        'name' => $value['name'],
+                        'id' => $value['id']
+                    ];
                 }
                 return $returnResult;
             });

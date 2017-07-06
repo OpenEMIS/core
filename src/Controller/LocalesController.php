@@ -24,6 +24,9 @@ class LocalesController extends PageController
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Localization', ['plugin' => false, 'controller' => 'LocaleContents', 'action' => 'index']);
 
+        $this->Page->get('direction')->setControlType('dropdown')->setOptions([
+                '' => '-- Select --', 'ltr' => 'Left to Right', 'rtl' => 'Right to Left'
+                ]);
     }
 
 
@@ -37,15 +40,12 @@ class LocalesController extends PageController
     public function edit($id)
     {
         $page = $this->Page;
-        $page->get('direction')->setControlType('dropdown')->setOptions([
-                '0' => '-- Select --', '1' => 'Left to Right', '2' => 'Right to Left'
-                ]);
         parent::edit($id);
     }
 
     public function view($id)
     {
-
+        $page = $this->Page;
         parent::view($id);
     }
 
@@ -53,16 +53,6 @@ class LocalesController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['editable']);
-
-        $page->get('direction')->setControlType('dropdown')->setOptions([
-                '0' => '-- Select --', '1' => 'Left to Right', '2' => 'Right to Left'
-                    ]);
-
-        // $page->addFilter('direction')
-        //     ->setOptions([
-        //         '0' => '-- Select --', '1' => 'Left to Right', '2' => 'Right to Left'
-        //             ])
-        //     ;
 
         parent::add();
     }

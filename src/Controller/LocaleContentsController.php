@@ -15,42 +15,27 @@ class LocaleContentsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        // $this->Page->loadElementsFromTable($this->LocaleContents);
+        
         $this->Page->disable(['add', 'delete']);
         $this->Page->setHeader('Translations');
 
         $this->loadModel('Locales');
         $this->loadModel('LocaleContents');
+
+        $this->Page->loadElementsFromTable($this->LocaleContents);
     }
 
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+
+        $this->Page->get('en')->setLabel('English');
         $this->Navigation->addCrumb('Localization', ['plugin' => false, 'controller' => 'LocaleContents', 'action' => 'index']);
-    }
-
-    private function getLocaleList()
-    {
-        $locales = [];
-        $result = $this->Locales->find('allLocale')->toArray();
-        foreach ($result as $key => $value) {
-            //extracting locale name
-            //e.g. [zh] = Chinese
-
-            $locales[$value['iso']] = [
-                'name' => $value['name'],
-                'id' => $value['id']
-            ];
-        }
-        return $locales;
     }
 
     public function index()
     {
-        $this->Page->loadElementsFromTable($this->LocaleContents);
         $page = $this->Page;
-
-        $page->get('en')->setLabel('English');
 
         $localeOptions = $this->Locales->getList()->toArray();
         $page->addFilter('locale_id')
@@ -59,15 +44,12 @@ class LocaleContentsController extends PageController
 
         $queryString = $page->getQueryString();
         if (array_key_exists('locale_id', $queryString)) {
-            foreach ($localeOptions as $key => $value) {
-                if ($key == $queryString['locale_id']) {
-                    $page->addNew($value)->setDisplayFrom('_matchingData.LocaleContentTranslations.translation');
-                }
-            }
+                $localeId = $queryString['locale_id'];
+                $page->addNew($localeOptions[$localeId])->setDisplayFrom('locales.0._joinData.translation');
         } else {
             $firstLocale = key($localeOptions);
             $page->setQueryString('locale_id', $firstLocale);
-            $page->addNew($localeOptions[$firstLocale])->setDisplayFrom('_matchingData.LocaleContentTranslations.translation');
+            $page->addNew($localeOptions[$firstLocale])->setDisplayFrom('locales.0._joinData.translation');
         }
 
         parent::index();
@@ -76,17 +58,16 @@ class LocaleContentsController extends PageController
     public function edit($id)
     {
         $page = $this->Page;
-        $page->loadElementsFromTable($this->LocaleContents);
         $request = $this->request;
         $model = $this->LocaleContents;
 
         $page->get('en')->setLabel('English')->setDisabled(true);
         $modelAlias = $model->alias();
-        $localeNames = $this->getLocaleList();
+        $localeNames = $this->Locales->find('allLocale');
         $counter = 0;
         foreach ($localeNames as $key => $value) {
-            $page->addNew("$modelAlias.locales.$counter._joinData.translation")->setLabel($value['name']);
-            $page->addNew("$modelAlias.locales.$counter.id")->setControlType('hidden')->setValue($value['id']);
+            $page->addNew($key)->setAliasField("$modelAlias.locales.$counter._joinData.translation")->setLabel($value['name']);
+            $page->addNew($key.'_id')->setAliasField("$modelAlias.locales.$counter.id")->setControlType('hidden')->setValue($value['id']);
             $counter++;
         }
 
@@ -96,17 +77,14 @@ class LocaleContentsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        $page->loadElementsFromTable($this->LocaleContents);
-        $model = $this->LocaleContents;
+        $model = $this->LocaleContents;$page->get('en')->setLabel('English');
 
-        $page->get('en')->setLabel('English');
-
-        $localeNames = $this->getLocaleList();
+        $localeNames = $this->Locales->find('allLocale');
         $modelAlias = $model->alias();
         $counter = 0;
 
         foreach ($localeNames as $key => $value) {
-            $page->addNew("locales.$counter._joinData.translation")->setLabel($value['name']);
+            $page->addNew($key)->setDisplayFrom("locales.$counter._joinData.translation")->setLabel($value['name']);
 
             $counter++;
         }
