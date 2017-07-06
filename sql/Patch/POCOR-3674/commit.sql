@@ -27,8 +27,6 @@ CREATE TABLE IF NOT EXISTS `locale_content_translations` (
   `translation` TEXT NULL,
   `locale_content_id` INT(11) NOT NULL,
   `locale_id` INT(11) NOT NULL,
-  `modified_user_id` INT(11) NULL,
-  `modified` DATETIME NULL,
   `created_user_id` INT(11) NOT NULL,
   `created` DATETIME NOT NULL,
   PRIMARY KEY (`locale_content_id`, `locale_id`),
