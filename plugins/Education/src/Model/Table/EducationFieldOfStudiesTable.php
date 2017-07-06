@@ -17,6 +17,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $this->addBehavior('Education.Setup');
         $this->belongsTo('ProgrammeOrientations', ['className' => 'Education.EducationProgrammeOrientations', 'foreignKey' => 'education_programme_orientation_id']);
         $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffQualifications', ['className' => 'Staff.Qualifications', 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
