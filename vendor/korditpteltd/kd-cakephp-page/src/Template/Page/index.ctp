@@ -14,16 +14,8 @@ if (array_key_exists('search', $actions)) {
 $this->end();
 
 $this->start('contentBody');
-?>
 
-<div class="panel">
-    <div class="panel-body">
-        <?= $this->element('Page.alert') ?>
-        <?= $this->element('Page.tabs') ?>
-        <?= $this->element('Page.table') ?>
-    </div>
-</div>
+echo $this->element('Page.table');
 
-<?php
 $this->end();
 ?>

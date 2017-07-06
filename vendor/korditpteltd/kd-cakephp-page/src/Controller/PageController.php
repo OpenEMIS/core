@@ -127,12 +127,15 @@ class PageController extends AppController
                     $extra['result'] = false;
                     $entity = $table->patchEntity($entity, $request->data, []);
                     $extra['result'] = $table->save($entity);
+
+                    $event = $this->dispatchEvent('Controller.Page.addAfterSave', [$entity, $extra], $this);
+                    if ($event->result instanceof Response) {
+                        return $event->result;
+                    }
                 } catch (Exception $ex) {
-                    Log::write('error', $ex->getMessage());
-                }
-                $event = $this->dispatchEvent('Controller.Page.addAfterSave', [$entity, $extra], $this);
-                if ($event->result instanceof Response) {
-                    return $event->result;
+                    $msg = $ex->getMessage();
+                    $this->Alert->show($msg, 'error');
+                    Log::write('error', $msg);
                 }
             }
             $this->set('data', $entity);
@@ -213,12 +216,15 @@ class PageController extends AppController
                     $extra['result'] = false;
                     $entity = $table->patchEntity($entity, $request->data, []);
                     $extra['result'] = $table->save($entity);
+
+                    $event = $this->dispatchEvent('Controller.Page.editAfterSave', [$entity, $extra], $this);
+                    if ($event->result instanceof Response) {
+                        return $event->result;
+                    }
                 } catch (Exception $ex) {
-                    Log::write('error', $ex->getMessage());
-                }
-                $event = $this->dispatchEvent('Controller.Page.editAfterSave', [$entity, $extra], $this);
-                if ($event->result instanceof Response) {
-                    return $event->result;
+                    $msg = $ex->getMessage();
+                    $this->Alert->show($msg, 'error');
+                    Log::write('error', $msg);
                 }
             }
             $this->set('data', $entity);

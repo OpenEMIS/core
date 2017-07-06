@@ -1,5 +1,6 @@
 <?php
 $menuItemSelected = isset($menuItemSelected) ? implode('-', $menuItemSelected) : '';
+$selectedLink = isset($selectedLink) ? $selectedLink : '';
 ?>
 
 <div class="left-menu">
