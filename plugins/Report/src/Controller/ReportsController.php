@@ -53,6 +53,7 @@ class ReportsController extends AppController {
 				'Report.StudentAbsences' => __('Student Absence'),
 				'Report.StaffAbsences' => __('Staff Absence'),
 				'Report.StaffLeave' => __('Staff Leave'),
+				'Report.StaffTransfers' => __('Staff Transfer'),
 				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
 				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
 				'Report.InstitutionCases' => __('Cases')
