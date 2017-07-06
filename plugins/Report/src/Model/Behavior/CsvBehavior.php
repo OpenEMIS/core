@@ -74,10 +74,11 @@ class CsvBehavior extends Behavior
     {
         $process = $settings['process'];
         $query = $settings['query'];
+        $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
 
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(
-            ['sql' => $query->sql()],
+            ['sql' => $sql],
             ['id' => $process->id]
         );
     }
