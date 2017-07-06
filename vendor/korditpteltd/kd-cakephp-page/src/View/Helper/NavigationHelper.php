@@ -10,6 +10,8 @@ use Cake\View\Helper;
 
 class NavigationHelper extends Helper
 {
+    public $helpers = ['Html'];
+
     private $html = '<ul id="nav-menu-1" class="nav nav-level-1 collapse in" role="tabpanel" data-level="1">';
     private $menuGroup = [];
     private $menuCount = 1;
