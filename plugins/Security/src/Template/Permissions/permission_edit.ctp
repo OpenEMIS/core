@@ -37,15 +37,44 @@ $this->start('panelBody');
                 </uib-tabset>
                 <div class="tabs-divider"></div>
             </scrollable-tabset>
-
-            <div class="section-header security-permission-checkbox">
+            <div class="section-header security-permission-checkbox" ng-repeat-start="(key, section) in SecurityPermissionEditController.pageSections">
                 <input
                 class="no-selection-label"
-                kd-checkbox-radio="General"
+                kd-checkbox-radio={{section.name}}
                 type="checkbox"
                 ng-true-value="1"
                 ng-false-value="0"
-                ng-model="SecurityPermissionEditController.enabled">
+                ng-model="section.enabled"
+                ng-change="SecurityPermissionEditController.checkAllInSection(key);">
+            </div>
+            <div class="table-wrapper" ng-repeat-end>
+                <div class="table-responsive">
+                    <table class="table table-curved">
+                        <thead>
+                            <th style="width: 300px"><?= __('Function')?></th>
+                            <th class="center"><?= __('View')?></th>
+                            <th class="center"><?= __('Edit')?></th>
+                            <th class="center"><?= __('Add')?></th>
+                            <th class="center"><?= __('Delete')?></th>
+                            <th class="center"><?= __('Execute')?></th>
+                        </thead>
+                        <tbody ng-repeat="function in section.items">
+                            <tr>
+                                <td>{{function.name}}</td>
+                                <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._view" ng-disabled="function._view==null;"></td>
+                                <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._edit" ng-disabled="function._edit==null;"></td>
+                                <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._add" ng-disabled="function._add==null;"></td>
+                                <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._delete" ng-disabled="function._delete==null;"></td>
+                                <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._execute" ng-disabled="function._execute==null;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <div class="button-label"></div>
+                <button class="btn btn-default btn-save" name="submit" value="save" type="button"><i class="fa fa-check"></i> <?= __('Save') ?></button>
+                <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             </div>
         </div>
     </div>
