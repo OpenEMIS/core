@@ -33,6 +33,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     // function
     Controller.changeModule = changeModule;
     Controller.checkAllInSection = checkAllInSection;
+    Controller.postForm = postForm;
 
     angular.element(document).ready(function () {
         SecurityPermissionEditSvc.init(angular.baseUrl);
@@ -131,5 +132,9 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
                 value.Permissions._execute = enabled;
             }
         });
+    }
+
+    function postForm() {
+
     }
 }
