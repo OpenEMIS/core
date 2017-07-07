@@ -29,6 +29,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     Controller.selectedModule = 'Institutions';
     Controller.roleId = 0;
     Controller.pageSections = [];
+    Controller.redirectUrl = '';
 
     // function
     Controller.changeModule = changeModule;
@@ -40,7 +41,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         var module = Controller.modules[0].key;
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module)
         .then(function(permissions) {
-            var sections = {};
+            var sections = [];
             var previousCategory = '';
             var counter = -1;
             var enabled = 0;
@@ -78,7 +79,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     function changeModule (module) {
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module.key)
         .then(function(permissions) {
-            var sections = {};
+            var sections = [];
             var previousCategory = '';
             var counter = -1;
             var enabled = 0;
@@ -134,7 +135,54 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         });
     }
 
-    function postForm() {
+    function updateQueryStringParameter(uri, key, value) {
+        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+        if (uri.match(re)) {
+            return uri.replace(re, '$1' + key + "=" + value + '$2');
+        }
+        else {
+            return uri + separator + key + "=" + value;
+        }
+    }
 
+    function postForm() {
+        var permissions = [];
+        for (var i = 0; i < Controller.pageSections.length; i++) {
+            var section = Controller.pageSections[i];
+            for (var j = 0; j < section.items.length ; j++) {
+                var securityFunction = {'id': section.items[j].id, '_joinData': section.items[j].Permissions};
+                permissions.push(securityFunction);
+            }
+        }
+
+        permissions = UtilsSvc.urlsafeBase64Encode(JSON.stringify(permissions));
+
+        var postData = {
+            'id': Controller.roleId,
+            'security_functions': permissions
+        };
+
+        SecurityPermissionEditSvc.savePermissions(postData)
+        .then(function(response) {
+            var error = response.data.error;
+            if (error instanceof Array && error.length == 0) {
+                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
+                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                $http.get(Controller.alertUrl)
+                .then(function(response) {
+                    $window.location.href = Controller.redirectUrl;
+                }, function (error) {
+                    console.log(error);
+                });
+            } else {
+                AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
+                angular.forEach(error, function(value, key) {
+                    Controller.postError[key] = value;
+                })
+            }
+        }, function(error){
+            console.log(error);
+        });
     }
 }

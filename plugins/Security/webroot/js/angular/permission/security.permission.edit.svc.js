@@ -9,11 +9,13 @@ function SecurityPermissionEditSvc($http, $q, $filter, KdDataSvc) {
     var service = {
         init: init,
         getPermissions: getPermissions,
-        translate: translate
+        translate: translate,
+        savePermissions: savePermissions
     };
 
     var models = {
-        SecurityFunctions: 'Security.SecurityFunctions'
+        SecurityFunctions: 'Security.SecurityFunctions',
+        SecurityRoles: 'Security.SecurityRoles'
     };
 
     return service;
@@ -41,5 +43,10 @@ function SecurityPermissionEditSvc($http, $q, $filter, KdDataSvc) {
             .select()
             .find('permissions', {'roleId': roleId, 'module': module})
             .ajax({success: success, defer: true});
+    }
+
+    function savePermissions(data) {
+        SecurityRoles.reset();
+        return SecurityRoles.edit(data);
     }
 };

@@ -23,7 +23,7 @@ class SecuritiesController extends AppController
 
     public function Permissions($subaction = 'index', $roleId = null)
     {
-        if ($subaction == 'editT') {
+        if ($subaction == 'edit') {
             $indexUrl = [
                 'plugin' => 'Security',
                 'controller' => 'Securities',
@@ -36,9 +36,16 @@ class SecuritiesController extends AppController
                 'index',
                 $roleId
             ];
+
+            $alertUrl = [
+                'plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => 'setAlert'
+            ];
             $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
             $this->set('indexUrl', $indexUrl);
             $this->set('viewUrl', $viewUrl);
+            $this->set('alertUrl', $alertUrl);
             $this->render('Permissions/permission_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
@@ -62,7 +69,7 @@ class SecuritiesController extends AppController
         switch ($action) {
             case 'Permissions':
                 if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'editT') {
+                    if ($this->request->param('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'security.permission.edit.ctrl',
