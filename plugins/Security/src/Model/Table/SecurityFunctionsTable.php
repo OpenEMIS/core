@@ -16,7 +16,7 @@ class SecurityFunctionsTable extends AppTable
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Permissions' => ['index', 'add']
+            'Permissions' => ['index']
         ]);
     }
 
