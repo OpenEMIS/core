@@ -203,7 +203,13 @@ class ExcelReportBehavior extends Behavior
         $format = $attr['format'];
         $cellStyle = $attr['style'];
         $columnWidth = $attr['columnWidth'];
-        $targetColumnValue = $objWorksheet->getCell($cellCoordinate)->getColumn();
+        $mergeColumns = $attr['mergeColumns'];
+
+        $targetCell = $objWorksheet->getCell($cellCoordinate);
+        $targetColumnValue = $targetCell->getColumn();
+        $targetColumnIndex = PHPExcel_Cell::columnIndexFromString($targetColumnValue);
+        // by default will merge to the same row, but for nested row parent cell will merge until the last row of the children
+        $rangeRowValue = isset($attr['rangeRowValue']) && !empty($attr['rangeRowValue']) ? $attr['rangeRowValue'] : $targetCell->getRow();
 
         switch($type) {
             case 'number':
@@ -238,6 +244,12 @@ class ExcelReportBehavior extends Behavior
         // set column width to follow placeholder
         $objWorksheet->getColumnDimension($targetColumnValue)->setAutoSize(false);
         $objWorksheet->getColumnDimension($targetColumnValue)->setWidth($columnWidth);
+
+        if (!empty($mergeColumns)) {
+            $rangeColumnValue = $objCell->stringFromColumnIndex(($targetColumnIndex - 1) + ($mergeColumns - 1)); //merge need to be minus 1
+            $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rangeRowValue;
+            $objWorksheet->mergeCells($mergeRange);
+        }
     }
 
     public function renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
@@ -459,6 +471,7 @@ class ExcelReportBehavior extends Behavior
         $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : null;
         $attr['showHeaders'] = array_key_exists('showHeaders', $settings) ? $settings['showHeaders'] : false;
         $attr['insertRows'] = array_key_exists('insertRows', $settings) ? $settings['insertRows'] : false;
+        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : null;
         // $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
 
         // Start attributes  for dropdown
@@ -483,7 +496,7 @@ class ExcelReportBehavior extends Behavior
         // columnIndexFromString(): Column index start from 1
         $columnValue = $objCell->getColumn();
         $attr['columnValue'] = $columnValue;
-        $attr['columnIndex'] = $objCell->columnIndexFromString($columnValue);
+        $attr['columnIndex'] = PHPExcel_Cell::columnIndexFromString($columnValue);
         $attr['columnWidth'] = $objWorksheet->getColumnDimension($columnValue)->getWidth();
         $attr['rowValue'] = $objCell->getRow();
         $coordinate = $objCell->getCoordinate();
@@ -561,7 +574,7 @@ class ExcelReportBehavior extends Behavior
                     } else {
                         $columnValue = $objCell->getColumn();
                         $rowValue = $objCell->getRow();
-                        $columnIndex = $objCell->columnIndexFromString($columnValue);
+                        $columnIndex = PHPExcel_Cell::columnIndexFromString($columnValue);
                         $extra['placeholders'][$columnIndex][$rowValue] = $cellValue;
                     }
                 }
@@ -716,7 +729,6 @@ class ExcelReportBehavior extends Behavior
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
-
     }
 
     private function nestedRow($nestedRow, $parentKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
