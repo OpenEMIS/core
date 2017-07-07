@@ -216,14 +216,7 @@ class ReportListBehavior extends Behavior {
 		$path = $entity->file_path;
 		if (!empty($path)) {
 			$filename = basename($path);
-
-			if ($entity->module == 'CustomReports') {
-				$url = "/export/customexcel/$filename";
-			} else {
-				$url = "/export/$filename";
-			}
-
-			return $this->_table->controller->redirect($url);
+			return $this->_table->controller->redirect("/export/$filename");
 		}
 	}
 }
