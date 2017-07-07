@@ -35,6 +35,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     Controller.changeModule = changeModule;
     Controller.checkAllInSection = checkAllInSection;
     Controller.postForm = postForm;
+    Controller.updateQueryStringParameter = updateQueryStringParameter;
 
     angular.element(document).ready(function () {
         SecurityPermissionEditSvc.init(angular.baseUrl);
