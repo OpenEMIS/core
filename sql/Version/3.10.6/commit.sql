@@ -2,9 +2,6 @@
 -- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-4081', NOW());
 
-ALTER TABLE `user_identities`
-ADD INDEX `number` (`number`);
-
 ALTER TABLE `deleted_records`
 RENAME TO `z_4081_deleted_records`;
 

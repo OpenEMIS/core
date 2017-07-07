@@ -1,7 +1,4 @@
 -- POCOR-4081
-ALTER TABLE `user_identities`
-DROP INDEX `number`;
-
 DROP TABLE `deleted_records`;
 
 ALTER TABLE `z_4081_deleted_records`
