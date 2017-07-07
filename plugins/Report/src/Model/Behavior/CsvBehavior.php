@@ -127,7 +127,7 @@ class CsvBehavior extends Behavior
         $exportCmd .= ' --default-character-set=utf8';
         $exportCmd .= ' ' . $database;
         $exportCmd .= ' < ' . $sqlFilepath;
-        $exportCmd .= "| sed -e 's/\t/,/g'";
+        $exportCmd .= '| sed -e \'s/\t/\",\"/g;s/^/\"/g;s/$/\"/g\'';
         $exportCmd .= ' > ' . $csvFilepath;
 
         try {
