@@ -771,8 +771,15 @@ class InstitutionRoomsTable extends ControllerActionTable
 
             $selectedEditType = $request->query('edit_type');
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
+                $classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
                 $roomTypeOptions = $this->RoomTypes
-                    ->find('list')
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name',
+                        'groupField' => function ($roomType) use ($classificationOptions) {
+                            return $classificationOptions[$roomType->classification];
+                        }
+                    ])
                     ->find('visible')
                     ->where([
                         $this->RoomTypes->aliasField('id <>') => $entity->room_type_id
