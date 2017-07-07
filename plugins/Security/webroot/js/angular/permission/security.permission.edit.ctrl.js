@@ -29,89 +29,80 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     Controller.selectedModule = 'Institutions';
     Controller.roleId = 0;
     Controller.pageSections = [];
+    Controller.originalPageSections = [];
     Controller.redirectUrl = '';
 
     // function
     Controller.changeModule = changeModule;
     Controller.checkAllInSection = checkAllInSection;
     Controller.postForm = postForm;
+    Controller.formatSections = formatSections;
     Controller.updateQueryStringParameter = updateQueryStringParameter;
 
     angular.element(document).ready(function () {
         SecurityPermissionEditSvc.init(angular.baseUrl);
         var module = Controller.modules[0].key;
+        UtilsSvc.isAppendLoader(true);
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module)
         .then(function(permissions) {
-            var sections = [];
-            var previousCategory = '';
-            var counter = -1;
-            var enabled = 0;
-            angular.forEach(permissions, function(value, key) {
-                if (previousCategory != value.category) {
-                    enabled = 0;
-                    counter++;
-                    previousCategory = value.category;
-                    sections[counter] = [];
-                    sections[counter] = {items: [value], name: value.category, enabled: 0};
-                    angular.forEach(value.Permissions, function(val, k) {
-                        value.Permissions[k] = parseInt(val);
-                        if (k != 'id' && val > 0) {
-                            enabled = 1;
-                        }
-                    });
-                    sections[counter]['enabled'] = enabled;
-                } else {
-                    angular.forEach(value.Permissions, function(val, k) {
-                        value.Permissions[k] = parseInt(val);
-                        if (k != 'id' && val > 0) {
-                            enabled = 1;
-                        }
-                    });
-                    sections[counter]['enabled'] = enabled;
-                    sections[counter]['items'].push(value);
-                }
-            });
-            Controller.pageSections = sections;
+            Controller.pageSections = Controller.formatSections(permissions);
+            Controller.originalPageSections = angular.copy(Controller.pageSections);
+            UtilsSvc.isAppendLoader(false);
         }, function(error) {
-
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
         });
     });
 
+    function formatSections(permissions)
+    {
+        var sections = [];
+        var previousCategory = [];
+        var counter = -1;
+        var enabled = 0;
+        var tmpSection = {};
+        angular.forEach(permissions, function(value, key) {
+            if (previousCategory.indexOf(value.category) === -1) {
+                enabled = 0;
+                counter++;
+                previousCategory.push(value.category);
+                tmpSection[value.category] = {items: [value], name: value.category, enabled: 0, counter: counter};
+                angular.forEach(value.Permissions, function(val, k) {
+                    value.Permissions[k] = parseInt(val);
+                    if (k != 'id' && val > 0) {
+                        enabled = 1;
+                    }
+                });
+                tmpSection[value.category]['enabled'] = enabled;
+            } else {
+                angular.forEach(value.Permissions, function(val, k) {
+                    value.Permissions[k] = parseInt(val);
+                    if (k != 'id' && val > 0) {
+                        enabled = 1;
+                    }
+                });
+                tmpSection[value.category]['enabled'] = enabled;
+                tmpSection[value.category]['items'].push(value);
+            }
+        });
+        angular.forEach(tmpSection, function(value, key) {
+            sections[value.counter] = value;
+        });
+
+        return sections;
+    }
+
+
     function changeModule (module) {
+        UtilsSvc.isAppendLoader(true);
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module.key)
         .then(function(permissions) {
-            var sections = [];
-            var previousCategory = '';
-            var counter = -1;
-            var enabled = 0;
-            angular.forEach(permissions, function(value, key) {
-                if (previousCategory != value.category) {
-                    enabled = 0;
-                    counter++;
-                    previousCategory = value.category;
-                    sections[counter] = [];
-                    sections[counter] = {items: [value], name: value.category, enabled: 0};
-                    angular.forEach(value.Permissions, function(val, k) {
-                        value.Permissions[k] = parseInt(val);
-                        if (k != 'id' && val > 0) {
-                            enabled = 1;
-                        }
-                    });
-                    sections[counter]['enabled'] = enabled;
-                } else {
-                    angular.forEach(value.Permissions, function(val, k) {
-                        value.Permissions[k] = parseInt(val);
-                        if (k != 'id' && val > 0) {
-                            enabled = 1;
-                        }
-                    });
-                    sections[counter]['enabled'] = enabled;
-                    sections[counter]['items'].push(value);
-                }
-            });
-            Controller.pageSections = sections;
+            Controller.pageSections = Controller.formatSections(permissions);
+            Controller.originalPageSections = angular.copy(Controller.pageSections);
+            UtilsSvc.isAppendLoader(false);
         }, function(error) {
-
+            console.log(error);
+            UtilsSvc.isAppendLoader(false);
         });
     }
 
@@ -149,21 +140,28 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
 
     function postForm() {
         var permissions = [];
+        var originalPageSections = Controller.originalPageSections;
         for (var i = 0; i < Controller.pageSections.length; i++) {
             var section = Controller.pageSections[i];
             for (var j = 0; j < section.items.length ; j++) {
-                var securityFunction = {'id': section.items[j].id, '_joinData': section.items[j].Permissions};
-                permissions.push(securityFunction);
+                // Logic to save only items that are modified
+                if (section.items[j].Permissions._view != originalPageSections[i].items[j].Permissions._view
+                    || section.items[j].Permissions._edit != originalPageSections[i].items[j].Permissions._edit
+                    || section.items[j].Permissions._add != originalPageSections[i].items[j].Permissions._add
+                    || section.items[j].Permissions._delete != originalPageSections[i].items[j].Permissions._delete
+                    || section.items[j].Permissions._execute != originalPageSections[i].items[j].Permissions._execute) {
+                    var securityFunction = {'id': section.items[j].id, '_joinData': section.items[j].Permissions};
+                    permissions.push(securityFunction);
+                }
             }
         }
-
         permissions = UtilsSvc.urlsafeBase64Encode(JSON.stringify(permissions));
 
         var postData = {
             'id': Controller.roleId,
             'security_functions': permissions
         };
-
+        UtilsSvc.isAppendLoader(true);
         SecurityPermissionEditSvc.savePermissions(postData)
         .then(function(response) {
             var error = response.data.error;
@@ -173,14 +171,14 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
                 $http.get(Controller.alertUrl)
                 .then(function(response) {
                     $window.location.href = Controller.redirectUrl;
+                    UtilsSvc.isAppendLoader(false);
                 }, function (error) {
                     console.log(error);
+                    UtilsSvc.isAppendLoader(false);
                 });
             } else {
                 AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
-                angular.forEach(error, function(value, key) {
-                    Controller.postError[key] = value;
-                })
+                UtilsSvc.isAppendLoader(false);
             }
         }, function(error){
             console.log(error);
