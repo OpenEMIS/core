@@ -60,7 +60,7 @@ $this->start('panelBody');
                         </thead>
                         <tbody ng-repeat="function in section.items">
                             <tr>
-                                <td>{{function.name}}</td>
+                                <td>{{function.name}} <i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title={{function.description}} ng-hide="function.description==null;"></i></td>
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._view" ng-disabled="function._view==null;"></td>
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._edit" ng-disabled="function._edit==null;"></td>
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._add" ng-disabled="function._add==null;"></td>
