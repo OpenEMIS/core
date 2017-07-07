@@ -28,7 +28,7 @@ $this->start('panelBody');
     <div class="alert {{SecurityPermissionEditController.class}}" ng-hide="SecurityPermissionEditController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{SecurityPermissionEditController.message}}
     </div>
-    <div ng-init="SecurityPermissionEditController.roleId=<?=$roleId; ?>">
+    <div ng-init="SecurityPermissionEditController.roleId=<?=$roleId ?>; SecurityPermissionEditController.redirectUrl='<?= $this->Url->build($viewUrl)?>'; SecurityPermissionEditController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
