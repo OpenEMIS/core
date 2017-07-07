@@ -1,3 +1,8 @@
+v3.10.6
+- Implemented validation for Programme Code in Administration > Education Structure > Programmes page
+- In Institutions > Attendance page, system will now count user as present when they are flagged as late
+- Added "Field of Study" to Staff > Qualifications page
+
 v3.10.5
 - Implemented new reports module
 - Implemented the ability for user to login using different IDP
