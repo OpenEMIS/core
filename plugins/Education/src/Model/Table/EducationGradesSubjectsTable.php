@@ -10,13 +10,21 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
 
-class EducationGradesSubjectsTable extends ControllerActionTable {
+class EducationGradesSubjectsTable extends ControllerActionTable
+{
+    use OptionsTrait;
+
+    private $autoAllocationOptions = [];
+
 	public function initialize(array $config)
     {
 		parent::initialize($config);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+
+        $this->autoAllocationOptions = $this->getSelectOptions('general.yesno');
 
         $this->setDeleteStrategy('restrict');
 	}
@@ -44,6 +52,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $this->field('education_programme_id', ['entity' => $entity]);
         $this->field('education_level_id', ['entity' => $entity]);
         $this->field('hours_required', ['type' => 'float', 'attr' => ['step' => 0.01]]);
+        $this->field('auto_allocation');
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
     }
 
@@ -57,7 +66,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
     {
         $this->field('code');
         $this->field('education_grade_id', ['visible' => 'hidden']);
-        $this->setFieldOrder(['code', 'education_subject_id', 'hours_required']);
+        $this->field('auto_allocation');
+        $this->setFieldOrder(['code', 'education_subject_id', 'hours_required', 'auto_allocation']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -108,7 +118,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $this->field('education_grade_id', ['selectedGrade' => $selectedGrade]);
         $this->field('education_subject_id', ['selectedGrade' => $selectedGrade]);
         $this->field('hours_required', ['type' => 'float', 'attr'=>['step' => 0.01]]);
-        $this->setFieldOrder(['education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',  'hours_required']);
+        $this->field('auto_allocation');
+        $this->setFieldOrder(['education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',  'hours_required', 'auto_allocation']);
     }
 
     public function onGetCode(Event $event, Entity $entity)
@@ -129,6 +140,12 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
     public function onGetEducationLevelId(Event $event, Entity $entity)
     {
         return $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;
+    }
+
+    public function onGetAutoAllocation(Event $event, Entity $entity)
+    {
+        // return $entity->auto_allocation == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>'; // if wanted to displayed the tick and cross
+        return $this->autoAllocationOptions[$entity->auto_allocation];
     }
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
@@ -263,6 +280,21 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         }
     }
 
+    public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action, Request $request)
+    {
+        // setting the tooltip message
+        $tooltipMessage = $this->getMessage($this->alias().'.tooltip_message');
+        $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
+        $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
+        $attr['attr']['label']['text'] = $attr['field'] . $this->tooltipMessage($tooltipMessage);
+
+        $options = $this->autoAllocationOptions;
+        $attr['options'] = $options;
+        $attr['select'] = false;
+
+        return $attr;
+    }
+
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         // populate 'to be deleted' field
@@ -345,5 +377,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : key($gradeOptions);
 
         return compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme', 'gradeOptions', 'selectedGrade');
+    }
+
+    // for info tooltip
+    protected function tooltipMessage($message)
+    {
+        $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+
+        return $tooltipMessage;
     }
 }
