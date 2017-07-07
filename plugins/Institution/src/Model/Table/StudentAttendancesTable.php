@@ -299,43 +299,65 @@ class StudentAttendancesTable extends AppTable
         $StudentAttendancesQuery = clone $query;
 
         $studentAbsenceArray = $StudentAttendancesQuery
-            ->find('list', [
-                'groupField' => 'student_id',
-                'keyField' => 'absence_id',
-                'valueField' => 'absence_type'
+            ->select([
+                'absence_id' => 'StudentAbsences.id', 
+                'student_id' => $this->aliasField('student_id'), 
+                'absence_type' => 'StudentAbsences.absence_type_id',
+                'full_day' => 'StudentAbsences.full_day'
             ])
-            ->select(['absence_id' => 'StudentAbsences.id', 'student_id' => $this->aliasField('student_id'), 'absence_type' => 'StudentAbsences.absence_type_id'])
             ->group(['student_id', 'absence_type'])
             ->where($dateRangeCondition)
             ->toArray();
-        // Creating the data set
-        $dataSet = [];
+        
+        $tempArr = [];
+        foreach ($studentAbsenceArray as $key => $value) {
+            $tempArr[] = [
+                'absence_id' => $value->absence_id,
+                'student_id' => $value->student_id,
+                'absence_type' => $value->absence_type,
+                'full_day' => $value->full_day
+            ];
+        }
+        $studentAbsenceArray = $tempArr;
+        
         $data = [];
-        foreach ($studentAbsenceArray as $userAbsenceType) {
-            // Compile the dataset
-            $absenceForTheWeek = false;
-            foreach ($userAbsenceType as $absenceType) {
-                if (empty($absenceType)) {
+        
+        foreach ($studentAbsenceArray as $key => $value) {
+            if (empty($value['absence_id'])) {
+                if (isset($data['Present'])) {
+                    $data['Present'] = ++$data['Present'];
+                } else {
+                    $data['Present'] = 1;
+                }
+            } else {
+                $typeCode = $this->absenceCodeList[$value['absence_type']];
+                
+                if ($typeCode == 'LATE') {
+                    if (isset($data['Late'])) {
+                        $data['Late'] = ++$data['Late'];
+                    } else {
+                        $data['Late'] = 1;
+                    }
                     if (isset($data['Present'])) {
                         $data['Present'] = ++$data['Present'];
                     } else {
                         $data['Present'] = 1;
                     }
                 } else {
-                    $typeName = $this->absenceList[$absenceType];
-                    if ($typeName != __('Late')) {
-                        $typeName = 'Absence';
-                    }
-                    if (!$absenceForTheWeek || $typeName == __('Late')) {
-                        if (isset($data[$typeName])) {
-                            $data[$typeName] = ++$data[$typeName];
+                    
+                    if ($value['full_day'] == 0) {
+                        if (isset($data['Present'])) {
+                            $data['Present'] = ++$data['Present'];
                         } else {
-                            $data[$typeName] = 1;
+                            $data['Present'] = 1;
                         }
                     }
-
-                    if ($typeName == 'Absence') {
-                        $absenceForTheWeek = true;
+                    if ($value['full_day'] == 1) {
+                        if (isset($data['Absence'])) {
+                            $data['Absence'] = ++$data['Absence'];
+                        } else {
+                            $data['Absence'] = 1;
+                        }
                     }
                 }
             }
@@ -450,13 +472,23 @@ class StudentAttendancesTable extends AppTable
             $html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
         } else {
             $absenceTypeList = $this->absenceList;
+            $absenceCodeList = $this->absenceCodeList;
+            $fullDay = '';
             if (empty($entity->StudentAbsences['id'])) {
                 $type = '<i class="fa fa-check"></i>';
             } else {
                 $absenceTypeId = $entity->StudentAbsences['absence_type_id'];
                 $type = __($absenceTypeList[$absenceTypeId]);
+
+                if ($absenceCodeList[$absenceTypeId] != 'LATE') {
+                    if ($entity->StudentAbsences['full_day'] == 1) {
+                        $fullDay = ' ('. __('Full Day').')';
+                    } else {
+                        $fullDay = ' ('. __('Not Full Day').')';
+                    }
+                }
             }
-            $html .= $type;
+            $html .= $type . $fullDay;
         }
 
         return $html;
@@ -848,7 +880,7 @@ class StudentAttendancesTable extends AppTable
             foreach ($dataSet as $key => $data) {
                 if ($key == 'Present') {
                     $present = $data;
-                } elseif ($key == __('Late')) {
+                } elseif ($key == 'Late') {
                     $late = $data;
                 } else {
                     $absent += $data;
@@ -1001,6 +1033,7 @@ class StudentAttendancesTable extends AppTable
                 'StudentAbsences.start_time',
                 'StudentAbsences.end_time',
                 'StudentAbsences.absence_type_id',
+                'StudentAbsences.full_day',
                 'StudentAbsences.student_absence_reason_id'
             ])
             ->join([
