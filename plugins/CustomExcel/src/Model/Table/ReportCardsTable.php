@@ -151,7 +151,7 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('report_card_id', $params)) {
             $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-            $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades.EducationStages']]);
+            $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']]);
 
             $extra['report_card_start_date'] = $entity->start_date;
             $extra['report_card_end_date'] = $entity->end_date;
