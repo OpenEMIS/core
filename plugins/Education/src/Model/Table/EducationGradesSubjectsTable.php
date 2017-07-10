@@ -78,10 +78,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
             $educationGradeCount->where([
                 $this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme
             ]);
-        }
 
-        if ($educationGradeCount->count() < 1) {
-            $this->Alert->warning('EducationStructure.noGradesSetup');
+            if ($educationGradeCount->count() < 1) {
+                $this->Alert->warning('EducationStructure.noGradesSetup');
+                unset($extra['toolbarButtons']['add']);
+            }
+        } else { //no programme
+            $this->Alert->warning('EducationStructure.noProgrammesSetup');
             unset($extra['toolbarButtons']['add']);
         }
     }

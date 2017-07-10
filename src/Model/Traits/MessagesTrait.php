@@ -723,7 +723,8 @@ trait MessagesTrait
             'noRecordRemain' => 'There should be at least one Nationality record'
         ],
         'EducationStructure' => [
-            'noGradesSetup' => 'Please set up Education Grades before adding Grade Subjects'
+            'noGradesSetup' => 'Please set up Education Grades before adding Grade Subjects',
+            'noProgrammesSetup' => 'Please set up Education Programmes before adding Grade Subjects'
         ],
         'UserContacts' => [
             'noEmailRemain' => 'There should be at least one Email record'
@@ -1562,6 +1563,11 @@ trait MessagesTrait
                 ]
             ],
             'EducationStages' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
+            ],
+            'EducationProgrammes' => [
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
