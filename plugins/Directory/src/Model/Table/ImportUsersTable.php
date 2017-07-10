@@ -305,29 +305,18 @@ class ImportUsersTable extends AppTable
 
     protected function getNewOpenEmisNo(ArrayObject $importedUniqueCodes, $row, $accountType)
     {
-        $model = $this->accountTypes[$accountType]['model'];
-        $importedCodes = $importedUniqueCodes->getArrayCopy();
-        if (count($importedCodes)>0) {
-            if (empty($accountType)) {
-                $prefix = '';
-            } else {
-                $prefix = $this->accountTypes[$accountType]['prefix'];
-            }
-            $val = reset($importedCodes);
-
-            foreach ($this->accountTypes as $key => $value) {
-                if (!empty($value['prefix']) && substr_count($val, $value['prefix'])>0) {
-                    $val = substr($val, strlen($value['prefix']));
-                }
-            }
-            $val = $prefix . (intval($val) + $row);
-            $user = $this->Users->find()->select(['id'])->where(['openemis_no'=>$val])->first();
+        $notUnique = true;
+        $val = $this->Users->getUniqueOpenemisId();
+        while ($notUnique) {
+            $user = $this->Users->find()->select(['id'])->where([
+                $this->Users->aliasField('openemis_no') => $val,
+                $this->Users->aliasField('username') => $val
+            ])->first();
             if ($user) {
-                $importedUniqueCodes[] = $val;
-                $val = $this->Users->getUniqueOpenemisId(['model' => $model]);
+                $val = $this->Users->getUniqueOpenemisId();
+            } else {
+                $notUnique = false;
             }
-        } else {
-            $val = $this->Users->getUniqueOpenemisId(['model' => $model]);
         }
         return $val;
     }
