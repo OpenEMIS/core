@@ -60,7 +60,7 @@ class CustomReportBehavior extends Behavior
 
     private function escapeSingleQuotes($str)
     {
-        $value = str_replace("'", "''", $str);;
+        $value = str_replace("'", "''", $str);
         return $value;
     }
 
