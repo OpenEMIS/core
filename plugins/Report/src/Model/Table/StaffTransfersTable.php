@@ -39,10 +39,9 @@ class StaffTransfersTable extends AppTable {
                     'next_institution_code' => 'Institutions.code',
                     'next_position_no' => 'Positions.position_no',
                     'next_position_title' => 'StaffPositionTitles.name',
-                    'authorized_date' => $this->aliasField('created'),
-                    'authorized_by' => $this->aliasField('created_user_id')
+                    'authorized_date' => $this->aliasField('created')
             ])
-            ->contain(['Users.IdentityTypes','Positions.StaffPositionTitles','Institutions','PreviousInstitutions']);
+            ->contain(['Users.IdentityTypes','Positions.StaffPositionTitles','Institutions','PreviousInstitutions','CreatedUser']);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -202,6 +201,6 @@ class StaffTransfersTable extends AppTable {
 
     public function onExcelGetAuthorizedBy(Event $event, Entity $entity)
     { 
-        return $this->Users->get($entity->authorized_by)->name;
+        return $entity->created_user->name;
     }
 }
