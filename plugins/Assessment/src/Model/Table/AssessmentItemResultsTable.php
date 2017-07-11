@@ -6,6 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 
@@ -27,6 +28,17 @@ class AssessmentItemResultsTable extends AppTable
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
         $this->addBehavior('Indexes.Indexes');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->allowEmpty('marks')
+            ->add('marks', 'ruleCheckAssessmentMarks', [
+                'rule' => ['checkAssessmentMarks']
+            ]);
     }
 
     public function implementedEvents()
