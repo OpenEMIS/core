@@ -185,67 +185,6 @@ class PermissionsTable extends ControllerActionTable
         return (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId));
     }
 
-    public function edit(Event $event, ArrayObject $extra)
-    {
-        $roleId = $this->paramsPass(0);
-        $roleId = $this->paramsDecode($roleId)['id'];
-        $request = $this->request;
-        $params = $this->paramsQuery();
-
-        $toolbarButtons = $extra['toolbarButtons'];
-        $toolbarButtons['back']['url']['action'] = 'Permissions';
-        $toolbarButtons['back']['url'][0] = 'index';
-
-        if (! $this->checkRolesHierarchy($roleId)) {
-            $action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
-            return $this->controller->redirect($action);
-        }
-
-        if ($request->is(['post', 'put'])) {
-            $permissions = $request->data($this->alias());
-            if (!empty($permissions)) {
-                foreach ($permissions as $row) {
-                    $defaultData = ['_view' => '0', '_edit' => '0', '_add' => '0', '_delete' => '0', '_execute' => '0', 'security_role_id' => $roleId];
-                    $entity = $this->newEntity(array_merge($defaultData, $row));
-                    $this->save($entity);
-                }
-            }
-            $this->Alert->success('general.edit.success');
-
-            $action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), 'index', $this->paramsEncode(['id' => $roleId])], $params);
-            return $this->controller->redirect($action);
-        } else {
-            $module = $this->request->query('module');
-            $query = $this->SecurityFunctions->find()->find('permissions', ['roleId' => $roleId, 'module' => $module]);
-            $data = $query->all();
-
-            $list = [];
-            foreach ($data as $obj) {
-                if (!array_key_exists($obj->category, $list)) {
-                    $list[$obj->category] = [];
-                }
-                foreach ($this->operations as $op) {
-                    $flag = $this->check($obj, $op);
-                    $obj->Permissions[$op] = $flag;
-                }
-                // if the permission have description, it will display the description tooltip next to the permission name.
-                if (!empty($obj['description'])) {
-                    $message = $obj['description'];
-                    $obj->name = $obj->name . $this->tooltipMessage($message);
-                }
-                $list[$obj->category][] = $obj;
-            }
-            $this->controller->set('data', $list);
-        }
-    }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.Model.edit'] = 'edit';
-        return $events;
-    }
-
     private function setupTabElements($modules)
     {
         $controller = $this->controller;

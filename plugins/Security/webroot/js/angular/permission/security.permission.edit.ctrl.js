@@ -31,6 +31,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     Controller.pageSections = [];
     Controller.originalPageSections = [];
     Controller.redirectUrl = '';
+    Controller.ready = false;
 
     // function
     Controller.changeModule = changeModule;
@@ -41,12 +42,14 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
 
     angular.element(document).ready(function () {
         SecurityPermissionEditSvc.init(angular.baseUrl);
+        Controller.ready = false;
         var module = Controller.modules[0].key;
         UtilsSvc.isAppendLoader(true);
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module)
         .then(function(permissions) {
             Controller.pageSections = Controller.formatSections(permissions);
             Controller.originalPageSections = angular.copy(Controller.pageSections);
+            Controller.ready = true;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);
@@ -94,11 +97,13 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
 
 
     function changeModule (module) {
+        Controller.ready = false;
         UtilsSvc.isAppendLoader(true);
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module.key)
         .then(function(permissions) {
             Controller.pageSections = Controller.formatSections(permissions);
             Controller.originalPageSections = angular.copy(Controller.pageSections);
+            Controller.ready = true;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.log(error);

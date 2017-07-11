@@ -72,7 +72,7 @@ $this->start('panelBody');
                     </table>
                 </div>
             </div>
-            <div class="form-buttons">
+            <div class="form-buttons" ng-show="SecurityPermissionEditController.ready">
                 <div class="button-label"></div>
                 <button class="btn btn-default btn-save" type="button" ng-click="SecurityPermissionEditController.postForm();">
                     <i class="fa fa-check"></i> <?= __('Save') ?>
