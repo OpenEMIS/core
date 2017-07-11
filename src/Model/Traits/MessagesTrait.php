@@ -357,6 +357,9 @@ trait MessagesTrait
         'EducationGrades' => [
             'add_subject' => 'Add Subject',
         ],
+        'EducationGradesSubjects' => [
+            'tooltip_message' => 'If this option is set to Yes, students will be allocated automatically to this subject upon enrolment to a class',
+        ],
         'RubricCriterias' => [
             //'rubric_section_id' => 'Rubric Section',
             'criterias' => 'Criterias'
