@@ -39,6 +39,8 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     Controller.postForm = postForm;
     Controller.formatSections = formatSections;
     Controller.updateQueryStringParameter = updateQueryStringParameter;
+    Controller.changePermission = changePermission;
+    Controller.setPermission = setPermission;
 
     angular.element(document).ready(function () {
         SecurityPermissionEditSvc.init(angular.baseUrl);
@@ -109,6 +111,54 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+
+    function changePermission(functionArr, type, value)
+    {
+        switch (type) {
+            case 'view':
+                if (value == 0) {
+                    Controller.setPermission(functionArr, 'edit', 0);
+                    Controller.setPermission(functionArr, 'add', 0);
+                    Controller.setPermission(functionArr, 'delete', 0);
+                }
+                break;
+            case 'edit':
+                if (value == 0) {
+                    Controller.setPermission(functionArr, 'add', 0);
+                    Controller.setPermission(functionArr, 'delete', 0);
+                } else {
+                    Controller.setPermission(functionArr, 'view', 1);
+                }
+                break;
+            case 'add':
+                if (value == 0) {
+                    Controller.setPermission(functionArr, 'delete', 0);
+                } else {
+                    Controller.setPermission(functionArr, 'view', 1)
+                    Controller.setPermission(functionArr, 'edit', 1);
+                }
+                break;
+            case 'delete':
+                if (value == 0) {
+                    Controller.setPermission(functionArr, 'delete', 0);
+                } else {
+                    Controller.setPermission(functionArr, 'view', 1)
+                    Controller.setPermission(functionArr, 'edit', 1);
+                    Controller.setPermission(functionArr, 'add', 1);
+                }
+                break;
+        }
+    }
+
+    function setPermission(permission, type, value)
+    {
+        var typeName = '_' + type;
+        if (permission[typeName] == null) {
+            permission['Permissions'][typeName] = 0;
+        } else {
+            permission['Permissions'][typeName] = value;
+        }
     }
 
     function checkAllInSection(key) {
