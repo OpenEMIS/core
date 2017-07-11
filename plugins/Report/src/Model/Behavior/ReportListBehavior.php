@@ -169,6 +169,7 @@ class ReportListBehavior extends Behavior {
 		$alias = $this->_table->alias();
 		$featureList = $this->_table->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
+		$fields = $this->_table->fields;
 		$postFix = '';
 		if (isset($data[$alias]['postfix'])) {
 			$postFix = $data[$alias]['postfix'];
@@ -182,7 +183,24 @@ class ReportListBehavior extends Behavior {
 		// $name = $event->result;
 		// End Event
 
+		$filters = [];
+		foreach ($fields as $key => $obj) {
+			if ($obj['type'] != 'hidden' && !in_array($key, ['feature', 'format'])) {
+				$selectedOption = $data[$alias][$key];
+
+				if (array_key_exists($selectedOption, $obj['options'])) {
+					$filters[] = $obj['options'][$selectedOption];
+				}
+			}
+		}
+
 		$name = $featureList[$feature];
+
+		if (!empty($filters)) {
+			$filterStr = implode(', ', $filters);
+			$name .= ' - '.$filterStr;
+		}
+
 		if (!empty($postFix)) {
 			$name .= ' - '.$postFix;
 		}
