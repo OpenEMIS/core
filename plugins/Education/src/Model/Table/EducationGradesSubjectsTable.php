@@ -6,6 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
+use Cake\Utility\Inflector;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -23,6 +24,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 		parent::initialize($config);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+
+        $this->addBehavior('CompositeKey');
 
         $this->autoAllocationOptions = $this->getSelectOptions('general.yesno');
 
@@ -47,8 +50,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->field('code', ['entity' => $entity]);
-        $this->field('education_subject_id', ['entity' => $entity]);
-        $this->field('education_grade_id', ['entity' => $entity]);
+        $this->field('education_subject_id', ['type' => 'integer', 'entity' => $entity]);
+        $this->field('education_grade_id', ['type' => 'integer', 'entity' => $entity]);
         $this->field('education_programme_id', ['entity' => $entity]);
         $this->field('education_level_id', ['entity' => $entity]);
         $this->field('hours_required', ['type' => 'float', 'attr' => ['step' => 0.01]]);
@@ -65,7 +68,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('code');
-        $this->field('education_grade_id', ['visible' => 'hidden']);
+        $this->field('education_subject_id', ['type' => 'integer']);
+        $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('auto_allocation');
         $this->setFieldOrder(['code', 'education_subject_id', 'hours_required', 'auto_allocation']);
     }
@@ -212,9 +216,9 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['options'] = $subjectOptions;
+
             return $attr;
         }
-
     }
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
@@ -289,7 +293,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $tooltipMessage = $this->getMessage($this->alias().'.tooltip_message');
         $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
         $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
-        $attr['attr']['label']['text'] = $attr['field'] . $this->tooltipMessage($tooltipMessage);
+        $attr['attr']['label']['text'] = __(Inflector::humanize($attr['field'])) . $this->tooltipMessage($tooltipMessage);
+
 
         $options = $this->autoAllocationOptions;
         $attr['options'] = $options;
