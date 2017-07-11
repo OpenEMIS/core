@@ -121,6 +121,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
                     Controller.setPermission(functionArr, 'edit', 0);
                     Controller.setPermission(functionArr, 'add', 0);
                     Controller.setPermission(functionArr, 'delete', 0);
+                    Controller.setPermission(functionArr, 'execute', 0);
                 }
                 break;
             case 'edit':
@@ -135,7 +136,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
                 if (value == 0) {
                     Controller.setPermission(functionArr, 'delete', 0);
                 } else {
-                    Controller.setPermission(functionArr, 'view', 1)
+                    Controller.setPermission(functionArr, 'view', 1);
                     Controller.setPermission(functionArr, 'edit', 1);
                 }
                 break;
@@ -143,9 +144,14 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
                 if (value == 0) {
                     Controller.setPermission(functionArr, 'delete', 0);
                 } else {
-                    Controller.setPermission(functionArr, 'view', 1)
+                    Controller.setPermission(functionArr, 'view', 1);
                     Controller.setPermission(functionArr, 'edit', 1);
                     Controller.setPermission(functionArr, 'add', 1);
+                }
+                break;
+            case 'execute':
+                if (value == 1) {
+                    Controller.setPermission(functionArr, 'view', 1);
                 }
                 break;
         }

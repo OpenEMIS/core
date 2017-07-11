@@ -66,7 +66,7 @@ $this->start('panelBody');
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._edit" ng-disabled="function._edit==null;" ng-change="SecurityPermissionEditController.changePermission(function, 'edit', function.Permissions._edit);"></td>
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._add" ng-disabled="function._add==null;" ng-change="SecurityPermissionEditController.changePermission(function, 'add', function.Permissions._add);"></td>
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._delete" ng-disabled="function._delete==null;" ng-change="SecurityPermissionEditController.changePermission(function, 'delete', function.Permissions._delete);"></td>
-                                <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._execute" ng-disabled="function._execute==null;"></td>
+                                <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._execute" ng-disabled="function._execute==null;" ng-change="SecurityPermissionEditController.changePermission(function, 'execute', function.Permissions._execute);"></td>
                             </tr>
                         </tbody>
                     </table>
