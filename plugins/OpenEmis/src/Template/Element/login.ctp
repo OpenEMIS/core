@@ -78,8 +78,8 @@ $description = __d('open_emis', $_productName);
 			<div class="form-group">
 				<?php if ($enableLocalLogin) : ?>
 				<?= $this->Form->button(__('Login'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
-				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
 				<?php endif; ?>
+				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
 			<?= $this->Form->end() ?>
 
 			<?php
