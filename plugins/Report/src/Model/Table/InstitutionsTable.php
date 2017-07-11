@@ -318,7 +318,7 @@ class InstitutionsTable extends AppTable
 				) {
 				$academicPeriodOptions = [];
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				$periodOptions = $AcademicPeriodTable->getList();
+				$periodOptions = $AcademicPeriodTable->getYearList();
 
 				$academicPeriodOptions = $academicPeriodOptions + $periodOptions;
 
