@@ -24,6 +24,7 @@ class SecurityFunctionsTable extends AppTable
     {
         $roleId = $options['roleId'];
         $module = $options['module'];
+        $translate = isset($options['translate']) ? $options['translate'] : false;
 
         $query
         ->find('visible')
@@ -58,6 +59,16 @@ class SecurityFunctionsTable extends AppTable
             $this->aliasField('order')
         ])
         ;
+
+        if ($translate) {
+            $query->formatResults(function ($result) {
+                foreach ($result as $value) {
+                    $value->name = __($value->name);
+                    $value->description = __($value->description);
+                }
+                return $result;
+            });
+        }
         return $query;
     }
 }

@@ -46,6 +46,8 @@ class SecuritiesController extends AppController
             $this->set('indexUrl', $indexUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('alertUrl', $alertUrl);
+            $header = __('Security') . ' - ' . __('Permissions');
+            $this->set('contentHeader', __($header));
             $this->render('Permissions/permission_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
