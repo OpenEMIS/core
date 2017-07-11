@@ -166,6 +166,16 @@ UPDATE system_authentications
 SET status = 1
 WHERE name = (SELECT `value` FROM `config_items` WHERE `type` = 'Authentication');
 
+CREATE TABLE `z_config_items` LIKE `config_items`;
+
+INSERT INTO `z_config_items`
+SELECT * FROM `config_items` WHERE `id` = 1001;
+
+-- new configuration to toggle local login
+UPDATE `config_items` SET `name`='Enable Local Login', `code`='enable_local_login', `label`='Enable Local Login',
+`value`= (ABS((SELECT COUNT(`status`) FROM system_authentications WHERE status = 1)-1)),
+`default_value`='1', `option_type`='yes_no' WHERE `id`=1001;
+
 -- security_user_logins
 CREATE TABLE `security_user_logins` (
   `id` BIGINT unsigned NOT NULL auto_increment,
