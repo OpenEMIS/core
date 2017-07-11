@@ -273,8 +273,8 @@ class ExaminationResultsTable extends ControllerActionTable
             ])
             ->innerJoinWith('Examinations')
             ->innerJoinWith('ExaminationItems')
-            ->innerJoinWith('EducationSubjects')
-            ->innerJoinWith('ExaminationGradingOptions')
+            ->leftJoinWith('EducationSubjects')
+            ->leftJoinWith('ExaminationGradingOptions')
             ->where([
                 $ExaminationItemResults->aliasField('academic_period_id') => $academicPeriodId,
                 $ExaminationItemResults->aliasField('examination_id') => $examinationId,
