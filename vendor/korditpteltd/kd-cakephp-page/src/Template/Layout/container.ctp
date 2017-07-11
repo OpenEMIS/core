@@ -7,7 +7,22 @@ $crumbs = [];
 <script type="text/javascript">
 window.onload = function(e) {
     Page.querystringValue = Page.getParamValue('querystring');
+
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    var elements = document.getElementsByTagName('select');
+    for (i=0; i<elements.length; i++) {
+        element = elements[i];
+        if (element.hasAttribute('dependent-on')) {
+            dependentOn = element.getAttribute('dependent-on');
+            source = document.getElementById(dependentOn);
+            source.addEventListener('change', function() {
+                Page.onChange(source, element);
+            });
+        }
+    }
+});
 
 var Page = {
     querystringValue: ''
@@ -73,6 +88,28 @@ Page.getParamValue = function(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
 }
 
+Page.onChange = function(source, target) {
+    var value = source.value;
+    target.innerHTML = '<option>Updating</option>';
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'onchange/' + target.getAttribute('params') + '/' + value);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            target.innerHTML = '';
+            var data = JSON.parse(xhr.responseText);
+            for (var i=0; i<data.length; i++) {
+                var option = document.createElement('option');
+                option.innerHTML = data[i]['text'];
+                option.setAttribute('value', data[i]['value']);
+                target.appendChild(option);
+            }
+        } else {
+            console.log('Request failed.  Returned status of ' + xhr.status);
+        }
+    };
+    xhr.send();
+}
+
 String.prototype.trim = function() { return this.replace(/^\s+|\s+$/g, ""); }
 String.prototype.hexEncode = function() {
     var hex, i;
@@ -109,7 +146,14 @@ String.prototype.hexDecode = function() {
 
     <div class="<?= $wrapperClass ?>">
         <div class="wrapper-child">
-            <?= $this->fetch('contentBody') ?>
+            <div class="panel">
+                <div class="panel-body">
+                    <?= $this->element('Page.alert') ?>
+                    <?= $this->element('Page.tabs') ?>
+                    <?= $this->element('Page.filters') ?>
+                    <?= $this->fetch('contentBody') ?>
+                </div>
+            </div>
         </div>
     </div>
 </div>
