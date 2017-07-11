@@ -40,7 +40,6 @@ class SecurityFunctionsTable extends AppTable
             $this->aliasField('_delete'),
             $this->aliasField('_execute'),
             $this->aliasField('description'),
-            'Permissions.id',
             'Permissions._view',
             'Permissions._add',
             'Permissions._edit',

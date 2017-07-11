@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 
 class SecuritiesController extends AppController
 {
@@ -46,7 +47,7 @@ class SecuritiesController extends AppController
             $this->set('indexUrl', $indexUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('alertUrl', $alertUrl);
-            $header = __('Security') . ' - ' . __('Permissions');
+            $header = __('Security') . ' - ' . TableRegistry::get('Security.SecurityRoles')->get($this->ControllerAction->paramsDecode($roleId))->name;
             $this->set('contentHeader', __($header));
             $this->render('Permissions/permission_edit');
         } else {
