@@ -281,8 +281,9 @@ class InstitutionSurveysTable extends ControllerActionTable
         if (!empty($search)) {
             $nameConditions = $this->getNameSearchConditions(['alias' => 'Assignees', 'searchTerm' => $search]);
             $surveyConditions = [$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'];
+            $descriptionConditions = [$this->SurveyForms->aliasField('description').' LIKE' => '%' . $search . '%'];
 
-            $extra['OR'] = array_merge($nameConditions, $surveyConditions);
+            $extra['OR'] = array_merge($nameConditions, $surveyConditions, $descriptionConditions);
         }
         // end POCOR-4027
     }
@@ -291,6 +292,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $searchableFields[] = 'survey_form_id';
         $searchableFields[] = 'assignee_id';
+        $searchableFields[] = 'description';
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
