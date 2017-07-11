@@ -1,0 +1,79 @@
+<?php
+namespace App\Model\Table;
+
+use ArrayObject;
+use Cake\ORM\Table;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
+use Cake\Cache\Cache;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\Filesystem\Folder;
+
+class CounselingsTable extends AppTable
+{
+    private $excludeList = ['created_user_id', 'created', 'modified_user_id', 'modified'];
+    // private $defaultConfig = 'counselors';
+
+    CONST ASSIGNED = 1;
+
+    public function initialize(array $config)
+    {
+        $this->table('institution_counselors');
+        parent::initialize($config);
+
+        $this->belongsTo('GuidanceTypes', ['className' => 'Staff.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
+        // $this->belongsTo('Students', ['className' => 'Security.Users', 'foreign_key' => 'student_id']);
+    }
+
+    public function findIndex(Query $query, array $options)
+    {
+        // pr($this);
+        // die;
+        return $query->where(['visible' => 1]);
+    }
+
+    public function getDefaultConfig()
+    {
+        return $this->defaultConfig;
+    }
+
+    public function getGuidanceTypeOptions()
+    {
+        // get the guidance type from Field Options
+        $guidanceTypeOptions = $this->GuidanceTypes
+            ->getList()
+            ->toArray();
+
+        return $guidanceTypeOptions;
+    }
+
+    public function getCounselorOptions($institutionId)
+    {
+        // get the staff that assigned from the institution from security user
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+
+        $counselorOptions = $this->Counselors
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->innerJoin(
+                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [
+                        $InstitutionStaff->aliasField('staff_id = ') . $this->Counselors->aliasField('id'),
+                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
+                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
+                    ]
+                )
+            ->order([
+                $this->Counselors->aliasField('first_name'),
+                $this->Counselors->aliasField('last_name')
+            ])
+            ->toArray();
+
+        return $counselorOptions;
+    }
+}

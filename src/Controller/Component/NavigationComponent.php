@@ -675,6 +675,11 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                     'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
+            'Counselings.index' => [
+                'title' => 'Counselings',
+                'parent' => 'Institutions.Students.index',
+                // 'selected' => ['Counselors.index', 'Counselors.view', 'Counselors.edit']
+            ],
             'Students.BankAccounts' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Students.index',
