@@ -20,6 +20,7 @@ class PageController extends AppController
         parent::initialize();
 
         $this->loadComponent('Page.Page');
+        $this->loadComponent('Page.Alert');
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
 
@@ -126,12 +127,15 @@ class PageController extends AppController
                     $extra['result'] = false;
                     $entity = $table->patchEntity($entity, $request->data, []);
                     $extra['result'] = $table->save($entity);
+
+                    $event = $this->dispatchEvent('Controller.Page.addAfterSave', [$entity, $extra], $this);
+                    if ($event->result instanceof Response) {
+                        return $event->result;
+                    }
                 } catch (Exception $ex) {
-                    Log::write('error', $ex->getMessage());
-                }
-                $event = $this->dispatchEvent('Controller.Page.addAfterSave', [$entity, $extra], $this);
-                if ($event->result instanceof Response) {
-                    return $event->result;
+                    $msg = $ex->getMessage();
+                    $this->Alert->show($msg, 'error');
+                    Log::write('error', $msg);
                 }
             }
             $this->set('data', $entity);
@@ -212,12 +216,15 @@ class PageController extends AppController
                     $extra['result'] = false;
                     $entity = $table->patchEntity($entity, $request->data, []);
                     $extra['result'] = $table->save($entity);
+
+                    $event = $this->dispatchEvent('Controller.Page.editAfterSave', [$entity, $extra], $this);
+                    if ($event->result instanceof Response) {
+                        return $event->result;
+                    }
                 } catch (Exception $ex) {
-                    Log::write('error', $ex->getMessage());
-                }
-                $event = $this->dispatchEvent('Controller.Page.editAfterSave', [$entity, $extra], $this);
-                if ($event->result instanceof Response) {
-                    return $event->result;
+                    $msg = $ex->getMessage();
+                    $this->Alert->show($msg, 'error');
+                    Log::write('error', $msg);
                 }
             }
             $this->set('data', $entity);
@@ -235,5 +242,19 @@ class PageController extends AppController
         if (!$page->isActionAllowed(__FUNCTION__)) {
             $page->throwMissingActionException();
         }
+    }
+
+    public function onchange($table, $finder, $value)
+    {
+        $results = $this->{$table}->find($finder, ['value' => $value])->toArray();
+        $options = [];
+
+        foreach ($results as $value => $text) {
+            $options[] = ['value' => $value, 'text' => $text];
+        }
+        $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
+        $this->response->type('json');
+
+        return $this->response;
     }
 }

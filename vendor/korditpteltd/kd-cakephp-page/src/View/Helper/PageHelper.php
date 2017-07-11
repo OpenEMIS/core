@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\I18n\Date;
 use Cake\I18n\I18n;
+use Cake\Utility\Hash;
 use Cake\Log\Log;
 use Cake\View\Helper;
 
@@ -263,32 +264,36 @@ class PageHelper extends Helper
 
     private function getValue($entity, $field)
     {
-        $value = '';
         $controlType = $field['controlType'];
 
-        if (array_key_exists('displayFrom', $field)) {
-            $displayFrom = explode('.', $field['displayFrom']);
-            $value = $entity;
-            foreach ($displayFrom as $key) {
-                if ($value instanceof Entity && $value->has($key)) {
-                    $value = $value->$key;
-                } elseif (is_array($value) && array_key_exists($key, $value)) {
-                    $value = $value[$key];
-                } else {
-                    break;
-                }
+        $array = $entity instanceof Entity ? $entity->toArray() : $entity;
+        $data = Hash::flatten($array);
+        $value = array_key_exists($field['name'], $data) ? $data[$field['name']] : '';
+
+        if (array_key_exists('displayFrom', $field)) { // if displayFrom exists, always get value based on displayFrom
+            $key = $field['displayFrom'];
+            if (array_key_exists($key, $data)) {
+                $value = $data[$key];
             }
         } else {
-            $key = $field['name'];
-            if ($entity instanceof Entity && $entity->has($key)) {
-                $value = $entity->$key;
-            } elseif (is_array($entity) && array_key_exists($key, $entity)) {
-                $value = $entity[$key];
+            $isDropdownType = $controlType == 'dropdown';
+            $isOptionsExists = array_key_exists('options', $field);
+            if ($isDropdownType && $isOptionsExists) {
+                $options = $field['options'];
+                $valueExistsInOptions = array_key_exists($value, $options);
+                if ($valueExistsInOptions) {
+                    $value = $options[$value];
+                }
             }
         }
 
-        if (in_array($controlType, ['date', 'time']) && array_key_exists('format', $field) && !empty($value)) {
-            if ($value instanceof Date) {
+        $isDateTimeType = in_array($controlType, ['date', 'time']);
+        $hasDateTimeFormat = array_key_exists('format', $field);
+        $valueIsNotEmpty = !empty($value);
+
+        if ($isDateTimeType && $hasDateTimeFormat && $valueIsNotEmpty) {
+            $valueIsDateObject = $value instanceof Date;
+            if ($valueIsDateObject) {
                 $value = $value->format($field['format']);
             } else {
                 $value = date($field['format'], strtotime($value));
@@ -309,7 +314,7 @@ class PageHelper extends Helper
                 if (method_exists($this, $controlType)) {
                     $html .= $this->$controlType($field, $data);
                 } else {
-                    Log::write('error', $controlType);
+                    Log::write('error', 'Missing control type implementation: ' . $controlType);
                 }
             }
         } else {
@@ -354,7 +359,7 @@ EOT;
     private function extractHtmlAttributes(array $field, $data)
     {
         $htmlAttr = [
-            'label', 'readonly', 'disabled',
+            'id', 'label', 'readonly', 'disabled',
             'options', 'value', 'maxlength',
             'required'
         ];
@@ -402,7 +407,12 @@ EOT;
 
     private function float(array $field, $data)
     {
-        return $this->integer($field);
+        return $this->integer($field, $data);
+    }
+
+    private function decimal(array $field, $data)
+    {
+        return $this->integer($field, $data);
     }
 
     private function textarea(array $field, $data)
@@ -417,6 +427,11 @@ EOT;
     {
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'select';
+
+        if (array_key_exists('dependentOn', $field) && array_key_exists('params', $field)) {
+            $options['dependent-on'] = $field['dependentOn'];
+            $options['params'] = $field['params'];
+        }
 
         return $this->Form->input($field['aliasField'], $options);
     }
