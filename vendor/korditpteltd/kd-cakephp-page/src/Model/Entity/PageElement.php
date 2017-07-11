@@ -8,6 +8,7 @@ use Cake\Log\Log;
 
 class PageElement
 {
+    protected $id;
     protected $name;
     protected $type; // data type
     protected $length;
@@ -33,6 +34,8 @@ class PageElement
     protected $label;
     protected $sortable;
     protected $visible;
+    protected $dependentOn;
+    protected $params;
     protected $options; // options for dropdown control type
     protected $value; // current selected value
     protected $wildcard;
@@ -47,6 +50,7 @@ class PageElement
         $this->disabled = false;
         $this->wildcard = 'full';
         $this->extra = [];
+        $this->sortable = false;
 
         foreach ($attributes as $name => $value) {
             if (property_exists($this, $name)) {
@@ -95,6 +99,17 @@ class PageElement
         ];
         $field = new PageElement($name, $attributes);
         return $field;
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
     }
 
     public function getName()
@@ -229,6 +244,28 @@ class PageElement
         return $this;
     }
 
+    public function setDependentOn($dependentOn)
+    {
+        $this->dependentOn = $dependentOn;
+        return $this;
+    }
+
+    public function getDependentOn()
+    {
+        return $this->dependentOn;
+    }
+
+    public function setParams($params)
+    {
+        $this->params = $params;
+        return $this;
+    }
+
+    public function getParams()
+    {
+        return $this->params;
+    }
+
     public function getForeignKey()
     {
         return $this->foreignKey;
@@ -316,6 +353,7 @@ class PageElement
     {
         // properties to be exposed to client browser
         $visibleProperties = [
+            'id' => 'get',
             'name' => 'get',
             'model' => 'get',
             'aliasField' => 'get',
@@ -328,6 +366,8 @@ class PageElement
             'maxlength' => 'get',
             'required' => 'is',
             'visible' => 'is',
+            'dependentOn' => 'get',
+            'params' => 'get',
             'foreignKey' => 'get',
             'defaultValue' => 'get',
             'options' => 'get',

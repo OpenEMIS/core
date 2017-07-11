@@ -51,6 +51,7 @@ class PageComponent extends Component
     // page elements
     private $showElements = false;
     private $header = '';
+    private $breadcrumbs = [];
     private $elements;
     private $filters;
     private $toolbar;
@@ -96,6 +97,8 @@ class PageComponent extends Component
 
         if ($isGet || $isAjax || $this->showElements()) {
             $controller->set('header', $this->getHeader());
+            $controller->set('breadcrumbs', $this->breadcrumbs);
+
             if ($this->elements->count() > 0) {
                 $elements = $this->elementsToJSON();
                 $controller->set('elements', $elements);
@@ -134,6 +137,20 @@ class PageComponent extends Component
     public function debug($bool)
     {
         $this->debug = $bool;
+    }
+
+    public function getVar($name)
+    {
+        $controller = $this->controller;
+        if (array_key_exists($name, $controller->viewVars)) {
+            return $this->controller->viewVars[$name];
+        }
+        return null;
+    }
+
+    public function getData()
+    {
+        return $this->getVar('data');
     }
 
     public function disable($actions)
@@ -225,6 +242,16 @@ class PageComponent extends Component
         return $this;
     }
 
+    public function addCrumb($title, $options = [])
+    {
+        $item = array(
+            'title' => __($title),
+            'link' => ['url' => $options],
+            'selected' => sizeof($options) == 0
+        );
+        $this->breadcrumbs[] = $item;
+    }
+
     public function getElements()
     {
         return $this->elements;
@@ -267,14 +294,21 @@ class PageComponent extends Component
         return $this->toolbar;
     }
 
-    public function attachPrimaryKey(Table $table, $entity)
+    public function attachPrimaryKey(Table $table, &$entity)
     {
-        if ($entity instanceof Entity) {
-            $primaryKey = $table->primaryKey();
+        $primaryKey = $table->primaryKey();
 
-            if (!is_array($primaryKey)) {
+        if ($entity instanceof Entity) {
+            if (!is_array($primaryKey)) { // primary key is not composite key
                 $key = [$primaryKey => $entity->$primaryKey];
                 $entity->primaryKey = $this->strToHex(json_encode($key));
+            } else {
+                pr($primaryKey);die;
+            }
+        } else {
+            if (!is_array($primaryKey)) { // primary key is not composite key
+                $key = [$primaryKey => $entity[$primaryKey]];
+                $entity['primaryKey'] = $this->strToHex(json_encode($key));
             } else {
                 pr($primaryKey);die;
             }
@@ -312,6 +346,20 @@ class PageComponent extends Component
         if (!empty($OR)) {
             $query->where(['OR' => $OR]);
         }
+    }
+
+    public function setQueryString($key, $value, $replace = false /* set value only if the key does not exists */)
+    {
+        $querystring = $this->request->query('querystring');
+        if ($querystring) {
+            $querystring = json_decode($this->hexToStr($querystring), true);
+            if ($replace || !array_key_exists($key, $querystring)) {
+                $querystring[$key] = $value;
+            }
+        } else {
+            $querystring = [$key => $value];
+        }
+        $this->request->query['querystring'] = $this->encode($querystring);
     }
 
     public function getQueryString($key = null)
@@ -417,7 +465,9 @@ class PageComponent extends Component
                 $attributes['foreignKey'] = $foreignKey;
                 $attributes['model'] = $table->alias();
                 $element = new PageElement($columnName, $attributes);
-
+                if (in_array($attributes['type'], ['string', 'integer', 'text']) && !$foreignKey) {
+                    $element->setSortable(true);
+                }
                 // setup displayFrom
                 if ($foreignKey) {
                     $belongsTo = $table->{$foreignKey['name']};
