@@ -28,6 +28,7 @@ class ReportListBehavior extends Behavior {
 		$events['Model.excel.onExcelBeforeWrite'] = 'onExcelBeforeWrite';
 		$events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
 		$events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
+		$events['ExcelTemplates.Model.onCsvGenerateComplete'] = 'onCsvGenerateComplete';
 		return $events;
 	}
 
@@ -165,6 +166,17 @@ class ReportListBehavior extends Behavior {
 		);
     }
 
+	public function onCsvGenerateComplete(Event $event, ArrayObject $settings)
+    {
+        $process = $settings['process'];
+		$expiryDate = new Time();
+		$expiryDate->addDays(5);
+		$this->ReportProgress->updateAll(
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['id' => $process->id]
+		);
+    }
+
 	protected function _generate($data) {
 		$alias = $this->_table->alias();
 		$featureList = $this->_table->fields['feature']['options'];
@@ -204,14 +216,7 @@ class ReportListBehavior extends Behavior {
 		$path = $entity->file_path;
 		if (!empty($path)) {
 			$filename = basename($path);
-
-			if ($entity->module == 'CustomReports') {
-				$url = "/export/customexcel/$filename";
-			} else {
-				$url = "/export/$filename";
-			}
-
-			return $this->_table->controller->redirect($url);
+			return $this->_table->controller->redirect("/export/$filename");
 		}
 	}
 }
