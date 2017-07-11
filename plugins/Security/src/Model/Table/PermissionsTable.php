@@ -41,12 +41,12 @@ class PermissionsTable extends ControllerActionTable
         return $flag;
     }
 
-    public function afterAction(Event $event, ArrayObject $entity)
+    public function afterAction(Event $event, ArrayObject $options)
     {
         $plugin = __($this->controller->plugin);
         $id = $this->request->pass[1];
         try {
-            $name = $this->SecurityRoles->get($id)->name;
+            $name = $this->SecurityRoles->get($this->paramsDecode($id))->name;
             $this->controller->set('contentHeader', $plugin.' - '.$name);
         } catch (RecordNotFoundException $e) {
             Log::write('error', $e->getMessage());

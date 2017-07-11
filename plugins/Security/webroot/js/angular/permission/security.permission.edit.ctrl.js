@@ -51,6 +51,25 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         .then(function(permissions) {
             Controller.pageSections = Controller.formatSections(permissions);
             Controller.originalPageSections = angular.copy(Controller.pageSections);
+            angular.forEach(Controller.pageSections, function (value, key) {
+                angular.forEach(value.items, function (v, k) {
+                    if (v._view == null) {
+                        v.Permissions._view = 0;
+                    }
+                    if (v._edit == null) {
+                        v.Permissions._edit = 0;
+                    }
+                    if (v._add == null) {
+                        v.Permissions._add = 0;
+                    }
+                    if (v._delete == null) {
+                        v.Permissions._delete = 0;
+                    }
+                    if (v._execute == null) {
+                        v.Permissions._execute = 0;
+                    }
+                });
+            });
             Controller.ready = true;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
@@ -105,6 +124,25 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         .then(function(permissions) {
             Controller.pageSections = Controller.formatSections(permissions);
             Controller.originalPageSections = angular.copy(Controller.pageSections);
+            angular.forEach(Controller.pageSections, function (value, key) {
+                angular.forEach(value.items, function (v, k) {
+                    if (v._view == null) {
+                        v.Permissions._view = 0;
+                    }
+                    if (v._edit == null) {
+                        v.Permissions._edit = 0;
+                    }
+                    if (v._add == null) {
+                        v.Permissions._add = 0;
+                    }
+                    if (v._delete == null) {
+                        v.Permissions._delete = 0;
+                    }
+                    if (v._execute == null) {
+                        v.Permissions._execute = 0;
+                    }
+                });
+            });
             Controller.ready = true;
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
