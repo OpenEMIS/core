@@ -25,14 +25,13 @@ class CounselingsTable extends AppTable
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Staff.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
-        // $this->belongsTo('Students', ['className' => 'Security.Users', 'foreign_key' => 'student_id']);
     }
 
     public function findIndex(Query $query, array $options)
     {
-        // pr($this);
-        // die;
-        return $query->where(['visible' => 1]);
+        $studentId = $options['student_id'];
+
+        return $query->where([$this->aliasField('student_id') => $studentId]);
     }
 
     public function getDefaultConfig()
