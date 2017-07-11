@@ -29,7 +29,7 @@ class ReportsController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$header = 'Reports';
-		$this->Navigation->addCrumb($header, ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index']);
+		$this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
 		$this->Navigation->addCrumb($this->request->action);
 	}
 
