@@ -199,11 +199,10 @@ class ReportListBehavior extends Behavior {
 					// if option is a code - name, only use code
 					$pos = strpos($value, '-');
 					if ($pos !== false) {
-						$code = explode('-', $value)[0];
-						$value = trim($code);
+						$value = explode('-', $value)[0];
 					}
 
-					$filters[] = $value;
+					$filters[] = trim($value);
 				}
 			}
 		}
