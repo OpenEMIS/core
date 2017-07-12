@@ -41,6 +41,7 @@ class PageElement
     protected $value; // current selected value
     protected $wildcard;
     protected $attributes; // html attributes
+    protected $extra; // any other attributes
 
     public function __construct($fieldName, array $attributes)
     {
@@ -54,6 +55,7 @@ class PageElement
         $this->sortable = false;
         $this->options = [];
         $this->attributes = [];
+        $this->extra = new ArrayObject();
 
         foreach ($attributes as $name => $value) {
             if (property_exists($this, $name)) {
@@ -117,6 +119,20 @@ class PageElement
     {
         $this->id = $id;
         return $this;
+    }
+
+    public function set($name, $value)
+    {
+        $this->extra->offsetSet($name, $value);
+        return $this;
+    }
+
+    public function get($name)
+    {
+        if ($this->extra->offsetExists($name)) {
+            return $this->extra->offsetGet($name);
+        }
+        return null;
     }
 
     public function getKey()
@@ -339,9 +355,19 @@ class PageElement
         return $this->options;
     }
 
-    public function setOptions($options)
+    public function setOptions($options, $empty = true)
     {
-        $this->options = $options;
+        if (empty($options)) {
+            $this->options = ['' => __('No Options')];
+        } else {
+            if ($empty === true) {
+                $this->options = array_merge(['' => __('-- Select --')], $options);
+            } elseif ($empty !== false) {
+                $this->options = array_merge(['' => __($empty)], $options);
+            } else {
+                $this->options = $options;
+            }
+        }
         return $this;
     }
 
@@ -424,6 +450,10 @@ class PageElement
 
         if ($this->getControlType() == 'dropdown') {
             $properties['options'] = $this->getOptions();
+        }
+
+        if ($this->extra->count() > 0) {
+            $properties = array_merge($properties, $this->extra->getArrayCopy());
         }
 
         return $properties;

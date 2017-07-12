@@ -438,7 +438,7 @@ EOT;
     private function date(array $field, $data)
     {
         $options = ['type' => 'text', 'class' => 'form-control', 'label' => false];
-        $required = $field['attributes']['required'];
+        $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
         $value = isset($field['attributes']['value']) ? isset($field['attributes']['value']) : '';
 
         if ($required) {
@@ -531,8 +531,8 @@ EOT;
             </div>
         ';
 
-        $headers = $this->Html->tableHeaders($attr['headers']);
-        $cells = $this->Html->tableCells($attr['cells']);
+        $headers = $this->Html->tableHeaders($field['headers']);
+        $cells = $this->Html->tableCells($field['cells']);
 
         $html = sprintf($html, $field['label'], $headers, $cells);
         return $html;
