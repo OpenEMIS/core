@@ -10,6 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\I18n;
 use Cake\ORM\Table;
 use Cake\Utility\Security;
+use Cake\Utility\Text;
 
 use ControllerAction\Model\Traits\SecurityTrait;
 
@@ -130,14 +131,8 @@ class ControllerActionHelper extends Helper
         if (is_resource($haystack)) {
             return $haystack;
         }
-        $tmpHaystack = strip_tags($haystack);
-        $ind = stripos($tmpHaystack, $needle);
-        $len = strlen($needle);
-        $value = $haystack;
-        if ($ind !== false) {
-            $newHaystack = substr($tmpHaystack, 0, $ind) . "<span class=\"highlight\">" . substr($tmpHaystack, $ind, $len) . "</span>" . $this->highlight($needle, substr($tmpHaystack, $ind + $len));
-            $value = str_replace($tmpHaystack, $newHaystack, $haystack);
-        }
+
+        $value = Text::highlight($haystack, $needle, ['html' => true]);
         return $value;
     }
 
