@@ -12,7 +12,6 @@ class CounselingsController extends PageController
         parent::initialize();
 
         $this->Page->loadElementsFromTable($this->Counselings);
-        $this->Page->disable(['delete']);
 
         $this->loadComponent('RenderDate'); // will get the date format from config
     }
