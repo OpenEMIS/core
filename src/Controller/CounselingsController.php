@@ -13,6 +13,8 @@ class CounselingsController extends PageController
 
         $this->Page->loadElementsFromTable($this->Counselings);
         $this->Page->disable(['delete']);
+
+        $this->loadComponent('RenderDate');
     }
 
     public function beforeFilter(Event $event)
