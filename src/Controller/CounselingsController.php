@@ -103,16 +103,10 @@ class CounselingsController extends PageController
 
         // set the options for guidance_type_id
         $guidanceTypeOptions = $this->Counselings->getGuidanceTypeOptions();
-        if (empty($guidanceTypeOptions)) {
-            $guidanceTypeOptions = ['' => __('No Options')];
-        }
         $page->get('guidance_type_id')->setControlType('dropdown')->setOptions($guidanceTypeOptions);
 
         // set the options for counselor_id
         $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);
-        if (empty($counselorOptions)) {
-            $counselorOptions = ['' => __('No Options')];
-        }
         $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
 
         // set student_id

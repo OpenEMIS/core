@@ -1,27 +1,19 @@
 <?php
-$session = $this->request->session();
-if ($session->check('_alert')) :
-    $_alertArray = $session->read('_alert');
+$types = [
+    'success' => ['class' => 'alert-success'],
+    'error' => ['class' => 'alert-danger'],
+    'warning' => ['class' => 'alert-warning'],
+    'info' => ['class' => 'alert-info']
+];
 
-    $session->delete('_alert');
-?>
+if (isset($alert)) {
+    $html = <<<EOT
+<div class="alert %s">
+    <a class="close" aria-hidden="true" href="#" data-dismiss="alert">&times;</a>
+    %s
+</div>
+EOT;
 
-<?php
-if (!empty($_alertArray)) {
-    foreach ($_alertArray as $key => $_alert) {
-        $class = 'alert ' . $_alert['class'];
- ?>
-        <div class="<?php echo $class; ?>">
-            <?php
-            if($_alert['closeButton']) {
-                echo '<a class="close" aria-hidden="true" href="#" data-dismiss="alert">&times;</a>';
-            }
-            echo $_alert['message'];
-            ?>
-        </div>
-<?php
-    }
+    echo sprintf($html, $types[$alert['type']]['class'], $alert['message']);
 }
 ?>
-
-<?php endif; ?>
