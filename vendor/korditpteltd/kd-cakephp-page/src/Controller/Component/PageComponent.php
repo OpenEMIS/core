@@ -24,6 +24,7 @@ use Cake\Controller\Component;
 use Page\Model\Entity\PageElement;
 use Page\Model\Entity\PageFilter;
 use Page\Model\Entity\PageTab;
+use Page\Model\Entity\PageStatus;
 use Page\Traits\EncodingTrait;
 
 class PageComponent extends Component
@@ -58,6 +59,7 @@ class PageComponent extends Component
     private $toolbar;
     private $tabs;
     private $viewVars;
+    private $status;
 
     private $excludedFields = ['order', 'modified', 'modified_user_id', 'created', 'created_user_id'];
 
@@ -73,6 +75,7 @@ class PageComponent extends Component
         $this->toolbar = new ArrayObject();
         $this->tabs = new ArrayObject();
         $this->viewVars = new ArrayObject();
+        $this->status = new PageStatus();
 
         $this->setHeader(Inflector::humanize(Inflector::underscore($this->controller->name)));
     }
@@ -133,6 +136,8 @@ class PageComponent extends Component
             $this->controller->set($this->viewVars->getArrayCopy());
         }
 
+        $this->controller->set('status', $this->status->toArray());
+
         if ($this->debug) {
             pr($this->controller->viewVars);die;
         }
@@ -160,6 +165,11 @@ class PageComponent extends Component
     public function getData()
     {
         return $this->getVar('data');
+    }
+
+    public function getStatus()
+    {
+        return $this->status;
     }
 
     public function disable($actions)
@@ -362,13 +372,22 @@ class PageComponent extends Component
         $querystring = $this->request->query('querystring');
         if ($querystring) {
             $querystring = json_decode($this->hexToStr($querystring), true);
-            if ($replace || !array_key_exists($key, $querystring)) {
+            if (is_null($value) && array_key_exists($key, $querystring)) { // if value is null, the key will be removed from querystring
+                unset($querystring[$key]);
+            } elseif ($replace || !array_key_exists($key, $querystring)) {
                 $querystring[$key] = $value;
             }
         } else {
-            $querystring = [$key => $value];
+            if (!is_null($value)) {
+                $querystring = [$key => $value];
+            }
         }
-        $this->request->query['querystring'] = $this->encode($querystring);
+
+        if (!empty($querystring)) {
+            $this->request->query['querystring'] = $this->encode($querystring);
+        } else {
+            unset($this->request->query['querystring']);
+        }
     }
 
     public function getQueryString($key = null)
