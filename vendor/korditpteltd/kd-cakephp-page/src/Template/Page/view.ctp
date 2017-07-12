@@ -19,7 +19,11 @@ $this->end();
 
 $this->start('contentBody');
 
-echo $this->Page->renderViewElements();
+if (isset($elements)) {
+    echo $this->Page->renderViewElements($elements);
+} else {
+    echo 'There are no elements';
+}
 
 $this->end();
 ?>

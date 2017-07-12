@@ -40,21 +40,26 @@ class PhpFrontEndComponent extends Component
         $controller = $this->controller;
         $request = $this->request;
         $action = $request->action;
-        $elements = $this->Page->getElements();
+        $page = $this->Page;
+        $elements = $page->getElements();
 
         foreach ($elements as $element) {
-            if ($element->getName() == 'openemis_no') {
+            if ($element->getKey() == 'openemis_no') {
                 $element->setLabel('OpenEMIS ID');
             }
 
-            $this->formatDate($element);
             $this->formatTime($element);
         }
         if ($request->is(['put', 'post'])) {
-            $this->Page->showElements(true);
+            $page->showElements(true);
         }
 
         $controller->set('menuItemSelected', [$controller->name]);
+
+        if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            $viewFile = 'Page.Page/' . $action;
+            $this->controller->viewBuilder()->template($viewFile);
+        }
     }
 
     public function implementedEvents()
@@ -95,13 +100,6 @@ class PhpFrontEndComponent extends Component
             return $this->controller->redirect($url);
         } else {
             $this->Alert->error('general.edit.failed');
-        }
-    }
-
-    private function formatDate(PageElement $element)
-    {
-        if ($element->getControlType() == 'date') {
-            $element->attr('format', 'Y-m-d');
         }
     }
 
