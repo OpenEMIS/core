@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Network\Response;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Network\Session;
@@ -211,7 +212,7 @@ class ReportListBehavior extends Behavior {
 						$value = explode('-', $value)[0];
 					}
 
-					$filters[] = trim($value);
+					$filters[] = __(trim($value));
 				}
 			}
 		}
@@ -242,13 +243,18 @@ class ReportListBehavior extends Behavior {
 		if (!empty($path)) {
 			$filename = basename($path);
 
-			if ($entity->module == 'CustomReports') {
-				$url = "/export/customexcel/$filename";
-			} else {
-				$url = "/export/$filename";
-			}
+			$response = $this->_table->controller->response;
+			$response->body(function() use ($path) {
+				$content = file_get_contents($path);
+				return $content;
+			});
 
-			return $this->_table->controller->redirect($url);
+			// Syntax will change in v3.4.x
+			$pathInfo = pathinfo($filename);
+			$response->type($pathInfo['extension']);
+			$response->download($filename);
+
+			return $response;
 		}
 	}
 }
