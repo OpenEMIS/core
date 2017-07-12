@@ -152,20 +152,6 @@ class AppController extends Controller
         }
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
-        return $events;
-    }
-
-    public function isActionIgnored(Event $event, $action)
-    {
-        if ($this->request->param('action') == 'setAlert') {
-            return true;
-        }
-    }
-
     /**
      * Before render callback.
      *
@@ -178,16 +164,6 @@ class AppController extends Controller
             in_array($this->response->type(), ['application/json', 'application/xml'])
         ) {
             $this->set('_serialize', true);
-        }
-    }
-
-    public function setAlert()
-    {
-        $this->autoRender = false;
-        if ($this->request->query('message') && $this->request->query('alertType')) {
-            $alertType = $this->request->query('alertType');
-            $alertMessage = $this->request->query('message');
-            $this->Alert->$alertType($alertMessage);
         }
     }
 

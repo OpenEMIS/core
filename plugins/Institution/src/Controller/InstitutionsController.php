@@ -509,8 +509,8 @@ class InstitutionsController extends AppController
             $viewUrl[0] = 'view';
 
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -565,8 +565,8 @@ class InstitutionsController extends AppController
             ];
 
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -618,8 +618,8 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
