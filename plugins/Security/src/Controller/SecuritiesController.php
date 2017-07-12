@@ -39,8 +39,8 @@ class SecuritiesController extends AppController
             ];
 
             $alertUrl = [
-                'plugin' => 'Security',
-                'controller' => 'Securities',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert'
             ];
             $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
