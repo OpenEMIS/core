@@ -16,6 +16,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
+use Cake\Utility\Inflector;
 use Cake\Controller\Exception\MissingActionException;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Controller\Component;
@@ -56,6 +57,7 @@ class PageComponent extends Component
     private $filters;
     private $toolbar;
     private $tabs;
+    private $viewVars;
 
     private $excludedFields = ['order', 'modified', 'modified_user_id', 'created', 'created_user_id'];
 
@@ -70,16 +72,15 @@ class PageComponent extends Component
         $this->paginateOptions = new ArrayObject(['limit' => 10]);
         $this->toolbar = new ArrayObject();
         $this->tabs = new ArrayObject();
+        $this->viewVars = new ArrayObject();
+
+        $this->setHeader(Inflector::humanize(Inflector::underscore($this->controller->name)));
     }
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
         $request = $this->request;
-
-        if (empty($request->params['_ext'])) {
-            // $request->params['_ext'] = 'json';
-        }
 
         if ($this->getQueryString('limit')) {
             $this->setPaginateOption('limit', $this->getQueryString('limit'));
@@ -96,37 +97,40 @@ class PageComponent extends Component
         $isAjax = $request->is(['ajax']);
 
         if ($isGet || $isAjax || $this->showElements()) {
-            $controller->set('header', $this->getHeader());
-            $controller->set('breadcrumbs', $this->breadcrumbs);
+            $this->setVar('header', $this->getHeader());
+            $this->setVar('breadcrumbs', $this->breadcrumbs);
 
             if ($this->elements->count() > 0) {
                 $elements = $this->elementsToJSON();
-                $controller->set('elements', $elements);
-                // $controller->set('schema', $elements);
+                $this->setVar('elements', $elements);
             }
 
             if ($this->filters->count() > 0) {
-                $controller->set('filters', $this->filtersToJSON());
+                $this->setVar('filters', $this->filtersToJSON());
             }
 
             if ($this->toolbar->count() > 0) {
-                $controller->set('toolbar', $this->toolbar->getArrayCopy());
+                $this->setVar('toolbar', $this->toolbar->getArrayCopy());
             }
 
             if ($this->tabs->count() > 0) {
-                $controller->set('tabs', $this->tabsToArray());
+                $this->setVar('tabs', $this->tabsToArray());
             }
 
-            $controller->set('actions', $this->actions);
+            $this->setVar('actions', $this->actions);
 
             if ($this->hasMainTable()) {
                 $table = $this->getMainTable();
                 if (array_key_exists('paging', $request->params)) {
                     $paging = $request->params['paging'][$table->alias()];
                     $paging['limitOptions'] = $this->limitOptions;
-                    $controller->set('paging', $paging);
+                    $this->setVar('paging', $paging);
                 }
             }
+        }
+
+        if ($this->viewVars->count() > 0) {
+            $this->controller->set($this->viewVars->getArrayCopy());
         }
 
         if ($this->debug) {
@@ -134,16 +138,21 @@ class PageComponent extends Component
         }
     }
 
-    public function debug($bool)
+    public function debug()
     {
-        $this->debug = $bool;
+        $this->debug = true;
+    }
+
+    public function setVar($name, $value)
+    {
+        $this->viewVars->offsetSet($name, $value);
+        return $this;
     }
 
     public function getVar($name)
     {
-        $controller = $this->controller;
-        if (array_key_exists($name, $controller->viewVars)) {
-            return $this->controller->viewVars[$name];
+        if ($this->viewVars->offsetExists($name)) {
+            return $this->viewVars->offsetGet($name);
         }
         return null;
     }
@@ -490,6 +499,34 @@ class PageComponent extends Component
         }
     }
 
+    public function loadDataToElements(Entity $entity)
+    {
+        foreach ($this->elements as $element) {
+            $key = $element->getKey();
+            $controlType = $element->getControlType();
+
+            if ($this->isExcluded($key)) continue; // skip excluded elements
+
+            $value = '';
+            $prefix = 'Controller.Page.onRender';
+            $eventName = $prefix . ucfirst($controlType);
+            $eventParams = [$entity, $key];
+            $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
+            if ($event->result) { // trigger render<Format>
+                $value = $event->result;
+            } else {
+                $eventName = $prefix . Inflector::camelize($key);
+                $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
+                if ($event->result) { // trigger render<Field>
+                    $value = $event->result;
+                } elseif ($entity->has($key)) { // lastly, get value from Entity
+                    $value = $entity->$key;
+                }
+            }
+            $element->setValue($value);
+        }
+    }
+
     public function attachDefaultValidation(Table $table)
     {
         $validator = $table->validator();
@@ -526,22 +563,22 @@ class PageComponent extends Component
         }
     }
 
-    public function get($name)
+    public function get($key)
     {
         $element = null;
-        if (array_key_exists($name, $this->order)) {
-            if ($this->elements->offsetExists($this->order[$name])) {
-                $element = $this->elements->offsetGet($this->order[$name]);
+        if (array_key_exists($key, $this->order)) {
+            if ($this->elements->offsetExists($this->order[$key])) {
+                $element = $this->elements->offsetGet($this->order[$key]);
             }
         } else {
-            pr($name . ' does not exists');die;
+            pr($key . ' does not exists');die;
         }
         return $element;
     }
 
-    public function addNew($name)
+    public function addNew($key)
     {
-        $element = PageElement::create($name);
+        $element = PageElement::create($key);
         $this->add($element);
         return $element;
     }
@@ -549,7 +586,7 @@ class PageComponent extends Component
     public function add(PageElement $element)
     {
         $this->elements->offsetSet($this->elements->count(), $element);
-        $this->order[$element->getName()] = count($this->order);
+        $this->order[$element->getKey()] = count($this->order);
     }
 
     public function addFilter($name)
@@ -564,15 +601,15 @@ class PageComponent extends Component
         $json = [];
 
         foreach ($this->elements as $element) {
-            $name = $element->getName();
-            if (!$this->isExcluded($name)) {
+            $key = $element->getKey();
+            if (!$this->isExcluded($key)) {
                 $controlType = $element->getControlType();
                 $isDropdownType = $controlType == 'dropdown';
                 $noDropdownOptions = is_null($element->getOptions());
                 if ($isDropdownType && $noDropdownOptions) {
                     $this->populateDropdownOptions($element);
                 }
-                $json[$name] = $element->getJSON();
+                $json[$key] = $element->getJSON();
             }
         }
         return $json;

@@ -23,13 +23,6 @@ class PageController extends AppController
         $this->loadComponent('Page.Alert');
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
-
-        $this->Page->setHeader(Inflector::humanize(Inflector::underscore($this->name)));
-    }
-
-    public function beforeFilter(Event $event)
-    {
-        parent::beforeFilter($event);
     }
 
     public function index()
@@ -101,11 +94,7 @@ class PageController extends AppController
             foreach ($data as $entity) {
                 $page->attachPrimaryKey($table, $entity);
             }
-            $this->set('data', $data);
-
-            if ($page->isAutoRender()) {
-                $this->render('Page.Page/index');
-            }
+            $page->setVar('data', $data);
         }
     }
 
@@ -139,10 +128,6 @@ class PageController extends AppController
                 }
             }
             $this->set('data', $entity);
-
-            if ($page->isAutoRender()) {
-                $this->render('Page.Page/add');
-            }
         }
     }
 
@@ -175,11 +160,8 @@ class PageController extends AppController
 
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
+                $page->loadDataToElements($entity);
                 $this->set('data', $entity);
-            }
-
-            if ($page->isAutoRender()) {
-                $this->render('Page.Page/view');
             }
         }
     }
@@ -228,10 +210,6 @@ class PageController extends AppController
                 }
             }
             $this->set('data', $entity);
-
-            if ($page->isAutoRender()) {
-                $this->render('Page.Page/edit');
-            }
         }
     }
 

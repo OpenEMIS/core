@@ -21,6 +21,7 @@ class PageElement
     protected $fixed;
     protected $collate;
 
+    protected $key;
     protected $model;
     protected $aliasField;
     protected $belongsTo;
@@ -39,18 +40,20 @@ class PageElement
     protected $options; // options for dropdown control type
     protected $value; // current selected value
     protected $wildcard;
-    protected $extra; // extra information
+    protected $attributes; // html attributes
 
     public function __construct($fieldName, array $attributes)
     {
+        $this->key = $fieldName;
         $this->name = $fieldName;
         $this->value = '';
         $this->visible = true;
         $this->readonly = false;
         $this->disabled = false;
         $this->wildcard = 'full';
-        $this->extra = [];
         $this->sortable = false;
+        $this->options = [];
+        $this->attributes = [];
 
         foreach ($attributes as $name => $value) {
             if (property_exists($this, $name)) {
@@ -83,6 +86,10 @@ class PageElement
         if (in_array($this->type, ['string', 'integer', 'text'])) {
             $this->setSortable(true);
         }
+
+        if (array_key_exists('model', $attributes)) {
+            $this->name = $attributes['model'] . '.' . $this->name;
+        }
     }
 
     public static function create($name)
@@ -112,6 +119,17 @@ class PageElement
         return $this;
     }
 
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    public function setName()
+    {
+        $this->name = $name;
+        return $this;
+    }
+
     public function getName()
     {
         return $this->name;
@@ -126,17 +144,17 @@ class PageElement
     {
         if (is_array($name) && is_null($value)) {
             foreach ($name as $key => $val) {
-                $this->extra[$key] = $val;
+                $this->attributes[$key] = $val;
             }
         } elseif (!is_null($value)) {
-            $this->extra[$name] = $value;
+            $this->attributes[$name] = $value;
         }
         return $this;
     }
 
-    public function getExtra()
+    public function getAttributes()
     {
-        return $this->extra;
+        return $this->attributes;
     }
 
     public function isRequired()
@@ -276,11 +294,11 @@ class PageElement
         return $this->model;
     }
 
-    public function setModel($model)
-    {
-        $this->model = $model;
-        return $this;
-    }
+    // public function setModel($model)
+    // {
+    //     $this->model = $model;
+    //     return $this;
+    // }
 
     public function getAliasField()
     {
@@ -353,25 +371,20 @@ class PageElement
     {
         // properties to be exposed to client browser
         $visibleProperties = [
-            'id' => 'get',
-            'name' => 'get',
-            'model' => 'get',
-            'aliasField' => 'get',
+            // 'model' => 'get',
+            // 'aliasField' => 'get',
+            'key' => 'get',
             'controlType' => 'get',
-            'readonly' => 'is',
-            'disabled' => 'is',
             'displayFrom' => 'get',
             'label' => 'get',
             'sortable' => 'is',
-            'maxlength' => 'get',
-            'required' => 'is',
             'visible' => 'is',
             'dependentOn' => 'get',
             'params' => 'get',
             'foreignKey' => 'get',
-            'defaultValue' => 'get',
-            'options' => 'get',
-            'value' => 'get'
+            // 'defaultValue' => 'get',
+            // 'options' => 'get',
+            'attributes' => 'get'
         ];
 
         $name = $this->name;
@@ -380,20 +393,39 @@ class PageElement
         //     $this->exclude($this->table->primaryKey());
         // }
 
+        $htmlAttributes = [
+            'id' => 'get',
+            'name' => 'get',
+            'readonly' => 'is',
+            'disabled' => 'is',
+            'maxlength' => 'get',
+            'required' => 'is',
+            'value' => 'get',
+        ];
+
+        $properties = [];
+
         foreach ($visibleProperties as $property => $method) {
             $propertyMethod = $method . ucfirst($property);
             if ($property != 'displayFrom') {
-                $array[$property] = $this->$propertyMethod();
+                $properties[$property] = $this->$propertyMethod();
             } elseif ($property == 'displayFrom' && $this->$propertyMethod()) {
-                $array[$property] = $this->$propertyMethod();
+                $properties[$property] = $this->$propertyMethod();
             }
         }
 
-        $extra = $this->getExtra();
-        foreach ($extra as $attr => $value) {
-            $array[$attr] = $value;
+        foreach ($htmlAttributes as $property => $method) {
+            $propertyMethod = $method . ucfirst($property);
+            $propertyValue = $this->$propertyMethod();
+            if (!empty($propertyValue)) {
+                $properties['attributes'][$property] = $propertyValue;
+            }
         }
 
-        return $array;
+        if ($this->getControlType() == 'dropdown') {
+            $properties['options'] = $this->getOptions();
+        }
+
+        return $properties;
     }
 }
