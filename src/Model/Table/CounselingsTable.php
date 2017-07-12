@@ -13,9 +13,6 @@ use Cake\Filesystem\Folder;
 
 class CounselingsTable extends AppTable
 {
-    private $excludeList = ['created_user_id', 'created', 'modified_user_id', 'modified'];
-    // private $defaultConfig = 'counselors';
-
     CONST ASSIGNED = 1;
 
     public function initialize(array $config)
@@ -29,7 +26,7 @@ class CounselingsTable extends AppTable
 
     public function findIndex(Query $query, array $options)
     {
-        $studentId = $options['student_id'];
+        $studentId = $options['querystring']['student_id'];
 
         return $query->where([$this->aliasField('student_id') => $studentId]);
     }
