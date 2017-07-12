@@ -268,7 +268,7 @@ class PageHelper extends Helper
 
         $array = $entity instanceof Entity ? $entity->toArray() : $entity;
         $data = Hash::flatten($array);
-        $value = array_key_exists($field['name'], $data) ? $data[$field['name']] : '';
+        $value = array_key_exists($field['key'], $data) ? $data[$field['key']] : '';
 
         if (array_key_exists('displayFrom', $field)) { // if displayFrom exists, always get value based on displayFrom
             $key = $field['displayFrom'];
@@ -324,7 +324,7 @@ class PageHelper extends Helper
         return $html;
     }
 
-    public function renderViewElements()
+    public function renderViewElements($fields)
     {
         $html = '';
 
@@ -334,9 +334,6 @@ class PageHelper extends Helper
     <div class="form-input">%s</div>
 </div>
 EOT;
-
-        $fields = $this->_View->get('elements');
-        $data = $this->_View->get('data');
 
         $excludedTypes = ['hidden'];
 
@@ -349,7 +346,10 @@ EOT;
             }
 
             $label = $attr['label'];
-            $value = $this->getValue($data, $attr);
+            $value = '';
+            if (array_key_exists('value', $attr['attributes'])) {
+                $value = $attr['attributes']['value'];
+            }
 
             $html .= sprintf($row, $label, $value);
         }
@@ -358,22 +358,13 @@ EOT;
 
     private function extractHtmlAttributes(array $field, $data)
     {
-        $htmlAttr = [
-            'id', 'label', 'readonly', 'disabled',
-            'options', 'value', 'maxlength',
-            'required'
-        ];
-
-        $options = [];
-        foreach ($htmlAttr as $attr) {
-            if (!empty($field[$attr])) {
-                $options[$attr] = $field[$attr];
-            }
+        $options = $field['attributes'];
+        if (array_key_exists('name', $options)) {
+            unset($options['name']);
         }
 
-        if (is_array($data) && empty($options['value'])) {
-            $value = $this->getValue($data, $field);
-            $options['value'] = $value;
+        if (array_key_exists('options', $field)) {
+            $options['options'] = $field['options'];
         }
         return $options;
     }
@@ -383,7 +374,7 @@ EOT;
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'string';
 
-        $value = $this->Form->input($field['aliasField'], $options);
+        $value = $this->Form->input($field['attributes']['name'], $options);
         return $value;
     }
 
@@ -394,13 +385,13 @@ EOT;
         $html = '';
 
         if (array_key_exists('disabled', $options) && array_key_exists('displayFrom', $field)) {
+            $options['type'] = 'hidden';
             unset($options['disabled']);
             $value = $this->getValue($data, $field);
-            $options['type'] = 'hidden';
-            $html .= $this->Form->input($field['name'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+            $html .= $this->Form->input($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
         }
 
-        $html .= $this->Form->input($field['aliasField'], $options);
+        $html .= $this->Form->input($field['attributes']['name'], $options);
 
         return $html;
     }
@@ -420,7 +411,7 @@ EOT;
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'textarea';
 
-        return $this->Form->input($field['aliasField'], $options);
+        return $this->Form->input($field['attributes']['name'], $options);
     }
 
     private function dropdown(array $field, $data)
@@ -433,7 +424,7 @@ EOT;
             $options['params'] = $field['params'];
         }
 
-        return $this->Form->input($field['aliasField'], $options);
+        return $this->Form->input($field['attributes']['name'], $options);
     }
 
     private function hidden(array $field, $data)
@@ -441,14 +432,14 @@ EOT;
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'hidden';
 
-        return $this->Form->input($field['aliasField'], $options);
+        return $this->Form->input($field['attributes']['name'], $options);
     }
 
     private function date(array $field, $data)
     {
         $options = ['type' => 'text', 'class' => 'form-control', 'label' => false];
-        $required = $field['required'];
-        $value = $field['value'];
+        $required = $field['attributes']['required'];
+        $value = isset($field['attributes']['value']) ? isset($field['attributes']['value']) : '';
 
         if ($required) {
             $options['required'] = 'required';
@@ -463,8 +454,8 @@ EOT;
         }
 
         $attr = [
-            'id' => $field['model'] . '_' . $field['name'],
-            'name' => $field['aliasField'],
+            'id' => str_replace('.', '_', $field['attributes']['name']),
+            'name' => $field['attributes']['name'],
             'label' => $field['label'],
             'options' => $options,
             'required' => $required ? ' required' : ''
