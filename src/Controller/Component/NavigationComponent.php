@@ -684,7 +684,7 @@ class NavigationComponent extends Component
             'Counselings.index' => [
                 'title' => 'Counselings',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Counselings.add', 'Counselings.edit', 'Counselings.view']
+                'selected' => ['Counselings.add', 'Counselings.edit', 'Counselings.view', 'Counselings.delete']
             ],
             'Students.BankAccounts' => [
                 'title' => 'Finance',
