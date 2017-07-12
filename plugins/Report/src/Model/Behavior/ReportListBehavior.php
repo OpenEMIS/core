@@ -196,6 +196,15 @@ class ReportListBehavior extends Behavior {
 				if (array_key_exists($selectedOption, $obj['options']) && !empty($obj['options'][$selectedOption])) {
 					$value = $obj['options'][$selectedOption];
 
+					// used for institution rubrics
+					if (is_array($value)) {
+						if (array_key_exists('text', $value)) {
+							$value = $value['text'];
+						} else {
+							$value = '';
+						}
+					}
+
 					// if option is a code - name, only use code
 					$pos = strpos($value, '-');
 					if ($pos !== false) {
