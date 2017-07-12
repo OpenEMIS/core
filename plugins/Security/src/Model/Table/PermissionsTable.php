@@ -26,6 +26,7 @@ class PermissionsTable extends ControllerActionTable
         $this->belongsTo('SecurityFunctions', ['className' => 'Security.SecurityFunctions']);
         $this->toggle('add', false);
         $this->toggle('view', false);
+        $this->toggle('search', false);
     }
 
     private function check($entity, $operation)
@@ -53,7 +54,8 @@ class PermissionsTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event)
+
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $controller = $this->controller;
 
@@ -115,6 +117,8 @@ class PermissionsTable extends ControllerActionTable
         $toolbarButtons['back']['attr']['title'] = __('Back');
         $toolbarButtons['back']['url']['action'] = 'Roles';
 
+        $toolbarButtons['edit']['url']['controller'] = 'Securities';
+        $toolbarButtons['edit']['url']['action'] = 'Permissions';
         $toolbarButtons['edit']['url'][0] = 'edit';
         $toolbarButtons['edit']['url'][] = $id;
         $toolbarButtons['edit']['type'] = 'button';
