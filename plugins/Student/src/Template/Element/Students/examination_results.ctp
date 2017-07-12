@@ -12,8 +12,8 @@ $this->start('panelBody');
 	    }
 	</style>
 
-	<div class="alert {{class}}" ng-hide="message == null">
-		<a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
+	<div class="alert {{StudentExaminationResultsController.class}}" ng-hide="StudentExaminationResultsController.message == null">
+		<a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{StudentExaminationResultsController.message}}
 	</div>
 	
 	<div class="row section-header" ng-repeat-start="section in StudentExaminationResultsController.sections | orderBy:'order'" ng-show={{section.visible}}>
