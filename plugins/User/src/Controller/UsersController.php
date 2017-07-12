@@ -126,6 +126,9 @@ class UsersController extends AppController
 
     public function postLogin($authenticationType = 'Local', $code = null)
     {
+        if ($this->request->is('post') && $this->request->data('submit') == 'reload') {
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        }
         $this->autoRender = false;
         $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
         $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
