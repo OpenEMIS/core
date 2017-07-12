@@ -104,6 +104,15 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
+	public function onExcelBeforeGenerate(Event $event, $settings) {
+        $process = $settings['process'];
+		$processData = $this->ReportProgress->get($process->id);
+
+		// set name of report
+		$name = str_replace(' ', '_', $processData->name);
+        $settings['file'] = $name . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
+	}
+
 	public function onExcelGenerate(Event $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
@@ -188,8 +197,17 @@ class ReportListBehavior extends Behavior {
 			if ($obj['type'] != 'hidden' && !in_array($key, ['feature', 'format'])) {
 				$selectedOption = $data[$alias][$key];
 
-				if (array_key_exists($selectedOption, $obj['options'])) {
-					$filters[] = $obj['options'][$selectedOption];
+				if (array_key_exists($selectedOption, $obj['options']) && !empty($obj['options'][$selectedOption])) {
+					$value = $obj['options'][$selectedOption];
+
+					// if option is a code - name, only use code
+					$pos = strpos($value, '-');
+					if ($pos !== false) {
+						$code = explode('-', $value)[0];
+						$value = trim($code);
+					}
+
+					$filters[] = $value;
 				}
 			}
 		}
@@ -197,7 +215,7 @@ class ReportListBehavior extends Behavior {
 		$name = $featureList[$feature];
 
 		if (!empty($filters)) {
-			$filterStr = implode(', ', $filters);
+			$filterStr = implode(' - ', $filters);
 			$name .= ' - '.$filterStr;
 		}
 
