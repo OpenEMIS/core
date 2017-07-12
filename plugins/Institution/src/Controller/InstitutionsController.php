@@ -695,7 +695,8 @@ class InstitutionsController extends AppController
 
     public function isActionIgnored(Event $event, $action)
     {
-        if ($this->request->param('action') == 'setAlert') {
+        $pass = $this->request->pass;
+        if (isset($pass[0]) && $pass[0] == 'downloadFile') {
             return true;
         }
     }
