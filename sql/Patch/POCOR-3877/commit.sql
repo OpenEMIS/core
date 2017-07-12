@@ -14,8 +14,8 @@ CREATE TABLE `security_role_functions` (
   `security_function_id` int(11) NOT NULL COMMENT 'links to security_functions.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
-  `created` datetime DEFAULT NULL,
+  `created_user_id` int(11) DEFAULT NOT NULL,
+  `created` datetime DEFAULT NOT NULL,
   PRIMARY KEY (`security_role_id`,`security_function_id`),
   KEY `security_function_id` (`security_function_id`),
   KEY `security_role_id` (`security_role_id`)
