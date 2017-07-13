@@ -110,8 +110,7 @@ class ReportListBehavior extends Behavior {
 		$processData = $this->ReportProgress->get($process->id);
 
 		// set name of report
-		$name = str_replace(' ', '_', $processData->name);
-        $settings['file'] = $name . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
+        $settings['file'] = $processData->name . ' - ' . date('Ymd') . 'T' . date('His') . '.xlsx';
 	}
 
 	public function onExcelGenerate(Event $event, $settings) {
@@ -204,12 +203,6 @@ class ReportListBehavior extends Behavior {
 						} else {
 							$value = '';
 						}
-					}
-
-					// if option is a code - name, only use code
-					$pos = strpos($value, '-');
-					if ($pos !== false) {
-						$value = explode('-', $value)[0];
 					}
 
 					if (!empty($value)) {
