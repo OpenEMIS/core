@@ -1001,11 +1001,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
             unset($grades);
 
             $educationSubjects = [];
-            if (count($educationGradeSubjects)>0) {
+            if (count($educationGradeSubjects) > 0) {
                 foreach ($educationGradeSubjects as $gradeSubject) {
                     foreach ($gradeSubject->education_subjects as $subject) {
-                        if (!isset($educationSubjects[$subject->id])) {
-                            $educationSubjects[$subject->id] = [
+                        if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
+                            $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
                                 'id' => $subject->id,
                                 'education_grade_id' => $gradeSubject->id,
                                 'name' => $subject->name
