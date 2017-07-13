@@ -363,6 +363,10 @@ EOT;
             unset($options['name']);
         }
 
+        if (array_key_exists('label', $field)) {
+            $options['label'] = $field['label'];
+        }
+
         if (array_key_exists('options', $field)) {
             $options['options'] = $field['options'];
         }
