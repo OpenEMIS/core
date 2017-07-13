@@ -533,7 +533,7 @@ class PageComponent extends Component
         }
     }
 
-    public function loadDataToElements(Entity $entity)
+    public function loadDataToElements(Entity $entity, $callback = true)
     {
         foreach ($this->elements as $element) {
             $key = $element->getKey();
@@ -542,21 +542,28 @@ class PageComponent extends Component
             if ($this->isExcluded($key)) continue; // skip excluded elements
 
             $value = '';
-            $prefix = 'Controller.Page.onRender';
-            $eventName = $prefix . ucfirst($controlType);
-            $eventParams = [$entity, $key];
-            $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
-            if ($event->result) { // trigger render<Format>
-                $value = $event->result;
-            } else {
-                $eventName = $prefix . Inflector::camelize($key);
+            if ($callback) {
+                $prefix = 'Controller.Page.onRender';
+                $eventName = $prefix . ucfirst($controlType);
+                $eventParams = [$entity, $key];
                 $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
-                if ($event->result) { // trigger render<Field>
+                if ($event->result) { // trigger render<Format>
                     $value = $event->result;
-                } elseif ($entity->has($key)) { // lastly, get value from Entity
+                } else {
+                    $eventName = $prefix . Inflector::camelize($key);
+                    $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
+                    if ($event->result) { // trigger render<Field>
+                        $value = $event->result;
+                    } elseif ($entity->has($key)) { // lastly, get value from Entity
+                        $value = $entity->$key;
+                    }
+                }
+            } else {
+                if ($entity->has($key)) {
                     $value = $entity->$key;
                 }
             }
+
             $element->setValue($value);
         }
     }

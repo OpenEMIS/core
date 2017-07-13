@@ -443,7 +443,7 @@ EOT;
     {
         $options = ['type' => 'text', 'class' => 'form-control', 'label' => false];
         $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
-        $value = isset($field['attributes']['value']) ? isset($field['attributes']['value']) : '';
+        $value = isset($field['attributes']['value']) ? $field['attributes']['value'] : '';
 
         if ($required) {
             $options['required'] = 'required';
