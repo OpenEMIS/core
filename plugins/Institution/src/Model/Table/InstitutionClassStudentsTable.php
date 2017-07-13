@@ -538,6 +538,7 @@ class InstitutionClassStudentsTable extends AppTable
     private function _setSubjectStudentData($data)
     {
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $studentEducationGradeId = $data['education_grade_id'];
 
         //get the education_subject_id and education_subject_id using the institution_id
         $classSubjectsData = $ClassSubjects->find()
@@ -554,11 +555,12 @@ class InstitutionClassStudentsTable extends AppTable
 
         $subjectStudents = [];
         foreach ($classSubjectsData as $classSubjects) {
+            $subjectEducationGradeId = $classSubjects['education_grade_id'];
             // will check in the education grade subject if the subject is an auto allocation subject
             $isAutoAddSubject = $this->isAutoAddSubject($classSubjects);
 
             // if the subject is not an add_auto_subject will not be added automatically to the student.
-            if ($isAutoAddSubject) {
+            if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
                 $subjectStudents[] = [
                     'student_status_id' => $data['student_status_id'],
                     'student_id' => $data['student_id'],
