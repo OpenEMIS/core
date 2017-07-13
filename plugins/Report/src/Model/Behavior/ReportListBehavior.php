@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Network\Response;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Network\Session;
@@ -104,6 +105,15 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
+	public function onExcelBeforeGenerate(Event $event, $settings) {
+        $process = $settings['process'];
+		$processData = $this->ReportProgress->get($process->id);
+
+		// set name of report
+		$name = str_replace(' ', '_', $processData->name);
+        $settings['file'] = $name . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
+	}
+
 	public function onExcelGenerate(Event $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
@@ -169,10 +179,7 @@ class ReportListBehavior extends Behavior {
 		$alias = $this->_table->alias();
 		$featureList = $this->_table->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
-		$postFix = '';
-		if (isset($data[$alias]['postfix'])) {
-			$postFix = $data[$alias]['postfix'];
-		}
+		$fields = $this->_table->fields;
 		$table = TableRegistry::get($feature);
 
 		// Event:
@@ -182,10 +189,43 @@ class ReportListBehavior extends Behavior {
 		// $name = $event->result;
 		// End Event
 
-		$name = $featureList[$feature];
-		if (!empty($postFix)) {
-			$name .= ' - '.$postFix;
+		$filters = [];
+		foreach ($fields as $key => $obj) {
+			if ($obj['type'] != 'hidden' && !in_array($key, ['feature', 'format'])) {
+				$selectedOption = $data[$alias][$key];
+
+				if (array_key_exists($selectedOption, $obj['options']) && !empty($obj['options'][$selectedOption])) {
+					$value = $obj['options'][$selectedOption];
+
+					// used for institution rubrics
+					if (is_array($value)) {
+						if (array_key_exists('text', $value)) {
+							$value = $value['text'];
+						} else {
+							$value = '';
+						}
+					}
+
+					// if option is a code - name, only use code
+					$pos = strpos($value, '-');
+					if ($pos !== false) {
+						$value = explode('-', $value)[0];
+					}
+
+					if (!empty($value)) {
+						$filters[] = __(trim($value));
+					}
+				}
+			}
 		}
+
+		$name = $featureList[$feature];
+
+		if (!empty($filters)) {
+			$filterStr = implode(' - ', $filters);
+			$name .= ' - '.$filterStr;
+		}
+
 		$params = $data[$alias];
 
 		$ReportProgress = TableRegistry::get('Report.ReportProgress');
@@ -205,13 +245,18 @@ class ReportListBehavior extends Behavior {
 		if (!empty($path)) {
 			$filename = basename($path);
 
-			if ($entity->module == 'CustomReports') {
-				$url = "/export/customexcel/$filename";
-			} else {
-				$url = "/export/$filename";
-			}
+			$response = $this->_table->controller->response;
+			$response->body(function() use ($path) {
+				$content = file_get_contents($path);
+				return $content;
+			});
 
-			return $this->_table->controller->redirect($url);
+			// Syntax will change in v3.4.x
+			$pathInfo = pathinfo($filename);
+			$response->type($pathInfo['extension']);
+			$response->download($filename);
+
+			return $response;
 		}
 	}
 }
