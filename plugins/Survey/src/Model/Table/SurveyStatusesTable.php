@@ -26,6 +26,13 @@ class SurveyStatusesTable extends ControllerActionTable
         ]);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        return $events;
+    }
+
     public function beforeAction(Event $event)
     {
         $this->field('academic_period_level');
@@ -36,19 +43,22 @@ class SurveyStatusesTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        //Add controls filter to index page
-        $toolbarElements = [
-            ['name' => 'Survey.controls', 'data' => [], 'options' => []]
-        ];
-
-        $this->controller->set('toolbarElements', $toolbarElements);
-    }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain($this->_contain);
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $query
+                ->matching('SurveyForms')
+                ->where(['SurveyForms.name LIKE' => '%' . $search . '%']);
+        }
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'survey_form_id';
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
