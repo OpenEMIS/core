@@ -6,13 +6,16 @@ window.onload = function(e) {
 document.addEventListener("DOMContentLoaded", function() {
     var elements = document.getElementsByTagName('select');
     for (i=0; i<elements.length; i++) {
-        element = elements[i];
-        if (element.hasAttribute('dependent-on')) {
+        if (elements[i].hasAttribute('dependent-on')) {
+            element = elements[i];
             dependentOn = element.getAttribute('dependent-on');
             source = document.getElementById(dependentOn);
-            source.addEventListener('change', function() {
-                Page.onChange(source, element);
-            });
+
+            (function (s, e) {
+                s.addEventListener('change', function() {
+                    Page.onChange(s, e);
+                });
+            }) (source, element);
         }
     }
 });
@@ -82,10 +85,16 @@ Page.getParamValue = function(name) {
 }
 
 Page.onChange = function(source, target) {
-    var value = source.value;
     target.innerHTML = '<option>Updating</option>';
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'onchange/' + target.getAttribute('params') + '/' + value);
+    var isMultiple = target.getAttribute('multiple') != null;
+    var method = 'onchange/' + target.getAttribute('params');
+    var params = source.id + '=' + source.value;
+
+    if (isMultiple) {
+        params += '&multiple=true';
+    }
+    xhr.open('GET', method + '?' + params);
     xhr.onload = function() {
         if (xhr.status === 200) {
             target.innerHTML = '';
