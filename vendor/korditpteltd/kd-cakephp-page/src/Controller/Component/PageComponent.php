@@ -708,6 +708,9 @@ class PageComponent extends Component
 
     public function move($source)
     {
+        if (!array_key_exists($source, $this->order)) {
+            pr($source . ' does not exists');die;
+        }
         $this->moveSourceField = $source;
         return $this;
     }

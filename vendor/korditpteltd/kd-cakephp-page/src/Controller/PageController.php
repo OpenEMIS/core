@@ -204,6 +204,7 @@ class PageController extends AppController
                 }
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
+                $page->loadDataToElements($entity);
             }
 
             if ($request->is(['post', 'put'])) {
@@ -277,6 +278,7 @@ class PageController extends AppController
             }
 
             $page->attachPrimaryKey($table, $entity);
+            $page->loadDataToElements($entity);
 
             $msg = __('All associated information related to this record will also be removed. Are you sure you want to delete this record?');
             $this->set('alert', ['type' => 'warning', 'message' => $msg]);
@@ -313,13 +315,13 @@ class PageController extends AppController
                         //     }
                         // }
                         if ($isAssociated) {
-                            $cells[$assoc->alias()] = [$title, $count];
+                            $cells[] = [$title, $count];
                         }
                     }
                 }
             }
 
-            $displayTypes = ['string', 'integer', 'text', 'date'];
+            $displayTypes = ['string', 'integer', 'text', 'date', 'decimal', 'textarea'];
             $elements = $page->getElements();
             foreach ($elements as $element) {
                 $type = $element->getControlType();
