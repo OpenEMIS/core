@@ -212,7 +212,9 @@ class ReportListBehavior extends Behavior {
 						$value = explode('-', $value)[0];
 					}
 
-					$filters[] = __(trim($value));
+					if (!empty($value)) {
+						$filters[] = __(trim($value));
+					}
 				}
 			}
 		}

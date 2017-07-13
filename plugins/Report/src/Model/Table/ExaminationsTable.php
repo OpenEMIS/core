@@ -200,7 +200,7 @@ class ExaminationsTable extends AppTable
 
                     $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
                     $institutionOptions = $ExamCentreStudents
-                        ->find('list' ,[
+                        ->find('list', [
                             'keyField' => 'institution_id',
                             'valueField' => 'institution.code_name'
                         ])
