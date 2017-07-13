@@ -34,16 +34,16 @@ class CounselingsController extends PageController
 
         parent::beforeFilter($event);
 
-        // set Breadcrumb
-        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-        // $this->Navigation->addCrumb('Counselings', ['plugin' => false, 'controller' => 'Counselings', 'action' => 'index']);
-        $this->Navigation->addCrumb('Counselings');
-
         $page = $this->Page;
         $page->exclude(['file_name', 'file_content']);
+        $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
+
+        // set Breadcrumb
+        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
+        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+        $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+        $page->addCrumb('Counselings');
 
         // set header
         $header = $page->getHeader();
@@ -65,7 +65,6 @@ class CounselingsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        $page->exclude(['student_id']);
 
         parent::view($id);
     }
@@ -108,8 +107,5 @@ class CounselingsController extends PageController
         // set the options for counselor_id
         $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
-
-        // set student_id
-        $page->get('student_id')->setControlType('hidden')->setValue($studentId);
     }
 }
