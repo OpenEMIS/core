@@ -696,7 +696,7 @@ class PageComponent extends Component
         for ($i=$count-1; $i>=0; $i--) {
             $element = $elements->offsetGet($i);
             $elements->offsetSet($i+1, $element);
-            $this->order[$element->getName()] = $i+1;
+            $this->order[$element->getKey()] = $i+1;
         }
 
         // insert source item to destination position
@@ -712,7 +712,7 @@ class PageComponent extends Component
             $element = $elements->offsetGet($i+1);
             $elements->offsetSet($i, $element);
             $elements->offsetUnset($i+1);
-            $this->order[$element->getName()] = $i;
+            $this->order[$element->getKey()] = $i;
         }
 
         $this->moveSourceField = null;
@@ -729,7 +729,7 @@ class PageComponent extends Component
         for ($i=$count; $i>$destinationOrder+1; $i--) {
             $element = $elements->offsetGet($i-1);
             $elements->offsetSet($i, $element);
-            $this->order[$element->getName()] = $i;
+            $this->order[$element->getKey()] = $i;
         }
 
         // insert source item to destination position
@@ -738,7 +738,7 @@ class PageComponent extends Component
 
         // updates $this->order with new position of source
         $sourceField = $elements->offsetGet($this->order[$this->moveSourceField]);
-        $this->order[$sourceField->getName()] = $destinationOrder+1;
+        $this->order[$sourceField->getKey()] = $destinationOrder+1;
 
         // remove the extra source item in the array
         $elements->offsetUnset($sourceOrder);
@@ -748,7 +748,7 @@ class PageComponent extends Component
             $element = $elements->offsetGet($i+1);
             $elements->offsetSet($i, $element);
             $elements->offsetUnset($i+1);
-            $this->order[$element->getName()] = $i;
+            $this->order[$element->getKey()] = $i;
         }
 
         // reset the source value
