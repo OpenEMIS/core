@@ -101,8 +101,7 @@ class CounselingsController extends PageController
         $studentId = $page->getQueryString('student_id');
 
         // set the options for guidance_type_id
-        $guidanceTypeOptions = $this->Counselings->getGuidanceTypeOptions();
-        $page->get('guidance_type_id')->setControlType('dropdown')->setOptions($guidanceTypeOptions);
+        $page->get('guidance_type_id')->setControlType('dropdown');
 
         // set the options for counselor_id
         $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);

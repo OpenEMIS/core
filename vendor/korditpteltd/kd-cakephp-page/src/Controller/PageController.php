@@ -204,7 +204,7 @@ class PageController extends AppController
                 }
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
-                $page->loadDataToElements($entity);
+                $page->loadDataToElements($entity, false);
             }
 
             if ($request->is(['post', 'put'])) {
