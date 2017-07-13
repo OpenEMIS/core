@@ -138,7 +138,7 @@ class PageComponent extends Component
 
         $this->controller->set('status', $this->status->toArray());
 
-        if ($this->debug) {
+        if ($this->isDebugMode()) {
             pr($this->controller->viewVars);die;
         }
     }
@@ -146,6 +146,21 @@ class PageComponent extends Component
     public function debug()
     {
         $this->debug = true;
+    }
+
+    public function isDebugMode()
+    {
+        $request = $this->request;
+        $debugConfig = Configure::read('debug');
+        $debugRequest = $this->request->query('debug') === 'true';
+        $httpGET = $request->is('get');
+        $httpPOST = $request->is('post');
+
+        if (($debugConfig && $this->debug && $httpGET)
+        ||  ($debugConfig && $debugRequest && $httpPOST)) {
+            return true;
+        }
+        return false;
     }
 
     public function setVar($name, $value)
@@ -595,9 +610,15 @@ class PageComponent extends Component
         return $element;
     }
 
-    public function addNew($key)
+    public function addNew($key, $attributes = [])
     {
-        $element = PageElement::create($key);
+        if (!array_key_exists('model', $attributes)) {
+            if ($this->hasMainTable()) {
+                $attributes['model'] = $this->mainTable->alias();
+            }
+        }
+
+        $element = PageElement::create($key, $attributes);
         $this->add($element);
         return $element;
     }
@@ -624,7 +645,9 @@ class PageComponent extends Component
             if (!$this->isExcluded($key)) {
                 $controlType = $element->getControlType();
                 $isDropdownType = $controlType == 'dropdown';
-                $noDropdownOptions = is_null($element->getOptions());
+                $noDropdownOptions = empty($element->getOptions());
+
+                // auto populate dropdown options based on foreign keys if no options are provided
                 if ($isDropdownType && $noDropdownOptions) {
                     $this->populateDropdownOptions($element);
                 }
@@ -659,7 +682,8 @@ class PageComponent extends Component
             $foreignKey = $element->getForeignKey();
             if ($foreignKey) {
                 $association = $foreignKey['name'];
-                $element->setOptions($table->$association->find('list')->toArray());
+                // default limit to 1000 to prevent out of memory error
+                $element->setOptions($table->$association->find('list')->limit(1000)->toArray());
             }
         }
     }

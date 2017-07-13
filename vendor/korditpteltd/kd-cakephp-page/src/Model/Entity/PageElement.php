@@ -94,9 +94,9 @@ class PageElement
         }
     }
 
-    public static function create($name)
+    public static function create($name, $attributes)
     {
-        $attributes = [
+        $_attributes = [
             'type' => 'string',
             'length' => '0',
             'unsigned' => false,
@@ -106,6 +106,8 @@ class PageElement
             'precision' => false,
             'foreignKey' => false
         ];
+
+        $attributes = array_merge($_attributes, $attributes);
         $field = new PageElement($name, $attributes);
         return $field;
     }
@@ -156,7 +158,7 @@ class PageElement
         return $this->type;
     }
 
-    public function attr($name, $value = null)
+    public function setAttributes($name, $value = null)
     {
         if (is_array($name) && is_null($value)) {
             foreach ($name as $key => $val) {
@@ -165,8 +167,18 @@ class PageElement
         } elseif (!is_null($value)) {
             $this->attributes[$name] = $value;
         }
+
+        if ($this->controlType == 'dropdown' && $name == 'multiple' && $value == true) {
+            $this->name .= '._ids';
+        }
         return $this;
     }
+
+    // public function setAttributes($key, $value)
+    // {
+    //     $this->attributes[$key] = $value;
+    //     return $this;
+    // }
 
     public function getAttributes()
     {
@@ -357,13 +369,13 @@ class PageElement
 
     public function setOptions($options, $empty = true)
     {
-        if (empty($options)) {
+        if (empty($options) && $empty !== false) {
             $this->options = ['' => __('No Options')];
         } else {
             if ($empty === true) {
-                $this->options = array_merge(['' => __('-- Select --')], $options);
+                $this->options = ['' => '-- ' . __('Select') . ' --'] + $options;
             } elseif ($empty !== false) {
-                $this->options = array_merge(['' => __($empty)], $options);
+                $this->options = ['' => __($empty)] + $options;
             } else {
                 $this->options = $options;
             }
@@ -426,7 +438,7 @@ class PageElement
             'disabled' => 'is',
             'maxlength' => 'get',
             'required' => 'is',
-            'value' => 'get',
+            'value' => 'get'
         ];
 
         $properties = [];
@@ -434,7 +446,10 @@ class PageElement
         foreach ($visibleProperties as $property => $method) {
             $propertyMethod = $method . ucfirst($property);
             if ($property != 'displayFrom') {
-                $properties[$property] = $this->$propertyMethod();
+                $propertyValue = $this->$propertyMethod();
+                if (!is_null($propertyValue)) {
+                    $properties[$property] = $this->$propertyMethod();
+                }
             } elseif ($property == 'displayFrom' && $this->$propertyMethod()) {
                 $properties[$property] = $this->$propertyMethod();
             }
@@ -443,7 +458,7 @@ class PageElement
         foreach ($htmlAttributes as $property => $method) {
             $propertyMethod = $method . ucfirst($property);
             $propertyValue = $this->$propertyMethod();
-            if (!empty($propertyValue)) {
+            if (!is_null($propertyValue)) {
                 $properties['attributes'][$property] = $propertyValue;
             }
         }

@@ -5,6 +5,7 @@ use ArrayObject;
 use Exception;
 
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Controller\Exception\MissingActionException;
@@ -57,7 +58,7 @@ class PageController extends AppController
             $page->autoConditions($table, $query, $querystring); // add where conditions if it exists in querystring
 
             if ($table->hasFinder('index')) {
-                $query = $table->find('index', $queryOptions->getArrayCopy());
+                $query->find('index', $queryOptions->getArrayCopy());
             }
 
             if ($page->isAutoContain()) {
@@ -117,11 +118,15 @@ class PageController extends AppController
                     $entity = $table->patchEntity($entity, $request->data, []);
                     $result = $table->save($entity);
 
+                    if ($page->isDebugMode()) {
+                        pr($request->data);
+                    }
                     if ($result) {
                         $pageStatus->setMessage('The record has been added successfully');
 
                         return;
                     } else {
+                        Log::write('debug', $entity->errors());
                         $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
                             ->setType('error')
                             ->setMessage('The record is not added due to errors encountered');
@@ -334,17 +339,101 @@ class PageController extends AppController
         }
     }
 
-    public function onchange($table, $finder, $value)
+    public function onchange($model, $finder = 'OptionList')
     {
-        $results = $this->{$table}->find($finder, ['value' => $value])->toArray();
-        $options = [];
+        $request = $this->request;
+        $table = $this->{$model};
 
-        foreach ($results as $value => $text) {
-            $options[] = ['value' => $value, 'text' => $text];
+        if ($table === false) {
+            $table = TableRegistry::get($model);
         }
+
+        $options = [];
+        $finderOptions = [];
+
+        $isMultiple = $request->query('multiple');
+        if ($isMultiple) {
+            $finderOptions['defaultOption'] = false;
+            unset($request->query['multiple']);
+        }
+
+        $finderOptions['conditions'] = $this->request->query;
+
+        if ($table->hasFinder($finder)) {
+            $options = $table->find($finder, $finderOptions)->toArray();
+        }
+
         $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
 
         return $this->response;
     }
+
+    /* To be added to AppTable for onchange to work
+    public function findOptionList(Query $query, array $options)
+    {
+        $options += [
+            'keyField' => $this->primaryKey(),
+            'valueField' => $this->displayField(),
+            'groupField' => null
+        ];
+
+        if (!$query->clause('select') &&
+            !is_object($options['keyField']) &&
+            !is_object($options['valueField']) &&
+            !is_object($options['groupField'])
+        ) {
+            $fields = array_merge(
+                (array)$options['keyField'],
+                (array)$options['valueField'],
+                (array)$options['groupField']
+            );
+            $columns = $this->schema()->columns();
+            if (count($fields) === count(array_intersect($fields, $columns))) {
+                $query->select($fields);
+            }
+        }
+
+        if (array_key_exists('conditions', $options)) {
+            $query->where($options['conditions']);
+        }
+
+        $options = $this->_setFieldMatchers(
+            $options,
+            ['keyField', 'valueField', 'groupField']
+        );
+
+        return $query->formatResults(function ($results) use ($options) {
+            $returnResult = [];
+            $groupField = $options['groupField'];
+            $keyField = $options['keyField'];
+            $valueField = $options['valueField'];
+            if (array_key_exists('defaultOption', $options) && !$options['defaultOption']) {
+                $returnResult = [];
+            } else if ($results->count() == 0) {
+                $returnResult[] = ['value' => '', 'text' => __('No Options')];
+            } else if (array_key_exists('defaultOption', $options) && is_string($options['defaultOption'])) {
+                $returnResult[] = ['value' => '', 'text' => __($options['defaultOption'])];
+            } else {
+                $returnResult[] = ['value' => '', 'text' => '-- '.__('Select').' --'];
+            }
+            foreach ($results as $result) {
+                $result = $result->toArray();
+
+                if (array_key_exists('flatten', $options) && $options['flatten']) {
+                    $result = Hash::flatten($result);
+                }
+                $key = array_key_exists($keyField, $result) ? $result[$keyField] : null;
+                $value = array_key_exists($valueField, $result) ? $result[$valueField] : null;
+                if ($options['groupField']) {
+                    $group = array_key_exists($groupField, $result) ? $result[$groupField] : null;
+                    $returnResult[] = ['group' => $group, 'value' => $key, 'text' => $value];
+                } else {
+                    $returnResult[] = ['value' => $key, 'text' => $value];
+                }
+            }
+            return $returnResult;
+        });
+    }
+    */
 }
