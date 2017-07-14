@@ -509,8 +509,8 @@ class InstitutionsController extends AppController
             $viewUrl[0] = 'view';
 
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -565,8 +565,8 @@ class InstitutionsController extends AppController
             ];
 
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -579,16 +579,6 @@ class InstitutionsController extends AppController
             $this->render('institution_classes_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
-        }
-    }
-
-    public function setAlert()
-    {
-        $this->autoRender = false;
-        if ($this->request->query('message') && $this->request->query('alertType')) {
-            $alertType = $this->request->query('alertType');
-            $alertMessage = $this->request->query('message');
-            $this->Alert->$alertType($alertMessage);
         }
     }
 
@@ -628,8 +618,8 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -707,9 +697,6 @@ class InstitutionsController extends AppController
     {
         $pass = $this->request->pass;
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
-            return true;
-        }
-        if ($this->request->param('action') == 'setAlert') {
             return true;
         }
     }
