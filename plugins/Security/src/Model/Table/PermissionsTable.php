@@ -148,6 +148,8 @@ class PermissionsTable extends ControllerActionTable
                 $obj->Permissions[$op] = $icons[$flag];
             }
 
+            $obj->name = __($obj->name);
+
             // if the permission have description, it will display the description tooltip next to the permission name.
             if (!empty($obj['description'])) {
                 $message = $obj['description'];
