@@ -205,7 +205,9 @@ class NavigationComponent extends Component
                         'Institutions.StudentFees',
                         'Institutions.Rubrics',
                         'Institutions.VisitRequests',
-                        'Institution.Competencies'
+                        'Institutions.StudentCompetencies',
+                        'Institutions.Indexes.index',
+                        'Institutions.ReportCards'
                     ];
 
                     $navigationParentList = $this->array_column($navigations, 'parent');
