@@ -83,29 +83,25 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         var sections = [];
         var previousCategory = [];
         var counter = -1;
-        var enabled = 0;
         var tmpSection = {};
         angular.forEach(permissions, function(value, key) {
             if (previousCategory.indexOf(value.category) === -1) {
-                enabled = 0;
                 counter++;
                 previousCategory.push(value.category);
                 tmpSection[value.category] = {items: [value], name: value.category, enabled: 0, counter: counter};
                 angular.forEach(value.Permissions, function(val, k) {
                     value.Permissions[k] = parseInt(val);
                     if (k != 'id' && val > 0) {
-                        enabled = 1;
+                        tmpSection[value.category]['enabled'] = 1;
                     }
                 });
-                tmpSection[value.category]['enabled'] = enabled;
             } else {
                 angular.forEach(value.Permissions, function(val, k) {
                     value.Permissions[k] = parseInt(val);
                     if (k != 'id' && val > 0) {
-                        enabled = 1;
+                        tmpSection[value.category]['enabled'] = 1;
                     }
                 });
-                tmpSection[value.category]['enabled'] = enabled;
                 tmpSection[value.category]['items'].push(value);
             }
         });
