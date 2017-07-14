@@ -24,12 +24,6 @@ class EmploymentsTable extends ControllerActionTable {
 			'allowable_file_types' => 'all',
 			'useDefaultName' => true
 		]);
-
-		// setting this up to be overridden in viewAfterAction(), this code is required
-		$this->behaviors()->get('ControllerAction')->config(
-			'actions.download.show',
-			true
-		);
 	}
 
     public function validationDefault(Validator $validator)
@@ -40,28 +34,10 @@ class EmploymentsTable extends ControllerActionTable {
             ->allowEmpty('file_content');
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-        $downloadAccess = $this->AccessControl->check([$this->controller->name, 'Attachments', 'download']);
-
-        if ($downloadAccess && !is_null($entity->file_content)) {
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
-
-            $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
-            $buttons['download']['attr'] = $indexAttr;
-            $buttons['download']['url']['action'] = $this->alias.'/download';
-            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
-        }
-
-        return $buttons;
-	}
-
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('employment_type_id', ['type' => 'select', 'before' => 'employment_date']);
 
-		$visible = ['index' => false, 'view' => false, 'add' => true, 'edit' => true];
+		$visible = ['index' => false, 'view' => true, 'add' => true, 'edit' => true];
         $this->field('file_content', ['visible' => $visible]);
 
         $this->field('file_name', ['type' => 'hidden']);
@@ -72,20 +48,6 @@ class EmploymentsTable extends ControllerActionTable {
 		$this->setFieldOrder(['employment_type_id', 'employment_date', 'comment', 'file_content']);
 
         $this->setupTabElements();
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-	{
-		// if has attachment, then show download button
-		$showFunc = function() use ($entity) {
-			$filename = $entity->file_content;
-			return !empty($filename);
-		};
-		$this->behaviors()->get('ControllerAction')->config(
-			'actions.download.show',
-			$showFunc
-		);
-		// End
 	}
 
 	private function setupTabElements() {

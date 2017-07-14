@@ -26,6 +26,9 @@ class ReportShell extends Shell {
 					case 'xlsx':
 						$this->doExcel($entity);
 						break;
+					case 'csv':
+						$this->doCsv($entity);
+						break;
 				}
 			} else {
 				// not new process
@@ -59,6 +62,28 @@ class ReportShell extends Shell {
 				echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
 			}
 
+		} catch (Exception $e) {
+			$error = $e->getMessage();
+			pr($error);
+			$this->ReportProgress->updateAll(
+				['status' => PROCESS::ERROR, 'error_message' => $error],
+				['id' => $entity->id]
+			);
+		}
+	}
+
+	public function doCsv($entity) {
+		try {
+			$params = json_decode($entity->params, true);
+			$feature = $params['feature'];
+			$name = $entity->name;
+
+			if ($entity->module == 'CustomReports') {
+				$table = TableRegistry::get('Report.CustomReports');
+				echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
+				$table->generateCSV(['process' => $entity, 'requestQuery' => $params]);
+				echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
+			}
 		} catch (Exception $e) {
 			$error = $e->getMessage();
 			pr($error);
