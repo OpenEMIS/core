@@ -355,17 +355,34 @@ class PageController extends AppController
 
         $options = [];
         $finderOptions = [];
+        $conditions = [];
+        $isReset = false;
 
-        $isMultiple = $request->query('multiple');
-        if ($isMultiple) {
-            $finderOptions['defaultOption'] = false;
-            unset($request->query['multiple']);
+        $requestQueries = $this->request->query;
+        $columns = $table->schema()->columns();
+        foreach ($requestQueries as $key => $value) {
+            if (in_array($key, $columns)) { // $key exists as a table column, automatically add as a condition
+                $conditions[$key] = $value;
+            } elseif ($key == 'multiple') { // if multiple flag is set, then turn off default option
+                $finderOptions['defaultOption'] = false;
+            } elseif ($key == 'reset') { // default selection has been chosen
+                $isReset = true;
+                break;
+            } elseif ($key == 'querystring') { // if querystring exists, decode the value
+                $finderOptions['querystring'] = $this->Page->decode($value);
+            } else { // any other values will be included in the finder options
+                $finderOptions[$key] = $value;
+            }
         }
 
-        $finderOptions['conditions'] = $this->request->query;
-
-        if ($table->hasFinder($finder)) {
-            $options = $table->find($finder, $finderOptions)->toArray();
+        if (!$isReset) {
+            $finderOptions['conditions'] = $conditions;
+            $finderOptions['limit'] = 1000; // maximum number of options set to 1000 to prevent out of memory
+            if ($table->hasFinder($finder)) {
+                $options = $table->find($finder, $finderOptions)->toArray();
+            }
+        } else {
+            $options[] = ['value' => '', 'text' => __('No Options')];
         }
 
         $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
@@ -397,10 +414,6 @@ class PageController extends AppController
             if (count($fields) === count(array_intersect($fields, $columns))) {
                 $query->select($fields);
             }
-        }
-
-        if (array_key_exists('conditions', $options)) {
-            $query->where($options['conditions']);
         }
 
         $options = $this->_setFieldMatchers(
