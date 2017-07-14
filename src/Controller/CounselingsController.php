@@ -27,7 +27,7 @@ class CounselingsController extends PageController
         parent::beforeFilter($event);
 
         $page = $this->Page;
-        $page->exclude(['file_name', 'file_content']);
+        $page->exclude(['file_name']);
         $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
 
         // set Breadcrumb
@@ -57,7 +57,6 @@ class CounselingsController extends PageController
     public function add()
     {
         $this->addEditCounseling();
-
         parent::add();
     }
 
@@ -81,5 +80,6 @@ class CounselingsController extends PageController
         // set the options for counselor_id
         $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
+        $page->get('file_content')->set('fileName', 'file_name');
     }
 }
