@@ -372,14 +372,26 @@ class PageElement
         if (empty($options) && $empty !== false) {
             $this->options = ['' => __('No Options')];
         } else {
-            if ($empty === true) {
-                $this->options = ['' => '-- ' . __('Select') . ' --'] + $options;
-            } elseif ($empty !== false) {
-                $this->options = ['' => __($empty)] + $options;
-            } else {
-                $this->options = $options;
+            $firstOption = current($options);
+            if (is_array($firstOption) && array_key_exists('value', $firstOption) && array_key_exists('text', $firstOption)) {
+                if ($empty === true && !strlen($firstOption['value']) == 0) {
+                    $this->options = array_merge([['value' => '', 'text' => '-- ' . __('Select') . ' --']], $options);
+                } elseif (is_string($empty)) {
+                    $this->options = array_merge([['value' => '', 'text' => __($empty)]], $options);
+                } else {
+                    $this->options = $options;
+                }
+            } else { // TODO: need to convert to [value, text] format
+                if ($empty === true) {
+                    $this->options = ['' => '-- ' . __('Select') . ' --'] + $options;
+                } elseif (is_string($empty)) {
+                    $this->options = ['' => __($empty)] + $options;
+                } else {
+                    $this->options = $options;
+                }
             }
         }
+
         return $this;
     }
 
