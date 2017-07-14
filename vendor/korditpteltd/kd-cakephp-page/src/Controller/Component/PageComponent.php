@@ -96,8 +96,18 @@ class PageComponent extends Component
         $controller = $this->controller;
         $request = $this->request;
         $requestQueries = $request->query;
+        $action = $request->action;
         $isGet = $request->is(['get']);
         $isAjax = $request->is(['ajax']);
+
+        $data = $this->getData();
+        if (!is_null($data)) {
+            if ($action == 'view' || $action == 'delete') {
+                $this->loadDataToElements($data);
+            } elseif ($action == 'edit' || $action == 'add') {
+                $this->loadDataToElements($data, false);
+            }
+        }
 
         if ($isGet || $isAjax || $this->showElements()) {
             $this->setVar('header', $this->getHeader());
@@ -538,10 +548,10 @@ class PageComponent extends Component
         foreach ($this->elements as $element) {
             $key = $element->getKey();
             $controlType = $element->getControlType();
+            $value = $element->getValue();
 
-            if ($this->isExcluded($key)) continue; // skip excluded elements
+            if ($this->isExcluded($key) || !empty($value)) continue; // skip excluded elements or if element already has a value
 
-            $value = '';
             if ($callback) {
                 $prefix = 'Controller.Page.onRender';
                 $eventName = $prefix . ucfirst($controlType);
