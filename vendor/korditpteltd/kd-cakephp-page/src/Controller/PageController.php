@@ -331,11 +331,14 @@ class PageController extends AppController
                     $element->setVisible(false);
                 }
             }
-            $page->addNew('associated_records')
-                ->setControlType('table')
-                ->set('headers', [__('Feature'), __('No of records')])
-                ->set('cells', $cells)
-                ;
+
+            if (!empty($cells)) {
+                $page->addNew('associated_records')
+                    ->setControlType('table')
+                    ->set('headers', [__('Feature'), __('No of records')])
+                    ->set('cells', $cells)
+                    ;
+            }
 
             $page->setVar('data', $entity);
         }
