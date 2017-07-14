@@ -444,9 +444,14 @@ EOT;
         $options = ['type' => 'text', 'class' => 'form-control', 'label' => false];
         $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
         $value = isset($field['attributes']['value']) ? $field['attributes']['value'] : '';
+        $disabled = isset($field['attributes']['disabled']) ? $field['attributes']['disabled'] : false;
 
         if ($required) {
             $options['required'] = 'required';
+        }
+
+        if ($disabled) {
+            $options['disabled'] = 'disabled';
         }
 
         if (!empty($value)) {
@@ -466,12 +471,14 @@ EOT;
         ];
 
         // datepicker variable is used for initialising javascript in datepicker.ctp
-        if (!is_null($this->_View->get('datepicker'))) {
-            $datepickers = $this->_View->get('datepicker');
-            $datepickers[] = $attr;
-            $this->_View->set('datepicker', $datepickers);
-        } else {
-            $this->_View->set('datepicker', [$attr]);
+        if (!$disabled) {
+            if (!is_null($this->_View->get('datepicker'))) {
+                $datepickers = $this->_View->get('datepicker');
+                $datepickers[] = $attr;
+                $this->_View->set('datepicker', $datepickers);
+            } else {
+                $this->_View->set('datepicker', [$attr]);
+            }
         }
 
         $this->includes['datepicker']['include'] = true;

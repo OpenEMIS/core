@@ -555,7 +555,17 @@ class PageComponent extends Component
                     if ($event->result) { // trigger render<Field>
                         $value = $event->result;
                     } elseif ($entity->has($key)) { // lastly, get value from Entity
-                        $value = $entity->$key;
+                        $displayFrom = $element->getDisplayFrom();
+                        if ($displayFrom) {
+                            $data = Hash::flatten($entity->toArray());
+                            if (array_key_exists($displayFrom, $data)) {
+                                $value = $data[$displayFrom];
+                            } else {
+                                Log::write('error', 'DisplayFrom: ' . $displayFrom . ' does not exists in $data');
+                            }
+                        } else {
+                            $value = $entity->$key;
+                        }
                     }
                 }
             } else {
