@@ -45,3 +45,19 @@ CREATE TABLE IF NOT EXISTS `institution_counselors` (
     KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains counselor in the institution';
 
+-- security_functions
+CREATE TABLE `z_3953_security_functions` LIKE `security_functions`;
+INSERT `z_3953_security_functions` SELECT * FROM `security_functions`;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+VALUES ('1061', 'Counseling', 'Counselings', 'Institutions', 'Students', '8', 'Counselings.index|Counselings.view', 'Counselings.edit', 'Counselings.add', 'Counselings.remove', NULL, '1061', '1', NULL, NULL, NULL, '1', NOW());
+
+-- security_role_functions
+CREATE TABLE `z_3953_security_role_functions` LIKE `security_role_functions`;
+INSERT `z_3953_security_role_functions` SELECT * FROM `security_role_functions`;
+
+INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, '1061', NULL, NULL, '1', NOW()
+FROM `security_role_functions`
+WHERE `security_function_id` = 1012;
+

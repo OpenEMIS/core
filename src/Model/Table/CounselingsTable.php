@@ -24,26 +24,9 @@ class CounselingsTable extends AppTable
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
     }
 
-    public function findIndex(Query $query, array $options)
-    {
-        $studentId = $options['querystring']['student_id'];
-
-        return $query->where([$this->aliasField('student_id') => $studentId]);
-    }
-
     public function getDefaultConfig()
     {
         return $this->defaultConfig;
-    }
-
-    public function getGuidanceTypeOptions()
-    {
-        // get the guidance type from Field Options
-        $guidanceTypeOptions = $this->GuidanceTypes
-            ->getList()
-            ->toArray();
-
-        return $guidanceTypeOptions;
     }
 
     public function getCounselorOptions($institutionId)
