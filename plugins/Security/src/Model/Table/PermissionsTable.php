@@ -117,10 +117,7 @@ class PermissionsTable extends ControllerActionTable
         $toolbarButtons['back']['attr']['title'] = __('Back');
         $toolbarButtons['back']['url']['action'] = 'Roles';
 
-        $toolbarButtons['edit']['url']['controller'] = 'Securities';
-        $toolbarButtons['edit']['url']['action'] = 'Permissions';
-        $toolbarButtons['edit']['url'][0] = 'edit';
-        $toolbarButtons['edit']['url'][] = $id;
+        $toolbarButtons['edit']['url'] = $this->url('edit');
         $toolbarButtons['edit']['type'] = 'button';
         $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
         $toolbarButtons['edit']['attr'] = $attr;

@@ -41,11 +41,22 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     Controller.updateQueryStringParameter = updateQueryStringParameter;
     Controller.changePermission = changePermission;
     Controller.setPermission = setPermission;
+    Controller.moduleKey = '';
 
     angular.element(document).ready(function () {
         SecurityPermissionEditSvc.init(angular.baseUrl);
         Controller.ready = false;
         var module = Controller.modules[0].key;
+
+        // Commented out as ui-tab is not able to support default selection for now,
+        // please uncomment when ui-tab is fixed
+
+        // if (Controller.moduleKey != '') {
+        //     module = Controller.moduleKey;
+        // } else {
+            Controller.moduleKey = module;
+        // }
+
         UtilsSvc.isAppendLoader(true);
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module)
         .then(function(permissions) {
@@ -116,6 +127,9 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     function changeModule (module) {
         Controller.ready = false;
         UtilsSvc.isAppendLoader(true);
+        Controller.moduleKey = module.key;
+        Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'module', Controller.moduleKey);
+        document.getElementById("back_url").href = Controller.redirectUrl;
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module.key)
         .then(function(permissions) {
             Controller.pageSections = Controller.formatSections(permissions);
@@ -263,6 +277,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
             if (error instanceof Array && error.length == 0) {
                 Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
                 Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'module', Controller.moduleKey);
                 $http.get(Controller.alertUrl)
                 .then(function(response) {
                     $window.location.href = Controller.redirectUrl;
