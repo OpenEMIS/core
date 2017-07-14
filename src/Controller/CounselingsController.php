@@ -16,14 +16,6 @@ class CounselingsController extends PageController
         $this->loadComponent('RenderDate'); // will get the date format from config
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Controller.Page.onRenderCounselorId'] = 'onRenderCounselorId';
-        $events['Controller.Page.onRenderGuidanceTypeId'] = 'onRenderGuidanceTypeId';
-        return $events;
-    }
-
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
@@ -62,13 +54,6 @@ class CounselingsController extends PageController
         parent::index();
     }
 
-    public function view($id)
-    {
-        $page = $this->Page;
-
-        parent::view($id);
-    }
-
     public function add()
     {
         $this->addEditCounseling();
@@ -81,16 +66,6 @@ class CounselingsController extends PageController
         $this->addEditCounseling();
 
         parent::edit($id);
-    }
-
-    public function onRenderCounselorId(Event $event, $entity, $key)
-    {
-        return $entity->counselor->name;
-    }
-
-    public function onRenderGuidanceTypeId(Event $event, $entity, $key)
-    {
-        return $entity->guidance_type->name;
     }
 
     private function addEditCounseling()
