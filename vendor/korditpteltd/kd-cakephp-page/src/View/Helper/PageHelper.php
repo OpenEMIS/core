@@ -373,6 +373,37 @@ EOT;
         return $options;
     }
 
+    private function binary(array $field, $data)
+    {
+        $options = ['type' => 'file', 'class' => 'form-control', 'label' => false];
+        $required = $field['attributes']['required'];
+        $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
+        $comments = '';
+        $fileName = '';
+        if ($data instanceof Entity) {
+            $fileName = $data->offsetExists($fileNameColumn) ? $data->$fileNameColumn : '';
+        } elseif (is_array($data)) {
+            $fileName = isset($data[$fileNameColumn]) ? $data[$fileNameColumn] : '';
+        }
+
+        if ($required) {
+            $options['required'] = 'required';
+        }
+
+        $attr = [
+            'id' => str_replace('.', '_', $field['attributes']['name']),
+            'name' => $field['attributes']['name'],
+            'label' => $field['label'],
+            'options' => $options,
+            'required' => $required ? ' required' : '',
+            'comments' => $comments ? $comments : '',
+            'fileNameColumn' => $fileNameColumn,
+            'fileName' => $fileName
+        ];
+
+        return $this->_View->element('Page.file_upload', $attr);
+    }
+
     private function string(array $field, $data)
     {
         $options = $this->extractHtmlAttributes($field, $data);
