@@ -89,10 +89,14 @@ Page.onChange = function(source, target) {
     var xhr = new XMLHttpRequest();
     var isMultiple = target.getAttribute('multiple') != null;
     var method = 'onchange/' + target.getAttribute('params');
+    var isReset = source.value.length == 0;
     var params = source.id + '=' + source.value;
 
     if (isMultiple) {
         params += '&multiple=true';
+    }
+    if (isReset) {
+        params += '&reset=true';
     }
     xhr.open('GET', method + '?' + params);
     xhr.onload = function() {

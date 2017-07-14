@@ -667,7 +667,14 @@ class PageComponent extends Component
                 // auto populate dropdown options based on foreign keys if no options are provided
                 if ($isDropdownType && $noDropdownOptions) {
                     $this->populateDropdownOptions($element);
+                    if (empty($element->getValue())) {
+                        $querystring = $this->getQueryString();
+                        if (array_key_exists($key, $querystring)) {
+                            $element->setValue($querystring[$key]);
+                        }
+                    }
                 }
+
                 $json[$key] = $element->getJSON();
             }
         }
