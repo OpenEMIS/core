@@ -43,10 +43,12 @@ class SecuritiesController extends AppController
                 'controller' => 'Configurations',
                 'action' => 'setAlert'
             ];
+            $moduleKey = is_null($this->request->query('module')) ? '' : $this->request->query('module');
             $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
             $this->set('indexUrl', $indexUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('alertUrl', $alertUrl);
+            $this->set('moduleKey', $moduleKey);
             $header = __('Security') . ' - ' . TableRegistry::get('Security.SecurityRoles')->get($this->ControllerAction->paramsDecode($roleId))->name;
             $this->set('contentHeader', __($header));
             $this->render('Permissions/permission_edit');
