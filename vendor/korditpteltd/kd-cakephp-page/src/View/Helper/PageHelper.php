@@ -486,7 +486,11 @@ EOT;
         }
 
         if (!empty($value)) {
-            $options['value'] = $value;
+            if ($value instanceof Date) {
+                $options['value'] = $value->format('d-m-Y');
+            } else {
+                $options['value'] = date('d-m-Y', strtotime($value));
+            }
         } else {
             if ($required) {
                 $options['value'] = date('d-m-Y', time());
