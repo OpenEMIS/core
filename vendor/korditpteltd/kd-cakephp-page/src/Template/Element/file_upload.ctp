@@ -90,7 +90,8 @@ $wrapperClass = ' always-single';
 				<span class="fileinput-new"><i class="fa fa-folder"></i></span>
 				<span class="fileinput-exists fa fa-folder"></span>
 				<?=	$this->Form->file($name, [
-						'class' => 'fa fa-folder'
+						'class' => 'fa fa-folder',
+						'onchange' => 'checkFileSize(this, '.($fileSizeLimit * 1048576).');'
 					])
 				?>
 				<?= $this->Form->hidden($name.'_name_column', ['value' => $fileNameColumn])?>
@@ -100,6 +101,7 @@ $wrapperClass = ' always-single';
 		   		<p><?= __($comments) ?></p>
 			</div>
 		</div>
+		<?= $this->Form->error($name);?>
 
 </div>
 
@@ -118,4 +120,28 @@ $(document).ready(function(e) {
 		}
 	});
 });
+
+function checkFileSize(fileInput, limit) {
+    var input, file;
+
+    if (!window.FileReader) {
+        alert("The file API isn't supported on this browser yet.");
+        return;
+    }
+
+    input = document.getElementById('fileinput');
+    if (!fileInput) {
+    	console.log('Not able to find file input element');
+    } else if (!fileInput.files) {
+    	console.log("This browser doesn't seem to support the `files` property of file inputs.");
+    } else if (!fileInput.files[0]) {
+    	console.log("No files selected");
+    } else {
+    	file = fileInput.files[0];
+    	if (file.size > limit) {
+    		alert("File is too huge");
+    	}
+    	console.log("File size is " + file.size);
+    }
+}
 </script>

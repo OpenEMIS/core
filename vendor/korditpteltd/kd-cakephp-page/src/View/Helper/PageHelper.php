@@ -378,6 +378,7 @@ EOT;
         $options = ['type' => 'file', 'class' => 'form-control', 'label' => false];
         $required = $field['attributes']['required'];
         $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
+        $fileSizeLimit = isset($field['fileSizeLimit']) ? $field['fileSizeLimit'] : 1;
         $comments = '';
         $fileName = '';
         if ($data instanceof Entity) {
@@ -398,7 +399,8 @@ EOT;
             'required' => $required ? ' required' : '',
             'comments' => $comments ? $comments : '',
             'fileNameColumn' => $fileNameColumn,
-            'fileName' => $fileName
+            'fileName' => $fileName,
+            'fileSizeLimit' => $fileSizeLimit
         ];
 
         return $this->_View->element('Page.file_upload', $attr);
