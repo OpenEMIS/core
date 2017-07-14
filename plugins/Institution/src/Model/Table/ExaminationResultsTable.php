@@ -218,7 +218,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         $examinationItemResults = $ExaminationItems
             ->find()
-            ->matching($EducationSubjects->alias())
+            ->leftJoinWith('EducationSubjects')
             ->where([
                 $ExaminationItems->aliasField('examination_id') => $selectedExamination,
                 $ExaminationItems->aliasField('weight > ') => 0
@@ -274,7 +274,7 @@ class ExaminationResultsTable extends ControllerActionTable
             ->innerJoinWith('Examinations')
             ->innerJoinWith('ExaminationItems')
             ->leftJoinWith('EducationSubjects')
-            ->leftJoinWith('ExaminationGradingOptions')
+            ->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $ExaminationItemResults->aliasField('academic_period_id') => $academicPeriodId,
                 $ExaminationItemResults->aliasField('examination_id') => $examinationId,
