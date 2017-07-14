@@ -83,7 +83,7 @@ class ExaminationItemResultsTable extends AppTable
             ])
             ->innerJoinWith('Examinations')
             ->innerJoinWith('ExaminationItems')
-            ->innerJoinWith('EducationSubjects')
+            ->leftJoinWith('EducationSubjects')
             ->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
