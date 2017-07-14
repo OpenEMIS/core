@@ -173,7 +173,6 @@ class PageController extends AppController
 
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
-                $page->loadDataToElements($entity);
                 $page->setVar('data', $entity);
             }
         }
@@ -204,7 +203,6 @@ class PageController extends AppController
                 }
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
-                $page->loadDataToElements($entity, false);
             }
 
             if ($request->is(['post', 'put'])) {
@@ -278,7 +276,6 @@ class PageController extends AppController
             }
 
             $page->attachPrimaryKey($table, $entity);
-            $page->loadDataToElements($entity);
 
             $msg = __('All associated information related to this record will also be removed. Are you sure you want to delete this record?');
             $this->set('alert', ['type' => 'warning', 'message' => $msg]);
