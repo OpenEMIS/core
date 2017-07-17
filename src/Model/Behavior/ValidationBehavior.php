@@ -2022,11 +2022,10 @@ class ValidationBehavior extends Behavior
 
         // If staff does not exist in the school, we check if the staff is in another school
         $staffRecord = $StaffTable->find()
-            ->contain(['Institutions', 'StaffStatuses'])
+            ->contain(['Institutions'])
             ->where([
                 $StaffTable->aliasField('staff_id') => $staffId,
                 $StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
-                'StaffStatuses.code' => 'ASSIGNED', // check status is assigned
                 'OR' => [
                     [$StaffTable->aliasField('end_date').' >= ' => $startDate],
                     [$StaffTable->aliasField('end_date').' IS NULL']
