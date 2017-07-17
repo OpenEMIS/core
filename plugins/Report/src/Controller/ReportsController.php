@@ -29,7 +29,7 @@ class ReportsController extends AppController {
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$header = 'Reports';
-		$this->Navigation->addCrumb($header, ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index']);
+		$this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
 		$this->Navigation->addCrumb($this->request->action);
 	}
 
@@ -53,6 +53,7 @@ class ReportsController extends AppController {
 				'Report.StudentAbsences' => __('Student Absence'),
 				'Report.StaffAbsences' => __('Staff Absence'),
 				'Report.StaffLeave' => __('Staff Leave'),
+				'Report.StaffTransfers' => __('Staff Transfer'),
 				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
 				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
 				'Report.InstitutionCases' => __('Cases')
