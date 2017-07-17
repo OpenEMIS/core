@@ -249,7 +249,6 @@ class ReportListBehavior extends Behavior {
 		$path = $entity->file_path;
 		if (!empty($path)) {
 			$filename = basename($path);
-<<<<<<< HEAD
 
 			$response = $this->_table->controller->response;
 			$response->body(function() use ($path) {
@@ -263,9 +262,6 @@ class ReportListBehavior extends Behavior {
 			$response->download($filename);
 
 			return $response;
-=======
-			return $this->_table->controller->redirect("/export/$filename");
->>>>>>> 93bf483e380d916435263eed41c127f50e1622cb
 		}
 	}
 }
