@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
@@ -58,6 +59,17 @@ class EducationGradesTable extends ControllerActionTable
         }
 
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ]);
+        return $validator;
     }
 
     public function implementedEvents()
