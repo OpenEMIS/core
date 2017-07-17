@@ -11,6 +11,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Institution\Model\Table\InstitutionsTable as Institutions;
 
 class InstitutionsTable extends AppTable
 {
@@ -21,10 +22,6 @@ class InstitutionsTable extends AppTable
 	const NO_FILTER = 0;
 	const NO_STUDENT = 1;
 	const NO_STAFF = 2;
-
-	// For Academic / Non-Academic Institution type
-	const ACADEMIC = 1;
-	const NON_ACADEMIC = 0;
 
 	public function initialize(array $config) {
 		$this->table('institutions');
@@ -57,8 +54,8 @@ class InstitutionsTable extends AppTable
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
 
         $this->classificationOptions = [
-			self::ACADEMIC => 'Academic Institution',
-			self::NON_ACADEMIC => 'Non-Academic Institution'
+			Institutions::ACADEMIC => 'Academic Institution',
+			Institutions::NON_ACADEMIC => 'Non-Academic Institution'
 		];
 	}
 
