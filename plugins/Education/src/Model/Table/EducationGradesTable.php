@@ -234,7 +234,7 @@ class EducationGradesTable extends ControllerActionTable
             $educationSubjects = $entity->extractOriginal(['education_subjects']);
             foreach ($educationSubjects['education_subjects'] as $key => $obj) {
                 if ($obj->_joinData->visible == 1) {
-                    $gradeSubjectId = $gradeSubjectData[$obj->id];
+                    $gradeSubjectId = $obj->id;
 
                     $rowData = [];
                     // link subject to GradeSubjects
@@ -243,7 +243,7 @@ class EducationGradesTable extends ControllerActionTable
                         'controller' => 'Educations',
                         'action' => 'GradeSubjects',
                         '0' => 'view',
-                        '1' => $this->paramsEncode(['id' => $gradeSubjectId])
+                        '1' => $this->paramsEncode(['education_grade_id' => $entity->id, 'education_subject_id' => $gradeSubjectId])
                     ]);
                     $rowData[] = $obj->code;
                     $rowData[] = $obj->_joinData->hours_required;
