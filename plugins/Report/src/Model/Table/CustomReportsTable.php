@@ -205,10 +205,6 @@ class CustomReportsTable extends AppTable
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
 
-        // set name of report
-        $reportName = str_replace(' ', '_', $customReportData->name). '_' . date('Ymd') . 'T' . date('His') . '.csv';
-        $settings['file'] = $reportName;
-
         if (array_key_exists('requestQuery', $settings)) {
             $jsonQuery = json_decode($customReportData->query, true);
 
