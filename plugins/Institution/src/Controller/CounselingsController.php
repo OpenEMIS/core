@@ -30,6 +30,9 @@ class CounselingsController extends PageController
 
         $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
 
+        $page->move('file_name')->after('guidance_type_id'); // move file_content after guidance type
+        $page->move('file_content')->after('file_name'); // move file_name after file_content
+
         // set Breadcrumb
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
@@ -63,8 +66,14 @@ class CounselingsController extends PageController
     public function edit($id)
     {
         $this->addEditCounseling();
-
         parent::edit($id);
+    }
+
+    public function view($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_content']);
+        parent::view($id);
     }
 
     public function delete($id)
@@ -87,6 +96,8 @@ class CounselingsController extends PageController
         // set the options for counselor_id
         $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
+
+        // set the file upload for attachment
         $page->get('file_content')->set('fileName', 'file_name')->set('fileSizeLimit', '2');
     }
 }

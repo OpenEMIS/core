@@ -50,6 +50,17 @@ class PageComponent extends Component
         'search' => true
     ];
 
+    private $cakephpReservedPassKeys = [
+            'controller',
+            'action',
+            'plugin',
+            'pass',
+            '_matchedRoute',
+            '_Token',
+            '_csrfToken',
+            'paging'
+        ];
+
     // page elements
     private $showElements = false;
     private $header = '';
@@ -489,7 +500,7 @@ class PageComponent extends Component
             'controller' => $controller->name
         ];
 
-        $url = array_merge($_url, $url);
+        $this->mergeRequestParams($url);
 
         if ($params === true) {
             $url = array_merge($url, $request->pass, $request->query);
@@ -499,6 +510,17 @@ class PageComponent extends Component
             $url = array_merge($url, $request->query);
         }
         return $url;
+    }
+
+    private function mergeRequestParams(array &$url)
+    {
+        $requestParams = $this->request->params;
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
+        }
+        $url = array_merge($url, $requestParams);
     }
 
     public function showElements($show = null)
