@@ -338,7 +338,6 @@ class StaffUserTable extends ControllerActionTable
         $query->contain([
             'InstitutionStaff' => function ($q) use ($institutionId, $startDate) {
                 return $q->where([
-                    'InstitutionStaff.staff_status_id' => 1,
                     'InstitutionStaff.institution_id <>' => $institutionId,
                     'OR' => [
                         ['InstitutionStaff.end_date >= ' => $startDate],
