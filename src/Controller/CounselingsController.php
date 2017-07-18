@@ -87,6 +87,6 @@ class CounselingsController extends PageController
         // set the options for counselor_id
         $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
-        $page->get('file_content')->set('fileName', 'file_name');
+        $page->get('file_content')->set('fileName', 'file_name')->set('fileSizeLimit', '2');
     }
 }
