@@ -106,14 +106,6 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
-	public function onExcelBeforeGenerate(Event $event, $settings) {
-        $process = $settings['process'];
-		$processData = $this->ReportProgress->get($process->id);
-
-		// set name of report
-        $settings['file'] = $processData->name . ' - ' . date('Ymd') . 'T' . date('His') . '.xlsx';
-	}
-
 	public function onExcelGenerate(Event $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
@@ -248,17 +240,21 @@ class ReportListBehavior extends Behavior {
 		$entity = $this->ReportProgress->get($id);
 		$path = $entity->file_path;
 		if (!empty($path)) {
-			$filename = basename($path);
-
 			$response = $this->_table->controller->response;
 			$response->body(function() use ($path) {
 				$content = file_get_contents($path);
 				return $content;
 			});
 
-			// Syntax will change in v3.4.x
-			$pathInfo = pathinfo($filename);
-			$response->type($pathInfo['extension']);
+			$pathInfo = pathinfo($path);
+			$ext = $pathInfo['extension'];
+
+			// set name of report (with filters and translation)
+	        $filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
+
+	        // Syntax will change in v3.4.x
+			$response->type($ext);
+			$response->charset('UTF-8');
 			$response->download($filename);
 
 			return $response;
