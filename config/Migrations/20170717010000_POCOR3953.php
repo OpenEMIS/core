@@ -12,6 +12,7 @@ class POCOR3953 extends AbstractMigration
      */
     public function up()
     {
+        // guidance_types
         $table = $this->table('guidance_types', [
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This field options table contains types of guidance'
@@ -70,7 +71,9 @@ class POCOR3953 extends AbstractMigration
                 'null' => false
             ])
             ->save();
+        // end guidance_types
 
+        // institution_counselors
         $table = $this->table('institution_counselors', [
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains counselor in the institution'
@@ -136,7 +139,9 @@ class POCOR3953 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+        // end institution_counselors
 
+        // security_functions
         $data = [
             'id' => '1061',
             'name' => 'Counseling',
@@ -157,14 +162,18 @@ class POCOR3953 extends AbstractMigration
         $table = $this->table('security_functions');
         $table->insert($data);
         $table->saveData();
+        // end security_functions
 
+        // security_role_functions
         $sql = 'INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `created_user_id`, `created`)
                 SELECT 1, 1, 1, 1, 0, `security_role_id`, 1061, 1, NOW() FROM `security_role_functions`
                 WHERE `security_function_id` = 1012';
 
         $this->execute($sql);
+        // end security_role_functions
     }
 
+    // rollback
     public function down()
     {
         $this->execute('DROP TABLE guidance_types');
