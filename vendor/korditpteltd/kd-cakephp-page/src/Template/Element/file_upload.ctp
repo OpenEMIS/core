@@ -35,7 +35,7 @@ if ($label){
 
 
 
-$wrapperClass = ' always-single';
+$wrapperClass = '';
 ?>
 
 <div class="input file <?= $required ?>">
@@ -44,7 +44,7 @@ $wrapperClass = ' always-single';
 	<label><?= $label ?></label>
 	<?php endif; ?>
 
-	<?php if (!empty($attr['value'])) : ?>
+	<?php if (!empty($fileName)) : ?>
 		<div id="file-input-wrapper" class="fileinput fileinput-exists input-group <?= $wrapperClass ?>" data-provides="fileinput">
 	<?php else : ?>
 		<div id="file-input-wrapper" class="fileinput fileinput-new input-group <?= $wrapperClass ?>" data-provides="fileinput">
@@ -85,16 +85,24 @@ $wrapperClass = ' always-single';
 				<span class="fileinput-filename"><?= $fileName ?></span>
 			</div>
 
-			<a href="#" class="input-group-addon btn fileinput-exists btn-file-cancel" data-dismiss="fileinput" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Remove') ?>"><i class="fa fa-close"></i></a>
+			<a href="#" class="input-group-addon btn fileinput-exists btn-file-cancel" data-dismiss="fileinput" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Remove') ?>" onclick="removeFile(<?=$key.'_remove' ?>);"><i class="fa fa-close"></i></a>
 			<div class="input-group-addon btn btn-default btn-file" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Browse') ?>">
 				<span class="fileinput-new"><i class="fa fa-folder"></i></span>
 				<span class="fileinput-exists fa fa-folder"></span>
+				<?php $this->Form->unlockField($name); ?>
+                <?php $this->Form->unlockField($name.'_remove'); ?>
 				<?=	$this->Form->file($name, [
 						'class' => 'fa fa-folder',
-						'onchange' => 'checkFileSize(this, '.($fileSizeLimit * 1048576).');'
+						'onchange' => 'checkFile(this, '.($fileSizeLimit * 1048576).', ['.$extensionSupported.']);'
 					])
 				?>
-				<?= $this->Form->hidden($name.'_name_column', ['value' => $fileNameColumn])?>
+				<?= $this->Form->hidden("$alias.$fileNameColumn", ['value' => $fileName]); ?>
+				<?= $this->Form->hidden($name.'_content', ['value' => $fileContent]); ?>
+                <?= $this->Form->hidden($name.'_file_size', ['value' => $fileContentSize]); ?>
+                <?= $this->Form->hidden($name.'_remove', [
+                    'id' => $key.'_remove',
+                    'value' => 0
+                ]) ?>
 			</div>
 
 			<div class="file-input-text">
@@ -102,7 +110,6 @@ $wrapperClass = ' always-single';
 			</div>
 		</div>
 		<?= $this->Form->error($name);?>
-
 </div>
 
 <script>
@@ -121,27 +128,54 @@ $(document).ready(function(e) {
 	});
 });
 
-function checkFileSize(fileInput, limit) {
-    var input, file;
+function removeFile(id) {
+    id.value = 1;
+}
 
-    if (!window.FileReader) {
-        alert("The file API isn't supported on this browser yet.");
-        return;
+function checkFile(fileInput, limit, extensions) {
+    var input;
+    var form = document.forms[0];
+    var inputWrapper = document.getElementById("file-input-wrapper");
+    var errorField = inputWrapper.nextSibling;
+    var errorMessage = document.createElement("div");
+    errorMessage.className = 'error-message';
+    errorMessage.innerHTML = '';
+    form.onsubmit = true;
+    var error = false;
+
+    if (document.getElementById("file-input-wrapper").parentNode.getElementsByClassName("error-message")[0] != undefined) {
+        document.getElementById("file-input-wrapper").parentNode.getElementsByClassName("error-message")[0].innerHTML = '';
     }
 
-    input = document.getElementById('fileinput');
-    if (!fileInput) {
-    	console.log('Not able to find file input element');
-    } else if (!fileInput.files) {
-    	console.log("This browser doesn't seem to support the `files` property of file inputs.");
-    } else if (!fileInput.files[0]) {
-    	console.log("No files selected");
-    } else {
+    if (fileInput) {
     	file = fileInput.files[0];
-    	if (file.size > limit) {
-    		alert("File is too huge");
+    	if (file.size != undefined && file.size > limit) {
+            errorMessage.innerHTML += '<?= __('File size exceeded the allowed limit.') ?> <br/>';
+            error = true;
+            form.onsubmit = preventDefault;
     	}
-    	console.log("File size is " + file.size);
+        var extension = getFileExtension(file.name);
+        if (extension == undefined || (extensions.length != 0 && extensions.indexOf(extension[0]) < 0)) {
+            errorMessage.innerHTML += '<?= __('File format not supported.') ?>';
+            error = true;
+            form.onsubmit = preventDefault;
+        }
     }
+
+    if (error) {
+        if (document.getElementById("file-input-wrapper").parentNode.getElementsByClassName("error-message")[0] == undefined) {
+            errorField.parentNode.appendChild(errorMessage)
+        } else {
+            document.getElementById("file-input-wrapper").parentNode.getElementsByClassName("error-message")[0].innerHTML = errorMessage.innerHTML;
+        }
+    }
+}
+
+function getFileExtension(fileName) {
+    return (/[.]/.exec(fileName)) ? /[^.]+$/.exec(fileName) : undefined;
+}
+
+function preventDefault(event) {
+    event.preventDefault();
 }
 </script>

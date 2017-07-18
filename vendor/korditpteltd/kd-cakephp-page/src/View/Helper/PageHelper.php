@@ -9,6 +9,7 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use Cake\Log\Log;
 use Cake\View\Helper;
+use Cake\ORM\TableRegistry;
 
 use Page\Traits\EncodingTrait;
 
@@ -379,20 +380,35 @@ EOT;
         $required = $field['attributes']['required'];
         $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
         $fileSizeLimit = isset($field['fileSizeLimit']) ? $field['fileSizeLimit'] : 1;
+        $formatSupported = isset($field['supportedFileFormat']) ? $field['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
+        $fileContent = isset($data[$field['key'].'_content']) ? $data[$field['key'].'_content'] : null;
+        $fileContentSize = isset($data[$field['key'].'_file_size']) ? $data[$field['key'].'_file_size'] : null;
         $comments = '';
+        $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+        $extensionSupported = '';
+        $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+        foreach ($formatSupported as &$format) {
+            $format = '\''.$format.'\'';
+        }
+        $extensionSupported = implode(', ', $formatSupported);
+        $comments .= $fileSizeMessage . '<br/>' . $fileFormatMessage;
         $fileName = '';
         if ($data instanceof Entity) {
-            $fileName = $data->offsetExists($fileNameColumn) ? $data->$fileNameColumn : '';
+            $fileName = $data->offsetExists($fileNameColumn) ? $data->$fileNameColumn : null;
         } elseif (is_array($data)) {
-            $fileName = isset($data[$fileNameColumn]) ? $data[$fileNameColumn] : '';
+            $fileName = isset($data[$fileNameColumn]) ? $data[$fileNameColumn] : null;
         }
 
         if ($required) {
             $options['required'] = 'required';
         }
 
+        $alias = explode('.', $field['attributes']['name'])[0];
+
         $attr = [
             'id' => str_replace('.', '_', $field['attributes']['name']),
+            'key' => $field['key'],
+            'alias' => $alias,
             'name' => $field['attributes']['name'],
             'label' => $field['label'],
             'options' => $options,
@@ -400,9 +416,12 @@ EOT;
             'comments' => $comments ? $comments : '',
             'fileNameColumn' => $fileNameColumn,
             'fileName' => $fileName,
-            'fileSizeLimit' => $fileSizeLimit
+            'fileSizeLimit' => $fileSizeLimit,
+            'fileContent' => $fileContent,
+            'fileContentSize' => $fileContentSize,
+            'extensionSupported' => $extensionSupported
         ];
-
+        $this->includes['jasny']['include'] = true;
         return $this->_View->element('Page.file_upload', $attr);
     }
 

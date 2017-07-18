@@ -8,7 +8,7 @@ use App\Model\Table\AppTable;
 
 class CounselingsTable extends AppTable
 {
-    CONST ASSIGNED = 1;
+    const ASSIGNED = 1;
 
     public function initialize(array $config)
     {
@@ -17,6 +17,10 @@ class CounselingsTable extends AppTable
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Staff.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
+        $this->addBehavior('Page.FileUpload', [
+            'fieldMap' => ['file_name' => 'file_content'],
+            'size' => '2MB'
+        ]);
     }
 
     public function getDefaultConfig()
