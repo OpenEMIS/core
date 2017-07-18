@@ -22,6 +22,7 @@ class CounselingsTable extends AppTable
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Staff.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
+        $this->addBehavior('Page.FileUpload');
     }
 
     public function getDefaultConfig()
