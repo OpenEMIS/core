@@ -28,7 +28,7 @@ class FileUploadBehavior extends Behavior
         'fieldMap' => ['file_name' => 'file_content'],
         'size' => '1MB',
         'contentEditable' => true,
-        'allowable_file_types' => []
+        'allowable_file_types' => ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers']
     ];
 
     public $fileImagesMap = array(
@@ -52,6 +52,12 @@ class FileUploadBehavior extends Behavior
         'xls'   => 'application/vnd.ms-excel',
         'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'zip'   => 'application/zip',
+        'odt'   => 'application/vnd.oasis.opendocument.text',
+        'ods'   => 'application/vnd.oasis.opendocument.spreadsheet',
+        'key'   => 'application/x-iwork-keynote-sffkey',
+        'pages' => 'application/x-iwork-pages-sffpages',
+        'numbers' => 'application/x-iwork-numbers-sffnumbers'
+
     );
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -87,6 +93,17 @@ class FileUploadBehavior extends Behavior
                         return $this->readableFormatToBytes() > $globalData['data'][$fileContent.'_file_size'];
                     },
                     'message' => __('File size exceeded the allowed limit.')
+                ]);
+
+                $validator->add($fileContent, 'ruleFileFormat', [
+                    'rule' => function ($check, array $globalData) use ($fileName) {
+                        $ext = pathinfo($globalData['data'][$fileName], PATHINFO_EXTENSION);
+                        if (in_array($ext, $this->config('allowable_file_types'))) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    'message' => __('File format not supported.')
                 ]);
             }
         }
