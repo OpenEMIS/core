@@ -50,20 +50,14 @@ class PageController extends AppController
                 $page->exclude($primaryKey);
             }
 
-            $querystring = $page->getQueryString();
+            $page->autoConditions($table); // add where conditions if field exists in querystring
+            $page->autoContains($table); // auto contain all belongsTo association
+
             $queryOptions = $page->getQueryOptions();
-            $queryOptions->offsetSet('querystring', $querystring);
-            $query = $table->find('all');
+            $query = $table->find('all', $queryOptions->getArrayCopy());
 
-            $page->autoConditions($table, $query, $querystring); // add where conditions if it exists in querystring
-
-            if ($table->hasFinder('index')) {
-                $query->find('index', $queryOptions->getArrayCopy());
-            }
-
-            if ($page->isAutoContain()) {
-                $contains = $page->getContains($table);
-                $query->contain($contains);
+            if ($table->hasFinder('Index')) {
+                $query->find('index');
             }
 
             if ($page->hasSearchText()) {
@@ -161,14 +155,11 @@ class PageController extends AppController
             }
 
             if ($table->exists($primaryKeyValue)) {
+                $page->autoContains($table);
                 $queryOptions = $page->getQueryOptions();
-                $queryOptions->offsetSet('querystring', $page->getQueryString());
-                if ($table->hasFinder('view')) {
-                    $queryOptions->offsetSet('finder', 'view');
-                }
-                if ($page->isAutoContain()) {
-                    $contains = $page->getContains($table);
-                    $queryOptions->offsetSet('contain', $contains);
+
+                if ($table->hasFinder('View')) {
+                    $queryOptions->offsetSet('finder', 'View');
                 }
 
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
@@ -191,16 +182,13 @@ class PageController extends AppController
             $primaryKeyValue = json_decode($page->hexToStr($id), true);
             $table = $page->getMainTable();
             if ($table->exists($primaryKeyValue)) {
+                $page->autoContains($table);
                 $queryOptions = $page->getQueryOptions();
-                $queryOptions->offsetSet('querystring', $page->getQueryString());
-                if ($table->hasFinder('edit')) {
-                    $queryOptions->offsetSet('finder', 'edit');
+
+                if ($table->hasFinder('Edit')) {
+                    $queryOptions->offsetSet('finder', 'Edit');
                 }
 
-                if ($page->isAutoContain()) {
-                    $contains = $page->getContains($table);
-                    $queryOptions->offsetSet('contain', $contains);
-                }
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
             }
@@ -256,16 +244,13 @@ class PageController extends AppController
                 return;
             }
 
+            $page->autoContains($table);
             $queryOptions = $page->getQueryOptions();
-            $queryOptions->offsetSet('querystring', $page->getQueryString());
-            if ($table->hasFinder('delete')) {
-                $queryOptions->offsetSet('finder', 'delete');
+
+            if ($table->hasFinder('Delete')) {
+                $queryOptions->offsetSet('finder', 'Delete');
             }
 
-            if ($page->isAutoContain()) {
-                $contains = $page->getContains($table);
-                $queryOptions->offsetSet('contain', $contains);
-            }
             $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
 
             if ($request->is(['delete'])) {
