@@ -250,29 +250,40 @@ class PageComponent extends Component
         return $this;
     }
 
-    public function autoConditions(Table $table, Query $query, array $querystring)
+    public function autoConditions(Table $table)
     {
         $conditions = [];
         $columns = $table->schema()->columns();
+        $querystring = $this->getQueryString();
         foreach ($querystring as $key => $value) {
             if (in_array($key, $columns)) {
                 $conditions[$table->aliasField($key)] = $value;
             }
         }
         if (!empty($conditions)) {
-            $query->where($conditions);
+            $this->queryOptions->offsetSet('conditions', $conditions);
         }
     }
 
-    public function getContains(Table $table)
+    public function autoContains(Table $table)
     {
-        $contain = [];
-        foreach ($table->associations() as $assoc) {
-            if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                $contain[] = $assoc->name();
+        if ($this->autoContain) {
+            $contain = [];
+            foreach ($table->associations() as $assoc) {
+                if ($assoc->type() == 'manyToOne') { // belongsTo associations
+                    $columns = $assoc->schema()->columns();
+                    if (in_array('name', $columns)) {
+                        $contain[$assoc->name()] = ['fields' => [
+                            $assoc->aliasField('id'),
+                            $assoc->aliasField('name')
+                        ]];
+                    } else {
+                        $contain[] = $assoc->name();
+                    }
+                }
             }
+            $this->queryOptions->offsetSet('contain', $contain);
         }
-        return $contain;
     }
 
     public function getHeader()
@@ -453,6 +464,8 @@ class PageComponent extends Component
 
     public function getQueryOptions()
     {
+        $querystring = $this->getQueryString();
+        $this->queryOptions->offsetSet('querystring', $querystring);
         return $this->queryOptions;
     }
 
