@@ -27,7 +27,7 @@ class CounselingsController extends PageController
         parent::beforeFilter($event);
 
         $page = $this->Page;
-        $page->exclude(['file_name']);
+
         $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
 
         // set Breadcrumb
@@ -49,7 +49,7 @@ class CounselingsController extends PageController
     public function index()
     {
         $page = $this->Page;
-        $page->exclude(['counselor_id', 'student_id']);
+        $page->exclude(['file_name', 'file_content', 'counselor_id', 'student_id']);
 
         parent::index();
     }
@@ -67,10 +67,17 @@ class CounselingsController extends PageController
         parent::edit($id);
     }
 
+    public function delete($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_content']);
+        parent::delete($id);
+    }
+
     private function addEditCounseling()
     {
         $page = $this->Page;
-
+        $page->exclude(['file_name']);
         $institutionId = $page->getQueryString('institution_id');
         $studentId = $page->getQueryString('student_id');
 
@@ -80,6 +87,6 @@ class CounselingsController extends PageController
         // set the options for counselor_id
         $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
-        $page->get('file_content')->set('fileName', 'file_name');
+        $page->get('file_content')->set('fileName', 'file_name')->set('fileSizeLimit', '2');
     }
 }
