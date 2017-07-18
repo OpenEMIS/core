@@ -68,11 +68,11 @@ class PhpFrontEndComponent extends Component
 
         $status = $page->getStatus();
 
-        switch($action) {
+        switch ($action) {
             case 'add':
                 $msg = $status->getMessage();
                 if ($request->is(['post'])) {
-                    switch($status->getCode()) {
+                    switch ($status->getCode()) {
                         case PageStatus::SUCCESS:
                             $page->setQueryString('alert', ['type' => $status->getType(), 'message' => $msg], true);
                             $url = $this->Page->getUrl(['action' => 'index'], 'QUERY');
@@ -90,7 +90,7 @@ class PhpFrontEndComponent extends Component
             case 'edit':
                 $msg = $status->getMessage();
                 if ($request->is(['post', 'put'])) {
-                    switch($status->getCode()) {
+                    switch ($status->getCode()) {
                         case PageStatus::SUCCESS:
                             $page->setQueryString('alert', ['type' => $status->getType(), 'message' => $msg], true);
                             $url = $this->Page->getUrl(['action' => 'view']);
