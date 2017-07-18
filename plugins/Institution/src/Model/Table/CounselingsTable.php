@@ -1,15 +1,10 @@
 <?php
-namespace App\Model\Table;
+namespace Institution\Model\Table;
 
-use ArrayObject;
 use Cake\ORM\Table;
-use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
-use Cake\Cache\Cache;
-use Cake\Event\Event;
-use Cake\ORM\Entity;
-use Cake\Filesystem\Folder;
+
+use App\Model\Table\AppTable;
 
 class CounselingsTable extends AppTable
 {
