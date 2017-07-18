@@ -28,9 +28,7 @@ class CounselingsTable extends AppTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator
-            ->allowEmpty('file_content')
-        ;
+        return $validator->allowEmpty('file_content');
     }
 
     public function getDefaultConfig()

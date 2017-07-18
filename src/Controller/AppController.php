@@ -61,7 +61,10 @@ class AppController extends Controller
     {
         parent::initialize();
 
-        $this->loadComponent('Page.PhpFrontEnd');
+        $ext = $this->request->params['_ext'];
+        if ($this instanceof \Page\Controller\PageController && $ext != 'json') {
+            $this->loadComponent('Page.PhpFrontEnd');
+        }
 
         // ControllerActionComponent must be loaded before AuthComponent for it to work
         $this->loadComponent('ControllerAction.ControllerAction', [
