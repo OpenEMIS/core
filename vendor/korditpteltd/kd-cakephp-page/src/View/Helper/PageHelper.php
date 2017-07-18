@@ -19,6 +19,17 @@ class PageHelper extends Helper
 
     public $helpers = ['Form', 'Html', 'Paginator', 'Url'];
 
+    private $cakephpReservedPassKeys = [
+            'controller',
+            'action',
+            'plugin',
+            'pass',
+            '_matchedRoute',
+            '_Token',
+            '_csrfToken',
+            'paging'
+        ];
+
     public $includes = [
         'datepicker' => [
             'include' => false,
@@ -158,9 +169,9 @@ class PageHelper extends Helper
         $icon = array('prev' => '', 'next' => '');
         $html = $this->Paginator->{$type}(
             $icon[$type],
-            array('tag' => 'li', 'escape' => false),
+            array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true)),
             null,
-            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false)
+            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true))
         );
         return $html;
     }
@@ -175,7 +186,8 @@ class PageHelper extends Helper
             'modulus' => 4,
             'first' => 2,
             'last' => 2,
-            'ellipsis' => '<li><a>...</a></li>'
+            'ellipsis' => '<li><a>...</a></li>',
+            'url' => $this->getUrl(['action' => $this->request->param('action')], true)
         ));
         return $html;
     }
@@ -198,7 +210,8 @@ class PageHelper extends Helper
             $label = $attr['label'];
 
             if ($attr['sortable']) {
-                $label = $this->Paginator->sort($field, $label);
+                $url = $this->getUrl(['action' => $this->request->param('action')], true);
+                $label = $this->Paginator->sort($field, $label, ['url' => $url]);
             }
 
             $headers[] = $label;
@@ -260,7 +273,19 @@ class PageHelper extends Helper
     {
         $request = $this->request;
         $url = array_merge($route, $request->query);
+        $this->mergeRequestParams($url);
         return $toArray ? $url : $this->Url->build($url);
+    }
+
+    private function mergeRequestParams(array &$url)
+    {
+        $requestParams = $this->request->params;
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
+        }
+        $url = array_merge($url, $requestParams);
     }
 
     private function getValue($entity, $field)

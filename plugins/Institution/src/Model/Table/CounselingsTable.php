@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 
@@ -21,6 +22,15 @@ class CounselingsTable extends AppTable
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
         ]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->allowEmpty('file_content')
+        ;
     }
 
     public function getDefaultConfig()
