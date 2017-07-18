@@ -56,8 +56,8 @@ VALUES ('1061', 'Counseling', 'Counselings', 'Institutions', 'Students', '8', 'C
 CREATE TABLE `z_3953_security_role_functions` LIKE `security_role_functions`;
 INSERT `z_3953_security_role_functions` SELECT * FROM `security_role_functions`;
 
-INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, '1061', NULL, NULL, '1', NOW()
+INSERT INTO `security_role_functions` (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `created_user_id`, `created`)
+SELECT 1, 1, 1, 1, 0, `security_role_id`, '1061', '1', NOW()
 FROM `security_role_functions`
 WHERE `security_function_id` = 1012;
 

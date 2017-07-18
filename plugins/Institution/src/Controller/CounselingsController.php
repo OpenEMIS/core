@@ -1,5 +1,5 @@
 <?php
-namespace App\Controller;
+namespace Institution\Controller;
 
 use Cake\Event\Event;
 
