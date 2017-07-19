@@ -93,11 +93,7 @@ class StaffTransferApprovalsTable extends StaffTransfer
             ->contain(['Positions', 'StaffTypes'])
             ->where([
                 $InstitutionStaff->aliasField('institution_id') => $institutionId,
-                $InstitutionStaff->aliasField('staff_id') => $staffId,
-                'OR' => [
-                    [$InstitutionStaff->aliasField('end_date').' >= ' => new Date()],
-                    [$InstitutionStaff->aliasField('end_date').' IS NULL']
-                ]
+                $InstitutionStaff->aliasField('staff_id') => $staffId
             ])
             ->order([$InstitutionStaff->aliasField('created') => 'DESC'])
             ->first();
