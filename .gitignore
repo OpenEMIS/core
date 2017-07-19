@@ -5,6 +5,7 @@ test_datasource.php
 app_extra.php
 private.key
 public.key
+schema-dump-default.lock
 tmp
 tmp/*
 tmp/Bake*
