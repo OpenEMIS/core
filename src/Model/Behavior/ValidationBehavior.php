@@ -2041,6 +2041,33 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function checkEndOfAssignmentWithStartDate($field, array $globalData)
+    {
+        // will get the max end_date of the staff and compare it with the inputted start_date
+        // start_date cant be earlier than max End of assignment date.
+        $data = $globalData['data'];
+        $staffId = $data['staff_id'];
+        $startDate = new Date($data['start_date']);
+
+        $StaffTable = TableRegistry::get('Institution.Staff');
+
+        $staffEndDateRecord = $StaffTable->find()
+            ->select([$StaffTable->aliasField('end_date')])
+            ->where([
+                $StaffTable->aliasField('staff_id') => $staffId,
+                $StaffTable->aliasField('end_date') . ' IS NOT NULL',
+                $StaffTable->aliasField('end_date') . ' <= ' => new Date(),
+            ])
+            ->hydrate(false)
+            ->toArray();
+
+        if (!empty($staffEndDateRecord) && $startDate <= max($staffEndDateRecord)['end_date']) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static function checkPendingStaffTransfer($field, array $globalData)
     {
         $data = $globalData['data'];
