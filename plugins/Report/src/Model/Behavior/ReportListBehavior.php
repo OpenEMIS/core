@@ -194,7 +194,7 @@ class ReportListBehavior extends Behavior {
 
 		$filters = [];
 		foreach ($fields as $key => $obj) {
-			if ($obj['type'] != 'hidden' && !in_array($key, ['feature', 'format'])) {
+			if (in_array($obj['type'], ['select', 'chosenSelect']) && !in_array($key, ['feature', 'format'])) {
 				$selectedOption = $data[$alias][$key];
 
 				if (array_key_exists($selectedOption, $obj['options']) && !empty($obj['options'][$selectedOption])) {
