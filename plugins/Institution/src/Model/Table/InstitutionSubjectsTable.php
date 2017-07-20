@@ -88,6 +88,20 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'education_grade_id';
+        $searchableFields[] = 'education_subject_id';
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -101,7 +115,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $this->enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
-        $this->field('education_grade_id', ['type' => 'select', 'visible' => ['view'=>false, 'edit'=>false, 'add'=>true], 'onChangeReload' => true]);
+        $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>false, 'add'=>true], 'onChangeReload' => true]);
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true, 'add'=>true], 'onChangeReload' => true]);
         $this->field('created', ['type' => 'string', 'visible' => false]);
         $this->field('created_user_id', ['type' => 'string', 'visible' => false]);
@@ -177,7 +191,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
 
         $this->setFieldOrder([
-            'name', 'education_subject_id', 'teachers', 'rooms', 'male_students', 'female_students','total_students',
+            'name', 'education_grade_id', 'education_subject_id', 'teachers', 'rooms', 'male_students', 'female_students','total_students',
         ]);
 
         $academicPeriodOptions = $this->getAcademicPeriodOptions($extra['institution_id']);
@@ -344,9 +358,30 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-        ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
-        ->contain(['Teachers', 'Rooms'])
-        ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
+            ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
+            ->contain(['Teachers', 'Rooms', 'EducationSubjects', 'EducationGrades'])
+            ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
+
+        // search function to search education grade and education subject
+        $searchKey = $this->getSearchKey();
+        if (!empty($searchKey)) {
+            $extra['OR'] = [
+                $this->EducationSubjects->aliasField('name').' LIKE' => '%' . $searchKey . '%',
+                $this->EducationGrades->aliasField('name').' LIKE' => '%' . $searchKey . '%',
+            ];
+        }
+
+        // by default sorting by EducationSubjectsOrder followed by EducationGradesOrder
+        $requestQuery = $this->request->query;
+        $sortable = array_key_exists('sort', $requestQuery) ? true : false;
+
+        if (!$sortable) {
+            $query
+                ->order([
+                    'EducationSubjects.order',
+                    'EducationGrades.order'
+                ]);
+        }
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -373,7 +408,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ]);
         }
         $this->setFieldOrder([
-            'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'past_teachers', 'rooms', 'students',
+            'academic_period_id', 'class_name', 'education_grade_id', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'past_teachers', 'rooms', 'students',
         ]);
     }
 
@@ -1089,6 +1124,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 unset($InstitutionClassSubjects);
             }
         }
+    }
+
+    public function onGetEducationGradeId(Event $event, Entity $entity)
+    {
+        return $entity->education_grade->name;
     }
 
     public function onGetTeachers(Event $event, Entity $entity)
