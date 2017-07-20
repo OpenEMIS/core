@@ -142,7 +142,7 @@ class CustomReportsTable extends AppTable
     public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (!empty($this->request->data[$this->alias()]['feature'])) {
+            if (isset($this->request->data[$this->alias()]['feature']) && !empty($this->request->data[$this->alias()]['feature'])) {
                 $reportId = $this->request->data[$this->alias()]['feature'];
                 $format = $this->get($reportId)->format;
 
