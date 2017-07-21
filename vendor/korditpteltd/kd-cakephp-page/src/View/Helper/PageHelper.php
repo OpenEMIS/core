@@ -9,7 +9,6 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use Cake\Log\Log;
 use Cake\View\Helper;
-use Cake\ORM\TableRegistry;
 
 use Page\Traits\EncodingTrait;
 

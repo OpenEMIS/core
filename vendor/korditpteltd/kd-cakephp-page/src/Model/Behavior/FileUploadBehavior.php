@@ -2,7 +2,6 @@
 namespace Page\Model\Behavior;
 
 use ArrayObject;
-use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
