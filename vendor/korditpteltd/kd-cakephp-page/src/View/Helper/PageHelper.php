@@ -20,15 +20,15 @@ class PageHelper extends Helper
     public $helpers = ['Form', 'Html', 'Paginator', 'Url'];
 
     private $cakephpReservedPassKeys = [
-            'controller',
-            'action',
-            'plugin',
-            'pass',
-            '_matchedRoute',
-            '_Token',
-            '_csrfToken',
-            'paging'
-        ];
+        'controller',
+        'action',
+        'plugin',
+        'pass',
+        '_matchedRoute',
+        '_Token',
+        '_csrfToken',
+        'paging'
+    ];
 
     public $includes = [
         'datepicker' => [
@@ -375,6 +375,10 @@ EOT;
             $value = '';
             if (array_key_exists('value', $attr['attributes'])) {
                 $value = $attr['attributes']['value'];
+            }
+
+            if ($controlType == 'link' && array_key_exists('href', $attr['attributes'])) {
+                $value = $this->Html->link($value, $attr['attributes']['href']);
             }
 
             $html .= sprintf($row, $label, $value);

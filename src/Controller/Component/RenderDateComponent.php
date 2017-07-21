@@ -7,6 +7,8 @@ use Cake\ORM\Entity;
 use Cake\I18n\Date;
 use Cake\Log\Log;
 
+use Page\Model\Entity\PageElement;
+
 class RenderDateComponent extends Component
 {
     private $controller = null;
@@ -33,8 +35,9 @@ class RenderDateComponent extends Component
         return $events;
     }
 
-    public function onRenderDate(Event $event, Entity $entity, $key)
+    public function onRenderDate(Event $event, Entity $entity, PageElement $element)
     {
+        $key = $element->getKey();
         $value = $entity->$key;
         $format = 'Y-m-d';
         if ($value instanceof Date) {

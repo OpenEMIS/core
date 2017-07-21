@@ -103,17 +103,17 @@ class POCOR3953 extends AbstractMigration
             ->addColumn('counselor_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('student_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('guidance_type_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
