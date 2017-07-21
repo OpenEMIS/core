@@ -47,6 +47,7 @@ class PageComponent extends Component
         'view' => true,
         'edit' => true,
         'delete' => true,
+        'download' => false,
         'search' => true
     ];
 
@@ -208,10 +209,18 @@ class PageComponent extends Component
         return $this->status;
     }
 
+    public function enable($actions)
+    {
+        foreach ($actions as $action) {
+            if (array_key_exists($action, $this->actions)) {
+                $this->actions[$action] = true;
+            }
+        }
+    }
+
     public function disable($actions)
     {
         foreach ($actions as $action) {
-            // $this->actions[$action] = false;
             if (array_key_exists($action, $this->actions)) {
                 unset($this->actions[$action]);
             }
@@ -590,7 +599,7 @@ class PageComponent extends Component
             if ($callback) {
                 $prefix = 'Controller.Page.onRender';
                 $eventName = $prefix . ucfirst($controlType);
-                $eventParams = [$entity, $key];
+                $eventParams = [$entity, $element];
                 $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
                 if ($event->result) { // trigger render<Format>
                     $value = $event->result;

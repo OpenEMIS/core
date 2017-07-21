@@ -14,6 +14,9 @@ class CounselingsController extends PageController
         $this->Page->loadElementsFromTable($this->Counselings);
 
         $this->loadComponent('RenderDate'); // will get the date format from config
+        $this->loadComponent('Page.RenderLink'); // will get the date format from config
+
+        $this->Page->enable(['download']);
     }
 
     public function beforeFilter(Event $event)
@@ -73,7 +76,8 @@ class CounselingsController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['file_content']);
-        parent::view($id);
+        $page->get('file_name')->setControlType('link');
+        parent::view($id);$page->debug();
     }
 
     public function delete($id)

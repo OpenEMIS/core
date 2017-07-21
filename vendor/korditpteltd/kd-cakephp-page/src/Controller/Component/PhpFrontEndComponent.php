@@ -21,7 +21,7 @@ class PhpFrontEndComponent extends Component
 {
     private $controller = null;
 
-    public $components = ['Page.Page', 'Alert'];
+    public $components = ['Page.Page'];
 
     public function initialize(array $config)
     {

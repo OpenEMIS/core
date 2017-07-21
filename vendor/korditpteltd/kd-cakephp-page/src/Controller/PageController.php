@@ -22,7 +22,6 @@ class PageController extends AppController
         parent::initialize();
 
         $this->loadComponent('Page.Page');
-        $this->loadComponent('Page.Alert');
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
     }
@@ -323,6 +322,45 @@ class PageController extends AppController
             }
 
             $page->setVar('data', $entity);
+        }
+    }
+
+    public function download($id, $fileColumn)
+    {
+        $page = $this->Page;
+        $request = $this->request;
+        if (!$page->isActionAllowed(__FUNCTION__)) {
+            $page->throwMissingActionException();
+        }
+
+        if ($page->hasMainTable()) {
+            $table = $page->getMainTable();
+            $primaryKeyValue = $page->decode($id);
+            if ($table->exists($primaryKeyValue) && $table->hasBehavior('FileUpload')) {
+                $entity = $table->get($primaryKeyValue);
+                $fileName = $entity->$fileColumn;
+                $binaryColumn = $table->getBinaryColumn($fileColumn);
+                $content = $entity->$binaryColumn;
+
+                $response = $this->response;
+                $response->body(function() use ($fileName, $content) {
+                    $file = '';
+                    while (!feof($content)) {
+                        $file .= fread($content, 8192); 
+                    } 
+                    fclose($content);
+
+                    return $file;
+                });
+
+                $pathInfo = pathinfo($fileName);
+                $response->type($pathInfo['extension']);
+                $response->download($fileName);
+
+                return $response;
+            }
+        } else {
+            // need error handling
         }
     }
 
