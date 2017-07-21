@@ -2060,7 +2060,7 @@ class ValidationBehavior extends Behavior
             ->where([
                 $StaffTable->aliasField('staff_id') => $staffId,
                 'OR' => [
-                    [$StaffTable->aliasField('end_date').' >= ' => $todayDate],
+                    [$StaffTable->aliasField('end_date').' > ' => $todayDate],
                     [$StaffTable->aliasField('end_date').' IS NULL']
                 ]
             ])
