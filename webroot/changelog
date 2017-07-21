@@ -1,3 +1,7 @@
+v3.10.7
+- Implemented configuration item to toggle whether the system should automatically add students into all subjects
+- Implemented Staff Transfer report in Reports > Institutions > Staff Transfer
+
 v3.10.6
 - Implemented validation for Programme Code in Administration > Education Structure > Programmes page
 - In Institutions > Attendance page, system will now count user as present when they are flagged as late

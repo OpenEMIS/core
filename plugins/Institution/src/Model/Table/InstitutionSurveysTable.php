@@ -71,6 +71,8 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+        $this->addBehavior('User.AdvancedNameSearch');
+
         $this->toggle('add', false);
     }
 
@@ -80,6 +82,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
         $events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
         // $events['Restful.Model.index.workbench'] = 'indexAfterFindWorkbench';
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
 
         return $events;
     }
@@ -272,6 +275,24 @@ class InstitutionSurveysTable extends ControllerActionTable
         $query->where([
             $this->aliasField('status_id <> ') => self::EXPIRED
         ]);
+
+        // POCOR-4027 fixed search function (search assignee and survey form)
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Assignees', 'searchTerm' => $search]);
+            $surveyConditions = [$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'];
+            $descriptionConditions = [$this->SurveyForms->aliasField('description').' LIKE' => '%' . $search . '%'];
+
+            $extra['OR'] = array_merge($nameConditions, $surveyConditions, $descriptionConditions);
+        }
+        // end POCOR-4027
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'survey_form_id';
+        $searchableFields[] = 'assignee_id';
+        $searchableFields[] = 'description';
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
