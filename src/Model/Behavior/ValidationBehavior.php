@@ -2045,24 +2045,54 @@ class ValidationBehavior extends Behavior
     {
         // will get the max end_date of the staff and compare it with the inputted start_date
         // start_date cant be earlier than max End of assignment date.
+        $model = $globalData['providers']['table'];
+        $registryAlias = $model->registryAlias();
         $data = $globalData['data'];
         $staffId = $data['staff_id'];
         $startDate = new Date($data['start_date']);
+        $todayDate = Date::now();
 
+        // no end date or future end date
         $StaffTable = TableRegistry::get('Institution.Staff');
-
-        $staffEndDateRecord = $StaffTable->find()
-            ->select([$StaffTable->aliasField('end_date')])
+        $assignedStaffRecords = $StaffTable
+            ->find()
+            ->select(['max_start_date' => $StaffTable->find()->func()->max('start_date')])
             ->where([
                 $StaffTable->aliasField('staff_id') => $staffId,
-                $StaffTable->aliasField('end_date') . ' IS NOT NULL',
-                $StaffTable->aliasField('end_date') . ' <= ' => new Date(),
+                'OR' => [
+                    [$StaffTable->aliasField('end_date').' >= ' => $todayDate],
+                    [$StaffTable->aliasField('end_date').' IS NULL']
+                ]
             ])
-            ->hydrate(false)
-            ->toArray();
+            ->first();
 
-        if (!empty($staffEndDateRecord) && $startDate <= max($staffEndDateRecord)['end_date']) {
-            return false;
+        if (!empty($assignedStaffRecords) && !empty($assignedStaffRecords->max_start_date)) {
+
+            if ($startDate <= new Date($assignedStaffRecords->max_start_date)) {
+                $maxStartDate = new Date($assignedStaffRecords->max_start_date);
+                $validationErrorMsg = "$registryAlias.start_date.checkEndOfAssignmentWithStartDate";
+
+                return $model->getMessage($validationErrorMsg, ['sprintf' => [$maxStartDate->format('d-m-Y')]]);
+            }
+        } else {
+            // EOA will get the max end date
+            $endOfAssigmentStaffRecords = $StaffTable
+                ->find()
+                ->select(['max_end_date' => $StaffTable->find()->func()->max('end_date')])
+                ->where([
+                    $StaffTable->aliasField('staff_id') => $staffId,
+                    $StaffTable->aliasField('end_date').' IS NOT NULL'
+                ])
+                ->first();
+
+            if (!empty($endOfAssigmentStaffRecords) && !empty($endOfAssigmentStaffRecords->max_end_date)) {
+                if ($startDate <= new Date($endOfAssigmentStaffRecords->max_end_date)) {
+                    $maxEndDate = new Date($endOfAssigmentStaffRecords->max_end_date);
+                    $validationErrorMsg = "$registryAlias.start_date.checkEndOfAssignmentWithStartDate";
+
+                    return $model->getMessage($validationErrorMsg, ['sprintf' => [$maxEndDate->format('d-m-Y')]]);
+                }
+            }
         }
 
         return true;
