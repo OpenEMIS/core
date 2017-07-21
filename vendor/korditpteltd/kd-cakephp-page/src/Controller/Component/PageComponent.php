@@ -92,6 +92,13 @@ class PageComponent extends Component
         $this->setHeader(Inflector::humanize(Inflector::underscore($this->controller->name)));
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 5];
+        return $events;
+    }
+
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
@@ -119,6 +126,20 @@ class PageComponent extends Component
                 $this->loadDataToElements($data);
             } elseif ($action == 'edit' || $action == 'add') {
                 $this->loadDataToElements($data, false);
+            } elseif ($action == 'index') {
+                foreach ($data as $entity) {
+                    $disabledActions = [];
+                    $event = $this->controller->dispatchEvent('Controller.Page.getEntityDisabledActions', [$entity], $this);
+
+                    if ($event->result) {
+                        $disabledActions = $event->result;
+                    }
+                    if ($entity instanceof Entity) {
+                        $entity->disabledActions = $disabledActions;
+                    } else {
+                        $entity['disabledActions'] = $disabledActions;
+                    }
+                }
             }
         }
 
@@ -143,7 +164,13 @@ class PageComponent extends Component
                 $this->setVar('tabs', $this->tabsToArray());
             }
 
-            $this->setVar('actions', $this->actions);
+            $disabledActions = [];
+            foreach ($this->actions as $action => $value) {
+                if ($value == false) {
+                    $disabledActions[] = $action;
+                }
+            }
+            $this->setVar('disabledActions', $disabledActions);
 
             if ($this->hasMainTable()) {
                 $table = $this->getMainTable();
@@ -263,9 +290,14 @@ class PageComponent extends Component
     {
         foreach ($actions as $action) {
             if (array_key_exists($action, $this->actions)) {
-                unset($this->actions[$action]);
+                $this->actions[$action] = false;
             }
         }
+    }
+
+    public function getActions()
+    {
+        return $this->actions;
     }
 
     public function action($action, $attr = [])
