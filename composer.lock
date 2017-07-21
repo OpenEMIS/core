@@ -490,7 +490,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "a89e6d3717dd567bd5743ebeb5d5b8c861d56af7"
+                "reference": "9ed8a58ce87fac1dd4f4c47666dced7324395988"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -527,7 +527,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-06-30T09:40:45+00:00"
+            "time": "2017-07-11 07:25:42"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
