@@ -1,0 +1,67 @@
+/* DASHBOARD v.1.0.3 */
+
+.dashboard-container {
+    background-color: #F9F9F9 !important;
+    border: 1px solid #CCC !important;
+    padding: 0 10px 10px !important;
+    margin: 0 0 10px 0 !important;
+    -webkit-border-radius: 4px !important;
+    border-radius: 4px !important;
+}
+
+.dashboard-container .table-bordered > tbody {
+    border: 1px solid #DDD !important;
+}
+
+.institution-dashboard {
+    padding: 0 !important;
+}
+
+.institution-dashboard .col-md-6 {
+    padding-left: 0 !important;
+    padding-top: 0;
+    padding-bottom: 10px;
+}
+
+.institution-dashboard .highcharts-background,
+.highcharts-container {
+    border: 0 !important;
+}
+
+.dashboard-content {
+    overflow: auto;
+    max-height: 250px;
+    border: 1px solid #CCC;
+}
+
+.dashboard-content .table-lined td,
+.dashboard-content .table th,
+.dashboard-content .table tbody td,
+.dashboard-content .table-curved tbody td {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    background-color: #FFF;
+}
+
+.dashboard-content .table-lined tr:first-child td,
+.dashboard-content .table > thead:first-child > tr:first-child > th {
+    border-top: 0 !important;
+}
+
+.dashboard-content .table-lined tr:last-child td,
+.dashboard-content .table tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+
+.institution-dashboard .highcharts-background {
+    stroke: #CCC;
+}
+
+
+/* RTL DASHBOARD */
+
+.rtl .institution-dashboard .col-md-6 {
+    padding-right: 0 !important;
+    padding-left: 20px !important;
+    padding-top: 0;
+}
