@@ -49,7 +49,6 @@ class StaffTransfer extends ControllerActionTable {
         $this->field('previous_institution_id');
         $this->field('institution_id', ['after' => 'previous_institution_id', 'visible' => ['index' => true, 'edit' => true, 'view' => true]]);
         $this->field('staff_id');
-        $this->field('institution_position_id', ['after' => 'institution_id', 'visible' => ['edit' => true, 'view' => true]]);
         $this->field('type', ['visible' => false]);
         $this->field('staff_type_id', ['after' => 'institution_position_id', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
         $this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'after' => 'staff_type_id', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
@@ -78,7 +77,6 @@ class StaffTransfer extends ControllerActionTable {
         $this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
         $this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $entity->previous_institution->name]]);
         $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institution_name_with_code]]);
-        $this->field('institution_position_id', ['type' => 'readonly', 'after' => 'institution_id', 'attr' => ['value' => $entity->position->name]]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, $extra) {
