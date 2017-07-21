@@ -103,12 +103,14 @@ class PageController extends AppController
 
         if ($page->hasMainTable()) {
             $table = $page->getMainTable();
-            $entity = $table->newEntity();
+            $entity = null;
 
-            if ($request->is(['post'])) {
+            if ($request->is('get')) {
+                $entity = $table->newEntity();
+            } elseif ($request->is(['post'])) {
                 $pageStatus = $page->getStatus();
                 try {
-                    $entity = $table->patchEntity($entity, $request->data, []);
+                    $entity = $table->newEntity($request->data);
                     $result = $table->save($entity);
 
                     if ($page->isDebugMode()) {
@@ -125,6 +127,7 @@ class PageController extends AppController
                             ->setMessage('The record is not added due to errors encountered');
                     }
                 } catch (Exception $ex) {
+                    Log::write('error', $ex);
                     $msg = $ex->getMessage();
                     $pageStatus->setCode(PageStatus::UNEXPECTED_ERROR)
                         ->setType('error')
@@ -146,7 +149,7 @@ class PageController extends AppController
         }
 
         if ($request->is(['get', 'ajax']) && $page->hasMainTable()) {
-            $primaryKeyValue = json_decode($page->hexToStr($id), true);
+            $primaryKeyValue = $page->decode($id);
             $table = $page->getMainTable();
             $primaryKey = $table->primaryKey();
             if (!is_array($primaryKey)) { // if primary key is not composite key, then hide from index page
@@ -175,12 +178,15 @@ class PageController extends AppController
         if (!$page->isActionAllowed(__FUNCTION__)) {
             $page->throwMissingActionException();
         }
-        $extra = new ArrayObject();
 
         if ($page->hasMainTable()) {
-            $primaryKeyValue = json_decode($page->hexToStr($id), true);
+            $primaryKeyValue = $page->decode($id);
             $table = $page->getMainTable();
+            $pageStatus = $page->getStatus();
+            $entity = null;
+
             if ($table->exists($primaryKeyValue)) {
+                if ($request->is('get')) {
                 $page->autoContains($table);
                 $queryOptions = $page->getQueryOptions();
 
@@ -190,10 +196,8 @@ class PageController extends AppController
 
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
-            }
-
-            if ($request->is(['post', 'put'])) {
-                $pageStatus = $page->getStatus();
+                } elseif ($request->is(['post', 'put', 'patch'])) {
+                    $entity = $table->get($primaryKeyValue);
                 try {
                     $entity = $table->patchEntity($entity, $request->data, []);
                     $result = $table->save($entity);
@@ -207,16 +211,26 @@ class PageController extends AppController
                             ->setType('error')
                             ->setMessage('The record is not updated due to errors encountered');
                     }
-                } catch (Exception $ex) {
+                    } catch (Exception $ex) { // should catch more specific exceptions to handle the exception appropriately
+                        Log::write('error', $ex);
                     $msg = $ex->getMessage();
                     $pageStatus->setCode(PageStatus::UNEXPECTED_ERROR)
                         ->setType('error')
                         ->setError(true)
                         ->setMessage($msg);
-                    Log::write('error', $msg);
                 }
+
+                    $errors = $entity->errors();
+                    $page->setVar('errors', $errors);
             }
             $page->setVar('data', $entity);
+            } else { // if primary key does not exists
+                $pageStatus->setCode(PageStatus::RECORD_NOT_FOUND)
+                    ->setType('warning')
+                    ->setError(true)
+                    ->setMessage('The record does not exists');
+                return;
+            }
         }
     }
 
@@ -228,6 +242,7 @@ class PageController extends AppController
             $page->throwMissingActionException();
         }
         $extra = new ArrayObject();
+        $entity = null;
 
         if ($page->hasMainTable()) {
             $primaryKeyValue = $page->decode($id);
@@ -243,16 +258,16 @@ class PageController extends AppController
                 return;
             }
 
+            if ($request->is(['get'])) {
             $page->autoContains($table);
             $queryOptions = $page->getQueryOptions();
 
             if ($table->hasFinder('Delete')) {
                 $queryOptions->offsetSet('finder', 'Delete');
             }
-
             $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
-
-            if ($request->is(['delete'])) {
+            } elseif ($request->is(['delete'])) {
+                $entity = $table->get($primaryKeyValue);
                 $extra['result'] = $table->delete($entity);
                 $page->getStatus()->setMessage('The record has been deleted successfully');
 
@@ -346,8 +361,8 @@ class PageController extends AppController
                 $response->body(function() use ($fileName, $content) {
                     $file = '';
                     while (!feof($content)) {
-                        $file .= fread($content, 8192); 
-                    } 
+                        $file .= fread($content, 8192);
+                    }
                     fclose($content);
 
                     return $file;
