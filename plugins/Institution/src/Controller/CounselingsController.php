@@ -77,7 +77,7 @@ class CounselingsController extends PageController
         $page = $this->Page;
         $page->exclude(['file_content']);
         $page->get('file_name')->setControlType('link');
-        parent::view($id);$page->debug();
+        parent::view($id);
     }
 
     public function delete($id)

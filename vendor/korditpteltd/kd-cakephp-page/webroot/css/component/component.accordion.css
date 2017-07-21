@@ -1,0 +1,47 @@
+/* ACCORDION v.1.0.0 */
+
+.accordion-toggle:focus {
+    text-decoration: none;
+}
+
+.accordion-group {
+    margin: 0 0 5px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.accordion-inner {
+    background-color: #FFF;
+    padding: 0 0 10px;
+}
+
+.accordion-heading {
+    background-color: #EFEFEF;
+    border: 1px solid #CCC;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+
+.accordion-heading a {
+    display: block;
+    width: 100%;
+    font-weight: 500;
+    padding: 6px 10px;
+}
+
+.accordion .accordion-toggle:after,
+.accordion .accordion-toggle.collapsed:after {
+    position: absolute;
+    right: 12px;
+}
+
+.accordion .accordion-toggle:after {
+    font-family: "FontAwesome";
+    content: "\f0d7";
+}
+
+.accordion .accordion-toggle.collapsed:after {
+    font-family: "FontAwesome";
+    content: "\f0da";
+}
