@@ -378,14 +378,22 @@ class PageComponent extends Component
                 $key = [$primaryKey => $entity->$primaryKey];
                 $entity->primaryKey = $this->strToHex(json_encode($key));
             } else {
-                pr($primaryKey);die;
+                $keyArray = [];
+                foreach ($primaryKey as $key) {
+                    $keyArray[$key] = $entity->$key;
+                }
+                $entity->primaryKey = $this->encode($keyArray);
             }
         } else {
             if (!is_array($primaryKey)) { // primary key is not composite key
                 $key = [$primaryKey => $entity[$primaryKey]];
                 $entity['primaryKey'] = $this->strToHex(json_encode($key));
             } else {
-                pr($primaryKey);die;
+                $keyArray = [];
+                foreach ($primaryKey as $key) {
+                    $keyArray[$key] = $entity[$key];
+                }
+                $entity['primaryKey'] = $this->encode($keyArray);
             }
         }
     }
@@ -455,11 +463,15 @@ class PageComponent extends Component
                 if (array_key_exists($key, $querystring)) {
                     $querystring = $querystring[$key];
                 } else {
-                    $querystring = false;
+                    $querystring = null;
                 }
             }
         } else {
+            if (!is_null($key)) {
+                $querystring = null;
+            } else {
             $querystring = [];
+        }
         }
         return $querystring;
     }
@@ -509,7 +521,7 @@ class PageComponent extends Component
             'controller' => $controller->name
         ];
 
-        $this->mergeRequestParams($url);
+        $url = array_merge($_url, $url);
 
         if ($params === true) {
             $url = array_merge($url, $request->pass, $request->query);
@@ -519,17 +531,6 @@ class PageComponent extends Component
             $url = array_merge($url, $request->query);
         }
         return $url;
-    }
-
-    private function mergeRequestParams(array &$url)
-    {
-        $requestParams = $this->request->params;
-        foreach ($requestParams as $key => $value) {
-            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
-                unset($requestParams[$key]);
-            }
-        }
-        $url = array_merge($url, $requestParams);
     }
 
     public function showElements($show = null)
