@@ -171,6 +171,8 @@ class POCOR3953 extends AbstractMigration
 
         $this->execute($sql);
         // end security_role_functions
+
+        $this->execute('ALTER TABLE `deleted_records` CHANGE `id` `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT');
     }
 
     // rollback

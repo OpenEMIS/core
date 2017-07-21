@@ -1,0 +1,303 @@
+/* IE9 v.1.0.2 */
+
+html,
+body {
+    font-size: 12px;
+}
+
+.navbar-right {
+    margin-right: 0 !important;
+}
+
+
+/* NAVIGATION */
+
+.split-panes.horizontal > .split-handler:after,
+.rtl .split-panes.horizontal > .split-handler:after {
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    -ms-border-radius: 0;
+    border-radius: 0;
+}
+
+
+/* FORM INPUT */
+
+label,
+button,
+input,
+select,
+textarea {
+    font-size: 12px;
+}
+
+
+/* SELECT */
+
+.input-select-wrapper:before {
+    display: block;
+    position: absolute;
+    content: '';
+    right: 24px;
+    top: 4px;
+    height: 22px;
+    width: 22px;
+    margin: 2px;
+    background: white;
+    z-index: 5;
+}
+
+.rtl .input-select-wrapper::after {
+    z-index: 999;
+}
+
+.rtl .input-select-wrapper:before {
+    right: auto !important;
+    left: 22px !important;
+    top: 2px;
+}
+
+
+/* LOGIN */
+
+.login-box .input-select-wrapper:before {
+    height: 30px;
+    width: 30px;
+}
+
+.rtl .login-box .input-select-wrapper:before {
+    left: -1px !important;
+    right: auto;
+    top: 0;
+}
+
+.rtl .login-box .input-select-wrapper:after {
+    z-index: 9;
+    left: 12px;
+}
+
+.rtl .login-box input {
+    padding: 10px 5px 10px 40px !important;
+}
+
+.rtl .login .text:after,
+.rtl .login .password:after,
+.rtl .login .select:after {
+    border-left: 1px solid #DDD !important;
+}
+
+
+/* PANEL */
+
+.panel-body .col-md-3,
+.panel-body .col-md-6,
+.rtl .panel-body .col-md-3,
+.rtl .panel-body .col-md-6 {
+    width: 18%;
+}
+
+
+/* TOOLBAR DROPDOWN */
+
+.toolbar-wrapper .input-select-wrapper::before {
+    top: 2px
+}
+
+
+/* FILTER DROPDOWN */
+
+.dropdown-filter .input-select-wrapper::before,
+.rtl .dropdown-filter .input-select-wrapper::before {
+    top: 0;
+}
+
+
+/* PAGINATION */
+
+.display-limit {
+    width: 160px !important;
+}
+
+.display-limit form {
+    width: 102px !important;
+}
+
+.display-limit span,
+.display-limit p {
+    width: auto;
+}
+
+.display-limit .input-select-wrapper {
+    width: 60px !important;
+}
+
+.display-limit .input-select-wrapper:before {
+    right: 12px;
+    width: 20px !important;
+}
+
+.display-limit .input-select-wrapper:after {
+    right: -2px;
+    z-index: 9;
+}
+
+.rtl .display-limit {
+    width: 170px !important;
+}
+
+.rtl .display-limit select {
+    padding: 5px 15px 5px 0px !important;
+}
+
+.rtl .display-limit .input-select-wrapper:before {
+    right: auto !important;
+    left: -1px !important;
+}
+
+.rtl .display-limit .input-select-wrapper:after {
+    right: auto;
+    left: 10px;
+    top: 45%;
+}
+
+
+/* FILE INPUT */
+
+.rtl .fileinput .btn-file {
+    left: -4px;
+}
+
+
+/* HEADER NAVIGATION */
+
+.navbar-right .dropdown-menu {
+    right: 0 !important;
+}
+
+.rtl .navbar-right .dropdown-menu {
+    right: -250px !important;
+}
+
+.rtl .navbar-right .more-menu {
+    right: -126px !important;
+}
+
+
+/* HOVER */
+
+.btn-default:hover,
+.btn-outline:hover,
+.btn-outline:active,
+.btn-outline:focus,
+.more-menu-item a:hover,
+#action-menu:hover,
+.horizontal-tabs span a:hover,
+.nav > li > a:hover,
+.outline-btn:hover,
+.btn-default:active,
+.btn-active,
+.action-dropdown > li > a:hover,
+.login-box .btn-login:hover,
+#menu-toggle .fa:hover,
+.btn-bold:hover,
+.btn-italic:hover,
+.input-group-addon:hover,
+.datepicker table tr td.active,
+.datepicker table tr td.active:hover,
+.datepicker table tr td.active.disabled,
+.datepicker table tr td.active.disabled:hover,
+.mce-menu-item:hover,
+.mce-menu-item.mce-selected,
+.mce-menu-item:focus,
+.selected-size,
+.ui-menu-item:hover,
+.ui-state-focus:hover,
+.ui-state-focus:focus,
+.ui-state-focus:visited,
+.ui-state-focus:active,
+.chosen-container .chosen-results li.highlighted,
+.chosen-container .chosen-results li.active-result:hover,
+.ui-state-focus,
+.ui-widget-content .ui-state-focus,
+.ui-widget-header .ui-state-focus,
+.mce-menu-item-normal.mce-active {
+    filter: none;
+}
+
+
+/* TABLE */
+
+.table thead tr {
+    border-top: 2px solid #CCC;
+    border-right: 2px solid #CCC;
+    border-bottom: 2px solid #CCC;
+}
+
+
+/* TOOLBAR */
+
+.format-item .input-select-wrapper:before {
+    top: 8px;
+    right: 2px;
+    height: 26px;
+}
+
+.format-item .input-select-wrapper:after {
+    z-index: 9;
+}
+
+.rtl .toolbar-wrapper .input-select-wrapper:before {
+    left: 2px;
+}
+
+.rtl .toolbar-wrapper .input-select-wrapper:after {
+    z-index: 9;
+}
+
+
+/* PRGRESS BAR */
+
+.spinner-wrapper .lt-ie9 {
+    top: 50%;
+    left: -5px;
+}
+
+.lt-ie9 {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    background-image: url('img/loader.gif');
+    @include animation(none);
+    animation: none !important;
+    border: none !important;
+    border-color: transparent !important;
+    border-width: 0 !important;
+    width: 55px !important;
+    height: 55px !important;
+    -webkit-border-radius: 0 !important;
+    border-radius: 0 !important;
+    -webkit-box-shadow: 0 2px 1px rgba(0, 0, 0, 0);
+    -moz-box-shadow: 0 2px 1px rgba(0, 0, 0, 0);
+    -o-box-shadow: 0 2px 1px rgba(0, 0, 0, 0);
+    -ms-box-shadow: 0 2px 1px rgba(0, 0, 0, 0);
+    box-shadow: 0 2px 1px rgba(0, 0, 0, 0);
+}
+
+.spinner-text .loading-percentage {
+    font-size: 12px !important;
+    top: 42% !important;
+}
+
+.ie9 .loader-text i {
+    display: none;
+}
+
+
+/* TABS */
+
+.scroll_tabs_container div.scroll_tab_inner span {
+    line-height: 30px;
+}

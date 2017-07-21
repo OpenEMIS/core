@@ -52,15 +52,15 @@ class PageComponent extends Component
     ];
 
     private $cakephpReservedPassKeys = [
-            'controller',
-            'action',
-            'plugin',
-            'pass',
-            '_matchedRoute',
-            '_Token',
-            '_csrfToken',
-            'paging'
-        ];
+        'controller',
+        'action',
+        'plugin',
+        'pass',
+        '_matchedRoute',
+        '_Token',
+        '_csrfToken',
+        'paging'
+    ];
 
     // page elements
     private $showElements = false;
@@ -108,6 +108,7 @@ class PageComponent extends Component
         $controller = $this->controller;
         $request = $this->request;
         $requestQueries = $request->query;
+        $session = $request->session();
         $action = $request->action;
         $isGet = $request->is(['get']);
         $isAjax = $request->is(['ajax']);
@@ -154,6 +155,11 @@ class PageComponent extends Component
             }
         }
 
+        if ($session->check('alert')) {
+            $this->setVar('alert', $session->read('alert'));
+            $session->delete('alert');
+        }
+
         if ($this->viewVars->count() > 0) {
             $this->controller->set($this->viewVars->getArrayCopy());
         }
@@ -183,6 +189,41 @@ class PageComponent extends Component
             return true;
         }
         return false;
+    }
+
+    public function isJson()
+    {
+        $ext = $this->request->params['_ext'];
+        return $ext === 'json';
+    }
+
+    public function redirect($url, $params = true /* 'PASS' | 'QUERY' | false */)
+    {
+        if (!$this->isJson()) { // only allow redirect if request type is not json
+            $url = $this->getUrl($url, $params);
+            $response = $this->controller->redirect($url);
+
+            return $response;
+        } else {
+            return $this->controller->response;
+        }
+    }
+
+    public function setAlert($message, $type = 'success', $reset = false)
+    {
+        $session = $this->request->session();
+
+        $alert = [];
+
+        if ($session->check('alert') && $reset == false) {
+            $alert = $session->read('alert');
+        }
+
+        $alert[] = [
+            'type' => $type,
+            'message' => $message
+        ];
+        $session->write('alert', $alert);
     }
 
     public function setVar($name, $value)
@@ -516,12 +557,8 @@ class PageComponent extends Component
     {
         $controller = $this->controller;
         $request = $this->request;
-        $_url = [
-            'plugin' => $controller->plugin,
-            'controller' => $controller->name
-        ];
 
-        $url = array_merge($_url, $url);
+        $this->mergeRequestParams($url);
 
         if ($params === true) {
             $url = array_merge($url, $request->pass, $request->query);
@@ -531,6 +568,17 @@ class PageComponent extends Component
             $url = array_merge($url, $request->query);
         }
         return $url;
+    }
+
+    private function mergeRequestParams(array &$url)
+    {
+        $requestParams = $this->request->params;
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
+        }
+        $url = array_merge($url, $requestParams);
     }
 
     public function showElements($show = null)

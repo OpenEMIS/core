@@ -32,16 +32,7 @@ class PhpFrontEndComponent extends Component
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
-        $request = $this->request;
-        $page = $this->Page;
 
-        if ($request->is('get')) {
-            $querystring = $page->getQueryString();
-            if (array_key_exists('alert', $querystring)) {
-                $this->controller->set('alert', $querystring['alert']);
-                $page->setQueryString('alert', null);
-            }
-        }
     }
 
     // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
@@ -65,56 +56,6 @@ class PhpFrontEndComponent extends Component
         }
 
         $controller->set('menuItemSelected', [$controller->name]);
-
-        $status = $page->getStatus();
-
-        switch ($action) {
-            case 'add':
-                $msg = $status->getMessage();
-                if ($request->is(['post'])) {
-                    switch ($status->getCode()) {
-                        case PageStatus::SUCCESS:
-                            $page->setQueryString('alert', ['type' => $status->getType(), 'message' => $msg], true);
-                            $url = $this->Page->getUrl(['action' => 'index'], 'QUERY');
-
-                            return $this->controller->redirect($url);
-                            break;
-                        case PageStatus::VALIDATION_ERROR:
-                        case PageStatus::UNEXPECTED_ERROR:
-                            $this->controller->set('alert', ['type' => $status->getType(), 'message' => $msg]);
-                            break;
-                    }
-                }
-
-                break;
-            case 'edit':
-                $msg = $status->getMessage();
-                if ($request->is(['post', 'put'])) {
-                    switch ($status->getCode()) {
-                        case PageStatus::SUCCESS:
-                            $page->setQueryString('alert', ['type' => $status->getType(), 'message' => $msg], true);
-                            $url = $this->Page->getUrl(['action' => 'view']);
-
-                            return $this->controller->redirect($url);
-                            break;
-                        case PageStatus::VALIDATION_ERROR:
-                        case PageStatus::UNEXPECTED_ERROR:
-                            $this->controller->set('alert', ['type' => $status->getType(), 'message' => $msg]);
-                            break;
-                    }
-                }
-                break;
-            case 'delete':
-                $isSuccessful = $request->is('delete') && $status->getCode() == PageStatus::SUCCESS;
-                $isRecordNotFound = $status->getCode() == PageStatus::RECORD_NOT_FOUND;
-                if ($isSuccessful || $isRecordNotFound) {
-                    $msg = $status->getMessage();
-                    $page->setQueryString('alert', ['type' => $status->getType(), 'message' => $msg], true);
-                    $url = $this->Page->getUrl(['action' => 'index'], 'QUERY');
-                    return $this->controller->redirect($url);
-                }
-                break;
-        }
 
         if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
             $viewFile = 'Page.Page/' . $action;

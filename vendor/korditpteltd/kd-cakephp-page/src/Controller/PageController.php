@@ -117,14 +117,16 @@ class PageController extends AppController
                         pr($request->data);
                     }
                     if ($result) {
-                        $pageStatus->setMessage('The record has been added successfully');
+                        $pageStatus->setMessage('The record has been added successfully.');
+                        $page->setAlert($pageStatus->getMessage());
+                        $response = $page->redirect(['action' => 'index']);
 
-                        return;
+                        return $response;
                     } else {
                         Log::write('debug', $entity->errors());
                         $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
                             ->setType('error')
-                            ->setMessage('The record is not added due to errors encountered');
+                            ->setMessage('The record is not added due to errors encountered.');
                     }
                 } catch (Exception $ex) {
                     Log::write('error', $ex);
@@ -187,49 +189,58 @@ class PageController extends AppController
 
             if ($table->exists($primaryKeyValue)) {
                 if ($request->is('get')) {
-                $page->autoContains($table);
-                $queryOptions = $page->getQueryOptions();
+                    $page->autoContains($table);
+                    $queryOptions = $page->getQueryOptions();
 
-                if ($table->hasFinder('Edit')) {
-                    $queryOptions->offsetSet('finder', 'Edit');
-                }
+                    if ($table->hasFinder('Edit')) {
+                        $queryOptions->offsetSet('finder', 'Edit');
+                    }
 
-                $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
-                $page->attachPrimaryKey($table, $entity);
+                    $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
+                    $page->attachPrimaryKey($table, $entity);
                 } elseif ($request->is(['post', 'put', 'patch'])) {
                     $entity = $table->get($primaryKeyValue);
-                try {
-                    $entity = $table->patchEntity($entity, $request->data, []);
-                    $result = $table->save($entity);
+                    try {
+                        $entity = $table->patchEntity($entity, $request->data, []);
+                        $result = $table->save($entity);
 
-                    if ($result) {
-                        $pageStatus->setMessage('The record has been updated successfully');
+                        if ($result) {
+                            $pageStatus->setMessage('The record has been updated successfully.');
+                            $page->setAlert($pageStatus->getMessage());
+                            $response = $page->redirect(['action' => 'view']);
 
-                        return;
-                    } else {
-                        $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
-                            ->setType('error')
-                            ->setMessage('The record is not updated due to errors encountered');
-                    }
+                            return $response;
+                        } else {
+                            $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
+                                ->setType('error')
+                                ->setMessage('The record is not updated due to errors encountered.');
+
+                            $page->setAlert($pageStatus->getMessage());
+                        }
                     } catch (Exception $ex) { // should catch more specific exceptions to handle the exception appropriately
                         Log::write('error', $ex);
-                    $msg = $ex->getMessage();
-                    $pageStatus->setCode(PageStatus::UNEXPECTED_ERROR)
-                        ->setType('error')
-                        ->setError(true)
-                        ->setMessage($msg);
-                }
+                        $msg = $ex->getMessage();
+                        $pageStatus->setCode(PageStatus::UNEXPECTED_ERROR)
+                            ->setType('error')
+                            ->setError(true)
+                            ->setMessage($msg);
+
+                        $page->setAlert($pageStatus->getMessage());
+                    }
 
                     $errors = $entity->errors();
                     $page->setVar('errors', $errors);
-            }
-            $page->setVar('data', $entity);
+                }
+                $page->setVar('data', $entity);
             } else { // if primary key does not exists
                 $pageStatus->setCode(PageStatus::RECORD_NOT_FOUND)
                     ->setType('warning')
                     ->setError(true)
-                    ->setMessage('The record does not exists');
-                return;
+                    ->setMessage('The record does not exists.');
+
+                $page->setAlert($pageStatus->getMessage());
+                $response = $page->redirect(['action' => 'view']);
+                return $response;
             }
         }
     }
@@ -243,41 +254,48 @@ class PageController extends AppController
         }
         $extra = new ArrayObject();
         $entity = null;
+        $pageStatus = $page->getStatus();
 
         if ($page->hasMainTable()) {
             $primaryKeyValue = $page->decode($id);
             $table = $page->getMainTable();
 
             if (!$table->exists($primaryKeyValue)) {
-                $page->getStatus()
-                    ->setCode(PageStatus::RECORD_NOT_FOUND)
+                $pageStatus->setCode(PageStatus::RECORD_NOT_FOUND)
                     ->setType('warning')
                     ->setError(true)
-                    ->setMessage('The record does not exists');
+                    ->setMessage('The record does not exists.');
 
-                return;
+                $page->setAlert($pageStatus->getMessage());
+                $response = $page->redirect(['action' => 'index'], 'QUERY');
+
+                return $response;
             }
 
             if ($request->is(['get'])) {
-            $page->autoContains($table);
-            $queryOptions = $page->getQueryOptions();
+                $page->autoContains($table);
+                $queryOptions = $page->getQueryOptions();
 
-            if ($table->hasFinder('Delete')) {
-                $queryOptions->offsetSet('finder', 'Delete');
-            }
-            $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
+                if ($table->hasFinder('Delete')) {
+                    $queryOptions->offsetSet('finder', 'Delete');
+                }
+
+                $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
             } elseif ($request->is(['delete'])) {
                 $entity = $table->get($primaryKeyValue);
-                $extra['result'] = $table->delete($entity);
-                $page->getStatus()->setMessage('The record has been deleted successfully');
+                $table->delete($entity);
+                $pageStatus->setMessage('The record has been deleted successfully.');
 
-                return;
+                $page->setAlert($pageStatus->getMessage());
+                $response = $page->redirect(['action' => 'index'], 'QUERY');
+
+                return $response;
             }
 
             $page->attachPrimaryKey($table, $entity);
 
             $msg = __('All associated information related to this record will also be removed. Are you sure you want to delete this record?');
-            $this->set('alert', ['type' => 'warning', 'message' => $msg]);
+            $page->setAlert($msg, 'warning');
             $cells = [];
             foreach ($table->associations() as $assoc) {
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
@@ -379,7 +397,7 @@ class PageController extends AppController
         }
     }
 
-    public function onchange($model, $finder = 'OptionList')
+    public function onchange($type, $model, $finder = 'OptionList')
     {
         $request = $this->request;
         $table = $this->{$model};
@@ -420,7 +438,12 @@ class PageController extends AppController
             $options[] = ['value' => '', 'text' => __('No Options')];
         }
 
-        $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
+        $response = [
+            'type' => $type,
+            'data' => $options
+        ];
+
+        $this->response->body(json_encode($response, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
 
         return $this->response;

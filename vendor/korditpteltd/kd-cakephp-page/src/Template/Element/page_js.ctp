@@ -102,7 +102,8 @@ Page.onChange = function(source, target) {
     xhr.onload = function() {
         if (xhr.status === 200) {
             target.innerHTML = '';
-            var data = JSON.parse(xhr.responseText);
+            var response = JSON.parse(xhr.responseText);
+            var data = response.data;
             for (var i=0; i<data.length; i++) {
                 var option = document.createElement('option');
                 option.innerHTML = data[i]['text'];

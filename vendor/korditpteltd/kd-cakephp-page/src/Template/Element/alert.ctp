@@ -7,13 +7,15 @@ $types = [
 ];
 
 if (isset($alert)) {
-    $html = <<<EOT
+	foreach ($alert as $item) {
+	    $html = <<<EOT
 <div class="alert %s">
     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">&times;</a>
     %s
 </div>
 EOT;
 
-    echo sprintf($html, $types[$alert['type']]['class'], $alert['message']);
+	    echo sprintf($html, $types[$item['type']]['class'], $item['message']);
+    }
 }
 ?>

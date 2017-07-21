@@ -421,8 +421,6 @@ class PageElement
     {
         // properties to be exposed to client browser
         $visibleProperties = [
-            // 'model' => 'get',
-            // 'aliasField' => 'get',
             'key' => 'get',
             'controlType' => 'get',
             'displayFrom' => 'get',
@@ -432,16 +430,8 @@ class PageElement
             'dependentOn' => 'get',
             'params' => 'get',
             'foreignKey' => 'get',
-            // 'defaultValue' => 'get',
-            // 'options' => 'get',
             'attributes' => 'get'
         ];
-
-        $name = $this->name;
-
-        // if ($this->excludePrimaryKey) {
-        //     $this->exclude($this->table->primaryKey());
-        // }
 
         $htmlAttributes = [
             'id' => 'get',
@@ -457,13 +447,16 @@ class PageElement
 
         foreach ($visibleProperties as $property => $method) {
             $propertyMethod = $method . ucfirst($property);
-            if ($property != 'displayFrom') {
-                $propertyValue = $this->$propertyMethod();
-                if (!is_null($propertyValue)) {
-                    $properties[$property] = $this->$propertyMethod();
+            $propertyValue = $this->$propertyMethod();
+
+            if ($property == 'displayFrom' && $propertyValue) {
+                $properties[$property] = $propertyValue;
+            } else if (!is_null($propertyValue)) {
+                if ($property == 'dependentOn') {
+                    $properties[$property] = $this->getKey() . '/' . $propertyValue;
+                } else {
+                    $properties[$property] = $propertyValue;
                 }
-            } elseif ($property == 'displayFrom' && $this->$propertyMethod()) {
-                $properties[$property] = $this->$propertyMethod();
             }
         }
 
