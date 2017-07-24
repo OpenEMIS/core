@@ -127,6 +127,8 @@ class PageController extends AppController
                         $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
                             ->setType('error')
                             ->setMessage('The record is not added due to errors encountered.');
+
+                        $page->setAlert($pageStatus->getMessage(), 'error');
                     }
                 } catch (Exception $ex) {
                     Log::write('error', $ex);
@@ -135,7 +137,8 @@ class PageController extends AppController
                         ->setType('error')
                         ->setError(true)
                         ->setMessage($msg);
-                    Log::write('error', $msg);
+
+                    $page->setAlert($pageStatus->getMessage(), 'error');
                 }
             }
             $page->setVar('data', $entity);
@@ -185,21 +188,23 @@ class PageController extends AppController
             $primaryKeyValue = $page->decode($id);
             $table = $page->getMainTable();
             $pageStatus = $page->getStatus();
+            $response = null;
             $entity = null;
 
             if ($table->exists($primaryKeyValue)) {
-                if ($request->is('get')) {
-                    $page->autoContains($table);
-                    $queryOptions = $page->getQueryOptions();
+                // autoContain and findEdit needs to be executed on POST/PUT/PATCH
+                // so that on validation error, correct values will be displayed
+                $page->autoContains($table);
+                $queryOptions = $page->getQueryOptions();
 
-                    if ($table->hasFinder('Edit')) {
-                        $queryOptions->offsetSet('finder', 'Edit');
-                    }
+                if ($table->hasFinder('Edit')) {
+                    $queryOptions->offsetSet('finder', 'Edit');
+                }
 
-                    $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
-                    $page->attachPrimaryKey($table, $entity);
-                } elseif ($request->is(['post', 'put', 'patch'])) {
-                    $entity = $table->get($primaryKeyValue);
+                $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
+                $page->attachPrimaryKey($table, $entity);
+
+                if ($request->is(['post', 'put', 'patch'])) {
                     try {
                         $entity = $table->patchEntity($entity, $request->data, []);
                         $result = $table->save($entity);
@@ -208,14 +213,12 @@ class PageController extends AppController
                             $pageStatus->setMessage('The record has been updated successfully.');
                             $page->setAlert($pageStatus->getMessage());
                             $response = $page->redirect(['action' => 'view']);
-
-                            return $response;
                         } else {
                             $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
                                 ->setType('error')
                                 ->setMessage('The record is not updated due to errors encountered.');
 
-                            $page->setAlert($pageStatus->getMessage());
+                            $page->setAlert($pageStatus->getMessage(), 'error');
                         }
                     } catch (Exception $ex) { // should catch more specific exceptions to handle the exception appropriately
                         Log::write('error', $ex);
@@ -225,20 +228,24 @@ class PageController extends AppController
                             ->setError(true)
                             ->setMessage($msg);
 
-                        $page->setAlert($pageStatus->getMessage());
+                        $page->setAlert($pageStatus->getMessage(), 'error');
                     }
 
                     $errors = $entity->errors();
                     $page->setVar('errors', $errors);
                 }
                 $page->setVar('data', $entity);
+
+                if (!is_null($response)) {
+                    return $response;
+                }
             } else { // if primary key does not exists
                 $pageStatus->setCode(PageStatus::RECORD_NOT_FOUND)
                     ->setType('warning')
                     ->setError(true)
                     ->setMessage('The record does not exists.');
 
-                $page->setAlert($pageStatus->getMessage());
+                $page->setAlert($pageStatus->getMessage(), 'warning');
                 $response = $page->redirect(['action' => 'view']);
                 return $response;
             }
@@ -266,7 +273,7 @@ class PageController extends AppController
                     ->setError(true)
                     ->setMessage('The record does not exists.');
 
-                $page->setAlert($pageStatus->getMessage());
+                $page->setAlert($pageStatus->getMessage(), 'warning');
                 $response = $page->redirect(['action' => 'index'], 'QUERY');
 
                 return $response;
@@ -400,43 +407,9 @@ class PageController extends AppController
     public function onchange($type, $model, $finder = 'OptionList')
     {
         $request = $this->request;
-        $table = $this->{$model};
+        $page = $this->Page;
 
-        if ($table === false) {
-            $table = TableRegistry::get($model);
-        }
-
-        $options = [];
-        $finderOptions = [];
-        $conditions = [];
-        $isReset = false;
-
-        $requestQueries = $this->request->query;
-        $columns = $table->schema()->columns();
-        foreach ($requestQueries as $key => $value) {
-            if (in_array($key, $columns)) { // $key exists as a table column, automatically add as a condition
-                $conditions[$key] = $value;
-            } elseif ($key == 'multiple') { // if multiple flag is set, then turn off default option
-                $finderOptions['defaultOption'] = false;
-            } elseif ($key == 'reset') { // default selection has been chosen
-                $isReset = true;
-                break;
-            } elseif ($key == 'querystring') { // if querystring exists, decode the value
-                $finderOptions['querystring'] = $this->Page->decode($value);
-            } else { // any other values will be included in the finder options
-                $finderOptions[$key] = $value;
-            }
-        }
-
-        if (!$isReset) {
-            $finderOptions['conditions'] = $conditions;
-            $finderOptions['limit'] = 1000; // maximum number of options set to 1000 to prevent out of memory
-            if ($table->hasFinder($finder)) {
-                $options = $table->find($finder, $finderOptions)->toArray();
-            }
-        } else {
-            $options[] = ['value' => '', 'text' => __('No Options')];
-        }
+        $options = $page->getFilterOptions(implode('/', [$model, $finder]));
 
         $response = [
             'type' => $type,
