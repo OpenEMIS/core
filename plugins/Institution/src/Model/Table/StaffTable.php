@@ -165,10 +165,6 @@ class StaffTable extends ControllerActionTable
         $validator = $this->buildStaffValidation();
         return $validator
             ->allowEmpty('staff_name')
-            ->add('start_date', 'ruleCheckEndOfAssignmentWithStartDate', [
-                'rule' => ['checkEndOfAssignmentWithStartDate'],
-                'on' => 'create'
-            ])
             ->add('staff_name', 'ruleInstitutionStaffId', [
                 'rule' => ['institutionStaffId'],
                 'on' => 'create'
