@@ -1,26 +1,48 @@
 <?php
 use Cake\Routing\Router;
 
-Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions'], function ($routes) {
+Router::scope('/Institution', ['plugin' => 'Institution'], function ($routes)
+{
+    $routes->scope('/Institutions', ['controller' => 'Institutions'], function ($route) {
+        $route->connect('/',
+            ['action' => 'Institutions', ]
+        );
 
-    $routes->connect('/',
-        ['action' => 'Institutions']
-    );
+        // For the main model's action
+        $route->connect('/:indexAction',
+            [],
+            ['indexAction' => 'index','pass' => [0 => 'indexAction']]
+        );
 
-    // For the main model's action
-    $routes->connect('/:indexAction',
-        ['action' => 'Institutions'],
-        ['indexAction' => 'index','pass' => [0 => 'indexAction']]
-    );
+        $route->connect('/:institutionId/:action/*',
+            [],
+            ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
+        );
 
-    $routes->connect('/:institutionId/:action/*',
-        ['plugin' => 'Institution', 'controller' => 'Institutions'],
-        ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
-    );
+        // For controller action version 3
+        $route->connect('/:action/*',
+            [],
+            ['action' => '[a-zA-Z]+']
+        );
+    });
 
-    // For controller action version 3
-    $routes->connect('/:action/*',
-        [],
-        ['action' => '[a-zA-Z]+']
-    );
+    $routes->scope('/:institutionId/:controller', [], function ($route) {
+        $route->connect('/:action',
+            [],
+            ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
+        );
+
+        $route->connect('/:action/*',
+            [],
+            ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
+        );
+    });
+
+    // to be removed when institution_id added to the url.
+    // $routes->scope('/:controller', [], function($route) {
+    //     $route->connect('/:action');
+
+    //     $route->connect('/:action/*');
+    // });
+    // end here
 });

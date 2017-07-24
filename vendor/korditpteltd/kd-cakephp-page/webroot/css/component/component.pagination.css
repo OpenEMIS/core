@@ -1,0 +1,298 @@
+/* PAGINATION v.1.0.7 */
+
+.first a:before,
+.prev a:before,
+.next a:before,
+.last a:before {
+    font-family: 'FontAwesome';
+    font-size: 12px;
+}
+
+.first a:before {
+    content: "\f100";
+}
+
+.prev a:before {
+    content: "\f104";
+}
+
+.next a:before {
+    content: "\f105";
+}
+
+.last a:before {
+    content: "\f101";
+}
+
+.ellipsis {
+    float: left;
+    padding: 5px 8px;
+    height: 26px;
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+.pagination-wrapper {
+    overflow: hidden;
+    color: #666;
+    font-size: 12px !important;
+    font-weight: normal;
+}
+
+.pagination {
+    float: left;
+    font-size: 11px;
+    margin: 10px 15px 10px 0 !important;
+}
+
+.pagination > li > a,
+.pagination > li > span {
+    padding: 4px 8px;
+}
+
+.chrome .pagination > li > a,
+.chrome .pagination > li > span {
+    padding: 5px 8px 3px;
+}
+
+.pagination-wrapper .counter {
+    float: left;
+    margin: 15px 0;
+}
+
+.display-limit {
+    float: right;
+    margin: 10px 0;
+    width: 140px !important;
+    height: 30px;
+    text-align: right;
+}
+
+.display-limit span,
+.display-limit p {
+    width: auto;
+    margin-right: 5px;
+    padding: 6px 0;
+}
+
+.display-limit span {
+    float: left;
+    margin-top: 1px;
+}
+
+.display-limit .input-select-wrapper {
+    width: 45px !important;
+    float: left;
+}
+
+.display-limit .input-select-wrapper:after {
+    right: -6px;
+}
+
+.display-limit form {
+    width: 102px !important;
+}
+
+.display-limit select {
+    width: 100% !important;
+    padding: 5px 14px 5px 5px !important;
+    float: left;
+}
+
+.pagination li a {
+    z-index: 0;
+    color: #999;
+    height: 26px;
+}
+
+.pagination i {
+    font-weight: bolder;
+}
+
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.pagination>li>a:focus,
+.pagination>li>a:hover,
+.pagination>li>span:focus,
+.pagination>li>span:hover {
+    z-index: 1;
+    background-color: #999;
+    color: #FFF;
+    border: 1px solid #6B6B6B;
+    text-decoration: none;
+}
+
+.pagination li a:hover {
+    background-color: #6B6B6B;
+    color: #FFF;
+    border: 1px solid #6B6B6B;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.pagination>.disabled>a,
+.pagination>.disabled>a:hover,
+.pagination>.disabled>a:focus {
+    background-color: transparent !important;
+    border-color: #DDD !important;
+    color: #999 !important;
+}
+
+.pagination>li>a:focus {
+    background-color: #999 !important;
+    color: #FFF !important;
+    border-color: #6B6B6B;
+}
+
+.pagination > .active > a:focus,
+.pagination > li > a:hover,
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.pagination>li>a:focus {
+    z-index: 1 !important;
+}
+
+
+/* RTL PAGINATION */
+
+.rtl .first,
+.rtl .prev {
+    margin-left: -1px;
+}
+
+.rtl .first a:before,
+.rtl .prev a:before,
+.rtl .next a:before,
+.rtl .last a:before {
+    font-family: 'FontAwesome';
+    font-size: 12px;
+}
+
+.rtl .first a:before {
+    content: "\f101";
+}
+
+.rtl .prev a:before {
+    content: "\f105";
+}
+
+.rtl .next a:before {
+    content: "\f104";
+}
+
+.rtl .last a:before {
+    content: "\f100";
+}
+
+.rtl .pagination > li {
+    float: right;
+}
+
+.rtl .pagination>li:last-child>a,
+.pagination>li:last-child>span {
+    -webkit-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    -webkit-border-top-left-radius: 4px !important;
+    border-top-left-radius: 4px !important;
+    -webkit-border-bottom-left-radius: 4px !important;
+    border-bottom-left-radius: 4px !important;
+}
+
+.rtl .pagination>li:first-child>a,
+.pagination>li:first-child>span {
+    -webkit-border-top-right-radius: 4px !important;
+    border-top-right-radius: 4px !important;
+    -webkit-border-bottom-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+    -webkit-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-bottom-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.rtl .pagination {
+    margin: 10px 0 10px 15px !important;
+    padding: 0;
+}
+
+.rtl .pagination-wrapper {
+    padding: 10px 0;
+}
+
+.rtl .pagination-wrapper .counter {
+    margin: 14px 0;
+    float: right;
+}
+
+.rtl .display-limit {
+    margin: 7px 0;
+    width: 155px !important;
+}
+
+.rtl .display-limit span {
+    float: right;
+}
+
+.rtl .display-limit span {
+    float: right;
+}
+
+.rtl .display-limit span,
+.rtl .display-limit p {
+    margin-left: 5px;
+    margin-right: 0;
+    text-align: left;
+    width: 45px;
+}
+
+.rtl .display-limit p {
+    width: auto;
+}
+
+.rtl .display-limit form {
+    width: 110px !important;
+    position: relative;
+}
+
+.rtl .display-limit .input-select-wrapper {
+    margin-left: 5px;
+    float: right !important;
+}
+
+.rtl .display-limit select {
+    padding: 5px 5px 5px 14px !important;
+}
+
+.rtl .display-limit .select:before {
+    margin-right: 72px;
+    margin-top: -1px;
+}
+
+.rtl .input-select-wrapper:after {
+    left: 8px;
+    right: auto;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Table Devices */
+
+@media only screen and (max-width: 800px) {
+    .pagination-wrapper .counter {
+        clear: both !important;
+    }
+}
+
+
+/* Extra Small Devices, Phones */
+
+@media only screen and (max-width: 480px) {
+    .pagination {
+        margin: 0 0 10px !important;
+    }
+}
