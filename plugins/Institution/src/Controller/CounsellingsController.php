@@ -5,13 +5,13 @@ use Cake\Event\Event;
 
 use Page\Controller\PageController;
 
-class CounselingsController extends PageController
+class CounsellingsController extends PageController
 {
     public function initialize()
     {
         parent::initialize();
 
-        $this->Page->loadElementsFromTable($this->Counselings);
+        $this->Page->loadElementsFromTable($this->Counsellings);
 
         $this->loadComponent('RenderDate'); // will get the date format from config
         $this->loadComponent('Page.RenderLink'); // will get the date format from config
@@ -41,7 +41,7 @@ class CounselingsController extends PageController
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
         $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
         $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-        $page->addCrumb('Counselings');
+        $page->addCrumb('Counselling');
 
         // set header
         $header = $page->getHeader();
@@ -62,13 +62,13 @@ class CounselingsController extends PageController
 
     public function add()
     {
-        $this->addEditCounseling();
+        $this->addEditCounselling();
         parent::add();
     }
 
     public function edit($id)
     {
-        $this->addEditCounseling();
+        $this->addEditCounselling();
         parent::edit($id);
     }
 
@@ -87,7 +87,7 @@ class CounselingsController extends PageController
         parent::delete($id);
     }
 
-    private function addEditCounseling()
+    private function addEditCounselling()
     {
         $page = $this->Page;
         $page->exclude(['file_name']);
@@ -98,7 +98,7 @@ class CounselingsController extends PageController
         $page->get('guidance_type_id')->setControlType('dropdown');
 
         // set the options for counselor_id
-        $counselorOptions = $this->Counselings->getCounselorOptions($institutionId);
+        $counselorOptions = $this->Counsellings->getCounselorOptions($institutionId);
         $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
 
         // set the file upload for attachment
