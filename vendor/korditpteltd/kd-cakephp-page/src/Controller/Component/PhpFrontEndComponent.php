@@ -29,6 +29,13 @@ class PhpFrontEndComponent extends Component
         $this->controller = $this->_registry->getController();
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 4];
+        return $events;
+    }
+
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
@@ -82,7 +89,7 @@ class PhpFrontEndComponent extends Component
     private function formatTime(PageElement $element)
     {
         if ($element->getControlType() == 'time') {
-            $element->attr('format', 'H:i:s');
+            // $element->attr('format', 'H:i:s');
         }
     }
 }

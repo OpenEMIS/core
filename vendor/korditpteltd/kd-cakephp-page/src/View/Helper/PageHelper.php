@@ -40,7 +40,7 @@ class PageHelper extends Helper
             'include' => false,
             'css' => 'Page.../plugins/timepicker/css/bootstrap-timepicker.min',
             'js' => 'Page.../plugins/timepicker/js/bootstrap-timepicker.min',
-            'element' => 'Page.bootstrap-timepicker/timepicker'
+            'element' => 'Page.timepicker_js'
         ],
         'chosen' => [
             'include' => false,
@@ -579,45 +579,77 @@ EOT;
         return $this->_View->element('Page.date', $attr);
     }
 
-    // private function time(array $field)
-    // {
-    //     $options = ['type' => 'text', 'class' => 'form-control', 'label' => false];
-    //     $required = $field['required'];
-    //     $value = $field['value'];
+    public function time(array $field, $data)
+    {
+        $value = '';
 
-    //     if ($required) {
-    //         $options['required'] = 'required';
-    //     }
+        $options = [];
 
-    //     if (!empty($value)) {
-    //         $options['value'] = $value;
-    //     } else {
-    //         if ($required) {
-    //             $options['value'] = date('d-m-Y', time());
-    //         }
-    //     }
+        $_options = [
+            'defaultTime' => false
+        ];
 
-    //     $attr = [
-    //         'id' => $field['model'] . '_' . $field['name'],
-    //         'name' => $field['aliasField'],
-    //         'label' => $field['label'],
-    //         'options' => $options,
-    //         'required' => $required ? ' required' : ''
-    //     ];
+        $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
 
-    //     // datepicker variable is used for initialising javascript in datepicker.ctp
-    //     if (!is_null($this->_View->get('datepicker'))) {
-    //         $datepickers = $this->_View->get('datepicker');
-    //         $datepickers[] = $attr;
-    //         $this->_View->set('datepicker', $datepickers);
-    //     } else {
-    //         $this->_View->set('datepicker', [$attr]);
-    //     }
+        if (!isset($field['time_options'])) {
+            $options['time_options'] = [];
+        }
+        if (!isset($field['default_time'])) {
+            $options['default_time'] = true;
+        }
 
-    //     $this->includes['datepicker']['include'] = true;
+        // if (!is_null($data)) {
+        //     $invalid = $data->invalid();
+        //     if (!empty($invalid) && array_key_exists($field, $invalid)) {
+        //         $value = $data->invalid($field);
+        //     } else {
+        //         $value = $data->$field;
+        //     }
+        // }
 
-    //     return $this->_View->element('../Page/date', $attr);
-    // }
+        if (!isset($field['id'])) {
+            $field['id'] = $field['attributes']['name'];
+        }
+
+        $options['time_options'] = array_merge($_options, $options['time_options']);
+
+        if (isset($data[$field['key']])) {
+            if (!is_null($data[$field['key']])) {
+                $options['value'] = date('h:i A', strtotime($data[$field['key']]));
+                $options['time_options']['defaultTime'] = $options['value'];
+            } elseif ($options['default_time']) {
+                $options['time_options']['defaultTime'] = date('h:i A');
+            }
+        } else {
+            if (($data instanceof Entity && $data->offsetExists($field['key'])) || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
+                $options['value'] = $data[$field['key']]->format('h:i A');
+                $options['time_options']['defaultTime'] = $options['value'];
+            } else {
+                $options['value'] = date('h:i A', strtotime($data[$field['key']]));
+                $options['time_options']['defaultTime'] = $data[$field['key']];
+            }
+        }
+
+        $attr = [
+            'id' => str_replace('.', '_', $field['attributes']['name']),
+            'name' => $field['attributes']['name'],
+            'label' => $field['label'],
+            'options' => $options,
+            'required' => $required ? ' required' : ''
+        ];
+
+        if (!is_null($this->_View->get('timepicker'))) {
+            $timepickers = $this->_View->get('timepicker');
+            $timepickers[] = $attr;
+            $this->_View->set('timepicker', $timepickers);
+        } else {
+            $this->_View->set('timepicker', [$attr]);
+        }
+        $this->includes['timepicker']['include'] = true;
+        $value = $this->_View->element('Page.time', $attr);
+
+        return $value;
+    }
 
     public function table(array $field, $data)
     {

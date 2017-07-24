@@ -51,9 +51,6 @@ Page.removeUrlParam = function(key) {
 }
 
 Page.querystring = function(key, value) {
-    if (value != null && value.trim().length == 0) {
-        return;
-    }
     var querystringValue = this.querystringValue;
 
     if (querystringValue != null) {
@@ -62,7 +59,7 @@ Page.querystring = function(key, value) {
         querystringValue = {};
     }
 
-    if (value == null) {
+    if (value == null || value.trim().length == 0) {
         delete querystringValue[key];
     } else {
         querystringValue[key] = value;
@@ -89,16 +86,17 @@ Page.onChange = function(source, target) {
     var xhr = new XMLHttpRequest();
     var isMultiple = target.getAttribute('multiple') != null;
     var method = 'onchange/' + target.getAttribute('params');
-    var isReset = source.value.length == 0;
-    var params = source.id + '=' + source.value;
+    // var isReset = source.value.length == 0;
+    var params = {};
+    params[source.id] = source.value;
 
     if (isMultiple) {
-        params += '&multiple=true';
+        params['multiple'] = 'true';
     }
-    if (isReset) {
-        params += '&reset=true';
-    }
-    xhr.open('GET', method + '?' + params);
+    // if (isReset) {
+    //     params['reset'] = 'true';
+    // }
+    xhr.open('GET', method + '?querystring=' + JSON.stringify(params).hexEncode());
     xhr.onload = function() {
         if (xhr.status === 200) {
             target.innerHTML = '';

@@ -153,6 +153,15 @@ class PageComponent extends Component
             }
 
             if ($this->filters->count() > 0) {
+                $querystring = $this->getQueryString();
+
+                foreach ($this->filters as $filter) {
+                    $dependentOn = $filter->getDependentOn();
+                    if ($dependentOn && array_key_exists($dependentOn, $querystring)) {
+                        $filterOptions = $this->getFilterOptions($filter->getParams());
+                        $filter->setOptions($filterOptions);
+                    }
+                }
                 $this->setVar('filters', $this->filtersToJSON());
             }
 
@@ -196,6 +205,43 @@ class PageComponent extends Component
         if ($this->isDebugMode()) {
             pr($this->controller->viewVars);die;
         }
+    }
+
+    public function getFilterOptions($params)
+    {
+        $params = explode('/', $params);
+        $querystring = $this->getQueryString();
+
+        $model = $params[0];
+        $finder = 'OptionList';
+        if (count($params) == 2) {
+            $finder = $params[1];
+        }
+
+        $table = $this->controller->{$model};
+
+        if ($table === false) {
+            $table = TableRegistry::get($model);
+        }
+
+        $options = [];
+        $conditions = [];
+        $finderOptions = ['limit' => 1000, 'querystring' => $querystring];
+
+        foreach ($querystring as $key => $value) {
+            if (in_array($key, $table->schema()->columns())) {
+                $conditions[$key] = $querystring[$key];
+            }
+        }
+        if (!empty($conditions)) {
+            $finderOptions['conditions'] = $conditions;
+        }
+
+        if ($table->hasFinder($finder)) {
+            $options = $table->find($finder, $finderOptions)->toArray();
+        }
+
+        return $options;
     }
 
     public function debug()
@@ -839,7 +885,9 @@ class PageComponent extends Component
         if ($this->hasMainTable()) {
             $table = $this->getMainTable();
             $foreignKey = $element->getForeignKey();
-            if ($foreignKey) {
+            if (!is_null($element->getParams())) {
+                $element->setOptions($this->getFilterOptions($element->getParams()));
+            } elseif ($foreignKey) {
                 $association = $foreignKey['name'];
                 // default limit to 1000 to prevent out of memory error
                 $element->setOptions($table->$association->find('list')->limit(1000)->toArray());
