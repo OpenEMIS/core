@@ -73,10 +73,10 @@ class POCOR3953 extends AbstractMigration
             ->save();
         // end guidance_types
 
-        // institution_counselors
-        $table = $this->table('institution_counselors', [
+        // institution_counsellings
+        $table = $this->table('institution_counsellings', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This table contains counselor in the institution'
+                'comment' => 'This table contains counsellings in the institution'
             ]);
         $table->addColumn('date', 'date', [
                 'default' => null,
@@ -103,17 +103,20 @@ class POCOR3953 extends AbstractMigration
             ->addColumn('counselor_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => false
+                'null' => false,
+                'comment' => 'links to security_users.id'
             ])
             ->addColumn('student_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => false
+                'null' => false,
+                'comment' => 'links to security_users.id'
             ])
             ->addColumn('guidance_type_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => false
+                'null' => false,
+                'comment' => 'links to guidance_types.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -139,13 +142,13 @@ class POCOR3953 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end institution_counselors
+        // end institution_counsellings
 
         // security_functions
         $data = [
             'id' => '1061',
-            'name' => 'Counseling',
-            'controller' => 'Counselings',
+            'name' => 'Counselling',
+            'controller' => 'Counsellings',
             'module' => 'Institutions',
             'category' => 'Students',
             'parent_id' => 8,
@@ -179,7 +182,7 @@ class POCOR3953 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE guidance_types');
-        $this->execute('DROP TABLE institution_counselors');
+        $this->execute('DROP TABLE institution_counsellings');
         $this->execute('DELETE FROM security_functions WHERE id = 1061');
         $this->execute('DELETE FROM security_role_functions WHERE security_function_id = 1061');
     }

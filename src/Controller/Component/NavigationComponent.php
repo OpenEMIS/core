@@ -250,7 +250,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counselings'];
+        $institutionControllers = ['Counsellings'];
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -683,11 +683,11 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                     'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']
             ],
-            'Counselings.index' => [
-                'title' => 'Counselings',
+            'Counsellings.index' => [
+                'title' => 'Counselling',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Counselings.add', 'Counselings.edit', 'Counselings.view', 'Counselings.delete']
+                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
             ],
             'Students.BankAccounts' => [
                 'title' => 'Finance',

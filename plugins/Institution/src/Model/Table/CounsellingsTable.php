@@ -7,13 +7,13 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 
-class CounselingsTable extends AppTable
+class CounsellingsTable extends AppTable
 {
     const ASSIGNED = 1;
 
     public function initialize(array $config)
     {
-        $this->table('institution_counselors');
+        $this->table('institution_counsellings');
         parent::initialize($config);
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Staff.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
