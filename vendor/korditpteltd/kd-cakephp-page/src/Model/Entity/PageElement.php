@@ -452,8 +452,8 @@ class PageElement
             if ($property == 'displayFrom' && $propertyValue) {
                 $properties[$property] = $propertyValue;
             } else if (!is_null($propertyValue)) {
-                if ($property == 'dependentOn') {
-                    $properties[$property] = $this->getKey() . '/' . $propertyValue;
+                if ($property == 'params') {
+                    $properties[$property] = $this->getControlType() . '/' . $propertyValue;
                 } else {
                     $properties[$property] = $propertyValue;
                 }
