@@ -15,12 +15,13 @@ use Cake\Log\Log;
 
 use Page\Model\Entity\PageElement;
 use Page\Model\Entity\PageFilter;
+use Page\Model\Entity\PageStatus;
 
 class PhpFrontEndComponent extends Component
 {
     private $controller = null;
 
-    public $components = ['Page.Page', 'Alert'];
+    public $components = ['Page.Page'];
 
     public function initialize(array $config)
     {
@@ -28,10 +29,17 @@ class PhpFrontEndComponent extends Component
         $this->controller = $this->_registry->getController();
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 4];
+        return $events;
+    }
+
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
-        $request = $this->request;
+
     }
 
     // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
@@ -40,75 +48,48 @@ class PhpFrontEndComponent extends Component
         $controller = $this->controller;
         $request = $this->request;
         $action = $request->action;
-        $elements = $this->Page->getElements();
+        $page = $this->Page;
+        $elements = $page->getElements();
 
         foreach ($elements as $element) {
-            if ($element->getName() == 'openemis_no') {
+            if ($element->getKey() == 'openemis_no') {
                 $element->setLabel('OpenEMIS ID');
             }
 
-            $this->formatDate($element);
             $this->formatTime($element);
         }
         if ($request->is(['put', 'post'])) {
-            $this->Page->showElements(true);
+            $page->showElements(true);
         }
 
         $controller->set('menuItemSelected', [$controller->name]);
-    }
 
-    public function implementedEvents()
-    {
-        $eventMap = [
-            'Controller.Page.addAfterSave' => ['callable' => 'addAfterSave', 'priority' => 5],
-            'Controller.Page.editAfterSave' => ['callable' => 'editAfterSave', 'priority' => 5]
-        ];
-
-        $events = parent::implementedEvents();
-        foreach ($eventMap as $event => $method) {
-            if (!method_exists($this, $method['callable'])) {
-                continue;
-            }
-            $events[$event] = $method;
-        }
-        return $events;
-    }
-
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $errors = $entity->errors();
-        if (empty($errors)) {
-            $this->Alert->success('general.add.success');
-            $url = $this->Page->getUrl(['action' => 'index']);
-            return $this->controller->redirect($url);
-        } else {
-            $this->Alert->error('general.add.failed');
+        if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            $viewFile = 'Page.Page/' . $action;
+            $this->controller->viewBuilder()->template($viewFile);
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $errors = $entity->errors();
-        if (empty($errors)) {
-            $this->Alert->success('general.edit.success');
-            $url = $this->Page->getUrl(['action' => 'view']);
-            return $this->controller->redirect($url);
-        } else {
-            $this->Alert->error('general.edit.failed');
-        }
-    }
+    // public function implementedEvents()
+    // {
+    //     $eventMap = [
 
-    private function formatDate(PageElement $element)
-    {
-        if ($element->getControlType() == 'date') {
-            $element->attr('format', 'Y-m-d');
-        }
-    }
+    //     ];
+
+    //     $events = parent::implementedEvents();
+    //     foreach ($eventMap as $event => $method) {
+    //         if (!method_exists($this, $method['callable'])) {
+    //             continue;
+    //         }
+    //         $events[$event] = $method;
+    //     }
+    //     return $events;
+    // }
 
     private function formatTime(PageElement $element)
     {
         if ($element->getControlType() == 'time') {
-            $element->attr('format', 'H:i:s');
+            // $element->attr('format', 'H:i:s');
         }
     }
 }

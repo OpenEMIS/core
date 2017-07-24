@@ -4,9 +4,27 @@ $url = ['plugin' => $this->request->params['plugin'], 'controller' => $this->req
 $actionItem = '<li role="presentation"><a href="%s" role="menuitem" tabindex="-1"><i class="%s"></i>%s</a></li>';
 $primaryKey = !is_array($data) ? $data->primaryKey : $data['primaryKey']; // $data may be Entity or array
 
+$view = true;
+$edit = true;
+$delete = true;
+
+if (!is_array($data)) {
+    if ($data->has('disabledActions')) {
+        $view = !in_array('view', $data->disabledActions);
+        $edit = !in_array('edit', $data->disabledActions);
+        $delete = !in_array('delete', $data->disabledActions);
+    }
+} else {
+    if (array_key_exists('disabledActions', $data)) {
+        $view = !in_array('view', $data['disabledActions']);
+        $edit = !in_array('edit', $data['disabledActions']);
+        $delete = !in_array('delete', $data['disabledActions']);
+    }
+}
+
 $rowActions = [];
 
-if (array_key_exists('view', $actions)) {
+if (!in_array('view', $disabledActions) && $view == true) {
     $rowActions[] = [
         'href' => $this->Page->getUrl(array_merge($url, ['action' => 'view', $primaryKey])),
         'icon' => 'fa fa-eye',
@@ -14,7 +32,7 @@ if (array_key_exists('view', $actions)) {
     ];
 }
 
-if (array_key_exists('edit', $actions)) {
+if (!in_array('edit', $disabledActions) && $edit == true) {
     $rowActions[] = [
         'href' => $this->Page->getUrl(array_merge($url, ['action' => 'edit', $primaryKey])),
         'icon' => 'fa fa-pencil',
@@ -22,7 +40,7 @@ if (array_key_exists('edit', $actions)) {
     ];
 }
 
-if (array_key_exists('delete', $actions)) {
+if (!in_array('delete', $disabledActions) && $delete == true) {
     $rowActions[] = [
         'href' => $this->Page->getUrl(array_merge($url, ['action' => 'delete', $primaryKey])),
         'icon' => 'fa fa-trash',

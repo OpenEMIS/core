@@ -1,0 +1,67 @@
+/* MODAL v.1.0.5 */
+
+.modal-backdrop {
+    z-index: 2000;
+}
+
+.modal-dialog {
+    z-index: 2001;
+    margin-top: 8%;
+}
+
+.modal-title {
+    width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    -ms-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+}
+
+.modal-body img {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.modal-body .modal-description {
+    margin: 15px 0 0;
+}
+
+.modal-body .modal-description p {
+    width: 90%;
+    -ms-word-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.modal a:hover {
+    text-decoration: none !important;
+}
+
+body > svg,
+.modal .modal-img-svg {
+    position: absolute;
+    left: -800px;
+    top: -800px;
+    z-index: -99999;
+}
+
+@media (max-width: 1024px) {
+    .modal-dialog {
+        margin-top: 15%;
+    }
+}
+
+@media (max-width: 800px) {
+    .modal-dialog {
+        margin-top: 25%;
+    }
+}
+
+@media (min-width: 100px) and (max-width: 480px) {
+    .modal-dialog {
+        margin-top: 30%;
+    }
+    .modal-content {
+        margin: 15px;
+    }
+}
