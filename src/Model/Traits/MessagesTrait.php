@@ -563,6 +563,7 @@ trait MessagesTrait
         'StaffTransferApprovals' => [
             'transferType' => 'Please select the transfer type.',
             'effectiveDate' => 'Please enter an effective date for the partial transfer.',
+            'effectiveDateCompare' => 'Effective date should be later than Current Start Date.',
             'newFTE' => 'Please select a new FTE for the partial transfer.',
             'staffEndOfAssignment' => 'The assignment of this staff has ended.'
         ],
