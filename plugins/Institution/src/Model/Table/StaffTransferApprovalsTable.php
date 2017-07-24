@@ -158,6 +158,12 @@ class StaffTransferApprovalsTable extends StaffTransfer
                 if (empty($data[$this->alias()]['effective_date'])) {
                     $extra[$this->aliasField('notice')] = $this->aliasField('effectiveDate');
                     $error = true;
+                } else if (!empty($data[$this->alias()]['effective_date'])) {
+                    $effectiveDate = $data[$this->alias()]['effective_date'];
+                    if (new Date($effectiveDate) <= $staffRecord->start_date) {
+                        $extra[$this->aliasField('notice')] = $this->aliasField('effectiveDateCompare');
+                        $error = true;
+                    }
                 }
 
                 if (empty($data[$this->alias()]['new_FTE'])) {
