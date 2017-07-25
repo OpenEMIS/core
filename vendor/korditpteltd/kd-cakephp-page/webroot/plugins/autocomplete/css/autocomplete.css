@@ -1,0 +1,48 @@
+.autocomplete:focus {
+	outline: none !important;
+}
+
+.autocomplete-loader {
+	display: inline-block;
+	position: relative;
+	background-image: url('../img/loader.gif');
+	background-repeat: no-repeat;
+	height: 16px;
+	width: 16px;
+	left: -25px;
+	top: -1px !important;
+	vertical-align: middle;
+	margin-bottom: 5px;
+}
+
+.safari .autocomplete-loader {
+	top: 2px;
+}
+
+.rtl .autocomplete-loader {
+	left: auto !important;
+	right: -25px;
+}
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Extra Small Devices, Phones */
+
+@media only screen and (max-width: 800px) {
+	.autocomplete {
+		position: relative;
+	}
+	.autocomplete-loader {
+		margin-left: 0 !important;
+		left: auto !important;
+		right: 5px !important;
+		position: absolute;
+		top: auto !important;
+		margin: 7px;
+	}
+	.rtl .autocomplete-loader {
+		right: auto !important;
+		left: 10px !important;
+	}
+}

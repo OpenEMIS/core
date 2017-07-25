@@ -250,8 +250,13 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
+        $institutionControllers = ['Counsellings'];
 
-        if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
+        if (in_array($controller->name, $institutionControllers) || (
+            $controller->name == 'Institutions'
+            && $action != 'index'
+            && (!in_array($action, $institutionActions)))
+            ) {
             $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
             $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
             $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
@@ -676,7 +681,14 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
-                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
+                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']
+            ],
+            'Counsellings.index' => [
+                'title' => 'Counselling',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
+            ],
             'Students.BankAccounts' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Students.index',

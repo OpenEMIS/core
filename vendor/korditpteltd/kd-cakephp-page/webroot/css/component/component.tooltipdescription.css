@@ -1,0 +1,132 @@
+/* TOOLTIP DESCRIPTION v.1.0.0 */
+
+.tooltip-desc {
+    position: relative;
+    padding: 5px 30px 5px 20px !important;
+}
+
+.tooltip-desc .fa-right,
+.tooltip-desc .fa-left {
+    position: absolute;
+    top: 50%;
+    -webkit-transform: translate(0, -50%);
+       -moz-transform: translate(0, -50%);
+        -ms-transform: translate(0, -50%);
+         -o-transform: translate(0, -50%);
+            transform: translate(0, -50%);
+}
+
+.tooltip-desc .fa {
+    cursor: pointer;
+}
+
+.tooltip-desc .fa-left {
+    left: 0;
+}
+
+.tooltip-desc .fa-right {
+    right: 10px;
+}
+
+/* BLUE(INFO) TOOLTIP */
+
+.tooltip-blue.top .tooltip-arrow {
+    border-top-color: #5C82CC !important;
+}
+
+.tooltip-blue.right .tooltip-arrow {
+    border-right-color: #5C82CC !important;
+}
+
+.tooltip-blue.left .tooltip-arrow {
+    border-left-color: #5C82CC !important;
+}
+
+.tooltip-blue.bottom .tooltip-arrow {
+    border-bottom-color: #5C82CC !important;
+}
+
+/* RED(ERROR) TOOLTIP */
+
+.tooltip-red.top .tooltip-arrow {
+    border-top-color: #CC5C5C !important;
+}
+
+.tooltip-red.right .tooltip-arrow {
+    border-right-color: #CC5C5C !important;
+}
+
+.tooltip-red.left .tooltip-arrow {
+    border-left-color: #CC5C5C !important;
+}
+
+.tooltip-red.bottom .tooltip-arrow {
+    border-bottom-color: #CC5C5C !important;
+}
+
+/* ORANGE(WARNING) TOOLTIP */
+
+.tooltip-orange.top .tooltip-arrow {
+    border-top-color: #E6BA64 !important;
+}
+
+.tooltip-orange.right .tooltip-arrow {
+    border-right-color: #E6BA64 !important;
+}
+
+.tooltip-orange.left .tooltip-arrow {
+    border-left-color: #E6BA64 !important;
+}
+
+.tooltip-orange.bottom .tooltip-arrow {
+    border-bottom-color: #E6BA64 !important;
+}
+
+
+/* RTL */
+
+.rtl .tooltip-desc {
+    padding: 5px 20px 5px 30px !important;
+}
+
+.rtl .tooltip-desc .fa-left {
+    left: auto !important;
+    right: 0;
+}
+
+.rtl .tooltip-desc .fa-right {
+    right: auto !important;
+    left: 10px;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+/* Bigger Screen */
+@media only screen and (max-width : 800px) {
+    .tooltip-blue,
+    .tooltip-red,
+    .tooltip-orange {
+        margin-right: 18px;
+    }
+    .tooltip-blue.bottom .tooltip-arrow,
+    .tooltip-red.bottom .tooltip-arrow,
+    .tooltip-orange.bottom .tooltip-arrow {
+        left: auto;
+        right: 9px;
+    }
+    .rtl .tooltip-blue,
+    .rtl .tooltip-red,
+    .rtl .tooltip-orange {
+        margin-right: 0 !important;
+        margin-left: 23px;
+        left: 0 !important;
+        right: auto;
+    }
+    .rtl .tooltip-blue.bottom .tooltip-arrow,
+    .rtl .tooltip-red.bottom .tooltip-arrow,
+    .rtl .tooltip-orange.bottom .tooltip-arrow {
+        left: 9px !important;
+        right: auto !important;
+    }
+}
