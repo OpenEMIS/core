@@ -1,0 +1,43 @@
+/* ALERTS v.1.0.2 */
+
+.alert {
+    color: #FFF;
+    padding: 10px;
+    margin: 0 0 10px;
+}
+
+.alert-success {
+    background-color: #77B576;
+    border: 1px solid #77B576;
+}
+
+.alert-info {
+    background-color: #5C82CC;
+    border: 1px solid #5C82CC;
+}
+
+.alert-warning {
+    background-color: #E6BA64;
+    border: 1px solid #E6BA64;
+}
+
+.alert-danger {
+    background-color: #CC5C5C;
+    border: 1px solid #CC5C5C;
+}
+
+.alert-danger a.close,
+.alert-success a.close {
+    opacity: 0.3;
+}
+
+.alert-danger a.close:hover,
+.alert-success a.close:hover {
+    opacity: 0.5;
+    text-decoration: none !important;
+}
+
+.alert .close {
+    font-size: 16px;
+    margin-top: -3px;
+}

@@ -7,26 +7,23 @@ $this->start('toolbar');
 
 echo $this->element('Page.button', ['title' => __('Back'), 'url' => ['action' => 'index'], 'iconClass' => 'fa kd-back', 'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']]);
 
-if (array_key_exists('edit', $actions)) {
+if (!in_array('edit', $disabledActions)) {
     echo $this->element('Page.button', ['title' => __('Edit'), 'url' => ['action' => 'edit', $primaryKey], 'iconClass' => 'fa kd-edit', 'linkOptions' => ['title' => __('Edit')]]);
 }
 
-if (array_key_exists('delete', $actions)) {
+if (!in_array('delete', $disabledActions)) {
     echo $this->element('Page.button', ['title' => __('Delete'), 'url' => ['action' => 'delete', $primaryKey], 'iconClass' => 'fa kd-trash', 'linkOptions' => ['title' => __('Delete')]]);
 }
 
 $this->end();
 
 $this->start('contentBody');
+
+if (isset($elements)) {
+    echo $this->Page->renderViewElements($elements);
+} else {
+    echo 'There are no elements';
+}
+
+$this->end();
 ?>
-
-<div class="panel">
-    <div class="panel-body">
-        <?php
-        echo $this->element('Page.alert');
-        echo $this->Page->renderViewElements();
-        ?>
-    </div>
-</div>
-
-<?php $this->end() ?>
