@@ -1,0 +1,138 @@
+/* MINI DASHBOARD v.1.0.1 */
+
+.overview-box {
+    padding: 8px !important;
+    color: #555 !important;
+    min-height: 110px;
+    background-color: #F9F9F9;
+    border: 1px solid #CCC;
+    float: none;
+    clear: both;
+    margin: 0 0 10px !important;
+    display: block;
+    padding: 0;
+}
+
+#canvas-holder {
+    float: left;
+    margin: 0 !important;
+    padding-right: 10px;
+}
+
+#chart-area {
+    width: 85px !important;
+    height: 85px !important;
+    margin-top: 4px;
+}
+
+.data-header {
+    font-size: 32px;
+    font-weight: bold;
+    color: #000;
+}
+
+.data-section {
+    position: relative;
+    padding: 0 auto;
+    display: inline-block;
+    width: 24%;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.data-section i {
+    font-size: 82px;
+    background-color: #999;
+    color: #FFF;
+    border: 2px solid #999;
+    margin: 5px 5px 5px 0;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.data-section .icon {
+    background: none !important;
+    border: 0 !important;
+    color: #999;
+    padding: 0 10px;
+    font-size: 78px;
+}
+
+.data-field {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.data-field h4 {
+	margin: 0;
+}
+
+.data-field h1 {
+	margin: 5px 0 0;
+}
+
+.data-field p {
+    margin: 0;
+}
+
+.data-blue:before {
+    color: #5C82CC;
+    font-family: 'FontAwesome';
+    content: "\f0c8";
+    float: left;
+    margin-right: 5px;
+}
+
+.data-pink:before {
+    color: #CC5C5C;
+    font-family: 'FontAwesome';
+    content: "\f0c8";
+    float: left;
+    margin-right: 5px;
+}
+
+.minidashboard-donut {
+    height: 100px;
+    width: 100px;
+}
+
+.overview-box .highcharts-container svg,
+.overview-box .highcharts-container {
+    overflow: visible !important;
+}
+
+@media (max-width: 1140px) {
+	.data-section {
+		width: 45%;
+		margin: 5px 0 10px;
+	}	
+	.data-section i {
+		font-size: 68px !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.data-section {
+		width: 47%;
+		margin: 0 0 15px;
+	}
+	.data-section i {
+		font-size: 45px !important;
+	}
+	.data-field {
+		vertical-align: middle;
+	}
+    .data-field h4 {
+        font-size: 15px;
+    }
+    .data-header {
+        font-size: 25px;
+    }
+    .data-section .icon {
+        margin: 0 2px;
+        padding: 0;
+    }
+}

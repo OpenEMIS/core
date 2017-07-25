@@ -40,7 +40,7 @@ class ConfigProductListsTable extends ControllerActionTable
                 'rule' => ['url', true]
             ])
             ->allowEmpty('url')
-            ->allowEmpty('file_content')
+            ->allowEmpty('->allowEmpty('file_content')->allowEmpty('file_content')')
             ;
         return $validator;
     }
