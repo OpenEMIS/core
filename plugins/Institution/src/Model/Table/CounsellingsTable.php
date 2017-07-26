@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
@@ -16,7 +17,7 @@ class CounsellingsTable extends AppTable
         $this->table('institution_counsellings');
         parent::initialize($config);
 
-        $this->belongsTo('GuidanceTypes', ['className' => 'Staff.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
@@ -36,6 +37,26 @@ class CounsellingsTable extends AppTable
         return $this->defaultConfig;
     }
 
+    public function findIndex(Query $query, array $options)
+    {
+        return $query->order([
+            'date' => 'ASC',
+            'GuidanceTypes.order' => 'ASC'
+        ]);
+    }
+
+    public function getGuidanceTypesOptions($institutionId)
+    {
+        // should be auto, if auto the reorder and visible not working
+        $guidanceTypesOptions = $this->GuidanceTypes
+            ->find('list')
+            ->find('visible')
+            ->find('order')
+            ->toArray();
+
+        return $guidanceTypesOptions;
+    }
+
     public function getCounselorOptions($institutionId)
     {
         // get the staff that assigned from the institution from security user
@@ -44,7 +65,7 @@ class CounsellingsTable extends AppTable
         $counselorOptions = $this->Counselors
             ->find('list', [
                 'keyField' => 'id',
-                'valueField' => 'name'
+                'valueField' => 'name_with_id'
             ])
             ->innerJoin(
                     [$InstitutionStaff->alias() => $InstitutionStaff->table()],

@@ -1,5 +1,5 @@
 <?php
-namespace Staff\Model\Table;
+namespace Student\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -10,7 +10,7 @@ class GuidanceTypesTable extends ControllerActionTable
         $this->table('guidance_types');
         parent::initialize($config);
 
-        $this->hasMany('Counselors', ['className' => 'Counselors']);
+        $this->hasMany('Counsellings', ['className' => 'Institution.Counsellings']);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');
