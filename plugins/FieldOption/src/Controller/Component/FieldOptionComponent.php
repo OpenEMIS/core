@@ -41,6 +41,7 @@ class FieldOptionComponent extends Component
         'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],
         'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
+        'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
 
     // Staff
         'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],
@@ -50,7 +51,6 @@ class FieldOptionComponent extends Component
         'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
         'Competencies' => ['className' => 'Staff.Competencies', 'parent' => 'Staff'],
         'CompetencySets' => ['className' => 'Staff.CompetencySets', 'parent' => 'Staff'],
-        'GuidanceTypes' => ['className' => 'Staff.GuidanceTypes', 'parent' => 'Staff'],
 
     // Finance
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
