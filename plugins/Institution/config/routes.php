@@ -37,12 +37,4 @@ Router::scope('/Institution', ['plugin' => 'Institution'], function ($routes)
             ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
         );
     });
-
-    // to be removed when institution_id added to the url.
-    // $routes->scope('/:controller', [], function($route) {
-    //     $route->connect('/:action');
-
-    //     $route->connect('/:action/*');
-    // });
-    // end here
 });
