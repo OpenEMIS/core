@@ -19,6 +19,13 @@ class CounsellingsController extends PageController
         $this->Page->enable(['download']);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.Page.onRenderCounselorId'] = 'onRenderCounselorId';
+        return $events;
+     }
+
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
@@ -80,6 +87,12 @@ class CounsellingsController extends PageController
         parent::view($id);
     }
 
+    // to display the counselor name with id
+    public function onRenderCounselorId(Event $event, $entity, $key)
+    {
+        return $entity->counselor->name_with_id;
+    }
+
     public function delete($id)
     {
         $page = $this->Page;
@@ -94,8 +107,9 @@ class CounsellingsController extends PageController
         $institutionId = $page->getQueryString('institution_id');
         $studentId = $page->getQueryString('student_id');
 
-        // set the options for guidance_type_id
-        $page->get('guidance_type_id')->setControlType('dropdown');
+        // set the options for guidance_type_id, should be auto create the options, but reorder and visible not working.
+        $guidanceTypesOptions = $this->Counsellings->getGuidanceTypesOptions($institutionId);
+        $page->get('guidance_type_id')->setControlType('dropdown')->setOptions($guidanceTypesOptions);
 
         // set the options for counselor_id
         $counselorOptions = $this->Counsellings->getCounselorOptions($institutionId);
