@@ -1485,7 +1485,10 @@ class InstitutionsController extends AppController
             $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
 
-        echo json_encode($options);
+        $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
+        $this->response->type('json');
+
+        return $this->response;
     }
 
     public function getStatusPermission($model)
