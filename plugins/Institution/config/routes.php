@@ -38,3 +38,28 @@ Router::scope('/Institution', ['plugin' => 'Institution'], function ($routes)
         );
     });
 });
+
+
+// Fall back route, to be deleted after the URL is fixed. (affected staffTransferRequest, staffTransferApproval)
+Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions'], function ($route) {
+    $route->connect('/',
+        ['action' => 'Institutions', ]
+    );
+
+    // For the main model's action
+    $route->connect('/:indexAction',
+        [],
+        ['indexAction' => 'index','pass' => [0 => 'indexAction']]
+    );
+
+    $route->connect('/:institutionId/:action/*',
+        [],
+        ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
+    );
+
+    // For controller action version 3
+    $route->connect('/:action/*',
+        [],
+        ['action' => '[a-zA-Z]+']
+    );
+});
