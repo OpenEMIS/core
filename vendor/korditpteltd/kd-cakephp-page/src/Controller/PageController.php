@@ -86,6 +86,13 @@ class PageController extends AppController
                 }
                 $data = $this->Paginator->paginate($query, $paginateOptions->getArrayCopy());
             }
+
+            // if data is empty display the warning message
+            if (count($data) == 0) {
+                $message = __('There are no records.');
+                $page->setAlert($message, 'info');
+            }
+
             foreach ($data as $entity) {
                 $page->attachPrimaryKey($table, $entity);
             }
