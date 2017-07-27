@@ -70,21 +70,56 @@ class StaffTransferRequestsTable extends StaffTransfer
         $query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'Positions']);
     }
 
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        $model = $this;
+        $process = function($model, $entity) use ($data) {
+            $staffDetail = $data[$this->alias()];
+            $transferRecord = $data[$this->alias()];
+            unset($staffDetail['id']);
+            unset($staffDetail['previous_institution_id']);
+            unset($staffDetail['comment']);
+            $staffDetail['staff_status_id'] = $staffDetail['status'];
+            unset($staffDetail['status']);
+            $StaffTable = TableRegistry::get('Institution.Staff');
+            $newStaffEntity = $StaffTable->newEntity($staffDetail, ['validate' => "AllowPositionType"]);
+
+            if ($newStaffEntity->errors()) {
+                $errors = $newStaffEntity->errors();
+
+                foreach ($errors as $key => $value) {
+                    $entity->errors($key, $value);
+                }
+
+                return false;
+            } else {
+                $success = $this->connection()->transactional(function() use ($StaffTable, $newStaffEntity, $model, $transferRecord) {
+                    if (!$StaffTable->save($newStaffEntity)) {
+                        return false;
+                    }
+
+                    $transferRecord['status'] = self::CLOSED;
+                    $transferEntity = $model->newEntity($transferRecord);
+                    if (!$model->save($transferEntity)) {
+                        return false;
+                    }
+
+                    return true;
+                });
+
+                return $success;
+            }
+        };
+
+        return $process;
+    }
+
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         parent::editAfterAction($event, $entity, $extra);
 
-        if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
-            $errors = $this->Session->read('Institution.StaffTransferRequests.errors');
-            $this->Alert->error('StaffTransferRequests.errorApproval');
-            foreach ($errors as $error) {
-                $this->Alert->error($error, ['type' => 'text']);
-            }
-            $this->Session->delete('Institution.StaffTransferRequests.errors');
-        }
-
         $this->field('previous_institution_id', ['type' => 'readonly', 'after' => 'staff_id', 'attr' => ['value' => $entity->previous_institution->code_name]]);
-        $this->field('institution_position_id', ['type' => 'select', 'attr' => ['value' => $this->getEntityProperty($entity, 'institution_position_id')]]);
+        $this->field('institution_position_id', ['type' => 'select']);
         $this->field('staff_type_id', ['type' => 'select']);
         $this->field('FTE', ['type' => 'select']);
     }
@@ -242,44 +277,6 @@ class StaffTransferRequestsTable extends StaffTransfer
         } else if ($this->action == 'edit') {
             if ($this->request->data[$this->alias()]['status'] == self::APPROVED) {
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Assign');
-                $buttons[0]['attr'] = ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'assign'];
-            }
-        }
-    }
-
-    // Assign of staff
-    public function editOnAssign(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $staffDetail = $data[$this->alias()];
-        $transferRecord = $data[$this->alias()];
-        unset($staffDetail['id']);
-        unset($staffDetail['previous_institution_id']);
-        unset($staffDetail['comment']);
-        $staffDetail['staff_status_id'] = $staffDetail['status'];
-        unset($staffDetail['status']);
-        $StaffTable = TableRegistry::get('Institution.Staff');
-        $newStaffEntity = $StaffTable->newEntity($staffDetail, ['validate' => "AllowPositionType"]);
-        if ($newStaffEntity->errors()) {
-            $message = [];
-            $errors = $newStaffEntity->errors();
-            foreach ($errors as $key => $value) {
-                $msg = 'Institution.Staff.'.$key;
-                if (is_array($value)) {
-                    foreach ($value as $k => $v) {
-                        $message[] = __($v);
-                    }
-                }
-            }
-            $this->Session->write('Institution.StaffTransferRequests.errors', $message);
-        } else {
-            if ($StaffTable->save($newStaffEntity)) {
-                $transferRecord['status'] = self::CLOSED;
-                $transferEntity = $this->newEntity($transferRecord);
-                if ($this->save($transferEntity)) {
-                    $url = $this->url('view');
-                    $this->Session->write('Institution.StaffTransferRequests.success', true);
-                    $this->controller->redirect($url);
-                }
             }
         }
     }
