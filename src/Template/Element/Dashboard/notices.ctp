@@ -11,7 +11,7 @@
 					</li>
 					<li class="list-group-item" ng-if="!DashboardController.notices">
 						<div class="notice-message">
-							<p><?= __('Loading'); ?> ...</p>
+							<p><?= __('No Notices'); ?></p>
 						</div>
 					</li>
 					<li class="list-group-item" ng-repeat="notice in DashboardController.notices | orderBy:'order'">

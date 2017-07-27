@@ -1,3 +1,7 @@
+v3.10.8
+- Implemented Counselor Feature in Institution > Students > Counselling
+- Upon generating a report in the Report module, system now includes filter selection in report name
+
 v3.10.7
 - Implemented configuration item to toggle whether the system should automatically add students into all subjects
 - Implemented Staff Transfer report in Reports > Institutions > Staff Transfer

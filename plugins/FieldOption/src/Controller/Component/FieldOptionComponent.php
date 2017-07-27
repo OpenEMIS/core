@@ -41,6 +41,7 @@ class FieldOptionComponent extends Component
         'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],
         'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
+        'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
 
     // Staff
         'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],

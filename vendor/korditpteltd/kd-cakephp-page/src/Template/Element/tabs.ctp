@@ -1,6 +1,6 @@
 <?php
-echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.mousewheel', ['block' => true]);
-echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.scrolltabs', ['block' => true]);
+echo $this->Html->script('Page.../plugins/scrolltabs/js/jquery.mousewheel', ['block' => true]);
+echo $this->Html->script('Page.../plugins/scrolltabs/js/jquery.scrolltabs', ['block' => true]);
 ?>
 
 <?php if (isset($tabs)) : ?>

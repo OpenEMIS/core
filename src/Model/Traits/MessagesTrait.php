@@ -563,6 +563,7 @@ trait MessagesTrait
         'StaffTransferApprovals' => [
             'transferType' => 'Please select the transfer type.',
             'effectiveDate' => 'Please enter an effective date for the partial transfer.',
+            'effectiveDateCompare' => 'Effective date should be later than Current Start Date.',
             'newFTE' => 'Please select a new FTE for the partial transfer.',
             'staffEndOfAssignment' => 'The assignment of this staff has ended.'
         ],
@@ -1000,6 +1001,7 @@ trait MessagesTrait
                 ],
                 'start_date' => [
                     'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'checkEndOfAssignmentWithStartDate' => 'Start Date should be later than %s',
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -1571,6 +1573,11 @@ trait MessagesTrait
                 ]
             ],
             'EducationProgrammes' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
+            ],
+            'EducationGrades' => [
                 'code' => [
                     'ruleUnique' => 'This code already exists in the system'
                 ]
