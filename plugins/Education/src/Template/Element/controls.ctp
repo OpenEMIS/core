@@ -64,7 +64,7 @@
 						'default' => $selectedGrade,
 						'url' => $baseUrl,
 						'data-named-key' => 'grade',
-						'data-named-group' => 'level'
+						'data-named-group' => 'level,programme'
 					));
 				}
 

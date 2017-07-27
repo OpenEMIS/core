@@ -1,0 +1,96 @@
+/* HEADINGS v.1.0.3 */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #333;
+    margin: 10px 0;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 400;
+}
+
+h2 {
+    font-size: 20px;
+    font-weight: 400;
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+h4 {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+h5 {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+h6 {
+    font-size: 13px;
+    font-weight: 400;
+}
+
+p {
+    font-size: 12px;
+    font-weight: 400;
+    width: 100%;
+    line-height: 1.4em;
+}
+
+p.error {
+    margin-top: 50px;
+}
+
+em {
+    font-style: italic;
+}
+
+/* RTL */
+
+.rtl h1 {
+    font-size: 30px;
+    font-weight: 400;
+}
+
+.rtl h2 {
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.rtl h3 {
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.rtl h4 {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.rtl h5 {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.rtl h6 {
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.rtl p {
+    font-size: 14px;
+    font-weight: 400;
+    width: 100%;
+    line-height: 1.4em;
+}

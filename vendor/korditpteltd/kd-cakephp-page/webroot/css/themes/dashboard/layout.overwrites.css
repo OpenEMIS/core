@@ -1,0 +1,753 @@
+/* 
+Dashboard Overwrites: v.1.0.4
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../../img/dashboard-login-bg.jpg') !important;
+}
+
+
+/* Main Toolbar */
+
+@media only screen and (max-width: 1024px) {
+    .has-header,
+    .has-breadcrumb {
+        position: relative !important;
+        top: 0 !important;
+        padding: 10px 0 !important;
+    }
+    .chart-container {
+        position: relative !important;
+        top: 0 !important;
+    }
+}
+
+
+/* Tags Input Field */
+
+tags-input {
+    width: 25% !important;
+}
+
+tags-input .tags .tag-list {
+    height: auto !important;
+    border: 0 !important;
+}
+
+@media only screen and (max-width: 1240px) {
+    tags-input {
+        width: 30% !important;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    tags-input {
+        width: 100% !important;
+    }
+}
+
+
+/* Scrollable Tabs */
+
+.scrolltabs .nav > li:hover {
+    font-weight: normal;
+}
+
+.scrolltabs.sticky-content .tab-content {
+    padding: 0;
+}
+
+
+/* Alphabet Lists */
+
+.alphabet-list {
+    height: auto !important;
+}
+
+
+/* About Page */
+
+.about-container {
+    border-top: 0 !important;
+}
+
+.about-wrapper {
+    background-color: #FFF;
+    border-top: 0;
+}
+
+
+/* Dashboard Canvas */
+
+.dashboard-canvas {
+    position: absolute;
+    /* PODSH-131 - added based on 'hide-visualization-chart' */
+    display: block;
+    width: 100%;
+    min-width: 800px;
+    min-height: 768px;
+    background: rgba(0, 0, 0, 0) url("../../../../img/dashboard-canvas.png") repeat scroll 0 0;
+    border: 1px solid #DDD;
+    margin: 0 auto;
+    padding: 5px;
+}
+
+@media only screen and (max-width: 800px) {
+    .dashboard-canvas {
+        min-width: 100%;
+    }
+}
+
+
+/* For Dashboard - Builder > Share Tab Group & Users Table */
+
+tbody + tbody tr:first-child td {
+    border-top: 1px solid #DDD !important;
+}
+
+
+/* For Shared Page Preview */
+
+.preview body {
+    overflow: scroll;
+}
+
+.preview #wrapper {
+    padding-left: 0px !important;
+}
+
+.preview .wrapper {
+    top: 0 !important;
+}
+
+.preview .content-wrapper {
+    padding: 0px !important;
+}
+
+.preview .content-wrapper .wrapper {
+    padding: 0px !important;
+}
+
+.preview #page-content-wrapper {
+    padding: 0px !important;
+}
+
+.preview .dashboard-canvas {
+    background: none;
+    border: none;
+    margin: 0;
+}
+
+.preview .dragdrop-chart {
+    border: 0;
+}
+
+.preview .gridster-element-scroll:hover {
+    margin-top: 0;
+}
+
+
+/* Dataset Progress Bar */
+
+.progress-wrapper.jsonstat-progress {
+    height: auto;
+    margin: auto;
+    border-radius: 3px;
+}
+
+.progress-wrapper.jsonstat-progress .progress.progress-striped .progress-bar.progress-bar-striped {
+    height: 40px;
+    background-color: #5cb85c;
+}
+
+.progress-wrapper.jsonstat-progress .progress.progress-striped .progress-bar.progress-bar-striped span {
+    color: #333;
+    text-align: center;
+}
+
+.progress-wrapper.jsonstat-progress .progress-text {
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    z-index: 5;
+    text-align: center;
+    line-height: 20px;
+}
+
+
+/* Overwrite the Filter Check on Gridster */
+
+.filter-check {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.5);
+    color: #FFF;
+    text-align: right;
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.filter-check-selector i {
+    color: #990000 !important;
+}
+
+
+/* Tinymce Overrides */
+
+.mce-container {
+    width: 90%;
+}
+
+.mce-panel {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-top: 1px solid #DDD !important;
+    border-bottom: 1px solid #DDD !important;
+    margin: 2px 0 !important;
+}
+
+.mce-stack-layout-item {
+    margin: 0 !important;
+    border-top: 0 !important;
+    padding-right: 18px !important;
+}
+
+.mce-floatpanel {
+    border: 1px solid #CCC !important;
+}
+
+.mce-caret {
+    margin-left: 5px !important;
+}
+
+.mce-btn:hover,
+.mce-btn:active,
+.mce-btn button:hover,
+.mce-btn button:focus {
+    border-color: #DDD !important;
+    background-color: #DDD !important;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.mce-wordcount {
+    padding: 10px !important;
+}
+
+.mce-btn-small button .mce-ico {
+    padding: 1px 5px 1px 0px !important;
+}
+
+.mce-tinymce {
+    border-right: 0 !important;
+}
+
+.mce-resizehandle {
+    display: none !important;
+}
+
+.mce-last {
+    border-bottom: 0 !important;
+}
+
+
+/* Dashboard Filter Checkbox on the Drag Drop Element */
+
+.filter-check-selector {
+    clear: both;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+.filter-check-selector i {
+    font-size: 6em !important;
+}
+
+.filter-check-background {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+
+/* Dashboard Sizing/Resize Function */
+
+.handle-n,
+.handle-e,
+.handle-s,
+.handle-w,
+.handle-ne,
+.handle-se,
+.handle-sw,
+.handle-nw {
+    z-index: 2;
+}
+
+
+/* Table Chart Container */
+
+.chart-container .table-responsive div {
+    height: auto !important;
+}
+
+
+/* Highcharts Overrides */
+
+.highcharts-tooltip {
+    z-index: 5;
+}
+
+.highcharts-tooltip span:first-child {
+    background-color: rgba(249, 249, 249, 0.85);
+    border: 1px solid #333;
+    border-radius: 3px;
+    opacity: 1;
+    z-index: 5;
+    padding: 10px;
+    box-shadow: 0px 0px 5px #888888;
+}
+
+.highcharts-tooltip span:first-child > * {
+    border: 0;
+    box-shadow: none;
+}
+
+
+/* For dashboard - builder share tab Group & Users table */
+
+tbody + tbody tr:first-child td {
+    border-top: 1px solid #DDD !important;
+}
+
+
+/* For Shared */
+
+.preview body {
+    overflow: scroll;
+}
+
+.preview #wrapper {
+    padding-left: 0px !important;
+}
+
+.preview .wrapper {
+    top: 0 !important;
+}
+
+.preview .content-wrapper {
+    padding: 0px !important;
+}
+
+.preview .content-wrapper .wrapper {
+    padding: 0px !important;
+}
+
+.preview #page-content-wrapper {
+    padding: 0px !important;
+}
+
+.preview .dashboard-canvas {
+    background: none;
+    border: none;
+    margin: 0;
+}
+
+.preview .dragdrop-chart {
+    border: 0;
+}
+
+.preview .gridster-element-scroll:hover {
+    margin-top: 0;
+}
+
+
+/* Dataset progress bar styling */
+
+.progress-wrapper.jsonstat-progress {
+    height: auto;
+    margin: auto;
+    border-radius: 3px;
+}
+
+.progress-wrapper.jsonstat-progress .progress.progress-striped .progress-bar.progress-bar-striped {
+    height: 40px;
+    background-color: #5cb85c;
+}
+
+.progress-wrapper.jsonstat-progress .progress.progress-striped .progress-bar.progress-bar-striped span {
+    color: #333;
+    text-align: center;
+}
+
+.progress-wrapper.jsonstat-progress .progress-text {
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    z-index: 5;
+    text-align: center;
+    line-height: 20px;
+}
+
+
+/* Overwrite the Filter Check on Gridster */
+
+.filter-check {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.5);
+    color: #FFF;
+    text-align: right;
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.filter-check-selector i {
+    color: #990000 !important;
+}
+
+
+/* Fix for PODSH-123 Table border bug in Firefox */
+
+.chart-container .table-responsive div {
+    height: auto !important;
+}
+
+
+/* Overwrites for Import button misalignment */
+
+.fileinput .btn-file,
+.fileinput .btn-file-cancel {
+    height: 30px !important;
+    padding: 6px !important;
+}
+
+
+/* For Profile (By Sevin) */
+
+.profile .dashboard-canvas {
+    margin: 0;
+}
+
+.profile .has-control-wrapper {
+    margin-bottom: 50px;
+}
+
+.profile .generation-wrapper .spinner-wrapper .spinner-text p {
+    width: 800px;
+    top: 10px;
+    padding-left: 70px;
+    position: relative;
+    -webkit-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
+.profile .generation-wrapper .spinner-wrapper .spinner-text p.subtitle {
+    top: 0;
+    font-size: 12px;
+}
+
+.profile .dashboard-canvas ul {
+    height: auto !important;
+    border-bottom: 0 !important;
+}
+
+
+/* Fixed for the legend item and also series drag & drop label (Vincent) */
+
+.sort-label,
+.highcharts-legend-item span {
+    word-break: break-word;
+    word-wrap: break-word;
+}
+
+.highcharts-legend > div,
+.highcharts-legend > div > div,
+.highcharts-legend > div > div > div,
+.highcharts-legend-item {
+    width: 240px !important;
+}
+
+.rtl .highcharts-legend-item span {
+    text-align: right;
+}
+
+ul li.list-item {
+    position: relative;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+
+.series-sort-wrapper .sort-wrapper ul.seriesSort li span {
+    display: inline-block !important;
+}
+
+.series-sort-wrapper ul.seriesSort li .sort-icon {
+    position: absolute;
+    bottom: 48%;
+    right: 5px;
+    height: 20px;
+    width: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.rtl .series-sort-wrapper ul.seriesSort li .sort-icon {
+    left: 5px;
+    right: auto;
+}
+
+.series-sort-wrapper ul.seriesSort li .sort-icon i {
+    line-height: 17px;
+}
+
+.series-sort-wrapper .sort-wrapper ul {
+    min-width: auto;
+    width: 160px;
+}
+
+
+/* remove checkbox container field when is set as hidden in ag-grid  */
+
+[colid="checkbox-hidden"] .ag-header-cell-label {
+    cursor: default !important;
+    display: none;
+}
+
+
+/* End legend item and series fix (Vincent) */
+
+
+/* Fixed for Accordion Style to using uib accordion */
+
+.panel-toolbar .ng-accordion .panel-default {
+    margin-top: -2px !important;
+}
+
+.ng-accordion .form-group {
+    margin: 0 10px 10px 0;
+    display: inline-block;
+    min-width: 210px;
+    max-width: 305px;
+    vertical-align: top;
+}
+
+.ng-accordion .input-select-wrapper,
+.ng-accordion .form-control {
+    float: none;
+    max-width: 305px
+}
+
+.ng-accordion .form-group {
+    margin: 0 10px 10px 0;
+    display: inline-block;
+    min-width: 210px;
+    max-width: 305px;
+    vertical-align: top;
+}
+
+.ng-accordion .format-item input {
+    display: inline-block;
+}
+
+.ng-accordion .format-item .input-select-wrapper {
+    height: 25px!important;
+    margin-bottom: 0!important;
+    width: 358px
+}
+
+.ng-accordion .format-item .input-selection-inline,
+.ng-accordion .format-item .input-selection {
+    max-width: 502px;
+    min-width: 200px;
+    width: 100%!important;
+    float: none;
+    margin-bottom: 0;
+}
+
+
+/* To remove !important to .scrolltabs ul on master.min */
+
+
+/* To remove !important to .scrolltabs ul li and set justify to false on the HTML */
+
+.sort-wrapper ul {
+    border-bottom-width: 2px !important;
+}
+
+.sort-wrapper-inactive ul {
+    height: 125px !important;
+}
+
+.sort-wrapper-inactive ul {
+    border: 2px dashed #E2E2E2 !important;
+}
+
+.scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+    text-align: center;
+}
+
+
+/* Accordion */
+
+@media only screen and (max-width: 1024px) {
+    .panel-toolbar .toolbar-container {
+        height: 40px;
+        overflow: scroll;
+    }
+    .panel-toolbar .format-item a {
+        padding: 0 !important;
+        vertical-align: top;
+        margin: 5px 8px;
+        width: 85px;
+    }
+}
+
+
+/* RTL Table - Temporary Fix for the extra padding/margin within the table */
+
+.rtl .table-curved,
+.rtl .table {
+    border-collapse: collapse !important;
+}
+
+
+/* Fixed Safari Scroll Tabs on click shifted down */
+
+.scrolltabs .nav-tabs li {
+    vertical-align: top;
+}
+
+.scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+    height: 29px;
+}
+
+@media only screen and (max-width: 1024px) {
+    .chrome .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a,
+    .safari .scrolltabs .ui-tabs-scrollable > .spacer > div:first-child > .nav-tabs > li > a {
+        height: 36px;
+    }
+}
+
+
+/* Add margin to dashboard element toolbar */
+
+.elements-toolbar .btn-outline {
+    margin: 0 2px;
+}
+
+
+/* Input Inline under Dashboard Share Error Message */
+
+.error-inline {
+    display: inline-block;
+}
+
+@media only screen and (max-width: 1024px) {
+    .form-horizontal .input-inline-wrapper .error-message {
+        margin: 0 0 10px !important;
+    }
+}
+
+
+/* Overwrite radio and checkbox input (Naqiyah) */
+
+.no-border-gridster {
+    border: none !important;
+}
+
+.gridster-element-scroll {
+    border: 1px solid #DDD;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+.gridster-element-scroll .input-selection-inline,
+.gridster-element-scroll .input-selection {
+    margin-bottom: 0;
+    border: 0;
+}
+
+.gridster-element-scroll .input-label {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 10px 11px 0;
+}
+
+
+/* End gridster filter input elements fix (Naqiyah) */
+
+
+/* Overwrite dragdrop-wrapper overflow (Tini) */
+
+.gridster-element-scroll {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    overflow: scroll;
+}
+
+
+/* End of dragdrop-wrapper overflow (Tini) */
+
+
+/* Overwrite highcharts title/subtitle (Naqiyah) */
+
+.highcharts-title,
+.highcharts-subtitle {
+    left: 0 !important;
+    width: 100% !important;
+    padding: 10px !important;
+    text-align: center;
+}
+
+
+/* End Overwrite highcharts title/subtitle (Naqiyah) */
+
+/* Add Accordion Format Pagination (Tini) */
+
+.accordion-pagination {
+    position: absolute;
+    width: 40px;
+    left: 0;
+    background-color: #FFF;
+}
+
+.accordion-anchor {
+    margin-left: 50px;
+    margin-bottom: 30px;
+    height: 100px;
+    vertical-align: middle;
+}
+
+.accordion-anchor:last-child {
+    margin-bottom: 0 !important;
+}
+
+.scroll-arrow-up,
+.scroll-arrow-down {
+    font-size: 16px;
+}
+
+/* End of Accordion Format Pagination (Tini) */
+
