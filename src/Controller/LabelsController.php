@@ -31,12 +31,6 @@ class LabelsController extends PageController
         $page->get('module_name')->setDisabled(true);
         $page->get('field_name')->setDisabled(true);
 
-        // to keep the value when there is an error occured
-        if (array_key_exists('Labels', $this->request['data']) && !empty($this->request['data']['Labels']['code'])) {
-            $code = $this->request['data']['Labels']['code'];
-            $page->get('code')->setValue($code);
-        }
-
         parent::edit($id);
     }
 }
