@@ -20,6 +20,7 @@ class InstitutionTextbooksTable extends AppTable  {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 
         $this->addBehavior('Excel', [
