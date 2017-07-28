@@ -83,34 +83,6 @@ class POCOR4095 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 'd1ea5102-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionRooms',
-                'field' => 'room_status_id',
-                'module_name' => 'Institutions -> Rooms',
-                'field_name' => 'Room Status',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => '93f94b7e-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionRooms',
-                'field' => 'change_type',
-                'module_name' => 'Institutions -> Rooms',
-                'field_name' => 'Change Type',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
                 'id' => '9740e336-72a4-11e7-95dd-525400b263eb',
                 'module' => 'InstitutionFloors',
                 'field' => 'academic_period_id',
@@ -186,34 +158,6 @@ class POCOR4095 extends AbstractMigration
                 'field' => 'infrastructure_condition_id',
                 'module_name' => 'Institutions -> Floors',
                 'field_name' => 'Infrastructure Condition',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => 'b811f127-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionFloors',
-                'field' => 'floor_status_id',
-                'module_name' => 'Institutions -> Floors',
-                'field_name' => 'Floor Status',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => 'bb0a520a-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionFloors',
-                'field' => 'change_type',
-                'module_name' => 'Institutions -> Floors',
-                'field_name' => 'Change Type',
                 'code' => NULL,
                 'name' => NULL,
                 'visible' => '1',
@@ -349,34 +293,6 @@ class POCOR4095 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => '874365cc-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionBuildings',
-                'field' => 'building_status_id',
-                'module_name' => 'Institutions -> Buildings',
-                'field_name' => 'Building Status',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => '8a4eb3a0-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionBuildings',
-                'field' => 'change_type',
-                'module_name' => 'Institutions -> Buildings',
-                'field_name' => 'Change Type',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
                 'id' => '8d03d552-72a4-11e7-95dd-525400b263eb',
                 'module' => 'InstitutionLands',
                 'field' => 'academic_period_id',
@@ -501,34 +417,6 @@ class POCOR4095 extends AbstractMigration
                 'modified' => NULL,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => 'a855e287-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionLands',
-                'field' => 'land_status_id',
-                'module_name' => 'Institutions -> Lands',
-                'field_name' => 'Land Status',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => 'ab2debd2-72a4-11e7-95dd-525400b263eb',
-                'module' => 'InstitutionLands',
-                'field' => 'change_type',
-                'module_name' => 'Institutions -> Lands',
-                'field_name' => 'Change Type',
-                'code' => NULL,
-                'name' => NULL,
-                'visible' => '1',
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
             ]
         ];
 
@@ -544,16 +432,12 @@ class POCOR4095 extends AbstractMigration
         $this->execute('DELETE FROM labels WHERE id = "ad02119f-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "c4b43789-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "ce6a6ef1-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "d1ea5102-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "93f94b7e-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "9740e336-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "a0595d43-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "a89f6642-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "ace9335b-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "b1be4de1-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "b55814b1-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "b811f127-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "bb0a520a-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "63e74ee6-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "674aa26b-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "6ee87402-72a4-11e7-95dd-525400b263eb"');
@@ -563,8 +447,6 @@ class POCOR4095 extends AbstractMigration
         $this->execute('DELETE FROM labels WHERE id = "7d2313dd-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "7fe9f8e8-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "83db120e-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "874365cc-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "8a4eb3a0-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "8d03d552-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "8fe0c8c5-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "92c67f0a-72a4-11e7-95dd-525400b263eb"');
@@ -574,7 +456,5 @@ class POCOR4095 extends AbstractMigration
         $this->execute('DELETE FROM labels WHERE id = "9eda890f-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "a18f9c93-72a4-11e7-95dd-525400b263eb"');
         $this->execute('DELETE FROM labels WHERE id = "a4bf6b4b-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "a855e287-72a4-11e7-95dd-525400b263eb"');
-        $this->execute('DELETE FROM labels WHERE id = "ab2debd2-72a4-11e7-95dd-525400b263eb"');
     }
 }
