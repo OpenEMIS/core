@@ -123,7 +123,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->field('education_subject_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('modified', ['type' => 'string', 'visible' => false]);
         $this->field('modified_user_id', ['type' => 'string', 'visible' => false]);
-        $this->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+        $this->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'sort' => ['field' => 'EducationSubjects.name']]);
         $this->field('no_of_seats', ['type' => 'integer', 'attr'=>['min' => 1], 'visible' => false]);
         $this->field('class_name', ['type' => 'select', 'visible' => ['view'=>true], 'onChangeReload' => true]);
 
@@ -372,7 +372,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
 
         // sortWhiteList
-        $sortList = ['EducationGrades.name'];
+        $sortList = ['EducationGrades.name', 'EducationSubjects.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
