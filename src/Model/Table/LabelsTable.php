@@ -76,7 +76,7 @@ class LabelsTable extends AppTable
         $keyValue = (!is_null($entity->name) && ($entity->name != "")) ? $entity->name : $entity->field_name;
 
         if (!is_null($entity->code) && ($entity->code != "")) {
-            $keyValue = '('.ucfirst($entity->code).') '.ucfirst($keyValue);
+            $keyValue = ucfirst($entity->code).' '.ucfirst($keyValue); // POCOR-4095 Remove the bracket on the label code
         }
 
         return $keyValue;
@@ -109,6 +109,7 @@ class LabelsTable extends AppTable
         $validator = parent::validationDefault($validator);
 
         $validator
+            ->allowEmpty('code')
             ->add('code', [
                     'ruleUnique' => [
                         'rule' => 'validateUnique',
