@@ -346,6 +346,12 @@ class InstitutionClassesTable extends ControllerActionTable
                     ->count();
             }
         ]);
+
+        //if selected value is disabled, then remove the search
+        if (array_search('disabled', $academicPeriodOptions[$selectedAcademicPeriodId]) >= 0) {
+            unset($extra['toolbarButtons']['search']);
+        }
+
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
