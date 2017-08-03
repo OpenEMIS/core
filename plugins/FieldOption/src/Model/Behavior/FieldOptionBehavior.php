@@ -87,6 +87,11 @@ class FieldOptionBehavior extends Behavior {
                     ]
                 ]);
         }
+
+        $validator
+            ->requirePresence('visible')
+            ->requirePresence('default')
+            ;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
