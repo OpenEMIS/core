@@ -218,11 +218,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
         ]);
 
-        //if selected value is disabled, then remove the search
-        if (array_search('disabled', $academicPeriodOptions['Year'][$selectedAcademicPeriodId]) >= 0) {
-            unset($extra['toolbarButtons']['search']);
-        }
-
         $AccessControl = $this->AccessControl;
         $userId = $this->Auth->user('id');
         $controller = $this->controller;
