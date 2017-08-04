@@ -50,26 +50,37 @@ Page.removeUrlParam = function(key) {
     return url;
 }
 
-Page.querystring = function(key, value) {
+Page.querystring = function(key, value, obj) {
     var querystringValue = this.querystringValue;
+    if (obj.getAttribute('dependenton') != undefined) {
+        if (querystringValue != null) {
+            querystringValue = JSON.parse(querystringValue.hexDecode());
+        } else {
+            querystringValue = {};
+        }
+        var dependentOn = obj.getAttribute('dependenton').split(' ');
 
-    if (querystringValue != null) {
-        querystringValue = JSON.parse(querystringValue.hexDecode());
+        var retainedQueryStringValue = {};
+        dependentOn.forEach(function (val, k) {
+            if (querystringValue[val] != undefined) {
+                retainedQueryStringValue[val] = querystringValue[val];
+            }
+        });
+        queryStringValue = retainedQueryStringValue
     } else {
         querystringValue = {};
     }
-
     if (value == null || value.trim().length == 0) {
         delete querystringValue[key];
     } else {
         querystringValue[key] = value;
     }
-
     var count = 0;
     for(var prop in querystringValue) {
         if(querystringValue.hasOwnProperty(prop)) ++count;
     }
     if (count > 0) {
+
         querystringValue = JSON.stringify(querystringValue).hexEncode();
         window.location.href = this.updateUrlParamValue('querystring', querystringValue);
     } else {
@@ -106,6 +117,9 @@ Page.onChange = function(source, target) {
                 var option = document.createElement('option');
                 option.innerHTML = data[i]['text'];
                 option.setAttribute('value', data[i]['value']);
+                if (data[i].hasOwnProperty('disabled')) {
+                    option.setAttribute('disabled', true);
+                }
                 target.appendChild(option);
             }
         } else {

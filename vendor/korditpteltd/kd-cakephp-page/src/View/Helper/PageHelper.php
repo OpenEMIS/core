@@ -5,9 +5,11 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\I18n\I18n;
-use Cake\Utility\Hash;
 use Cake\Log\Log;
+use Cake\Utility\Hash;
+use Cake\Utility\Text;
 use Cake\View\Helper;
 
 use Page\Traits\EncodingTrait;
@@ -59,28 +61,28 @@ class PageHelper extends Helper
         $includes = new ArrayObject($this->includes);
 
         foreach ($includes as $include) {
-            if ($include['include']) {
-                if (array_key_exists('css', $include)) {
-                    if (is_array($include['css'])) {
-                        foreach ($include['css'] as $css) {
-                            echo $this->Html->css($css, ['block' => true]);
-                        }
-                    } else {
-                        echo $this->Html->css($include['css'], ['block' => true]);
+            if ($include['include'] == false) continue;
+
+            if (array_key_exists('css', $include)) {
+                if (is_array($include['css'])) {
+                    foreach ($include['css'] as $css) {
+                        echo $this->Html->css($css, ['block' => true]);
                     }
+                } else {
+                    echo $this->Html->css($include['css'], ['block' => true]);
                 }
-                if (array_key_exists('js', $include)) {
-                    if (is_array($include['js'])) {
-                        foreach ($include['js'] as $js) {
-                            echo $this->Html->script($js, ['block' => true]);
-                        }
-                    } else {
-                        echo $this->Html->script($include['js'], ['block' => true]);
+            }
+            if (array_key_exists('js', $include)) {
+                if (is_array($include['js'])) {
+                    foreach ($include['js'] as $js) {
+                        echo $this->Html->script($js, ['block' => true]);
                     }
+                } else {
+                    echo $this->Html->script($include['js'], ['block' => true]);
                 }
-                if (array_key_exists('element', $include)) {
-                    $this->_View->element($include['element']);
-                }
+            }
+            if (array_key_exists('element', $include)) {
+                $this->_View->element($include['element']);
             }
         }
     }
@@ -238,6 +240,15 @@ class PageHelper extends Helper
         return $tableData;
     }
 
+    public function highlight($value)
+    {
+        $search = $this->getQueryString('search');
+        if ($search !== false) {
+            $value = Text::highlight($value, $search, ['html' => true]);
+        }
+        return $value;
+    }
+
     public function getLimitOptions()
     {
         $paging = $this->_View->get('paging');
@@ -313,6 +324,7 @@ class PageHelper extends Helper
         }
 
         $isDateTimeType = in_array($controlType, ['date', 'time']);
+        $isStringType = in_array($controlType, ['string', 'textarea']);
         $hasDateTimeFormat = array_key_exists('format', $field);
         $valueIsNotEmpty = !empty($value);
 
@@ -323,6 +335,8 @@ class PageHelper extends Helper
             } else {
                 $value = date($field['format'], strtotime($value));
             }
+        } elseif ($isStringType && $valueIsNotEmpty) {
+            $value = $this->highlight($value);
         }
         return $value;
     }
@@ -530,10 +544,11 @@ EOT;
 
     private function date(array $field, $data)
     {
-        $options = ['type' => 'text', 'class' => 'form-control', 'label' => false];
+        $options = ['type' => 'text', 'class' => 'form-control', 'label' => false, 'error' => false];
         $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
         $value = isset($field['attributes']['value']) ? $field['attributes']['value'] : '';
         $disabled = isset($field['attributes']['disabled']) ? $field['attributes']['disabled'] : false;
+        $dateOptions = [];
 
         if ($required) {
             $options['required'] = 'required';
@@ -541,6 +556,15 @@ EOT;
 
         if ($disabled) {
             $options['disabled'] = 'disabled';
+        }
+
+        $dateProperties = ['minDate' => 'startDate', 'maxDate' => 'endDate'];
+
+        foreach ($dateProperties as $prop => $mapped) {
+            if (array_key_exists($prop, $field)) {
+                $propValue = $field[$prop];
+                $dateOptions[$mapped] = implode('-', [$propValue['day'], $propValue['month'], $propValue['year']]);
+            }
         }
 
         if (!empty($value)) {
@@ -560,6 +584,7 @@ EOT;
             'name' => $field['attributes']['name'],
             'label' => $field['label'],
             'options' => $options,
+            'date_options' => $dateOptions,
             'required' => $required ? ' required' : ''
         ];
 
@@ -583,13 +608,14 @@ EOT;
     {
         $value = '';
 
-        $options = [];
+        $options = ['type' => 'text', 'class' => 'form-control', 'label' => false, 'error' => false];
 
         $_options = [
             'defaultTime' => false
         ];
 
         $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
+        $disabled = isset($field['attributes']['disabled']) ? $field['attributes']['disabled'] : false;
 
         if (!isset($field['time_options'])) {
             $options['time_options'] = [];
@@ -598,14 +624,9 @@ EOT;
             $options['default_time'] = true;
         }
 
-        // if (!is_null($data)) {
-        //     $invalid = $data->invalid();
-        //     if (!empty($invalid) && array_key_exists($field, $invalid)) {
-        //         $value = $data->invalid($field);
-        //     } else {
-        //         $value = $data->$field;
-        //     }
-        // }
+        if ($disabled) {
+            $options['disabled'] = 'disabled';
+        }
 
         if (!isset($field['id'])) {
             $field['id'] = $field['attributes']['name'];
@@ -613,37 +634,31 @@ EOT;
 
         $options['time_options'] = array_merge($_options, $options['time_options']);
 
-        if (isset($data[$field['key']])) {
-            if (!is_null($data[$field['key']])) {
-                $options['value'] = date('h:i A', strtotime($data[$field['key']]));
-                $options['time_options']['defaultTime'] = $options['value'];
-            } elseif ($options['default_time']) {
-                $options['time_options']['defaultTime'] = date('h:i A');
-            }
+        if (($data instanceof Entity && $data->offsetExists($field['key'])) || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
+            $options['value'] = $data[$field['key']]->format('h:i A');
+            $options['time_options']['defaultTime'] = $options['value'];
         } else {
-            if (($data instanceof Entity && $data->offsetExists($field['key'])) || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
-                $options['value'] = $data[$field['key']]->format('h:i A');
-                $options['time_options']['defaultTime'] = $options['value'];
-            } else {
-                $options['value'] = date('h:i A', strtotime($data[$field['key']]));
-                $options['time_options']['defaultTime'] = $data[$field['key']];
-            }
+            $options['value'] = date('h:i A', strtotime($data[$field['key']]));
+            $options['time_options']['defaultTime'] = $data[$field['key']];
         }
 
         $attr = [
             'id' => str_replace('.', '_', $field['attributes']['name']),
             'name' => $field['attributes']['name'],
             'label' => $field['label'],
-            'options' => $options,
-            'required' => $required ? ' required' : ''
+            'required' => $required ? ' required' : '',
+            'options' => $options
         ];
+
+        $options['id'] = $attr['id'];
+        $options['name'] = $attr['name'];
 
         if (!is_null($this->_View->get('timepicker'))) {
             $timepickers = $this->_View->get('timepicker');
-            $timepickers[] = $attr;
+            $timepickers[] = $options;
             $this->_View->set('timepicker', $timepickers);
         } else {
-            $this->_View->set('timepicker', [$attr]);
+            $this->_View->set('timepicker', [$options]);
         }
         $this->includes['timepicker']['include'] = true;
         $value = $this->_View->element('Page.time', $attr);
