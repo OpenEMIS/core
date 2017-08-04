@@ -44,6 +44,11 @@ class FileUploadBehavior extends Behavior
 
     );
 
+    public function initialize(array $config)
+    {
+        $this->_config = array_merge($this->_config, $config);
+    }
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         foreach ($this->config('fieldMap') as $fileName => $fileContent) {
