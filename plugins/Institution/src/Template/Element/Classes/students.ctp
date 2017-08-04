@@ -201,7 +201,7 @@
 							?>
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
-						<td><?= $obj->student_name ?></td>
+						<td><?= $obj->user->name ?></td>
 						<td><?= __($obj->student_gender) ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 						<td><?= __($obj->student_status_name) ?></td>
