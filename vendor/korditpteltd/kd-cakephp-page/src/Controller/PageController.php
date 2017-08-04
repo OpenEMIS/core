@@ -86,13 +86,6 @@ class PageController extends AppController
                 }
                 $data = $this->Paginator->paginate($query, $paginateOptions->getArrayCopy());
             }
-
-            // if data is empty display the warning message
-            if (count($data) == 0) {
-                $message = __('There are no records.');
-                $page->setAlert($message, 'info');
-            }
-
             foreach ($data as $entity) {
                 $page->attachPrimaryKey($table, $entity);
             }
@@ -329,7 +322,7 @@ class PageController extends AppController
                             //     $conditions[$assocTable->aliasField($key)] = $ids[$bindingKey[$index]];
                             // }
                         } else {
-                            $conditions[$assocTable->aliasField($foreignKey)] = $id;
+                            $conditions[$assocTable->aliasField($foreignKey)] = $primaryKeyValue['id'];
                         }
 
                         $query = $assocTable->find()->where($conditions);
@@ -349,7 +342,7 @@ class PageController extends AppController
                 }
             }
 
-            $displayTypes = ['string', 'integer', 'text', 'date', 'decimal', 'textarea'];
+            $displayTypes = ['string', 'integer', 'text', 'date', 'time', 'decimal', 'textarea'];
             $elements = $page->getElements();
             foreach ($elements as $element) {
                 $type = $element->getControlType();
@@ -390,7 +383,7 @@ class PageController extends AppController
                 $content = $entity->$binaryColumn;
 
                 $response = $this->response;
-                $response->body(function() use ($fileName, $content) {
+                $response->body(function () use ($fileName, $content) {
                     $file = '';
                     while (!feof($content)) {
                         $file .= fread($content, 8192);
@@ -423,7 +416,8 @@ class PageController extends AppController
             'data' => $options
         ];
 
-        $this->response->body(json_encode($response, JSON_UNESCAPED_UNICODE));
+        // Added pretty print option. Will change this to serialise to make use of cakephp rendering function
+        $this->response->body(json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
         $this->response->type('json');
 
         return $this->response;
