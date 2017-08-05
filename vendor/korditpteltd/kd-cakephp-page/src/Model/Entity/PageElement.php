@@ -86,10 +86,6 @@ class PageElement
             $this->controlType = $this->type;
         }
 
-        if (in_array($this->type, ['string', 'integer', 'text'])) {
-            $this->setSortable(true);
-        }
-
         if (array_key_exists('model', $attributes)) {
             $this->name = $attributes['model'] . '.' . $this->name;
         }

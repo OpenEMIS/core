@@ -371,7 +371,7 @@ class NavigationComponent extends Component
     public function getInstitutionNavigation()
     {
         $session = $this->request->session();
-        $id = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $id = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $id;
         $navigation = [
             'Institutions.dashboard' => [
@@ -663,16 +663,16 @@ class NavigationComponent extends Component
     public function getInstitutionStudentNavigation()
     {
         $session = $this->request->session();
-        $id = !empty($this->controller->ControllerAction->getQueryString('institution_student_id')) ? $this->controller->ControllerAction->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
+        $id = !empty($this->controller->getQueryString('institution_student_id')) ? $this->controller->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
         $studentId = $session->read('Student.Students.id');
-        $institutionIdSession = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
-        $queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $this->controller->ControllerAction->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
+        $queryString = $this->controller->paramsEncode(['institution_id' => $this->controller->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
         $navigation = [
             'Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
-                'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
                     'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys']],
@@ -711,14 +711,14 @@ class NavigationComponent extends Component
     public function getInstitutionStaffNavigation()
     {
         $session = $this->request->session();
-        $institutionIdSession = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
         $id = $session->read('Staff.Staff.id');
         $navigation = [
             'Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
-                'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $id])],
+                'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $id])],
                 'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
                     'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'Staff.Comments', 'Staff.History']
             ],
