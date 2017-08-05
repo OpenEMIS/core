@@ -13,18 +13,8 @@ class CounsellingsController extends PageController
 
         $this->Page->loadElementsFromTable($this->Counsellings);
 
-        $this->loadComponent('RenderDate'); // will get the date format from config
-        $this->loadComponent('Page.RenderLink'); // will get the date format from config
-
         $this->Page->enable(['download']);
     }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Controller.Page.onRenderCounselorId'] = 'onRenderCounselorId';
-        return $events;
-     }
 
     public function beforeFilter(Event $event)
     {
@@ -36,19 +26,21 @@ class CounsellingsController extends PageController
 
         parent::beforeFilter($event);
 
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
         $page = $this->Page;
+
+        // set Breadcrumb
+        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
+        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $encodedInstitutionId]);
+        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $encodedInstitutionId]);
+        $page->addCrumb('Counselling');
 
         $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
 
         $page->move('file_name')->after('guidance_type_id'); // move file_content after guidance type
         $page->move('file_content')->after('file_name'); // move file_name after file_content
-
-        // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-        $page->addCrumb('Counselling');
 
         // set header
         $header = $page->getHeader();
@@ -62,8 +54,7 @@ class CounsellingsController extends PageController
     public function index()
     {
         $page = $this->Page;
-        $page->exclude(['file_name', 'file_content', 'counselor_id', 'student_id']);
-
+        $page->exclude(['file_name', 'file_content', 'student_id']);
         parent::index();
     }
 
@@ -85,12 +76,6 @@ class CounsellingsController extends PageController
         $page->exclude(['file_content']);
         $page->get('file_name')->setControlType('link');
         parent::view($id);
-    }
-
-    // to display the counselor name with id
-    public function onRenderCounselorId(Event $event, $entity, $key)
-    {
-        return $entity->counselor->name_with_id;
     }
 
     public function delete($id)
