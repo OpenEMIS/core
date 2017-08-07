@@ -438,7 +438,7 @@ class StudentPromotionTable extends AppTable
             $options = [];
             $educationGradeId = $request->query('grade_to_promote');
             if (!empty($educationGradeId) && $educationGradeId != -1) {
-                $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+                $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
 
                 // If there is no more next grade in the same education programme then the student may be graduated
                 if (count($nextGrades) == 0) {
@@ -495,7 +495,7 @@ class StudentPromotionTable extends AppTable
 
                 // list of grades available to promote to
                 // 'false' means only displayed the next level within the same grade level.
-                $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+                $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
 
                 // list of grades available in the institution
                 $today = date('Y-m-d');
@@ -528,6 +528,10 @@ class StudentPromotionTable extends AppTable
                 if (count($gradeOptions) == 0 || (key($gradeOptions) != key($listOfGrades))) {
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
+
+                    if (!empty($listOfGrades)) {
+                        $options = [0 => $listOfGrades[key($listOfGrades)] . ' - ' . $this->getMessage($this->aliasField('notOfferedGrades'))];
+                    }
                 } else {
                     $options = [key($gradeOptions) => $gradeOptions[key($gradeOptions)]];
                 }
