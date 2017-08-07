@@ -55,8 +55,6 @@ class PhpFrontEndComponent extends Component
             if ($element->getKey() == 'openemis_no') {
                 $element->setLabel('OpenEMIS ID');
             }
-
-            $this->formatTime($element);
         }
         if ($request->is(['put', 'post'])) {
             $page->showElements(true);
@@ -85,11 +83,4 @@ class PhpFrontEndComponent extends Component
     //     }
     //     return $events;
     // }
-
-    private function formatTime(PageElement $element)
-    {
-        if ($element->getControlType() == 'time') {
-            // $element->attr('format', 'H:i:s');
-        }
-    }
 }

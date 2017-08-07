@@ -8,16 +8,11 @@
             $errorMsg = '';
             $errorMsg = $this->Form->error($name);
             $fieldName = $name;
-
-            echo $this->Form->input($fieldName, [
-                    'type' => 'text',
-                    'label' => false,
-                    'class' => 'form-control',
-                    'value' => isset($options['value']) ? $options['value'] : '',
-                    'error' => false
-                ]);
-         ?>
+            echo $this->Form->input($fieldName, $options);
+        ?>
+        <?php if (!array_key_exists('disabled', $options)) : ?>
         <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
+        <?php endif; ?>
     </div>
     <?php echo $errorMsg ?>
 </div>
