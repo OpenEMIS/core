@@ -5,10 +5,6 @@ use ArrayObject;
 use Exception;
 
 use Cake\Core\Configure;
-use Cake\Chronos\MutableDate;
-use Cake\Chronos\Chronos;
-use Cake\Chronos\Date;
-use Cake\Chronos\MutableDateTime;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -890,7 +886,32 @@ class PageComponent extends Component
             } elseif ($foreignKey) {
                 $association = $foreignKey['name'];
                 // default limit to 1000 to prevent out of memory error
-                $element->setOptions($table->$association->find('list')->limit(1000)->toArray());
+
+                $options = [];
+                // if finder OptionList exists, call finder
+                // else call findList and format results
+                if ($table->$association->hasFinder('optionList')) {
+                    $options = $table->$association
+                        ->find('optionList')
+                        ->limit(1000)
+                        ->toArray();
+                } else {
+                    $options = $table->$association->find('list')
+                        ->limit(1000)
+                        ->formatResults(function ($results) {
+                            $results = $results->toArray();
+                            $returnResults = [];
+                            foreach ($results as $key => $value) {
+                                $returnResults[] = [
+                                    'text' => __($value),
+                                    'value' => $key
+                                ];
+                            }
+                            return $returnResults;
+                        })
+                        ->toArray();
+                }
+                $element->setOptions($options);
             }
         }
     }

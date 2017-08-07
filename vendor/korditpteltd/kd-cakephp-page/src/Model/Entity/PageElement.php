@@ -3,8 +3,9 @@ namespace Page\Model\Entity;
 
 use ArrayObject;
 
-use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Utility\Inflector;
 
 class PageElement
 {
@@ -142,7 +143,7 @@ class PageElement
         return $this->key;
     }
 
-    public function setName()
+    public function setName($name)
     {
         $this->name = $name;
         return $this;
@@ -473,6 +474,15 @@ class PageElement
         }
 
         if ($this->extra->count() > 0) {
+            foreach ($this->extra as $property => $value) {
+                if ($value instanceof Time) {
+                    $this->extra[$property] = [
+                        'year' => $value->year,
+                        'month' => str_pad($value->month, 2, '0', STR_PAD_LEFT),
+                        'day' => str_pad($value->day, 2, '0', STR_PAD_LEFT)
+                    ];
+                }
+            }
             $properties = array_merge($properties, $this->extra->getArrayCopy());
         }
 

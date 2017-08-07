@@ -13,6 +13,8 @@ export class PageService {
     private querystringValue: any = '';
     private limit: number = null;
     private page: number = null;
+    private sort: string;
+    private direction: string;
 
     constructor(private http: Http) {}
 
@@ -107,6 +109,12 @@ export class PageService {
         return this;
     }
 
+    sortFields(field: string, direction: string = 'asc') {
+        this.sort = field;
+        this.direction = direction;
+        return this;
+    }
+
     toURL(action: string, primaryKey: string = null): string {
         let url = [this.base, this.controller, action].join('/');
 
@@ -126,6 +134,11 @@ export class PageService {
 
         if (primaryKey != null && typeof primaryKey == 'string') {
             url += '/' + primaryKey;
+        }
+
+        if (this.sort != undefined && this.direction != undefined) {
+            params.push('sort=' + this.sort);
+            params.push('direction=' + this.direction);
         }
 
         url += '.' + this.responseType;
@@ -167,6 +180,14 @@ export class PageService {
         let url = this.toURL('delete', primaryKey);
         // let observable = this.http.request(url, requestOptions).map(this.extractData);
         let observable = this.http.delete(url, requestOptions).map(this.extractData);
+        this.reset();
+        return observable;
+    }
+
+    onChange(uri: string, data: Object = {}) {
+        this.setQueryString(data);
+        let url = this.toURL('onchange', uri);
+        let observable = this.http.get(url).map(this.extractData);
         this.reset();
         return observable;
     }
