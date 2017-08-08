@@ -71,6 +71,11 @@ class PageComponent extends Component
 
     private $excludedFields = [];
 
+    protected $_defaultConfig = [
+        'sequence' => 'sequence',
+        'is_visible' => 'is_visible'
+    ];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -713,7 +718,7 @@ class PageComponent extends Component
                 $attributes['foreignKey'] = $foreignKey;
                 $attributes['model'] = $table->alias();
                 $element = new PageElement($columnName, $attributes);
-                if (in_array($attributes['type'], ['string', 'integer']) && !$foreignKey) {
+                if (in_array($attributes['type'], ['string', 'text', 'integer', 'date', 'datetime']) && !$foreignKey) {
                     $element->setSortable(true);
                 }
                 // setup displayFrom
@@ -912,20 +917,17 @@ class PageComponent extends Component
             if (!is_null($element->getParams())) {
                 $element->setOptions($this->getFilterOptions($element->getParams()));
             } elseif ($foreignKey) {
-                $association = $foreignKey['name'];
-                // default limit to 1000 to prevent out of memory error
+                $associationName = $foreignKey['name'];
+                $association = $table->{$associationName};
+                $columns = $association->schema()->columns();
 
-                $options = [];
                 // if finder OptionList exists, call finder
                 // else call findList and format results
-                if ($table->$association->hasFinder('optionList')) {
-                    $options = $table->$association
-                        ->find('optionList')
-                        ->limit(1000)
-                        ->toArray();
+
+                if ($association->hasFinder('optionList')) {
+                    $query = $association->find('optionList');
                 } else {
-                    $options = $table->$association->find('list')
-                        ->limit(1000)
+                    $query = $association->find('list')
                         ->formatResults(function ($results) {
                             $results = $results->toArray();
                             $returnResults = [];
@@ -936,9 +938,21 @@ class PageComponent extends Component
                                 ];
                             }
                             return $returnResults;
-                        })
-                        ->toArray();
+                        });
                 }
+                $sequence = $this->config('sequence');
+                $isVisible = $this->config('is_visible');
+
+                if (in_array($sequence, $columns)) {
+                    $query->order([$association->aliasField($sequence) => 'ASC']);
+                }
+
+                if (in_array($isVisible, $columns)) {
+                    $query->where([$association->aliasField($isVisible) => 1]);
+                }
+
+                // default limit to 1000 to prevent out of memory error
+                $options = $query->limit(1000)->toArray();
                 $element->setOptions($options);
             }
         }
