@@ -16,10 +16,11 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Event\Event;
-use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
-use Cake\Routing\Router;
+
+use ControllerAction\Model\Traits\ControllerActionTrait;
+use ControllerAction\Model\Traits\SecurityTrait;
 
 /**
  * Application Controller
@@ -32,6 +33,7 @@ use Cake\Routing\Router;
 class AppController extends Controller
 {
     use ControllerActionTrait;
+    use SecurityTrait;
 
     private $productName = 'OpenEMIS Core';
     public $helpers = [
@@ -45,10 +47,10 @@ class AppController extends Controller
     ];
 
     private $webhookListUrl = [
-            'plugin' => 'Webhook',
-            'controller' => 'Webhooks',
-            'action' => 'listWebhooks'
-        ];
+        'plugin' => 'Webhook',
+        'controller' => 'Webhooks',
+        'action' => 'listWebhooks'
+    ];
 
     /**
      * Initialization hook method.
@@ -64,12 +66,15 @@ class AppController extends Controller
         $ext = $this->request->params['_ext'];
         if ($this instanceof \Page\Controller\PageController && $ext != 'json') {
             $this->loadComponent('Page.PhpFrontEnd');
+            $this->loadComponent('Page.RenderLink');
+            $this->loadComponent('RenderDate');
+            $this->loadComponent('RenderDatetime');
+        } else {
+            // ControllerActionComponent must be loaded before AuthComponent for it to work
+            $this->loadComponent('ControllerAction.ControllerAction', [
+                'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
+            ]);
         }
-
-        // ControllerActionComponent must be loaded before AuthComponent for it to work
-        $this->loadComponent('ControllerAction.ControllerAction', [
-            'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
-        ]);
 
         $this->loadComponent('Auth', [
             'authenticate' => [
