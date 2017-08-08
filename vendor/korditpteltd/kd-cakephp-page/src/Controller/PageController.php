@@ -63,6 +63,11 @@ class PageController extends AppController
             $page->autoContains($table); // auto contain all belongsTo association
 
             $queryOptions = $page->getQueryOptions();
+
+            // Remove all default ordering if sort key exists in querystring
+            if (array_key_exists('sort', $requestQueries) && $queryOptions->offsetExists('order')) {
+                $queryOptions->offsetUnset('order');
+            }
             $query = $table->find('all', $queryOptions->getArrayCopy());
 
             if ($table->hasFinder('Index')) {
