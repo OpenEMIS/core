@@ -3,7 +3,7 @@ namespace Institution\Controller;
 
 use Cake\Event\Event;
 
-use Page\Controller\PageController;
+use App\Controller\PageController;
 
 class CounsellingsController extends PageController
 {
@@ -55,6 +55,10 @@ class CounsellingsController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['file_name', 'file_content', 'student_id']);
+
+        // set default ordering
+        $page->setQueryOption('order', [$this->Counsellings->aliasField('date') => 'DESC']);
+
         parent::index();
     }
 
@@ -92,9 +96,7 @@ class CounsellingsController extends PageController
         $institutionId = $page->getQueryString('institution_id');
         $studentId = $page->getQueryString('student_id');
 
-        // set the options for guidance_type_id, should be auto create the options, but reorder and visible not working.
-        $guidanceTypesOptions = $this->Counsellings->getGuidanceTypesOptions($institutionId);
-        $page->get('guidance_type_id')->setControlType('dropdown')->setOptions($guidanceTypesOptions);
+        $page->get('guidance_type_id')->setControlType('dropdown');
 
         // set the options for counselor_id
         $counselorOptions = $this->Counsellings->getCounselorOptions($institutionId);
