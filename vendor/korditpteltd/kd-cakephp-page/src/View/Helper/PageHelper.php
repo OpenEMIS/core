@@ -250,7 +250,7 @@ class PageHelper extends Helper
     {
         $search = $this->getQueryString('search');
         if ($search !== false) {
-            $value = Text::highlight($value, $search, ['html' => true]);
+            $value = Text::highlight($value, $search);
         }
         return $value;
     }
@@ -268,7 +268,7 @@ class PageHelper extends Helper
                 'options' => $limitOptions,
                 'value' => $limit,
                 'templates' => ['select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'],
-                'onchange' => "Page.querystring('limit', this.value)"
+                'onchange' => "Page.querystring('limit', this.value, this)"
             ]);
         }
         return $html;

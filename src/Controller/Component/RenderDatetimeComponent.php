@@ -5,7 +5,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\Log\Log;
 
 use Page\Model\Entity\PageElement;
@@ -44,7 +44,7 @@ class RenderDatetimeComponent extends Component
         $value = $entity->$key;
 
         if (!is_null($value)) {
-            if ($value instanceof Date) {
+            if ($value instanceof Time) {
                 $value = $value->format($format);
             } else {
                 $value = date($format, strtotime($value));
