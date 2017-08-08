@@ -10,7 +10,7 @@ use Cake\Log\Log;
 
 use Page\Model\Entity\PageElement;
 
-class RenderDateComponent extends Component
+class RenderDatetimeComponent extends Component
 {
     private $controller = null;
 
@@ -23,7 +23,7 @@ class RenderDateComponent extends Component
     public function implementedEvents()
     {
         $eventMap = [
-            'Controller.Page.onRenderDate' => ['callable' => 'onRenderDate', 'priority' => 5]
+            'Controller.Page.onRenderDatetime' => ['callable' => 'onRenderDatetime', 'priority' => 5]
         ];
 
         $events = parent::implementedEvents();
@@ -36,10 +36,10 @@ class RenderDateComponent extends Component
         return $events;
     }
 
-    public function onRenderDate(Event $event, Entity $entity, PageElement $element)
+    public function onRenderDateTime(Event $event, Entity $entity, PageElement $element)
     {
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-        $format = $ConfigItem->value('date_format');
+        $format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
         $key = $element->getKey();
         $value = $entity->$key;
 
