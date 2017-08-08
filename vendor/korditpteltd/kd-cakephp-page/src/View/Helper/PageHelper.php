@@ -212,6 +212,12 @@ class PageHelper extends Helper
 
             if ($attr['sortable']) {
                 $url = $this->getUrl(['action' => $this->request->param('action')], true);
+                if (array_key_exists('sort', $url)) {
+                    unset($url['sort']);
+                }
+                if (array_key_exists('direction', $url)) {
+                    unset($url['direction']);
+                }
                 $label = $this->Paginator->sort($field, $label, ['url' => $url]);
             }
 
