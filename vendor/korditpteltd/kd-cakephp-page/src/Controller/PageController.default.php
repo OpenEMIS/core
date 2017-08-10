@@ -6,6 +6,8 @@ use Page\Controller\PageController as BaseController;
 
 class PageController extends BaseController
 {
+    public $helpers = ['Page.Page'];
+
     public function initialize()
     {
         parent::initialize();
