@@ -42,8 +42,7 @@ class AppController extends Controller
         // Custom Helper
         'ControllerAction.ControllerAction',
         'OpenEmis.Navigation',
-        'OpenEmis.Resource',
-        'Page.Page'
+        'OpenEmis.Resource'
     ];
 
     private $webhookListUrl = [
