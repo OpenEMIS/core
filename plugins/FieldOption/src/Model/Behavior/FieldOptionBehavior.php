@@ -36,7 +36,7 @@ class FieldOptionBehavior extends Behavior {
         $value = '';
         $primaryKey = $this->_table->primaryKey();
         $entity = $this->getDefaultEntity();
-        return $entity->$primaryKey;
+        return $entity->{$primaryKey};
     }
 
     public function getDefaultEntity()

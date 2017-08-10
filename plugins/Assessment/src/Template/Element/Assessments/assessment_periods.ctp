@@ -149,7 +149,7 @@
 							$field = $attr['fields'][$formField];
 							$associated = explode('.', $formField);
 							if (count($associated)>1) {
-								$record = $period->$associated[0];
+								$record = $period->{$associated[0]};
 							} else {
 								$record = $period;
 							}
