@@ -788,7 +788,7 @@ class ImportBehavior extends Behavior
         foreach ($columns as $col => $property) {
             /*
             //if value in datetime format, then format it according to the systemDateFormat
-            $value = ( $entity->$property instanceof DateTimeInterface ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
+            $value = ( $entity->{$property} instanceof DateTimeInterface ) ? $entity->{$property}->format( $systemDateFormat ) : $originalRow[$col];
             */
             $value = $originalRow[$col];
             $array[] = $value;

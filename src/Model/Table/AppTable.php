@@ -234,33 +234,35 @@ class AppTable extends Table
     // Event: 'Model.excel.onFormatDate' ExcelBehavior
     public function onExcelRenderDate(Event $event, Entity $entity, $attr)
     {
-        if (!empty($entity->$attr['field'])) {
-            if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
-                return $this->formatDate($entity->$attr['field']);
+        $field = $entity->{$attr['field']};
+        if (!empty($field)) {
+            if ($field instanceof Time || $field instanceof Date) {
+                return $this->formatDate($field);
             } else {
-                if ($entity->$attr['field'] != '0000-00-00') {
-                    $date = new Date($entity->$attr['field']);
+                if ($field != '0000-00-00') {
+                    $date = new Date($field);
                     return $this->formatDate($date);
                 } else {
                     return '';
                 }
             }
         } else {
-            return $entity->$attr['field'];
+            return $field;
         }
     }
 
     public function onExcelRenderDateTime(Event $event, Entity $entity, $attr)
     {
-        if (!empty($entity->$attr['field'])) {
-            if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
-                return $this->formatDate($entity->$attr['field']);
+        $field = $entity->{$attr['field']};
+        if (!empty($field)) {
+            if ($field instanceof Time || $field instanceof Date) {
+                return $this->formatDate($field);
             } else {
-                $date = new Time($entity->$attr['field']);
+                $date = new Time($field);
                 return $this->formatDate($date);
             }
         } else {
-            return $entity->$attr['field'];
+            return $field;
         }
     }
 

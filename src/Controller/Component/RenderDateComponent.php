@@ -38,7 +38,7 @@ class RenderDateComponent extends Component
     public function onRenderDate(Event $event, Entity $entity, PageElement $element)
     {
         $key = $element->getKey();
-        $value = $entity->$key;
+        $value = $entity->{$key};
         $format = 'Y-m-d';
         if ($value instanceof Date) {
             $value = $value->format('Y-m-d');
