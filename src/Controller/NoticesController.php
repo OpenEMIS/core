@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use Page\Controller\PageController;
+use App\Controller\PageController;
 use Cake\Event\Event;
 
 class NoticesController extends PageController
