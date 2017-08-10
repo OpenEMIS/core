@@ -7,16 +7,14 @@ use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
 use Cake\Network\Exception\UnauthorizedException;
 use Cake\Core\Configure;
-use App\Controller\UsersController as BaseController;
 
-class OAuthController extends BaseController
+class OAuthController extends AppController
 {
     public function initialize()
     {
-        // $this->allowedAction[] = 'auth';
-        $this->allowedAction[] = 'token';
         parent::initialize();
-
+        $this->loadComponent('RequestHandler');
+        $this->Auth->allow('token');
         $header = getallheaders();
         if (isset($header['Origin'])) {
             $this->checkOrigin($header['Origin']);
