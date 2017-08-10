@@ -62,6 +62,20 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
 
     /**
+     * For oauth connection
+     *
+     */
+    $routes->scope('/oauth', ['controller' => 'OAuth'], function ($r) {
+        $r->extensions(['json']);
+        $r->connect('/:action/*', ['_ext' => 'json']);
+    });
+
+    $routes->scope('/OAuth', ['controller' => 'OAuth'], function ($r) {
+        $r->extensions(['json']);
+        $r->connect('/:action/*', ['_ext' => 'json']);
+    });
+
+    /**
      * Connect catchall routes for all controllers.
      *
      * Using the argument `DashedRoute`, the `fallbacks` method is a shortcut for
