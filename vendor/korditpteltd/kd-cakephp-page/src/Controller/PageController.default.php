@@ -23,8 +23,6 @@ class PageController extends BaseController
         $this->Page->config('labels', $labels);
 
         $this->loadComponent('Page.RenderLink');
-        $this->loadComponent('RenderDate');
-        $this->loadComponent('RenderDatetime');
     }
 
     public function beforeFilter(Event $event)
