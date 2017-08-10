@@ -121,6 +121,13 @@ class UsersTable extends AppTable
 			$this->fields['password']['type'] = 'password';
 			$this->fields['password']['attr']['value'] = '';
 			$this->fields['password']['attr']['autocomplete'] = 'off';
+
+        	// setting the tooltip message
+        	$tooltipMessage = $this->getMessage($this->alias().'.tooltip_message');
+
+			$this->fields['password']['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
+			$this->fields['password']['attr']['label']['class'] = 'tooltip-desc'; //css class for label
+			$this->fields['password']['attr']['label']['text'] = $this->fields['password']['field'] . $this->tooltipMessage($tooltipMessage);
 		}
 
 		if ($this->action == 'edit') {
@@ -317,4 +324,12 @@ class UsersTable extends AppTable
 
 		return $licenseData->toArray();
 	}
+
+	// for info tooltip
+    protected function tooltipMessage($message)
+    {
+        $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+
+        return $tooltipMessage;
+    }
 }
