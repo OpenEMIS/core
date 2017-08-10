@@ -63,13 +63,8 @@ class AppController extends Controller
     {
         parent::initialize();
 
-        $ext = $this->request->params['_ext'];
-        if ($this instanceof \Page\Controller\PageController && $ext != 'json') {
-            $this->loadComponent('Page.PhpFrontEnd');
-            $this->loadComponent('Page.RenderLink');
-            $this->loadComponent('RenderDate');
-            $this->loadComponent('RenderDatetime');
-        } else {
+        // don't load ControllerAction component if it is not a PageController
+        if ($this instanceof \Page\Controller\PageController == false) {
             // ControllerActionComponent must be loaded before AuthComponent for it to work
             $this->loadComponent('ControllerAction.ControllerAction', [
                 'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
