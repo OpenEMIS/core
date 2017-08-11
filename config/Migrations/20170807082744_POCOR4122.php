@@ -204,15 +204,11 @@ class POCOR4122 extends AbstractMigration
                 'null' => false
             ])
             ->addColumn('staff_qualification_id', 'integer', [
-                'default' => null,
                 'limit' => 11,
-                'null' => true,
                 'comment' => 'links to staff_qualifications.id'
             ])
             ->addColumn('qualification_specialisation_id', 'integer', [
-                'default' => null,
                 'limit' => 11,
-                'null' => true,
                 'comment' => 'links to qualification_specialisations.id'
             ])
             ->addIndex('staff_qualification_id')
