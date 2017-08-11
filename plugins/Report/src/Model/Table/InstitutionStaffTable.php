@@ -388,6 +388,7 @@ class InstitutionStaffTable extends AppTable  {
                 'field' => 'contact_option',
                 'type' => 'contact_option',
                 'label' => __($name),
+                'formatting' => 'string',
                 'contactTypes' => $contactTypes
             ];
         }
