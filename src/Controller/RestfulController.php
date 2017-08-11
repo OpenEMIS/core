@@ -61,6 +61,7 @@ class RestfulController extends BaseController
                 $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($bodyb64));
                 if (property_exists($payload, 'iss')) {
                     $queryDatasource = false;
+                    $this->Auth->config('storage', 'Memory');
                 }
                 if (property_exists($payload, 'scope')) {
                     $this->controllerAction = $payload->scope;
