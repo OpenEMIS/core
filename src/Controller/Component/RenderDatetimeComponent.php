@@ -5,12 +5,12 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\Log\Log;
 
 use Page\Model\Entity\PageElement;
 
-class RenderDateComponent extends Component
+class RenderDatetimeComponent extends Component
 {
     private $controller = null;
 
@@ -23,7 +23,7 @@ class RenderDateComponent extends Component
     public function implementedEvents()
     {
         $eventMap = [
-            'Controller.Page.onRenderDate' => ['callable' => 'onRenderDate', 'priority' => 5]
+            'Controller.Page.onRenderDatetime' => ['callable' => 'onRenderDatetime', 'priority' => 5]
         ];
 
         $events = parent::implementedEvents();
@@ -36,28 +36,19 @@ class RenderDateComponent extends Component
         return $events;
     }
 
-    public function onRenderDate(Event $event, Entity $entity, PageElement $element)
+    public function onRenderDateTime(Event $event, Entity $entity, PageElement $element)
     {
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-        $format = $ConfigItem->value('date_format');
+        $format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
         $key = $element->getKey();
-<<<<<<< HEAD
-        $value = $entity->{$key};
-        $format = 'Y-m-d';
-        if ($value instanceof Date) {
-            $value = $value->format('Y-m-d');
-        } else {
-            $value = date('Y-m-d', strtotime($value));
-=======
         $value = $entity->$key;
 
         if (!is_null($value)) {
-            if ($value instanceof Date) {
+            if ($value instanceof Time) {
                 $value = $value->format($format);
             } else {
                 $value = date($format, strtotime($value));
             }
->>>>>>> 9aef272269ef7e33bdff9e90b19c0230c5e2baa4
         }
         return $value;
     }
