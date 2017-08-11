@@ -119,6 +119,8 @@ class OAuthController extends AppController
                     $expireIn = 3600;
 
                     $token = JWT::decode($assertion, $credentials->public_key, ['RS256']);
+                    // using API scope for issued token for now
+                    $token->scope = 'API';
                     $token->iat = Time::now()->toUnixString();
                     $token->exp = intval(Time::now()->toUnixString()) + $expireIn;
                     $token = JWT::encode($token, Configure::read('Application.private.key'), 'RS256');
