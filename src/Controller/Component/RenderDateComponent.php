@@ -41,15 +41,7 @@ class RenderDateComponent extends Component
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format');
         $key = $element->getKey();
-<<<<<<< HEAD
         $value = $entity->{$key};
-        $format = 'Y-m-d';
-        if ($value instanceof Date) {
-            $value = $value->format('Y-m-d');
-        } else {
-            $value = date('Y-m-d', strtotime($value));
-=======
-        $value = $entity->$key;
 
         if (!is_null($value)) {
             if ($value instanceof Date) {
@@ -57,7 +49,6 @@ class RenderDateComponent extends Component
             } else {
                 $value = date($format, strtotime($value));
             }
->>>>>>> 9aef272269ef7e33bdff9e90b19c0230c5e2baa4
         }
         return $value;
     }
