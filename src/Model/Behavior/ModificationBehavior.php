@@ -20,7 +20,7 @@ class ModificationBehavior extends Behavior
         $columns = $schema->columns();
 
         $userId = null;
-        if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
+        if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User']['id'])) {
             $userId = $_SESSION['Auth']['User']['id'];
         }
         if (!is_null($userId)) {
