@@ -760,8 +760,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
         if (array_key_exists('user', $data)) {
             $model = 'Subject'.ucwords(strtolower($persona));
-            $newEntity = $this->$model->newEntity();
-            $newEntity = $this->$model->patchEntity($newEntity, $data);
+            $newEntity = $this->{$model}->newEntity();
+            $newEntity = $this->{$model}->patchEntity($newEntity, $data);
             $newEntity->user = $userData->user;
             $newEntity->student_status = $userData->student_status;
             return $newEntity;
@@ -772,7 +772,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $recordId = '';
         $relationKey = 'subject_'.strtolower($persona);
-        foreach ($entity->$relationKey as $data) {
+        foreach ($entity->{$relationKey} as $data) {
             if (strtolower($persona)=='students') {
                 if (is_object($data)) {
                     if ($data->student_id == $id) {
