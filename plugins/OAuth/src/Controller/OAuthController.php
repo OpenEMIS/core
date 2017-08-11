@@ -7,15 +7,14 @@ use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
 use Cake\Network\Exception\UnauthorizedException;
 use Cake\Core\Configure;
-use OAuth\Controller\AppController;
+use Cake\Controller\Controller;
 
-class OAuthController extends AppController
+class OAuthController extends Controller
 {
     public function initialize()
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');
-        $this->Auth->allow('token');
         $header = getallheaders();
         if (isset($header['Origin'])) {
             $this->checkOrigin($header['Origin']);
@@ -104,7 +103,7 @@ class OAuthController extends AppController
                         throw new UnauthorizedException('No client id specified');
                     }
 
-                    $ServerCredentialsTable = TableRegistry::get('ServerCredentials');
+                    $ServerCredentialsTable = TableRegistry::get('Credentials');
 
                     $credentials = $ServerCredentialsTable
                         ->find()
