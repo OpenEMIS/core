@@ -131,9 +131,15 @@ class ImportBehavior extends Behavior
         }
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    }
 
-        if (!empty($this->config('custom_text'))) {
-            $this->customText = $this->config('custom_text');
+    private function isCustomText()
+    {
+        $this->customText = $this->config('custom_text');
+        if (!empty($this->customText) && strlen($this->customText) > 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -376,14 +382,14 @@ class ImportBehavior extends Behavior
                 return false;
             }
 
-            ($this->customText) ? $this->recordHeader = 3 : $this->recordHeader = 2;
+            ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
 
             if ($highestRow == $this->recordHeader) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
 
-            ($this->customText) ? $startCheck = 3 : $startCheck = 2;
+            ($this->isCustomText()) ? $startCheck = 3 : $startCheck = 2;
             
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
                 if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
@@ -632,7 +638,7 @@ class ImportBehavior extends Behavior
         $activeSheet->getRowDimension(1)->setRowHeight(75);
         $activeSheet->getRowDimension(2)->setRowHeight(25);
 
-        ($this->customText) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : ''; 
+        ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : ''; 
 
         $headerLastAlpha = $this->getExcelColumnAlpha('last');
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
@@ -649,11 +655,11 @@ class ImportBehavior extends Behavior
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
-            ($this->customText) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];            
+            ($this->isCustomText()) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];            
         }
 
         if (empty($applyCellBorder)) {
-            ($this->customText) ? $applyCellBorder = ['s'=>3, 'e'=>3] : $applyCellBorder = ['s'=>2, 'e'=>2];
+            ($this->isCustomText()) ? $applyCellBorder = ['s'=>3, 'e'=>3] : $applyCellBorder = ['s'=>2, 'e'=>2];
         }
 
         $activeSheet = $objPHPExcel->getActiveSheet();
@@ -682,11 +688,11 @@ class ImportBehavior extends Behavior
             __('Salary Date') . $description,
         ];
 
-        ($this->customText) ? $lastRowToAlign = 3 : $lastRowToAlign = 2;
+        ($this->isCustomText()) ? $lastRowToAlign = 3 : $lastRowToAlign = 2;
 
         $activeSheet = $objPHPExcel->getActiveSheet();
 
-        if ($this->customText) {
+        if ($this->isCustomText()) {
             $activeSheet->mergeCells('A2:C2');
             $activeSheet->setCellValue("A2", $this->customText);
         }
@@ -776,7 +782,7 @@ class ImportBehavior extends Behavior
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
                 $alpha = $this->getExcelColumnAlpha($columnOrder - 1);
                 $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn);
-                ($this->customText) ? $lookupStart = 4 : $lookupStart = 3;
+                ($this->isCustomText()) ? $lookupStart = 4 : $lookupStart = 3;
                 for ($i=$lookupStart; $i < 103; $i++) {
                     $objPHPExcel->setActiveSheetIndex(0);
                     $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
