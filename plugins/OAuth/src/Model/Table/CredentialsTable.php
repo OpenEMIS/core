@@ -3,8 +3,8 @@ namespace OAuth\Model\Table;
 
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
-use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
 /**
  * Credentials Model
@@ -18,9 +18,8 @@ use Cake\Validation\Validator;
  * @method \OAuth\Model\Entity\Credential[] patchEntities($entities, array $data, array $options = [])
  * @method \OAuth\Model\Entity\Credential findOrCreate($search, callable $callback = null, $options = [])
  *
- * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class CredentialsTable extends Table
+class CredentialsTable extends AppTable
 {
 
     /**

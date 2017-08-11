@@ -68,7 +68,8 @@ class UsersTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index', 'add'],
             'ClassStudents' => ['index'],
-            'OpenEMIS_Classroom' => ['view', 'edit']
+            'OpenEMIS_Classroom' => ['view', 'edit'],
+            'API' => ['index', 'view']
         ]);
     }
 
