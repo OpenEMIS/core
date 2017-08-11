@@ -1092,7 +1092,7 @@ class NavigationComponent extends Component
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit']
+                    'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit', 'Notices.delete']
                 ],
                 'Indexes.Indexes' => [
                     'title' => 'Indexes',
