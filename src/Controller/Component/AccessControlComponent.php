@@ -191,8 +191,8 @@ class AccessControlComponent extends Component
                         $function = $entity->security_function;
 
                         foreach ($operations as $op) { // for each operation in function
-                            if (!empty($function->$op) && $entity->$op == 1) {
-                                $actions = explode($separator, $function->$op);
+                            if (!empty($function->{$op}) && $entity->{$op} == 1) {
+                                $actions = explode($separator, $function->{$op});
 
                                 if (is_array($actions)) {
                                     foreach ($actions as $action) { // for each action in operation
