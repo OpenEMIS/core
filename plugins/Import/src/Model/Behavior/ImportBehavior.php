@@ -135,7 +135,6 @@ class ImportBehavior extends Behavior
         if (!empty($this->config('custom_text'))) {
             $this->customText = $this->config('custom_text');
         }
-        // pr($customText);die;
     }
 
 
@@ -695,7 +694,7 @@ class ImportBehavior extends Behavior
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $lastRowToAlign, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
-        // pr($currentRowHeight);die;
+        
         foreach ($header as $key => $value) {
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . $lastRowToAlign, $value);
