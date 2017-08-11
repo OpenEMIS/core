@@ -12,7 +12,7 @@
 
 	if (!empty($path)) {
 		foreach ($path as $obj) {
-			$name = $obj->$levelAssociation->name;
+			$name = $obj->{$levelAssociation}->name;
 			if (!($tableName=='Area.AreaAdministratives' && $count==0)) {
 				$options = [
 					'class' => $formClass,
