@@ -17,6 +17,8 @@ use App\Controller\AppController;
 
 class PageController extends AppController
 {
+    private $excludedFields = ['order', 'modified', 'modified_user_id', 'created', 'created_user_id'];
+
     public function initialize()
     {
         parent::initialize();
@@ -24,6 +26,14 @@ class PageController extends AppController
         $this->loadComponent('Page.Page');
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        $action = $this->request->action;
+        if (in_array($action, ['index', 'add', 'edit', 'delete'])) {
+            $this->Page->exclude($this->excludedFields);
+        }
     }
 
     public function index()
@@ -53,6 +63,11 @@ class PageController extends AppController
             $page->autoContains($table); // auto contain all belongsTo association
 
             $queryOptions = $page->getQueryOptions();
+
+            // Remove all default ordering if sort key exists in querystring
+            if (array_key_exists('sort', $requestQueries) && $queryOptions->offsetExists('order')) {
+                $queryOptions->offsetUnset('order');
+            }
             $query = $table->find('all', $queryOptions->getArrayCopy());
 
             if ($table->hasFinder('Index')) {
@@ -103,12 +118,14 @@ class PageController extends AppController
 
         if ($page->hasMainTable()) {
             $table = $page->getMainTable();
+            $response = null;
             $entity = null;
 
             if ($request->is('get')) {
                 $entity = $table->newEntity();
             } elseif ($request->is(['post'])) {
                 $pageStatus = $page->getStatus();
+
                 try {
                     $entity = $table->newEntity($request->data);
                     $result = $table->save($entity);
@@ -120,8 +137,6 @@ class PageController extends AppController
                         $pageStatus->setMessage('The record has been added successfully.');
                         $page->setAlert($pageStatus->getMessage());
                         $response = $page->redirect(['action' => 'index']);
-
-                        return $response;
                     } else {
                         Log::write('debug', $entity->errors());
                         $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
@@ -142,6 +157,10 @@ class PageController extends AppController
                 }
             }
             $page->setVar('data', $entity);
+
+            if (!is_null($response)) {
+                return $response;
+            }
         }
     }
 
@@ -214,6 +233,7 @@ class PageController extends AppController
                             $page->setAlert($pageStatus->getMessage());
                             $response = $page->redirect(['action' => 'view']);
                         } else {
+                            Log::write('debug', $entity->errors());
                             $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
                                 ->setType('error')
                                 ->setMessage('The record is not updated due to errors encountered.');
@@ -235,10 +255,6 @@ class PageController extends AppController
                     $page->setVar('errors', $errors);
                 }
                 $page->setVar('data', $entity);
-
-                if (!is_null($response)) {
-                    return $response;
-                }
             } else { // if primary key does not exists
                 $pageStatus->setCode(PageStatus::RECORD_NOT_FOUND)
                     ->setType('warning')
@@ -247,6 +263,8 @@ class PageController extends AppController
 
                 $page->setAlert($pageStatus->getMessage(), 'warning');
                 $response = $page->redirect(['action' => 'view']);
+            }
+            if (!is_null($response)) {
                 return $response;
             }
         }
@@ -422,68 +440,4 @@ class PageController extends AppController
 
         return $this->response;
     }
-
-    /* To be added to AppTable for onchange to work
-    public function findOptionList(Query $query, array $options)
-    {
-        $options += [
-            'keyField' => $this->primaryKey(),
-            'valueField' => $this->displayField(),
-            'groupField' => null
-        ];
-
-        if (!$query->clause('select') &&
-            !is_object($options['keyField']) &&
-            !is_object($options['valueField']) &&
-            !is_object($options['groupField'])
-        ) {
-            $fields = array_merge(
-                (array)$options['keyField'],
-                (array)$options['valueField'],
-                (array)$options['groupField']
-            );
-            $columns = $this->schema()->columns();
-            if (count($fields) === count(array_intersect($fields, $columns))) {
-                $query->select($fields);
-            }
-        }
-
-        $options = $this->_setFieldMatchers(
-            $options,
-            ['keyField', 'valueField', 'groupField']
-        );
-
-        return $query->formatResults(function ($results) use ($options) {
-            $returnResult = [];
-            $groupField = $options['groupField'];
-            $keyField = $options['keyField'];
-            $valueField = $options['valueField'];
-            if (array_key_exists('defaultOption', $options) && !$options['defaultOption']) {
-                $returnResult = [];
-            } else if ($results->count() == 0) {
-                $returnResult[] = ['value' => '', 'text' => __('No Options')];
-            } else if (array_key_exists('defaultOption', $options) && is_string($options['defaultOption'])) {
-                $returnResult[] = ['value' => '', 'text' => __($options['defaultOption'])];
-            } else {
-                $returnResult[] = ['value' => '', 'text' => '-- '.__('Select').' --'];
-            }
-            foreach ($results as $result) {
-                $result = $result->toArray();
-
-                if (array_key_exists('flatten', $options) && $options['flatten']) {
-                    $result = Hash::flatten($result);
-                }
-                $key = array_key_exists($keyField, $result) ? $result[$keyField] : null;
-                $value = array_key_exists($valueField, $result) ? $result[$valueField] : null;
-                if ($options['groupField']) {
-                    $group = array_key_exists($groupField, $result) ? $result[$groupField] : null;
-                    $returnResult[] = ['group' => $group, 'value' => $key, 'text' => $value];
-                } else {
-                    $returnResult[] = ['value' => $key, 'text' => $value];
-                }
-            }
-            return $returnResult;
-        });
-    }
-    */
 }
