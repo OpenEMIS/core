@@ -67,6 +67,11 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'Phinx\\' => 6,
             'Page\\' => 5,
         ),
+        'O' => 
+        array (
+            'OAuth\\Test\\' => 11,
+            'OAuth\\' => 6,
+        ),
         'M' => 
         array (
             'Migrations\\' => 11,
@@ -222,6 +227,14 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'Page\\' => 
         array (
             0 => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-page/src',
+        ),
+        'OAuth\\Test\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/OAuth/tests',
+        ),
+        'OAuth\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/OAuth/src',
         ),
         'Migrations\\' => 
         array (
