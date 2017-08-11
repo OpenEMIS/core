@@ -13,7 +13,7 @@ class POCOR3791 extends AbstractMigration
     public function up()
     {
         // server_credentials
-        $table = $this->table('server_credentials', [
+        $table = $this->table('credentials', [
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table will contain the server credentials of the server accessing the application.'
             ]);
@@ -55,6 +55,6 @@ class POCOR3791 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->dropTable('server_credentials');
+        $this->dropTable('credentials');
     }
 }
