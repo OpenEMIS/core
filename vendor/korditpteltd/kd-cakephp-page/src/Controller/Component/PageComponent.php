@@ -72,8 +72,9 @@ class PageComponent extends Component
     private $excludedFields = [];
 
     protected $_defaultConfig = [
-        'sequence' => 'sequence',
-        'is_visible' => 'is_visible'
+        'sequence' => 'sequence', // used in populateDropdownOptions()
+        'is_visible' => 'is_visible', // used in populateDropdownOptions()
+        'labels' => [] // used in add() for setting default labels
     ];
 
     public function initialize(array $config)
@@ -852,6 +853,11 @@ class PageComponent extends Component
 
     public function add(PageElement $element)
     {
+        $labels = $this->config('labels');
+        $key = $element->getKey();
+        if (array_key_exists($key, $labels)) {
+            $element->setLabel($labels[$key]);
+        }
         $this->elements->offsetSet($this->elements->count(), $element);
         $this->order[$element->getKey()] = count($this->order);
     }
