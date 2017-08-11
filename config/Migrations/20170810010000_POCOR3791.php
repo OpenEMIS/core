@@ -50,11 +50,36 @@ class POCOR3791 extends AbstractMigration
                 'null' => false
             ])
             ->save();
+
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 163');
+
+        $this->insert('security_functions', [
+            'id' => 5077,
+            'name' => 'Credentials',
+            'controller' => 'Credentials',
+            'module' => 'Administration',
+            'category' => 'System Configurations',
+            'parent_id' => 5000,
+            '_view' => 'index|view',
+            '_edit' => 'edit',
+            '_add' => 'add',
+            '_delete' => 'delete',
+            '_execute' => null,
+            'order' => 164,
+            'visible' => 1,
+            'description' => '',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => 1,
+            'created' => '2017-08-11'
+        ]);
     }
 
     // rollback
     public function down()
     {
         $this->dropTable('credentials');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 163');
+        $this->execute('DELETE FROM security_functions WHERE id = 5077');
     }
 }
