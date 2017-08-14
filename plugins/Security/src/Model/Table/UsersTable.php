@@ -264,7 +264,7 @@ class UsersTable extends AppTable
     	$tooltipMessage = $this->getMessage($this->alias().'.tooltip_message');
 		$this->fields['password']['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
 		$this->fields['password']['attr']['label']['class'] = 'tooltip-desc'; //css class for label
-		$this->fields['password']['attr']['label']['text'] = $this->fields['password']['field'] . $this->tooltipMessage($tooltipMessage);
+		$this->fields['password']['attr']['label']['text'] = __(Inflector::humanize($this->fields['password']['field'])) . $this->tooltipMessage($tooltipMessage);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)
