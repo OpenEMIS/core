@@ -43,4 +43,25 @@ class POCOR4124 extends AbstractMigration
         $this->execute($sql);
         //import_mapping
     }
+
+    // rollback
+    public function down()
+    {
+        //import_mapping
+        $sql = "UPDATE `import_mapping` 
+                SET `description` = 'Code (Optional)' 
+                WHERE `model` = 'Training.TrainingSessionsTrainees'
+                AND `column_name` = 'identity_type_id'";
+
+        $this->execute($sql);
+
+
+        $sql = "UPDATE `import_mapping` 
+                SET `description` = '(Optional)'
+                WHERE `model` = 'Training.TrainingSessionsTrainees'
+                AND `column_name` = 'openemis_no'";
+
+        $this->execute($sql);
+        //import_mapping
+    }
 }
