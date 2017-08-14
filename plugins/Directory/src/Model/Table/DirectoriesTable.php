@@ -471,11 +471,11 @@ class DirectoriesTable extends ControllerActionTable
     public function onUpdateFieldPassword(Event $event, array $attr, $action, Request $request)
     {
         // setting the tooltip message
-        $tooltipMessage = $this->getMessage('Users.tooltip_message');
+        $tooltipMessagePassword = $this->getMessage('Users.tooltip_message_password');
 
         $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
         $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
-        $attr['attr']['label']['text'] = __(Inflector::humanize($attr['field'])) . $this->tooltipMessage($tooltipMessage);
+        $attr['attr']['label']['text'] = __(Inflector::humanize($attr['field'])) . $this->tooltipMessage($tooltipMessagePassword);
 
         return $attr;
     }
