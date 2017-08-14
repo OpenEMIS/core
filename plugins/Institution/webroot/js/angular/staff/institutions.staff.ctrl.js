@@ -1028,6 +1028,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             remain = true;
         }
 
+        if (StaffController.selectedStaffData.password == '' || StaffController.selectedStaffData.password == undefined) {
+            StaffController.postResponse.error.password = empty;
+            remain = true;
+        }
+
         var arrNumber = [{}];
 
         if (StaffController.StaffIdentities == 1 && (StaffController.selectedStaffData.identity_number == '' || StaffController.selectedStaffData.identity_number == undefined)) {
