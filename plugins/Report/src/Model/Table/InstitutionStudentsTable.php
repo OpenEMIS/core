@@ -253,21 +253,24 @@ class InstitutionStudentsTable extends AppTable  {
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
 			'type' => 'string',
-			'label' => ''
+			'label' => '',
+            'formatting' => 'string'
 		];
 
         $extraField[] = [
             'key' => 'Users.username',
             'field' => 'username',
             'type' => 'string',
-            'label' => __('Username')
+            'label' => __('Username'),
+            'formatting' => 'string'
         ];
 
 		$extraField[] = [
 			'key' => 'Users.identity_number',
 			'field' => 'number',
 			'type' => 'string',
-			'label' => __($identity->name)
+			'label' => __($identity->name),
+            'formatting' => 'string'
 		];
 
 		$extraField[] = [
