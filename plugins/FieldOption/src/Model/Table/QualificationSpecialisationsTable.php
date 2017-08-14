@@ -15,8 +15,17 @@ class QualificationSpecialisationsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->hasMany('Qualifications', ['className' => 'Staff.Qualifications']);
         $this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
+
+        $this->belongsToMany('Qualifications', [
+            'className' => 'Staff.Qualifications',
+            'joinTable' => 'staff_qualifications_specialisations',
+            'foreignKey' => 'qualification_specialisation_id',
+            'targetForeignKey' => 'staff_qualification_id',
+            'through' => 'Staff.QualificationsSpecialisations',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
         
         $this->addBehavior('FieldOption.FieldOption');
 
