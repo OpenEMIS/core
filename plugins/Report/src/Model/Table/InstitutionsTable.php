@@ -107,7 +107,7 @@ class InstitutionsTable extends AppTable
 		}
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
 	{
 		$requestData = json_decode($settings['process']['params']);
 		$feature = $requestData->feature;
@@ -338,19 +338,19 @@ class InstitutionsTable extends AppTable
 		if (isset($this->request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
 			if (in_array($feature, ['Report.InstitutionStudents'])) {
-            	$EducationGrades = TableRegistry::get('Education.EducationGrades');
-                $gradeOptions = $EducationGrades
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-                    ->find('visible')
-                    ->contain(['EducationProgrammes.EducationCycles'])
-                    ->order([
-                    	'EducationCycles.order' => 'ASC',
-                    	'EducationProgrammes.order' => 'ASC',
-                    	$EducationGrades->aliasField('order') => 'ASC'
-                    ])
-                    ->toArray();
+				$EducationGrades = TableRegistry::get('Education.EducationGrades');
+				$gradeOptions = $EducationGrades
+					->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+					->find('visible')
+					->contain(['EducationProgrammes.EducationCycles'])
+					->order([
+						'EducationCycles.order' => 'ASC',
+						'EducationProgrammes.order' => 'ASC',
+						$EducationGrades->aliasField('order') => 'ASC'
+					])
+					->toArray();
 
-                $attr['type'] = 'select';
+				$attr['type'] = 'select';
 				$attr['options'] = $gradeOptions;
 			} else {
 				$attr['value'] = self::NO_FILTER;
