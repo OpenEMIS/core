@@ -475,7 +475,7 @@ class DirectoriesTable extends ControllerActionTable
 
         $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
         $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
-        $attr['attr']['label']['text'] = $attr['field'] . $this->tooltipMessage($tooltipMessage);
+        $attr['attr']['label']['text'] = __(Inflector::humanize($attr['field'])) . $this->tooltipMessage($tooltipMessage);
 
         return $attr;
     }
