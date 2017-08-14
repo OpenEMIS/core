@@ -249,13 +249,13 @@ class InstitutionStudentsTable extends AppTable  {
             'label' => '',
         ];
 
-		$extraField[] = [
-			'key' => 'Users.openemis_no',
-			'field' => 'openemis_no',
-			'type' => 'string',
-			'label' => '',
+        $extraField[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => '',
             'formatting' => 'string'
-		];
+        ];
 
         $extraField[] = [
             'key' => 'Users.username',
@@ -265,13 +265,13 @@ class InstitutionStudentsTable extends AppTable  {
             'formatting' => 'string'
         ];
 
-		$extraField[] = [
-			'key' => 'Users.identity_number',
-			'field' => 'number',
-			'type' => 'string',
-			'label' => __($identity->name),
+        $extraField[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'number',
+            'type' => 'string',
+            'label' => __($identity->name),
             'formatting' => 'string'
-		];
+        ];
 
 		$extraField[] = [
 			'key' => 'Users.gender_id',
