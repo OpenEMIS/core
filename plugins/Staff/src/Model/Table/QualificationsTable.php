@@ -98,6 +98,15 @@ class QualificationsTable extends ControllerActionTable
         $query->contain(['QualificationTitles.QualificationLevels']);
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'qualification_level') {
+            return __('Level');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['EducationSubjects','QualificationSpecialisations']);
