@@ -572,7 +572,6 @@ class UsersTable extends AppTable
                 ]
             ])
             ->allowEmpty('username', 'update')
-            ->allowEmpty('password')
             // password validation now in behavior
             ->allowEmpty('photo_content')
             ;
@@ -695,7 +694,6 @@ class UsersTable extends AppTable
             ->requirePresence('username', 'create')
             ->allowEmpty('username', 'update')
             // password validation now in behavior
-            ->allowEmpty('password')
             ->allowEmpty('photo_content')
             ;
 
