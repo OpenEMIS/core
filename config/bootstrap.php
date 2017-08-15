@@ -316,4 +316,4 @@ if (Configure::read('debug')) {
     // Plugin::load('DebugKit', ['bootstrap' => true]);
 }
 
-Plugin::load('OAuth');
+Plugin::load('OAuth', ['routes' => true]);
