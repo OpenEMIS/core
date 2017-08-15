@@ -849,7 +849,7 @@ class ImportBehavior extends Behavior
 
             $objPHPExcel = new \PHPExcel();
 
-            ($this->isCustomText()) ? $rowData = 4 ? $rowData = 3;
+            ($this->isCustomText()) ? $rowData = 4 : $rowData = 3;
 
             $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader, $type);
             $activeSheet = $objPHPExcel->getActiveSheet();
