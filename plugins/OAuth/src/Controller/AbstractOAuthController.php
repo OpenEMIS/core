@@ -1,9 +1,7 @@
 <?php
 namespace OAuth\Controller;
 
-use Cake\Utility\Security;
 use Firebase\JWT\JWT;
-use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
 use Cake\Network\Exception\UnauthorizedException;
 use Cake\Core\Configure;
