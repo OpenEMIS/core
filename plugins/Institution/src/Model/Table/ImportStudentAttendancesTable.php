@@ -125,7 +125,7 @@ class ImportStudentAttendancesTable extends AppTable {
                     $currentPeriod->name,
                     $row->education_grade->name,
                     $row->user->name,
-                    $row->user->$lookupColumn
+                    $row->user->{$lookupColumn}
                 ];
             }
         }
@@ -166,7 +166,7 @@ class ImportStudentAttendancesTable extends AppTable {
     //              $row->Users->name,
     //              $row->AcademicPeriods->name,
     //              $row->EducationGrades->name,
-    //              $row->Users->$lookupColumn
+    //              $row->Users->{$lookupColumn}
     //          ];
     //      }
     //  }
@@ -188,7 +188,7 @@ class ImportStudentAttendancesTable extends AppTable {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }

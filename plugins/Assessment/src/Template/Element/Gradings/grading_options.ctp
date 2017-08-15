@@ -81,7 +81,7 @@
 										'label'=>false,
 										'name'=>'AssessmentGradingTypes[grading_options]['.$key.']['.$field['field'].']',
 										'class'=>$fieldClass,
-										'value'=>$record->$field['field']
+										'value'=>$record->{$field['field']}
 									],
 									$fieldAttributes);
 							?>

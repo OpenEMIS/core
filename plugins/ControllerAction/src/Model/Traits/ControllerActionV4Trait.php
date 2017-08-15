@@ -23,7 +23,7 @@ trait ControllerActionV4Trait {
 		// Copy all component objects from Controller to Model
 		$components = $this->controller->components()->loaded();
 		foreach ($components as $component) {
-			$model->$component = $this->controller->$component;
+			$model->{$component} = $this->controller->{$component};
 		}
 	}
 
@@ -188,7 +188,7 @@ trait ControllerActionV4Trait {
 		}
 
 		if (!array_key_exists('className', $options)) {
-			pr('There is no className set for ' . $this->$request->action);
+			pr('There is no className set for ' . $this->request->action);
 			die;
 		}
 
