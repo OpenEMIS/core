@@ -22,7 +22,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['alternative_name','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_id', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
+			'excludes' => ['alternative_name','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_id', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'],
 			'pages' => false
 		]);
 
@@ -50,6 +50,17 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			'orientation' => 'landscape'
 		];
 	}
+
+    // POCOR-4100 studentTeacherRatio report > classification show index instead of name.
+    public function onExcelGetClassification(Event $event, Entity $entity)
+    {
+        // constant in institution table
+        if ($entity->classification == 1) {
+            return __('Academic');
+        } else {
+            return __('Non Academic');
+        }
+    }
 
 	public function onExcelRenderStudentCount(Event $event, Entity $entity, $attr) {
 		$InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -85,7 +96,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 		$query->matching('Institutions', function ($q) use ($institutionId) {
 			return $q->where(['Institutions.id' => $institutionId]);
 		});
-		
+
 		$query->select(['totalTeacher' => $query->func()->count('DISTINCT '.$InstitutionStaff->aliasField('Staff_id'))]);
 		if (array_key_exists('academic_period_id', $attr) && !empty($attr['academic_period_id'])) {
 			$academic_period_id = $attr['academic_period_id'];
@@ -143,7 +154,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 				->first()
 				;
 		$currAcademicPeriodName = ($currAcademicPeriod->has('name'))? $currAcademicPeriod->name: '';
-		
+
 		$recordObj = new ArrayObject([]);
 		$extraField[] = [
 			'key' => 'AcademicPeriod',
@@ -182,7 +193,7 @@ class InstitutionStudentTeacherRatioTable extends AppTable  {
 			'recordObj' => $recordObj
 		];
 		$newFields = array_merge($newFields, $extraField);
-		
+
 		$fields->exchangeArray($newFields);
 
         $cloneFields = $fields->getArrayCopy();

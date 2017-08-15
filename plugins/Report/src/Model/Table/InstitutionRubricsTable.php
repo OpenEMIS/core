@@ -19,13 +19,13 @@ class InstitutionRubricsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_quality_rubrics');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
 		$this->belongsTo('Subjects', ['className' => 'Institution.InstitutionSubjects', 'foreignKey' => 'institution_subject_id']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->addBehavior('Excel', [
@@ -110,7 +110,7 @@ class InstitutionRubricsTable extends AppTable {
 							$this->aliasField('rubric_template_id') => $templateId
 						])
 						->group([
-							$this->aliasField('rubric_template_id'), 
+							$this->aliasField('rubric_template_id'),
 							$this->aliasField('academic_period_id')
 						])
 						->order(['AcademicPeriods.order'])
@@ -131,7 +131,7 @@ class InstitutionRubricsTable extends AppTable {
 
 	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			if (isset($this->request->data[$this->alias()]['feature']) 
+			if (isset($this->request->data[$this->alias()]['feature'])
 				&& isset($this->request->data[$this->alias()]['rubric_template_id'])
 				&& isset($this->request->data[$this->alias()]['academic_period_id'])) {
 
@@ -162,8 +162,8 @@ class InstitutionRubricsTable extends AppTable {
 
 							// Add a case to check if the rubrics is completed or not
 							$completedRubrics = $query->newExpr()->addCase(
-								[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)], 
-								[self::COMPLETED, -1], 
+								[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)],
+								[self::COMPLETED, -1],
 								['integer', 'integer']);
 
 							$query->select([

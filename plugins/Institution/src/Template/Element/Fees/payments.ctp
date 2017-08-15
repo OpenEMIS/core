@@ -56,7 +56,7 @@
 									<?php
 										$field['attr']['name'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
 										$field['attr']['id'] = strtolower($field['model']).'-'.$recordKey.'-'.$field['field'];
-										$field['attr']['value'] = $record->$field['field'];
+										$field['attr']['value'] = $record->{$field['field']};
 										$field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
 										$tdClass = '';
 										if ($record->errors($field['field'])) {
