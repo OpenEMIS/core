@@ -459,7 +459,7 @@ class PageComponent extends Component
 
     public function getHeader()
     {
-        return $this->header;
+        return __($this->header);
     }
 
     public function setHeader($header)
