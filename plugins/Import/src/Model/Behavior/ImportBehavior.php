@@ -230,6 +230,7 @@ class ImportBehavior extends Behavior
         $this->_table->ControllerAction->field('lookup_model', ['visible' => false]);
         $this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
         $this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
+        $this->_table->ControllerAction->field('is_optional', ['visible' => false]);
 
         $comment = __('* Format Supported: ' . implode(', ', $this->config('allowable_file_types')));
         $comment .= '<br/>';
@@ -552,7 +553,7 @@ class ImportBehavior extends Behavior
 
         $objPHPExcel = new \PHPExcel();
 
-        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header);
+        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
 
         $this->setCodesDataTemplate($objPHPExcel);
 
@@ -673,7 +674,7 @@ class ImportBehavior extends Behavior
         $activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
     }
 
-    public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header)
+    public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
     {
         $objPHPExcel->setActiveSheetIndex(0);
         // column_name in import_mapping that have date format, after the humanize
@@ -693,7 +694,12 @@ class ImportBehavior extends Behavior
         $activeSheet = $objPHPExcel->getActiveSheet();
 
         if ($this->isCustomText()) {
-            $activeSheet->mergeCells('A2:C2');
+            if (!empty($type) && $type == 'failed') { //if failed, then need to merge 4 columns instead of 3
+                $activeSheet->mergeCells('A2:D2');
+            } else if (empty($type) || $type != 'failed') {
+                $activeSheet->mergeCells('A2:C2');
+            }
+            
             $activeSheet->setCellValue("A2", $this->customText);
         }
 
@@ -843,7 +849,9 @@ class ImportBehavior extends Behavior
 
             $objPHPExcel = new \PHPExcel();
 
-            $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader);
+            ($this->isCustomText()) ? $rowData = 4 ? $rowData = 3;
+
+            $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader, $type);
             $activeSheet = $objPHPExcel->getActiveSheet();
             foreach ($data as $index => $record) {
                 if ($type == 'failed') {
@@ -852,16 +860,16 @@ class ImportBehavior extends Behavior
                 } else {
                     $values = $record['data'];
                 }
-                $activeSheet->getRowDimension(($index + 3))->setRowHeight(15);
+                $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
                     $alpha = $this->getExcelColumnAlpha($key);
-                    $activeSheet->setCellValue($alpha . ($index + 3), $value);
+                    $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
                     if ($key==(count($values)-1) && $type == 'failed') {
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
-                        $activeSheet->getRowDimension(($index + 3))->setRowHeight($suggestedRowHeight);
-                        $activeSheet->getStyle($alpha . ($index + 3))->getAlignment()->setWrapText(true);
+                        $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
+                        $activeSheet->getStyle($alpha . ($index + $rowData))->getAlignment()->setWrapText(true);
                     }
                 }
             }
@@ -1292,7 +1300,7 @@ class ImportBehavior extends Behavior
             }
             $translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
             $columnDescription = strtolower($mapping[$col]->description);
-            $isOptional = substr_count($columnDescription, 'optional');
+            $isOptional = $mapping[$col]->is_optional;
             if (!$isOptional) {
                 $isOptional = substr_count($columnDescription, 'not required');
             }
