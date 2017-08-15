@@ -173,7 +173,7 @@ class ImportUsersTable extends AppTable
             foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }
@@ -194,7 +194,7 @@ class ImportUsersTable extends AppTable
             foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }
@@ -296,7 +296,7 @@ class ImportUsersTable extends AppTable
                 $identityTypeName = !empty($row->identity_type) ? $row->identity_type->name : '';
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn,
+                    $row->{$lookupColumn},
                     $identityTypeName
                 ];
             }
