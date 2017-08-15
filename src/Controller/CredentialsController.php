@@ -10,8 +10,8 @@ class CredentialsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('OAuth.Credentials');
-        $this->Page->loadElementsFromTable($this->Credentials);
+        $this->loadModel('ApiCredentials');
+        $this->Page->loadElementsFromTable($this->ApiCredentials);
     }
 
     public function beforeFilter(Event $event)
@@ -19,6 +19,7 @@ class CredentialsController extends PageController
         $page = $this->Page;
 
         parent::beforeFilter($event);
+        $page->exclude(['scope']);
         $page->addCrumb('Credentials', ['plugin' => false, 'controller' => 'Credentials', 'action' => 'index']);
     }
 
@@ -31,17 +32,16 @@ class CredentialsController extends PageController
         $randomString = '';
         $timeStamp = new Time();
         $timeStamp = $timeStamp->toUnixString();
-        while(!$cStrong) {
+        while (!$cStrong) {
             $randomString = bin2hex(openssl_random_pseudo_bytes(8, $cStrong));
         }
         $clientId = $timeStamp.'-'.$randomString.'.app';
-        if ($this->request->data('Credentials.client_id')) {
-            $clientId = $this->request->data('Credentials.client_id');
+        if ($this->request->data('ApiCredentials.client_id')) {
+            $clientId = $this->request->data('ApiCredentials.client_id');
         }
         $page->addNew('client')->setControlType('string')->setLabel('Client ID')->setValue($clientId)->setDisabled(true);
         $page->move('client')->first();
         $page->get('client_id')->setControlType('hidden')->setValue($clientId);
-
     }
 
     public function index()
