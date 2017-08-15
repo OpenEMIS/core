@@ -1089,6 +1089,16 @@ class NavigationComponent extends Component
                     'parent' => 'SystemSetup',
                     'selected' => ['Configurations.index', 'Configurations.add', 'Configurations.view', 'Configurations.edit']
                 ],
+                'API' => [
+                    'title' => 'APIs',
+                    'parent' => 'SystemSetup',
+                    'link' => false
+                ],
+                    'Credentials.index' => [
+                        'title' => 'Credentials',
+                        'parent' => 'API',
+                        'selected' => ['Credentials.view', 'Credentials.add', 'Credentials.edit', 'Credentials.delete']
+                    ],
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
