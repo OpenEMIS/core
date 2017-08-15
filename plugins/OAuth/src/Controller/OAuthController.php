@@ -9,29 +9,28 @@ use Cake\Network\Exception\UnauthorizedException;
 use Cake\Core\Configure;
 use Cake\Controller\Controller;
 
-class OAuthController extends Controller
+abstract class OAuthController extends Controller
 {
     public function initialize()
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');
-        $header = getallheaders();
-        if (isset($header['Origin'])) {
-            $this->checkOrigin($header['Origin']);
-        }
     }
 
-    private function checkOrigin($origin)
-    {
-        $ServerCredentialsTable = TableRegistry::get('ServerCredentials');
-        $hasServerOrigin = $ServerCredentialsTable
-            ->find()
-            ->where([$ServerCredentialsTable->aliasField('authorised_domain') => $origin])
-            ->count();
-        if ($hasServerOrigin) {
-            header('Access-Control-Allow-Origin: '.$origin);
-        }
-    }
+    /**
+     * Retreive api credentials from application api credential table.
+     *
+     * @param string $iss Client ID or API Key that can uniquely identify the record
+     * @return array Credentials that minimally contain the public_key and the scope of the credential record
+     */
+    abstract protected function getApiCredential($iss);
+
+    /**
+     * Retreive application signature.
+     *
+     * @return array An array with two key, signature - Application signature, and algorithm - Signature algorithm
+     */
+    abstract protected function getApplicationSignature();
 
     private function _requestCodeFields()
     {
@@ -103,26 +102,18 @@ class OAuthController extends Controller
                         throw new UnauthorizedException('No client id specified');
                     }
 
-                    $ServerCredentialsTable = TableRegistry::get('Credentials');
-
-                    $credentials = $ServerCredentialsTable
-                        ->find()
-                        ->where([$ServerCredentialsTable->aliasField('client_id') => $payload->iss])
-                        ->first();
-
-                    if (empty($credentials)) {
-                        throw new UnauthorizedException();
-                    }
+                    $credentials = $this->getApiCredential($payload->iss);
 
                     // To set to one hour expiry
                     $expireIn = 3600;
 
-                    $token = JWT::decode($assertion, $credentials->public_key, ['RS256']);
-                    // using API scope for issued token for now
-                    $token->scope = 'API';
+                    $token = JWT::decode($assertion, $credentials['public_key'], ['RS256']);
+                    $token->scope = $credentials['scope'];
                     $token->iat = Time::now()->toUnixString();
                     $token->exp = intval(Time::now()->toUnixString()) + $expireIn;
-                    $token = JWT::encode($token, Configure::read('Application.private.key'), 'RS256');
+
+                    $applicationSignature = $this->getApplicationSignature();
+                    $token = JWT::encode($token, $applicationSignature['signature'], $applicationSignature['algorithm']);
 
                     $serialize = [
                         'access_token' => $token,

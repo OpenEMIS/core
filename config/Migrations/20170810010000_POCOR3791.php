@@ -13,7 +13,7 @@ class POCOR3791 extends AbstractMigration
     public function up()
     {
         // server_credentials
-        $table = $this->table('credentials', [
+        $table = $this->table('api_credentials', [
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table will contain the server credentials of the server accessing the application.'
             ]);
@@ -30,6 +30,10 @@ class POCOR3791 extends AbstractMigration
             ->addColumn('public_key', 'text', [
                 'default' => null,
                 'null' => false
+            ])
+            ->addColumn('scope', 'text', [
+                'default' => null,
+                'null' => true
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -78,7 +82,7 @@ class POCOR3791 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->dropTable('credentials');
+        $this->dropTable('api_credentials');
         $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 163');
         $this->execute('DELETE FROM security_functions WHERE id = 5077');
     }

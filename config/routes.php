@@ -61,6 +61,16 @@ Router::scope('/', function (RouteBuilder $routes) {
      */
     $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
 
+    $routes->scope('/oauth', ['controller' => 'OAuth'], function ($r) {
+        $r->extensions(['json']);
+        $r->connect('/:action/*', ['_ext' => 'json']);
+    });
+
+    $routes->scope('/OAuth', ['controller' => 'OAuth'], function ($r) {
+        $r->extensions(['json']);
+        $r->connect('/:action/*', ['_ext' => 'json']);
+    });
+
     /**
      * Connect catchall routes for all controllers.
      *

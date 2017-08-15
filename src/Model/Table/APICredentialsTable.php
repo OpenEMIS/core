@@ -1,25 +1,13 @@
 <?php
-namespace OAuth\Model\Table;
+namespace App\Model\Table;
 
-use Cake\ORM\Query;
+use ArrayObject;
+use Cake\Event\Event;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
-/**
- * Credentials Model
- *
- *
- * @method \OAuth\Model\Entity\Credential get($primaryKey, $options = [])
- * @method \OAuth\Model\Entity\Credential newEntity($data = null, array $options = [])
- * @method \OAuth\Model\Entity\Credential[] newEntities(array $data, array $options = [])
- * @method \OAuth\Model\Entity\Credential|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \OAuth\Model\Entity\Credential patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \OAuth\Model\Entity\Credential[] patchEntities($entities, array $data, array $options = [])
- * @method \OAuth\Model\Entity\Credential findOrCreate($search, callable $callback = null, $options = [])
- *
- */
-class CredentialsTable extends AppTable
+class ApiCredentialsTable extends AppTable
 {
 
     /**
@@ -62,5 +50,10 @@ class CredentialsTable extends AppTable
         $rules->add($rules->isUnique(['client_id']));
 
         return $rules;
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $data['scope'] = 'API';
     }
 }
