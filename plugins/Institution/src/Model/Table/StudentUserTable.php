@@ -172,8 +172,7 @@ class StudentUserTable extends ControllerActionTable
                 'on' => 'create'
             ])
             ->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
-                'rule' => ['compareStudentGenderWithInstitution'],
-                'on' => 'create'
+                'rule' => ['compareStudentGenderWithInstitution']
             ])
             ->requirePresence('start_date', 'create')
             ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
@@ -209,13 +208,16 @@ class StudentUserTable extends ControllerActionTable
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
         $institutionStudentId = $this->getQueryString('institution_student_id');
 
+        $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
+        $extra['institutionId'] = $institutionId;
+
         // this is required if the student link is clicked from the Institution Classes or Subjects
         if (empty($institutionStudentId)) {
             $params = [];
             if ($this->paramsPass(0)) {
                 $params = $this->paramsDecode($this->paramsPass(0));
             }
-            $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
+
             $studentId = isset($params['id']) ? $params['id'] : $this->Session->read('Institution.StudentUser.primaryKey.id');
 
             // get the id of the latest student record in the current institution
@@ -303,9 +305,8 @@ class StudentUserTable extends ControllerActionTable
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
         
-        $this->fields['gender_id']['type'] = 'readonly';
-        $this->fields['gender_id']['attr']['value'] = $entity->has('gender') ? $entity->gender->name : '';
-        $this->fields['gender_id']['value'] = $entity->has('gender') ? $entity->gender->id : '';
+        $this->field('institution_id', ['type' => 'hidden']);
+        $this->fields['institution_id']['value'] = $extra['institutionId'];
     }
 
     private function setupToolbarButtons(Entity $entity, ArrayObject $extra)

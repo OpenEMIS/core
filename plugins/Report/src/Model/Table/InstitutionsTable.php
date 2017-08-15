@@ -116,7 +116,7 @@ class InstitutionsTable extends AppTable
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
 			$newFields[] = $value;
-			if ($value['field'] == 'area_id') {
+			if ($value['field'] == 'classification') {
 				$newFields[] = [
 					'key' => 'Areas.code',
 					'field' => 'area_code',
@@ -125,7 +125,7 @@ class InstitutionsTable extends AppTable
 				];
 			}
 
-			if ($value['field'] == 'area_administrative_id') {
+			if ($value['field'] == 'area_id') {
 				$newFields[] = [
 					'key' => 'AreaAdministratives.code',
 					'field' => 'area_administrative_code',
