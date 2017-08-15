@@ -253,7 +253,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                     'external_data_source_type' => $entity->value,
                     'attribute_field' => $field,
                     'attribute_name' => $field,
-                    'value' => $entity->$field
+                    'value' => $entity->{$field}
                 ];
                 $newEntity = $ExternalDataSourceAttributes->newEntity($data);
                 $ExternalDataSourceAttributes->save($newEntity);

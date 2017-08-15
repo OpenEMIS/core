@@ -32,7 +32,7 @@ class ReorderBehavior extends Behavior
                         $filterValue = $filterValues;
                     }
                 } else {
-                    $filterValue = $entity->$filter;
+                    $filterValue = $entity->{$filter};
                 }
                 $table = $this->_table;
                 $order = $table
@@ -40,7 +40,7 @@ class ReorderBehavior extends Behavior
                     ->where([$table->aliasField($filter).' IN ' => $filterValue])
                     ->count();
             }
-            $entity->$orderField = $order + 1;
+            $entity->{$orderField} = $order + 1;
         }
     }
 
@@ -60,7 +60,7 @@ class ReorderBehavior extends Behavior
                     $filterValue = $filterValues;
                 }
             } else {
-                $filterValue = $entity->$filter;
+                $filterValue = $entity->{$filter};
             }
 
             if (!is_null($filterValue)) {

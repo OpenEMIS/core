@@ -662,7 +662,7 @@ class WorkflowBehavior extends Behavior {
                 $workflowId = 0;
                 if (empty($filterId)) {
                     if (!is_null($entity) && $entity->has($filterKey)) {
-                        $filterId = $entity->$filterKey;
+                        $filterId = $entity->{$filterKey};
                     }
                 }
 
@@ -1356,7 +1356,7 @@ class WorkflowBehavior extends Behavior {
 					$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
 				}
 
-				$filterId = $entity->$filterKey;
+				$filterId = $entity->{$filterKey};
 				$filterName = TableRegistry::get($filterAlias)->get($filterId)->name;
 
 				$model->fields[$filterKey]['type'] = 'readonly';
