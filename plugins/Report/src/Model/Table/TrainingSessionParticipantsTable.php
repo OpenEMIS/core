@@ -15,15 +15,15 @@ class TrainingSessionParticipantsTable extends AppTable
     private $institutionDetails = [];
 
     CONST ACTIVE_STATUS = 1;
+    CONST WITHDRAWN_STATUS = 2;
 
     public function initialize(array $config)
     {
-        $this->table('training_session_trainee_results');
+        $this->table('training_sessions_trainees');
         parent::initialize($config);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
-        $this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
-
+        
         $this->addBehavior('Excel');
         $this->addBehavior('Report.ReportList');
     }
@@ -55,10 +55,6 @@ class TrainingSessionParticipantsTable extends AppTable
                 'identity_number' => 'Trainees.identity_number'
             ])
             ->contain(['Sessions.Courses'])
-            ->innerJoin(
-                [$TrainingSessionResults->alias() => $TrainingSessionResults->table()],
-                [$TrainingSessionResults->aliasField('training_session_id = ') . $this->aliasField('training_session_id')]
-            )
             ->join([
                 'Trainees' => [
                     'type' => 'LEFT',
@@ -108,7 +104,7 @@ class TrainingSessionParticipantsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'TrainingResults.training_session_id',
+            'key' => 'TrainingSessionParticipants.training_session_id',
             'field' => 'training_session_id',
             'type' => 'integer',
             'label' => __('Session Name'),
@@ -136,6 +132,13 @@ class TrainingSessionParticipantsTable extends AppTable
         ];
 
         $newFields[] = [
+            'key' => 'TrainingSessionParticipants.trainee_id',
+            'field' => 'trainee_id',
+            'type' => 'string',
+            'label' => __('Name'),
+        ];
+
+        $newFields[] = [
             'key' => 'IdentityTypes.name',
             'field' => 'identity_type_name',
             'type' => 'string',
@@ -147,13 +150,6 @@ class TrainingSessionParticipantsTable extends AppTable
             'field' => 'identity_number',
             'type' => 'integer',
             'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'TrainingResults.trainee_id',
-            'field' => 'trainee_id',
-            'type' => 'string',
-            'label' => __('Name'),
         ];
 
         $newFields[] = [
@@ -175,6 +171,12 @@ class TrainingSessionParticipantsTable extends AppTable
             'field' => 'position_name',
             'type' => 'position_name',
             'label' => __('Position'),
+        ];
+        $newFields[] = [
+            'key' => 'trainee_status',
+            'field' => 'trainee_status',
+            'type' => 'trainee_status',
+            'label' => __('Status'),
         ];
 
         $fields->exchangeArray($newFields);
@@ -218,6 +220,21 @@ class TrainingSessionParticipantsTable extends AppTable
             return $staffPositionTitles['staff_position_title']['name'];
         } else {
             return ' ';
+        }
+    }
+
+    public function onExcelRenderTraineeStatus(Event $event, Entity $entity)
+    {
+        if ($entity->has('status')) {
+            $status = $entity->status;
+            
+            if ($status == self::ACTIVE_STATUS) {
+                return 'Active';
+            } else if ($status == self::WITHDRAWN_STATUS) {
+                return 'Withdrawn';
+            } else {
+                return ' ';
+            }
         }
     }
 
