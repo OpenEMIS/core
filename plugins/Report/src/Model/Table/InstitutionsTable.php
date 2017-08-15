@@ -11,6 +11,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use Institution\Model\Table\InstitutionsTable as Institutions;
 
 class InstitutionsTable extends AppTable
@@ -59,6 +60,21 @@ class InstitutionsTable extends AppTable
 		];
 	}
 
+	public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator;
+    }
+
+    public function validationStudents(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('education_grade_id')
+            ->notEmpty('status');
+        return $validator;
+    }
+
 	public function beforeAction(Event $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
@@ -91,6 +107,13 @@ class InstitutionsTable extends AppTable
 		$this->ControllerAction->field('module', ['type' => 'hidden']);
 		// $this->ControllerAction->field('license', ['type' => 'hidden']);
 	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->alias()]['feature'] == 'Report.InstitutionStudents') {
+            $options['validate'] = 'students';
+        }
+    }
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$requestData = json_decode($settings['process']['params']);
