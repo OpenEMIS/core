@@ -66,10 +66,10 @@ class TrackActivityBehavior extends Behavior {
 						if (array_key_exists($fieldType, $ActivityModel->dateTypes)) {
 							$dateType = $ActivityModel->dateTypes[$fieldType];
 							$oldValue = date($dateType, strtotime($oldValue));
-							$newValue = date($dateType, strtotime($entity->$field));
+							$newValue = date($dateType, strtotime($entity->{$field}));
 							$dateType = null;
 						} else {
-							$newValue = $entity->$field;
+							$newValue = $entity->{$field};
 						}
 		    			
 		    			/**

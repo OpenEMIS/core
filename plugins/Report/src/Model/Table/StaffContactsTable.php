@@ -39,4 +39,15 @@ class StaffContactsTable extends AppTable  {
 		$options = [0 => __('No'), 1 => __('Yes')];
 		return $options[$entity->preferred];
 	}
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        foreach ($fields as $key => $field) {
+            // change formatting to string to avoid content unreadable errors on excel
+            if ($field['field'] == 'value') {
+                $fields[$key]['formatting'] = 'string';
+                break;
+            }
+        }
+    }
 }

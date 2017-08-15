@@ -468,6 +468,18 @@ class DirectoriesTable extends ControllerActionTable
         }
     }
 
+    public function onUpdateFieldPassword(Event $event, array $attr, $action, Request $request)
+    {
+        // setting the tooltip message
+        $tooltipMessagePassword = $this->getMessage('Users.tooltip_message_password');
+
+        $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
+        $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
+        $attr['attr']['label']['text'] = __(Inflector::humanize($attr['field'])) . $this->tooltipMessage($tooltipMessagePassword);
+
+        return $attr;
+    }
+
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
         $userType = $requestData[$this->alias()]['user_type'];
@@ -734,5 +746,13 @@ class DirectoriesTable extends ControllerActionTable
                 ->toArray();
             return implode('<BR>', $staffInstitutions);
         }
+    }
+
+    // for info tooltip
+    protected function tooltipMessage($message)
+    {
+        $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+
+        return $tooltipMessage;
     }
 }
