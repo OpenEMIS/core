@@ -35,7 +35,6 @@ return [
         'Migrations' => $baseDir . '/vendor/cakephp/migrations/',
         'OAuth' => $baseDir . '/plugins/OAuth/',
         'OpenEmis' => $baseDir . '/plugins/OpenEmis/',
-        'OpenEmis_backup' => $baseDir . '/plugins/OpenEmis_backup/',
         'Page' => $baseDir . '/vendor/korditpteltd/kd-cakephp-page/',
         'Profile' => $baseDir . '/plugins/Profile/',
         'Report' => $baseDir . '/plugins/Report/',
