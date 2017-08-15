@@ -2,9 +2,9 @@
 namespace App\Controller;
 
 use Cake\Core\Configure;
-use OAuth\Controller\OAuthController as BaseController;
+use OAuth\Controller\AbstractOAuthController;
 
-class OAuthController extends BaseController
+class OAuthController extends AbstractOAuthController
 {
     public function initialize()
     {

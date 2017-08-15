@@ -9,7 +9,7 @@ use Cake\Network\Exception\UnauthorizedException;
 use Cake\Core\Configure;
 use Cake\Controller\Controller;
 
-abstract class OAuthController extends Controller
+abstract class AbstractOAuthController extends Controller
 {
     public function initialize()
     {
