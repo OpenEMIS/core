@@ -9,6 +9,8 @@ use Cake\Controller\Controller;
 
 abstract class AbstractOAuthController extends Controller
 {
+    protected $tokenExpiry = 3600; // To set to one hour expiry
+
     public function initialize()
     {
         parent::initialize();
@@ -18,17 +20,17 @@ abstract class AbstractOAuthController extends Controller
     /**
      * Retreive api credentials from application api credential table.
      *
-     * @param string $iss Client ID or API Key that can uniquely identify the record
+     * @param string $iss Payload of the assertion
      * @return array Credentials that minimally contain the public_key and the scope of the credential record
      */
-    abstract protected function getApiCredential($iss);
+    abstract protected function getApiCredential($payload);
 
     /**
      * Retreive application signature.
      *
      * @return array An array with two key, signature - Application signature, and algorithm - Signature algorithm
      */
-    abstract protected function getApplicationSignature();
+    abstract protected function getSignatureParams();
 
     private function _requestCodeFields()
     {
@@ -100,21 +102,34 @@ abstract class AbstractOAuthController extends Controller
                         throw new UnauthorizedException('No client id specified');
                     }
 
-                    $credentials = $this->getApiCredential($payload->iss);
+                    $credentials = $this->getApiCredential($payload);
 
-                    // To set to one hour expiry
-                    $expireIn = 3600;
+                    if (!$credentials) {
+                        throw new UnauthorizedException();
+                    }
+
+                    if (!array_key_exists('public_key', $credentials)) {
+                        throw new UnauthorizedException('Public Key is missing from getApiCredential()');
+                    }
+
+                    $scope = '';
+                    if (array_key_exists('scope', $credentials)) {
+                        $scope = $credentials['scope'];
+                    }
+
+                    $expireIn = $this->tokenExpiry;
+                    $unixTimestamp = intval(Time::now()->toUnixString());
 
                     $token = JWT::decode($assertion, $credentials['public_key'], ['RS256']);
-                    $token->scope = $credentials['scope'];
-                    $token->iat = Time::now()->toUnixString();
-                    $token->exp = intval(Time::now()->toUnixString()) + $expireIn;
+                    $token->scope = $scope;
+                    $token->iat = $unixTimestamp;
+                    $token->exp = $unixTimestamp + $expireIn;
 
-                    $applicationSignature = $this->getApplicationSignature();
-                    $token = JWT::encode($token, $applicationSignature['signature'], $applicationSignature['algorithm']);
+                    $signatureParams = $this->getSignatureParams();
+                    $accessToken = JWT::encode($token, $signatureParams['key'], $signatureParams['algorithm']);
 
                     $serialize = [
-                        'access_token' => $token,
+                        'access_token' => $accessToken,
                         'expire_in' => $expireIn,
                         'token_type' => 'Bearer',
                         '_serialize' => [
@@ -123,10 +138,7 @@ abstract class AbstractOAuthController extends Controller
                             'access_token'
                         ]
                     ];
-                    $this->set('access_token', $token);
-                    $this->set('expire_in', $expireIn);
-                    $this->set('token_type', 'Bearer');
-                    $this->set('_serialize', ['token_type', 'expire_in', 'access_token']);
+                    $this->set($serialize);
                     break;
 
                 case 'authorization_code':
