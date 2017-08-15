@@ -21,7 +21,8 @@ class ImportTraineesTable extends AppTable
 
         $this->addBehavior('Import.Import', [
             'plugin'=>'Training', 
-            'model'=>'TrainingSessionsTrainees'
+            'model'=>'TrainingSessionsTrainees',
+            'custom_text'=>__('Please enter either OpenEMIS ID or an Identity Code and number')
         ]);
     }
 

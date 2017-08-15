@@ -19,8 +19,9 @@ class AppTestCase extends IntegrationTestCase
     private $urlPrefix = '';
     // public $dropTables = false;
 
-    public function setup()
+    public function setUp()
     {
+        parent::setUp();
         $this->setAuthSession();
     }
 

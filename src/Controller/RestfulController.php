@@ -12,6 +12,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Network\Request;
 use Cake\Core\Configure;
+use Firebase\JWT\JWT;
 use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController
@@ -47,6 +48,27 @@ class RestfulController extends BaseController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+
+        $queryDatasource = true;
+        $authorisationHeader = $this->request->header('authorization');
+        $token = '';
+        if ($authorisationHeader) {
+            $token = str_ireplace('Bearer ', '', $authorisationHeader);
+
+            $tks = explode('.', $token);
+            if (count($tks) == 3) {
+                list($headb64, $bodyb64, $cryptob64) = $tks;
+                $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($bodyb64));
+                if (property_exists($payload, 'iss')) {
+                    $queryDatasource = false;
+                    $this->Auth->config('storage', 'Memory');
+                }
+                if (property_exists($payload, 'scope')) {
+                    $this->controllerAction = $payload->scope;
+                }
+            }
+        }
+
         $this->Auth->config('authenticate', [
             'ADmad/JwtAuth.Jwt' => [
                 'parameter' => 'token',
@@ -57,9 +79,11 @@ class RestfulController extends BaseController
                 ],
                 'allowedAlgs' => ['RS256'],
                 'key' => Configure::read('Application.public.key'),
-                'queryDatasource' => true
+                'queryDatasource' => $queryDatasource
             ]
         ]);
+
+
 
         if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
             $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
