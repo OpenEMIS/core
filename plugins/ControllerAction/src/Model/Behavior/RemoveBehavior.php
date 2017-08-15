@@ -290,7 +290,7 @@ class RemoveBehavior extends Behavior
                 foreach ($convertOptions as $value) {
                     $keysToEncode = $model->getIdKeys($model, $value, false);
                     $encodedKey = $model->paramsEncode($keysToEncode);
-                    $convertOptions[$encodedKey] = $value->$extra['options']['valueField'];
+                    $convertOptions[$encodedKey] = $value->{$extra['options']['valueField']};
                 }
 
                 if (empty($convertOptions)) {
@@ -398,10 +398,10 @@ class RemoveBehavior extends Behavior
         $ids = [];
         if (is_array($primaryKey)) {
             foreach ($primaryKey as $key) {
-                $ids[$key] = $entity->$key;
+                $ids[$key] = $entity->{$key};
             }
         } else {
-            $ids[$primaryKey] = $entity->$primaryKey;
+            $ids[$primaryKey] = $entity->{$primaryKey};
         }
         $associations = [];
         foreach ($model->associations() as $assoc) {

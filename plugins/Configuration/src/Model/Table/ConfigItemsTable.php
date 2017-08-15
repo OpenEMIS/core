@@ -116,12 +116,12 @@ class ConfigItemsTable extends AppTable
              * grab validation rules by either record code or record type
              */
             $validationRules = 'validate' . Inflector::camelize($entity->code);
-            if (isset($this->$validationRules)) {
-                $this->validator()->add('value', $this->$validationRules);
+            if (isset($this->{$validationRules})) {
+                $this->validator()->add('value', $this->{$validationRules});
             } else {
                 $validationRules = 'validate' . Inflector::camelize($entity->type);
-                if (isset($this->$validationRules)) {
-                    $this->validator()->add('value', $this->$validationRules);
+                if (isset($this->{$validationRules})) {
+                    $this->validator()->add('value', $this->{$validationRules});
                 }
             }
         }
@@ -305,16 +305,16 @@ class ConfigItemsTable extends AppTable
                 if ($entity->code == 'institution_area_level_id' || $entity->code == 'institution_validate_area_level_id') {
                     // get area level from value
                     $value = $optionsModel->find()
-                        ->where([$optionsModel->aliasField('level') => $entity->$valueField])
+                        ->where([$optionsModel->aliasField('level') => $entity->{$valueField}])
                         ->first();
                 } else {
-                    $value = $optionsModel->get($entity->$valueField);
+                    $value = $optionsModel->get($entity->{$valueField});
                 }
 
                 if (is_object($value)) {
                     return $value->name;
                 } else {
-                    return $entity->$valueField;
+                    return $entity->{$valueField};
                 }
 
             /**
@@ -325,21 +325,21 @@ class ConfigItemsTable extends AppTable
                 $value = $optionsModel->find()
                     ->where([
                         'ConfigItemOptions.option_type' => $entity->option_type,
-                        'ConfigItemOptions.value' => $entity->$valueField,
+                        'ConfigItemOptions.value' => $entity->{$valueField},
                     ])
                     ->first();
                 if (is_object($value)) {
                     if ($entity->code == 'date_format') {
-                        return date($entity->$valueField);
+                        return date($entity->{$valueField});
                     } else {
                         return $value->option;
                     }
                 } else {
-                    return $entity->$valueField;
+                    return $entity->{$valueField};
                 }
             }
         } else if ($entity->code == 'openemis_id_prefix') {
-            $exp = explode(',', $entity->$valueField);
+            $exp = explode(',', $entity->{$valueField});
             if (!$exp[1]) {
                 return __('Disabled');
             } else {
@@ -347,9 +347,9 @@ class ConfigItemsTable extends AppTable
             }
         } else {
             if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-                return date($entity->$valueField);
+                return date($entity->{$valueField});
             } else {
-                return $entity->$valueField;
+                return $entity->{$valueField};
             }
         }
     }
