@@ -9,7 +9,6 @@ use App\Model\Table\AppTable;
 
 class ApiCredentialsTable extends AppTable
 {
-
     /**
      * Initialize method
      *
