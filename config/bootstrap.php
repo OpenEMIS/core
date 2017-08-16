@@ -315,3 +315,5 @@ Plugin::load('Profile', ['routes' => true, 'autoload' => true]);
 if (Configure::read('debug')) {
     // Plugin::load('DebugKit', ['bootstrap' => true]);
 }
+
+Plugin::load('OAuth', ['routes' => true]);
