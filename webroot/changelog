@@ -1,3 +1,6 @@
+v3.10.9
+- Allow for both specialisations and subjects in Staff > Professional Development > Qualifications page
+
 v3.10.8
 - Implemented Counselor Feature in Institution > Students > Counselling
 - Upon generating a report in the Report module, system now includes filter selection in report name
