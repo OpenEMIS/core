@@ -450,6 +450,14 @@ class ExcelBehavior extends Behavior
                 }
             }
         }
+
+        $specialCharacters = ['=', '@'];
+        $firstCharacter = substr($value, 0, 1);
+        if (in_array($firstCharacter, $specialCharacters)) {
+            // append single quote to escape special characters
+            $value = "'" . $value;
+        }
+
         return ['rowData' => __($value), 'style' => $style];
     }
 
