@@ -367,7 +367,7 @@ class PageElement
     public function setOptions($options, $empty = true)
     {
         if (empty($options) && $empty !== false) {
-            $this->options = ['' => __('No Options')];
+            $this->options = [['value' => '', 'text' => __('No Options')]];
         } else {
             $firstOption = current($options);
             if (is_array($firstOption) && array_key_exists('value', $firstOption) && array_key_exists('text', $firstOption)) {
