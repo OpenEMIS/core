@@ -15,7 +15,7 @@ class POCOR4130 extends AbstractMigration
         $table = $this->table('security_functions');
 
         $data = [
-            'id' => 5077,
+            'id' => 5078,
             'name' => 'Labels',
             'controller' => 'Labels',
             'module' => 'Administration',
@@ -39,7 +39,7 @@ class POCOR4130 extends AbstractMigration
     public function Down()
     {
         // remove permission for label
-        $this->execute('DELETE FROM security_functions WHERE id = 5077');
+        $this->execute('DELETE FROM security_functions WHERE id = 5078');
 
         // update the order back
         $updateOrder = 'UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 159';
