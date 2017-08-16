@@ -710,12 +710,13 @@ class InstitutionsController extends AppController
             $id = $session->read('Staff.Staff.id');
         }
         if (!empty($id)) {
-            $Users = TableRegistry::get('Preferences');
+            $Users = TableRegistry::get('Security.Users');
             $entity = $Users->get($id);
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
             $header = $name . ' - ' . __($crumb);
             $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+            $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
             $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             $this->Navigation->addCrumb($crumb);
             $this->set('contentHeader', $header);
