@@ -21,9 +21,6 @@ class RestfulController extends BaseController
     {
         parent::initialize();
         $this->loadComponent('Csrf');
-        $this->loadComponent('Localization.Localization', [
-            'productName' => 'OpenEMIS Core'
-        ]);
         $this->Auth->config('authenticate', [
             'Form' => [
                 'userModel' => 'User.Users',
