@@ -346,6 +346,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     ->count();
             }
         ]);
+        
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
