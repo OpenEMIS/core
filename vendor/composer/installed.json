@@ -4020,7 +4020,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-            "reference": "da897b79ad0f77e4ee12a520c0d9c5287da2d577"
+            "reference": "96e1ece297e56b09a4bf64a16f85e7647853ee4b"
         },
         "require": {
             "cakephp/cakephp": ">=3.3.0 <3.4"
@@ -4029,7 +4029,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-08-10T05:21:59+00:00",
+        "time": "2017-08-15T09:05:00+00:00",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
