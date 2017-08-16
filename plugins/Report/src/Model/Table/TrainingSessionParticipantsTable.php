@@ -41,6 +41,9 @@ class TrainingSessionParticipantsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
+        $requestData = json_decode($settings['process']['params']);
+        $trainingCourseId = $requestData->training_course_id;
+        $trainingSessionId = $requestData->training_session_id;
 
         $query
             ->select([
@@ -71,11 +74,15 @@ class TrainingSessionParticipantsTable extends AppTable
                     ]
                 ]
             ])
+            ->where(['Courses.id' => $trainingCourseId])
             ->group([
                 $this->aliasField('training_session_id'),
                 $this->aliasField('trainee_id')
-            ])
-        ;
+            ]);
+
+        if (!empty($trainingSessionId)) {
+            $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
