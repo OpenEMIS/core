@@ -109,7 +109,7 @@ class ExaminationsTable extends AppTable
         if ($action == 'add') {
              $selectedAcademicPeriod = !empty($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id']: $this->AcademicPeriods->getCurrent();
 
-            $examinationOptions = $this->find('list' ,[
+            $examinationOptions = $this->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code_name'
                 ])
