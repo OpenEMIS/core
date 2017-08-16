@@ -18,6 +18,7 @@ class SurveysTable extends AppTable  {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->addBehavior('Excel', [
 			'pages' => false
 		]);
@@ -67,7 +68,7 @@ class SurveysTable extends AppTable  {
 			$userId = $requestData->user_id;
 			$superAdmin = $requestData->super_admin;
 			$InstitutionsTable = $this->Institutions;
-			
+
 			$missingRecords = $InstitutionsTable->find()
 				->where(['NOT EXISTS ('.
 					$this->find()->where([
@@ -101,7 +102,7 @@ class SurveysTable extends AppTable  {
 				$row = [];
 				foreach ($fields as $field) {
 					if (in_array($field['field'], $mappingArray)) {
-						$row[] = __($record->$field['field']);
+						$row[] = __($record->{$field['field']});
 					} else if ($field['field'] == 'area') {
 						$row[] = __($record->area);
 					} else if ($field['field'] == 'area_administrative') {
@@ -142,7 +143,7 @@ class SurveysTable extends AppTable  {
 		];
 
 		$surveyStatuses = $WorkflowStatusesTable->getWorkflowSteps($status);
-		
+
 		$this->surveyStatuses = $WorkflowStatusesTable->getWorkflowStepStatusNameMappings('Institution.InstitutionSurveys');
 		if (!empty($surveyStatuses)) {
 			$statusCondition = [
@@ -168,12 +169,12 @@ class SurveysTable extends AppTable  {
 		$requestData = json_decode($settings['process']['params']);
 		$query
 			->select([
-				'code' => 'Institutions.code', 
-				'area' => 'Areas.name', 
+				'code' => 'Institutions.code',
+				'area' => 'Areas.name',
 				'area_administrative' => 'AreaAdministratives.name'
 			])
 			->contain([
-				'Institutions.Areas', 
+				'Institutions.Areas',
 				'Institutions.AreaAdministratives'
 			]);
 	}
@@ -276,7 +277,7 @@ class SurveysTable extends AppTable  {
 
 	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
-			if (isset($this->request->data[$this->alias()]['feature']) 
+			if (isset($this->request->data[$this->alias()]['feature'])
 				&& isset($this->request->data[$this->alias()]['survey_form'])
 				&& isset($this->request->data[$this->alias()]['academic_period_id'])) {
 

@@ -39,8 +39,7 @@ class UserBehavior extends Behavior {
             ]);
 
             $this->_table->addBehavior('Security.Password', [
-                'field' => 'password',
-                'passwordAllowEmpty' => true
+                'field' => 'password'
             ]);
             $this->_table->addBehavior('Area.Areapicker');
         }

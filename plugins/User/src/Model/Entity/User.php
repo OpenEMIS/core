@@ -31,17 +31,17 @@ class User extends Entity {
         $separator = ' ';
         $keys = $this->getNameKeys();
         foreach($keys as $k=>$v){
-            if(isset($this->$k)&&$v){
+            if(isset($this->{$k})&&$v){
                 if($k!='last_name'){
                     if($k=='preferred_name'){
-                        $name .= $separator . '('. $this->$k .')';
+                        $name .= $separator . '('. $this->{$k} .')';
                     } else {
-                        if (!empty($this->$k)) {
-                            $name .= $this->$k . $separator;
+                        if (!empty($this->{$k})) {
+                            $name .= $this->{$k} . $separator;
                         }
                     }
                 } else {
-                    $name .= $this->$k;
+                    $name .= $this->{$k};
                 }
             }
         }

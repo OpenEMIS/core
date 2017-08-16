@@ -212,6 +212,12 @@ class PageHelper extends Helper
 
             if ($attr['sortable']) {
                 $url = $this->getUrl(['action' => $this->request->param('action')], true);
+                if (array_key_exists('sort', $url)) {
+                    unset($url['sort']);
+                }
+                if (array_key_exists('direction', $url)) {
+                    unset($url['direction']);
+                }
                 $label = $this->Paginator->sort($field, $label, ['url' => $url]);
             }
 
@@ -244,7 +250,7 @@ class PageHelper extends Helper
     {
         $search = $this->getQueryString('search');
         if ($search !== false) {
-            $value = Text::highlight($value, $search, ['html' => true]);
+            $value = Text::highlight($value, $search);
         }
         return $value;
     }
@@ -262,7 +268,7 @@ class PageHelper extends Helper
                 'options' => $limitOptions,
                 'value' => $limit,
                 'templates' => ['select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'],
-                'onchange' => "Page.querystring('limit', this.value)"
+                'onchange' => "Page.querystring('limit', this.value, this)"
             ]);
         }
         return $html;

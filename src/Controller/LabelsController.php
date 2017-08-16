@@ -3,7 +3,7 @@ namespace App\Controller;
 
 use Cake\Event\Event;
 
-use Page\Controller\PageController;
+use App\Controller\PageController;
 
 class LabelsController extends PageController
 {
