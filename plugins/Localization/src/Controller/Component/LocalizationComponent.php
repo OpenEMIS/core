@@ -146,7 +146,6 @@ class LocalizationComponent extends Component
 
     public function beforeFilter(Event $event)
     {
-        $this->Cookie->configKey('System.language', 'encryption', false);
         // Call to recompile the language if the translation files are affected
         if ($this->autoCompile()) {
             $this->updateLocaleFile($this->language);
