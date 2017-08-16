@@ -32,7 +32,7 @@ class PermissionsTable extends ControllerActionTable
     private function check($entity, $operation)
     {
         $flag = 0;
-        if (empty($entity->$operation)) {
+        if (empty($entity->{$operation})) {
             $flag = -1;
         } else if (!empty($entity->Permissions)) {
             if (!is_null($entity->Permissions[$operation])) {

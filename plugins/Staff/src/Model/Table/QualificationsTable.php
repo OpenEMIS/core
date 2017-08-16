@@ -34,13 +34,23 @@ class QualificationsTable extends ControllerActionTable
 		$this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
         $this->belongsTo('QualificationCountries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'qualification_country_id']);
 		$this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
-
+        
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
             'joinTable' => 'staff_qualifications_subjects',
             'foreignKey' => 'staff_qualification_id',
             'targetForeignKey' => 'education_subject_id',
             'through' => 'Staff.QualificationsSubjects',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+        $this->belongsToMany('QualificationSpecialisations', [
+            'className' => 'FieldOption.QualificationSpecialisations',
+            'joinTable' => 'staff_qualifications_specialisations',
+            'foreignKey' => 'staff_qualification_id',
+            'targetForeignKey' => 'qualification_specialisation_id',
+            'through' => 'Staff.QualificationsSpecialisations',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -88,9 +98,18 @@ class QualificationsTable extends ControllerActionTable
         $query->contain(['QualificationTitles.QualificationLevels']);
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'qualification_level') {
+            return __('Level');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['EducationSubjects']);
+        $query->contain(['EducationSubjects','QualificationSpecialisations']);
         $query->contain(['QualificationTitles.QualificationLevels']);
     }
 
@@ -204,6 +223,41 @@ class QualificationsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldQualificationSpecialisations(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+
+            $requestData = $request->data;
+            $fieldOfStudyId = 0;
+
+            if (array_key_exists($this->alias(), $requestData) && !empty($requestData[$this->alias()]['education_field_of_study_id'])) {
+                $fieldOfStudyId = $requestData[$this->alias()]['education_field_of_study_id'];
+            } else {
+                $entity = $attr['entity'];
+                if ($entity->has('education_field_of_study_id')) {
+                    $fieldOfStudyId = $entity->education_field_of_study_id;
+                }
+            }
+
+            $specialisationOptions = $this->QualificationSpecialisations
+                                    ->find('list')
+                                    ->find('visible')
+                                    ->find('order')
+                                    ->where([
+                                        $this->QualificationSpecialisations->aliasField('education_field_of_study_id') => $fieldOfStudyId
+                                    ])
+                                    ->toArray();
+            
+            if (!empty($specialisationOptions)) {
+                $attr['options'] = $specialisationOptions;
+            } else {
+                $attr['placeholder'] = $this->getMessage('general.select.noOptions');
+            }
+            
+        }
+        return $attr;
+    }
+
     public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, Request $request)
     {
         switch ($action) {
@@ -307,9 +361,15 @@ class QualificationsTable extends ControllerActionTable
     {
         $this->field('qualification_title_id', ['type' => 'select', 'entity' => $entity]);
 
-        $this->field('qualification_level', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('qualification_level', ['type' => 'readonly', 'entity' => $entity, 'attr' => ['label' => __('Level')]]);
 
         $this->field('education_field_of_study_id', ['type' => 'select', 'entity' => $entity]);
+
+        $this->field('qualification_specialisations', [
+            'type' => 'chosenSelect',
+            'placeholder' => __('Select some specialisations'),
+            'entity' => $entity
+        ]);
 
         $this->field('education_subjects', [
             'type' => 'chosenSelect',
@@ -334,7 +394,7 @@ class QualificationsTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-            'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
+            'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
         ]);
     }
 }

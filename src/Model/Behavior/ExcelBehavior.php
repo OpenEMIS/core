@@ -442,14 +442,22 @@ class ExcelBehavior extends Behavior
                     if ($this->isForeignKey($table, $field)) {
                         $associatedField = $this->getAssociatedKey($table, $field);
                         if ($entity->has($associatedField)) {
-                            $value = $entity->$associatedField->name;
+                            $value = $entity->{$associatedField}->name;
                         }
                     } else {
-                        $value = $entity->$field;
+                        $value = $entity->{$field};
                     }
                 }
             }
         }
+
+        $specialCharacters = ['=', '@'];
+        $firstCharacter = substr($value, 0, 1);
+        if (in_array($firstCharacter, $specialCharacters)) {
+            // append single quote to escape special characters
+            $value = "'" . $value;
+        }
+
         return ['rowData' => __($value), 'style' => $style];
     }
 

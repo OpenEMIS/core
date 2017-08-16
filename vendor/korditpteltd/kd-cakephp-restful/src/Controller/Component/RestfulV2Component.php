@@ -104,7 +104,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     {
         $this->controller->setAuthorizedUser($user);
         $model = $this->model;
-        $scope = $this->request->header('controlleraction');
+        $scope = $this->controller->controllerAction ? $this->controller->controllerAction : $this->request->header('controlleraction');
         $action = $this->request->params['action'];
 
         if ($action == 'translate') {

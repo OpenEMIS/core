@@ -45,7 +45,7 @@ class RenderLinkComponent extends Component
         return $events;
     }
 
-    public function onRenderLink(Event $event, Entity $entity, $element)
+    public function onRenderLink(Event $event, Entity $entity, PageElement $element)
     {
         $request = $this->request;
         $requestParams = $request->params;

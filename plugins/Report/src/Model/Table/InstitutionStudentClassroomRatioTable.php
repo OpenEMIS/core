@@ -22,7 +22,7 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Excel', [
-			'excludes' => ['alternative_name','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_id', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'], 
+			'excludes' => ['alternative_name','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','longitude','latitude', 'area_id', 'area_administrative_id', 'institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','institution_network_connectivity_id','security_group_id','modified_user_id','modified','created_user_id','created','selected'],
 			'pages' => false
 		]);
 		$this->addBehavior('Report.InstitutionSecurity');
@@ -48,6 +48,17 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
             ->contain(['Areas', 'AreaAdministratives'])
             ->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name']);
 	}
+
+    // POCOR-4100 studentClassroomRatio report > classification show index instead of name.
+    public function onExcelGetClassification(Event $event, Entity $entity)
+    {
+        // constant in institution table
+        if ($entity->classification == 1) {
+            return __('Academic');
+        } else {
+            return __('Non Academic');
+        }
+    }
 
 	public function onExcelRenderStudentCount(Event $event, Entity $entity, $attr) {
 		$InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -174,7 +185,7 @@ class InstitutionStudentClassroomRatioTable extends AppTable  {
 			'recordObj' => $recordObj
 		];
 		$newFields = array_merge($newFields, $extraField);
-		
+
 		$fields->exchangeArray($newFields);
 
         $cloneFields = $fields->getArrayCopy();

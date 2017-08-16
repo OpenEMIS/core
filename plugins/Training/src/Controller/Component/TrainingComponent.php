@@ -4,14 +4,17 @@ namespace Training\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 
-class TrainingComponent extends Component {
-	private $controller;
+class TrainingComponent extends Component
+{
+    private $controller;
 
-	public function initialize(array $config) {
-		$this->controller = $this->_registry->getController();
-	}
+    public function initialize(array $config)
+    {
+        $this->controller = $this->_registry->getController();
+    }
 
-	public function getCourseList($params=[]) {
+    public function getCourseList($params = [])
+    {
         $Courses = TableRegistry::get('Training.TrainingCourses');
 
         $query = $Courses->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
@@ -40,11 +43,13 @@ class TrainingComponent extends Component {
         return $query->toArray();
     }
 
-    public function getSessionList($params=[]) {
+    public function getSessionList($params = [])
+    {
         $listAll = array_key_exists('listAll', $params) ? $params['listAll'] : false;
+        $courseId = array_key_exists('training_course_id', $params) ? $params['training_course_id'] : false;
 
         $Sessions = TableRegistry::get('Training.TrainingSessions');
-        $query = $Sessions->find('list');
+        $query = $Sessions->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
 
         if (!$listAll) {
             // Filter by Approved
@@ -58,6 +63,12 @@ class TrainingComponent extends Component {
                 return [];
             }
             // End
+        }
+
+        if ($courseId) {
+            $query->where([
+                $Sessions->aliasField('training_course_id') => $courseId
+            ]);
         }
 
         return $query->toArray();
