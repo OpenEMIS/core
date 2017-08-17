@@ -68,7 +68,8 @@ class InstitutionStaffTable extends AppTable  {
             'Institutions.Types',
             'Institutions.Sectors',
             'Institutions.Providers',
-            'Users.Identities.IdentityTypes'
+            'Users.Identities.IdentityTypes',
+            'Users.Contacts'
         ])
         ->select([
             'openemis_no' => 'Users.openemis_no',
@@ -155,31 +156,21 @@ class InstitutionStaffTable extends AppTable  {
 
     public function onExcelRenderContactOption(Event $event, Entity $entity, array $attr)
     {
-        $staffId = $entity->staff_id;
-        $contactOptionId = $attr['contactOptionId'];
+        $contactTypes = $attr['contactTypes'];
 
-        $ContactTypesTable = TableRegistry::get('User.ContactTypes');
-        $types = $ContactTypesTable->find()
-            ->where([$ContactTypesTable->aliasField('contact_option_id') => $contactOptionId])
-            ->extract('id')
-            ->toArray();
-
-        $result = '';
-        if (!empty($types)) {
-            $UserContactsTable = TableRegistry::get('User.Contacts');
-            $contacts = $UserContactsTable->find()
-                ->where([
-                    $UserContactsTable->aliasField('security_user_id') => $staffId,
-                    $UserContactsTable->aliasField('contact_type_id IN ') => $types
-                ])
-                ->order([$UserContactsTable->aliasField('preferred') => 'DESC'])
-                ->extract('value')
-                ->toArray();
-
-            $result = implode(', ', $contacts);
+        $result = [];
+        if ($entity->has('user')) {
+            if ($entity->user->has('contacts')) {
+                $userContacts = $entity->user->contacts;
+                foreach ($userContacts as $key => $obj) {
+                    if (in_array($obj->contact_type_id, $contactTypes)) {
+                        $result[] = $obj->value;
+                    }
+                }
+            }
         }
 
-        return $result;
+        return implode(', ', $result);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
@@ -188,15 +179,6 @@ class InstitutionStaffTable extends AppTable  {
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
-
-        // To update to this code when upgrade server to PHP 5.5 and above
-        // unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
-
-        foreach ($fields as $key => $field) {
-            if ($field['field'] == 'institution_id' || $field['field'] == 'staff_id') {
-                unset($fields[$key]);
-            }
-        }
 
         $newFields[] = [
             'key' => 'Institutions.code',
@@ -394,13 +376,20 @@ class InstitutionStaffTable extends AppTable  {
             ->order('order')
             ->toArray();
 
+        $ContactTypesTable = TableRegistry::get('User.ContactTypes');
         foreach ($options as $id => $name) {
+            $contactTypes = $ContactTypesTable->find()
+                ->where([$ContactTypesTable->aliasField('contact_option_id') => $id])
+                ->extract('id')
+                ->toArray();
+
             $newFields[] = [
                 'key' => 'contact_option',
                 'field' => 'contact_option',
                 'type' => 'contact_option',
                 'label' => __($name),
-                'contactOptionId' => $id
+                'formatting' => 'string',
+                'contactTypes' => $contactTypes
             ];
         }
 

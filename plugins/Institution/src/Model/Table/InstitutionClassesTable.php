@@ -346,6 +346,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     ->count();
             }
         ]);
+        
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
@@ -558,21 +559,51 @@ class InstitutionClassesTable extends ControllerActionTable
             if (!empty($queryString) && array_key_exists('gender', $queryString)) {
                 $extra['selectedGender'] = $queryString['gender'];
             }
+
+            if (!empty($queryString) && array_key_exists('sort', $queryString)) {
+                $extra['sort'] = $queryString['sort'];
+            }
+
+            if (!empty($queryString) && array_key_exists('direction', $queryString)) {
+                $extra['direction'] = $queryString['direction'];
+            }
         }
 
-        $query->contain([
-            'AcademicPeriods',
-            //'InstitutionShifts',
-            'InstitutionShifts.ShiftOptions',
-            'EducationGrades',
-            'Staff',
-            'ClassStudents' => [
-                'Users.Genders',
+        $sortConditions = '';
+        if (!empty($extra['sort'])) {
+            if ($extra['sort'] == 'name') {
+                $sortConditions = 'Users.first_name ' .  $extra['direction'];
+            } else if ($extra['sort'] == 'openemis_no') {
+                $sortConditions = 'Users.openemis_no ' .  $extra['direction'];
+            }
+        }
+
+        if ($sortConditions) {
+            $query->contain([
+                'AcademicPeriods',
+                'InstitutionShifts.ShiftOptions',
                 'EducationGrades',
-                'StudentStatuses',
-                'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
-            ],
-        ]);
+                'Staff',
+                'ClassStudents' => [
+                    'Users.Genders',
+                    'EducationGrades',
+                    'StudentStatuses',
+                    'sort' => [$sortConditions]
+                ],
+            ]);
+        } else {
+            $query->contain([
+                'AcademicPeriods',
+                'InstitutionShifts.ShiftOptions',
+                'EducationGrades',
+                'Staff',
+                'ClassStudents' => [
+                    'Users.Genders',
+                    'EducationGrades',
+                    'StudentStatuses'
+                ],
+            ]);
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -580,6 +611,9 @@ class InstitutionClassesTable extends ControllerActionTable
         //generate student filter.
         $params = $this->getQueryString();
         $baseUrl = $this->url($this->action, true);
+
+        $this->fields['students']['data']['baseUrl'] = $baseUrl;
+        $this->fields['students']['data']['params'] = $params;
 
         $gradeOptions = [];
         $statusOptions = [];

@@ -3,8 +3,9 @@ namespace Page\Model\Entity;
 
 use ArrayObject;
 
-use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Utility\Inflector;
 
 class PageElement
 {
@@ -85,10 +86,6 @@ class PageElement
             $this->controlType = $this->type;
         }
 
-        if (in_array($this->type, ['string', 'integer', 'text'])) {
-            $this->setSortable(true);
-        }
-
         if (array_key_exists('model', $attributes)) {
             $this->name = $attributes['model'] . '.' . $this->name;
         }
@@ -142,7 +139,7 @@ class PageElement
         return $this->key;
     }
 
-    public function setName()
+    public function setName($name)
     {
         $this->name = $name;
         return $this;
@@ -370,7 +367,7 @@ class PageElement
     public function setOptions($options, $empty = true)
     {
         if (empty($options) && $empty !== false) {
-            $this->options = ['' => __('No Options')];
+            $this->options = [['value' => '', 'text' => __('No Options')]];
         } else {
             $firstOption = current($options);
             if (is_array($firstOption) && array_key_exists('value', $firstOption) && array_key_exists('text', $firstOption)) {
@@ -473,6 +470,15 @@ class PageElement
         }
 
         if ($this->extra->count() > 0) {
+            foreach ($this->extra as $property => $value) {
+                if ($value instanceof Time) {
+                    $this->extra[$property] = [
+                        'year' => $value->year,
+                        'month' => str_pad($value->month, 2, '0', STR_PAD_LEFT),
+                        'day' => str_pad($value->day, 2, '0', STR_PAD_LEFT)
+                    ];
+                }
+            }
             $properties = array_merge($properties, $this->extra->getArrayCopy());
         }
 

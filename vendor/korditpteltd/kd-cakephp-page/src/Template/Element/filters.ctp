@@ -9,13 +9,23 @@
 
         foreach ($filters as $name => $filter) {
             $default = $this->Page->getQueryString($name) !== false ? $this->Page->getQueryString($name) : $filter['value'];
-            echo $this->Form->input($name, array(
+            $inputOptions = [
                 'class' => 'form-control',
                 'label' => false,
                 'options' => $filter['options'],
                 'default' => $default,
-                'onchange' => "Page.querystring('$name', this.value)"
-            ));
+                'onchange' => "Page.querystring('$name', this.value, this)"
+            ];
+
+            if (isset($filter['dependentOn']) && $filter['dependentOn']) {
+                if (is_string($filter['dependentOn'])) {
+                    $inputOptions['dependenton'] = [$filter['dependentOn']];
+                } elseif (is_array($filter['dependentOn'])) {
+                    $inputOptions['dependenton'] = explode($filter['dependentOn']);
+                }
+
+            }
+            echo $this->Form->input($name, $inputOptions);
         }
         ?>
     </div>
