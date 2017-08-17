@@ -965,6 +965,7 @@ class ExcelReportBehavior extends Behavior
                 $columnIndex = $attr['columnIndex'];
                 if (!empty($columnsArray)) {
                     $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
+                    $rowValue++;
                 } else {
                     if (!empty($nestedRowsArray)) {
                         if (!is_null($nestedfilter) && !empty($nestedMatchFrom)) {
@@ -1002,10 +1003,9 @@ class ExcelReportBehavior extends Behavior
                         $cellCoordinate = $columnValue.$rowValue;
 
                         $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
+                        $rowValue++;
                     }
                 }
-
-                $rowValue++;
             }
 
         } else {
