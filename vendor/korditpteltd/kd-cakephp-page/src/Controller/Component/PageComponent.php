@@ -5,10 +5,6 @@ use ArrayObject;
 use Exception;
 
 use Cake\Core\Configure;
-use Cake\Chronos\MutableDate;
-use Cake\Chronos\Chronos;
-use Cake\Chronos\Date;
-use Cake\Chronos\MutableDateTime;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -17,8 +13,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
-use Cake\Controller\Exception\MissingActionException;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Controller\Exception\MissingActionException;
 use Cake\Controller\Component;
 
 use Page\Model\Entity\PageElement;
@@ -73,7 +69,13 @@ class PageComponent extends Component
     private $viewVars;
     private $status;
 
-    private $excludedFields = ['order', 'modified', 'modified_user_id', 'created', 'created_user_id'];
+    private $excludedFields = [];
+
+    protected $_defaultConfig = [
+        'sequence' => 'sequence', // used in populateDropdownOptions()
+        'is_visible' => 'is_visible', // used in populateDropdownOptions()
+        'labels' => [] // used in add() for setting default labels
+    ];
 
     public function initialize(array $config)
     {
@@ -107,6 +109,10 @@ class PageComponent extends Component
         if ($this->getQueryString('limit')) {
             $this->setPaginateOption('limit', $this->getQueryString('limit'));
         }
+
+        if ($this->hasMainTable()) {
+            $this->attachDefaultValidation($this->mainTable);
+        }
     }
 
     // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
@@ -122,14 +128,14 @@ class PageComponent extends Component
 
         $data = $this->getData();
         if (!is_null($data)) {
-            if ($action == 'view' || $action == 'delete') {
+            if ($action == 'view' || $action == 'delete') { // load the entity values into elements with events
                 $this->loadDataToElements($data);
-            } elseif ($action == 'edit' || $action == 'add') {
+            } elseif ($action == 'edit' || $action == 'add') { // load the entity values into elements without events
                 $this->loadDataToElements($data, false);
-            } elseif ($action == 'index') {
+            } elseif ($action == 'index') { // populate entities with action permissions
                 foreach ($data as $entity) {
                     $disabledActions = [];
-                    $event = $this->controller->dispatchEvent('Controller.Page.getEntityDisabledActions', [$entity], $this);
+                    $event = $controller->dispatchEvent('Controller.Page.getEntityDisabledActions', [$entity], $this);
 
                     if ($event->result) {
                         $disabledActions = $event->result;
@@ -138,6 +144,32 @@ class PageComponent extends Component
                         $entity->disabledActions = $disabledActions;
                     } else {
                         $entity['disabledActions'] = $disabledActions;
+                    }
+
+                    foreach ($this->elements as $element) {
+                        $displayFrom = $element->getDisplayFrom();
+
+                        if (is_null($displayFrom)) {
+                            $value = null;
+                            $key = $element->getKey();
+                            $controlType = $element->getControlType();
+                            $prefix = 'Controller.Page.onRender';
+                            $eventName = $prefix . ucfirst($controlType);
+                            $eventParams = [$entity, $element];
+                            $event = $controller->dispatchEvent($eventName, $eventParams, $this);
+                            if ($event->result) { // trigger render<Format>
+                                $value = $event->result;
+                            } else {
+                                $eventName = $prefix . Inflector::camelize($key);
+                                $event = $controller->dispatchEvent($eventName, $eventParams, $this);
+                                if ($event->result) { // trigger render<Field>
+                                    $value = $event->result;
+                                }
+                            }
+                            if (!is_null($value)) {
+                                $entity->$key = $value;
+                            }
+                        }
                     }
                 }
             }
@@ -427,7 +459,7 @@ class PageComponent extends Component
 
     public function getHeader()
     {
-        return $this->header;
+        return __($this->header);
     }
 
     public function setHeader($header)
@@ -680,8 +712,6 @@ class PageComponent extends Component
         $schema = $table->schema();
         $columns = $schema->columns();
 
-        $this->attachDefaultValidation($table);
-
         foreach ($columns as $columnName) {
             if (!in_array($columnName, $this->excludedFields)) {
                 $attributes = $schema->column($columnName);
@@ -689,7 +719,7 @@ class PageComponent extends Component
                 $attributes['foreignKey'] = $foreignKey;
                 $attributes['model'] = $table->alias();
                 $element = new PageElement($columnName, $attributes);
-                if (in_array($attributes['type'], ['string', 'integer', 'text']) && !$foreignKey) {
+                if (in_array($attributes['type'], ['string', 'text', 'integer', 'date', 'datetime']) && !$foreignKey) {
                     $element->setSortable(true);
                 }
                 // setup displayFrom
@@ -782,7 +812,7 @@ class PageComponent extends Component
                 if (array_key_exists('null', $attr)) {
                     if ($attr['null'] === false // not nullable
                         && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
-                        && $key !== 'id' // not a primary key
+                        && $key !== $table->primaryKey() // not a primary key
                         && !in_array($key, $this->excludedFields)) // fields not excluded
                     {
                         $validator->add($key, 'notBlank', ['rule' => 'notBlank']);
@@ -823,6 +853,11 @@ class PageComponent extends Component
 
     public function add(PageElement $element)
     {
+        $labels = $this->config('labels');
+        $key = $element->getKey();
+        if (array_key_exists($key, $labels)) {
+            $element->setLabel($labels[$key]);
+        }
         $this->elements->offsetSet($this->elements->count(), $element);
         $this->order[$element->getKey()] = count($this->order);
     }
@@ -888,15 +923,52 @@ class PageComponent extends Component
             if (!is_null($element->getParams())) {
                 $element->setOptions($this->getFilterOptions($element->getParams()));
             } elseif ($foreignKey) {
-                $association = $foreignKey['name'];
+                $associationName = $foreignKey['name'];
+                $association = $table->{$associationName};
+                $columns = $association->schema()->columns();
+
+                // if finder OptionList exists, call finder
+                // else call findList and format results
+
+                if ($association->hasFinder('optionList')) {
+                    $query = $association->find('optionList');
+                } else {
+                    $query = $association->find('list')
+                        ->formatResults(function ($results) {
+                            $results = $results->toArray();
+                            $returnResults = [];
+                            foreach ($results as $key => $value) {
+                                $returnResults[] = [
+                                    'text' => __($value),
+                                    'value' => $key
+                                ];
+                            }
+                            return $returnResults;
+                        });
+                }
+                $sequence = $this->config('sequence');
+                $isVisible = $this->config('is_visible');
+
+                if (in_array($sequence, $columns)) {
+                    $query->order([$association->aliasField($sequence) => 'ASC']);
+                }
+
+                if (in_array($isVisible, $columns)) {
+                    $query->where([$association->aliasField($isVisible) => 1]);
+                }
+
                 // default limit to 1000 to prevent out of memory error
-                $element->setOptions($table->$association->find('list')->limit(1000)->toArray());
+                $options = $query->limit(1000)->toArray();
+                $element->setOptions($options);
             }
         }
     }
 
-    public function exclude($fields)
+    public function exclude($fields, $replace = false)
     {
+        if ($replace) {
+            $this->excludedFields = [];
+        }
         if (!is_array($fields)) {
             $fields = [$fields];
         }

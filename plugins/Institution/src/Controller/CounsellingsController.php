@@ -3,7 +3,7 @@ namespace Institution\Controller;
 
 use Cake\Event\Event;
 
-use Page\Controller\PageController;
+use App\Controller\PageController;
 
 class CounsellingsController extends PageController
 {
@@ -13,18 +13,8 @@ class CounsellingsController extends PageController
 
         $this->Page->loadElementsFromTable($this->Counsellings);
 
-        $this->loadComponent('RenderDate'); // will get the date format from config
-        $this->loadComponent('Page.RenderLink'); // will get the date format from config
-
         $this->Page->enable(['download']);
     }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Controller.Page.onRenderCounselorId'] = 'onRenderCounselorId';
-        return $events;
-     }
 
     public function beforeFilter(Event $event)
     {
@@ -36,19 +26,21 @@ class CounsellingsController extends PageController
 
         parent::beforeFilter($event);
 
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
         $page = $this->Page;
+
+        // set Breadcrumb
+        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
+        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $encodedInstitutionId]);
+        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $encodedInstitutionId]);
+        $page->addCrumb('Counselling');
 
         $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
 
         $page->move('file_name')->after('guidance_type_id'); // move file_content after guidance type
         $page->move('file_content')->after('file_name'); // move file_name after file_content
-
-        // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-        $page->addCrumb('Counselling');
 
         // set header
         $header = $page->getHeader();
@@ -62,7 +54,10 @@ class CounsellingsController extends PageController
     public function index()
     {
         $page = $this->Page;
-        $page->exclude(['file_name', 'file_content', 'counselor_id', 'student_id']);
+        $page->exclude(['file_name', 'file_content', 'student_id']);
+
+        // set default ordering
+        $page->setQueryOption('order', [$this->Counsellings->aliasField('date') => 'DESC']);
 
         parent::index();
     }
@@ -87,12 +82,6 @@ class CounsellingsController extends PageController
         parent::view($id);
     }
 
-    // to display the counselor name with id
-    public function onRenderCounselorId(Event $event, $entity, $key)
-    {
-        return $entity->counselor->name_with_id;
-    }
-
     public function delete($id)
     {
         $page = $this->Page;
@@ -107,9 +96,7 @@ class CounsellingsController extends PageController
         $institutionId = $page->getQueryString('institution_id');
         $studentId = $page->getQueryString('student_id');
 
-        // set the options for guidance_type_id, should be auto create the options, but reorder and visible not working.
-        $guidanceTypesOptions = $this->Counsellings->getGuidanceTypesOptions($institutionId);
-        $page->get('guidance_type_id')->setControlType('dropdown')->setOptions($guidanceTypesOptions);
+        $page->get('guidance_type_id')->setControlType('dropdown');
 
         // set the options for counselor_id
         $counselorOptions = $this->Counsellings->getCounselorOptions($institutionId);

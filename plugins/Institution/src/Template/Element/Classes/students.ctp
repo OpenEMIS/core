@@ -86,11 +86,64 @@
 
 	<div class="table-wrapper">
 		<div class="table-responsive">
-			<table class="table table-curved">
+			<table class="table table-curved table-sortable">
 				<thead>
 					<tr>
-						<th><?= $this->Label->get('Users.openemis_no'); ?></th>
-						<th><?= $this->Label->get('Users.name'); ?></th>
+						<?php
+							$baseUrl = $attr['data']['baseUrl'];
+								
+							$params = [];
+							if (!empty($attr['data']['params'])) {
+								$params = $attr['data']['params'];
+							}
+
+							$sortField = '';
+							$sortDirection = '';
+							$nextDirection = 'asc';
+							if (!empty($params) && array_key_exists('sort', $params) && !empty($params['sort'])) {
+								$sortField = $params['sort'];
+							}
+
+							if (!empty($params) && array_key_exists('direction', $params) && !empty($params['direction'])) {
+								$sortDirection = $params['direction'];
+								if ($params['direction'] == 'asc') {
+									$nextDirection = 'desc';
+								}
+							}
+
+							$linkOptions = [];
+							if (!empty($sortDirection)) {
+								$linkOptions = [
+									'class' => $sortDirection
+								];
+							}
+						?>
+						<th>
+							<?php
+								if ($sortField != 'openemis_no') {
+									$tempNextDirection = 'asc';
+									$tempLinkOptions = [];
+								} else {
+									$tempNextDirection = $nextDirection;
+									$tempLinkOptions = $linkOptions;
+								}
+								$sortUrl = $this->ControllerAction->setQueryString($baseUrl, array_merge($params, ['sort' => 'openemis_no', 'direction' => $tempNextDirection]));
+							?>
+							<?= $this->html->link($this->Label->get('Users.openemis_no'), $sortUrl, $tempLinkOptions) ?>
+						</th>
+						<th>
+							<?php
+								if ($sortField != 'name') {
+									$tempNextDirection = 'asc';
+									$tempLinkOptions = [];
+								} else {
+									$tempNextDirection = $nextDirection;
+									$tempLinkOptions = $linkOptions;
+								}
+								$sortUrl = $this->ControllerAction->setQueryString($baseUrl, array_merge($params, ['sort' => 'name', 'direction' => $tempNextDirection]));
+							?>
+							<?= $this->html->link($this->Label->get('Users.name'), $sortUrl, $tempLinkOptions) ?>
+						</th>
 						<th><?= $this->Label->get('Users.gender_id'); ?></th>
 						<th><?= $this->Label->get($attr['model'] . '.education_grade'); ?></th>
 						<th><?= __('Student Status') ?></th>
@@ -148,7 +201,7 @@
 							?>
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
-						<td><?= $obj->student_name ?></td>
+						<td><?= $obj->user->name ?></td>
 						<td><?= __($obj->student_gender) ?></td>
 						<td><?= (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 						<td><?= __($obj->student_status_name) ?></td>

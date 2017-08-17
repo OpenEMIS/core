@@ -4,6 +4,7 @@ namespace App\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
 use Cake\Log\Log;
 
@@ -37,13 +38,17 @@ class RenderDateComponent extends Component
 
     public function onRenderDate(Event $event, Entity $entity, PageElement $element)
     {
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $format = $ConfigItem->value('date_format');
         $key = $element->getKey();
-        $value = $entity->$key;
-        $format = 'Y-m-d';
-        if ($value instanceof Date) {
-            $value = $value->format('Y-m-d');
-        } else {
-            $value = date('Y-m-d', strtotime($value));
+        $value = $entity->{$key};
+
+        if (!is_null($value)) {
+            if ($value instanceof Date) {
+                $value = $value->format($format);
+            } else {
+                $value = date($format, strtotime($value));
+            }
         }
         return $value;
     }
