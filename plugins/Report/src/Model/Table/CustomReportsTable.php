@@ -12,6 +12,12 @@ use App\Model\Table\AppTable;
 
 class CustomReportsTable extends AppTable
 {
+    // format types
+    const CSV = 1;
+    const XLSX = 2;
+
+    private $formatOptions = [];
+
 	public function initialize(array $config)
 	{
 		$this->table('reports');
@@ -26,6 +32,12 @@ class CustomReportsTable extends AppTable
             'purge' => false,
             'variableSource' => 'database'
         ]);
+        $this->addBehavior('Report.Csv');
+
+        $this->formatOptions = [
+            self::CSV => ['key' => 'csv', 'value' => 'CSV'],
+            self::XLSX => ['key'=> 'xlsx', 'value' => 'Excel']
+        ];
 	}
 
     public function implementedEvents()
@@ -33,6 +45,7 @@ class CustomReportsTable extends AppTable
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables'] = 'onExcelTemplateInitialiseQueryVariables';
+        $events['ExcelTemplates.Model.onCsvBeforeGenerate'] = 'onCsvBeforeGenerate';
 
         return $events;
     }
@@ -79,15 +92,19 @@ class CustomReportsTable extends AppTable
                     $fieldType = array_key_exists('fieldType', $data) ? $data['fieldType'] : 'select';
                     $parameters = ['type' => $fieldType];
 
-                    if ($fieldType == 'select') {
+                    if ($fieldType == 'select' || $fieldType == 'chosenSelect') {
                         $params = $this->request->data[$this->alias()];
 
-                        $options = $this->parseJson($data, $params);
+                        $options = $this->buildQuery($data, $params, false);
                         if (array_key_exists('options', $data)) {
                             $options = $data['options'] + $options;
                         }
 
                         $parameters = $parameters + ['options' => $options, 'select' => false, 'onChangeReload' => true];
+
+                        if ($fieldType == 'chosenSelect') {
+                            $parameters['attr'] = ['multiple' => false];
+                        }
 
                         if (!(isset($this->request->data[$this->alias()][$field]))) {
                             $this->request->data[$this->alias()][$field] = key($options);
@@ -118,6 +135,27 @@ class CustomReportsTable extends AppTable
                 reset($option);
                 $this->request->data[$this->alias()]['feature'] = key($option);
             }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (isset($this->request->data[$this->alias()]['feature']) && !empty($this->request->data[$this->alias()]['feature'])) {
+                $reportId = $this->request->data[$this->alias()]['feature'];
+                $format = $this->get($reportId)->format;
+
+                $key = $this->formatOptions[$format]['key'];
+                $value = $this->formatOptions[$format]['value'];
+            } else {
+                $key = '';
+                $value = '';
+            }
+
+            $attr['value'] = $key;
+            $attr['attr']['value'] = $value;
+            $attr['type'] = 'readonly';
             return $attr;
         }
     }
@@ -155,10 +193,24 @@ class CustomReportsTable extends AppTable
 
         $variables = new ArrayObject([]);
         foreach($jsonQuery as $key => $obj) {
-            $entity = $this->parseJson($obj, $params);
+            $entity = $this->buildQuery($obj, $params, false);
             $variables[$key] = $entity;
         }
 
         return $variables;
+    }
+
+    public function onCsvBeforeGenerate(Event $event, ArrayObject $settings)
+    {
+        $params = $settings['requestQuery'];
+        $customReportData = $this->get($params['feature']);
+
+        if (array_key_exists('requestQuery', $settings)) {
+            $jsonQuery = json_decode($customReportData->query, true);
+
+            // csvBehavior can only can handle one query
+            $obj = current($jsonQuery);
+            $settings['sql'] = $this->buildQuery($obj, $params, true);
+        }
     }
 }

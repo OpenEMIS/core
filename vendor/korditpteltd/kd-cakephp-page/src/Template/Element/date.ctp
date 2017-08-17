@@ -5,6 +5,10 @@
         <div class="input text<?= $required ?>">
             <?= $this->Form->input($name, $options) ?>
         </div>
+        <?php if (!array_key_exists('disabled', $options)) : ?>
         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+        <?php endif ?>
     </div>
+
+    <?php echo $this->Form->error($name) ?>
 </div>
