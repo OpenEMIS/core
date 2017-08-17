@@ -240,19 +240,30 @@ class InstitutionClassesTable extends ControllerActionTable
             $subjects = json_decode($this->urlsafeB64Decode($data['subjects']), true);
             $subjectStudents = [];
             foreach ($subjects as $subject) {
-                foreach ($data['class_students'] as $classStudent) {
-                    $subjectStudents[] = [
-                        'student_status_id' => $classStudent['student_status_id'],
-                        'student_id' => $classStudent['student_id'],
-                        'institution_subject_id' => $subject['id'],
-                        'institution_class_id' => $classStudent['institution_class_id'],
-                        'institution_id' => $subject['institution_id'],
-                        'academic_period_id' => $subject['academic_period_id'],
-                        'education_subject_id' => $subject['education_subject_id'],
-                        'education_grade_id' => $classStudent['education_grade_id']
-                    ];
+                $subjectEducationGradeId = $subject['education_grade_id'];
+                // will check in the education grade subject if the subject is an auto allocation subject
+                $isAutoAddSubject = $this->isAutoAddSubject($subject);
+
+                // if the subject is not an add_auto_subject will not be added automatically to the student.
+                if ($isAutoAddSubject) {
+                    foreach ($data['class_students'] as $classStudent) {
+                        $studentEducationGradeId = $classStudent['education_grade_id'];
+                        if ($subjectEducationGradeId == $studentEducationGradeId) {
+                            $subjectStudents[] = [
+                                'student_status_id' => $classStudent['student_status_id'],
+                                'student_id' => $classStudent['student_id'],
+                                'institution_subject_id' => $subject['id'],
+                                'institution_class_id' => $classStudent['institution_class_id'],
+                                'institution_id' => $subject['institution_id'],
+                                'academic_period_id' => $subject['academic_period_id'],
+                                'education_subject_id' => $subject['education_subject_id'],
+                                'education_grade_id' => $classStudent['education_grade_id']
+                            ];
+                        }
+                    }
                 }
             }
+
             $data['subject_students'] = $subjectStudents;
             $data->offsetUnset('subjects');
         }
@@ -335,6 +346,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     ->count();
             }
         ]);
+        
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
@@ -406,7 +418,12 @@ class InstitutionClassesTable extends ControllerActionTable
                 'modified',
                 'created_user_id',
                 'created',
-                'education_stage_order' => $query->func()->min('EducationStages.order'),
+                'education_stage_order' => $query->func()->min('EducationStages.order')
+            ])
+            ->contain([
+                'Staff' => [
+                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
+                ]
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
@@ -542,21 +559,51 @@ class InstitutionClassesTable extends ControllerActionTable
             if (!empty($queryString) && array_key_exists('gender', $queryString)) {
                 $extra['selectedGender'] = $queryString['gender'];
             }
+
+            if (!empty($queryString) && array_key_exists('sort', $queryString)) {
+                $extra['sort'] = $queryString['sort'];
+            }
+
+            if (!empty($queryString) && array_key_exists('direction', $queryString)) {
+                $extra['direction'] = $queryString['direction'];
+            }
         }
 
-        $query->contain([
-            'AcademicPeriods',
-            //'InstitutionShifts',
-            'InstitutionShifts.ShiftOptions',
-            'EducationGrades',
-            'Staff',
-            'ClassStudents' => [
-                'Users.Genders',
+        $sortConditions = '';
+        if (!empty($extra['sort'])) {
+            if ($extra['sort'] == 'name') {
+                $sortConditions = 'Users.first_name ' .  $extra['direction'];
+            } else if ($extra['sort'] == 'openemis_no') {
+                $sortConditions = 'Users.openemis_no ' .  $extra['direction'];
+            }
+        }
+
+        if ($sortConditions) {
+            $query->contain([
+                'AcademicPeriods',
+                'InstitutionShifts.ShiftOptions',
                 'EducationGrades',
-                'StudentStatuses',
-                'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
-            ],
-        ]);
+                'Staff',
+                'ClassStudents' => [
+                    'Users.Genders',
+                    'EducationGrades',
+                    'StudentStatuses',
+                    'sort' => [$sortConditions]
+                ],
+            ]);
+        } else {
+            $query->contain([
+                'AcademicPeriods',
+                'InstitutionShifts.ShiftOptions',
+                'EducationGrades',
+                'Staff',
+                'ClassStudents' => [
+                    'Users.Genders',
+                    'EducationGrades',
+                    'StudentStatuses'
+                ],
+            ]);
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -564,6 +611,9 @@ class InstitutionClassesTable extends ControllerActionTable
         //generate student filter.
         $params = $this->getQueryString();
         $baseUrl = $this->url($this->action, true);
+
+        $this->fields['students']['data']['baseUrl'] = $baseUrl;
+        $this->fields['students']['data']['params'] = $params;
 
         $gradeOptions = [];
         $statusOptions = [];
@@ -1220,5 +1270,23 @@ class InstitutionClassesTable extends ControllerActionTable
                 return $q->where(['InstitutionSubjects.education_subject_id' => $subjectId]);
             })
             ->toArray();
+    }
+
+    private function isAutoAddSubject($subject)
+    {
+        // will check in the education grade subject if the subject is an auto allocation subject
+        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+
+        $educationGradeId = $subject['education_grade_id'];
+        $educationSubjectId = $subject['education_subject_id'];
+        $educationGradesSubjectsData = $EducationGradesSubjects->find()
+            ->where([
+                $EducationGradesSubjects->aliasField('education_grade_id') => $educationGradeId,
+                $EducationGradesSubjects->aliasField('education_subject_id') => $educationSubjectId
+            ])
+            ->first();
+        $addAutoSubject = $educationGradesSubjectsData['auto_allocation'];
+
+        return $addAutoSubject;
     }
 }

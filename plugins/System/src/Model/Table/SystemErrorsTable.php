@@ -54,7 +54,7 @@ class SystemErrorsTable extends AppTable
             'request_url' => $_SERVER['REQUEST_URI'],
             'referrer_url' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
             'client_ip' => $clientIp,
-            'client_browser' => $_SERVER['HTTP_USER_AGENT'],
+            'client_browser' => isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '',
             'triggered_from' => $file . ' (Line: ' . $line . ')',
             'stack_trace' => $trace,
             'server_info' => $serverInfo

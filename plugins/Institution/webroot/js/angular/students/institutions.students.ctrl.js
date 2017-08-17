@@ -913,6 +913,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             remain = true;
         }
 
+        if (StudentController.selectedStudentData.password == '' || StudentController.selectedStudentData.password == undefined) {
+            StudentController.postResponse.error.password = empty;
+            remain = true;
+        }
+
         var arrNumber = [{}];
 
         // if (StudentController.StudentIdentities == 1 && (StudentController.Student.identity_type_id == '' || StudentController.Student.identity_type_id == undefined)) {

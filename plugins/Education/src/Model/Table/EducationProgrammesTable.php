@@ -8,6 +8,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 use App\Model\Traits\HtmlTrait;
 
 use App\Model\Table\ControllerActionTable;
@@ -44,6 +45,17 @@ class EducationProgrammesTable extends ControllerActionTable
 
 		$this->setDeleteStrategy('restrict');
 	}
+
+	public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ])
+            ;
+    }
 
 	public function beforeAction(Event $event, ArrayObject $extra)
 	{
@@ -236,11 +248,15 @@ class EducationProgrammesTable extends ControllerActionTable
 										->where([$this->aliasField('id') => $nextProgrammeId])
 										->first();
 
-						$arrayNextProgrammes[] = [
-							'education_programme_id' => $entity->id,
-							'next_programme_id' => $programmeObj->id,
-							'name' => $programmeObj->cycle_programme_name,
-						];
+						// POCOR-4002 adding the checking to prevent adding empty next programme
+						if (!empty($programmeObj)) {
+							$arrayNextProgrammes[] = [
+								'education_programme_id' => $entity->id,
+								'next_programme_id' => $programmeObj->id,
+								'name' => $programmeObj->cycle_programme_name,
+							];
+						}
+						// end POCOR-4002
 					}
 				}
 				$form->unlockField($attr['model'] . '.education_next_programmes');

@@ -188,7 +188,14 @@ class ContactsTable extends ControllerActionTable {
 			->add('value', 'ruleContactValuePattern', [
                 'rule' => ['validateContactValuePattern'],
                 'provider' => 'table',
-                'last' => true
+                'last' => true,
+                'on' => function ($context) { //only trigger validation when contact_type_id has value
+                    $contactTypeId = '';
+                    if (array_key_exists('contact_type_id', $context['data'])) {
+                        $contactTypeId = $context['data']['contact_type_id'];
+                    }
+                    return ($contactTypeId);
+                },
             ])
 			->add('value', 'ruleValidateNumeric',  [
 				'rule' => ['numericPositive'],

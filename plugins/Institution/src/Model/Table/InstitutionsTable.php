@@ -148,7 +148,8 @@ class InstitutionsTable extends ControllerActionTable
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
-            'Staff' => ['index', 'view']
+            'Staff' => ['index', 'view'],
+            'API' => ['index', 'view']
         ]);
 
         $this->classificationOptions = [

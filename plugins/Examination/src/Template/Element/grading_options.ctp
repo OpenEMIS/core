@@ -79,7 +79,7 @@
                                                     'label'=>false,
                                                     'name'=>'ExaminationGradingTypes[grading_options]['.$key.']['.$field['field'].']',
                                                     'class'=>$fieldClass,
-                                                    'value'=>$record->$field['field']
+                                                    'value'=>$record->{$field['field']}
                                                 ],
                                                 $fieldAttributes);
                             ?>

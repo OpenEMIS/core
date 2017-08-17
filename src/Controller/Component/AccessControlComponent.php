@@ -20,7 +20,7 @@ class AccessControlComponent extends Component
         'separator' => '|'
     ];
 
-    public $components = ['Auth'];
+    public $components = ['Auth', 'Page.Page'];
 
     public function initialize(array $config)
     {
@@ -41,6 +41,36 @@ class AccessControlComponent extends Component
             }
         } elseif ($this->Auth->user('super_admin') == 1) {
             $this->Session->write('System.User.roles', __('System Administrator'));
+        }
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        // need to execute before PageComponent::beforeRender
+        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 4];
+        return $events;
+    }
+
+    // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
+    public function beforeRender(Event $event)
+    {
+        if ($this->controller instanceof \Page\Controller\PageController) {
+            $page = $this->Page;
+            $allowedActions = ['index', 'view', 'add', 'edit', 'delete', 'download'];
+            $actions = $page->getActions();
+            $disabledActions = [];
+
+            foreach ($actions as $action => $value) {
+                if ($value == true && in_array($action, $allowedActions)) {
+                    $check = $this->check(['controller' => $this->controller->name, 'action' => $action]);
+                    if ($check == false) {
+                        $disabledActions[] = $action;
+                    }
+                }
+            }
+
+            $page->disable($disabledActions);
         }
     }
 
@@ -161,8 +191,8 @@ class AccessControlComponent extends Component
                         $function = $entity->security_function;
 
                         foreach ($operations as $op) { // for each operation in function
-                            if (!empty($function->$op) && $entity->$op == 1) {
-                                $actions = explode($separator, $function->$op);
+                            if (!empty($function->{$op}) && $entity->{$op} == 1) {
+                                $actions = explode($separator, $function->{$op});
 
                                 if (is_array($actions)) {
                                     foreach ($actions as $action) { // for each action in operation

@@ -3,11 +3,11 @@ $this->extend('Page.Layout/container');
 
 $this->start('toolbar');
 
-if (array_key_exists('add', $actions)) {
+if (!in_array('add', $disabledActions)) {
     echo $this->element('Page.button', ['title' => __('Add'), 'url' => ['action' => 'add'], 'iconClass' => 'fa kd-add']);
 }
 
-if (array_key_exists('search', $actions)) {
+if (!in_array('search', $disabledActions)) {
     echo $this->element('Page.search');
 }
 

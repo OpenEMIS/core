@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
@@ -58,6 +59,17 @@ class EducationGradesTable extends ControllerActionTable
         }
 
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ]);
+        return $validator;
     }
 
     public function implementedEvents()
@@ -234,7 +246,7 @@ class EducationGradesTable extends ControllerActionTable
             $educationSubjects = $entity->extractOriginal(['education_subjects']);
             foreach ($educationSubjects['education_subjects'] as $key => $obj) {
                 if ($obj->_joinData->visible == 1) {
-                    $gradeSubjectId = $gradeSubjectData[$obj->id];
+                    $gradeSubjectId = $obj->id;
 
                     $rowData = [];
                     // link subject to GradeSubjects
@@ -243,7 +255,7 @@ class EducationGradesTable extends ControllerActionTable
                         'controller' => 'Educations',
                         'action' => 'GradeSubjects',
                         '0' => 'view',
-                        '1' => $this->paramsEncode(['id' => $gradeSubjectId])
+                        '1' => $this->paramsEncode(['education_grade_id' => $entity->id, 'education_subject_id' => $gradeSubjectId])
                     ]);
                     $rowData[] = $obj->code;
                     $rowData[] = $obj->_joinData->hours_required;

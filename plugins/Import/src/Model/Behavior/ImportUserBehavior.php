@@ -75,7 +75,7 @@ class ImportUserBehavior extends Behavior {
 			foreach($modelData->toArray() as $row) {
 				$data[$sheetName][] = [
 					$row->name,
-					$row->$lookupColumn
+					$row->{$lookupColumn}
 				];
 			}
 		}
@@ -94,7 +94,7 @@ class ImportUserBehavior extends Behavior {
 			foreach($modelData->toArray() as $row) {
 				$data[$sheetName][] = [
 					$row->name,
-					$row->$lookupColumn
+					$row->{$lookupColumn}
 				];
 			}
 		}

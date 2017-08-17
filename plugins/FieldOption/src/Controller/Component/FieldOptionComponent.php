@@ -41,6 +41,7 @@ class FieldOptionComponent extends Component
         'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],
         'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
+        'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
 
     // Staff
         'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],
@@ -66,6 +67,7 @@ class FieldOptionComponent extends Component
     // Qualification
         'QualificationLevels' => ['className' => 'FieldOption.QualificationLevels', 'parent' => 'Qualification'],
         'QualificationTitles' => ['className' => 'FieldOption.QualificationTitles', 'parent' => 'Qualification'],
+        'QualificationSpecialisations' => ['className' => 'FieldOption.QualificationSpecialisations', 'parent' => 'Qualification'],
 
     // Quality
         'QualityVisitTypes' => ['className' => 'FieldOption.QualityVisitTypes', 'parent' => 'Quality'],

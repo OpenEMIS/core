@@ -128,5 +128,18 @@ class ConfigurationsController extends AppController
         if (in_array($action, ['generateServerAuthorisationToken', 'getExternalUsers'])) {
             return true;
         }
+        if ($this->request->param('action') == 'setAlert') {
+            return true;
+        }
+    }
+
+    public function setAlert()
+    {
+        $this->autoRender = false;
+        if ($this->request->query('message') && $this->request->query('alertType')) {
+            $alertType = $this->request->query('alertType');
+            $alertMessage = $this->request->query('message');
+            $this->Alert->$alertType($alertMessage);
+        }
     }
 }

@@ -10,6 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\I18n;
 use Cake\ORM\Table;
 use Cake\Utility\Security;
+use Cake\Utility\Text;
 
 use ControllerAction\Model\Traits\SecurityTrait;
 
@@ -130,14 +131,8 @@ class ControllerActionHelper extends Helper
         if (is_resource($haystack)) {
             return $haystack;
         }
-        $tmpHaystack = strip_tags($haystack);
-        $ind = stripos($tmpHaystack, $needle);
-        $len = strlen($needle);
-        $value = $haystack;
-        if ($ind !== false) {
-            $newHaystack = substr($tmpHaystack, 0, $ind) . "<span class=\"highlight\">" . substr($tmpHaystack, $ind, $len) . "</span>" . $this->highlight($needle, substr($tmpHaystack, $ind + $len));
-            $value = str_replace($tmpHaystack, $newHaystack, $haystack);
-        }
+
+        $value = Text::highlight($haystack, $needle, ['html' => true]);
         return $value;
     }
 
@@ -250,7 +245,7 @@ class ControllerActionHelper extends Helper
         $count = 0;
         foreach ($fields as $field => $attr) {
             $model = $attr['model'];
-            $value = $entity->$field;
+            $value = $entity->{$field};
             $type = $attr['type'];
 
             if (is_null($table)) {
@@ -274,7 +269,7 @@ class ControllerActionHelper extends Helper
                 } else {
                     $value = $event->result;
                 }
-                $entity->$field = $value;
+                $entity->{$field} = $value;
             } elseif ($this->endsWith($field, '_id') || $this->isForeignKey($table, $field)) {
                 $associatedObject = '';
                 if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
@@ -282,8 +277,8 @@ class ControllerActionHelper extends Helper
                 } else {
                     $associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
                 }
-                if (!empty($associatedObject) && $entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
-                    $value = __($entity->$associatedObject->name);
+                if (!empty($associatedObject) && $entity->has($associatedObject) && $entity->{$associatedObject} instanceof Entity && $entity->{$associatedObject}->has('name')) {
+                    $value = __($entity->{$associatedObject}->name);
                     $associatedFound = true;
                 }
             }
@@ -467,8 +462,8 @@ class ControllerActionHelper extends Helper
             $fieldCol = $schema->column($col);
             if ($fieldCol['type'] == 'string' || $fieldCol['type'] == 'text') {
                 if ($entity->has($col)) {
-                    $htmlInfo = $this->HtmlField->escapeHtmlEntity($entity->$col);
-                    $entity->$col = $htmlInfo;
+                    $htmlInfo = $this->HtmlField->escapeHtmlEntity($entity->{$col});
+                    $entity->{$col} = $htmlInfo;
                 }
             }
         }
@@ -526,7 +521,7 @@ class ControllerActionHelper extends Helper
             $_fieldAttr = array_merge($_attrDefaults, $attr);
             $_type = $_fieldAttr['type'];
             $visible = $this->isFieldVisible($_fieldAttr, 'view');
-            $value = $data->$_field;
+            $value = $data->{$_field};
             $label = '';
 
             if ($visible && $_type != 'hidden') {
@@ -571,7 +566,7 @@ class ControllerActionHelper extends Helper
                 $associatedFound = false;
                 if ($event->result) {
                     $value = $event->result;
-                    $data->$_field = $event->result;
+                    $data->{$_field} = $event->result;
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
                     if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
@@ -582,7 +577,7 @@ class ControllerActionHelper extends Helper
                     }
 
                     if (!empty($associatedObject) && $data->has($associatedObject)) {
-                        $value = __($data->$associatedObject->name);
+                        $value = __($data->{$associatedObject}->name);
                         $associatedFound = true;
                     }
                 }
