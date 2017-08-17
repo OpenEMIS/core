@@ -128,20 +128,6 @@ class PageController extends AppController
                 $pageStatus = $page->getStatus();
 
                 try {
-<<<<<<< HEAD
-                    $extra['result'] = false;
-                    $entity = $table->patchEntity($entity, $request->data, []);
-                    $extra['result'] = $table->save($entity);
-
-                    $event = $this->dispatchEvent('Controller.Page.addAfterSave', [$entity, $extra], $this);
-                    if ($event->result instanceof Response) {
-                        return $event->result;
-                    }
-                } catch (Exception $ex) {
-                    $msg = $ex->getMessage();
-                    $this->Alert->show($msg, 'error');
-                    Log::write('error', $msg);
-=======
                     $entity = $table->newEntity($request->data);
                     $result = $table->save($entity);
 
@@ -169,7 +155,6 @@ class PageController extends AppController
                         ->setMessage($msg);
 
                     $page->setAlert($pageStatus->getMessage(), 'error');
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
                 }
             }
             $page->setVar('data', $entity);
@@ -286,22 +271,6 @@ class PageController extends AppController
         }
     }
 
-<<<<<<< HEAD
-            if ($request->is(['post', 'put'])) {
-                try {
-                    $extra['result'] = false;
-                    $entity = $table->patchEntity($entity, $request->data, []);
-                    $extra['result'] = $table->save($entity);
-
-                    $event = $this->dispatchEvent('Controller.Page.editAfterSave', [$entity, $extra], $this);
-                    if ($event->result instanceof Response) {
-                        return $event->result;
-                    }
-                } catch (Exception $ex) {
-                    $msg = $ex->getMessage();
-                    $this->Alert->show($msg, 'error');
-                    Log::write('error', $msg);
-=======
     public function delete($id)
     {
         $page = $this->Page;
@@ -400,7 +369,6 @@ class PageController extends AppController
                     $element->setDisabled(true);
                 } else {
                     $element->setVisible(false);
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
                 }
             }
 

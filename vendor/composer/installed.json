@@ -3973,11 +3973,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-<<<<<<< HEAD
-            "reference": "a89e6d3717dd567bd5743ebeb5d5b8c861d56af7"
-=======
             "reference": "9ed8a58ce87fac1dd4f4c47666dced7324395988"
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
         },
         "require": {
             "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -3986,11 +3982,7 @@
             "onelogin/php-saml": "^2.9",
             "phpseclib/phpseclib": "^2.0"
         },
-<<<<<<< HEAD
-        "time": "2017-06-30T09:40:45+00:00",
-=======
         "time": "2017-07-11T07:25:42+00:00",
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
@@ -4028,18 +4020,6 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-<<<<<<< HEAD
-            "reference": "232e70a713d14c10d770c4e54dfb5aab326b2e6b"
-        },
-        "require": {
-            "cakephp/cakephp": ">=3.3.0 <3.4"
-        },
-        "require-dev": {
-            "cakephp/cakephp-codesniffer": "^2.3",
-            "phpunit/phpunit": "^5.7"
-        },
-        "time": "2017-07-05T11:31:55+00:00",
-=======
             "reference": "96e1ece297e56b09a4bf64a16f85e7647853ee4b"
         },
         "require": {
@@ -4050,7 +4030,6 @@
             "phpunit/phpunit": "^5.7"
         },
         "time": "2017-08-15T09:05:00+00:00",
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {

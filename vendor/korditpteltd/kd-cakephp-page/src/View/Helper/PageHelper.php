@@ -311,11 +311,7 @@ class PageHelper extends Helper
 
         $array = $entity instanceof Entity ? $entity->toArray() : $entity;
         $data = Hash::flatten($array);
-<<<<<<< HEAD
-        $value = array_key_exists($field['name'], $data) ? $data[$field['name']] : '';
-=======
         $value = array_key_exists($field['key'], $data) ? $data[$field['key']] : '';
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
 
         if (array_key_exists('displayFrom', $field)) { // if displayFrom exists, always get value based on displayFrom
             $key = $field['displayFrom'];
@@ -335,10 +331,7 @@ class PageHelper extends Helper
         }
 
         $isDateTimeType = in_array($controlType, ['date', 'time']);
-<<<<<<< HEAD
-=======
         $isStringType = in_array($controlType, ['string', 'textarea']);
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
         $hasDateTimeFormat = array_key_exists('format', $field);
         $valueIsNotEmpty = !empty($value);
 
