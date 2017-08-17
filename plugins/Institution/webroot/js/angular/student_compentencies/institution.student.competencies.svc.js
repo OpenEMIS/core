@@ -194,7 +194,6 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                     eSelect.value = params.value;
 
                     eSelect.addEventListener('change', function () {
-                        console.log('here');
                         var newValue = eSelect.value;
                         params.data[params.colDef.field] = newValue;
                         vm.saveCompetencyResults(params)
@@ -209,7 +208,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 } else {
                     // don't allow input if student is not enrolled
                     var cellValue = '';
-                    if (params.value.length != 0 && params.value != 0) {
+                    if (params.value != undefined && params.value != 0 && params.value.length != 0) {
                         cellValue = gradingOptions[params.value]['name'];
                         if (gradingOptions[params.value]['code'].length > 0) {
                             cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
