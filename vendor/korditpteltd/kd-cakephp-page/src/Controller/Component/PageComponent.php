@@ -608,15 +608,6 @@ class PageComponent extends Component
         $querystring = $this->request->query('querystring');
         if ($querystring) {
             $querystring = json_decode($this->hexToStr($querystring), true);
-<<<<<<< HEAD
-            if ($replace || !array_key_exists($key, $querystring)) {
-                $querystring[$key] = $value;
-            }
-        } else {
-            $querystring = [$key => $value];
-        }
-        $this->request->query['querystring'] = $this->encode($querystring);
-=======
             if (is_null($value) && array_key_exists($key, $querystring)) { // if value is null, the key will be removed from querystring
                 unset($querystring[$key]);
             } elseif ($replace || !array_key_exists($key, $querystring)) {
@@ -633,7 +624,6 @@ class PageComponent extends Component
         } else {
             unset($this->request->query['querystring']);
         }
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
     }
 
     public function getQueryString($key = null)

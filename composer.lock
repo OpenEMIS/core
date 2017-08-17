@@ -393,11 +393,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-<<<<<<< HEAD
-                "reference": "232e70a713d14c10d770c4e54dfb5aab326b2e6b"
-=======
                 "reference": "96e1ece297e56b09a4bf64a16f85e7647853ee4b"
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4"
@@ -431,11 +427,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
             },
-<<<<<<< HEAD
-            "time": "2017-07-05 11:31:55"
-=======
             "time": "2017-08-15 09:05:00"
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
@@ -535,11 +527,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-<<<<<<< HEAD
-            "time": "2017-06-30T09:40:45+00:00"
-=======
             "time": "2017-07-11 07:25:42"
->>>>>>> 4a8bdb4502c14865c9dfd769ae7504224e300aef
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
