@@ -263,9 +263,9 @@ class RestSurveyComponent extends Component
                 $this->log($xmlstr, 'debug');
                 $xml = Xml::build($xmlstr);
 
-                $formId = $xml->$formAlias->attributes()->id->__toString();
-                $institutionId = $xml->$formAlias->Institutions->__toString();
-                $periodId = $xml->$formAlias->AcademicPeriods->__toString();
+                $formId = $xml->{$formAlias}->attributes()->id->__toString();
+                $institutionId = $xml->{$formAlias}->Institutions->__toString();
+                $periodId = $xml->{$formAlias}->AcademicPeriods->__toString();
                 $statusIds = $this->Workflow->getStepsByModelCode($CustomRecords->registryAlias(), 'COMPLETED');
                 $createdUserId = 1; // System Administrator
 
@@ -339,7 +339,7 @@ class RestSurveyComponent extends Component
                         $answers = new ArrayObject();
 
                         if (!is_null($recordId)) {
-                            $fields = $xml->$formAlias->$fieldAlias;
+                            $fields = $xml->{$formAlias}->{$fieldAlias};
                             foreach ($fields as $field) {
                                 $fieldId = $field->attributes()->id->__toString();
                                 $fieldType = $this->Field->get($fieldId)->field_type;
