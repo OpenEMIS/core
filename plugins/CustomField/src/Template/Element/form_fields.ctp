@@ -42,7 +42,8 @@
 				$this->Form->input($alias.".sectiontxt", [
 					'label' => 'Add Section',
 					'type' => 'text',
-					'id' => 'sectionTxt'
+					'id' => 'sectionTxt',
+					'maxLength' => 250
 				]);
 			?>
 			<div class="form-buttons no-margin-top">

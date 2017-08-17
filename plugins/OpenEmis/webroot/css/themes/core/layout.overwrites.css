@@ -919,6 +919,14 @@ a,
 
 /* End of fix for POCOR-3658 */
 
+/* Security Permission font-size fix for POCOR-3877 */
+
+.security-permission-checkbox label{
+    font-size: 13px !important;
+}
+
+/* End of security permission font-size fix */
+
 /* Temp fix by KK POCOR-3880 */
 
 .ag-fresh .ag-pinned-left-header,

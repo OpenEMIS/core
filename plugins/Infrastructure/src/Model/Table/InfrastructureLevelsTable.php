@@ -21,6 +21,6 @@ class InfrastructureLevelsTable extends ControllerActionTable
             ->where([$this->aliasField('code') => $code])
             ->first();
 
-        return $data->$field;
+        return $data->{$field};
     }
 }

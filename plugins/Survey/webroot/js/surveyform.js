@@ -52,6 +52,7 @@ var SurveyForm = {
 
 	checkSectionExist: function(sName){
 		var found = false;
+		var sLength = sName.length;
 		$('#sortable').find('.section-header').each(function(){
 			if ($(this).text() == sName) {
 				found = true;
@@ -60,7 +61,10 @@ var SurveyForm = {
 		if (! found) {
 			return sName;
 		} else {
-			sName += " - Copy";
+			if (sLength + 7 > 250) {
+				sName = sName.substr(0, sLength - 7);
+			}
+			sName = "Copy - " + sName;
 			return SurveyForm.checkSectionExist(sName);
 		}
 	},

@@ -1,0 +1,77 @@
+/* ABOUT v.1.0.4 */
+
+.about-wrapper {
+    background-color: #FFF;
+    border-left: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+    border-top: 0;
+}
+
+.about-container {
+    text-align: left;
+    padding: 15px !important;
+    display: block;
+    background-color: #FFF;
+    border-top: 0 !important;
+}
+
+.img-logo {
+    display: inline-block;
+    padding: 20px;
+    vertical-align: middle;
+}
+
+.about-content {
+    padding: 0 10px;
+    display: inline-block;
+    width: 50%;
+    vertical-align: top;
+}
+
+.img-logo img {
+    width: 100%;
+}
+
+.about-info {
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    text-align: left;
+    padding: 5px 0;
+}
+
+.about-info i {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+}
+
+.about-info span {
+    display: inline-block;
+    width: 80%;
+    vertical-align: top;
+}
+
+.partner-logo {
+    display: inline-block;
+    margin: 0 20px 0 0;
+}
+
+@media (max-width: 978px) {
+    .img-logo {
+        margin: 0 auto;
+    }
+    .about-content {
+        width: 100%;
+        padding: 15px 0;
+    }
+}
+
+
+/* RTL ABOUT v.1.0.1 */
+
+.rtl .about-container,
+.rtl .about-content, 
+.rtl .about-info {
+    text-align: right;
+}
