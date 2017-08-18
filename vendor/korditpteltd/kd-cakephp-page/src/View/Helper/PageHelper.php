@@ -11,7 +11,6 @@ use Cake\Log\Log;
 use Cake\Utility\Hash;
 use Cake\Utility\Text;
 use Cake\View\Helper;
-use Cake\Filesystem\File;
 
 use Page\Traits\RTLTrait;
 use Page\Traits\EncodingTrait;
