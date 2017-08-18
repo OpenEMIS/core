@@ -981,7 +981,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Report'],
             ],
             'Reports.InstitutionRubrics' => [
-                'title' => 'Quality',
+                'title' => 'Rubrics',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
