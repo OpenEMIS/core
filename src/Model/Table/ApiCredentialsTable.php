@@ -9,7 +9,6 @@ use App\Model\Table\AppTable;
 
 class ApiCredentialsTable extends AppTable
 {
-
     /**
      * Initialize method
      *
@@ -29,6 +28,7 @@ class ApiCredentialsTable extends AppTable
      */
     public function validationDefault(Validator $validator)
     {
+        parent::validationDefault($validator);
         $validator
             ->requirePresence('name', 'create')
             ->notEmpty('name')

@@ -1,6 +1,9 @@
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 		<?php
+			$this->Form->unlockField('academic_period_id_');
+			$this->Form->unlockField('class_id');
+
 			$baseUrl = $this->Url->build([
 				'plugin' => $this->request->params['plugin'],
 			    'controller' => $this->request->params['controller'],
