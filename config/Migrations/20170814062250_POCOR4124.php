@@ -28,6 +28,21 @@ class POCOR4124 extends AbstractMigration
     public function up()
     {   
         //import_mapping
+        $table = $this->table('import_mapping');
+        $table->addColumn('is_optional', 'integer', [
+                    'after' => 'order', 
+                    'limit' => 1,
+                    'default' => 0, 
+                    'null' => false
+                ])
+              ->save();
+
+        $sql = "UPDATE `import_mapping`
+                SET is_optional = 1
+                WHERE description LIKE '%optional%'";
+
+        $this->execute($sql);
+
         $sql = "UPDATE `import_mapping` 
                 SET `description` = 'Code' 
                 WHERE `model` = 'Training.TrainingSessionsTrainees'
@@ -48,13 +63,16 @@ class POCOR4124 extends AbstractMigration
     public function down()
     {
         //import_mapping
+        $table = $this->table('import_mapping');
+        $table->removeColumn('is_optional')
+              ->save();
+
         $sql = "UPDATE `import_mapping` 
                 SET `description` = 'Code (Optional)' 
                 WHERE `model` = 'Training.TrainingSessionsTrainees'
                 AND `column_name` = 'identity_type_id'";
 
         $this->execute($sql);
-
 
         $sql = "UPDATE `import_mapping` 
                 SET `description` = '(Optional)'
