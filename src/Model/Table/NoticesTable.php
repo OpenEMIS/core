@@ -6,11 +6,11 @@ use Cake\Event\Event;
 
 class NoticesTable extends AppTable
 {
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
-		parent::initialize($config);
-		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Dashboard' => ['index']
+        parent::initialize($config);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
         ]);
-	}
+    }
 }
