@@ -364,20 +364,6 @@ class PageComponent extends Component
         }
     }
 
-    public function getVar($name)
-    {
-        $controller = $this->controller;
-        if (array_key_exists($name, $controller->viewVars)) {
-            return $this->controller->viewVars[$name];
-        }
-        return null;
-    }
-
-    public function getData()
-    {
-        return $this->getVar('data');
-    }
-
     public function disable($actions)
     {
         foreach ($actions as $action) {
@@ -559,13 +545,6 @@ class PageComponent extends Component
                     $keyArray[$key] = $entity[$key];
                 }
                 $entity['primaryKey'] = $this->encode($keyArray);
-            }
-        } else {
-            if (!is_array($primaryKey)) { // primary key is not composite key
-                $key = [$primaryKey => $entity[$primaryKey]];
-                $entity['primaryKey'] = $this->strToHex(json_encode($key));
-            } else {
-                pr($primaryKey);die;
             }
         }
     }
