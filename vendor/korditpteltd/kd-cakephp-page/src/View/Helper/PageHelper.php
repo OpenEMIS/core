@@ -7,7 +7,6 @@ use Cake\ORM\Entity;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\I18n\I18n;
-use Cake\Utility\Hash;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
 use Cake\Utility\Text;

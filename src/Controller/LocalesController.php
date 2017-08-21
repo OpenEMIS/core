@@ -3,7 +3,7 @@ namespace App\Controller;
 
 use Cake\Event\Event;
 
-use Page\Controller\PageController;
+use App\Controller\PageController;
 
 class LocalesController extends PageController
 {
@@ -17,7 +17,7 @@ class LocalesController extends PageController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $this->Navigation->addCrumb('Localization', ['plugin' => false, 'controller' => 'LocaleContents', 'action' => 'index']);
+        $this->Page->addCrumb('Localization', ['plugin' => false, 'controller' => 'Locales', 'action' => 'index']);
 
         $this->Page->get('direction')
             ->setControlType('dropdown')
