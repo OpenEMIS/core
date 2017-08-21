@@ -72,8 +72,10 @@ class InstitutionClassesTable extends ControllerActionTable
             'Students' => ['index', 'add'],
             'ClassStudents' => ['view', 'edit'],
             'StudentCompetencies' => ['view'],
-            'OpenEMIS_Classroom' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'ReportCardComments' => ['index']
         ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
@@ -1327,5 +1329,46 @@ class InstitutionClassesTable extends ControllerActionTable
         $addAutoSubject = $educationGradesSubjectsData['auto_allocation'];
 
         return $addAutoSubject;
+    }
+
+    // used for student report cards
+    public function findTeacherEditPermissions(Query $query, array $options)
+    {
+        $reportCardId = $options['report_card_id'];
+        $institutionId = $options['institution_id'];
+        $classId = $options['institution_class_id'];
+        $staffId = $options['staff_id'];
+
+        $today = Date::now();
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $ReportCardSubjects = TableRegistry::get('ReportCards.ReportCardSubjects');
+
+        return $query
+            ->find('list', [
+                'keyField' => 'education_subject_id',
+                'valueField' => 'education_subject_id'
+            ])
+            ->select(['education_subject_id' => 'InstitutionSubjects.education_subject_id'])
+            ->leftJoinWith('InstitutionSubjects.SubjectStaff')
+            ->leftJoinWith('InstitutionSubjects.EducationSubjects.ReportCardSubjects')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('id') => $classId,
+                'ReportCardSubjects.report_card_id' => $reportCardId,
+                'OR' => [
+                    [
+                        'SubjectStaff.staff_id' => $staffId,
+                        'OR' => [
+                            'SubjectStaff.end_date IS NULL',
+                            'SubjectStaff.end_date >= ' => $today->format('Y-m-d')
+                        ]
+                    ],
+                    [
+                        $this->aliasField('secondary_staff_id') => $staffId
+                    ]
+                ]
+            ])
+            ;
     }
 }
