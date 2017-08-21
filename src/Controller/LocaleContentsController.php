@@ -2,20 +2,20 @@
 namespace App\Controller;
 
 use ArrayObject;
+
 use Cake\Event\Event;
-
-use Page\Controller\PageController;
-
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+
+use App\Controller\PageController;
 
 class LocaleContentsController extends PageController
 {
     public function initialize()
     {
         parent::initialize();
-        
+
         $this->Page->disable(['add', 'delete']);
         $this->Page->setHeader('Translations');
 
@@ -30,7 +30,7 @@ class LocaleContentsController extends PageController
         parent::beforeFilter($event);
 
         $this->Page->get('en')->setLabel('English');
-        $this->Navigation->addCrumb('Localization', ['plugin' => false, 'controller' => 'LocaleContents', 'action' => 'index']);
+        $this->Page->addCrumb('Localization', ['plugin' => false, 'controller' => 'LocaleContents', 'action' => 'index']);
     }
 
     public function index()
@@ -39,7 +39,7 @@ class LocaleContentsController extends PageController
 
         $localeOptions = $this->Locales->getList()->toArray();
         $page->addFilter('locale_id')
-            ->setOptions($localeOptions);
+            ->setOptions($localeOptions)
         ;
 
         $queryString = $page->getQueryString();
