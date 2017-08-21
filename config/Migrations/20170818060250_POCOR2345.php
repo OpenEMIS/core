@@ -6,11 +6,22 @@ class POCOR2345 extends AbstractMigration
 {
     public function up()
     {
-        $this->execute("ALTER TABLE `institution_classes` ADD COLUMN `secondary_staff_id` INT(11) NULL COMMENT 'links to security_users.id' AFTER `staff_id`");
+        $table = $this->table('institution_classes');
+        $table
+            ->addColumn('secondary_staff_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'after' => 'staff_id'
+            ])
+            ->addIndex('secondary_staff_id')
+            ->update();
     }
 
     public function down()
     {
-        $this->execute("ALTER TABLE `institution_classes` DROP COLUMN `secondary_staff_id`");
+        $table = $this->table('institution_classes');
+        $table->removeColumn('secondary_staff_id')
+              ->save();
     }
 }
