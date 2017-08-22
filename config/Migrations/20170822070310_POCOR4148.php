@@ -90,6 +90,7 @@ class POCOR4148 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('id')
             ->addIndex('competency_template_id')
             ->addIndex('competency_period_id')
             ->addIndex('competency_item_id')
@@ -172,6 +173,7 @@ class POCOR4148 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('id')
             ->addIndex('competency_template_id')
             ->addIndex('competency_period_id')
             ->addIndex('student_id')
