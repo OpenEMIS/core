@@ -233,7 +233,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $model = $this;
         $process = function($model, $entity) use ($data) {
             if (!empty($entity->competency_period) && !empty($entity->competency_item)) {
-                $StudentCompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
+                $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
 
                 $competencyTemplateId = $data[$model->alias()]['competency_template'];
                 $competencyPeriodId = $data[$model->alias()]['competency_period'];
@@ -241,8 +241,8 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $institutionId = $data[$model->alias()]['institution_id'];
                 $academicPeriodId = $data[$model->alias()]['academic_period_id'];
 
-                if (array_key_exists('student_competency_results', $data[$model->alias()]) && !empty($data[$model->alias()]['student_competency_results'])) {
-                    foreach ($data[$model->alias()]['student_competency_results'] as $studentId => $criteriaResults) {
+                if (array_key_exists('institution_competency_results', $data[$model->alias()]) && !empty($data[$model->alias()]['institution_competency_results'])) {
+                    foreach ($data[$model->alias()]['institution_competency_results'] as $studentId => $criteriaResults) {
                         foreach ($criteriaResults as $criteriaKey => $criteriaValue) {
                             $studentData = [
                                 'student_id' => $studentId,
@@ -446,7 +446,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         $value = '';
         $form = $event->subject()->Form;
-        $fieldPrefix = $attr['model'] . '.student_competency_results';
+        $fieldPrefix = $attr['model'] . '.institution_competency_results';
 
         $tableHeaders = [];
         $tableCells = [];
@@ -493,7 +493,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
-            $CompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
+            $CompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
             $students = $ClassStudents
                 ->find()
                 ->select([

@@ -20,7 +20,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
         CompetencyTemplates: 'Competency.CompetencyTemplates',
-        StudentCompetencyResults: 'Institution.StudentCompetencyResults'
+        InstitutionCompetencyResults: 'Institution.InstitutionCompetencyResults'
     };
 
     return service;
@@ -55,7 +55,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return StudentCompetencyResults
+        return InstitutionCompetencyResults
             .find('studentResults', {
                 competency_template_id: templateId,
                 competency_period_id: periodId,
@@ -73,7 +73,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         };
         return CompetencyTemplates
             .get(primaryKey)
-            .contain(['Periods.CompetencyItems', 'Criterias.GradingTypes.GradingOptions', 'StudentCompetencyResults', 'Items'])
+            .contain(['Periods.CompetencyItems', 'Criterias.GradingTypes.GradingOptions', 'InstitutionCompetencyResults', 'Items'])
             .ajax({success: success, defer:true});
     }
 
@@ -250,6 +250,6 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
             institution_id: institutionId,
             academic_period_id: academicPeriodId
         };
-        return StudentCompetencyResults.save(saveObj);
+        return InstitutionCompetencyResults.save(saveObj);
     }
 };

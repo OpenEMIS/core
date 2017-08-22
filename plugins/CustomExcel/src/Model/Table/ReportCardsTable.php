@@ -552,7 +552,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $StudentCompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
+            $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
 
             $entity = $StudentCompetencyResults->find()
                 ->contain('CompetencyGradingOptions')
