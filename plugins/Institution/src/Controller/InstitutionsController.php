@@ -65,7 +65,7 @@ class InstitutionsController extends AppController
 
         // competencies
         'StudentCompetencies',
-        'StudentCompetencyResults',
+        'InstitutionCompetencyResults',
 
         // assessments
         'Results',
@@ -325,9 +325,9 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']);
     }
-    public function StudentCompetencyResults()
+    public function InstitutionCompetencyResults()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCompetencyResults']);
     }
     public function StudentSurveys()
     {
