@@ -768,10 +768,10 @@ class InstitutionsController extends AppController
         if ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'index') {
             if ($session->check('Institution.Institutions.search.key')) {
                 $search = $session->read('Institution.Institutions.search.key');
-                $session->delete('Institution.Institutions');
+                $session->delete('Institution.Institutions.id');
                 $session->write('Institution.Institutions.search.key', $search);
             } else {
-                $session->delete('Institution.Institutions');
+                $session->delete('Institution.Institutions.id');
             }
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
