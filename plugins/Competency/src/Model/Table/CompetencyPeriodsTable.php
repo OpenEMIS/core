@@ -32,7 +32,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_period_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
+        $this->hasMany('InstitutionCompetencyResults', ['className' => 'Institution.InstitutionCompetencyResults', 'foreignKey' => ['competency_period_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
 
         $this->setDeleteStrategy('restrict');
     }

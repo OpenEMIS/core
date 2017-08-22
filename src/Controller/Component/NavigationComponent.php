@@ -515,7 +515,7 @@ class NavigationComponent extends Component
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults'],
                 'params' => ['plugin' => 'Institution']
             ],
 
