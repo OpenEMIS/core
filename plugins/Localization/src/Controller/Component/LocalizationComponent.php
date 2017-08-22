@@ -165,6 +165,8 @@ class LocalizationComponent extends Component
 
     private function updateLocaleFile($lang)
     {
+        pr($lang);
+        die;
         if ($this->defaultLocale != $lang) {
             $isChanged = $this->isChanged($lang);
             if ($isChanged) {
@@ -175,6 +177,7 @@ class LocalizationComponent extends Component
 
     private function getModifiedDate()
     {
+        /*
         $TranslationsTable = TableRegistry::get('Localization.Translations');
         $selectedColumns = [
             'modified' => '(
@@ -191,6 +194,16 @@ class LocalizationComponent extends Component
             ->order(['modified' => 'DESC'])
             ->extract('modified')
             ->first();
+        */
+
+        $LocaleContents = TableRegistry::get('LocaleContents');
+
+        $lastModified = $LocaleContents
+            ->find()
+            ->order([$LocaleContents->aliasField('created') => 'DESC'])
+            ->extract('created')
+            ->first();
+
         return $lastModified;
     }
 
@@ -225,9 +238,14 @@ class LocalizationComponent extends Component
 
     private function convertPO($locale, $lastModified)
     {
+// pr('convertPO');
+// die;
         $str = "";
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
+// pr($locale);
+// die;
+
         $TranslationsTable = TableRegistry::get('Localization.Translations');
         $data = $TranslationsTable
             ->find('list', [
@@ -235,6 +253,10 @@ class LocalizationComponent extends Component
                 'valueField' => $locale
             ])
             ->toArray();
+
+
+
+
 
         // clear persistent cache that is used for Translations
         Cache::clear(false, '_cake_core_');
