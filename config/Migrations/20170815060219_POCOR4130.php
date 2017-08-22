@@ -5,7 +5,7 @@ use Phinx\Migration\AbstractMigration;
 class POCOR4130 extends AbstractMigration
 {
     // commit
-    public function Up()
+    public function up()
     {
         // update the order
         $updateOrder = 'UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 158';
@@ -36,7 +36,7 @@ class POCOR4130 extends AbstractMigration
     }
 
     // rollback
-    public function Down()
+    public function down()
     {
         // remove permission for label
         $this->execute('DELETE FROM security_functions WHERE id = 5078');
