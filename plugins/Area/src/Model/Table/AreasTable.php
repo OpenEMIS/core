@@ -400,7 +400,7 @@ class AreasTable extends ControllerActionTable
                 if (!$superAdmin) {
                     $parentIds = array_unique(array_column($value, 'parent_id'));
                     if (array_intersect($authorisedAreaIds, $parentIds)) {
-                        unset($authorisedAreaIds[array_search($parentId, $authorisedAreaIds)]);
+                        unset($authorisedAreaIds[array_search($parentIds[0], $authorisedAreaIds)]);
                         $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
                     }
                 }
