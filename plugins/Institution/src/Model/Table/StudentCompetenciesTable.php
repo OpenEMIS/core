@@ -64,6 +64,12 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if ($this->action != 'index') {
+            $tabElements = $this->controller->getCompetencyTabElements();
+            $this->set('tabElements', $tabElements);
+            $this->set('selectedAction', 'StudentCompetencies');
+        }
+
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('institution_shift_id', ['type' => 'hidden']);

@@ -503,6 +503,7 @@ class InstitutionsController extends AppController
                     return $this->redirect($url);
                 }
             }
+            $tabElements = $this->getCompetencyTabElements();
             $queryString = $this->ControllerAction->getQueryString();
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentCompetencies';
@@ -521,6 +522,8 @@ class InstitutionsController extends AppController
             $this->set('classId', $queryString['class_id']);
             $this->set('competencyTemplateId', $queryString['competency_template_id']);
             $this->set('queryString', $queryString);
+            $this->set('tabElements', $tabElements);
+            $this->set('selectedAction', 'StudentCompetencies');
             $this->render('student_competency_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']);
@@ -1394,6 +1397,18 @@ class InstitutionsController extends AppController
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+    }
+
+    public function getCompetencyTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'StudentCompetencies' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
+                'text' => __('Items')
+            ]
+        ];
+        return $tabElements;
     }
 
     public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate = '')
