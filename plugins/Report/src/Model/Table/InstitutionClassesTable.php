@@ -8,17 +8,19 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class InstitutionClassesTable extends AppTable  {
+class InstitutionClassesTable extends AppTable
+{
 
     public function initialize(array $config)
     {
-		$this->table('institution_classes');
-		parent::initialize($config);
+        $this->table('institution_classes');
+        parent::initialize($config);
 
-		$this->belongsTo('AcademicPeriods', 		['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('Staff', 					['className' => 'User.Users', 						'foreignKey' => 'staff_id']);
-		$this->belongsTo('InstitutionShifts', 		['className' => 'Institution.InstitutionShifts',	'foreignKey' => 'institution_shift_id']);
-		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Staff', ['className' => 'User.Users',                       'foreignKey' => 'staff_id']);
+        $this->belongsTo('SecondaryStaff', ['className' => 'User.Users',                        'foreignKey' => 'secondary_staff_id']);
+        $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts',    'foreignKey' => 'institution_shift_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
 
         $this->belongsToMany('EducationGrades', [
             'className' => 'Education.EducationGrades',
@@ -28,22 +30,23 @@ class InstitutionClassesTable extends AppTable  {
             'dependent' => true
         ]);
 
-		$this->addBehavior('Excel', ['excludes' => ['class_number']]);
-		$this->addBehavior('Report.ReportList');
-		$this->addBehavior('Report.InstitutionSecurity');
-	}
+        $this->addBehavior('Excel', ['excludes' => ['class_number']]);
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity');
+    }
 
-	public function beforeAction(Event $event) {
-		$this->fields = [];
-		$this->ControllerAction->field('feature');
-		$this->ControllerAction->field('format');
-	}
-
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function beforeAction(Event $event)
     {
-		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
-		return $attr;
-	}
+        $this->fields = [];
+        $this->ControllerAction->field('feature');
+        $this->ControllerAction->field('format');
+    }
+
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['options'] = $this->controller->getFeatureOptions('Institutions');
+        return $attr;
+    }
 
     public function onExcelGetInstitutionShiftId(Event $event, Entity $entity)
     {
@@ -54,7 +57,7 @@ class InstitutionClassesTable extends AppTable  {
     {
         $classGrades = [];
         if ($entity->education_grades) {
-           foreach ($entity->education_grades as $key => $value) {
+            foreach ($entity->education_grades as $key => $value) {
                 $classGrades[] = $value->name;
             }
         }
@@ -170,6 +173,13 @@ class InstitutionClassesTable extends AppTable  {
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
             'field' => 'staff_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.secondary_staff_id',
+            'field' => 'secondary_staff_id',
             'type' => 'integer',
             'label' => ''
         ];
