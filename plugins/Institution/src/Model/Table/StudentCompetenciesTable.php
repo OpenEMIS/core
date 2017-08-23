@@ -455,7 +455,8 @@ class StudentCompetenciesTable extends ControllerActionTable
         $tableHeaders[] = __('OpenEMIS ID');
         $tableHeaders[] = __('Student Name');
         $tableHeaders[] = __('Student Status');
-        $colOffset = 3; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status
+        $tableHeaders[] = __('Comments');
+        $colOffset = 4; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status, 3 -> Comments
 
         $competencyItemEntity = null;
         if (!is_null($this->competencyItemId)) {
@@ -494,11 +495,13 @@ class StudentCompetenciesTable extends ControllerActionTable
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
             $CompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
+            $ItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
             $students = $ClassStudents
                 ->find()
                 ->select([
                     $CompetencyResults->aliasField('competency_grading_option_id'),
                     $CompetencyResults->aliasField('competency_criteria_id'),
+                    $ItemComments->aliasField('comments'),
                     $ClassStudents->aliasField('student_id'),
                     $ClassStudents->aliasField('student_status_id'),
                     $StudentStatuses->aliasField('name'),
@@ -511,6 +514,17 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ])
                 ->matching('Users')
                 ->matching('StudentStatuses')
+                ->leftJoin(
+                    [$ItemComments->alias() => $ItemComments->table()],
+                    [
+                        $ItemComments->aliasField('student_id = ') . $ClassStudents->aliasField('student_id'),
+                        $ItemComments->aliasField('institution_id') => $this->institutionId,
+                        $ItemComments->aliasField('academic_period_id') => $this->academicPeriodId,
+                        $ItemComments->aliasField('competency_template_id') => $this->competencyTemplateId,
+                        $ItemComments->aliasField('competency_period_id') => $this->competencyPeriodId,
+                        $ItemComments->aliasField('competency_item_id') => $this->competencyItemId
+                    ]
+                )
                 ->leftJoin(
                     [$CompetencyResults->alias() => $CompetencyResults->table()],
                     [
@@ -544,8 +558,13 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $currentStudentId = $studentObj->student_id;
                 $savedGradingOptionId = $studentObj->{$CompetencyResults->alias()}['competency_grading_option_id'];
                 $savedCriteriaId = $studentObj->{$CompetencyResults->alias()}['competency_criteria_id'];
+                $savedItemComments = $studentObj->{$ItemComments->alias()}['comments'];
                 if (!is_null($savedCriteriaId) && !is_null($savedGradingOptionId)) {
                     $answerObj[$currentStudentId][$savedCriteriaId] = $savedGradingOptionId;
+                }
+                $comments = "";
+                if (!is_null($savedItemComments)) {
+                    $comments = $savedItemComments;
                 }
 
                 $userObj = $studentObj->_matchingData['Users'];
@@ -573,10 +592,12 @@ class StudentCompetenciesTable extends ControllerActionTable
                         $rowData[] = $userObj->openemis_no;
                         $rowData[] = $userObj->name;
                         $rowData[] = $studentStatusObj->name;
+                        $rowData[] = $comments;
                     } else if ($action == 'edit') {
                         $rowData[] = $userObj->openemis_no . $rowInput;
                         $rowData[] = $userObj->name;
                         $rowData[] = $studentStatusObj->name;
+                        $rowData[] = $comments;
                     }
 
                     $studentId = $currentStudentId;
