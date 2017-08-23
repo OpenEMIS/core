@@ -65,6 +65,7 @@ class InstitutionsController extends AppController
 
         // competencies
         'StudentCompetencies',
+        'StudentCompetencyComments',
         'InstitutionCompetencyResults',
 
         // assessments
@@ -530,6 +531,15 @@ class InstitutionsController extends AppController
         }
     }
 
+    public function StudentCompetencyComments($subaction = 'index')
+    {
+        if ($subaction == 'edit') {
+
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyComments']);
+        }
+    }
+
     public function Classes($subaction = 'index', $classId = null)
     {
         if ($subaction == 'edit') {
@@ -931,6 +941,17 @@ class InstitutionsController extends AppController
                             'alert.svc',
                             'institution.student.competencies.ctrl',
                             'institution.student.competencies.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'StudentCompetencyComments':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'institution.student.competencyComments.ctrl',
+                            'institution.student.competencyComments.svc'
                         ]);
                     }
                 }
@@ -1406,6 +1427,10 @@ class InstitutionsController extends AppController
             'StudentCompetencies' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
                 'text' => __('Items')
+            ],
+            'StudentCompetencyComments' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencyComments', 'view', 'queryString' => $queryString],
+                'text' => __('Periods')
             ]
         ];
         return $tabElements;
