@@ -66,8 +66,8 @@ class StudentCompetenciesTable extends ControllerActionTable
     {
         if ($this->action != 'index') {
             $tabElements = $this->controller->getCompetencyTabElements();
-            $this->set('tabElements', $tabElements);
-            $this->set('selectedAction', 'StudentCompetencies');
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', 'StudentCompetencies');
         }
 
         $this->field('class_number', ['visible' => false]);
