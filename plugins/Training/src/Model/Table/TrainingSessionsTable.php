@@ -609,11 +609,10 @@ class TrainingSessionsTable extends ControllerActionTable
         $trainerType = '';
         $entity = $obj;
 
-        // (is_guardian == 1 or (is_staff == 0, is_student == 0, is_guardian == 0)) == OTHERS
-        if ($entity->user->is_guardian == 1 || ($entity->user->is_staff == 0 && $entity->user->is_student == 0 && $entity->user->is_guardian == 0)) {
-            $trainerType = self::OTHERS;
-        } else if ($entity->user->is_staff == 1) { // STAFF
+        if ($entity->user->is_staff == 1) { // STAFF
             $trainerType = self::STAFF;
+        } else {
+            $trainerType = self::OTHERS;
         }
 
         return $trainerType;

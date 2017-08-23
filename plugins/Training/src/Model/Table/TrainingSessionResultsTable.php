@@ -41,7 +41,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $process = function($model, $entity) use ($data) {
         	$sessionId = $data[$model->alias()]['training_session_id'];
 			$resultTypeId = $data[$model->alias()]['result_type'];
-			$trainees = $data[$model->alias()]['trainees'];
+			$trainees = array_key_exists('trainees', $data[$model->alias()]) ? $data[$model->alias()]['trainees'] : [];
 
 			$newEntities = [];
 			$deleteIds = [];
@@ -103,32 +103,15 @@ class TrainingSessionResultsTable extends ControllerActionTable
         return $process;
 	}
 
-	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
-	{
-		// To manually clear all records in training_session_trainee_results when delete
-		$TraineeResults = $this->Sessions->TraineeResults;
-		$TraineeResults->deleteAll([
-			$TraineeResults->aliasField('training_session_id') => $entity->training_session_id
-		]);
-		// End
-
-		// To manually delete from records and transitions table
-		$this->attachWorkflow = $this->controller->Workflow->attachWorkflow;
-		if ($this->attachWorkflow) {
-			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-			if (!empty($workflowRecord)) {
-				$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
-				$workflowRecord = $WorkflowRecords->get($workflowRecord->id);
-				$WorkflowRecords->delete($workflowRecord);
-			}
-		}
-		// End
-
-		$this->Alert->success('general.delete.success');
-
-		$event->stopPropagation();
-		return $this->controller->redirect($this->url('index'));
-	}
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // To manually clear all records in training_session_trainee_results when delete
+        $TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+        $TraineeResults->deleteAll([
+            $TraineeResults->aliasField('training_session_id') => $entity->training_session_id
+        ]);
+        // End
+    }
 
 	public function onGetTrainingCourse(Event $event, Entity $entity)
 	{

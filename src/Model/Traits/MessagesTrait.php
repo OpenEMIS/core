@@ -246,6 +246,7 @@ trait MessagesTrait
             'education_programme' => 'Education Programme',
             'education_grade' => 'Education Grade',
             'staff_id' => 'Home Room Teacher',
+            'secondary_staff_id' => 'Secondary Home Room Teacher',
             'class' => 'Class',
             'single_grade_field' => 'Single Grade Classes',
             'multi_grade_field' => 'Class Grades',
@@ -837,6 +838,9 @@ trait MessagesTrait
                 'name' => [
                     'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
                 ],
+                'staff_id' => [
+                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Home Room Teacher cannot be the same person.'
+                ]
             ],
 
             'InstitutionProgrammes' => [
