@@ -330,8 +330,8 @@ class AreasTable extends ControllerActionTable
         $areaCondition = [];
         foreach ($authorisedAreas as $area) {
             $areaCondition[] = [
-                $$authorisedAreaIds->aliasField('lft').' >= ' => $area['lft'],
-                $$authorisedAreaIds->aliasField('rght').' <= ' => $area['rght']
+                $this->aliasField('lft').' >= ' => $area['lft'],
+                $this->aliasField('rght').' <= ' => $area['rght']
             ];
         }
         if (!empty($authorisedAreas)) {
@@ -339,7 +339,7 @@ class AreasTable extends ControllerActionTable
                 ->where(['OR' => $areaCondition])
                 ->toArray();
         } else {
-            $authorisedAreaIds = [1];
+            $authorisedAreaIds = [];
         }
 
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
@@ -359,7 +359,7 @@ class AreasTable extends ControllerActionTable
             ->hydrate(false)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected, $isSuperAdmin) {
                 $results = $results->toArray();
-                $this->unsetEmptyArr($results, $authorisedAreaIds, $selected, !$isSuperAdmin);
+                $this->unsetEmptyArr($results, $authorisedAreaIds, $selected, $isSuperAdmin);
                 $order = array_column($results, 'order');
                 array_multisort($order, SORT_ASC, $results);
                 unset($order);
@@ -378,7 +378,7 @@ class AreasTable extends ControllerActionTable
             if (isset($value['id'])) {
                 if (!in_array($value['id'], $authorisedAreaIds) && !$superAdmin) {
                     $value['disabled'] = true;
-                } else {
+                } elseif (!$superAdmin) {
                     $authorisedAreaIds = array_merge($authorisedAreaIds, array_column($value['children'], 'id'));
                 }
                 if ($value['id'] == $selected) {
