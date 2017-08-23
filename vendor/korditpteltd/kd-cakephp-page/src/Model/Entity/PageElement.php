@@ -240,7 +240,7 @@ class PageElement
 
     public function getLabel()
     {
-        return __($this->label);
+        return is_array($this->label) ? $this->label : __($this->label);
     }
 
     public function setLabel($label)
