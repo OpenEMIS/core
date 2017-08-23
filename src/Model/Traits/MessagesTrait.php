@@ -780,6 +780,9 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ]
         ],
+        'BodyMasses' => [
+            'dateNotWithinPeriod' => 'Date should be within %s and %s'
+        ],
 
         // Validation Messages
         'Institution' => [
@@ -1143,7 +1146,15 @@ trait MessagesTrait
                 'code' => [
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
-            ]
+            ],
+            'BodyMasses' => [
+                'height' => [
+                    'validHeight' => 'Height must be within 0 and 3 meter',
+                ],
+                'weight' => [
+                    'validWeight' => 'Weight must be within 0 and 500 kilogram',
+                ],
+            ],
         ],
         'User' => [
             'Users' => [
