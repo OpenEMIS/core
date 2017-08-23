@@ -168,6 +168,8 @@ class InstitutionsTable extends ControllerActionTable
             'API' => ['index', 'view']
         ]);
 
+        $this->addBehavior('ControllerAction.Image');
+
         $this->classificationOptions = [
             self::ACADEMIC => 'Academic Institution',
             self::NON_ACADEMIC => 'Non-Academic Institution'
@@ -492,7 +494,9 @@ class InstitutionsTable extends ControllerActionTable
         }
 
         $this->field('logo_name', ['visible' => false]);
-        $this->field('logo_content', ['type' => 'image']);
+        if ($this->action != 'index') {
+            $this->field('logo_content', ['type' => 'image']);
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -604,12 +608,18 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->Session->delete('Institutions.id');
 
+        $plugin = $this->controller->plugin;
+        $name = $this->controller->name;
+        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
+        $imageDefault = 'fa fa-image';
+        $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+
         $this->setFieldOrder([
-            'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
 
         $this->setFieldVisible(['index'], [
-            'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
@@ -837,6 +847,7 @@ class InstitutionsTable extends ControllerActionTable
 
          $this->setFieldOrder([
             'information_section',
+            'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
             'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
