@@ -34,7 +34,7 @@ class POCOR4148 extends AbstractMigration
             ])
             ->addColumn('comments', 'text', [
                 'default' => null,
-                'null' => false
+                'null' => true
             ])
             ->addColumn('student_id', 'integer', [
                 'default' => null,
@@ -123,7 +123,7 @@ class POCOR4148 extends AbstractMigration
             ])
             ->addColumn('comments', 'text', [
                 'default' => null,
-                'null' => false
+                'null' => true
             ])
             ->addColumn('student_id', 'integer', [
                 'default' => null,
