@@ -50,6 +50,11 @@ class ImageBehavior extends Behavior
             if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
                 $phpResourceFile = $photoData->Users->photo_content;
             }
+        } else if ($model->table() == 'institutions') {
+            $photoData = $model->get($idKeys);
+            if ($photoData->has('logo_content')) {
+                $phpResourceFile = $photoData->logo_content;
+            }
         }
 
         if (is_resource($phpResourceFile)) {
