@@ -212,21 +212,6 @@ class BodyMassesController extends PageController
             ->setOptions($periodOptions);
         // end Academic Period Field
 
-        // Date field
-        $date = !empty($requestData['BodyMasses']['date']) ? $requestData['BodyMasses']['date']: new Date();
-        $page->get('date')->setValue($date);
-        // end Date field
-
-        // Height field
-        $height = !empty($requestData['BodyMasses']['height']) ? $requestData['BodyMasses']['height']: null;
-        $page->get('height')->setValue($height);
-        // end Height field
-
-        // Weight field
-        $weight = !empty($requestData['BodyMasses']['weight']) ? $requestData['BodyMasses']['weight']: null;
-        $page->get('weight')->setValue($weight);
-        // end Weight field
-
         $page->get('body_mass_index')->setControlType('hidden');
 
         parent::add();
