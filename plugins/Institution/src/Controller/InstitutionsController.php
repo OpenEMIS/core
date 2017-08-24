@@ -542,8 +542,8 @@ class InstitutionsController extends AppController
                 if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
                         $ClassTable = TableRegistry::get('Institution.InstitutionClasses');
-                        $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id']]);
-                        if ($classRecord->staff_id != $userId) {
+                        $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id', 'secondary_staff_id']]);
+                        if ($userId != $classRecord->staff_id && $userId != $classRecord->secondary_staff_id) {
                             $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                             return $this->redirect($url);
                         }
