@@ -17,20 +17,21 @@ class EducationSubjectsTable extends ControllerActionTable
 {
     use HtmlTrait;
 
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
-		parent::initialize($config);
-		$this->addBehavior('Education.Setup');
-		$this->hasMany('InstitutionSubjects',			['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionSubjectStudents',	['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'dependent' => true]);
-		$this->belongsToMany('EducationGrades', [
-			'className' => 'Education.EducationGrades',
-			'joinTable' => 'education_grades_subjects',
-			'foreignKey' => 'education_subject_id',
-			'targetForeignKey' => 'education_grade_id',
-			'through' => 'Education.EducationGradesSubjects',
-			'dependent' => true
-		]);
+        parent::initialize($config);
+        $this->addBehavior('Education.Setup');
+        $this->hasMany('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ReportCardSubjects', ['className' => 'ReportCard.ReportCardSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('EducationGrades', [
+            'className' => 'Education.EducationGrades',
+            'joinTable' => 'education_grades_subjects',
+            'foreignKey' => 'education_subject_id',
+            'targetForeignKey' => 'education_grade_id',
+            'through' => 'Education.EducationGradesSubjects',
+            'dependent' => true
+        ]);
         $this->belongsToMany('FieldOfStudies', [
             'className' => 'Education.EducationFieldOfStudies',
             'joinTable' => 'education_subjects_field_of_studies',
@@ -41,7 +42,7 @@ class EducationSubjectsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
         $this->setDeleteStrategy('restrict');
-	}
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -117,7 +118,7 @@ class EducationSubjectsTable extends ControllerActionTable
         return $fieldOfStudiesOptions;
     }
 
-    public function onGetCustomFieldOfStudiesElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomFieldOfStudiesElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $cellCount = 0;
         $tableHeaders = [__('Field of Studies')];

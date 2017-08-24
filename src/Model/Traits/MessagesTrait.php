@@ -246,6 +246,7 @@ trait MessagesTrait
             'education_programme' => 'Education Programme',
             'education_grade' => 'Education Grade',
             'staff_id' => 'Home Room Teacher',
+            'secondary_staff_id' => 'Secondary Home Room Teacher',
             'class' => 'Class',
             'single_grade_field' => 'Single Grade Classes',
             'multi_grade_field' => 'Class Grades',
@@ -780,6 +781,9 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ]
         ],
+        'BodyMasses' => [
+            'dateNotWithinPeriod' => 'Date should be within %s and %s'
+        ],
 
         // Validation Messages
         'Institution' => [
@@ -834,6 +838,9 @@ trait MessagesTrait
                 'name' => [
                     'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
                 ],
+                'staff_id' => [
+                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Home Room Teacher cannot be the same person.'
+                ]
             ],
 
             'InstitutionProgrammes' => [
@@ -1143,7 +1150,15 @@ trait MessagesTrait
                 'code' => [
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
-            ]
+            ],
+            'BodyMasses' => [
+                'height' => [
+                    'validHeight' => 'Height must be within 0 and 3 metre',
+                ],
+                'weight' => [
+                    'validWeight' => 'Weight must be within 0 and 500 kilogram',
+                ],
+            ],
         ],
         'User' => [
             'Users' => [
