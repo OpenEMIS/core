@@ -78,7 +78,11 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     Controller.selectedPeriodStatus = Controller.periodOptions[0].editable;
                     if (Controller.itemOptions.length > 0) {
                         Controller.selectedItem = Controller.periodOptions[0].competency_items[0].id;
+                    } else {
+                        AlertSvc.warning(Controller, "Please setup competency items for the selected period");
                     }
+                } else {
+                    AlertSvc.warning(Controller, "Please setup competency periods for the selected template");
                 }
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
                     Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
@@ -167,12 +171,16 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                         rowData.push(row);
                     });
                     Controller.gridOptions.api.setRowData(rowData);
-                    if (response.data.length > 4) {
-                        AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                    } else {
-                        Controller.gridOptions.api.sizeColumnsToFit();
-                        AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
+
+                    if (angular.isDefined(item)) {
+                        if (response.data.length > 4) {
+                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+                        } else {
+                            AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
+                        }
                     }
+
+                    Controller.gridOptions.api.sizeColumnsToFit();
                 }, function(error){
                     console.log(error);
                 });
