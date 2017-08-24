@@ -1,10 +1,12 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\I18n\Date;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
@@ -53,7 +55,7 @@ class BodyMassesTable extends AppTable
                     } else {
                         return true;
                     }
-                },
+                }
             ])
         ;
     }
@@ -61,5 +63,16 @@ class BodyMassesTable extends AppTable
     public function findIndex(Query $query, array $options)
     {
         return $query->where(['user_id' => $options['querystring']['student_id']]);
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (!empty($data['height']) && !empty($data['weight'])) {
+            $height = $data['height'];
+            $weight = $data['weight'];
+
+            $bmi = round(($weight / ($height * $height)), 2);
+            $data['body_mass_index'] = $bmi;
+        }
     }
 }
