@@ -78,18 +78,23 @@ class POCOR4156 extends AbstractMigration
         // end of user_body_masses
 
         // security_functions
+        // update the order
+        $updateOrder = 'UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 95';
+        $this->execute($updateOrder);
+
+        // insert permission for label
         $data = [
-            'id' => '1061',
-            'name' => 'Counselling',
-            'controller' => 'Counsellings',
+            'id' => 2035,
+            'name' => 'Body Mass',
+            'controller' => 'BodyMasses',
             'module' => 'Institutions',
-            'category' => 'Students',
-            'parent_id' => 8,
-            '_view' => 'index|view|download',
+            'category' => 'Students - Health',
+            'parent_id' => 2000,
+            '_view' => 'index|view',
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => '1061',
+            'order' => 95,
             'visible' => 1,
             'created_user_id' => '1',
             'created' => date('Y-m-d H:i:s')
@@ -105,5 +110,10 @@ class POCOR4156 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE body_masses');
+        $this->execute('DELETE FROM security_functions WHERE id = 2035');
+
+        // update the order back
+        $updateOrder = 'UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 96';
+        $this->execute($updateOrder);
     }
 }

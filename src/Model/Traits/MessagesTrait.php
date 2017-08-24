@@ -1153,7 +1153,7 @@ trait MessagesTrait
             ],
             'BodyMasses' => [
                 'height' => [
-                    'validHeight' => 'Height must be within 0 and 3 meter',
+                    'validHeight' => 'Height must be within 0 and 3 metre',
                 ],
                 'weight' => [
                     'validWeight' => 'Weight must be within 0 and 500 kilogram',

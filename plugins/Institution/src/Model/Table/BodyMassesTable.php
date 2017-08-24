@@ -57,4 +57,9 @@ class BodyMassesTable extends AppTable
             ])
         ;
     }
+
+    public function findIndex(Query $query, array $options)
+    {
+        return $query->where(['user_id' => $options['querystring']['student_id']]);
+    }
 }
