@@ -1085,7 +1085,6 @@ class InstitutionsTable extends ControllerActionTable
             $debugInfo = $this->alias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
 
             Log::write('debug', $debugInfo);
-            Log::write('debug', $entity);
             Log::write('debug', $options);
             Log::write('debug', 'End of monitoring year opened');
         }
@@ -1183,7 +1182,7 @@ class InstitutionsTable extends ControllerActionTable
         $controllerName = $this->controller->name;
 
         $value = $this->defaultLogoView;
-        
+
         return $value;
     }
 
