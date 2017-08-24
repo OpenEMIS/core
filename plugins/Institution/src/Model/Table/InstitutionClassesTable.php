@@ -73,7 +73,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'ClassStudents' => ['view', 'edit'],
             'StudentCompetencies' => ['view'],
             'StudentCompetencyComments' => ['view'],
-            'OpenEMIS_Classroom' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['index', 'view'],
             'ReportCardComments' => ['index']
         ]);
 
