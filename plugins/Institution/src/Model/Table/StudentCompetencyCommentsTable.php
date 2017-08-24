@@ -6,6 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
 class StudentCompetencyCommentsTable extends ControllerActionTable
@@ -57,6 +58,18 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        // set breadcrumbs
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $indexUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentCompetencies',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+        ];
+        $oldCrumbTitle = Inflector::humanize(Inflector::underscore($this->request->param('action')));
+        $this->Navigation->substituteCrumb($oldCrumbTitle, 'Student Competencies', $indexUrl);
+
         $this->classId = $this->getQueryString('class_id');
         $this->institutionId = $this->getQueryString('institution_id');
         $this->academicPeriodId = $this->getQueryString('academic_period_id');
