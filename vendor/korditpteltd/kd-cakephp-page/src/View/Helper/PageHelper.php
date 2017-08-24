@@ -398,6 +398,9 @@ EOT;
             }
 
             $label = $attr['label'];
+            if (is_array($label)) {
+                $label = $label['text'];
+            }
             $value = '';
             if (array_key_exists('value', $attr['attributes'])) {
                 $value = $attr['attributes']['value'];
