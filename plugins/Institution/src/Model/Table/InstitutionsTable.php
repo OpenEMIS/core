@@ -37,7 +37,7 @@ class InstitutionsTable extends ControllerActionTable
     const ACADEMIC = 1;
     const NON_ACADEMIC = 2;
 
-    private $defaultLogoView = "<div class='profile-image'><i class='fa fa-image'></i></div>";
+    private $defaultLogoView = "<div class='profile-image'><i class='fa kd-institutions'></i></div>";
     private $defaultImgIndexClass = "logo-thumbnail";
     private $defaultImgViewClass= "logo-image";
     private $photoMessage = 'Advisable logo dimension 200 by 200';
@@ -611,7 +611,7 @@ class InstitutionsTable extends ControllerActionTable
         $plugin = $this->controller->plugin;
         $name = $this->controller->name;
         $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
-        $imageDefault = 'fa fa-image';
+        $imageDefault = 'fa kd-institutions';
         $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
 
         $this->setFieldOrder([
