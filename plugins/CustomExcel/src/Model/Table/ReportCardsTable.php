@@ -185,6 +185,29 @@ class ReportCardsTable extends AppTable
             if (!empty($entity) && $entity->has('student')) {
                 $birthdate = $entity->student->date_of_birth;
                 $entity->student->date_of_birth = $birthdate->format($dateFormat);
+
+                // POCOR-4156 body masses data
+                $reportCardStartDate = $extra['report_card_start_date'];
+                $reportCardEndDate = $extra['report_card_end_date'];
+                $studentId = $entity->student_id;
+
+                $BodyMasses = TableRegistry::get('Institution.BodyMasses');
+                $bodyMassData = $BodyMasses->find()
+                    ->where([
+                        $BodyMasses->aliasField('user_id') => $studentId,
+                        $BodyMasses->aliasField('date >= ') => $reportCardStartDate,
+                        $BodyMasses->aliasField('date <= ') => $reportCardEndDate,
+                    ])
+                    ->order([
+                        $BodyMasses->aliasField('date') => 'DESC'
+                    ])
+                    ->first();
+
+                if (!empty($bodyMassData)) {
+                    $entity->body_mass = $bodyMassData;
+                    $entity->body_mass->date = $entity->body_mass->date->format($dateFormat);
+                }
+                // end POCOR-4156 body masses data
             }
 
             return $entity;

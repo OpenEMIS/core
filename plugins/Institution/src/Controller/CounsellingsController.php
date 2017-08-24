@@ -27,6 +27,7 @@ class CounsellingsController extends PageController
         parent::beforeFilter($event);
 
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        $encodedStudentId = $this->paramsEncode(['id' => $studentId]);
 
         $page = $this->Page;
 
@@ -34,7 +35,7 @@ class CounsellingsController extends PageController
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
         $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $encodedInstitutionId]);
-        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $encodedInstitutionId]);
+        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $encodedStudentId]);
         $page->addCrumb('Counselling');
 
         $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id

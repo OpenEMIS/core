@@ -93,10 +93,8 @@ class AdvanceSearchBehavior extends Behavior
                         if ($relatedModelTable == 'areas' || $relatedModelTable == 'area_administratives') {
                             switch ($relatedModelTable) {
                                 case 'areas':
-                                    $authorisedAreaIds = array_keys($list);
                                     $filters[$key] = [
                                         'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
-                                        'authorisedAreas' => $authorisedAreaIds,
                                         'selected' => $selected,
                                         'type' => 'areapicker',
                                         'source_model' => 'Area.Areas'
@@ -106,7 +104,6 @@ class AdvanceSearchBehavior extends Behavior
                                 case 'area_administratives':
                                     $filters[$key] = [
                                         'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
-                                        'authorisedAreas' => [],
                                         'displayCountry' => $this->config('display_country'),
                                         'selected' => $selected,
                                         'type' => 'areapicker',

@@ -596,8 +596,8 @@ class InstitutionsController extends AppController
                 if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
                         $ClassTable = TableRegistry::get('Institution.InstitutionClasses');
-                        $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id']]);
-                        if ($classRecord->staff_id != $userId) {
+                        $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id', 'secondary_staff_id']]);
+                        if ($userId != $classRecord->staff_id && $userId != $classRecord->secondary_staff_id) {
                             $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                             return $this->redirect($url);
                         }
@@ -764,12 +764,13 @@ class InstitutionsController extends AppController
             $id = $session->read('Staff.Staff.id');
         }
         if (!empty($id)) {
-            $Users = TableRegistry::get('Preferences');
+            $Users = TableRegistry::get('Security.Users');
             $entity = $Users->get($id);
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
             $header = $name . ' - ' . __($crumb);
             $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+            $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
             $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             $this->Navigation->addCrumb($crumb);
             $this->set('contentHeader', $header);
@@ -821,10 +822,10 @@ class InstitutionsController extends AppController
         if ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'index') {
             if ($session->check('Institution.Institutions.search.key')) {
                 $search = $session->read('Institution.Institutions.search.key');
-                $session->delete('Institution.Institutions');
+                $session->delete('Institution.Institutions.id');
                 $session->write('Institution.Institutions.search.key', $search);
             } else {
-                $session->delete('Institution.Institutions');
+                $session->delete('Institution.Institutions.id');
             }
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
