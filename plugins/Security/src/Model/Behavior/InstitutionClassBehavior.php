@@ -37,7 +37,7 @@ class InstitutionClassBehavior extends Behavior
         if (!$this->checkAllClassesPermission($action)) {
             if ($this->checkMyClassesPermission($action)) {
                 $userId = $this->_table->Auth->user('id');
-                if ($userId != $entity->staff_id || $userId != $entity->secondary_staff_id) {
+                if ($userId != $entity->staff_id && $userId != $entity->secondary_staff_id) {
                     $urlParams = $this->_table->url('view');
                     $event->stopPropagation();
                     $this->_table->Alert->error('security.noAccess');
@@ -122,11 +122,12 @@ class InstitutionClassBehavior extends Behavior
                 if (!$this->checkAllClassesPermission($action)) {
                     if ($this->checkMyClassesPermission($action)) {
                         $userId = $this->_table->Auth->user('id');
-                        if ($userId != $entity->staff_id || $userId != $entity->secondary_staff_id) {
+                        if ($userId != $entity->staff_id && $userId != $entity->secondary_staff_id) {
                             $urlParams = $this->_table->ControllerAction->url('index');
                             $event->stopPropagation();
                             $this->_table->Alert->error('security.noAccess');
-                            return $this->_table->controller->redirect($urlParams);
+                            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $urlParams['institutionId'], 'action' => 'Institutions'];
+                            return $this->_table->controller->redirect($url);
                         }
                     }
                 }
@@ -137,7 +138,7 @@ class InstitutionClassBehavior extends Behavior
                     if ($this->checkMyClassesPermission('edit')) {
                         $userId = $this->_table->Auth->user('id');
                         // Remove the edit button from those records who does not belong to the user
-                        if ($userId != $entity->staff_id || $userId != $entity->secondary_staff_id) {
+                        if ($userId != $entity->staff_id && $userId != $entity->secondary_staff_id) {
                             if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['edit'])) {
                                 unset($extra['toolbarButtons']['edit']);
                             }
