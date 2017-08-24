@@ -14,6 +14,7 @@ class BodyMassesController extends PageController
 
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->Page->loadElementsFromTable($this->BodyMasses);
+        $this->Page->disable(['search']); // to disable the search function
     }
 
     public function beforeFilter(Event $event)
@@ -51,90 +52,136 @@ class BodyMassesController extends PageController
         $tabController = 'Students';
 
         // overviewTab
-        $overviewTab = $page->addTab('Overview');
-        $overviewTab->setTitle('Overview');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'Healths'
-        ];
-        $overviewTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'Healths', 'index'])) {
+            $overviewTab = $page->addTab('Overview');
+            $overviewTab->setTitle('Overview');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'Healths'
+            ];
+            $overviewTab->setUrl($url);
+        }
 
         // allergiesTab
-        $allergiesTab = $page->addTab('Allergies');
-        $allergiesTab->setTitle('Allergies');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'HealthAllergies'
-        ];
-        $allergiesTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'HealthAllergies', 'index'])) {
+            $allergiesTab = $page->addTab('Allergies');
+            $allergiesTab->setTitle('Allergies');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'HealthAllergies'
+            ];
+            $allergiesTab->setUrl($url);
+        }
 
         // consultationsTab
-        $consultationsTab = $page->addTab('Consultations');
-        $consultationsTab->setTitle('Consultations');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'HealthConsultations'
-        ];
-        $consultationsTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'HealthConsultations', 'index'])) {
+            $consultationsTab = $page->addTab('Consultations');
+            $consultationsTab->setTitle('Consultations');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'HealthConsultations'
+            ];
+            $consultationsTab->setUrl($url);
+        }
 
         // familiesTab
-        $familiesTab = $page->addTab('Families');
-        $familiesTab->setTitle('Families');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'HealthFamilies'
-        ];
-        $familiesTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'HealthFamilies', 'index'])) {
+            $familiesTab = $page->addTab('Families');
+            $familiesTab->setTitle('Families');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'HealthFamilies'
+            ];
+            $familiesTab->setUrl($url);
+        }
 
         // historiesTab
-        $historiesTab = $page->addTab('Histories');
-        $historiesTab->setTitle('Histories');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'HealthHistories'
-        ];
-        $historiesTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'HealthHistories', 'index'])) {
+            $historiesTab = $page->addTab('Histories');
+            $historiesTab->setTitle('Histories');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'HealthHistories'
+            ];
+            $historiesTab->setUrl($url);
+        }
 
         // immunizationsTab
-        $immunizationsTab = $page->addTab('Immunizations');
-        $immunizationsTab->setTitle('Immunizations');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'HealthImmunizations'
-        ];
-        $immunizationsTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'HealthImmunizations', 'index'])) {
+            $immunizationsTab = $page->addTab('Immunizations');
+            $immunizationsTab->setTitle('Immunizations');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'HealthImmunizations'
+            ];
+            $immunizationsTab->setUrl($url);
+        }
 
         // medicationsTab
-        $medicationsTab = $page->addTab('Medications');
-        $medicationsTab->setTitle('Medications');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'HealthMedications'
-        ];
-        $medicationsTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'HealthMedications', 'index'])) {
+            $medicationsTab = $page->addTab('Medications');
+            $medicationsTab->setTitle('Medications');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'HealthMedications'
+            ];
+            $medicationsTab->setUrl($url);
+        }
 
         // testsTab
-        $testsTab = $page->addTab('Tests');
-        $testsTab->setTitle('Tests');
-        $url = [
-            'plugin' => $tabPlugin,
-            'controller' => $tabController,
-            'action' => 'HealthTests'
-        ];
-        $testsTab->setUrl($url);
+        if ($this->AccessControl->check([$tabController, 'HealthTests', 'index'])) {
+            $testsTab = $page->addTab('Tests');
+            $testsTab->setTitle('Tests');
+            $url = [
+                'plugin' => $tabPlugin,
+                'controller' => $tabController,
+                'action' => 'HealthTests'
+            ];
+            $testsTab->setUrl($url);
+        }
 
         // bodyMassesTab
         $bodyMassesTab = $page->addTab('BodyMasses');
         $bodyMassesTab->setTitle('Body Mass');
+        $url = [
+                'plugin' => 'Institution',
+                'institutionId' => $encodedInstitutionId,
+                'controller' => 'BodyMasses',
+                'action' => 'index'
+            ];
+        $bodyMassesTab->setUrl($url);
         $bodyMassesTab->setActive('true');
         // end of set Tab
+
+        // set tooltip
+        $action = ['add', 'edit', 'view'];
+        if (in_array($this->request->params['action'], $action)) {
+            $page->get('height')->setLabel([
+                'escape' => false,
+                'class' => 'tooltip-desc',
+                'text' => __('Height') . $this->tooltipMessage(__('Within 0 to 3 metre'))
+            ]);
+
+            $page->get('weight')->setLabel([
+                'escape' => false,
+                'class' => 'tooltip-desc',
+                'text' => __('Weight') . $this->tooltipMessage(__('Within 0 to 500 kilogram'))
+            ]);
+
+            $page->get('body_mass_index')->setLabel([
+                'escape' => false,
+                'class' => 'tooltip-desc',
+                'text' => __('Body Mass Index') . $this->tooltipMessage(__('Weight / Height2'))
+            ]);
+        }
+        // end set tooltip
 
         // set queryString
         $page->setQueryString('institution_id', $institutionId);
@@ -172,25 +219,12 @@ class BodyMassesController extends PageController
 
         // Height field
         $height = !empty($requestData['BodyMasses']['height']) ? $requestData['BodyMasses']['height']: null;
-        $page->get('height')
-            ->setLabel([
-                'escape' => false,
-                'class' => 'tooltip-desc',
-                'text' => __('Height') . $this->tooltipMessage(__('Within 0 to 3 Meter'))
-            ])
-            ->setValue($height)
-        ;
+        $page->get('height')->setValue($height);
         // end Height field
 
         // Weight field
         $weight = !empty($requestData['BodyMasses']['weight']) ? $requestData['BodyMasses']['weight']: null;
-        $page->get('weight')
-            ->setLabel([
-                'escape' => false,
-                'class' => 'tooltip-desc',
-                'text' => __('Weight') . $this->tooltipMessage(__('Within 0 to 500 Kilogram'))
-            ])
-            ->setValue($weight);
+        $page->get('weight')->setValue($weight);
         // end Weight field
 
         $page->get('body_mass_index')->setControlType('hidden');
