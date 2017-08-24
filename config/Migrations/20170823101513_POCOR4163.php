@@ -27,7 +27,7 @@ class POCOR4163 extends AbstractMigration
      */
     public function up()
     {
-        $table = $this->table('competency_templates');
+        $table = $this->table('competency_criterias');
         $table->changeColumn('name', 'string', array('limit' => 500))
               ->save();
     }
@@ -37,7 +37,7 @@ class POCOR4163 extends AbstractMigration
      */
     public function down()
     {
-        $table = $this->table('competency_templates');
+        $table = $this->table('competency_criterias');
         $table->changeColumn('name', 'string', array('limit' => 250))
               ->save();
     }
