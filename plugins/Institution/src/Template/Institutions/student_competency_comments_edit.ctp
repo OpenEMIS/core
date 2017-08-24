@@ -5,41 +5,30 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
-<style type='text/css'>
-    .ag-grid-duration {
-        width: 50%;
-        border: none;
-        background-color: inherit;
-        text-align: center;
-    }
-
-    .ag-grid-dir-ltr {
-        direction: ltr !important;
-    }
-</style>
 <?= $this->Html->link('<i class="fa kd-back"></i>', $viewUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escapeTitle' => false]) ?>
 
 <?= $this->Html->link('<i class="fa kd-lists"></i>', $indexUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('List'), 'escapeTitle' => false]) ?>
 <?php
 $this->end();
-$this->element('nav_tabs');
 $this->start('panelBody');
 ?>
-<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetencyCommentsCtrl as InstitutionStudentCompetencyCommentsController" ng-init="InstitutionStudentCompetencyCommentsController.classId=<?= $classId ?>; InstitutionStudentCompetencyCommentsController.competencyTemplateId=<?=$competencyTemplateId ?>;">
-    <div class="alert {{InstitutionStudentCompetencyCommentsController.class}}" ng-hide="InstitutionStudentCompetencyCommentsController.message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionStudentCompetencyCommentsController.message}}
-    </div>
-    <div class="input string required">
-        <label><?= __('Class Name') ?></label>
-        <input ng-model="InstitutionStudentCompetencyCommentsController.className" type="text" ng-init="InstitutionStudentCompetencyCommentsController.className='';" disabled="disabled">
-    </div>
-    <div class="input string required">
-        <label><?= __('Academic Period') ?></label>
-        <input ng-model="InstitutionStudentCompetencyCommentsController.academicPeriodName" type="text" disabled="disabled">
-    </div>
-    <div class="input string required">
-        <label><?= __('Competency Template') ?></label>
-        <input ng-model="InstitutionStudentCompetencyCommentsController.competencyTemplateName" type="text" disabled="disabled">
+<form accept-charset="utf-8" id="content-main-form" class="ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetencyCommentsCtrl as InstitutionStudentCompetencyCommentsController" ng-init="InstitutionStudentCompetencyCommentsController.classId=<?= $classId ?>; InstitutionStudentCompetencyCommentsController.competencyTemplateId=<?=$competencyTemplateId ?>;">
+    <div class="form-horizontal">
+        <div class="alert {{InstitutionStudentCompetencyCommentsController.class}}" ng-hide="InstitutionStudentCompetencyCommentsController.message == null">
+            <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionStudentCompetencyCommentsController.message}}
+        </div>
+        <div class="input string required">
+            <label><?= __('Class Name') ?></label>
+            <input ng-model="InstitutionStudentCompetencyCommentsController.className" type="text" ng-init="InstitutionStudentCompetencyCommentsController.className='';" disabled="disabled">
+        </div>
+        <div class="input string required">
+            <label><?= __('Academic Period') ?></label>
+            <input ng-model="InstitutionStudentCompetencyCommentsController.academicPeriodName" type="text" disabled="disabled">
+        </div>
+        <div class="input string required">
+            <label><?= __('Competency Template') ?></label>
+            <input ng-model="InstitutionStudentCompetencyCommentsController.competencyTemplateName" type="text" disabled="disabled">
+        </div>
     </div>
     <div class="clearfix">
     </div>

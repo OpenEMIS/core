@@ -72,6 +72,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['type' => 'hidden']);
+        $this->field('secondary_staff_id', ['type' => 'hidden']);
         $this->field('institution_shift_id', ['type' => 'hidden']);
         $this->field('modified_user_id', ['type' => 'hidden']);
         $this->field('modified', ['type' => 'hidden']);
@@ -344,9 +345,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             ->find()
             ->where([
                 $CompetencyPeriods->aliasField('academic_period_id') => $this->academicPeriodId,
-                $CompetencyPeriods->aliasField('competency_template_id') => $this->competencyTemplateId,
-                $CompetencyPeriods->aliasField('date_enabled <= ') => $today,
-                $CompetencyPeriods->aliasField('date_disabled >= ') => $today
+                $CompetencyPeriods->aliasField('competency_template_id') => $this->competencyTemplateId
             ])
             ->all();
 
