@@ -139,7 +139,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $data['name'] = '';
+        $data['name'] = $data['code'];
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -376,6 +376,7 @@ class InstitutionLandsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
+        $entity->name = $entity->code;
         $extra['excludedModels'] = [
             $this->CustomFieldValues->alias(),
             $this->InstitutionBuildings->alias()
