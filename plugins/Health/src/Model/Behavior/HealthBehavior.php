@@ -78,6 +78,18 @@ class HealthBehavior extends Behavior {
             ];
         }
 
+        if ($name == 'Students' && $controller->AccessControl->check(['BodyMasses', 'index'])) {
+            // currently only support Institution student.
+            $session = $this->_table->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+            $params = $this->_table->paramsEncode(['id' => $institutionId]);
+
+            $tabElements['BodyMasses'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'BodyMasses', 'action' => 'index'],
+                'text' => __('Body Mass')
+            ];
+        }
+
 		$controller->set('tabElements', $tabElements);
 		$controller->set('selectedAction', $model->alias());
 	}

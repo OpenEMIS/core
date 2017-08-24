@@ -241,7 +241,11 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 } else {
                     // don't allow input if student is not enrolled
                     var cellValue = '';
+<<<<<<< HEAD
                     if (angular.isDefined(params.value) && params.value.length != 0 && params.value != 0) {
+=======
+                    if (params.value != undefined && params.value != 0 && params.value.length != 0) {
+>>>>>>> 0173c5ad2956ae6d98b083e35d04292c3dff4a80
                         cellValue = gradingOptions[params.value]['name'];
                         if (gradingOptions[params.value]['code'].length > 0) {
                             cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;

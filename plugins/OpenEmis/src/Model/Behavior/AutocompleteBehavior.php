@@ -21,7 +21,7 @@ class AutocompleteBehavior extends Behavior {
 			$target = $attr['target'];
 
 			$subject->includes['autocomplete'] = [
-				'include' => true, 
+				'include' => true,
 				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
 				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
@@ -30,8 +30,13 @@ class AutocompleteBehavior extends Behavior {
 			if (array_key_exists('fieldName', $attr)) {
 				$fieldName = $attr['fieldName'];
 			}
-			
+
 			$options['type'] = 'text';
+
+			// POCOR-4062 maxLength auto set by database type value, so extend the maxLength to 30 char by default, unless specified.
+			$options['maxlength'] = array_key_exists('maxlength', $attr) ? $attr['maxlength'] : 30;
+			// end POCOR-4062
+
 			$options['class'] = 'autocomplete';
 			$options['autocomplete-url'] = $url;
 			// text to show for no results

@@ -250,7 +250,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings'];
+        $institutionControllers = ['Counsellings', 'BodyMasses'];
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -698,7 +698,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']],
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'BodyMasses.index', 'BodyMasses.add', 'BodyMasses.edit', 'BodyMasses.view', 'BodyMasses.delete']],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {

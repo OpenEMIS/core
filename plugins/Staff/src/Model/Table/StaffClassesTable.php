@@ -11,99 +11,113 @@ use Cake\ORM\TableRegistry;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
 
-class StaffClassesTable extends ControllerActionTable {
-	use MessagesTrait;
+class StaffClassesTable extends ControllerActionTable
+{
+    use MessagesTrait;
 
     private $InstitutionClassStudents;
 
-	public function initialize(array $config) {
-		$this->table('institution_classes');
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        $this->table('institution_classes');
+        parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-		$this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('SecondaryUser', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
 
         /*
             note that in DirectoriesController
             if ($model instanceof \Staff\Model\Table\StaffClassesTable) {
             $this->toggle('add', false);
          */
-		$this->toggle('edit', false);
-		$this->toggle('remove', false);
-	}
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
+    }
 
-	// Academic Period	Institution	Grade	Class	Male Students	Female Students
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		$this->fields['class_number']['visible'] = false;
-		$this->fields['institution_shift_id']['visible'] = false;
+    // Academic Period	Institution	Grade	Class	Male Students	Female Students
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields['class_number']['visible'] = false;
+        $this->fields['institution_shift_id']['visible'] = false;
+        $this->fields['secondary_staff_id']['visible'] = false;
 
-		$this->field('male_students', []);
-		$this->field('female_students', []);
+        $this->field('male_students', []);
+        $this->field('female_students', []);
         $this->field('total_students', []);
 
-		$this->setFieldOrder([
-			'academic_period_id',
-			'institution_id',
-			'name',
-			'male_students',
-			'female_students',
+        $this->setFieldOrder([
+            'academic_period_id',
+            'institution_id',
+            'name',
+            'male_students',
+            'female_students',
             'total_students'
-		]);
-	}
+        ]);
+    }
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		$query->contain([
-			'AcademicPeriods',
-			'Institutions',
-		]);
-	}
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'AcademicPeriods',
+            'Institutions',
+        ]);
+    }
 
     public function onGetMaleStudents(Event $event, Entity $entity)
     {
-        if (!isset($this->InstitutionClassStudents)) $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        if (!isset($this->InstitutionClassStudents)) {
+            $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        }
         $count = $this->InstitutionClassStudents->getMaleCountByClass($entity->id);
         return $count.' ';
     }
 
     public function onGetFemaleStudents(Event $event, Entity $entity)
     {
-        if (!isset($this->InstitutionClassStudents)) $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        if (!isset($this->InstitutionClassStudents)) {
+            $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        }
         $count = $this->InstitutionClassStudents->getFemaleCountByClass($entity->id);
         return $count.' ';
     }
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
-        if (!isset($this->InstitutionClassStudents)) $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        if (!isset($this->InstitutionClassStudents)) {
+            $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        }
         $count = $this->InstitutionClassStudents->getMaleCountByClass($entity->id) + $this->InstitutionClassStudents->getFemaleCountByClass($entity->id);
         return $count.' ';
     }
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		if (array_key_exists('view', $buttons)) {
-			$institutionId = $entity->institution->id;
-			$url = [
-				'plugin' => 'Institution',
-				'controller' => 'Institutions',
-				'action' => 'Classes',
-				'view',
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        if (array_key_exists('view', $buttons)) {
+            $institutionId = $entity->institution->id;
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Classes',
+                'view',
                 $this->paramsEncode(['id' => $entity->id]),
-				'institution_id' => $institutionId,
-			];
-			$buttons['view']['url'] = $url;
-		}
-		return $buttons;
-	}
+                'institution_id' => $institutionId,
+            ];
+            $buttons['view']['url'] = $url;
+        }
+        return $buttons;
+    }
 
-	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
-		$options = ['type' => 'staff'];
-		$tabElements = $this->controller->getCareerTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Classes');
-	}
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $options = ['type' => 'staff'];
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Classes');
+    }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -117,7 +131,7 @@ class StaffClassesTable extends ControllerActionTable {
         $selectedAcademicPeriod = '';
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
             'message' => '{{label}} - ' . $this->getMessage('StaffClasses.notActiveHomeroomTeacher'),
-            'callable' => function($id) use ($InstitutionStaff, $staffId, $institutionId) {
+            'callable' => function ($id) use ($InstitutionStaff, $staffId, $institutionId) {
                 $allRelevantStaffRecords = $InstitutionStaff
                     ->find()
                     ->find('staffRecords',
@@ -152,17 +166,16 @@ class StaffClassesTable extends ControllerActionTable {
         $extra['classOptions'] = $classOptions;
     }
 
-    private function getClassOptions() {
+    private function getClassOptions()
+    {
         $classOptions = [];
-        if (
-            array_key_exists($this->alias(), $this->request->data)
+        if (array_key_exists($this->alias(), $this->request->data)
              && array_key_exists('academic_period_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['academic_period_id']))
-        {
+             && !empty($this->request->data[$this->alias()]['academic_period_id'])) {
             $classOptions = $this->find()
                 ->contain(['Users' => function ($q) {
                         return $q->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name']);
-                    }
+                }
                 ])
                 ->where([
                     $this->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
