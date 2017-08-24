@@ -182,6 +182,28 @@ class POCOR4148 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+
+        // security_functions
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 59');
+
+        $data = [
+            'id' => '1062',
+            'name' => 'Competency Comments',
+            'controller' => 'Institutions',
+            'module' => 'Institutions',
+            'category' => 'Students',
+            'parent_id' => 8,
+            '_view' => 'StudentCompetencyComments.index|StudentCompetencyComments.view',
+            '_edit' => 'StudentCompetencyComments.edit',
+            'order' => '60',
+            'visible' => 1,
+            'created_user_id' => '1',
+            'created' => date('Y-m-d H:i:s')
+        ];
+
+        $table = $this->table('security_functions');
+        $table->insert($data);
+        $table->saveData();
     }
 
     // rollback
@@ -192,5 +214,7 @@ class POCOR4148 extends AbstractMigration
 
         $this->execute('DROP TABLE institution_competency_item_comments');
         $this->execute('DROP TABLE institution_competency_period_comments');
+        $this->execute('DELETE FROM security_functions WHERE `id` = 1062');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 59');
     }
 }
