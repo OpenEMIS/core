@@ -137,15 +137,17 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         var ResultsSvc = this;
 
         // comments column
-        var extra = {};
-        var columnDef = {
-            headerName: "Comments",
-            field: "comments",
-            filterParams: filterParams,
-            pinned: direction
-        };
-        columnDef = ResultsSvc.renderText(columnDef, extra);
-        columnDefs.push(columnDef);
+        if (angular.isDefined(item)) {
+            var extra = {};
+            var columnDef = {
+                headerName: "Comments",
+                field: "comments",
+                filterParams: filterParams,
+                pinned: direction
+            };
+            columnDef = ResultsSvc.renderText(columnDef, extra);
+            columnDefs.push(columnDef);
+        }
 
         angular.forEach(criterias, function(criteria, key) {
             if (criteria.competency_item_id == item) {
