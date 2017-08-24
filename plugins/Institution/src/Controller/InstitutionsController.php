@@ -544,16 +544,16 @@ class InstitutionsController extends AppController
             ];
             $this->Navigation->addCrumb('Student Competencies', $indexUrl);
 
-            // if (!$this->AccessControl->isAdmin() && $institutionId) {
-            //     $userId = $this->Auth->user('id');
-            //     $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-            //     $AccessControl = $this->AccessControl;
-            //     $action = 'edit';
-            //     if (!$AccessControl->check(['Institutions', 'StudentCompetencies', $action], $roles)) {
-            //         $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
-            //         return $this->redirect($url);
-            //     }
-            // }
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                $action = 'edit';
+                if (!$AccessControl->check(['Institutions', 'StudentCompetencyComments', $action], $roles)) {
+                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
+                    return $this->redirect($url);
+                }
+            }
 
             $tabElements = $this->getCompetencyTabElements();
             $queryString = $this->ControllerAction->getQueryString();
