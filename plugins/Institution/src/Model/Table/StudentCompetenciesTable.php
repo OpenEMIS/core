@@ -460,16 +460,18 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         $tableHeaders = [];
         $tableCells = [];
+        $colOffset = 0;
 
         // Build table header
         $tableHeaders[] = __('OpenEMIS ID');
         $tableHeaders[] = __('Student Name');
         $tableHeaders[] = __('Student Status');
-        $tableHeaders[] = __('Comments');
-        $colOffset = 4; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status, 3 -> Comments
 
         $competencyItemEntity = null;
         if (!is_null($this->competencyItemId)) {
+            $tableHeaders[] = __('Comments');
+            $colOffset = 4; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status, 3 -> Comments
+
             $CompetencyItems = TableRegistry::get('Competency.CompetencyItems');
             $competencyItemEntity = $CompetencyItems
                 ->find()
@@ -602,11 +604,12 @@ class StudentCompetenciesTable extends ControllerActionTable
                         $rowData[] = $userObj->openemis_no;
                         $rowData[] = $userObj->name;
                         $rowData[] = $studentStatusObj->name;
-                        $rowData[] = $comments;
                     } else if ($action == 'edit') {
                         $rowData[] = $userObj->openemis_no . $rowInput;
                         $rowData[] = $userObj->name;
                         $rowData[] = $studentStatusObj->name;
+                    }
+                    if (!is_null($competencyItemEntity)) {
                         $rowData[] = $comments;
                     }
 
