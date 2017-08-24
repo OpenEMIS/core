@@ -178,7 +178,7 @@ class BodyMassesController extends PageController
             $page->get('body_mass_index')->setLabel([
                 'escape' => false,
                 'class' => 'tooltip-desc',
-                'text' => __('Body Mass Index') . $this->tooltipMessage(__('Weight / Height2'))
+                'text' => __('Body Mass Index') . $this->tooltipMessage(__('Weight / Height<sup>2</sup>'))
             ]);
         }
         // end set tooltip
