@@ -263,7 +263,12 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
 
     function renderText(cols, extra) {
         cols = angular.merge(cols, {
-            cellClass: 'oe-cell-highlight',
+            cellClass: function(params) {
+                var studentStatusCode = params.node.data.student_status_code;
+                var periodEditable = params.node.data.period_editable;
+                var highlightClass = 'oe-cell-highlight';
+                return (studentStatusCode == 'CURRENT' && periodEditable) ? highlightClass : false;
+            },
             editable: function(params) {
                 // only enrolled student is editable
                 var studentStatusCode = params.node.data.student_status_code;
