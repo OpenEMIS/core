@@ -72,13 +72,9 @@ class InstitutionClassesTable extends ControllerActionTable
             'Students' => ['index', 'add'],
             'ClassStudents' => ['view', 'edit'],
             'StudentCompetencies' => ['view'],
-<<<<<<< HEAD
             'StudentCompetencyComments' => ['view'],
             'OpenEMIS_Classroom' => ['index', 'view']
-=======
-            'OpenEMIS_Classroom' => ['index', 'view'],
             'ReportCardComments' => ['index']
->>>>>>> 0173c5ad2956ae6d98b083e35d04292c3dff4a80
         ]);
 
         $this->setDeleteStrategy('restrict');
