@@ -200,6 +200,7 @@ class BodyMassesController extends PageController
     public function add()
     {
         $page = $this->Page;
+        $page->get('body_mass_index')->setControlType('hidden');
         $requestData = $this->request->data;
 
         // Academic Period Field
@@ -212,40 +213,15 @@ class BodyMassesController extends PageController
             ->setOptions($periodOptions);
         // end Academic Period Field
 
-        $page->get('body_mass_index')->setControlType('hidden');
-
         parent::add();
-
-        $entity = $page->getData();
-        if (!empty($entity->height) && !empty($entity->weight)) {
-            $height = $entity->height;
-            $weight = $entity->weight;
-
-            $bmi = $this->getBodyMassIndex($height, $weight);
-
-            $entity->body_mass_index = $bmi;
-            $this->BodyMasses->save($entity);
-        }
     }
 
     public function edit($id)
     {
         $page = $this->Page;
-
         $page->get('body_mass_index')->setControlType('hidden');
 
         parent::edit($id);
-
-        if ($page->getData()->has('height') && $page->getData()->has('weight')) {
-            $entity = $page->getData();
-            $height = $entity->height;
-            $weight = $entity->weight;
-
-            $bmi = $this->getBodyMassIndex($height, $weight);
-
-            $entity->body_mass_index = $bmi;
-            $this->BodyMasses->save($entity);
-        }
     }
 
     // for info tooltip
@@ -254,13 +230,5 @@ class BodyMassesController extends PageController
         $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
 
         return $tooltipMessage;
-    }
-
-    private function getBodyMassIndex($height, $weight)
-    {
-        // from wikipedia bmi.
-        $bmi = round(($weight / ($height * $height)), 2);
-
-        return $bmi;
     }
 }
