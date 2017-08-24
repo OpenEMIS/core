@@ -398,6 +398,9 @@ EOT;
             }
 
             $label = $attr['label'];
+            if (is_array($label)) {
+                $label = $label['text'];
+            }
             $value = '';
             if (array_key_exists('value', $attr['attributes'])) {
                 $value = $attr['attributes']['value'];
@@ -416,8 +419,9 @@ EOT;
         return $html;
     }
 
-    private function extractHtmlAttributes(array $field, $data)
+    private function extractHtmlAttributes(array &$field, $data)
     {
+        $key = $field['key'];
         $options = $field['attributes'];
         if (array_key_exists('name', $options)) {
             unset($options['name']);
@@ -429,6 +433,12 @@ EOT;
 
         if (array_key_exists('options', $field)) {
             $options['options'] = $field['options'];
+        }
+
+        $invalidFields = $data->invalid();
+        if (array_key_exists($key, $invalidFields)) {
+            $options['value'] = $invalidFields[$key];
+            $field['attributes']['value'] = $invalidFields[$key];
         }
         return $options;
     }
@@ -561,10 +571,14 @@ EOT;
 
     private function date(array $field, $data)
     {
+        $key = $field['key'];
         $options = ['type' => 'text', 'class' => 'form-control', 'label' => false, 'error' => false];
         $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
-        $value = isset($field['attributes']['value']) ? $field['attributes']['value'] : '';
         $disabled = isset($field['attributes']['disabled']) ? $field['attributes']['disabled'] : false;
+        $value = isset($field['attributes']['value']) ? $field['attributes']['value'] : '';
+        if ($data->invalid($key)) {
+            $value = $data->invalid($key);
+        }
         $dateOptions = [];
 
         if ($required) {
