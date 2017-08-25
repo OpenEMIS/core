@@ -781,7 +781,7 @@ trait MessagesTrait
                 'value' => 'Days within %d to %d'
             ]
         ],
-        'BodyMasses' => [
+        'UserBodyMasses' => [
             'dateNotWithinPeriod' => 'Date should be within %s and %s'
         ],
 
@@ -1151,14 +1151,6 @@ trait MessagesTrait
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ],
-            'BodyMasses' => [
-                'height' => [
-                    'validHeight' => 'Height must be within 0 and 3 metre',
-                ],
-                'weight' => [
-                    'validWeight' => 'Weight must be within 0 and 500 kilogram',
-                ],
-            ],
         ],
         'User' => [
             'Users' => [
@@ -1352,6 +1344,14 @@ trait MessagesTrait
                 'preferred' => [
                     'ruleValidatePreferredNationality' => 'There must be at least one Preferred Nationality'
                 ]
+            ],
+            'UserBodyMasses' => [
+                'height' => [
+                    'validHeight' => 'Height must be within 0 and 3 metre',
+                ],
+                'weight' => [
+                    'validWeight' => 'Weight must be within 0 and 500 kilogram',
+                ],
             ],
         ],
         'Student' => [
