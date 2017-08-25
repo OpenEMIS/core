@@ -198,12 +198,13 @@ class ReportCardsTable extends AppTable
                 $BodyMasses = TableRegistry::get('Institution.BodyMasses');
                 $bodyMassData = $BodyMasses->find()
                     ->where([
-                        $BodyMasses->aliasField('user_id') => $studentId,
+                        $BodyMasses->aliasField('security_user_id') => $studentId,
                         $BodyMasses->aliasField('date >= ') => $reportCardStartDate,
                         $BodyMasses->aliasField('date <= ') => $reportCardEndDate,
                     ])
                     ->order([
-                        $BodyMasses->aliasField('date') => 'DESC'
+                        $BodyMasses->aliasField('date') => 'DESC',
+                        $BodyMasses->aliasField('created') => 'DESC'
                     ])
                     ->first();
 
@@ -588,7 +589,7 @@ class ReportCardsTable extends AppTable
                 ->innerJoin(
                     ['StudentCompetencyResults' => 'student_competency_results'],
                     [
-                        $CompetencyCriterias->aliasField('id = ') . 'StudentCompetencyResults.competency_criteria_id',   
+                        $CompetencyCriterias->aliasField('id = ') . 'StudentCompetencyResults.competency_criteria_id',
                         $CompetencyCriterias->aliasField('academic_period_id = ') . 'StudentCompetencyResults.academic_period_id',
                         $CompetencyCriterias->aliasField('competency_item_id = ') . 'StudentCompetencyResults.competency_item_id',
                         $CompetencyCriterias->aliasField('competency_template_id = ') . 'StudentCompetencyResults.competency_template_id',
@@ -604,7 +605,7 @@ class ReportCardsTable extends AppTable
                 ])
                 ->autoFields(true)
                 ->toArray();
-            
+
             return $entity;
         }
     }
@@ -685,7 +686,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessmentItemsWithResults(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
-            
+
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
             $entity = $AssessmentItems->find()

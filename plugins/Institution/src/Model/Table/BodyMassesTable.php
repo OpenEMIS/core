@@ -20,7 +20,7 @@ class BodyMassesTable extends AppTable
         $this->table('body_masses');
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'user_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
     }
 
@@ -62,7 +62,6 @@ class BodyMassesTable extends AppTable
 
     public function findIndex(Query $query, array $options)
     {
-        $query->where(['user_id' => $options['querystring']['student_id']]);
         if (array_key_exists('sort', $options) && $options['sort'] == 'date') {
             $direction = $options['direction'];
             $query->order([$this->aliasField($options['sort']) => $direction, $this->aliasField('created') => 'desc']);
