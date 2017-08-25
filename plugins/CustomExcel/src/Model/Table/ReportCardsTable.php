@@ -560,8 +560,7 @@ class ReportCardsTable extends AppTable
 
             // only get criterias linked to items in periods within the report card date
             $entity = $CompetencyCriterias->find()
-                ->select(['competency_period_id' => 'Periods.id'])
-                ->innerJoinWith('Items.Periods')
+                ->select(['competency_period_id' => 'CompetencyPeriods.id'])
                 ->innerJoin(
                     ['StudentCompetencyResults' => 'student_competency_results'],
                     [
@@ -571,17 +570,40 @@ class ReportCardsTable extends AppTable
                         $CompetencyCriterias->aliasField('competency_template_id = ') . 'StudentCompetencyResults.competency_template_id',
                     ]
                 )
+                ->innerJoin(
+                    ['CompetencyItems' => 'competency_items'],
+                    [
+                        $CompetencyCriterias->aliasField('competency_item_id = ') . 'CompetencyItems.id',
+                        $CompetencyCriterias->aliasField('competency_template_id = ') . 'CompetencyItems.competency_template_id',
+                        $CompetencyCriterias->aliasField('academic_period_id = ') . 'CompetencyItems.academic_period_id'
+                    ]
+                )
+                ->innerJoin(
+                    ['CompetencyItemsPeriods' => 'competency_items_periods'],
+                    [
+                        'CompetencyItemsPeriods.competency_item_id = CompetencyItems.id',
+                        'CompetencyItemsPeriods.competency_template_id = CompetencyItems.competency_template_id',
+                        'CompetencyItemsPeriods.academic_period_id = CompetencyItems.academic_period_id'
+                    ]
+                )
+                ->innerJoin(
+                    ['CompetencyPeriods' => 'competency_periods'],
+                    [
+                        'CompetencyPeriods.id = CompetencyItemsPeriods.competency_period_id',
+                        'CompetencyPeriods.id = StudentCompetencyResults.competency_period_id',
+                        'CompetencyPeriods.academic_period_id = CompetencyItemsPeriods.academic_period_id'
+                    ]
+                )
                 ->where([
                     'StudentCompetencyResults.competency_grading_option_id > 0',
                     'StudentCompetencyResults.student_id = ' . $params['student_id'],
                     $CompetencyCriterias->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
-                    'Periods.id IN' => $extra['competency_periods_ids'],
+                    'CompetencyPeriods.id IN' => $extra['competency_periods_ids'],
                     'StudentCompetencyResults.institution_id = ' . $params['institution_id'],
                     $CompetencyCriterias->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
                 ->autoFields(true)
                 ->toArray();
-            
             return $entity;
         }
     }
