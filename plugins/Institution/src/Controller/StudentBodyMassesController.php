@@ -6,14 +6,15 @@ use Cake\Event\Event;
 
 use App\Controller\PageController;
 
-class BodyMassesController extends PageController
+class StudentBodyMassesController extends PageController
 {
     public function initialize()
     {
         parent::initialize();
 
         $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->Page->loadElementsFromTable($this->BodyMasses);
+        $this->loadModel('User.UserBodyMasses');
+        $this->Page->loadElementsFromTable($this->UserBodyMasses);
         $this->Page->disable(['search']); // to disable the search function
     }
 
@@ -44,8 +45,7 @@ class BodyMassesController extends PageController
         $page->move('academic_period_id')->first(); // move academic_period_id to be the first
 
         // set header
-        $header = $page->getHeader();
-        $page->setHeader($studentName . ' - ' . $header);
+        $page->setHeader($studentName . ' - ' . __('Body Masses'));
 
         // set tabElement
         $tabPlugin = 'Student';
@@ -153,7 +153,7 @@ class BodyMassesController extends PageController
         $url = [
                 'plugin' => 'Institution',
                 'institutionId' => $encodedInstitutionId,
-                'controller' => 'BodyMasses',
+                'controller' => 'StudentBodyMasses',
                 'action' => 'index'
             ];
         $bodyMassesTab->setUrl($url);
