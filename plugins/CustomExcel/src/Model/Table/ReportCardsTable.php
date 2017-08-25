@@ -209,8 +209,9 @@ class ReportCardsTable extends AppTable
                     ->first();
 
                 if (!empty($userBodyMassData)) {
-                    $entity->student_body_mass = $userBodyMassData;
-                    $entity->student_body_mass->date = $entity->student_body_mass->date->format($dateFormat);
+                    $entity->student->height = $userBodyMassData->height;
+                    $entity->student->weight = $userBodyMassData->weight;
+                    $entity->student->body_mass_index = $userBodyMassData->body_mass_index;
                 }
                 // end POCOR-4156 body masses data
             }
