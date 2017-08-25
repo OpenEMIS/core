@@ -49,6 +49,8 @@ class ReportCardsTable extends AppTable
                 'CompetencyPeriods',
                 'CompetencyItems',
                 'CompetencyCriterias',
+                'StudentCompetencyPeriodComments',
+                'StudentCompetencyItemComments',
                 'StudentCompetencyResults',
                 'Assessments',
                 'AssessmentPeriods',
@@ -80,6 +82,8 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyPeriods'] = 'onExcelTemplateInitialiseCompetencyPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyItems'] = 'onExcelTemplateInitialiseCompetencyItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyCriterias'] = 'onExcelTemplateInitialiseCompetencyCriterias';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCompetencyPeriodComments'] = 'onExcelTemplateInitialiseStudentCompetencyPeriodComments';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCompetencyItemComments'] = 'onExcelTemplateInitialiseStudentCompetencyItemComments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCompetencyResults'] = 'onExcelTemplateInitialiseStudentCompetencyResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
@@ -568,6 +572,44 @@ class ReportCardsTable extends AppTable
                 ])
                 ->autoFields(true)
                 ->toArray();
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseStudentCompetencyPeriodComments(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $CompetencyPeriodComments = TableRegistry::get('Institution.InstitutionCompetencyPeriodComments');
+
+            $entity = $CompetencyPeriodComments->find()
+                ->where([
+                    $CompetencyPeriodComments->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    $CompetencyPeriodComments->aliasField('competency_period_id IN ') => $extra['competency_periods_ids'],
+                    $CompetencyPeriodComments->aliasField('student_id') => $params['student_id'],
+                    $CompetencyPeriodComments->aliasField('institution_id') => $params['institution_id'],
+                    $CompetencyPeriodComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                ])
+                ->toArray();
+
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $CompetencyItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
+
+            $entity = $CompetencyItemComments->find()
+                ->where([
+                    $CompetencyItemComments->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    $CompetencyItemComments->aliasField('competency_period_id IN ') => $extra['competency_periods_ids'],
+                    $CompetencyItemComments->aliasField('student_id') => $params['student_id'],
+                    $CompetencyItemComments->aliasField('institution_id') => $params['institution_id'],
+                    $CompetencyItemComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                ])
+                ->toArray();
+
             return $entity;
         }
     }
