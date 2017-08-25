@@ -657,7 +657,7 @@ class ReportCardsTable extends AppTable
                     ['CompetencyPeriods' => 'competency_periods'],
                     [
                         'CompetencyPeriods.id = CompetencyItemsPeriods.competency_period_id',
-                        'CompetencyPeriods.id = StudentCompetencyResults.competency_period_id',
+                        'CompetencyPeriods.id = InstitutionCompetencyResults.competency_period_id',
                         'CompetencyPeriods.academic_period_id = CompetencyItemsPeriods.academic_period_id'
                     ]
                 )
@@ -666,7 +666,7 @@ class ReportCardsTable extends AppTable
                     'InstitutionCompetencyResults.student_id = ' . $params['student_id'],
                     $CompetencyCriterias->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
                     'CompetencyPeriods.id IN' => $extra['competency_periods_ids'],
-                    'StudentCompetencyResults.institution_id = ' . $params['institution_id'],
+                    'InstitutionCompetencyResults.institution_id = ' . $params['institution_id'],
                     $CompetencyCriterias->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
                 ->autoFields(true)
