@@ -39,7 +39,7 @@ class BodyMassesController extends PageController
         $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $encodedStudentId]);
         $page->addCrumb('Body Mass');
 
-        $page->get('user_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
+        $page->get('security_user_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
 
         $page->move('academic_period_id')->first(); // move academic_period_id to be the first
 
@@ -185,13 +185,13 @@ class BodyMassesController extends PageController
 
         // set queryString
         $page->setQueryString('institution_id', $institutionId);
-        $page->setQueryString('student_id', $studentId);
+        $page->setQueryString('security_user_id', $studentId);
     }
 
     public function index()
     {
         $page = $this->Page;
-        $page->exclude(['comment', 'user_id']);
+        $page->exclude(['comment', 'security_user_id']);
 
         $requestQuery = $this->request->query;
         if (array_key_exists('sort', $requestQuery)) {
