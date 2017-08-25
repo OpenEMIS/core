@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace User\Model\Table;
 
 use ArrayObject;
 use Cake\I18n\Date;
@@ -11,13 +11,11 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 
-class BodyMassesTable extends AppTable
+class UserBodyMassesTable extends AppTable
 {
-    const ASSIGNED = 1;
-
     public function initialize(array $config)
     {
-        $this->table('body_masses');
+        $this->table('user_body_masses');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -50,7 +48,7 @@ class BodyMassesTable extends AppTable
                             $startDate = date('d-m-Y', strtotime($academicStartDate));
                             $endDate = date('d-m-Y', strtotime($academicEndDate));
 
-                            return $this->getMessage('BodyMasses.dateNotWithinPeriod', ['sprintf' => [$startDate, $endDate]]);
+                            return $this->getMessage('UserBodyMasses.dateNotWithinPeriod', ['sprintf' => [$startDate, $endDate]]);
                         }
                     } else {
                         return true;
