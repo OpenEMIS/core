@@ -83,8 +83,8 @@ class UserBodyMassesTable extends AppTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['height']) && !empty($data['weight'])) {
-            $height = $data['height'];
-            $weight = $data['weight'];
+            $height = round($data['height'], 2);
+            $weight = round($data['weight'], 2);
 
             $bmi = round(($weight / ($height * $height)), 2);
             $data['body_mass_index'] = $bmi;
