@@ -20,7 +20,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Items',           ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id']]);
         $this->belongsTo('GradingTypes',    ['className' => 'Competency.CompetencyGradingTypes', 'foreignKey' => 'competency_grading_type_id']);
-        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_template_id', 'competency_criteria_id', 'academic_period_id'], 'bindingKey' => ['competency_template_id', 'id', 'academic_period_id']]);
+        $this->hasMany('InstitutionCompetencyResults', ['className' => 'Institution.InstitutionCompetencyResults', 'foreignKey' => ['competency_template_id', 'competency_criteria_id', 'academic_period_id'], 'bindingKey' => ['competency_template_id', 'id', 'academic_period_id']]);
         $this->belongsTo('Templates', ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
         $this->setDeleteStrategy('restrict');
     }

@@ -87,12 +87,6 @@ class AreapickerBehavior extends Behavior
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             $session->write('FormTampering.'.$fieldName, $areaKeys);
 
-            if ($targetModel == 'Area.Areas') {
-                $authorisedArea = $areaKeys;
-                $attr['authorisedArea'] = $authorisedArea;
-            } else {
-                $attr['authorisedArea'] = [];
-            }
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
         return $value;
