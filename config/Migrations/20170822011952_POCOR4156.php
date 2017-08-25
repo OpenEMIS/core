@@ -8,7 +8,7 @@ class POCOR4156 extends AbstractMigration
     public function up()
     {
         // body_masses
-        $table = $this->table('body_masses', [
+        $table = $this->table('user_body_masses', [
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the body mass of the user'
             ]);
@@ -71,7 +71,7 @@ class POCOR4156 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('academic_period_id')
-            ->addIndex('user_id')
+            ->addIndex('security_user_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
@@ -85,8 +85,8 @@ class POCOR4156 extends AbstractMigration
         // insert permission for label
         $data = [
             'id' => 2035,
-            'name' => 'Body Mass',
-            'controller' => 'BodyMasses',
+            'name' => 'Student Body Mass',
+            'controller' => 'StudentBodyMasses',
             'module' => 'Institutions',
             'category' => 'Students - Health',
             'parent_id' => 2000,
@@ -109,7 +109,7 @@ class POCOR4156 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->execute('DROP TABLE body_masses');
+        $this->execute('DROP TABLE user_body_masses');
         $this->execute('DELETE FROM security_functions WHERE id = 2035');
 
         // update the order back
