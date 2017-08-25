@@ -62,7 +62,13 @@ class BodyMassesTable extends AppTable
 
     public function findIndex(Query $query, array $options)
     {
-        return $query->where(['user_id' => $options['querystring']['student_id']]);
+        $query->where(['user_id' => $options['querystring']['student_id']]);
+        if (array_key_exists('sort', $options) && $options['sort'] == 'date') {
+            $direction = $options['direction'];
+            $query->order([$this->aliasField($options['sort']) => $direction, $this->aliasField('created') => 'desc']);
+
+        }
+        return $query;
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)

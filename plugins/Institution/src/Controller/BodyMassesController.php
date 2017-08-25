@@ -192,7 +192,12 @@ class BodyMassesController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['comment', 'user_id']);
-        $url = $page->getUrl();
+
+        $requestQuery = $this->request->query;
+        if (array_key_exists('sort', $requestQuery)) {
+            $page->setQueryOption('sort', $requestQuery['sort']);
+            $page->setQueryOption('direction', $requestQuery['direction']);
+        }
 
         parent::index();
     }
