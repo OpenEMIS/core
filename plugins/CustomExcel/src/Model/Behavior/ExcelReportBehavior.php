@@ -303,9 +303,16 @@ class ExcelReportBehavior extends Behavior
         $imageMarginLeft = $attr['imageMarginLeft'];
         $imageMarginTop = $attr['imageMarginTop'];
 
-        $objDrawing = new PHPExcel_Worksheet_MemoryDrawing(); 
+        $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
+        if (!$imageResource) {
+            $imageResource = imagecreatefrompng(ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png');
+            $objDrawing->setName('OpenEMIS Logo');
+            $objDrawing->setDescription('OpenEMIS Logo');
+            $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG);
+        } else {
+            $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
+        }
         $objDrawing->setImageResource($imageResource);
-        $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
         $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
         $objDrawing->setWidth($imageWidth); 
         $objDrawing->setCoordinates($cellCoordinate); 
@@ -1116,15 +1123,16 @@ class ExcelReportBehavior extends Behavior
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $blob = current($data);
 
+        $imageResource = '';
         if (is_resource($blob)) {
             $imageResource = imagecreatefromstring(stream_get_contents($blob));
             
             //retain transparency on png/gif file
             imageAlphaBlending($imageResource, true);
             imageSaveAlpha($imageResource, true);
-
-            $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
         }
+
+        $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
 
         // set to empty to remove the placeholder
         $objWorksheet->setCellValue($cellCoordinate, '');
