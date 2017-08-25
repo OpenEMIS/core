@@ -630,20 +630,20 @@ class ReportCardsTable extends AppTable
                 ->select(['competency_period_id' => 'Periods.id'])
                 ->innerJoinWith('Items.Periods')
                 ->innerJoin(
-                    ['StudentCompetencyResults' => 'student_competency_results'],
+                    ['InstitutionCompetencyResults' => 'institution_competency_results'],
                     [
-                        $CompetencyCriterias->aliasField('id = ') . 'StudentCompetencyResults.competency_criteria_id',
-                        $CompetencyCriterias->aliasField('academic_period_id = ') . 'StudentCompetencyResults.academic_period_id',
-                        $CompetencyCriterias->aliasField('competency_item_id = ') . 'StudentCompetencyResults.competency_item_id',
-                        $CompetencyCriterias->aliasField('competency_template_id = ') . 'StudentCompetencyResults.competency_template_id',
+                        $CompetencyCriterias->aliasField('id = ') . 'InstitutionCompetencyResults.competency_criteria_id',
+                        $CompetencyCriterias->aliasField('academic_period_id = ') . 'InstitutionCompetencyResults.academic_period_id',
+                        $CompetencyCriterias->aliasField('competency_item_id = ') . 'InstitutionCompetencyResults.competency_item_id',
+                        $CompetencyCriterias->aliasField('competency_template_id = ') . 'InstitutionCompetencyResults.competency_template_id',
                     ]
                 )
                 ->where([
-                    'StudentCompetencyResults.competency_grading_option_id > 0',
-                    'StudentCompetencyResults.student_id = ' . $params['student_id'],
+                    'InstitutionCompetencyResults.competency_grading_option_id > 0',
+                    'InstitutionCompetencyResults.student_id = ' . $params['student_id'],
                     $CompetencyCriterias->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
                     'Periods.id IN' => $extra['competency_periods_ids'],
-                    'StudentCompetencyResults.institution_id = ' . $params['institution_id'],
+                    'InstitutionCompetencyResults.institution_id = ' . $params['institution_id'],
                     $CompetencyCriterias->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
                 ->autoFields(true)
