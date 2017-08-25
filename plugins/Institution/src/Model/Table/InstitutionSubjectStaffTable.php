@@ -21,10 +21,6 @@ class InstitutionSubjectStaffTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
-
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'ReportCardComments' => ['index']
-        ]);
     }
 
     public function implementedEvents()
@@ -188,45 +184,5 @@ class InstitutionSubjectStaffTable extends AppTable
             );
         }
         // }
-    }
-
-    // used for student report cards
-    public function findTeacherEditPermissions(Query $query, array $options)
-    {
-        $reportCardId = $options['report_card_id'];
-        $institutionId = $options['institution_id'];
-        $classId = $options['institution_class_id'];
-        $staffId = $options['staff_id'];
-
-        $today = Date::now();
-        $InstitutionSubjects = $this->InstitutionSubjects;
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $ReportCardSubjects = TableRegistry::get('ReportCards.ReportCardSubjects');
-
-        return $query
-            ->find('list', [
-                'keyField' => 'education_subject_id',
-                'valueField' => 'education_subject_id'
-            ])
-            ->select(['education_subject_id' => 'InstitutionSubjects.education_subject_id'])
-            ->innerJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
-                $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->aliasField('institution_subject_id'),
-                $InstitutionClassSubjects->aliasField('institution_class_id') => $classId
-            ])
-            ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
-                $InstitutionSubjects->aliasField('id = ') . $this->aliasField('institution_subject_id')
-            ])
-            ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
-                $ReportCardSubjects->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id'),
-                $ReportCardSubjects->aliasField('report_card_id = ') . $reportCardId
-            ])
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('staff_id') => $staffId,
-                'OR' => [
-                    $this->aliasField('end_date IS NULL'),
-                    $this->aliasField('end_date >= ') => $today->format('Y-m-d')
-                ]
-            ]);
     }
 }
