@@ -1347,9 +1347,11 @@ trait MessagesTrait
             ],
             'UserBodyMasses' => [
                 'height' => [
+                    'notZero' => 'Height must be more than 0',
                     'validHeight' => 'Height must be within 0 and 3 metre',
                 ],
                 'weight' => [
+                    'notZero' => 'Weight must be more than 0',
                     'validWeight' => 'Weight must be within 0 and 500 kilogram',
                 ],
             ],
