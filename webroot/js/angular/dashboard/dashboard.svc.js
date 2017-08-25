@@ -1,10 +1,10 @@
 angular
-    .module('dashboard.svc', ['kd.orm.svc', 'kd.session.svc'])
+    .module('dashboard.svc', ['kd.data.svc', 'kd.session.svc'])
     .service('DashboardSvc', DashboardSvc);
 
-DashboardSvc.$inject = ['$q', '$filter', 'KdOrmSvc'];
+DashboardSvc.$inject = ['$q', '$filter', 'KdDataSvc'];
 
-function DashboardSvc($q, $filter, KdOrmSvc) {
+function DashboardSvc($q, $filter, KdDataSvc) {
     const workbenchItemTypes = {
         FIXED: ['status', 'request_title', 'institution', 'received_date'],
         SCHOOL_BASED: ['status', 'request_title', 'institution', 'received_date'],
@@ -105,16 +105,16 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
     return service;
 
     function init(baseUrl) {
-        KdOrmSvc.base(baseUrl);
-        KdOrmSvc.controllerAction('Dashboard');
-        KdOrmSvc.init({NoticesTable: 'Notices'});
+        KdDataSvc.base(baseUrl);
+        KdDataSvc.controllerAction('Dashboard');
+        KdDataSvc.init({NoticesTable: 'Notices'});
 
         var models = this.extractModels();
-        KdOrmSvc.init(this.extractModels());
+        KdDataSvc.init(this.extractModels());
     };
 
     function translate(data) {
-        KdOrmSvc.init({translation: 'translate'});
+        KdDataSvc.init({translation: 'translate'});
         var success = function(response, deferred) {
             var translated = response.data.translated;
             deferred.resolve(translated);
@@ -137,13 +137,14 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             var notices = response.data.data;
 
             if (angular.isObject(notices) && notices.length > 0) {
-                var order = 1;
+                var order = 0;
                 angular.forEach(notices, function(notice, key) {
-                    notice['message'] = $filter('date')(notice.created, 'medium') + ': ' + notice.message;
+                    notice['message'] = notice.created + ': ' + notice.message;
                     notice['order'] = order;
-                    properties.notices[notice.id] = notice;
+                    properties.notices[notice.order] = notice;
                     order++;
                 });
+
                 deferred.resolve(properties.notices);
             } else {
                 deferred.reject('No Notices');
@@ -151,7 +152,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         };
 
         return NoticesTable
-            .order(['created desc'])
+            .order(['-created'])
             .ajax({success: success, defer: true});
     };
 

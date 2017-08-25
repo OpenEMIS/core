@@ -42,7 +42,7 @@ class InstitutionsTable extends AppTable
             'foreignKey' => 'institution_network_connectivity_id'
         ]);
 
-		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
+		$this->addBehavior('Excel', ['excludes' => ['security_group_id', 'logo_name'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.CustomFieldList', [
 			'model' => 'Institution.Institutions',
