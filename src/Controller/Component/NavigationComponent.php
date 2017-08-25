@@ -4,6 +4,7 @@ namespace App\Controller\Component;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Controller\Exception\SecurityException;
 
 class NavigationComponent extends Component
 {
@@ -64,10 +65,14 @@ class NavigationComponent extends Component
     public function beforeFilter(Event $event)
     {
         $controller = $this->controller;
-        $navigations = $this->buildNavigation();
-        $this->checkSelectedLink($navigations);
-        $this->checkPermissions($navigations);
-        $controller->set('_navigations', $navigations);
+        try {
+            $navigations = $this->buildNavigation();
+            $this->checkSelectedLink($navigations);
+            $this->checkPermissions($navigations);
+            $controller->set('_navigations', $navigations);
+        } catch (SecurityException $ex) {
+            return;
+        }
     }
 
     private function getLink($controllerActionModelLink, $params = [])

@@ -2,6 +2,7 @@
 namespace Institution\Controller;
 
 use ArrayObject;
+use Exception;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
@@ -12,10 +13,11 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use Cake\I18n\Date;
-use ControllerAction\Model\Traits\UtilityTrait;
+use Cake\Controller\Exception\SecurityException;
+
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
-use Exception;
+use ControllerAction\Model\Traits\UtilityTrait;
 
 class InstitutionsController extends AppController
 {
@@ -803,22 +805,27 @@ class InstitutionsController extends AppController
         // this is to cater for back links
         $query = $this->request->query;
 
-        if ($this->ControllerAction->getQueryString('institution_id')) {
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            //check for permission
-            $this->checkInstitutionAccess($institutionId, $event);
-            if ($event->isStopped()) {
-                return false;
+        try {
+            if ($this->ControllerAction->getQueryString('institution_id')) {
+                $institutionId = $this->ControllerAction->getQueryString('institution_id');
+                //check for permission
+                $this->checkInstitutionAccess($institutionId, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $institutionId);
+            } elseif (array_key_exists('institution_id', $query)) {
+                //check for permission
+                $this->checkInstitutionAccess($query['institution_id'], $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $query['institution_id']);
             }
-            $session->write('Institution.Institutions.id', $institutionId);
-        } elseif (array_key_exists('institution_id', $query)) {
-            //check for permission
-            $this->checkInstitutionAccess($query['institution_id'], $event);
-            if ($event->isStopped()) {
-                return false;
-            }
-            $session->write('Institution.Institutions.id', $query['institution_id']);
+        } catch (SecurityException $ex) {
+            return;
         }
+
         if ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'index') {
             if ($session->check('Institution.Institutions.search.key')) {
                 $search = $session->read('Institution.Institutions.search.key');
