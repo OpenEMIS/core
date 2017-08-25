@@ -92,6 +92,10 @@ class AppTable extends Table
 
         $this->addBehavior('TrackDelete');
         $this->addBehavior('ControllerAction.Security');
+
+        $this->_controllerActionEvents['Restful.Model.onRenderDatetime'] = 'onRestfulRenderDatetime';
+        $this->_controllerActionEvents['Restful.Model.onRenderDate'] = 'onRestfulRenderDate';
+        $this->_controllerActionEvents['Restful.Model.onRenderTime'] = 'onRestfulRenderTime';
     }
 
     public function validationDefault(Validator $validator)
@@ -269,6 +273,27 @@ class AppTable extends Table
             $value = $dateObject->format($format);
         }
         return $value;
+    }
+
+    // Not using $extra parameter to be backward compatible with restfulv1
+    public function onRestfulRenderDatetime(Event $event, $entity, $property)
+    {
+        $dateTimeObj = $entity[$property];
+        return $this->formatDateTime($dateTimeObj);
+    }
+
+    // Not using $extra parameter to be backward compatible with restfulv1
+    public function onRestfulRenderDate(Event $event, $entity, $property)
+    {
+        $dateTimeObj = $entity[$property];
+        return $this->formatDate($dateTimeObj);
+    }
+
+    // Not using $extra parameter to be backward compatible with restfulv1
+    public function onRestfulRenderTime(Event $event, $entity, $property)
+    {
+        $dateTimeObj = $entity[$property];
+        return $this->formatTime($dateTimeObj);
     }
 
     // Event: 'ControllerAction.Model.onGetFieldLabel'

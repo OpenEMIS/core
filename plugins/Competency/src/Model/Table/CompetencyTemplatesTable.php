@@ -22,10 +22,13 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->hasMany('Items', ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true, 'bindingKey' => ['id', 'academic_period_id']]);
         $this->hasMany('Periods', ['className' => 'Competency.CompetencyPeriods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true, 'bindingKey' => ['id', 'academic_period_id']]);
         $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true, 'bindingKey' => ['id', 'academic_period_id']]);
-        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true, 'bindingKey' => ['id', 'academic_period_id']]);
+        $this->hasMany('InstitutionCompetencyResults', ['className' => 'Institution.InstitutionCompetencyResults', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true, 'bindingKey' => ['id', 'academic_period_id']]);
+        $this->hasMany('CompetencyPeriodComments', ['className' => 'Institution.InstitutionCompetencyPeriodComments', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CompetencyItemComments', ['className' => 'Institution.InstitutionCompetencyItemComments', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StudentCompetencies' => ['view']
+            'StudentCompetencies' => ['view'],
+            'StudentCompetencyComments' => ['view']
         ]);
 
         $this->setDeleteStrategy('restrict');
