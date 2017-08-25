@@ -46,7 +46,7 @@ class POCOR4156 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to academic_periods.id'
             ])
-            ->addColumn('user_id', 'integer', [
+            ->addColumn('security_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
