@@ -4,6 +4,7 @@ namespace App\Controller\Component;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Controller\Exception\SecurityException;
 
 class NavigationComponent extends Component
 {
@@ -64,10 +65,14 @@ class NavigationComponent extends Component
     public function beforeFilter(Event $event)
     {
         $controller = $this->controller;
-        $navigations = $this->buildNavigation();
-        $this->checkSelectedLink($navigations);
-        $this->checkPermissions($navigations);
-        $controller->set('_navigations', $navigations);
+        try {
+            $navigations = $this->buildNavigation();
+            $this->checkSelectedLink($navigations);
+            $this->checkPermissions($navigations);
+            $controller->set('_navigations', $navigations);
+        } catch (SecurityException $ex) {
+            return;
+        }
     }
 
     private function getLink($controllerActionModelLink, $params = [])
@@ -250,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses'];
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -515,7 +520,7 @@ class NavigationComponent extends Component
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -698,7 +703,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']],
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete']],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
