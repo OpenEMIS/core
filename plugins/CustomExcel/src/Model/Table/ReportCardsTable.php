@@ -195,22 +195,22 @@ class ReportCardsTable extends AppTable
                 $reportCardEndDate = $extra['report_card_end_date'];
                 $studentId = $entity->student_id;
 
-                $BodyMasses = TableRegistry::get('Institution.BodyMasses');
-                $bodyMassData = $BodyMasses->find()
+                $UserBodyMasses = TableRegistry::get('User.UserBodyMasses');
+                $userBodyMassData = $UserBodyMasses->find()
                     ->where([
-                        $BodyMasses->aliasField('security_user_id') => $studentId,
-                        $BodyMasses->aliasField('date >= ') => $reportCardStartDate,
-                        $BodyMasses->aliasField('date <= ') => $reportCardEndDate,
+                        $UserBodyMasses->aliasField('security_user_id') => $studentId,
+                        $UserBodyMasses->aliasField('date >= ') => $reportCardStartDate,
+                        $UserBodyMasses->aliasField('date <= ') => $reportCardEndDate,
                     ])
                     ->order([
-                        $BodyMasses->aliasField('date') => 'DESC',
-                        $BodyMasses->aliasField('created') => 'DESC'
+                        $UserBodyMasses->aliasField('date') => 'DESC',
+                        $UserBodyMasses->aliasField('created') => 'DESC'
                     ])
                     ->first();
 
-                if (!empty($bodyMassData)) {
-                    $entity->body_mass = $bodyMassData;
-                    $entity->body_mass->date = $entity->body_mass->date->format($dateFormat);
+                if (!empty($userBodyMassData)) {
+                    $entity->student_body_mass = $userBodyMassData;
+                    $entity->student_body_mass->date = $entity->student_body_mass->date->format($dateFormat);
                 }
                 // end POCOR-4156 body masses data
             }
