@@ -320,7 +320,28 @@ class AreasTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
-        $authorisedAreaIds = json_decode($this->urlsafeB64Decode($options['authorisedAreaIds']), true);
+        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $authorisedAreas = $SecurityGroupAreas->getAreasByUser($options['userId']);
+        $authorisedAreaIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id']);
+
+        $UsersTable = TableRegistry::get('User.Users');
+        $isSuperAdmin = $UsersTable->get($options['userId'])->super_admin;
+
+        $areaCondition = [];
+        foreach ($authorisedAreas as $area) {
+            $areaCondition[] = [
+                $this->aliasField('lft').' >= ' => $area['lft'],
+                $this->aliasField('rght').' <= ' => $area['rght']
+            ];
+        }
+        if (!empty($authorisedAreas)) {
+            $authorisedAreaIds = $authorisedAreaIds
+                ->where(['OR' => $areaCondition])
+                ->toArray();
+        } else {
+            $authorisedAreaIds = [];
+        }
+
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
         return $query
             ->find('threaded', [
@@ -336,9 +357,9 @@ class AreasTable extends ControllerActionTable
                 $this->aliasField('order')
             ])
             ->hydrate(false)
-            ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
+            ->formatResults(function ($results) use ($authorisedAreaIds, $selected, $isSuperAdmin) {
                 $results = $results->toArray();
-                $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
+                $this->unsetEmptyArr($results, $authorisedAreaIds, $selected, $isSuperAdmin);
                 $order = array_column($results, 'order');
                 array_multisort($order, SORT_ASC, $results);
                 unset($order);
@@ -351,12 +372,14 @@ class AreasTable extends ControllerActionTable
             });
     }
 
-    private function unsetEmptyArr(&$array, &$authorisedAreaIds, $selected)
+    private function unsetEmptyArr(&$array, &$authorisedAreaIds, $selected, $superAdmin)
     {
         foreach ($array as &$value) {
             if (isset($value['id'])) {
-                if (!in_array($value['id'], $authorisedAreaIds)) {
+                if (!in_array($value['id'], $authorisedAreaIds) && !$superAdmin) {
                     $value['disabled'] = true;
+                } elseif (!$superAdmin) {
+                    $authorisedAreaIds = array_merge($authorisedAreaIds, array_column($value['children'], 'id'));
                 }
                 if ($value['id'] == $selected) {
                     $value['selected'] = true;
@@ -376,11 +399,7 @@ class AreasTable extends ControllerActionTable
                     unset($children);
                     unset($order);
                 }
-                $parentIds = array_unique(array_column($value, 'parent_id'));
-                if (array_intersect($authorisedAreaIds, $parentIds)) {
-                    $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
-                }
-                $this->unsetEmptyArr($value, $authorisedAreaIds, $selected);
+                $this->unsetEmptyArr($value, $authorisedAreaIds, $selected, $superAdmin);
             }
         }
     }

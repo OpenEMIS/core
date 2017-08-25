@@ -798,10 +798,10 @@ class InstitutionFloorsTable extends ControllerActionTable
         $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_land->id,
-            'institution_land_name' => $entity->institution_land->name
+            'institution_land_name' => $entity->institution_land->code
         ]);
         $crumbs[] = [
-            'name' => $entity->institution_land->name,
+            'name' => $entity->institution_land->code,
             'url' => $buildingUrl
         ];
         $crumbs[] = [

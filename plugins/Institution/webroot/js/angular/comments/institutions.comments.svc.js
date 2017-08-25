@@ -11,13 +11,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         ReportCardTable: 'ReportCard.ReportCards',
         ReportCardSubjectsTable: 'ReportCard.ReportCardSubjects',
         ReportCardCommentCodesTable: 'ReportCard.ReportCardCommentCodes',
+        InstitutionClassesTable: 'Institution.InstitutionClasses',
         InstitutionStudentsReportCardsTable: 'Institution.InstitutionStudentsReportCards',
         InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments',
         InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents',
         StaffUserTable: 'Institution.StaffUser',
         StaffTable: 'Institution.Staff',
         HomeroomStaffTable: 'Institution.Staff',
-        InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff'
     };
 
     var service = {
@@ -69,7 +69,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 staff_id: currentUserId
             });
 
-        var teacherPermission = InstitutionSubjectStaffTable
+        var teacherPermission = InstitutionClassesTable
             .select()
             .find('teacherEditPermissions', {
                 report_card_id: reportCardId,
