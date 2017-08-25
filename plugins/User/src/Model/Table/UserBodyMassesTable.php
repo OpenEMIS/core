@@ -27,11 +27,23 @@ class UserBodyMassesTable extends AppTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('height', 'validHeight', [
-                'rule' => ['range', 0, 3]
+            ->add('height', [
+                'notZero' => [
+                    'rule' => ['comparison', '>', 0],
+                    'last' => true
+                ],
+                'validHeight' => [
+                    'rule' => ['range', 0, 3]
+                ]
             ])
-            ->add('weight', 'validWeight', [
-                'rule' => ['range', 0, 500]
+            ->add('weight', [
+                'notZero' => [
+                    'rule' => ['comparison', '>', 0],
+                    'last' => true
+                ],
+                'validWeight' => [
+                    'rule' => ['range', 0, 3]
+                ]
             ])
             ->add('date', 'dateWithinPeriod', [
                 'rule' => function ($value, $context) {
