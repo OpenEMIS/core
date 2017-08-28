@@ -28,28 +28,30 @@ class UserBodyMassesTable extends AppTable
 
         return $validator
             ->add('height', [
-                'validateDecimal' => [
-                    'rule' => ['decimal', 2]
-                ],
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],
                     'last' => true
                 ],
                 'validHeight' => [
-                    'rule' => ['range', 0, 3]
-                ]
+                    'rule' => ['range', 0, 3],
+                    'last' => true
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                ],
             ])
             ->add('weight', [
-                'validateDecimal' => [
-                    'rule' => ['decimal', 2]
-                ],
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],
                     'last' => true
                 ],
                 'validWeight' => [
-                    'rule' => ['range', 0, 500]
-                ]
+                    'rule' => ['range', 0, 500],
+                    'last' => true
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                ],
             ])
             ->add('date', 'dateWithinPeriod', [
                 'rule' => function ($value, $context) {
