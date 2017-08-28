@@ -45,7 +45,7 @@ class StudentBodyMassesController extends PageController
         $page->move('academic_period_id')->first(); // move academic_period_id to be the first
 
         // set header
-        $page->setHeader($studentName . ' - ' . __('Body Masses'));
+        $page->setHeader($studentName . ' - ' . __('Body Mass'));
 
         // set tabElement
         $tabPlugin = 'Student';
