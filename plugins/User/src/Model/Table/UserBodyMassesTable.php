@@ -28,6 +28,9 @@ class UserBodyMassesTable extends AppTable
 
         return $validator
             ->add('height', [
+                'validateDecimal' => [
+                    'rule' => ['decimal', 2]
+                ],
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],
                     'last' => true
@@ -37,6 +40,9 @@ class UserBodyMassesTable extends AppTable
                 ]
             ])
             ->add('weight', [
+                'validateDecimal' => [
+                    'rule' => ['decimal', 2]
+                ],
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],
                     'last' => true
@@ -86,7 +92,15 @@ class UserBodyMassesTable extends AppTable
             $height = round($data['height'], 2);
             $weight = round($data['weight'], 2);
 
-            $bmi = round(($weight / ($height * $height)), 2);
+            $denominator = $height * $weight;
+
+            // to prevent the division by 0
+            if ($denominator > 0) {
+                $bmi = round(($weight / ($denominator)), 2);
+            } else {
+                $bmi = 0;
+            }
+
             $data['body_mass_index'] = $bmi;
         }
     }
