@@ -14,7 +14,7 @@ use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (!$entity->errors()) {
             $sessionKey = 'Student.Guardians.new';
@@ -39,31 +39,31 @@ class GuardianUserTable extends UserTable {
 
             return $this->controller->redirect($redirect);
         }
-	}
+    }
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-		$this->setupTabElements($entity);
+        $this->setupTabElements($entity);
 
-		unset($extra['toolbarButtons']['back']);
+        unset($extra['toolbarButtons']['back']);
 
         if ($extra['toolbarButtons']->offsetExists('export')) {
             unset($extra['toolbarButtons']['export']);
         }
-	}
+    }
 
-	public function beforeAction(Event $event, ArrayObject $extra)
-	{
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
         $this->request->query['user_type'] = UserTable::GUARDIAN;
 
-		//parent::hideOtherInformationSection($this->controller->name, $this->action);
-	}
+        //parent::hideOtherInformationSection($this->controller->name, $this->action);
+    }
 
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-		$this->setupTabElements($entity);
+        $this->setupTabElements($entity);
 
-		$this->fields['nationality_id']['type'] = 'readonly';
+        $this->fields['nationality_id']['type'] = 'readonly';
         if (!empty($entity->main_nationality)) {
             $this->fields['nationality_id']['attr']['value'] = $entity->main_nationality->name;
         }
@@ -73,28 +73,30 @@ class GuardianUserTable extends UserTable {
             $this->fields['identity_type_id']['attr']['value'] = $entity->main_identity_type->name;
         }
 
-		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
-	}
+        $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+    }
 
-	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-		$options['type'] = 'student';
-		$tabElements = $this->controller->getStudentGuardianTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
+        $options['type'] = 'student';
+        $tabElements = $this->controller->getStudentGuardianTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
 
         // pr($this->fields);
         $this->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
-		$this->field('nationality_id', ['visible' => 'false']);
+        $this->field('nationality_id', ['visible' => 'false']);
         $this->field('identity_type_id', ['visible' => 'false']);
         $this->field('identity_number', ['visible' => 'false']);
 
         $this->field('username', ['visible' => true, 'after' => 'other_information_section']);
         $this->field('password', ['visible' => true, 'after' => 'username']);
 
-		$backUrl = $this->controller->getStudentGuardianTabElements();
-		$extra['toolbarButtons']['back']['url']['action'] = $backUrl['Guardians']['url']['action'];
-		$extra['toolbarButtons']['back']['url'][0] = 'add';
-	}
+        $backUrl = $this->controller->getStudentGuardianTabElements();
+        $extra['toolbarButtons']['back']['url']['action'] = $backUrl['Guardians']['url']['action'];
+        $extra['toolbarButtons']['back']['url'][0] = 'add';
+
+        $this->controller->set('selectedAction', 'Guardians');
+    }
 
     public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
     {
@@ -149,20 +151,20 @@ class GuardianUserTable extends UserTable {
         return $tooltipMessage;
     }
 
-	private function setupTabElements($entity)
+    private function setupTabElements($entity)
     {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+        $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 
-		$tabElements = [
-			'Guardians' => ['text' => __('Relation')],
-			'GuardianUser' => ['text' => __('General')]
-		];
-		$action = 'Guardians';
-		$actionUser = $this->alias();
-		if ($this->controller->name == 'Directories') {
-			$action = 'StudentGuardians';
-			$actionUser = 'StudentGuardianUser';
-		}
+        $tabElements = [
+            'Guardians' => ['text' => __('Relation')],
+            'GuardianUser' => ['text' => __('General')]
+        ];
+        $action = 'Guardians';
+        $actionUser = $this->alias();
+        if ($this->controller->name == 'Directories') {
+            $action = 'StudentGuardians';
+            $actionUser = 'StudentGuardianUser';
+        }
 
         $encodedParam = $this->request->params['pass'][1];
         $ids = $this->paramsDecode($encodedParam);
@@ -173,7 +175,7 @@ class GuardianUserTable extends UserTable {
         $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $studentGuardiansId])]);
         $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->id, 'StudentGuardians.id' => $studentGuardiansId])]);
 
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
 }
