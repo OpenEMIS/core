@@ -291,7 +291,7 @@ class NavigationComponent extends Component
                 $session->write('Directory.Directories.reload', true);
             }
         } else if ($controller->name == 'Profiles' && $action != 'index') {
-            $navigations = $this->appendNavigation('Profiles.Profiles.index', $navigations, $this->getProfileNavigation());
+            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
@@ -336,11 +336,14 @@ class NavigationComponent extends Component
 
     public function getMainNavigation()
     {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+
         $navigation = [
-            'Profiles.Profiles.index' => [
+            'Profiles.Profiles' => [
                 'title' => 'Profile',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => 'view', $userId]
             ],
 
             'Institutions.Institutions.index' => [
@@ -520,7 +523,7 @@ class NavigationComponent extends Component
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults'],
+                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults', 'Institutions.StudentCompetencyComments'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -772,14 +775,14 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Profiles.view' => [
                 'title' => 'General',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'Profiles.Comments', 'Profiles.Attachments',
                     'Profiles.History', 'Profiles.SpecialNeeds', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests']
             ]
@@ -812,7 +815,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Staff' => [
                 'title' => 'Staff',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
                 'Profiles.StaffEmployments' => [
@@ -848,7 +851,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Student' => [
                 'title' => 'Student',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
                 'Profiles.ProfileGuardians' => [
