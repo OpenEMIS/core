@@ -92,7 +92,7 @@ class UserBodyMassesTable extends AppTable
             $height = round($data['height'], 2);
             $weight = round($data['weight'], 2);
 
-            $denominator = $height * $weight;
+            $denominator = $height * $height;
 
             // to prevent the division by 0
             if ($denominator > 0) {
