@@ -34,7 +34,6 @@ class StaffSubjectsTable extends ControllerActionTable {
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->field('academic_period', []);
-		$this->field('institution', []);
 		$this->field('institution_class', []);
 		$this->field('educationSubject', []);
 		$this->field('male_students', []);
@@ -42,7 +41,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
 		$this->setFieldOrder([
 			'academic_period',
-			'institution',
+			'institution_id',
 			'institution_class',
 			'institution_subject_id',
 			'educationSubject',
