@@ -42,7 +42,7 @@ class UserBodyMassesTable extends AppTable
                     'last' => true
                 ],
                 'validWeight' => [
-                    'rule' => ['range', 0, 3]
+                    'rule' => ['range', 0, 500]
                 ]
             ])
             ->add('date', 'dateWithinPeriod', [
