@@ -76,7 +76,9 @@ class HtmlFieldHelper extends Helper
             }
         }
         if (array_key_exists('label', $options)) {
-            $options['label'] = ['escape' => false, 'text' => $options['label']];
+            if (!is_array($options['label'])) {
+                $options['label'] = ['escape' => false, 'text' => $options['label']];
+            }
         }
         return $options;
     }
