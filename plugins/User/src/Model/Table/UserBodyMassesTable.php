@@ -33,8 +33,12 @@ class UserBodyMassesTable extends AppTable
                     'last' => true
                 ],
                 'validHeight' => [
-                    'rule' => ['range', 0, 3]
-                ]
+                    'rule' => ['range', 0, 3],
+                    'last' => true
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                ],
             ])
             ->add('weight', [
                 'notZero' => [
@@ -42,8 +46,12 @@ class UserBodyMassesTable extends AppTable
                     'last' => true
                 ],
                 'validWeight' => [
-                    'rule' => ['range', 0, 500]
-                ]
+                    'rule' => ['range', 0, 500],
+                    'last' => true
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                ],
             ])
             ->add('date', 'dateWithinPeriod', [
                 'rule' => function ($value, $context) {
@@ -86,7 +94,15 @@ class UserBodyMassesTable extends AppTable
             $height = round($data['height'], 2);
             $weight = round($data['weight'], 2);
 
-            $bmi = round(($weight / ($height * $height)), 2);
+            $denominator = $height * $height;
+
+            // to prevent the division by 0
+            if ($denominator > 0) {
+                $bmi = round(($weight / ($denominator)), 2);
+            } else {
+                $bmi = 0;
+            }
+
             $data['body_mass_index'] = $bmi;
         }
     }
