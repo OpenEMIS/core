@@ -162,6 +162,8 @@ class AreaAdministrativesTable extends ControllerActionTable
             if (isset($value['id'])) {
                 if (!in_array($value['id'], $authorisedAreaIds)) {
                     $value['disabled'] = true;
+                } else {
+                    $authorisedAreaIds = array_merge($authorisedAreaIds, array_column($value['children'], 'id'));
                 }
                 if ($value['id'] == $selected) {
                     $value['selected'] = true;
@@ -180,10 +182,6 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $value['children'] = $children;
                     unset($children);
                     unset($order);
-                }
-                $parentIds = array_unique(array_column($value, 'parent_id'));
-                if (array_intersect($authorisedAreaIds, $parentIds)) {
-                    $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
                 }
                 $this->unsetEmptyArr($value, $authorisedAreaIds, $selected);
             }

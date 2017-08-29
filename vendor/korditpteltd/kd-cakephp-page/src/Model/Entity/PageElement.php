@@ -86,10 +86,6 @@ class PageElement
             $this->controlType = $this->type;
         }
 
-        if (in_array($this->type, ['string', 'integer', 'text'])) {
-            $this->setSortable(true);
-        }
-
         if (array_key_exists('model', $attributes)) {
             $this->name = $attributes['model'] . '.' . $this->name;
         }
@@ -244,7 +240,7 @@ class PageElement
 
     public function getLabel()
     {
-        return __($this->label);
+        return is_array($this->label) ? $this->label : __($this->label);
     }
 
     public function setLabel($label)
@@ -371,7 +367,7 @@ class PageElement
     public function setOptions($options, $empty = true)
     {
         if (empty($options) && $empty !== false) {
-            $this->options = ['' => __('No Options')];
+            $this->options = [['value' => '', 'text' => __('No Options')]];
         } else {
             $firstOption = current($options);
             if (is_array($firstOption) && array_key_exists('value', $firstOption) && array_key_exists('text', $firstOption)) {

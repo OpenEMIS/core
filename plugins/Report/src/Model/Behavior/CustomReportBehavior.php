@@ -166,7 +166,7 @@ class CustomReportBehavior extends Behavior
                         $associated = false;
                         break;
                     } else {
-                        $table = $table->$model;
+                        $table = $table->{$model};
                     }
                 }
 
@@ -195,7 +195,7 @@ class CustomReportBehavior extends Behavior
                         $associated = false;
                         break;
                     } else {
-                        $table = $table->$model;
+                        $table = $table->{$model};
                     }
                 }
 

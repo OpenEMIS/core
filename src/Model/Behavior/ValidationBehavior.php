@@ -2312,4 +2312,14 @@ class ValidationBehavior extends Behavior
             return count($authentications) > 1;
         }
     }
+
+    public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
+    {
+        if ($homeRoomTeacher != 0 && $globalData['data'][$secondaryHomeRoomTeacher] != 0) {
+            if ($homeRoomTeacher == $globalData['data'][$secondaryHomeRoomTeacher]) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

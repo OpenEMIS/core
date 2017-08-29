@@ -12,11 +12,13 @@ use Cake\Utility\Hash;
 use Cake\Utility\Text;
 use Cake\View\Helper;
 
+use Page\Traits\RTLTrait;
 use Page\Traits\EncodingTrait;
 
 class PageHelper extends Helper
 {
     use EncodingTrait;
+    use RTLTrait;
 
     public $helpers = ['Form', 'Html', 'Paginator', 'Url'];
 
@@ -212,6 +214,12 @@ class PageHelper extends Helper
 
             if ($attr['sortable']) {
                 $url = $this->getUrl(['action' => $this->request->param('action')], true);
+                if (array_key_exists('sort', $url)) {
+                    unset($url['sort']);
+                }
+                if (array_key_exists('direction', $url)) {
+                    unset($url['direction']);
+                }
                 $label = $this->Paginator->sort($field, $label, ['url' => $url]);
             }
 
@@ -231,7 +239,12 @@ class PageHelper extends Helper
         foreach ($data as $entity) {
             $row = [];
             foreach ($fields as $field => $attr) {
-                $row[] = $this->getValue($entity, $attr);
+                if (!$this->isRTL($this->getValue($entity, $attr))) {
+                    $row[] = '<div style = "direction: ltr !important">' . $this->getValue($entity, $attr) . '</div>';
+                } else {
+                    $row[] = $this->getValue($entity, $attr);
+                }
+
             }
             $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
 
@@ -244,7 +257,7 @@ class PageHelper extends Helper
     {
         $search = $this->getQueryString('search');
         if ($search !== false) {
-            $value = Text::highlight($value, $search, ['html' => true]);
+            $value = Text::highlight($value, $search);
         }
         return $value;
     }
@@ -262,7 +275,7 @@ class PageHelper extends Helper
                 'options' => $limitOptions,
                 'value' => $limit,
                 'templates' => ['select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'],
-                'onchange' => "Page.querystring('limit', this.value)"
+                'onchange' => "Page.querystring('limit', this.value, this)"
             ]);
         }
         return $html;
@@ -385,9 +398,16 @@ EOT;
             }
 
             $label = $attr['label'];
+            if (is_array($label)) {
+                $label = $label['text'];
+            }
             $value = '';
             if (array_key_exists('value', $attr['attributes'])) {
                 $value = $attr['attributes']['value'];
+                if (!$this->isRTL($value)) {
+                    $value = '<div style = "direction:ltr !important">' . $value . '</div>';
+                }
+
             }
 
             if ($controlType == 'link' && array_key_exists('href', $attr['attributes'])) {
@@ -399,8 +419,9 @@ EOT;
         return $html;
     }
 
-    private function extractHtmlAttributes(array $field, $data)
+    private function extractHtmlAttributes(array &$field, $data)
     {
+        $key = $field['key'];
         $options = $field['attributes'];
         if (array_key_exists('name', $options)) {
             unset($options['name']);
@@ -412,6 +433,12 @@ EOT;
 
         if (array_key_exists('options', $field)) {
             $options['options'] = $field['options'];
+        }
+
+        $invalidFields = $data->invalid();
+        if (array_key_exists($key, $invalidFields)) {
+            $options['value'] = $invalidFields[$key];
+            $field['attributes']['value'] = $invalidFields[$key];
         }
         return $options;
     }
@@ -544,10 +571,14 @@ EOT;
 
     private function date(array $field, $data)
     {
+        $key = $field['key'];
         $options = ['type' => 'text', 'class' => 'form-control', 'label' => false, 'error' => false];
         $required = isset($field['attributes']['required']) ? $field['attributes']['required'] : false;
-        $value = isset($field['attributes']['value']) ? $field['attributes']['value'] : '';
         $disabled = isset($field['attributes']['disabled']) ? $field['attributes']['disabled'] : false;
+        $value = isset($field['attributes']['value']) ? $field['attributes']['value'] : '';
+        if ($data->invalid($key)) {
+            $value = $data->invalid($key);
+        }
         $dateOptions = [];
 
         if ($required) {

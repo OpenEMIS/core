@@ -32,7 +32,7 @@ class AreapickerBehavior extends Behavior
         $fieldName = $attr['model'] . '.' . $attr['field'];
         $HtmlField = $event->subject();
         $data = $HtmlField->request->data;
-        $value = isset($data[$this->_table->alias()][$attr['field']]) ? $data[$this->_table->alias()][$attr['field']] : $entity->$attr['field'];
+        $value = isset($data[$this->_table->alias()][$attr['field']]) ? $data[$this->_table->alias()][$attr['field']] : $entity->{$attr['field']};
         if ($action == 'edit') {
             $Url = $HtmlField->Url;
             $Form = $HtmlField->Form;
@@ -84,15 +84,9 @@ class AreapickerBehavior extends Behavior
             $areaKeys[] = null;
             $session = $HtmlField->request->session();
 
-            $areaKeys = array_merge($areaKeys, [$entity->$attr['field']]);
+            $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             $session->write('FormTampering.'.$fieldName, $areaKeys);
 
-            if ($targetModel == 'Area.Areas') {
-                $authorisedArea = $areaKeys;
-                $attr['authorisedArea'] = $authorisedArea;
-            } else {
-                $attr['authorisedArea'] = [];
-            }
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
         return $value;
@@ -119,7 +113,7 @@ class AreapickerBehavior extends Behavior
                 if ($attr['type'] == 'areapicker' && $attr['source_model'] == 'Area.Areas') {
                     $this->_table->fields[$field]['visible'] = false;
                     $targetModel = $attr['source_model'];
-                    $areaId = $entity->$field;
+                    $areaId = $entity->{$field};
                     $list = $this->getAreaLevelName($targetModel, $areaId);
                     $after = $field;
                     foreach ($list as $key => $area) {
@@ -149,7 +143,7 @@ class AreapickerBehavior extends Behavior
             if ($attr['type'] == 'areapicker') {
                 $this->_table->fields[$field]['type'] = 'hidden';
                 $targetModel = $attr['source_model'];
-                $areaId = $entity->$field;
+                $areaId = $entity->{$field};
                 if (!empty($areaId)) {
                     $list = $this->getAreaLevelName($targetModel, $areaId);
                 } else {

@@ -42,6 +42,7 @@ class TrainingsTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('training_course_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('training_session_id', ['type' => 'hidden']);
         $this->ControllerAction->field('training_need_type', ['type' => 'hidden']);
         $this->ControllerAction->field('status');
         $this->ControllerAction->field('format');
@@ -83,12 +84,50 @@ class TrainingsTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
-
-                if (in_array($feature, ['Report.TrainingResults'])) {
+                if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers'])) {
                     $options = $this->Training->getCourseList();
+
+                    if (empty($this->request->data[$this->alias()]['training_course_id'])) {
+                        reset($options);
+                        $this->request->data[$this->alias()]['training_course_id'] = key($options);
+                    }
+
                     $attr['type'] = 'select';
                     $attr['select'] = false;
                     $attr['options'] = $options;
+                    $attr['onChangeReload'] = 'changeTrainingCourseId';
+                    return $attr;
+                }
+            }
+        }
+    }
+
+    public function addOnChangeTrainingCourseId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('training_session_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['training_session_id']);
+            }
+        }
+    }
+
+    public function onUpdateFieldTrainingSessionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
+
+                if (in_array($feature, ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers'])) {
+                    if (!empty($this->request->data[$this->alias()]['training_course_id'])) {
+                        $courseId = $this->request->data[$this->alias()]['training_course_id'];
+                        $options = $this->Training->getSessionList(['training_course_id' => $courseId]);
+                    } else {
+                        $options = [];
+                    }
+
+                    $attr['options'] = $options;
+                    $attr['type'] = 'select';
+                    $attr['select'] = false;
                     return $attr;
                 }
             }

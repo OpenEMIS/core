@@ -57,7 +57,7 @@ class ImportResultsTable extends AppTable
                 $data[$columnOrder]['data'][] = [
                     $row->code,
                     $row->name,
-                    $row->$lookupColumn,
+                    $row->{$lookupColumn},
                     $row->_matchingData[$AcademicPeriods->alias()]->name
                 ];
             }
@@ -92,7 +92,7 @@ class ImportResultsTable extends AppTable
                     $row->_matchingData[$Examinations->alias()]->id,
                     $row->_matchingData[$lookedUpTable->alias()]->name,
                     $row->_matchingData[$lookedUpTable->alias()]->code,
-                    $row->_matchingData[$lookedUpTable->alias()]->$lookupColumn
+                    $row->_matchingData[$lookedUpTable->alias()]->{$lookupColumn}
                 ];
             }
         }
@@ -122,7 +122,7 @@ class ImportResultsTable extends AppTable
                 $data[$columnOrder]['data'][] = [
                     $row->name,
                     $row->code,
-                    $row->$lookupColumn,
+                    $row->{$lookupColumn},
                     $row->_matchingData[$ExaminationGradingTypes->alias()]->name
                 ];
             }
