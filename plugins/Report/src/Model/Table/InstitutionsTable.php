@@ -11,6 +11,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use Institution\Model\Table\InstitutionsTable as Institutions;
 
 class InstitutionsTable extends AppTable
@@ -41,7 +42,7 @@ class InstitutionsTable extends AppTable
             'foreignKey' => 'institution_network_connectivity_id'
         ]);
 
-		$this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
+		$this->addBehavior('Excel', ['excludes' => ['security_group_id', 'logo_name'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.CustomFieldList', [
 			'model' => 'Institution.Institutions',
@@ -58,6 +59,21 @@ class InstitutionsTable extends AppTable
 			Institutions::NON_ACADEMIC => 'Non-Academic Institution'
 		];
 	}
+
+	public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator;
+    }
+
+    public function validationStudents(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('education_grade_id')
+            ->notEmpty('status');
+        return $validator;
+    }
 
 	public function beforeAction(Event $event) {
 		$this->fields = [];
@@ -85,11 +101,19 @@ class InstitutionsTable extends AppTable
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('type', ['type' => 'hidden']);
 		$this->ControllerAction->field('module', ['type' => 'hidden']);
 		// $this->ControllerAction->field('license', ['type' => 'hidden']);
 	}
+
+	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->alias()]['feature'] == 'Report.InstitutionStudents') {
+            $options['validate'] = 'students';
+        }
+    }
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
 		$requestData = json_decode($settings['process']['params']);
@@ -106,7 +130,7 @@ class InstitutionsTable extends AppTable
 		}
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
 	{
 		$requestData = json_decode($settings['process']['params']);
 		$feature = $requestData->feature;
@@ -116,7 +140,7 @@ class InstitutionsTable extends AppTable
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {
 			$newFields[] = $value;
-			if ($value['field'] == 'area_id') {
+			if ($value['field'] == 'classification') {
 				$newFields[] = [
 					'key' => 'Areas.code',
 					'field' => 'area_code',
@@ -125,7 +149,7 @@ class InstitutionsTable extends AppTable
 				];
 			}
 
-			if ($value['field'] == 'area_administrative_id') {
+			if ($value['field'] == 'area_id') {
 				$newFields[] = [
 					'key' => 'AreaAdministratives.code',
 					'field' => 'area_administrative_code',
@@ -330,6 +354,31 @@ class InstitutionsTable extends AppTable
 				}
 				return $attr;
 			}
+		}
+	}
+
+	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionStudents'])) {
+				$EducationGrades = TableRegistry::get('Education.EducationGrades');
+				$gradeOptions = $EducationGrades
+					->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+					->find('visible')
+					->contain(['EducationProgrammes.EducationCycles'])
+					->order([
+						'EducationCycles.order' => 'ASC',
+						'EducationProgrammes.order' => 'ASC',
+						$EducationGrades->aliasField('order') => 'ASC'
+					])
+					->toArray();
+
+				$attr['type'] = 'select';
+				$attr['options'] = $gradeOptions;
+			} else {
+				$attr['value'] = self::NO_FILTER;
+			}
+			return $attr;
 		}
 	}
 

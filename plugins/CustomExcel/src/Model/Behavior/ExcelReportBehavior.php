@@ -19,7 +19,7 @@ use PHPExcel_Worksheet;
 use PHPExcel_Cell;
 use PHPExcel_Cell_DataValidation;
 use PHPExcel_Style_Alignment;
-// use PHPExcel_Worksheet_MemoryDrawing;
+use PHPExcel_Worksheet_MemoryDrawing;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -43,7 +43,7 @@ class ExcelReportBehavior extends Behavior
         'table' => 'table',
         'match' => 'match',
         'dropdown' => 'dropdown',
-        // 'image' => 'image'
+        'image' => 'image'
     ];
 
 	public function initialize(array $config)
@@ -297,21 +297,29 @@ class ExcelReportBehavior extends Behavior
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
     }
 
-    // public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra)
-    // {
-    //     $imageWidth = $attr['imageWidth'];
+    public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra)
+    {
+        $imageWidth = $attr['imageWidth'];
+        $imageMarginLeft = $attr['imageMarginLeft'];
+        $imageMarginTop = $attr['imageMarginTop'];
 
-    //     $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
-    //     $objDrawing->setImageResource($imageResource);
-    //     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
-    //     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
-    //     $objDrawing->setWidth($imageWidth);
-    //     $objDrawing->setCoordinates($cellCoordinate);
-    //     $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
-
-    //     // set to empty to remove the placeholder
-    //     $objWorksheet->setCellValue($cellCoordinate, '');
-    // }
+        $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
+        if (!$imageResource) {
+            $imageResource = imagecreatefrompng(ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png');
+            $objDrawing->setName('OpenEMIS Logo');
+            $objDrawing->setDescription('OpenEMIS Logo');
+            $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG);
+        } else {
+            $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
+        }
+        $objDrawing->setImageResource($imageResource);
+        $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+        $objDrawing->setWidth($imageWidth); 
+        $objDrawing->setCoordinates($cellCoordinate); 
+        $objDrawing->setOffsetX($imageMarginLeft); 
+        $objDrawing->setOffsetY($imageMarginTop); 
+        $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
+    }
 
     public function saveExcel($objPHPExcel, $filepath)
     {
@@ -472,7 +480,9 @@ class ExcelReportBehavior extends Behavior
         $attr['showHeaders'] = array_key_exists('showHeaders', $settings) ? $settings['showHeaders'] : false;
         $attr['insertRows'] = array_key_exists('insertRows', $settings) ? $settings['insertRows'] : false;
         $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : null;
-        // $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
+        $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
+        $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $settings) ? $settings['imageMarginLeft'] : null;
+        $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $settings) ? $settings['imageMarginTop'] : null;
 
         // Start attributes  for dropdown
         $dropdownAttrs = ['source', 'promptTitle', 'prompt', 'errorTitle', 'error'];
@@ -965,6 +975,7 @@ class ExcelReportBehavior extends Behavior
                 $columnIndex = $attr['columnIndex'];
                 if (!empty($columnsArray)) {
                     $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
+                    $rowValue++;
                 } else {
                     if (!empty($nestedRowsArray)) {
                         if (!is_null($nestedfilter) && !empty($nestedMatchFrom)) {
@@ -1002,10 +1013,9 @@ class ExcelReportBehavior extends Behavior
                         $cellCoordinate = $columnValue.$rowValue;
 
                         $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
+                        $rowValue++;
                     }
                 }
-
-                $rowValue++;
             }
 
         } else {
@@ -1100,19 +1110,31 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    // private function image($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
-    // {
-    //     $columnValue = $attr['columnValue'];
-    //     $rowValue = $attr['rowValue'];
-    //     $cellCoordinate = $columnValue.$rowValue;
-    //     $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 72;
+    private function image($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $columnValue = $attr['columnValue'];
+        $rowValue = $attr['rowValue'];
+        $cellCoordinate = $columnValue.$rowValue;
 
-    //     $data = Hash::extract($extra['vars'], $attr['displayValue']);
-    //     $blob = current($data);
+        $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 50;
+        $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $attr) ? $attr['imageMarginLeft'] : 0;
+        $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $attr) ? $attr['imageMarginTop'] : 0;
 
-    //     if (is_resource($blob)) {
-    //         $imageResource = imagecreatefromstring(stream_get_contents($blob));
-    //         $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
-    //     }
-    // }
+        $data = Hash::extract($extra['vars'], $attr['displayValue']);
+        $blob = current($data);
+
+        $imageResource = '';
+        if (is_resource($blob)) {
+            $imageResource = imagecreatefromstring(stream_get_contents($blob));
+            
+            //retain transparency on png/gif file
+            imageAlphaBlending($imageResource, true);
+            imageSaveAlpha($imageResource, true);
+        }
+
+        $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
+
+        // set to empty to remove the placeholder
+        $objWorksheet->setCellValue($cellCoordinate, '');
+    }
 }
