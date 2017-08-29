@@ -186,7 +186,7 @@ class ControllerActionBehavior extends Behavior
         return in_array($field, $columns);
     }
 
-    public function actions($action=null)
+    public function actions($action = null)
     {
         $actions = $this->config('actions');
 
@@ -213,7 +213,7 @@ class ControllerActionBehavior extends Behavior
         }
     }
 
-    public function paramsPass($index=null)
+    public function paramsPass($index = null)
     {
         $params = $this->_table->request->pass;
         if (count($params) > 0) {
@@ -304,7 +304,7 @@ class ControllerActionBehavior extends Behavior
         return $params;
     }
 
-    public function setUrlParams($action, $params=[])
+    public function setUrlParams($action, $params = [])
     {
         $session = $this->_table->request->session();
         $hash = sha1(time());
@@ -315,7 +315,7 @@ class ControllerActionBehavior extends Behavior
         return $action;
     }
 
-    public function field($name, $attr=[])
+    public function field($name, $attr = [])
     {
         $model = $this->_table;
 
@@ -368,7 +368,11 @@ class ControllerActionBehavior extends Behavior
         foreach ($this->_table->fields as $key => $attr) {
             if (in_array($key, $fields)) {
                 foreach ($actions as $action) {
-                    $this->_table->fields[$key]['visible'][$action] = true;
+                    if (is_array($this->_table->fields[$key]['visible'])) {
+                        $this->_table->fields[$key]['visible'][$action] = true;
+                    } else {
+                        $this->_table->fields[$key]['visible'] = [$action => true];
+                    }
                 }
             } else {
                 $this->_table->fields[$key]['visible'] = false;
@@ -376,7 +380,7 @@ class ControllerActionBehavior extends Behavior
         }
     }
 
-    public function setFieldOrder($field, $order=0)
+    public function setFieldOrder($field, $order = 0)
     {
         $fields = $this->_table->fields;
 
@@ -426,7 +430,7 @@ class ControllerActionBehavior extends Behavior
         return false;
     }
 
-    public function getAssociatedModel($field, $type='belongsTo' /* hasOne | hasMany | belongsToMany */)
+    public function getAssociatedModel($field, $type = 'belongsTo' /* hasOne | hasMany | belongsToMany */)
     {
         $associationTypes = [
             'belongsTo' => 'manyToOne',
@@ -469,7 +473,8 @@ class ControllerActionBehavior extends Behavior
     }
 
     public function getContains($type = 'belongsTo', ArrayObject $extra)
-    { // type is not being used atm
+    {
+ // type is not being used atm
         $model = $this->_table;
         $contain = [];
         $containFields = [];

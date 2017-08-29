@@ -69,6 +69,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->allowEmpty('name')
             ->add('code', [
                 'ruleUnique' => [
                     'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
@@ -133,6 +134,12 @@ class InstitutionLandsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->Navigation->substituteCrumb(__('Institution Lands'), __('Institution Lands'));
+        $this->field('name', ['visible' => false]);
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $data['name'] = $data['code'];
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -180,7 +187,7 @@ class InstitutionLandsTable extends ControllerActionTable
             'institutionId' => $institutionId
         ];
         $url = array_merge($url, $this->request->query);
-        $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->name]);
+        $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
 
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
@@ -369,6 +376,7 @@ class InstitutionLandsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
+        $entity->name = $entity->code;
         $extra['excludedModels'] = [
             $this->CustomFieldValues->alias(),
             $this->InstitutionBuildings->alias()

@@ -4,6 +4,7 @@ namespace App\Controller\Component;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Controller\Exception\SecurityException;
 
 class NavigationComponent extends Component
 {
@@ -64,10 +65,14 @@ class NavigationComponent extends Component
     public function beforeFilter(Event $event)
     {
         $controller = $this->controller;
-        $navigations = $this->buildNavigation();
-        $this->checkSelectedLink($navigations);
-        $this->checkPermissions($navigations);
-        $controller->set('_navigations', $navigations);
+        try {
+            $navigations = $this->buildNavigation();
+            $this->checkSelectedLink($navigations);
+            $this->checkPermissions($navigations);
+            $controller->set('_navigations', $navigations);
+        } catch (SecurityException $ex) {
+            return;
+        }
     }
 
     private function getLink($controllerActionModelLink, $params = [])
@@ -250,8 +255,12 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
+<<<<<<< HEAD
         $institutionControllers = ['Counsellings', 'Comments'];
         $profileControllers = ['Comments'];
+=======
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses'];
+>>>>>>> 39fea7c953bdde6c9940a1707c8bc10712fdc6f7
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -286,8 +295,13 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
+<<<<<<< HEAD
         } else if (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles.index', $navigations, $this->getProfileNavigation());
+=======
+        } else if ($controller->name == 'Profiles' && $action != 'index') {
+            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
+>>>>>>> 39fea7c953bdde6c9940a1707c8bc10712fdc6f7
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
@@ -332,11 +346,14 @@ class NavigationComponent extends Component
 
     public function getMainNavigation()
     {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+
         $navigation = [
-            'Profiles.Profiles.index' => [
+            'Profiles.Profiles' => [
                 'title' => 'Profile',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => 'view', $userId]
             ],
 
             'Institutions.Institutions.index' => [
@@ -516,7 +533,7 @@ class NavigationComponent extends Component
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults', 'Institutions.StudentCompetencyComments'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -699,7 +716,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']],
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete']],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -768,14 +785,14 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Profiles.view' => [
                 'title' => 'General',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'Comments.index', 'Comments.view', 'Profiles.Attachments',
                     'Profiles.History', 'Profiles.SpecialNeeds', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests']
             ]
@@ -808,7 +825,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Staff' => [
                 'title' => 'Staff',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
                 'Profiles.StaffEmployments' => [
@@ -844,7 +861,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Student' => [
                 'title' => 'Student',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
                 'Profiles.ProfileGuardians' => [
