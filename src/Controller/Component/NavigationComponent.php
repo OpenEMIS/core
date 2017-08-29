@@ -255,12 +255,8 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-<<<<<<< HEAD
-        $institutionControllers = ['Counsellings', 'Comments'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'Comments'];
         $profileControllers = ['Comments'];
-=======
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses'];
->>>>>>> 39fea7c953bdde6c9940a1707c8bc10712fdc6f7
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -295,13 +291,8 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
-<<<<<<< HEAD
         } else if (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles.index', $navigations, $this->getProfileNavigation());
-=======
-        } else if ($controller->name == 'Profiles' && $action != 'index') {
-            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
->>>>>>> 39fea7c953bdde6c9940a1707c8bc10712fdc6f7
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
