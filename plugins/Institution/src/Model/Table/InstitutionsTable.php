@@ -37,6 +37,13 @@ class InstitutionsTable extends ControllerActionTable
     const ACADEMIC = 1;
     const NON_ACADEMIC = 2;
 
+    private $defaultLogoView = "<div class='profile-image'><i class='fa kd-institutions'></i></div>";
+    private $defaultImgIndexClass = "logo-thumbnail";
+    private $defaultImgViewClass= "logo-image";
+    private $photoMessage = 'Advisable logo dimension 200 by 200';
+    private $formatSupport = 'Format Supported: ';
+    private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
+
     public function initialize(array $config)
     {
         $this->table('institutions');
@@ -145,12 +152,23 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->addBehavior('Institution.AdvancedProgrammeSearch');
 
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'logo_name',
+            'content' => 'logo_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'image',
+            'useDefaultName' => true
+        ]);
+
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index', 'view'],
             'API' => ['index', 'view']
         ]);
+
+        $this->addBehavior('ControllerAction.Image');
 
         $this->classificationOptions = [
             self::ACADEMIC => 'Academic Institution',
@@ -253,6 +271,7 @@ class InstitutionsTable extends ControllerActionTable
                         'rule' => 'checkLinkedSector',
                         'provider' => 'table'
                 ])
+            ->allowEmpty('logo_content')
             ;
         return $validator;
     }
@@ -473,6 +492,11 @@ class InstitutionsTable extends ControllerActionTable
             $this->field('email', ['visible' => false]);
             $this->field('website', ['visible' => false]);
         }
+
+        $this->field('logo_name', ['visible' => false]);
+        if ($this->action != 'index') {
+            $this->field('logo_content', ['type' => 'image']);
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -584,12 +608,18 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->Session->delete('Institutions.id');
 
+        $plugin = $this->controller->plugin;
+        $name = $this->controller->name;
+        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
+        $imageDefault = 'fa kd-institutions';
+        $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+
         $this->setFieldOrder([
-            'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
 
         $this->setFieldVisible(['index'], [
-            'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
@@ -735,6 +765,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->setFieldOrder([
             'information_section',
+            'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
             'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
@@ -793,6 +824,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->setFieldOrder([
             'information_section',
+            'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
             'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
@@ -815,6 +847,7 @@ class InstitutionsTable extends ControllerActionTable
 
          $this->setFieldOrder([
             'information_section',
+            'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
             'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
 
@@ -1052,7 +1085,6 @@ class InstitutionsTable extends ControllerActionTable
             $debugInfo = $this->alias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
 
             Log::write('debug', $debugInfo);
-            Log::write('debug', $entity);
             Log::write('debug', $options);
             Log::write('debug', 'End of monitoring year opened');
         }
@@ -1127,5 +1159,43 @@ class InstitutionsTable extends ControllerActionTable
         }
 
         return $isActive;
+    }
+
+    public function getDefaultImgMsg()
+    {
+        return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
+    }
+
+    public function getDefaultImgIndexClass()
+    {
+        return $this->defaultImgIndexClass;
+    }
+
+    public function getDefaultImgViewClass()
+    {
+        return $this->defaultImgViewClass;
+    }
+
+    public function getDefaultImgView()
+    {
+        $value = "";
+        $controllerName = $this->controller->name;
+
+        $value = $this->defaultLogoView;
+
+        return $value;
+    }
+
+    public function onGetLogoContent(Event $event, Entity $entity)
+    {
+        $fileContent = $entity->logo_content;
+        $value = "";
+        if (empty($fileContent) && is_null($fileContent)) {
+            $value = $this->defaultLogoView;
+        } else {
+            $value = base64_encode(stream_get_contents($fileContent));//$fileContent;
+        }
+
+        return $value;
     }
 }

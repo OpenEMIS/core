@@ -18,6 +18,7 @@ class ReportCardCommentsTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('SecondaryStaff', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
@@ -33,6 +34,7 @@ class ReportCardCommentsTable extends ControllerActionTable
         $this->fields['class_number']['visible'] = false;
         $this->fields['institution_shift_id']['visible'] = false;
         $this->fields['staff_id']['visible'] = false;
+        $this->fields['secondary_staff_id']['visible'] = false;
 
         $this->field('subjects', ['type' => 'integer']);
         $this->field('male_students', ['type' => 'integer']);
