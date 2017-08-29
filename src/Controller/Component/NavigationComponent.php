@@ -97,7 +97,7 @@ class NavigationComponent extends Component
     {
         $linkOnly = [];
 
-        $ignoredAction = ['Profiles']; // action that will be excluded from checking
+        $ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking
 
         $roles = [];
         $restrictedTo = [];
@@ -130,7 +130,7 @@ class NavigationComponent extends Component
                 }
 
                 // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['action'], $ignoredAction)) {
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'], $ignoredPlugin)) {
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
@@ -250,7 +250,8 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings'];
+        $institutionControllers = ['Counsellings', 'Comments'];
+        $profileControllers = ['Comments'];
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -285,7 +286,7 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
-        } else if ($controller->name == 'Profiles' && $action != 'index') {
+        } else if (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles.index', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
@@ -675,7 +676,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
-                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys']],
+                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'Comments.index', 'Comments.view', 'Comments.add', 'Comments.edit', 'Comments.remove']],
             'Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
@@ -769,7 +770,7 @@ class NavigationComponent extends Component
                 'title' => 'General',
                 'parent' => 'Profiles.Profiles.index',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'Profiles.Comments', 'Profiles.Attachments',
+                'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'Comments.index', 'Comments.view', 'Profiles.Attachments',
                     'Profiles.History', 'Profiles.SpecialNeeds', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
