@@ -120,12 +120,12 @@ class CommentsController extends PageController
         }
     }
 
-
     private function setupTabElements()
     {
         // set tabElement
         $page = $this->Page;
-        $tabPlugin = $this->plugin;
+        // $tabPlugin = $this->plugin;
+        $tabPlugin = 'Profile';
         $tabController = 'Profiles';
 
         $loginUserId = $this->Auth->user('id');
