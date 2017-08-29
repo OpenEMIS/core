@@ -61,12 +61,20 @@ class MultiGradeBehavior extends Behavior
             'field' => 'multi_grade_field',
             'element' => 'Institution.Classes/multi_grade',
         ]);
+
+        $staffId = is_null($model->request->data($model->aliasField('staff_id'))) ? 0 : $model->request->data($model->aliasField('staff_id'));
+        $secondaryStaffId = is_null($model->request->data($model->aliasField('secondary_staff_id'))) ? 0 : $model->request->data($model->aliasField('secondary_staff_id'));
         $model->fields['students']['visible'] = false;
-        $model->fields['staff_id']['options'] = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId);
+        $model->fields['staff_id']['options'] = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $secondaryStaffId);
+        $model->fields['staff_id']['onChangeReload'] = true;
         $model->fields['staff_id']['select'] = false;
 
+        $model->fields['secondary_staff_id']['options'] = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $staffId);
+        $model->fields['secondary_staff_id']['onChangeReload'] = true;
+        $model->fields['secondary_staff_id']['select'] = false;
+
         $model->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'multi_grade_field'
+            'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'secondary_staff_id', 'multi_grade_field'
         ]);
     }
 

@@ -37,14 +37,6 @@ class CounsellingsTable extends AppTable
         return $this->defaultConfig;
     }
 
-    public function findIndex(Query $query, array $options)
-    {
-        return $query->order([
-            'date' => 'ASC',
-            'GuidanceTypes.order' => 'ASC'
-        ]);
-    }
-
     public function getGuidanceTypesOptions($institutionId)
     {
         // should be auto, if auto the reorder and visible not working

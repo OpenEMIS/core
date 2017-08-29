@@ -34,10 +34,12 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     Controller.gridOptions = {};
     Controller.criteriaGradeOptions = {};
     Controller.studentResults = {};
+    Controller.studentComments = {};
 
     // Function mapping
     Controller.initGrid = initGrid;
     Controller.changeCriteria = changeCriteria;
+    Controller.changeComments = changeComments;
     Controller.resetColumnDefs = resetColumnDefs;
     Controller.changeCompetencyOptions = changeCompetencyOptions;
 
@@ -76,7 +78,11 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     Controller.selectedPeriodStatus = Controller.periodOptions[0].editable;
                     if (Controller.itemOptions.length > 0) {
                         Controller.selectedItem = Controller.periodOptions[0].competency_items[0].id;
+                    } else {
+                        AlertSvc.warning(Controller, "Please setup competency items for the selected period");
                     }
+                } else {
+                    AlertSvc.warning(Controller, "Please setup competency periods for the selected template");
                 }
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
                     Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
@@ -85,9 +91,14 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             })
             .then(function (competencyResults) {
                 Controller.changeCriteria(competencyResults);
+                return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
+                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+            }, function (error) {
+            })
+            .then(function (competencyItemComments) {
+                Controller.changeComments(competencyItemComments);
                 return Controller.initGrid();
             }, function (error) {
-
             })
             .finally(function(){
                 Controller.dataReady = true;
@@ -146,20 +157,30 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                             competency_period_id: period,
                             period_editable: selectedPeriodStatus,
                             student_status_name: student.student_status.name,
-                            student_status_code: student.student_status.code
+                            student_status_code: student.student_status.code,
+                            comments: ''
                         };
+                        var studentComments = Controller.studentComments;
+                        if (angular.isDefined(studentComments[student.student_id]) && studentComments[student.student_id]['comments'] != null) {
+                            row['comments'] = studentComments[student.student_id]['comments'];
+                        }
+
                         angular.forEach(copyCriteriaIds, function(value, key) {
                             row[value.name] = value.value;
                         });
                         rowData.push(row);
                     });
                     Controller.gridOptions.api.setRowData(rowData);
-                    if (response.data.length > 4) {
-                        AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                    } else {
-                        Controller.gridOptions.api.sizeColumnsToFit();
-                        AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
+
+                    if (angular.isDefined(item)) {
+                        if (response.data.length > 4) {
+                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+                        } else {
+                            AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
+                        }
                     }
+
+                    Controller.gridOptions.api.sizeColumnsToFit();
                 }, function(error){
                     console.log(error);
                 });
@@ -182,6 +203,17 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         Controller.studentResults = studentResults;
     }
 
+    function changeComments(competencyItemComments) {
+        var studentComments = {};
+        angular.forEach(competencyItemComments, function (value, key) {
+            if (studentComments[value.student_id] == undefined) {
+                studentComments[value.student_id] = {}
+            }
+            studentComments[value.student_id]['comments'] = value.comments;
+        });
+        Controller.studentComments = studentComments;
+    }
+
     function changeCompetencyOptions(periodChange) {
         if (periodChange) {
             angular.forEach(Controller.periodOptions, function(value, key) {
@@ -196,9 +228,14 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId)
         .then(function (results) {
             Controller.changeCriteria(results);
+            return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
+                Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+        }, function (error) {
+        })
+        .then(function (comments) {
+            Controller.changeComments(comments);
             Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
         }, function (error) {
-
         });
     }
 
@@ -225,6 +262,15 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 localeText: localeText,
+                onCellValueChanged: function(params) {
+                    if (params.newValue != params.oldValue) {
+                        InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
+                        .then(function(response) {
+                        }, function(error) {
+                            console.log(error);
+                        });
+                    }
+                },
                 onGridReady: function() {
                     Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
                 }
@@ -249,6 +295,15 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                onCellValueChanged: function(params) {
+                    if (params.newValue != params.oldValue) {
+                        InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
+                        .then(function(response) {
+                        }, function(error) {
+                            console.log(error);
+                        });
+                    }
+                },
                 onGridReady: function() {
                     Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
                 }

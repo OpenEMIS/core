@@ -1,3 +1,12 @@
+v3.10.10
+- System allows users to record student's Height and Weight in Students > Health > Body Mass page
+- Added Comments field to Students Competencies in Institutions > Competencies > Items page
+- System allows adding of Institution logo to Institutions > Overview page
+- System allows a Secondary Home Room Teacher to be assigned to a class in Institution > Academic > Classes page
+
+v3.10.9
+- Allow for both specialisations and subjects in Staff > Professional Development > Qualifications page
+
 v3.10.8
 - Implemented Counselor Feature in Institution > Students > Counselling
 - Upon generating a report in the Report module, system now includes filter selection in report name
