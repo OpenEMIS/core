@@ -83,7 +83,7 @@ class ProfilesController extends AppController
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
     public function StudentBankAccounts()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
     public function StaffBankAccounts()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
-    public function Comments()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+    // public function Comments()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function StudentProgrammes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
     public function Identities()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
@@ -356,11 +356,17 @@ class ProfilesController extends AppController
         ];
 
         foreach ($tabElements as $key => $value) {
-
             if ($key == $this->name) {
                 $tabElements[$key]['url']['action'] = 'Profiles';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+            } else if ($key == 'Comments') {
+                $tabElements[$key]['url'] = [
+                    'plugin' => $plugin,
+                    'controller' => 'Comments',
+                    'action' => 'index',
+                    $this->ControllerAction->paramsEncode(['id' => $id])
+                ];
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';

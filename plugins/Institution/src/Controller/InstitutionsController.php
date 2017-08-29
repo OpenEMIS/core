@@ -1292,6 +1292,17 @@ class InstitutionsController extends AppController
                             ['security_user_id' => $securityUserId]
                         );
 
+                if ($key == 'Comments') {
+                    $institutionId = $this->request->session()->read('Institution.Institutions.id');
+
+                    $url = [
+                        'plugin' => 'Institution',
+                        'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                        'controller' => 'Comments',
+                        'action' => 'index',
+                    ];
+                }
+
                 $tabElements[$key]['url'] = $url;
             }
         }
