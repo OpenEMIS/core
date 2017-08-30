@@ -164,6 +164,21 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
+    public function isLastGradeInEducationProgrammes($gradeId)
+    {
+        if (!empty($gradeId)) {
+            $nextAvailableEducationGrades = $this->getNextAvailableEducationGrades($gradeId, false);
+
+            if (!count($nextAvailableEducationGrades)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $this->association('Institutions')->name('InstitutionProgrammes');
