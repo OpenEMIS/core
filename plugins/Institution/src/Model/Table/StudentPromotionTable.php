@@ -506,9 +506,17 @@ class StudentPromotionTable extends AppTable
             if (!in_array($studentStatusId, [$statuses['REPEATED']])) {
                 $institutionId = $this->institutionId;
 
-                // list of grades available to promote to
-                // 'false' means only displayed the next level within the same grade level.
-                $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
+                $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
+                if ($isLastGrade) {
+                    // list of next first grades from all next programme available to promote to
+                    // 'true' means get all the grades of the next programmes plus the current programme grades
+                    // 'true' means get first grade only from all available next programme
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, true);
+                } else {
+                    // list of grades available to promote to
+                    // 'false' means only displayed the next level within the same grade level.
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+                }
 
                 // list of grades available in the institution
                 $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
@@ -517,11 +525,13 @@ class StudentPromotionTable extends AppTable
                 $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
                 // if no grade option or the next grade is not available in the institution
-                if (count($gradeOptions) == 0 || (key($gradeOptions) != key($listOfGrades))) {
+                if (count($gradeOptions) == 0) {
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
-                    $options = [key($gradeOptions) => $gradeOptions[key($gradeOptions)]];
+                    // if is last grade in the programme, show All first grade of the next programme,
+                    // else show the next grade of the current grade only
+                    $options = ($isLastGrade) ? $gradeOptions : [key($gradeOptions) => current($gradeOptions)];
 
                     // to cater for graduate
                     if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
