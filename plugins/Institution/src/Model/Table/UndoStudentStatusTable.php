@@ -169,7 +169,7 @@ class UndoStudentStatusTable extends AppTable {
 						->count();
 				}
 			]);
-            
+
             $attr['options'] = $periodOptions;
             $attr['attr']['value'] = $request->query('period');
             $attr['onChangeReload'] = 'changePeriod';
@@ -197,10 +197,10 @@ class UndoStudentStatusTable extends AppTable {
 			if (!empty($selectedPeriod)) {
 				$gradeOptions = $this->Grades
 					->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
-					->contain(['EducationGrades.EducationProgrammes'])
+					->contain(['EducationGrades.EducationProgrammes', 'EducationGrades.EducationStages'])
 					->where([$this->Grades->aliasField('institution_id') => $institutionId])
 					->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-					->order(['EducationProgrammes.order', 'EducationGrades.order'])
+					->order(['EducationStages.order', 'EducationGrades.order'])
 					->toArray();
 				$selectedGrade = $request->query('grade');
 				$gradeOptions = $gradeOptions;
@@ -267,8 +267,8 @@ class UndoStudentStatusTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) 
-    {   
+	public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    {
 		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
 		if ($action == 'reconfirm') {
@@ -285,7 +285,7 @@ class UndoStudentStatusTable extends AppTable {
 			} else {
 				$institutionClassRecord = __('Students without Class');
 			}
-			
+
 			$attr['attr']['value'] = $institutionClassRecord;
 
 		} else {
@@ -297,11 +297,11 @@ class UndoStudentStatusTable extends AppTable {
 			$institutionId = $institutionId = $this->Session->read('Institution.Institutions.id');
 			$selectedPeriod = $request->query('period');
 			$selectedGrade = $request->query('grade');
-			
+
 			$institutionClassRecords = $InstitutionClasses->find('list')
 				->innerJoinWith('ClassGrades')
 				->where([
-					$InstitutionClasses->aliasField('institution_id') => $institutionId, 
+					$InstitutionClasses->aliasField('institution_id') => $institutionId,
 					$InstitutionClasses->aliasField('academic_period_id') => $selectedPeriod,
 					'ClassGrades.education_grade_id' => $selectedGrade
 				])
@@ -311,7 +311,7 @@ class UndoStudentStatusTable extends AppTable {
 			if (empty($selectedClass)) {
 				if (!empty($classes)) {
 					$selectedClass = key($classes);
-				}		
+				}
 			}
 
 			$this->advancedSelectOptions($options, $selectedClass);
@@ -323,7 +323,7 @@ class UndoStudentStatusTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request)
     {
 		$data = [];
 
@@ -350,7 +350,7 @@ class UndoStudentStatusTable extends AppTable {
 
             if ($selectedStatus == $this->statuses['TRANSFERRED']) {
 
-                $data->find('UndoTransferredStudent', 
+                $data->find('UndoTransferredStudent',
                     ['institutionId' => $institutionId, 'selectedPeriod' => $selectedPeriod, 'selectedClass' => $selectedClass, 'selectedGrade' => $selectedGrade, 'studentIds' => $student_ids]
                 );
 
@@ -362,7 +362,7 @@ class UndoStudentStatusTable extends AppTable {
                     ->find('studentClasses', ['institution_class_id' => $selectedClass])
                     ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id']);
             }
-	    	
+
             $data = $data
 				->order(['Users.first_name'])
 				->autoFields(true);
@@ -376,7 +376,7 @@ class UndoStudentStatusTable extends AppTable {
 			$selectedClass = $request->query('class');
 
 			if (!is_null($selectedPeriod) && $selectedGrade != -1 && $selectedStatus != -1) {
-				
+
                 $conditions = [
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('academic_period_id') =>  $selectedPeriod,
@@ -390,7 +390,7 @@ class UndoStudentStatusTable extends AppTable {
                         ->matching('EducationGrades');
 
                 //to undo enrolled, then student cant have specific status before.
-                if ($selectedStatus == $this->statuses['CURRENT']) { 
+                if ($selectedStatus == $this->statuses['CURRENT']) {
 
                     $checkStatus = [
                         $this->statuses['GRADUATED'],
@@ -413,7 +413,7 @@ class UndoStudentStatusTable extends AppTable {
 
                 } else if ($selectedStatus == $this->statuses['TRANSFERRED']) {
 
-                    $data->find('UndoTransferredStudent', 
+                    $data->find('UndoTransferredStudent',
                         ['institutionId' => $institutionId, 'selectedPeriod' => $selectedPeriod, 'selectedClass' => $selectedClass, 'selectedGrade' => $selectedGrade, 'studentIds' => '']
                     );
 
@@ -575,7 +575,7 @@ class UndoStudentStatusTable extends AppTable {
 
 		if (!is_null($entity)) {
 			$this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
-			
+
 			if ($this->request->is(['get'])) {
 				$this->request->data = $requestData;
 			} else if ($this->request->is(['post', 'put'])) {
@@ -590,7 +590,7 @@ class UndoStudentStatusTable extends AppTable {
 					$patchOptionsArray = $patchOptions->getArrayCopy();
 					$request->data = $requestData->getArrayCopy();
 					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-				
+
 					$selectedStatus = $entity->student_status_id;
 					$statusCode = array_search($selectedStatus, $this->statuses);
 					$undoAction = Inflector::camelize(strtolower($statusCode));
@@ -644,7 +644,7 @@ class UndoStudentStatusTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['student_status_id', 'academic_period_id', 'education_grade_id', 'class', 'students']);
 	}
 
-    public function findUndoTransferredStudent(Query $query, array $options) 
+    public function findUndoTransferredStudent(Query $query, array $options)
     {
         $conditions = [
             $this->aliasField('academic_period_id') =>  $options['selectedPeriod'],
@@ -671,7 +671,7 @@ class UndoStudentStatusTable extends AppTable {
                 ['InstitutionStudent' => 'institution_students'], [
                     $this->aliasfield('id') . ' = ' . 'InstitutionStudent.previous_institution_student_id',
                     'StudentAdmission.institution_id = ' . 'InstitutionStudent.institution_id',
-                    'StudentAdmission.new_education_grade_id = ' . 'InstitutionStudent.education_grade_id' 
+                    'StudentAdmission.new_education_grade_id = ' . 'InstitutionStudent.education_grade_id'
                 ])
             ->where([
                 $conditions,
