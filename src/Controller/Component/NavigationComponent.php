@@ -457,7 +457,7 @@ class NavigationComponent extends Component
                 'Institutions.Textbooks' => [
                     'title' => 'Textbooks',
                     'parent' => 'Institution.Academic',
-                    'selected' => ['Institutions.Textbooks', 'Institutions.ImportTextbooks'],
+                    'selected' => ['Institutions.Textbooks', 'Institutions.ImportInstitutionTextbooks'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
@@ -1279,7 +1279,7 @@ class NavigationComponent extends Component
                 'title' => 'Textbooks',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'Textbook'],
-                'selected' => ['Textbooks.Textbooks']
+                'selected' => ['Textbooks.Textbooks', 'Textbooks.ImportTextbooks']
             ],
             'ReportCards.Templates' => [
                 'title' => 'Report Cards',

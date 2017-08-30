@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use PHPExcel_Worksheet;
 
-class ImportTextbooksTable extends AppTable
+class ImportInstitutionTextbooksTable extends AppTable
 {
     public function initialize(array $config)
     {
