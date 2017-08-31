@@ -162,77 +162,10 @@ class ImportTextbooksTable extends AppTable
             }
         }
 
-        //check expiry_date date format and validity
-        // pr($tempRow);die;
-        // $expiryDate = explode('/', $tempRow['expiry_date']);
-        // if (count($expiryDate) == 3) { //check that dd/mm/yyyy format
-        //     if (!checkdate($expiryDate[1], $expiryDate[0], $expiryDate[2])) {
-        //         $rowInvalidCodeCols['expiry_date'] = __('Invalid Expiry Date.');
-        //         $validationResult = false;
-        //     }
-        // } else {
-        //     $rowInvalidCodeCols['expiry_date'] = __('Invalid Expiry Date format.');
-        //     $validationResult = false;
-        // }
-
         if (!$validationResult) {
             return false;
         } else {
             return true;
         }
-
-        // if (!$this->institutionId) {
-        //     $rowInvalidCodeCols['institution_id'] = __('No active institution');
-        //     $tempRow['institution_id'] = false;
-        //     return false;
-        // }
-        // $tempRow['institution_id'] = $this->institutionId;
-
-        // if ($tempRow->offsetExists('textbook_id') && !empty($tempRow['textbook_id'])) {
-        //     $Textbooks = TableRegistry::get('Textbook.Textbooks');
-        //     $textbookResults = $Textbooks
-        //         ->find()
-        //         ->where([$Textbooks->aliasField('id') => $tempRow['textbook_id']])
-        //         ->all();
-
-        //     if ($textbookResults->isEmpty()) {
-        //         $rowInvalidCodeCols['textbook_id'] = $this->getExcelLabel('Import', 'value_not_in_list');
-        //         return false;
-        //     } else {
-        //         $textbookEntity = $textbookResults->first();
-        //         $tempRow['academic_period_id'] = $textbookEntity->academic_period_id;
-        //         $tempRow['education_subject_id'] = $textbookEntity->education_subject_id;
-        //         $tempRow['education_grade_id'] = $textbookEntity->education_grade_id;
-
-        //         //check for student being assigned 2 same book.
-        //         $InstitutionTextbooks = TableRegistry::get('Institution.InstitutionTextbooks');
-        //         if ($tempRow->offsetExists('student_id')) {
-        //             if (!empty($tempRow['student_id'])) {
-        //                 $query = $InstitutionTextbooks->find()
-        //                         ->where([
-        //                             $InstitutionTextbooks->aliasField('student_id') => $tempRow['student_id'],
-        //                             $InstitutionTextbooks->aliasField('textbook_id') => $tempRow['textbook_id'],
-        //                             $InstitutionTextbooks->aliasField('institution_id') => $tempRow['institution_id'],
-        //                             $InstitutionTextbooks->aliasField('academic_period_id') => $tempRow['academic_period_id'],
-        //                             $InstitutionTextbooks->aliasField('education_subject_id') => $tempRow['education_subject_id'],
-        //                             $InstitutionTextbooks->aliasField('education_grade_id') => $tempRow['education_grade_id']
-        //                         ])
-        //                         ->count();
-        //                 if ($query > 0) { //student assigned to same book before
-        //                     $rowInvalidCodeCols['student_id'] = __('Textbook already assigned to the same student before.');
-        //                     return false;
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-        
-    }
-
-    public function validateDate($date, $format = 'Y-m-d H:i:s')
-    {
-        $d = DateTime::createFromFormat($format, $date);
-        return $d && $d->format($format) == $date;
     }
 }
