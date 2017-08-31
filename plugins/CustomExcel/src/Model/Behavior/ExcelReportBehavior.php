@@ -46,9 +46,9 @@ class ExcelReportBehavior extends Behavior
         'image' => 'image'
     ];
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
 
         $model = $this->_table;
         $folder = WWW_ROOT . $this->config('folder');
@@ -59,14 +59,14 @@ class ExcelReportBehavior extends Behavior
 
         new Folder($folder, true, 0777);
         new Folder($subfolder, true, 0777);
-	}
+    }
 
-	public function implementedEvents()
-	{
-		$events = parent::implementedEvents();
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
         $events['ExcelTemplates.Model.onGetExcelTemplateVars'] = 'onGetExcelTemplateVars';
-		return $events;
+        return $events;
     }
 
     public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
@@ -117,6 +117,11 @@ class ExcelReportBehavior extends Behavior
 
         if ($this->config('format') == 'xlsx') {
             $this->saveExcel($objPHPExcel, $filepath);
+        }
+
+        if ($extra->offsetExists('temp_logo')) {
+            // delete temporary logo
+            $this->deleteFile($extra['temp_logo']);
         }
 
         if ($extra->offsetExists('tmp_file_path')) {
@@ -304,21 +309,42 @@ class ExcelReportBehavior extends Behavior
         $imageMarginTop = $attr['imageMarginTop'];
 
         $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
-        if (!$imageResource) {
-            $imageResource = imagecreatefrompng(ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png');
-            $objDrawing->setName('OpenEMIS Logo');
-            $objDrawing->setDescription('OpenEMIS Logo');
-            $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG);
-        } else {
-            $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
+        
+        if ($imageResource) {
+            switch ($attr['img_ext']) {
+                case 'png':
+                    $imageResource = imagecreatefrompng($imageResource);
+                    $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_PNG);
+                    $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG);
+                    break;
+                case 'jpg': case 'jpeg':
+                    $imageResource = imagecreatefromjpeg($imageResource);
+                    $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_JPEG);
+                    $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
+                    break;
+                case 'gif':
+                    $imageResource = imagecreatefromgif($imageResource);
+                    $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_GIF);
+                    $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_GIF);
+                    break;
+                default:
+                    $imageResource = '';
+                    break;
+            }
         }
-        $objDrawing->setImageResource($imageResource);
-        $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
-        $objDrawing->setWidth($imageWidth); 
-        $objDrawing->setCoordinates($cellCoordinate); 
-        $objDrawing->setOffsetX($imageMarginLeft); 
-        $objDrawing->setOffsetY($imageMarginTop); 
-        $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
+
+        if ($imageResource) {
+            //retain transparency on png/gif file
+            imageAlphaBlending($imageResource, true);
+            imageSaveAlpha($imageResource, true);
+
+            $objDrawing->setImageResource($imageResource);
+            $objDrawing->setWidth($imageWidth); 
+            $objDrawing->setCoordinates($cellCoordinate); 
+            $objDrawing->setOffsetX($imageMarginLeft); 
+            $objDrawing->setOffsetY($imageMarginTop); 
+            $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
+        }
     }
 
     public function saveExcel($objPHPExcel, $filepath)
@@ -1110,7 +1136,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function image($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function image($objPHPExcel, $objWorksheet, $objCell, $attr,ArrayObject $extra)
     {
         $columnValue = $attr['columnValue'];
         $rowValue = $attr['rowValue'];
@@ -1123,15 +1149,31 @@ class ExcelReportBehavior extends Behavior
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $blob = current($data);
 
-        $imageResource = '';
-        if (is_resource($blob)) {
-            $imageResource = imagecreatefromstring(stream_get_contents($blob));
-            
-            //retain transparency on png/gif file
-            imageAlphaBlending($imageResource, true);
-            imageSaveAlpha($imageResource, true);
-        }
+        //for institution logo
+        if ($attr['displayValue'] == 'Institutions.logo_content' ) {
+            if (is_resource($blob)) {
+                $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
+                $institutionId = current($institutionId);
 
+                $logoName = Hash::extract($extra['vars'], 'Institutions.logo_name');
+                $logoName = explode('.', current($logoName));
+                $logoExt = end($logoName);
+                $logoExt = $logoName[key($logoName)];
+
+                $attr['img_ext'] = $logoExt;
+
+                $imageResource = TMP . "temp_logo_$institutionId.$logoExt";
+
+                if (!file_exists($imageResource)) {
+                    file_put_contents($imageResource, stream_get_contents($blob));
+                    $extra['temp_logo'] = $imageResource;
+                }
+            } else {
+                $imageResource = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+                $attr['img_ext'] = 'png';
+            }
+        }
+        
         $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
 
         // set to empty to remove the placeholder
