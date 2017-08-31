@@ -321,12 +321,10 @@ class ExcelReportBehavior extends Behavior
                     $imageResource = imagecreatefromjpeg($imageResource);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_JPEG);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
-                    break;
                 case 'gif':
                     $imageResource = imagecreatefromgif($imageResource);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_GIF);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_GIF);
-                    break;
                 default:
                     $imageResource = '';
                     break;
