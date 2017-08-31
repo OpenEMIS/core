@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 use App\Model\Traits\OptionsTrait;
 
@@ -29,6 +30,24 @@ class TrainingsTable extends AppTable
 
         $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
+    }
+
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->notEmpty('training_course_id', __('This field cannot be left empty'), function ($context) {
+                if (isset($context['data']['feature'])) {
+                    return in_array($context['data']['feature'], ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers']);
+                }
+                return false;
+            })
+            ->notEmpty('training_session_id', __('This field cannot be left empty'), function ($context) {
+                if (isset($context['data']['feature'])) {
+                    return in_array($context['data']['feature'], ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers']);
+                }
+                return false;
+            });
     }
 
     public function beforeAction(Event $event)
