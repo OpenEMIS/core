@@ -121,6 +121,8 @@ class ImportTextbooksTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        $validationResult = true;
+
         //check combination of Grade and Subject
         $query = $this->EducationGradesSubjects->find()
                     ->where([
@@ -130,8 +132,8 @@ class ImportTextbooksTable extends AppTable
                     ->count();
 
         if ($query <= 0) { //combinatin not found
-            $rowInvalidCodeCols['education_grade_id, education_subject_id'] = __('Wrong Combination of Education Grade and Subject.');
-            return false;
+            $rowInvalidCodeCols['education_grade_id, education_subject_id'] = __('Wrong combination of Education Grade and Subject.');
+            $validationResult = false;
         }
 
         //check unique code
@@ -143,7 +145,7 @@ class ImportTextbooksTable extends AppTable
 
         if ($query > 0) { //code already exist
             $rowInvalidCodeCols['code'] = __('Textbook Code already exist.');
-            return false;
+            $validationResult = false;
         }
 
         //check year_published must be following config
@@ -151,14 +153,33 @@ class ImportTextbooksTable extends AppTable
         $lowestYear = $ConfigItems->value('lowest_year');
 
         if (!is_numeric($tempRow['year_published'])) {
-            $rowInvalidCodeCols['year_published'] = __('Invalid year format.');
+            $rowInvalidCodeCols['year_published'] = __('Invalid format.');
+            $validationResult = false;
         } else {
             if ($tempRow['year_published'] < $lowestYear || $tempRow['year_published'] > date("Y")) {
                 $rowInvalidCodeCols['year_published'] = __('Year is out of the Configuration range.');
+                $validationResult = false;
             }
         }
 
-        //
+        //check expiry_date date format and validity
+        // pr($tempRow);die;
+        // $expiryDate = explode('/', $tempRow['expiry_date']);
+        // if (count($expiryDate) == 3) { //check that dd/mm/yyyy format
+        //     if (!checkdate($expiryDate[1], $expiryDate[0], $expiryDate[2])) {
+        //         $rowInvalidCodeCols['expiry_date'] = __('Invalid Expiry Date.');
+        //         $validationResult = false;
+        //     }
+        // } else {
+        //     $rowInvalidCodeCols['expiry_date'] = __('Invalid Expiry Date format.');
+        //     $validationResult = false;
+        // }
+
+        if (!$validationResult) {
+            return false;
+        } else {
+            return true;
+        }
 
         // if (!$this->institutionId) {
         //     $rowInvalidCodeCols['institution_id'] = __('No active institution');
@@ -206,7 +227,7 @@ class ImportTextbooksTable extends AppTable
         //     }
         // }
 
-        return true;
+        
     }
 
     public function validateDate($date, $format = 'Y-m-d H:i:s')
