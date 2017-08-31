@@ -363,7 +363,7 @@ class ProfilesController extends AppController
             } else if ($key == 'Comments') {
                 $tabElements[$key]['url'] = [
                     'plugin' => $plugin,
-                    'controller' => 'Comments',
+                    'controller' => 'ProfileComments',
                     'action' => 'index',
                     $this->ControllerAction->paramsEncode(['id' => $id])
                 ];
