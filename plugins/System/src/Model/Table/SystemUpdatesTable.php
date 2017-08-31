@@ -16,8 +16,10 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
-class SystemUpdatesTable extends ControllerActionTable {
-    public function initialize(array $config) {
+class SystemUpdatesTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
 
         $this->belongsTo('Approver', ['className' => 'Security.Users', 'foreignKey' => 'approved_by']);
