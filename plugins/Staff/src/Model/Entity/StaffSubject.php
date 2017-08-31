@@ -6,23 +6,12 @@ use Cake\ORM\TableRegistry;
 
 class StaffSubject extends Entity
 {
-	protected $_virtual = ['academic_period', 'institution', 'institution_class', 'education_subject', 'homeroom_teacher_name', 'male_students', 'female_students'];
+	protected $_virtual = ['academic_period', 'institution_class', 'education_subject', 'homeroom_teacher_name', 'male_students', 'female_students'];
 
 	protected function _getAcademicPeriod() {
 		$name = '';
 		if ($this->has('institution_subject') && $this->institution_subject->has('academic_period_id')) {
 			$data = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($this->institution_subject->academic_period_id)->toArray();
-			if (!empty($data)) {
-				$name = $data['name'];
-			}
-		}
-		return $name;
-	}
-
-	protected function _getInstitution() {
-		$name = '';
-		if ($this->has('institution_subject') && $this->institution_subject->has('institution_id')) {
-			$data = TableRegistry::get('Institution.Institutions')->get($this->institution_subject->institution_id)->toArray();
 			if (!empty($data)) {
 				$name = $data['name'];
 			}
