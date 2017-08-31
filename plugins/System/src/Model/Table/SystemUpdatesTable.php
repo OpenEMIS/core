@@ -2,6 +2,7 @@
 namespace System\Model\Table;
 
 use ArrayObject;
+use InvalidArgumentException;
 
 use Cake\Network\Request;
 use Cake\Event\Event;
@@ -15,8 +16,10 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
-class SystemUpdatesTable extends ControllerActionTable {
-    public function initialize(array $config) {
+class SystemUpdatesTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
 
         $this->belongsTo('Approver', ['className' => 'Security.Users', 'foreignKey' => 'approved_by']);
@@ -32,6 +35,10 @@ class SystemUpdatesTable extends ControllerActionTable {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.updates'] = 'updates';
         $events['Restful.Model.onGetAllowedActions'] = 'onGetAllowedActions';
+
+        if (array_key_exists('Restful.Model.onRenderDate', $events)) { // prevent renderDate logic
+            unset($events['Restful.Model.onRenderDate']);
+        }
         return $events;
     }
 
@@ -69,37 +76,51 @@ class SystemUpdatesTable extends ControllerActionTable {
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $domain = $ConfigItems->value('version_api_domain');
-        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-date_released';
+        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
         $http = new Client();
         $response = $http->get($api);
 
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $supportEmails = $ConfigItems->value('version_support_emails');
+        $emails = explode(',', $supportEmails);
+
+        $host = $this->request->env('HTTP_HOST');
+        $subject = 'Core Upgrade Request Failed - ' . $host;
+
         if ($response->getStatusCode() == 200) {
-            $data = array_reverse(json_decode($response->body(), true)['data']);
+            $jsonResponse = json_decode($response->body(), true);
+            $data = array_reverse($jsonResponse['data']);
 
             foreach ($data as $item) {
-
-                if ($item['id'] > $maxId['max']) {
+                if ($item['id'] > $maxId) {
                     $entity = $this->newEntity([
                         'id' => $item['id'],
                         'version' => $item['version'],
                         'date_released' => $item['date_released'],
                         'created' => Time::now(),
                     ]);
-                    $this->save($entity);
+                    $result = $this->save($entity);
+                    if ($result == false) {
+                        try {
+                            Log::write('error', $entity->toArray());
+                            Log::write('error', $entity->errors());
+                            $email = new Email('openemis');
+                            $email->to($emails)->subject($subject)->send('Unable to update system versions');
+                        } catch (InvalidArgumentException $ex) {
+                            Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
+                        }
+                    }
                 }
             }
         } else {
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $supportEmails = $ConfigItems->value('version_support_emails');
-            $emails = explode(',', $supportEmails);
-
-            $host = $this->request->env('HTTP_HOST');
-            $subject = 'Core Upgrade Request Failed - ' . $host;
-
-            $email = new Email('openemis');
-            $email->to($emails)->subject($subject)->send('Unable to retrieve system versions.');
-            Log::write('error', 'Unable to retrieve system versions (Status Code: ' . $response->getStatusCode() . ')');
+            try {
+                Log::write('error', 'Unable to retrieve system versions (Status Code: ' . $response->getStatusCode() . ')');
+                $email = new Email('openemis');
+                $email->to($emails)->subject($subject)->send('Unable to retrieve system versions.');
+            } catch (InvalidArgumentException $ex) {
+                Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
+            }
         }
 
         $changelogUrl = $domain . '/changelog';
