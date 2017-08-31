@@ -269,7 +269,20 @@ class StudentPromotionTable extends AppTable
                 ->where([$this->EducationGrades->aliasField($this->EducationGrades->primaryKey()) => $currentData->education_grade_id])
                 ->select([$this->EducationGrades->aliasField('education_programme_id'), $this->EducationGrades->aliasField('name')])
                 ->first();
-                $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
+            $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
+
+            // to get the notEnrolled message for the reconfirm page
+            $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($currentData['grade_to_promote']);
+
+            // list of grades available in the institution
+            $institutionId = $this->institutionId;
+            $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
+
+            if ($currentData['student_status_id'] == $this->statuses['GRADUATED'] && array_key_exists(key($nextGrades), $listOfInstitutionGrades)) {
+                $gradeName = $this->getMessage($this->aliasField('notEnrolled'));
+            }
+            // end of getting the notEnrolled message
+
         } else if ($currentData['student_status_id'] == $this->statuses['REPEATED']) {
             $gradeData = $this->EducationGrades->get($currentData['grade_to_promote']);
             $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
@@ -313,10 +326,10 @@ class StudentPromotionTable extends AppTable
                     $statuses = $this->statuses;
                     $gradeOptions = $InstitutionGradesTable
                         ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade.programme_grade_name'])
-                        ->contain(['EducationGrades.EducationProgrammes'])
+                        ->contain(['EducationGrades.EducationProgrammes', 'EducationGrades.EducationStages'])
                         ->where([$InstitutionGradesTable->aliasField('institution_id') => $institutionId])
                         ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-                        ->order(['EducationProgrammes.order', 'EducationGrades.order'])
+                        ->order(['EducationStages.order', 'EducationGrades.order'])
                         ->toArray();
 
                     $attr['type'] = 'select';
@@ -342,7 +355,6 @@ class StudentPromotionTable extends AppTable
                 $attr['options'] = $gradeOptions;
                 break;
         }
-
 
         return $attr;
     }
@@ -438,10 +450,11 @@ class StudentPromotionTable extends AppTable
             $options = [];
             $educationGradeId = $request->query('grade_to_promote');
             if (!empty($educationGradeId) && $educationGradeId != -1) {
-                $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+                $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
+                $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
 
                 // If there is no more next grade in the same education programme then the student may be graduated
-                if (count($nextGrades) == 0) {
+                if (count($nextGrades) == 0 || $isLastGrade) {
                     $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
                 } else {
                     $options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
@@ -493,43 +506,37 @@ class StudentPromotionTable extends AppTable
             if (!in_array($studentStatusId, [$statuses['REPEATED']])) {
                 $institutionId = $this->institutionId;
 
-                // list of grades available to promote to
-                // 'false' means only displayed the next level within the same grade level.
-                $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+                $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
+                if ($isLastGrade) {
+                    // list of next first grades from all next programme available to promote to
+                    // 'true' means get all the grades of the next programmes plus the current programme grades
+                    // 'true' means get first grade only from all available next programme
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, true);
+                } else {
+                    // list of grades available to promote to
+                    // 'false' means only displayed the next level within the same grade level.
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+                }
 
                 // list of grades available in the institution
-                $today = date('Y-m-d');
-                $listOfInstitutionGrades = $this->InstitutionGrades
-                    ->find('list', [
-                        'keyField' => 'education_grade_id',
-                        'valueField' => 'education_grade.programme_grade_name'])
-                    ->contain(['EducationGrades.EducationProgrammes'])
-                    ->where([
-                        $this->InstitutionGrades->aliasField('institution_id') => $institutionId,
-                        'OR' => [
-                            [
-                                $this->InstitutionGrades->aliasField('end_date IS NULL'),
-                                $this->InstitutionGrades->aliasField('start_date <= ') => $today
-                            ],
-                            [
-                                $this->InstitutionGrades->aliasField('end_date IS NOT NULL'),
-                                $this->InstitutionGrades->aliasField('start_date <= ') => $today,
-                                $this->InstitutionGrades->aliasField('end_date >= ') => $today
-                            ]
-                        ]
-                    ])
-                    ->order(['EducationProgrammes.order', 'EducationGrades.order'])
-                    ->toArray();
+                $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
 
                 // Only display the options that are available in the institution and also linked to the current programme
                 $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
                 // if no grade option or the next grade is not available in the institution
-                if (count($gradeOptions) == 0 || (key($gradeOptions) != key($listOfGrades))) {
+                if (count($gradeOptions) == 0) {
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
-                    $options = [key($gradeOptions) => $gradeOptions[key($gradeOptions)]];
+                    // if is last grade in the programme, show All first grade of the next programme,
+                    // else show the next grade of the current grade only
+                    $options = ($isLastGrade) ? $gradeOptions : [key($gradeOptions) => current($gradeOptions)];
+
+                    // to cater for graduate
+                    if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
+                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $options;
+                    }
                 }
 
                 $attr['type'] = 'select';
@@ -901,5 +908,34 @@ class StudentPromotionTable extends AppTable
                 # code...
                 break;
         }
+    }
+
+    public function getListOfInstitutionGrades($institutionId)
+    {
+        // list of grades available in the institution
+        $today = date('Y-m-d');
+        $listOfInstitutionGrades = $this->InstitutionGrades
+        ->find('list', [
+            'keyField' => 'education_grade_id',
+            'valueField' => 'education_grade.programme_grade_name'])
+        ->contain(['EducationGrades.EducationProgrammes'])
+        ->where([
+            $this->InstitutionGrades->aliasField('institution_id') => $institutionId,
+            'OR' => [
+                [
+                    $this->InstitutionGrades->aliasField('end_date IS NULL'),
+                    $this->InstitutionGrades->aliasField('start_date <= ') => $today
+                ],
+                [
+                    $this->InstitutionGrades->aliasField('end_date IS NOT NULL'),
+                    $this->InstitutionGrades->aliasField('start_date <= ') => $today,
+                    $this->InstitutionGrades->aliasField('end_date >= ') => $today
+                ]
+            ]
+        ])
+        ->order(['EducationProgrammes.order', 'EducationGrades.order'])
+        ->toArray();
+
+        return $listOfInstitutionGrades;
     }
 }

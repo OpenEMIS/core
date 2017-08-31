@@ -529,7 +529,8 @@ trait MessagesTrait
             'successOthers' => 'Students status changed successfully',
             'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
             'pendingRequest' => 'There is a pending student status change request at the moment.',
-            'selectNextGrade' => 'Please select a grade to promote to.'
+            'selectNextGrade' => 'Please select a grade to promote to.',
+            'notEnrolled' => 'Not enrolled to any grades'
         ],
         'IndividualPromotion' => [
             'noGrades' => 'No Available Grades',
