@@ -35,7 +35,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->field('academic_period', []);
 		$this->field('institution_class', []);
-		$this->field('educationSubject', []);
+		$this->field('education_subject', []);
 		$this->field('male_students', []);
 		$this->field('female_students', []);
 
@@ -44,7 +44,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 			'institution_id',
 			'institution_class',
 			'institution_subject_id',
-			'educationSubject',
+			'education_subject',
 			'male_students',
 			'female_students'
 		]);
