@@ -45,6 +45,15 @@ class ExaminationsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+                ->requirePresence('examination_id')
+                ->requirePresence('examination_centre_id')
+                ;
+    }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];
