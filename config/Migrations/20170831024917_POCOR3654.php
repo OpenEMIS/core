@@ -143,10 +143,36 @@ class POCOR3654 extends AbstractMigration
 
         $this->insert('import_mapping', $data);
         //import_mapping
+
+         // security_functions
+        $this->execute("
+        UPDATE `security_functions` 
+        SET 
+        `_execute` = 'ImportInstitutionTextbooks.add|ImportInstitutionTextbooks.template|ImportInstitutionTextbooks.results|ImportInstitutionTextbooks.downloadFailed|ImportInstitutionTextbooks.downloadPassed',
+        `name` = 'Import Institution Textbooks'
+        WHERE `name` = 'Import Textbooks'
+        AND `id` = '1052'");
+
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= 210');
+
+        $this->execute("INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('5079', 'Import Textbooks', 'Textbooks', 'Administration', 'Textbooks', '5000', NULL, NULL, NULL, NULL, 'ImportTextbooks.add|ImportTextbooks.template|ImportTextbooks.results|ImportTextbooks.downloadFailed|ImportTextbooks.downloadPassed', '210', '1', NULL, NULL, NULL, '1', '2017-09-05 00:00:00')");
     }
 
     public function down()
     {
         $this->execute("DELETE FROM import_mapping WHERE model = 'Textbook.Textbooks'");
+
+        // security_functions
+        $this->execute("
+        UPDATE `security_functions` 
+        SET 
+        `_execute` = 'ImportTextbooks.add|ImportTextbooks.template|ImportTextbooks.results|ImportTextbooks.downloadFailed|ImportTextbooks.downloadPassed',
+        `name` = 'Import Textbooks'
+        WHERE `name` = 'Import Institution Textbooks'
+        AND `id` = '1052'");
+
+        $this->execute('DELETE `security_functions` WHERE `id` = 5079');
+
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 210');
     }
 }
