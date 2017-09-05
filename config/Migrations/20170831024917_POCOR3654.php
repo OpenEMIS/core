@@ -144,6 +144,22 @@ class POCOR3654 extends AbstractMigration
         $this->insert('import_mapping', $data);
         //import_mapping
 
+        //education_grades_subjects
+        $this->execute('CREATE TABLE `z_3654_education_grades_subjects` LIKE `education_grades_subjects`');
+        $this->execute('INSERT INTO `z_3654_education_grades_subjects` 
+                        SELECT * FROM `education_grades_subjects` 
+                        WHERE NOT EXISTS ( 
+                            SELECT 1 FROM `education_grades` 
+                            WHERE `education_grades_subjects`.`education_grade_id` = `education_grades`.`id`
+                        )');
+
+        //delete orpan records
+        $this->execute('DELETE FROM `education_grades_subjects` 
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM `education_grades` 
+                            WHERE `education_grades_subjects`.`education_grade_id` = `education_grades`.`id`
+                        )');
+
          // security_functions
         $this->execute("
         UPDATE `security_functions` 
@@ -162,6 +178,10 @@ class POCOR3654 extends AbstractMigration
     {
         $this->execute("DELETE FROM import_mapping WHERE model = 'Textbook.Textbooks'");
 
+        //education_grades_subjects
+        $this->execute('INSERT INTO `education_grades_subjects` SELECT * FROM `z_3654_education_grades_subjects`'); 
+        $this->execute('DROP TABLE IF EXISTS `z_3654_education_grades_subjects`');
+
         // security_functions
         $this->execute("
         UPDATE `security_functions` 
@@ -171,8 +191,8 @@ class POCOR3654 extends AbstractMigration
         WHERE `name` = 'Import Institution Textbooks'
         AND `id` = '1052'");
 
-        $this->execute('DELETE `security_functions` WHERE `id` = 5079');
+        $this->execute("DELETE FROM `security_functions` WHERE `id` = 5079");
 
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 210');
+        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 210");
     }
 }
