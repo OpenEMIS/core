@@ -67,12 +67,9 @@ class ImportTextbooksTable extends AppTable
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 3;
         $data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
-        $modelData = $lookedUpTable->find('all')
+        $modelData = $lookedUpTable->find('visible')
                             ->contain(['EducationProgrammes'])
                             ->select(['code', 'name', 'EducationProgrammes.name'])
-                            ->where([
-                                $lookedUpTable->aliasField('visible').' = 1'
-                            ])
                             ->order([
                                 'EducationProgrammes.order',
                                 $lookupModel.'.order'
@@ -100,7 +97,7 @@ class ImportTextbooksTable extends AppTable
         $modelData = $this->EducationGradesSubjects->find('all')
                         ->contain(['EducationGrades.EducationProgrammes', 'EducationSubjects'])
                         ->where([
-                            'EducationGrades.id IS NOT NULL'
+                            'EducationGrades.visible = 1'
                         ])
                         ->order([
                             'EducationProgrammes.order',
