@@ -171,8 +171,8 @@ class POCOR3654 extends AbstractMigration
         WHERE `name` = 'Import Institution Textbooks'
         AND `id` = '1052'");
 
-        $this->execute('DELETE `security_functions` WHERE `id` = 5079');
+        $this->execute("DELETE FROM `security_functions` WHERE `id` = 5079");
 
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 210');
+        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 210");
     }
 }
