@@ -168,7 +168,7 @@ class InstitutionsController extends AppController
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudents'            => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
-            'ImportTextbooks'           => ['className' => 'Institution.ImportTextbooks', 'actions' => ['add']]
+            'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
