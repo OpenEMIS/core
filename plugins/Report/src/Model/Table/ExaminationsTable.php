@@ -50,8 +50,18 @@ class ExaminationsTable extends AppTable
 
         return $validator
                 ->requirePresence('examination_id')
-                ->requirePresence('examination_centre_id')
-                ;
+                ->notEmpty('examination_centre_id', __('This field cannot be left empty'), function ($context) {
+                    if (isset($context['data']['feature'])) {
+                        return in_array($context['data']['feature'], ['Report.RegisteredStudentsExaminationCentre']);
+                    }
+                    return false;
+                })
+                ->notEmpty('institution_id', __('This field cannot be left empty'), function ($context) {
+                    if (isset($context['data']['feature'])) {
+                        return in_array($context['data']['feature'], ['Report.NotRegisteredStudents', 'Report.ExaminationResults']);
+                    }
+                    return false;
+                });
     }
 
     public function beforeAction(Event $event)
