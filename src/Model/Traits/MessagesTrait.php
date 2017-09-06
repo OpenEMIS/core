@@ -839,7 +839,7 @@ trait MessagesTrait
                     'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
                 ],
                 'staff_id' => [
-                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Home Room Teacher cannot be the same person.'
+                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Teacher cannot be the same person.'
                 ]
             ],
 
