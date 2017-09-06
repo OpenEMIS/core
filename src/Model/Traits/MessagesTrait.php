@@ -246,7 +246,6 @@ trait MessagesTrait
             'education_programme' => 'Education Programme',
             'education_grade' => 'Education Grade',
             'staff_id' => 'Home Room Teacher',
-            'secondary_staff_id' => 'Secondary Home Room Teacher',
             'class' => 'Class',
             'single_grade_field' => 'Single Grade Classes',
             'multi_grade_field' => 'Class Grades',
