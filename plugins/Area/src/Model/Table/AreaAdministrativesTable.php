@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -40,10 +41,19 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('is_main_country', 'ruleValidateAreaAdministrativeMainCountry', [
+                'rule' => ['validateAreaAdministrativeMainCountry'],
+                'provider' => 'table'
+            ]);
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('area_administrative_level_id');
-        $this->field('is_main_country', ['visible' => false]);
+        
         $this->field('name');
         $count = $this->find()->where([
                 'OR' => [
@@ -293,6 +303,13 @@ class AreaAdministrativesTable extends ControllerActionTable
         ]);
     }
 
+    public function onGetIsMainCountry(Event $event, Entity $entity)
+    {
+        ($entity->is_main_country) ? $return = __('Yes') : $return = __('No');
+
+        return $return;
+    }
+
     public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request)
     {
         if ($action=='add') {
@@ -428,5 +445,21 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
 
         return $crumbs;
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->dirty('is_main_country')) {
+            if ($entity->is_main_country == 1) { //if set as main country
+                // update the rest of areas to non main country
+                $this->updateAll(
+                    ['is_main_country' => 0],
+                    [
+                        'area_administrative_level_id' => 1,
+                        'id <> ' => $entity->id
+                    ]
+                );
+            }
+        }
     }
 }

@@ -21,6 +21,17 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.ConfigItems.populateOptions' => 'configItemsPopulateOptions'
+        ];
+
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('level', ['before' => 'name']);
@@ -106,5 +117,19 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
         $selectedCountry = !is_null($this->request->query('country')) ? $this->request->query('country') : key($countryOptions);
 
         return compact('countryOptions', 'selectedCountry');
+    }
+
+    public function configItemsPopulateOptions(Event $event, ArrayObject $customOptions)
+    {
+        $query = $this->find('all')
+                ->contain('Countries')
+                ->where([
+                    'Countries.is_main_country' => 1
+                ])
+                ->toArray();
+        
+        foreach ($query as $key => $value) {
+            $customOptions[$value->id] = $value->name;
+        }
     }
 }
