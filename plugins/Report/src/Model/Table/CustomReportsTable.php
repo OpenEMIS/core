@@ -94,6 +94,8 @@ class CustomReportsTable extends AppTable
 
                     if ($fieldType == 'select' || $fieldType == 'chosenSelect') {
                         $params = $this->request->data[$this->alias()];
+                        $params['user_id'] = $this->Auth->user('id');
+                        $params['super_admin'] =$this->Auth->user('super_admin');
 
                         $options = $this->buildQuery($data, $params, false);
                         if (array_key_exists('options', $data)) {
