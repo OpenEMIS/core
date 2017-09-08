@@ -14,6 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use Cake\I18n\Date;
 use Cake\Controller\Exception\SecurityException;
+use Cake\Utility\Hash;
 
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
@@ -701,6 +702,7 @@ class InstitutionsController extends AppController
                 $institutionId = $session->read('Institution.Institutions.id');
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
+
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -710,6 +712,13 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             $this->set('externalDataSource', $externalDataSource);
+            
+            $admissionExecutePermission = true;
+            if (!$this->AccessControl->isAdmin()) {
+                $admissionExecutePermission = Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
+            }
+            $this->set('admissionExecutePermission', $admissionExecutePermission);
+
             $this->render('studentAdd');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
