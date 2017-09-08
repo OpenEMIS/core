@@ -2,6 +2,7 @@
 namespace Profile\Controller;
 
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 use App\Controller\PageController;
 
 class CommentsController extends PageController
@@ -23,9 +24,6 @@ class CommentsController extends PageController
 
         $page->exclude(['security_user_id']);
         $page->get('comment_date')->setLabel('Date');
-
-        // setup Tabs with incomplete url
-        $this->setupTabElements();
     }
 
     public function index()
@@ -53,20 +51,23 @@ class CommentsController extends PageController
         parent::view($id);
     }
 
-    private function setBreadCrumb($securityUserId, $securityUserName, $plugin)
+    public function setBreadCrumb($options)
     {
         $page = $this->Page;
-// pr('setBreadCrumb ' .$plugin);
+        $plugin = $this->plugin;
+
+        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
+        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $encodedUserId = $this->paramsEncode(['id' => $userId]);
+
+        // for Institution Staff and Institution Students
         if ($plugin == 'Institution') {
-            // got institution id (student and staff)
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
-            $institutionName = $session->read('Institution.Institutions.name');
-            $studentId = $session->read('Student.Students.id');
-            $studentName = $session->read('Student.Students.name');
+            $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
+            $institutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
+            $institutionName = array_key_exists('institutionName', $options) ? $options['institutionName'] : '';
 
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-            $encodedStudentId = $this->paramsEncode(['id' => $studentId]);
+            $pluralUserRole = Inflector::pluralize($userRole);
 
             $page->addCrumb('Institutions', [
                 'plugin' => 'Institution',
@@ -81,39 +82,56 @@ class CommentsController extends PageController
                 'institutionId' => $encodedInstitutionId,
                 $encodedInstitutionId
             ]);
-            $page->addCrumb('Students', [
+            $page->addCrumb($pluralUserRole, [
                 'plugin' => $this->plugin,
                 'controller' => 'Institutions',
-                'action' => 'Students',
+                'action' => $pluralUserRole,
                 'institutionId' => $encodedInstitutionId
             ]);
-            $page->addCrumb($studentName, [
+            $page->addCrumb($userName, [
                 'plugin' => $this->plugin,
                 'controller' => 'Institutions',
-                'action' => 'StudentUser',
+                'action' => $userRole.'User',
                 'view',
-                $encodedStudentId
+                $encodedUserId
             ]);
             $page->addCrumb('Comments');
-        } else if ($plugin == 'Profile') {
-            // no institution id (Profile and Directory)
-            $encodedSecurityUserId = $this->paramsEncode(['id' => $securityUserId]);
 
-            $page->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'index']);
-            $page->addCrumb($securityUserName, ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $encodedSecurityUserId]);
+        // for Directories and Profiles
+        } else if ($plugin == 'Profile' || $plugin == 'Directory') {
+            $pluralPlugin = Inflector::pluralize($plugin);
+
+            $page->addCrumb($plugin, [
+                'plugin' => $plugin,
+                'controller' => $pluralPlugin,
+                'action' => $pluralPlugin,
+                'view',
+                $encodedUserId
+            ]);
+            $page->addCrumb($userName);
             $page->addCrumb('Comments');
         }
     }
 
-    public function setupTabElements()
+    // for Directories and Profiles
+    public function setupTabElements($options)
     {
         $page = $this->Page;
+        $plugin = $this->plugin;
+
+        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
+        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+
+        $nationalityId = $this->Users->get($userId)->nationality_id;
+        $encodedUserId = $this->paramsEncode(['id' => $userId]);
+        $encodedUserAndNationalityId = $this->paramsEncode(['security_user_id' => $userId,'nationality_id' => $nationalityId]);
+        $pluralPlugin = Inflector::pluralize($plugin);
 
         $tabElements = [
             'Overview' => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Identities' => ['text' => __('Identities')],
-            'Nationalities' =>['text' =>  __('Nationalities')],
+            'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
             'SpecialNeeds' =>['text' =>  __('Special Needs')],
@@ -122,12 +140,101 @@ class CommentsController extends PageController
             'History' => ['text' => __('History')]
         ];
 
-        foreach ($tabElements as $action => $options) {
-            // only set subaction in url
-            $subaction = ($action == 'Overview' || $action == 'Accounts') ? 'view' : 'index';
+        foreach ($tabElements as $action => $obj) {
+            $url = ['plugin' => $plugin, 'controller' => $pluralPlugin, 'action' => $action, $subaction, $encodedUserId];
+
+            // exceptions
+            if ($action == 'Overview') {
+                $url['action'] = $pluralPlugin;
+                $url[0] = 'view';
+
+            } else if ($action == 'Accounts') {
+                $url[0] = 'view';
+
+            } else if ($action == 'Comments') {
+                $url = [
+                    'plugin' => $plugin,
+                    'controller' => $plugin.'Comments',
+                    'action' => 'index',
+                    $encodedUserId
+                ];
+
+            } else if ($action == 'UserNationalities') {
+                $url['action'] = 'Nationalities';
+                $url[1] = $encodedUserAndNationalityId;
+            }
+
             $page->addTab($action)
-                ->setTitle($options['text'])
-                ->setUrl(['0' => $subaction]);
+                ->setTitle($obj['text'])
+                ->setUrl($url);
+        }
+
+        // set active tab
+        $page->getTab('Comments')->setActive('true');
+    }
+
+    // for Institution Staff and Institution Students
+    public function setupInstitutionTabElements($options)
+    {
+        $page = $this->Page;
+
+        $plugin = $this->plugin;
+        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
+        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
+        $institutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
+
+        $nationalityId = $this->Users->get($userId)->nationality_id;
+        $encodedUserId = $this->paramsEncode(['id' => $userId]);
+        $encodedUserAndNationalityId = $this->paramsEncode(['security_user_id' => $userId,'nationality_id' => $nationalityId]);
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        $pluralUserRole = Inflector::pluralize($userRole);
+        $pluralPlugin = Inflector::pluralize($plugin);
+
+        $tabElements = [
+            'Overview' => ['text' => __('Overview')],
+            'Accounts' => ['text' => __('Account')],
+            'Identities' => ['text' => __('Identities')],
+            'UserNationalities' =>['text' =>  __('Nationalities')],
+            'Contacts' => ['text' => __('Contacts')],
+            'Languages' => ['text' => __('Languages')],
+            'Special Needs' =>['text' =>  __('Special Needs')],
+            'Attachments' => ['text' => __('Attachments')],
+            'Comments' => ['text' => __('Comments')],
+            'History' => ['text' => __('History')]
+        ];
+
+        foreach ($tabElements as $action => $obj) {
+            $url = ['plugin' => $userRole, 'controller' => $pluralUserRole, 'action' => $action, 'index', $encodedUserId];
+
+            // exceptions
+            if (in_array($action, ['Overview', 'Accounts'])) {
+                $action = $action == 'Overview' ? $userRole.'User' : $action;
+                $url = [
+                    'plugin' => $plugin,
+                    'controller' => $pluralPlugin,
+                    'action' => $action,
+                    'view',
+                    $encodedUserId
+                ];
+
+            } else if ($action == 'Comments') {
+                $url = [
+                    'plugin' => $plugin,
+                    'institutionId' => $encodedInstitutionId,
+                    'controller' => $userRole.'Comments',
+                    'action' => 'index',
+                    $encodedUserId
+                ];
+
+            } else if ($action == 'UserNationalities') {
+                $url['action'] = 'Nationalities';
+                $url[0] = $encodedUserAndNationalityId;
+            }
+
+            $page->addTab($action)
+                ->setTitle($obj['text'])
+                ->setUrl($url);
         }
 
         // set active tab

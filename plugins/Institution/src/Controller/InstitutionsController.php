@@ -1371,8 +1371,8 @@ class InstitutionsController extends AppController
                     $url = [
                         'plugin' => 'Institution',
                         'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                        'controller' => 'Comments',
-                        'action' => 'index',
+                        'controller' => 'StudentComments',
+                        'action' => 'index'
                     ];
                 }
 
