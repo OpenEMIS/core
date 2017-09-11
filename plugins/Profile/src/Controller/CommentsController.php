@@ -152,7 +152,7 @@ class CommentsController extends PageController
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
 
         $nationalityId = $this->Users->get($userId)->nationality_id;
-        $encodedUserId = $this->paramsEncode(['id' => $userId]);
+        $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $encodedUserAndNationalityId = $this->paramsEncode(['security_user_id' => $userId,'nationality_id' => $nationalityId]);
         $pluralPlugin = Inflector::pluralize($plugin);
 
@@ -185,7 +185,7 @@ class CommentsController extends PageController
                     'controller' => $pluralPlugin,
                     'action' => $action,
                     'view',
-                    $encodedUserId
+                    $this->paramsEncode(['id' => $userId])
                 ];
 
             } else if ($action == 'Comments') {
@@ -221,7 +221,7 @@ class CommentsController extends PageController
         $institutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
 
         $nationalityId = $this->Users->get($userId)->nationality_id;
-        $encodedUserId = $this->paramsEncode(['id' => $userId]);
+        $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $encodedUserAndNationalityId = $this->paramsEncode(['security_user_id' => $userId,'nationality_id' => $nationalityId]);
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $pluralUserRole = Inflector::pluralize($userRole);
@@ -234,7 +234,7 @@ class CommentsController extends PageController
             'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'Special Needs' =>['text' =>  __('Special Needs')],
+            'SpecialNeeds' =>['text' =>  __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')]
@@ -265,7 +265,7 @@ class CommentsController extends PageController
                     'controller' => $pluralPlugin,
                     'action' => $action,
                     'view',
-                    $encodedUserId
+                    $this->paramsEncode(['id' => $userId])
                 ];
 
             } else if ($action == 'Comments') {
