@@ -1321,12 +1321,12 @@ class InstitutionsController extends AppController
                 'urlModel' => 'Nationalities'
             ],
             'Contacts' => ['text' => __('Contacts')],
-            'Guardians' => ['text' => __('Guardians')],
             'Languages' => ['text' => __('Languages')],
             'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')],
+            'Guardians' => ['text' => __('Guardians')],
             'StudentSurveys' => ['text' => __('Surveys')]
         ];
 
@@ -1371,7 +1371,7 @@ class InstitutionsController extends AppController
                     $url = [
                         'plugin' => 'Institution',
                         'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                        'controller' => 'StudentComments',
+                        'controller' => $userRole.'Comments',
                         'action' => 'index'
                     ];
                 }
