@@ -58,7 +58,8 @@ class AdvancedNameSearchBehavior extends Behavior
                         $alias . '.first_name LIKE' => $searchString,
                         $alias . '.middle_name LIKE' => $searchString,
                         $alias . '.third_name LIKE' => $searchString,
-                        $alias . '.last_name LIKE' => $searchString
+                        $alias . '.last_name LIKE' => $searchString,
+                        $alias . '.identity_number LIKE' => $searchString
                     ]
                 ];
                 if ($searchByUserName) {
