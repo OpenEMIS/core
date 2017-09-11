@@ -157,7 +157,7 @@ class CommentsController extends PageController
         $pluralPlugin = Inflector::pluralize($plugin);
 
         $tabElements = [
-            'Overview' => ['text' => __('Overview')],
+            $pluralPlugin => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
@@ -170,27 +170,35 @@ class CommentsController extends PageController
         ];
 
         foreach ($tabElements as $action => $obj) {
-            $url = ['plugin' => $plugin, 'controller' => $pluralPlugin, 'action' => $action, $subaction, $encodedUserId];
+            $url = [
+                'plugin' => $plugin,
+                'controller' => $pluralPlugin,
+                'action' => $action,
+                'index',
+                'queryString' => $encodedUserId
+            ];
 
             // exceptions
-            if ($action == 'Overview') {
-                $url['action'] = $pluralPlugin;
-                $url[0] = 'view';
-
-            } else if ($action == 'Accounts') {
-                $url[0] = 'view';
+            if (in_array($action, [$pluralPlugin, 'Accounts'])) {
+                $url = [
+                    'plugin' => $plugin,
+                    'controller' => $pluralPlugin,
+                    'action' => $action,
+                    'view',
+                    $encodedUserId
+                ];
 
             } else if ($action == 'Comments') {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $plugin.'Comments',
                     'action' => 'index',
-                    $encodedUserId
+                    'queryString' => $encodedUserId
                 ];
 
             } else if ($action == 'UserNationalities') {
                 $url['action'] = 'Nationalities';
-                $url[1] = $encodedUserAndNationalityId;
+                $url['queryString'] = $encodedUserAndNationalityId;
             }
 
             $page->addTab($action)
@@ -242,7 +250,13 @@ class CommentsController extends PageController
         }
 
         foreach ($tabElements as $action => $obj) {
-            $url = ['plugin' => $userRole, 'controller' => $pluralUserRole, 'action' => $action, 'index', 'queryString' => $encodedUserId];
+            $url = [
+                'plugin' => $userRole,
+                'controller' => $pluralUserRole,
+                'action' => $action,
+                'index',
+                'queryString' => $encodedUserId
+            ];
 
             // exceptions
             if (in_array($action, [$userRole.'User', $userRole.'Account'])) {
