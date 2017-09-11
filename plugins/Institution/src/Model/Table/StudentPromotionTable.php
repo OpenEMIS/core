@@ -279,7 +279,7 @@ class StudentPromotionTable extends AppTable
             $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
 
             if ($currentData['student_status_id'] == $this->statuses['GRADUATED'] && array_key_exists(key($nextGrades), $listOfInstitutionGrades)) {
-                $gradeName = $this->getMessage($this->aliasField('notEnrolled'));
+                $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('notEnrolled'));
             }
             // end of getting the notEnrolled message
 
@@ -516,6 +516,9 @@ class StudentPromotionTable extends AppTable
                     // list of grades available to promote to
                     // 'false' means only displayed the next level within the same grade level.
                     $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+
+                    // if is not last grade, listOfGrades show the next grade of the current grade only
+                    $listOfGrades = [key($listOfGrades) => current($listOfGrades)];
                 }
 
                 // list of grades available in the institution
@@ -529,13 +532,9 @@ class StudentPromotionTable extends AppTable
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
-                    // if is last grade in the programme, show All first grade of the next programme,
-                    // else show the next grade of the current grade only
-                    $options = ($isLastGrade) ? $gradeOptions : [key($gradeOptions) => current($gradeOptions)];
-
                     // to cater for graduate
                     if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
-                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $options;
+                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
                     }
                 }
 
