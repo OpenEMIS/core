@@ -257,6 +257,7 @@ class NavigationComponent extends Component
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
         $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments'];
         $profileControllers = ['ProfileComments'];
+        $directoryControllers = ['DirectoryComments'];
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -275,7 +276,7 @@ class NavigationComponent extends Component
             $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
             $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
             $this->checkClassification($navigations);
-        } elseif ($controller->name == 'Directories' && $action != 'index') {
+        } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
             $session = $this->request->session();
@@ -797,7 +798,7 @@ class NavigationComponent extends Component
                 'title' => 'General',
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments',
+                'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'DirectoryComments.index', 'DirectoryComments.view', 'DirectoryComments.add', 'DirectoryComments.edit', 'DirectoryComments.remove', 'Directories.Attachments',
                     'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
             ],
             'Directories.Healths' => [

@@ -63,7 +63,7 @@ class DirectoriesController extends AppController {
 	public function Contacts() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
 	public function StudentBankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
 	public function StaffBankAccounts() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
-	public function Comments() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
+	// public function Comments() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
 	public function StudentProgrammes() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
     public function Identities() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
@@ -382,6 +382,14 @@ class DirectoriesController extends AppController {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+
+            } else if ($key == 'Comments') {
+                $url = [
+                    'plugin' => $plugin,
+                    'controller' => 'DirectoryComments',
+                    'action' => 'index'
+                ];
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
 
             } else {
 
