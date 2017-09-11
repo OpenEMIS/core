@@ -15,10 +15,8 @@ class ProfileCommentsController extends BaseController
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
-
         $userId = $this->Auth->user('id');
         $userName = $this->Auth->user('name');
-        $encodedUserId = $this->paramsEncode(['id' => $userId]);
 
         parent::beforeFilter($event);
 
