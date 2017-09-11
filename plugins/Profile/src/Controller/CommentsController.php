@@ -19,16 +19,23 @@ class CommentsController extends PageController
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
-
         parent::beforeFilter($event);
 
-        $page->exclude(['security_user_id']);
+        // set label
         $page->get('comment_date')->setLabel('Date');
+
+        // set field order
+        $page->move('comment_type_id')->first();
     }
 
     public function index()
     {
         $page = $this->Page;
+        $page->exclude(['security_user_id']);
+
+        // set sortable
+        $page->get('comment_type_id')->setSortable(true);
+        $page->get('comment')->setSortable(false);
 
         // set field order
         $page->move('comment_date')->first();
@@ -43,12 +50,35 @@ class CommentsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-
-        // set field order
-        $page->move('comment_type_id')->first();
-        $page->move('comment_date')->after('comment');
+        $page->exclude(['security_user_id']);
 
         parent::view($id);
+    }
+
+    public function add()
+    {
+        $page = $this->Page;
+        $page->get('security_user_id')->setControlType('hidden');
+        $page->get('comment_type_id')->setControlType('dropdown');
+
+        parent::add();
+    }
+
+    public function edit($id)
+    {
+        $page = $this->Page;
+        $page->get('security_user_id')->setControlType('hidden');
+        $page->get('comment_type_id')->setControlType('dropdown');
+
+        parent::edit($id);
+    }
+
+    public function delete($id)
+    {
+        $page = $this->Page;
+        $page->get('security_user_id')->setControlType('hidden');
+
+        parent::delete($id);
     }
 
     public function setBreadCrumb($options)
@@ -118,7 +148,6 @@ class CommentsController extends PageController
     {
         $page = $this->Page;
         $plugin = $this->plugin;
-
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
 
@@ -177,7 +206,6 @@ class CommentsController extends PageController
     public function setupInstitutionTabElements($options)
     {
         $page = $this->Page;
-
         $plugin = $this->plugin;
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
@@ -192,8 +220,8 @@ class CommentsController extends PageController
         $pluralPlugin = Inflector::pluralize($plugin);
 
         $tabElements = [
-            'Overview' => ['text' => __('Overview')],
-            'Accounts' => ['text' => __('Account')],
+            $userRole.'User' => ['text' => __('Overview')],
+            $userRole.'Account' => ['text' => __('Account')],
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' =>['text' =>  __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
@@ -204,12 +232,20 @@ class CommentsController extends PageController
             'History' => ['text' => __('History')]
         ];
 
+        // extra student tabs
+        if ($userRole == 'Student') {
+            $studentTabElements = [
+                'Guardians' => ['text' => __('Guardians')],
+                'StudentSurveys' => ['text' => __('Surveys')]
+            ];
+            $tabElements = array_merge($tabElements, $studentTabElements);
+        }
+
         foreach ($tabElements as $action => $obj) {
-            $url = ['plugin' => $userRole, 'controller' => $pluralUserRole, 'action' => $action, 'index', $encodedUserId];
+            $url = ['plugin' => $userRole, 'controller' => $pluralUserRole, 'action' => $action, 'index', 'queryString' => $encodedUserId];
 
             // exceptions
-            if (in_array($action, ['Overview', 'Accounts'])) {
-                $action = $action == 'Overview' ? $userRole.'User' : $action;
+            if (in_array($action, [$userRole.'User', $userRole.'Account'])) {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $pluralPlugin,
@@ -224,12 +260,12 @@ class CommentsController extends PageController
                     'institutionId' => $encodedInstitutionId,
                     'controller' => $userRole.'Comments',
                     'action' => 'index',
-                    $encodedUserId
+                    'queryString' => $encodedUserId
                 ];
 
             } else if ($action == 'UserNationalities') {
                 $url['action'] = 'Nationalities';
-                $url[0] = $encodedUserAndNationalityId;
+                $url['queryString'] = $encodedUserAndNationalityId;
             }
 
             $page->addTab($action)

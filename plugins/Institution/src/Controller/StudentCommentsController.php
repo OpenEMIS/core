@@ -9,16 +9,11 @@ class StudentCommentsController extends BaseController
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
-
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionName = $session->read('Institution.Institutions.name');
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
-
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-        $encodedStudentId = $this->paramsEncode(['id' => $studentId]);
-        $nationalityId = $this->Users->get($studentId)->nationality_id;
 
         parent::beforeFilter($event);
 
@@ -37,11 +32,23 @@ class StudentCommentsController extends BaseController
             'institutionName' => $institutionName
         ]);
 
+        // set Tabs
         $this->setupInstitutionTabElements([
             'userId' => $studentId,
             'userName' => $studentName,
             'userRole' => 'Student',
             'institutionId' => $institutionId
         ]);
+    }
+
+    public function add()
+    {
+        $page = $this->Page;
+        $session = $this->request->session();
+
+        $studentId = $session->read('Student.Students.id');
+        $page->get('security_user_id')->setValue($studentId);
+
+        parent::add();
     }
 }
