@@ -349,8 +349,8 @@ class ProfilesController extends AppController
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'Attachments' => ['text' => __('Attachments')],
             'SpecialNeeds' => ['text' => __('Special Needs')],
+            'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')]
         ];
@@ -361,12 +361,12 @@ class ProfilesController extends AppController
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
             } else if ($key == 'Comments') {
-                $tabElements[$key]['url'] = [
+                $url = [
                     'plugin' => $plugin,
                     'controller' => 'ProfileComments',
-                    'action' => 'index',
-                    $this->ControllerAction->paramsEncode(['id' => $id])
+                    'action' => 'index'
                 ];
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
