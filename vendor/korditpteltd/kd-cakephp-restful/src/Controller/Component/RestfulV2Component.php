@@ -81,7 +81,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         $serialize = $this->serialize;
 
         if ($this->schema == true) {
-            $serialize['schema'] = $this->model->getSchema()->toArray();
+            $schema = $this->model->getSchema();
+            $serialize['schema'] = $schema->toArray();
+            if ($schema->hasFilters()) {
+                $serialize['filters'] = $schema->getFilters();
+            }
         }
 
         if (array_key_exists('_serialize', $controller->viewVars)) {
@@ -417,7 +421,9 @@ class RestfulV2Component extends Component implements RestfulInterface
         $OR = [];
         foreach ($schema as $field) {
             $name = $field->name();
-            if ($name == 'id' || $field->controlType() == 'password') continue;
+            if ($name == 'id' || $field->controlType() == 'password') {
+                continue;
+            }
 
             // if the field is of a searchable type and it is part of the table schema
             if (in_array($field->type(), $types) && in_array($name, $columns)) {
@@ -509,6 +515,26 @@ class RestfulV2Component extends Component implements RestfulInterface
                 }
             }
             $extra['innerJoinWith'] = $innerJoinAssoc;
+        }
+    }
+
+    private function _leftJoinWith($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $leftJoinAssoc = [];
+
+            if (strpos($value, ',')) {
+                $leftJoinAssoc[] = $value;
+            } else {
+                $leftJoinAssoc = explode(',', $value);
+            }
+
+            if (!is_null($query)) {
+                foreach ($leftJoinAssoc as $assoc) {
+                    $query->leftJoinWith($assoc);
+                }
+            }
+            $extra['leftJoinWith'] = $leftJoinAssoc;
         }
     }
 
@@ -740,7 +766,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
 
         // methods have to be executed in the correct sequence
-        $indexMethods = ['_search', '_fields', '_finder', '_contain', '_innerJoinWith', '_conditions', '_orWhere', '_group', '_order', '_limit', '_page'];
+        $indexMethods = ['_search', '_fields', '_finder', '_contain', '_innerJoinWith', '_leftJoinWith', '_conditions', '_orWhere', '_group', '_order', '_limit', '_page'];
         $viewMethods = ['_fields', '_finder', '_contain'];
 
         if ($action == 'index') {
