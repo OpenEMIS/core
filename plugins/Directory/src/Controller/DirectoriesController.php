@@ -363,8 +363,8 @@ class DirectoriesController extends AppController {
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'Attachments' => ['text' => __('Attachments')],
             'SpecialNeeds' => ['text' => __('Special Needs')],
+            'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')]
         ];
