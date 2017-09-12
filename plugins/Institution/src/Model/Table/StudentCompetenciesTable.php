@@ -64,9 +64,20 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if ($this->action != 'index') {
+            $tabElements = $this->controller->getCompetencyTabElements();
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', 'StudentCompetencies');
+        }
+
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['type' => 'hidden']);
+        $this->field('secondary_staff_id', ['type' => 'hidden']);
         $this->field('institution_shift_id', ['type' => 'hidden']);
+        $this->field('modified_user_id', ['type' => 'hidden']);
+        $this->field('modified', ['type' => 'hidden']);
+        $this->field('created_user_id', ['type' => 'hidden']);
+        $this->field('created', ['type' => 'hidden']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -233,7 +244,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $model = $this;
         $process = function($model, $entity) use ($data) {
             if (!empty($entity->competency_period) && !empty($entity->competency_item)) {
-                $StudentCompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
+                $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
 
                 $competencyTemplateId = $data[$model->alias()]['competency_template'];
                 $competencyPeriodId = $data[$model->alias()]['competency_period'];
@@ -241,8 +252,8 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $institutionId = $data[$model->alias()]['institution_id'];
                 $academicPeriodId = $data[$model->alias()]['academic_period_id'];
 
-                if (array_key_exists('student_competency_results', $data[$model->alias()]) && !empty($data[$model->alias()]['student_competency_results'])) {
-                    foreach ($data[$model->alias()]['student_competency_results'] as $studentId => $criteriaResults) {
+                if (array_key_exists('institution_competency_results', $data[$model->alias()]) && !empty($data[$model->alias()]['institution_competency_results'])) {
+                    foreach ($data[$model->alias()]['institution_competency_results'] as $studentId => $criteriaResults) {
                         foreach ($criteriaResults as $criteriaKey => $criteriaValue) {
                             $studentData = [
                                 'student_id' => $studentId,
@@ -334,9 +345,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             ->find()
             ->where([
                 $CompetencyPeriods->aliasField('academic_period_id') => $this->academicPeriodId,
-                $CompetencyPeriods->aliasField('competency_template_id') => $this->competencyTemplateId,
-                $CompetencyPeriods->aliasField('date_enabled <= ') => $today,
-                $CompetencyPeriods->aliasField('date_disabled >= ') => $today
+                $CompetencyPeriods->aliasField('competency_template_id') => $this->competencyTemplateId
             ])
             ->all();
 
@@ -446,19 +455,22 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         $value = '';
         $form = $event->subject()->Form;
-        $fieldPrefix = $attr['model'] . '.student_competency_results';
+        $fieldPrefix = $attr['model'] . '.institution_competency_results';
 
         $tableHeaders = [];
         $tableCells = [];
+        $colOffset = 0;
 
         // Build table header
         $tableHeaders[] = __('OpenEMIS ID');
         $tableHeaders[] = __('Student Name');
         $tableHeaders[] = __('Student Status');
-        $colOffset = 3; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status
 
         $competencyItemEntity = null;
         if (!is_null($this->competencyItemId)) {
+            $tableHeaders[] = __('Comments');
+            $colOffset = 4; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status, 3 -> Comments
+
             $CompetencyItems = TableRegistry::get('Competency.CompetencyItems');
             $competencyItemEntity = $CompetencyItems
                 ->find()
@@ -493,12 +505,14 @@ class StudentCompetenciesTable extends ControllerActionTable
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
-            $CompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
+            $CompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
+            $ItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
             $students = $ClassStudents
                 ->find()
                 ->select([
                     $CompetencyResults->aliasField('competency_grading_option_id'),
                     $CompetencyResults->aliasField('competency_criteria_id'),
+                    $ItemComments->aliasField('comments'),
                     $ClassStudents->aliasField('student_id'),
                     $ClassStudents->aliasField('student_status_id'),
                     $StudentStatuses->aliasField('name'),
@@ -511,6 +525,17 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ])
                 ->matching('Users')
                 ->matching('StudentStatuses')
+                ->leftJoin(
+                    [$ItemComments->alias() => $ItemComments->table()],
+                    [
+                        $ItemComments->aliasField('student_id = ') . $ClassStudents->aliasField('student_id'),
+                        $ItemComments->aliasField('institution_id') => $this->institutionId,
+                        $ItemComments->aliasField('academic_period_id') => $this->academicPeriodId,
+                        $ItemComments->aliasField('competency_template_id') => $this->competencyTemplateId,
+                        $ItemComments->aliasField('competency_period_id') => $this->competencyPeriodId,
+                        $ItemComments->aliasField('competency_item_id') => $this->competencyItemId
+                    ]
+                )
                 ->leftJoin(
                     [$CompetencyResults->alias() => $CompetencyResults->table()],
                     [
@@ -544,8 +569,13 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $currentStudentId = $studentObj->student_id;
                 $savedGradingOptionId = $studentObj->{$CompetencyResults->alias()}['competency_grading_option_id'];
                 $savedCriteriaId = $studentObj->{$CompetencyResults->alias()}['competency_criteria_id'];
+                $savedItemComments = $studentObj->{$ItemComments->alias()}['comments'];
                 if (!is_null($savedCriteriaId) && !is_null($savedGradingOptionId)) {
                     $answerObj[$currentStudentId][$savedCriteriaId] = $savedGradingOptionId;
+                }
+                $comments = "";
+                if (!is_null($savedItemComments)) {
+                    $comments = $savedItemComments;
                 }
 
                 $userObj = $studentObj->_matchingData['Users'];
@@ -577,6 +607,9 @@ class StudentCompetenciesTable extends ControllerActionTable
                         $rowData[] = $userObj->openemis_no . $rowInput;
                         $rowData[] = $userObj->name;
                         $rowData[] = $studentStatusObj->name;
+                    }
+                    if (!is_null($competencyItemEntity)) {
+                        $rowData[] = $comments;
                     }
 
                     $studentId = $currentStudentId;

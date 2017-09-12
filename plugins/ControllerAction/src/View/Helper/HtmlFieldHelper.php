@@ -75,6 +75,11 @@ class HtmlFieldHelper extends Helper
                 $options['value'] = $data->invalid($field);
             }
         }
+        if (array_key_exists('label', $options)) {
+            if (!is_array($options['label'])) {
+                $options['label'] = ['escape' => false, 'text' => $options['label']];
+            }
+        }
         return $options;
     }
 

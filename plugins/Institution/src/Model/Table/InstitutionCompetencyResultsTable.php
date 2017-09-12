@@ -5,7 +5,7 @@ use Cake\ORM\Query;
 
 use App\Model\Table\AppTable;
 
-class StudentCompetencyResultsTable extends AppTable
+class InstitutionCompetencyResultsTable extends AppTable
 {
     public function initialize(array $config)
     {

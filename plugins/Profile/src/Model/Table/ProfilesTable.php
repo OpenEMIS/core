@@ -49,6 +49,7 @@ class ProfilesTable extends ControllerActionTable
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Auth.User.id']);
 
+        $this->toggle('index', false);
         $this->toggle('search', false);
         $this->toggle('remove', false);
     }
@@ -65,13 +66,6 @@ class ProfilesTable extends ControllerActionTable
             ;
         $BaseUsers = TableRegistry::get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
-    }
-
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
-    {
-        $session = $this->request->session();
-        $loginUserId = $session->read('Auth.User.id');
-        $this->controller->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)

@@ -122,33 +122,36 @@ trait ControllerActionV4Trait {
 						$query = $event->result;
 					}
 
-					if ($query instanceof Query) {
-						$queryData = $query->toArray();
-						$hasDefaultField = false;
-						$defaultValue = false;
-						$optionsArray = [];
-						foreach ($queryData as $okey => $ovalue) {
-							$optionsArray[$ovalue->id] = $ovalue->name;
-							if ($ovalue->has('default')) {
-								$hasDefaultField = true;
-								if ($ovalue->default) {
-									$defaultValue = $ovalue->id;
+					if ($model->action != 'index') { // should not populate options for index page
+						if ($query instanceof Query) {
+							$query->limit(500); // to prevent out of memory error, options should not be more than 500 records anyway
+							$queryData = $query->toArray();
+							$hasDefaultField = false;
+							$defaultValue = false;
+							$optionsArray = [];
+							foreach ($queryData as $okey => $ovalue) {
+								$optionsArray[$ovalue->id] = $ovalue->name;
+								if ($ovalue->has('default')) {
+									$hasDefaultField = true;
+									if ($ovalue->default) {
+										$defaultValue = $ovalue->id;
+									}
 								}
 							}
-						}
 
-						if (!empty($defaultValue) && !(is_bool($attr['default']) && !$attr['default'])) {
-							$model->fields[$key]['default'] = $defaultValue;
-						}
-						if ($attr['type'] != 'chosenSelect') {
-                            if (in_array($model->action, ['edit', 'add'])) {
-							    $optionsArray = ['' => __('-- Select --')] + $optionsArray;
-                            }
-						}
+							if (!empty($defaultValue) && !(is_bool($attr['default']) && !$attr['default'])) {
+								$model->fields[$key]['default'] = $defaultValue;
+							}
+							if ($attr['type'] != 'chosenSelect') {
+	                            if (in_array($model->action, ['edit', 'add'])) {
+								    $optionsArray = ['' => __('-- Select --')] + $optionsArray;
+	                            }
+							}
 
-						$model->fields[$key]['options'] = $optionsArray;
-					} else {
-						$model->fields[$key]['options'] = $query;
+							$model->fields[$key]['options'] = $optionsArray;
+						} else {
+							$model->fields[$key]['options'] = $query;
+						}
 					}
 				}
 			}

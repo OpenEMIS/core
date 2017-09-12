@@ -601,7 +601,7 @@ class InstitutionClassStudentsTable extends AppTable
         $this->_autoDeleteSubjectStudent($entity);
 
         $listeners = [
-            TableRegistry::get('Institution.StudentCompetencyResults')
+            TableRegistry::get('Institution.InstitutionCompetencyResults')
         ];
         $this->dispatchEventToModels('Model.InstitutionClassStudents.afterDelete', [$entity], $this, $listeners);
     }

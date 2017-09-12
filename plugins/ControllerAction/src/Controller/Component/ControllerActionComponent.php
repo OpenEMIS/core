@@ -1475,7 +1475,9 @@ class ControllerActionComponent extends Component
 
                     $convertOptions = [];
                     foreach ($convertOptionResults as $key => $value) {
-                        $keysToEncode = $model->getIdKeys($model, $key, false);
+                        $ids = ['id' => $value->id];
+
+                        $keysToEncode = $model->getIdKeys($model, $ids, false);
                         $encodedKey = $model->paramsEncode($keysToEncode);
                         $convertOptions[$encodedKey] = $value->{$extra['valueField']};
                     }

@@ -9,11 +9,12 @@
 					<tr>
 						<th><?= $this->Label->get('InstitutionClasses.class'); ?></th>
 						<th><?= $this->Label->get('InstitutionClasses.staff_id'); ?></th>
+						<th><?= $this->Label->get('InstitutionClasses.secondary_staff_id'); ?> </th>
 					</tr>
 				</thead>
-				
+
 				<tbody>
-					<?php 
+					<?php
 					$startingClassNumber = count($attr['data']['existedClasses']) + 1;
 					for ($i=0; $i<$attr['data']['numberOfClasses']; $i++) :
 						$nameIsAvailable = false;
@@ -35,7 +36,7 @@
 						} while (!$nameIsAvailable);
 					?>
 					<tr>
-		    			<?php 
+		    			<?php
 		    			$attrValue = '';
 	    				$attrErrors = [];
 		    			if(empty($this->request->data)) {
@@ -52,12 +53,12 @@
 		    				'fieldName' => 'MultiClasses['.$i.'][name]',
 		    				'attr' => [
 		    					'id' => 'multiclasses-'.$i.'-name',
-		    					'label' => false, 
+		    					'label' => false,
 		    					'name' => 'MultiClasses['.$i.'][name]',
 		    					'value' => $attrValue
 		    				],
 		    			];
-						$tdClass = ''; 
+						$tdClass = '';
 						if (!empty($attrErrors) && isset($attrErrors['name'])) {
 							$field['attr']['class'] = 'form-error';
 							$tdClass = 'error';
@@ -67,7 +68,7 @@
 						<td class="<?= $tdClass ?>">
 							<?php
 								echo $this->Form->input($field['fieldName'], $field['attr']);
-							?>	
+							?>
 							<?php if (!empty($attrErrors) && isset($attrErrors['name'])) : ?>
 								<ul class="error-message" style="margin-left:20px">
 								<?php foreach ($attrErrors['name'] as $error) : ?>
@@ -79,10 +80,29 @@
 								'value' => $startingClassNumber
 							));?>
 						</td>
-						
-						<td><?php 
+
+						<td><?php
 						echo $this->Form->input(sprintf('MultiClasses.%d.staff_id', $i), array(
-							'options' => $attr['data']['staffOptions'], 
+							'options' => $attr['data']['staffOptions'],
+							'label' => false,
+							'div' => false,
+							'between' => false,
+							'after' => false
+						));
+
+						?>
+						<?php if (!empty($attrErrors) && isset($attrErrors['staff_id'])) : ?>
+							<ul class="error-message" style="margin-left:20px">
+							<?php foreach ($attrErrors['staff_id'] as $error) : ?>
+								<li><?= $error ?></li>
+							<?php endforeach ?>
+							</ul>
+						<?php endif; ?>
+						</td>
+
+						<td><?php
+						echo $this->Form->input(sprintf('MultiClasses.%d.secondary_staff_id', $i), array(
+							'options' => $attr['data']['staffOptions'],
 							'label' => false,
 							'div' => false,
 							'between' => false,
@@ -90,7 +110,7 @@
 						));
 						?></td>
 					</tr>
-					<?php 
+					<?php
 						$startingClassNumber++;
 					endfor; ?>
 				</tbody>
