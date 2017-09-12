@@ -225,7 +225,8 @@ class WorkflowsTable extends AppTable {
         $this->setupFields($entity);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
         if (!$isDeletable) {
@@ -234,7 +235,7 @@ class WorkflowsTable extends AppTable {
             $session->write($sessionKey, $this->aliasField('restrictDelete'));
 
             $event->stopPropagation();
-            return $this->controller->redirect($this->ControllerAction->url('index'));
+            return $this->controller->redirect($this->ControllerAction->url('index', false));
         }
 
         $query->where([
@@ -258,12 +259,15 @@ class WorkflowsTable extends AppTable {
                 $this->aliasField('id <>') => $entity->id
             ])
             ->toArray();
-        $entity->transfer_to = $this->queryString('workflow', $convertOptions);
+
+        $encodedTransferTo = !is_null($this->request->query('workflow')) ? $this->request->query('workflow') : $this->ControllerAction->paramsEncode(['id' => key($convertOptions)]);
+        $entity->transfer_to = $encodedTransferTo;
+        $transferTo = $this->ControllerAction->paramsDecode($encodedTransferTo);
 
         $convertStepOptions = $this->WorkflowSteps
             ->find('list')
             ->where([
-                $this->WorkflowSteps->aliasField('workflow_id') => $entity->transfer_to
+                $this->WorkflowSteps->aliasField('workflow_id') => $transferTo['id']
             ])
             ->toArray();
         // End
@@ -346,25 +350,25 @@ class WorkflowsTable extends AppTable {
             $conn->begin();
 
             $requestData = $this->request->data;
-            $entity = $model->get($transferFrom);
+            $entity = $model->get($transferFrom['id']);
 
             // Update workflow_id in workflows_filters
             $filterResults = $this->WorkflowsFilters
                 ->find()
                 ->where([
-                    $this->WorkflowsFilters->aliasField('workflow_id') => $transferTo,
+                    $this->WorkflowsFilters->aliasField('workflow_id') => $transferTo['id'],
                     $this->WorkflowsFilters->aliasField('filter_id') => 0
                 ])
                 ->all();
 
             if ($filterResults->isEmpty()) {
                 $this->WorkflowsFilters->updateAll(
-                    ['workflow_id' => $transferTo],
-                    ['workflow_id' => $transferFrom]
+                    ['workflow_id' => $transferTo['id']],
+                    ['workflow_id' => $transferFrom['id']]
                 );
             } else {
                 $this->WorkflowsFilters->deleteAll([
-                    'workflow_id' => $transferFrom
+                    'workflow_id' => $transferFrom['id']
                 ]);
             }
             // End
