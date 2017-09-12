@@ -14,7 +14,7 @@ class CustomReportBehavior extends Behavior
 {
     private $Table = null;
 
-    public function buildQuery($jsonArray, array $params, $returnSql = false)
+    public function buildQuery($jsonArray, array $params, $byaccess = false, $returnSql = false)
     {
         $result = [];
         if (array_key_exists('model', $jsonArray)) {
@@ -22,17 +22,16 @@ class CustomReportBehavior extends Behavior
             $this->Table = TableRegistry::get($model);
             $query = $this->Table->find();
 
-            $plugin = explode('.', $model)[0];
-            $userId = $params['user_id'];
-            // $superAdmin = $params['super_admin'];
-            if (in_array($plugin, ['Institution'])) {
-                // rename to avoid duplicate finders
-                $this->Table->addBehavior('Report.InstitutionSecurity', [
-                    'implementedFinders' => [
-                        'byReportAccess' => 'findByAccess',
-                    ]
-                ]);
+            // rename to avoid duplicate finders
+            $this->Table->addBehavior('Report.InstitutionSecurity', [
+                'implementedFinders' => [
+                    'byReportAccess' => 'findByAccess',
+                ]
+            ]);
 
+            $userId = $params['user_id'];
+            $superAdmin = $params['super_admin'];
+            if ($byaccess) {
                 // don't implement super admin checking for now as not consistent with sql type
                 // if (!$superAdmin) {
                     $query->find('byReportAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
