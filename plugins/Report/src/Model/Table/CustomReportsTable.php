@@ -97,7 +97,9 @@ class CustomReportsTable extends AppTable
                         $params['user_id'] = $this->Auth->user('id');
                         $params['super_admin'] =$this->Auth->user('super_admin');
 
-                        $options = $this->buildQuery($data, $params, false);
+                        $byaccess = false;
+                        $toSql = false;
+                        $options = $this->buildQuery($data, $params, $byaccess, $toSql);
                         if (array_key_exists('options', $data)) {
                             $options = $data['options'] + $options;
                         }
@@ -212,7 +214,9 @@ class CustomReportsTable extends AppTable
 
             // csvBehavior can only can handle one query
             $obj = current($jsonQuery);
-            $settings['sql'] = $this->buildQuery($obj, $params, true);
+            $byaccess = true;
+            $toSql = true;
+            $settings['sql'] = $this->buildQuery($obj, $params, $byaccess, $toSql);
         }
     }
 }
