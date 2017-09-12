@@ -105,6 +105,9 @@ class PageController extends AppController
             foreach ($data as $entity) {
                 $page->attachPrimaryKey($table, $entity);
             }
+            if (count($data) == 0) {
+                $page->setAlert('There are no records.', 'info');
+            }
             $page->setVar('data', $data);
         }
     }

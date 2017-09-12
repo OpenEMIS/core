@@ -1,5 +1,5 @@
 <?php
-	$fieldPrefix = $ControllerAction['table']->alias() . '.student_competency_results';
+	$fieldPrefix = $ControllerAction['table']->alias() . '.institution_competency_results';
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 ?>

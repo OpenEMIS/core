@@ -61,6 +61,23 @@ $this->start('panelBody');
                 ng-options="option.id as option.name for option in InstitutionClassStudentsController.teacherOptions"
                 ng-model="InstitutionClassStudentsController.selectedTeacher"
                 ng-init="InstitutionClassStudentsController.selectedTeacher=null;"
+                ng-change="InstitutionClassStudentsController.secondaryTeacherOptions = InstitutionClassStudentsController.changeStaff(InstitutionClassStudentsController.selectedTeacher);"
+                >
+                <option value="" >-- <?= __('Select Teacher or Leave Blank') ?> --</option>
+            </select>
+        </div>
+        <div ng-if="InstitutionClassStudentsController.postError.staff_id" class="error-message">
+            <p ng-repeat="error in InstitutionClassStudentsController.postError.staff_id">{{ error }}</p>
+        </div>
+    </div>
+    <div class="input select">
+        <label><?= __('Secondary Home Room Teacher') ?></label>
+        <div class="input-select-wrapper">
+            <select name="InstitutionClasses[secondary_staff_id]" id="institutionclasses-secondary-staff-id"
+                ng-options="option.id as option.name for option in InstitutionClassStudentsController.secondaryTeacherOptions"
+                ng-model="InstitutionClassStudentsController.selectedSecondaryTeacher"
+                ng-init="InstitutionClassStudentsController.selectedSecondaryTeacher=null;"
+                ng-change="InstitutionClassStudentsController.teacherOptions = InstitutionClassStudentsController.changeStaff(InstitutionClassStudentsController.selectedSecondaryTeacher);"
                 >
                 <option value="" >-- <?= __('Select Teacher or Leave Blank') ?> --</option>
             </select>
