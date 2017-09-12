@@ -339,6 +339,7 @@ class StaffUserTable extends ControllerActionTable
             'InstitutionStaff' => function ($q) use ($institutionId, $startDate) {
                 return $q->where([
                     'InstitutionStaff.institution_id <>' => $institutionId,
+                    'InstitutionStaff.start_date <= ' => $startDate,
                     'OR' => [
                         ['InstitutionStaff.end_date >= ' => $startDate],
                         ['InstitutionStaff.end_date IS NULL']
