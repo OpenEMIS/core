@@ -51,6 +51,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('AcademicPeriod.Period');
         // to handle field type (autocomplete)
@@ -150,57 +151,6 @@ class StaffTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
         return $events;
-    }
-
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
-    {
-        // this piece of logic can be move to a behavior
-        if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
-            $user = $options['user'];
-            if ($user['super_admin'] == 0) { // if he is not super admin
-                $userId = $user['id'];
-
-                $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-                $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-
-                $institutionQuery = $SecurityGroupInstitutions->find()
-                    ->select(['id' => $this->aliasField('id')])
-                    ->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
-                        'SecurityGroupUser.security_group_id = SecurityGroupInstitutions.security_group_id',
-                        'SecurityGroupUser.security_user_id = ' . $userId
-                    ])
-                    ->where([
-                        $SecurityGroupInstitutions->aliasField('institution_id') . ' = Institutions.id'
-                    ]);
-
-                $areaQuery = $SecurityGroupAreas->find()
-                    ->select(['id' => $this->aliasField('id')])
-                    ->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
-                        'SecurityGroupUser.security_group_id = SecurityGroupAreas.security_group_id',
-                        'SecurityGroupUser.security_user_id = ' . $userId
-                    ])
-                    ->innerJoin(['AreaAll' => 'areas'], [
-                        'AreaAll.id = SecurityGroupAreas.area_id'
-                    ])
-                    ->where([
-                        'AreaAll.lft <= Areas.lft',
-                        'AreaAll.rght >= Areas.rght'
-                    ]);
-
-                $query->innerJoin(
-                    ['Institutions' => 'institutions'],
-                    ['Institutions.id = ' . $this->aliasField('institution_id')]
-                );
-                $query->innerJoin(
-                    ['Areas' => 'areas'],
-                    ['Areas.id = Institutions.area_id']
-                );
-                $query->where(['OR' => [
-                    'EXISTS (' . $institutionQuery->sql() . ')',
-                    'EXISTS (' . $areaQuery->sql() . ')'
-                ]]);
-            }
-        }
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
