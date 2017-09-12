@@ -12,6 +12,18 @@ class ProfileCommentsController extends BaseController
         $this->Page->disable(['add', 'delete', 'edit']);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        return true;
+    }
+
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
