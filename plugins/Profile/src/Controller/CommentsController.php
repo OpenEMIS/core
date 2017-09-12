@@ -113,13 +113,13 @@ class CommentsController extends PageController
                 $encodedInstitutionId
             ]);
             $page->addCrumb($pluralUserRole, [
-                'plugin' => $this->plugin,
+                'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => $pluralUserRole,
                 'institutionId' => $encodedInstitutionId
             ]);
             $page->addCrumb($userName, [
-                'plugin' => $this->plugin,
+                'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => $userRole.'User',
                 'view',
@@ -127,18 +127,30 @@ class CommentsController extends PageController
             ]);
             $page->addCrumb('Comments');
 
-        // for Directories and Profiles
-        } else if ($plugin == 'Profile' || $plugin == 'Directory') {
-            $pluralPlugin = Inflector::pluralize($plugin);
-
-            $page->addCrumb($plugin, [
-                'plugin' => $plugin,
-                'controller' => $pluralPlugin,
-                'action' => $pluralPlugin,
+        } else if ($plugin == 'Profile') {
+            $page->addCrumb('Profile', [
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
+                'action' => 'Profiles',
                 'view',
                 $encodedUserId
             ]);
             $page->addCrumb($userName);
+            $page->addCrumb('Comments');
+
+        } else if ($plugin == 'Directory') {
+            $page->addCrumb('Directory', [
+                'plugin' => 'Directory',
+                'controller' => 'Directories',
+                'action' => 'Directories'
+            ]);
+            $page->addCrumb($userName, [
+                'plugin' => 'Directory',
+                'controller' => 'Directories',
+                'action' => 'Directories',
+                'view',
+                $encodedUserId
+            ]);
             $page->addCrumb('Comments');
         }
     }

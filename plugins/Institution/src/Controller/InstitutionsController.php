@@ -1374,6 +1374,7 @@ class InstitutionsController extends AppController
                         'controller' => $userRole.'Comments',
                         'action' => 'index'
                     ];
+                    $url = $this->ControllerAction->setQueryString($url, ['security_user_id' => $securityUserId]);
                 }
 
                 $tabElements[$key]['url'] = $url;
