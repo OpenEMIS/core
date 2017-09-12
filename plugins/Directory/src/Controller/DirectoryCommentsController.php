@@ -21,4 +21,15 @@ class DirectoryCommentsController extends BaseController
         $this->setBreadCrumb(['userId' => $userId, 'userName' => $userName]);
         $this->setupTabElements(['userId' => $userId, 'userName' => $userName]);
     }
+
+    public function add()
+    {
+        $page = $this->Page;
+        $requestQuery = $this->request->query;
+
+        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        $page->get('security_user_id')->setValue($userId);
+
+        parent::add();
+    }
 }
