@@ -66,6 +66,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 
         // this behavior restricts current user to see All Classes or My Classes
+        $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Security.InstitutionClass');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Restful.RestfulAccessControl', [
