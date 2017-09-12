@@ -21,6 +21,8 @@ class StaffLeaveTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
+    private $assigneeList; //to be used for validation
+
     public function initialize(array $config)
     {
         $this->table('institution_staff_leave');
@@ -56,6 +58,13 @@ class StaffLeaveTable extends ControllerActionTable
                 'rule' => ['compareDateReverse', 'date_from', true]
             ])
             ->allowEmpty('file_content')
+            ->requirePresence('assignee_id', function ($context) { //only validate if the list exists
+                if (empty($this->assigneeList)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            });
         ;
     }
 
@@ -105,6 +114,18 @@ class StaffLeaveTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('assignee_id', ['entity' => $entity]); //send entity information
+    }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (!array_key_exists('assignee_id', $data[$this->Alias()])) { //when no assignee_id submitted, then unset from entity so it will be auto assigned
+            unset($entity->assignee_id);
+        }
+    }
+
     public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
@@ -124,6 +145,65 @@ class StaffLeaveTable extends ControllerActionTable
             $attr['value'] = $userId;
         }
 
+        return $attr;
+    }
+
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {   
+        if ($action == 'add' || $action == 'edit') {
+
+            $session = $this->request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            if ($session->check('Auth.User.id')) {
+                $userId = $session->read('Auth.User.id');
+                $userName = $session->read('Auth.User.name');
+            }
+            
+            //get the open status
+            $workflowStep = $this->Statuses
+                        ->find()
+                        ->contain('Workflows.WorkflowModels')
+                        ->where([
+                            'WorkflowModels.model' => $this->registryAlias(),
+                            $this->Statuses->aliasField('category') => 1  // Open
+                        ])
+                        ->first();
+
+            $openStatus = $workflowStep->id;
+
+            $currentStatus = '';
+            if ($action == 'edit') {
+                if (array_key_exists('entity', $attr)) {
+                    $currentStatus = $attr['entity']['status_id'];
+                }
+            }
+
+            if ($action == 'add' || ($action == 'edit' && $currentStatus == $openStatus)) { //only for 'add' and also for 'open' status
+                $params = [
+                    'is_school_based' => $workflowStep->workflow->workflow_model->is_school_based,
+                    'workflow_step_id' => $openStatus,
+                    'institution_id' => $institutionId
+                ];
+
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $this->assigneeList = $SecurityGroupUsers->getAssigneeList($params); //existing function
+
+                if(!empty($this->assigneeList)) {
+                    $attr['type'] = 'select';
+                    $attr['visible'] = true;
+                    $attr['options'] = $this->assigneeList;
+
+                    if ($action == 'edit') {
+                        if (array_key_exists('entity', $attr)) {
+                            $attr['default'] = $attr['entity']['assignee_id'];
+                        }
+                    }
+                }
+            }
+        }
         return $attr;
     }
 

@@ -186,9 +186,13 @@ class WorkflowBehavior extends Behavior {
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
         if ($entity->isNew()) {
             $this->setStatusAsOpen($entity);
+        }
+        
+        if (!$entity->has('assignee_id')) {
             $this->autoAssignAssignee($entity);
         }
     }
@@ -266,7 +270,7 @@ class WorkflowBehavior extends Behavior {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('assignee_id')) {
+        if (!$entity->isNew() && $entity->dirty('assignee_id') && $entity->dirty('status_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
