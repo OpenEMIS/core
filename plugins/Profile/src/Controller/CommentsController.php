@@ -182,15 +182,6 @@ class CommentsController extends PageController
         ];
 
         foreach ($tabElements as $action => $obj) {
-            $url = [
-                'plugin' => $plugin,
-                'controller' => $pluralPlugin,
-                'action' => $action,
-                'index',
-                'queryString' => $encodedUserId
-            ];
-
-            // exceptions
             if (in_array($action, [$pluralPlugin, 'Accounts'])) {
                 $url = [
                     'plugin' => $plugin,
@@ -208,9 +199,20 @@ class CommentsController extends PageController
                     'queryString' => $encodedUserId
                 ];
 
-            } else if ($action == 'UserNationalities') {
-                $url['action'] = 'Nationalities';
-                $url['queryString'] = $encodedUserAndNationalityId;
+            } else {
+                $url = [
+                    'plugin' => $plugin,
+                    'controller' => $pluralPlugin,
+                    'action' => $action,
+                    'index',
+                    'queryString' => $encodedUserId
+                ];
+
+                // exceptions
+                if ($action == 'UserNationalities') {
+                    $url['action'] = 'Nationalities';
+                    $url['queryString'] = $encodedUserAndNationalityId;
+                }
             }
 
             $page->addTab($action)
@@ -262,15 +264,6 @@ class CommentsController extends PageController
         }
 
         foreach ($tabElements as $action => $obj) {
-            $url = [
-                'plugin' => $userRole,
-                'controller' => $pluralUserRole,
-                'action' => $action,
-                'index',
-                'queryString' => $encodedUserId
-            ];
-
-            // exceptions
             if (in_array($action, [$userRole.'User', $userRole.'Account'])) {
                 $url = [
                     'plugin' => $plugin,
@@ -289,9 +282,20 @@ class CommentsController extends PageController
                     'queryString' => $encodedUserId
                 ];
 
-            } else if ($action == 'UserNationalities') {
-                $url['action'] = 'Nationalities';
-                $url['queryString'] = $encodedUserAndNationalityId;
+            } else {
+                $url = [
+                    'plugin' => $userRole,
+                    'controller' => $pluralUserRole,
+                    'action' => $action,
+                    'index',
+                    'queryString' => $encodedUserId
+                ];
+
+                // exceptions
+                if ($action == 'UserNationalities') {
+                    $url['action'] = 'Nationalities';
+                    $url['queryString'] = $encodedUserAndNationalityId;
+                }
             }
 
             $page->addTab($action)
