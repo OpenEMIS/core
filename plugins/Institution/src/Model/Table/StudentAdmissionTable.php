@@ -45,8 +45,7 @@ class StudentAdmissionTable extends AppTable {
 		$this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index'],
-        	'Students' => ['index', 'add'],
-
+        	'Students' => ['index', 'add']
         ]);
 	}
 
@@ -519,8 +518,36 @@ class StudentAdmissionTable extends AppTable {
         $errors = $entity->errors();
 
         if (empty($errors)) {
-            
-            $this->approveAdmission($entity, $data, 'Approval');
+	        
+			$Students = TableRegistry::get('Institution.Students');
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+			$newSchoolId = $entity->institution_id;
+			$studentId = $entity->student_id;
+			$gradeId = $entity->education_grade_id;
+			$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
+
+			$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
+			if (!empty($validateEnrolledInAnyInstitutionResult)) {
+				$this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
+			} else if ($Students->completedGrade($gradeId, $studentId)) {
+				$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
+			} else { // if not exists
+                $entity->comment = $data['StudentAdmission']['comment'];
+
+                $startDate = $data[$this->alias()]['start_date'];
+                $startDate = date('Y-m-d', strtotime($startDate));
+
+                // Update the status of the admission to be approved
+                $entity->start_date = $startDate;
+                $entity->status = self::APPROVED;
+                if (!$this->save($entity, ['validate' => false])) {
+                    $this->Alert->error('general.edit.failed');
+                    $this->log($entity->errors(), 'debug');
+                } else {
+                    $this->Alert->success('StudentAdmission.approve');
+                }
+			}
 
 			// To redirect back to the student admission if it is not access from the workbench
 			$urlParams = $this->ControllerAction->url('index');
@@ -547,6 +574,8 @@ class StudentAdmissionTable extends AppTable {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $processStudent = true;
+
         //this logic is meant for auto approve admission and add student into the institution when the creator has 'Student Admission -> Execute' permission
         if ($entity->isNew()) {
             
@@ -555,87 +584,27 @@ class StudentAdmissionTable extends AppTable {
                 
                 $admissionExecutePermission = true;    
                 //check for super admin
-                $superAdmin = Hash::check($_SESSION['Auth'], 'User.super_admin');
-
+                $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
+                
                 if (!$superAdmin) {
                     $admissionExecutePermission = Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
                 }
                 
-                if ($admissionExecutePermission){
-                    $this->approveAdmission($entity, [], 'AutoApprove');
+                if ($admissionExecutePermission) { //approve admission
+                    $this->updateAll(
+                        ['status' => self::APPROVED],
+                        [$this->aliasField('id') => $entity->id]
+                    );
+                } else {
+                    $processStudent = false;
                 }
             }
-        } 
-    }
-
-    private function approveAdmission($entity, $data, $caller)
-    {
-        $selectedClassId = $entity->institution_class_id;
-
-        if ($caller == 'Approval') {
-            $entity->comment = $data['StudentAdmission']['comment'];
         }
         
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $statuses = $StudentStatuses->findCodeList();
+        if ($processStudent) {
+            $errors = $entity->errors();
 
-        $newSchoolId = $entity->institution_id;
-        $previousSchoolId = $entity->previous_institution_id;
-        $studentId = $entity->student_id;
-        $periodId = $entity->academic_period_id;
-        $gradeId = $entity->education_grade_id;
-        $newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
-
-        if (!is_null($selectedClassId)) {
-            $classData = [];
-            $classData['student_id'] = $studentId;
-            $classData['education_grade_id'] = $gradeId;
-            $classData['institution_class_id'] = $selectedClassId;
-            $classData['student_status_id'] = $statuses['CURRENT'];
-            $classData['institution_id'] = $newSchoolId;
-            $classData['academic_period_id'] = $periodId;
-            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $InstitutionClassStudents->autoInsertClassStudent($classData);
-        }
-
-        $studentChecking = true;
-        if ($caller == 'Approval') {
-            $validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
-            if (!empty($validateEnrolledInAnyInstitutionResult)) {
-                $this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
-                $studentChecking = false;
-            } else if ($Students->completedGrade($gradeId, $studentId)) {
-                $this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
-                $studentChecking = false;
-            }
-        }
-
-        if ($caller == 'AutoApprove' || $studentChecking) {
-
-            if (!empty($data)) {
-                $startDate = $data[$this->alias()]['start_date']; 
-            } else {
-                $startDate = $entity->start_date; 
-            }
-            
-            $startDate = date('Y-m-d', strtotime($startDate));
-
-            // add the student to the new school
-            $entityData = [
-                'institution_id' => $newSchoolId,
-                'student_id' => $studentId,
-                'academic_period_id' => $periodId,
-                'education_grade_id' => $gradeId,
-                'student_status_id' => $statuses['CURRENT']
-            ];
-            $entityData['start_date'] = $startDate;
-            $entityData['end_date'] = $entity->end_date->format('Y-m-d');
-            $newEntity = $Students->newEntity($entityData);
-            if ($Students->save($newEntity)) {
-                if ($caller == 'Approval') {
-                    $this->Alert->success('StudentAdmission.approve');
-                }
+            if (empty($errors)) {
 
                 $EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
@@ -655,17 +624,52 @@ class StudentAdmissionTable extends AppTable {
                     [$conditions]
                 );
 
-                // Update the status of the admission to be approved
-                $entity->start_date = $startDate;
-                $entity->status = self::APPROVED;
-                if (!$this->save($entity, ['validate' => false])) {
-                    $this->log($entity->errors(), 'debug');
+                $selectedClassId = $entity->institution_class_id;
+                $Students = TableRegistry::get('Institution.Students');
+                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $statuses = $StudentStatuses->findCodeList();
+
+                $newSchoolId = $entity->institution_id;
+                $previousSchoolId = $entity->previous_institution_id;
+                $studentId = $entity->student_id;
+                $periodId = $entity->academic_period_id;
+                $gradeId = $entity->education_grade_id;
+                $newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
+
+                // add the student to the new school
+                $entityData = [
+                    'institution_id' => $newSchoolId,
+                    'student_id' => $studentId,
+                    'academic_period_id' => $periodId,
+                    'education_grade_id' => $gradeId,
+                    'student_status_id' => $statuses['CURRENT']
+                ];
+
+                if (is_string($entity->start_date)) {
+                    $entityData['start_date'] = $entity->start_date;
+                } else {
+                    $entityData['start_date'] = $entity->start_date->format('Y-m-d');
                 }
-            } else {
-                if ($caller == 'Approval') {
-                    $this->Alert->error('general.edit.failed');
+
+                $entityData['end_date'] = $entity->end_date->format('Y-m-d');
+                $newEntity = $Students->newEntity($entityData);
+
+                if ($Students->save($newEntity)) {
+
+                    //add student into class
+                    if (!is_null($selectedClassId)) {
+                        $classData = [];
+                        $classData['student_id'] = $studentId;
+                        $classData['education_grade_id'] = $gradeId;
+                        $classData['institution_class_id'] = $selectedClassId;
+                        $classData['student_status_id'] = $statuses['CURRENT'];
+                        $classData['institution_id'] = $newSchoolId;
+                        $classData['academic_period_id'] = $periodId;
+                        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                        $InstitutionClassStudents->autoInsertClassStudent($classData);
+                    }
+
                 }
-                $this->log($newEntity->errors(), 'debug');
             }
         }
     }
