@@ -183,6 +183,7 @@ class StudentPromotionTable extends AppTable
     public function addOnChangeStudentStatus(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->query['student_status']);
+        unset($data[$this->alias()]['education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $data)) {
