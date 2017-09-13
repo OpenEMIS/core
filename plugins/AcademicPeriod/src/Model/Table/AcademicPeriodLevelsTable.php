@@ -17,7 +17,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('level');
-		$this->setFieldOrder('level', 'name');
+		$this->setFieldOrder(['level', 'name']);
 	}
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
