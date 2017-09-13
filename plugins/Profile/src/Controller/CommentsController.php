@@ -12,8 +12,8 @@ class CommentsController extends PageController
         parent::initialize();
 
         $this->loadModel('Security.Users');
-        $this->loadModel('User.UserComments');
-        $this->Page->loadElementsFromTable($this->UserComments);
+        $this->loadModel('User.Comments');
+        $this->Page->loadElementsFromTable($this->Comments);
     }
 
     public function beforeFilter(Event $event)
@@ -42,7 +42,7 @@ class CommentsController extends PageController
         $page->move('comment_type_id')->after('comment_date');
 
         // set default ordering
-        $page->setQueryOption('order', [$this->UserComments->aliasField('comment_date') => 'DESC']);
+        $page->setQueryOption('order', [$this->Comments->aliasField('comment_date') => 'DESC']);
 
         parent::index();
     }
