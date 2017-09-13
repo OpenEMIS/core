@@ -2051,7 +2051,7 @@ class ValidationBehavior extends Behavior
         $startDate = $globalData['data']['start_date'];
         $endDate = isset($globalData['data']['end_date']) ? $globalData['data']['end_date'] : null;
         $staffId = $globalData['data']['staff_id'];
-        $staffFTE = $globalData['data']['FTE'];
+        $staffFTE = isset($globalData['data']['FTE']) && !empty($globalData['data']['FTE']) ? $globalData['data']['FTE'] : 0;
 
         $StaffTable = TableRegistry::get('Institution.Staff');
         $conditions = [
