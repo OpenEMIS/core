@@ -83,7 +83,6 @@ class ProfilesController extends AppController
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
     public function StudentBankAccounts()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
     public function StaffBankAccounts()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
-    // public function Comments()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function StudentProgrammes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
     public function Identities()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
