@@ -6,57 +6,93 @@ use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Log\Log;
 
 class SecurityAccessBehavior extends Behavior
 {
 	public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
 	{
-        // $options['user'] = ['id' => 4, 'super_admin' => 0];
+        // $options['user'] = ['id' => 4, 'super_admin' => 0]; // for testing purposes
         if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
 
-                $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-                $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-
-                $institutionQuery = $SecurityGroupInstitutions->find()
-                    ->select(1)
-                    ->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
-                        'SecurityGroupUser.security_group_id = SecurityGroupInstitutions.security_group_id',
-                        'SecurityGroupUser.security_user_id = ' . $userId
-                    ])
-                    ->where([
-                        $SecurityGroupInstitutions->aliasField('institution_id') . ' = Institutions.id'
-                    ]);
-
-                $areaQuery = $SecurityGroupAreas->find()
-                    ->select(1)
-                    ->innerJoin(['SecurityGroupUser' => 'security_group_users'], [
-                        'SecurityGroupUser.security_group_id = SecurityGroupAreas.security_group_id',
-                        'SecurityGroupUser.security_user_id = ' . $userId
-                    ])
-                    ->innerJoin(['AreaAll' => 'areas'], [
-                        'AreaAll.id = SecurityGroupAreas.area_id'
-                    ])
-                    ->where([
-                        'AreaAll.lft <= Areas.lft',
-                        'AreaAll.rght >= Areas.rght'
-                    ]);
-
-                $query->innerJoin(
-                    ['Institutions' => 'institutions'],
-                    ['Institutions.id = ' . $this->_table->aliasField('institution_id')]
-                );
-                $query->innerJoin(
-                    ['Areas' => 'areas'],
-                    ['Areas.id = Institutions.area_id']
-                );
-                $query->where(['OR' => [
-                    'EXISTS (' . $institutionQuery->sql() . ')',
-                    'EXISTS (' . $areaQuery->sql() . ')'
-                ]]);
+                $query->find('BySecurityAccess', ['userId' => $userId]);
             }
         }
 	}
+
+    public function findBySecurityAccess(Query $query, array $options)
+    {
+        if (array_key_exists('userId', $options)) {
+            $userId = $options['userId'];
+            $Institutions = TableRegistry::get('Institution.Institutions');
+
+            $institutionQuery = $Institutions->find()
+                ->select(['institution_id' => $Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id'])
+                ->innerJoin(['SecurityGroupInstitutions' => 'security_group_institutions'], [
+                    ['SecurityGroupInstitutions.institution_id = ' . $Institutions->aliasField('id')]
+                ])
+                ->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                    [
+                        'SecurityGroupUsers.security_group_id = SecurityGroupInstitutions.security_group_id',
+                        'SecurityGroupUsers.security_user_id = ' . $userId
+                    ]
+                ])
+                ->group([$Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id']);
+
+            /* Generated SQL: */
+
+            // SELECT institutions.id AS institution_id, security_group_users.security_group_id, security_group_users.security_role_id
+            // FROM institutions
+            // INNER JOIN security_group_institutions ON security_group_institutions.institution_id = institutions.id
+            // INNER JOIN security_group_users
+            //     ON security_group_users.security_group_id = security_group_institutions.security_group_id
+            //     AND security_group_users.security_user_id = 4
+            // GROUP BY institutions.id, security_group_users.security_group_id, security_group_users.security_role_id
+
+
+            $areaQuery = $Institutions->find()
+                ->select(['institution_id' => $Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id'])
+                ->innerJoin(['Areas' => 'areas'], ['Areas.id = ' . $Institutions->aliasField('area_id')])
+                ->innerJoin(['AreasAll' => 'areas'], [
+                    'AreasAll.lft < Areas.lft',
+                    'AreasAll.rght > Areas.rght'
+                ])
+                ->innerJoin(['SecurityGroupAreas' => 'security_group_areas'], [
+                    'SecurityGroupAreas.area_id = AreasAll.id'
+                ])
+                ->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                    [
+                        'SecurityGroupUsers.security_group_id = SecurityGroupAreas.security_group_id',
+                        'SecurityGroupUsers.security_user_id = ' . $userId
+                    ]
+                ])
+                ->group([$Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id']);
+
+            /* Generated SQL: */
+
+            // SELECT institutions.id AS institution_id, security_group_users.security_group_id, security_group_users.security_role_id
+            // FROM institutions
+            // INNER JOIN areas ON areas.id = institutions.area_id
+            // INNER JOIN areas AS AreaAll
+            //     ON AreaAll.lft <= areas.lft
+            //     AND AreaAll.rght >= areas.rght
+            // INNER JOIN security_group_areas ON security_group_areas.area_id = AreaAll.id
+            // INNER JOIN security_group_users
+            //     ON security_group_users.security_group_id = security_group_areas.security_group_id
+            //     AND security_group_users.security_user_id = 4
+            // GROUP BY institutions.id, security_group_users.security_group_id, security_group_users.security_role_id
+
+            $query->join([
+                'table' => '(' . $institutionQuery->sql() . ' UNION ' . $areaQuery->sql() . ')', // inner join subquery
+                'alias' => 'SecurityAccess',
+                'type' => 'inner',
+                'conditions' => ['SecurityAccess.institution_id = ' . $this->_table->aliasField('institution_id')]
+            ]);
+        }
+
+        return $query;
+    }
 }
