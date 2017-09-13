@@ -715,7 +715,7 @@ class InstitutionsController extends AppController
             
             $admissionExecutePermission = true;
             if (!$this->AccessControl->isAdmin()) {
-                $admissionExecutePermission = Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
+                $admissionExecutePermission = $session->read('Permissions.Institutions.StudentAdmission.execute');
             }
             $this->set('admissionExecutePermission', $admissionExecutePermission);
 
