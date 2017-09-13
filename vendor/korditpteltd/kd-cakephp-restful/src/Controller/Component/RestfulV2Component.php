@@ -217,6 +217,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
         $controller = $this->controller;
         $extra = $this->extra;
+        $user = $controller->getAuthorizedUser();
+        $extra['user'] = $user;
         $serialize = $this->serialize;
         $table = $this->initTable($this->model);
         if ($table instanceof RestfulAppTable) {
@@ -733,8 +735,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         // onBuildSchema will always be called to build the schema, but $this->schema will control if the schema information
         // should be included in the json response
         $event = $table->dispatchEvent('Restful.Model.onBuildSchema', [$this->extra], $this->controller);
-
-        if (array_key_exists('_flatten', $requestQueries) && $requestQueries['_flatten'] == 'true') {
+        if (array_key_exists('_flatten', $requestQueries) && $requestQueries['_flatten'] == true) {
             unset($this->request->query['_flatten']);
             $this->extra['flatten'] = true;
         }
