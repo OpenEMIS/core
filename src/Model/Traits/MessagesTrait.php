@@ -1009,7 +1009,7 @@ trait MessagesTrait
                 ],
                 'start_date' => [
                     'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
-                    'checkEndOfAssignmentWithStartDate' => 'Start Date should be later than %s',
+                    'ruleCheckStaffFTE' => 'No available FTE for the Staff within the start date and end date specified.',
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'

@@ -701,6 +701,7 @@ class InstitutionsController extends AppController
                 $institutionId = $session->read('Institution.Institutions.id');
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
+
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -710,6 +711,13 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             $this->set('externalDataSource', $externalDataSource);
+            
+            $admissionExecutePermission = true;
+            if (!$this->AccessControl->isAdmin()) {
+                $admissionExecutePermission = $session->read('Permissions.Institutions.StudentAdmission.execute');
+            }
+            $this->set('admissionExecutePermission', $admissionExecutePermission);
+
             $this->render('studentAdd');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
