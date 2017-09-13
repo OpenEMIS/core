@@ -535,6 +535,9 @@ class StudentPromotionTable extends AppTable
                     // to cater for graduate
                     if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
                         $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
+                    } else {
+                        // to cater for promote
+                        $options = $gradeOptions;
                     }
                 }
 
