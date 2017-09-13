@@ -531,14 +531,7 @@ class StudentAdmissionTable extends AppTable {
             } else if ($Students->completedGrade($gradeId, $studentId)) {
                 $this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
             } else { // if not exists
-                // check this logic whether it is necessary
-                $entity->comment = $data['StudentAdmission']['comment'];
 
-                $startDate = $data[$this->alias()]['start_date'];
-                $startDate = date('Y-m-d', strtotime($startDate));
-
-                // Update the status of the admission to be approved
-                $entity->start_date = $startDate;
                 $entity->status = self::APPROVED;
                 if (!$this->save($entity, ['validate' => false])) {
                     $this->Alert->error('general.edit.failed');
