@@ -10,9 +10,17 @@ use Cake\Log\Log;
 
 class SecurityAccessBehavior extends Behavior
 {
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.beforeFind'] = ['callable' => 'beforeFind', 'priority' => 1];
+        return $events;
+    }
+
 	public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
 	{
         // $options['user'] = ['id' => 4, 'super_admin' => 0]; // for testing purposes
+        // This logic will only be triggered when the table is accessed by RestfulController
         if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
@@ -30,7 +38,11 @@ class SecurityAccessBehavior extends Behavior
             $Institutions = TableRegistry::get('Institution.Institutions');
 
             $institutionQuery = $Institutions->find()
-                ->select(['institution_id' => $Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id'])
+                ->select([
+                    'institution_id' => $Institutions->aliasField('id'),
+                    'security_group_id' => 'SecurityGroupUsers.security_group_id',
+                    'security_role_id' => 'SecurityGroupUsers.security_role_id'
+                ])
                 ->innerJoin(['SecurityGroupInstitutions' => 'security_group_institutions'], [
                     ['SecurityGroupInstitutions.institution_id = ' . $Institutions->aliasField('id')]
                 ])
@@ -54,7 +66,11 @@ class SecurityAccessBehavior extends Behavior
 
 
             $areaQuery = $Institutions->find()
-                ->select(['institution_id' => $Institutions->aliasField('id'), 'SecurityGroupUsers.security_group_id', 'SecurityGroupUsers.security_role_id'])
+                ->select([
+                    'institution_id' => $Institutions->aliasField('id'),
+                    'security_group_id' => 'SecurityGroupUsers.security_group_id',
+                    'security_role_id' => 'SecurityGroupUsers.security_role_id'
+                ])
                 ->innerJoin(['Areas' => 'areas'], ['Areas.id = ' . $Institutions->aliasField('area_id')])
                 ->innerJoin(['AreasAll' => 'areas'], [
                     'AreasAll.lft < Areas.lft',
