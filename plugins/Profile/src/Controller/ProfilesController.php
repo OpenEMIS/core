@@ -83,7 +83,6 @@ class ProfilesController extends AppController
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']); }
     public function StudentBankAccounts()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
     public function StaffBankAccounts()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']); }
-    public function Comments()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function StudentProgrammes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
     public function Identities()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
@@ -349,18 +348,24 @@ class ProfilesController extends AppController
             'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
-            'Comments' => ['text' => __('Comments')],
-            'Attachments' => ['text' => __('Attachments')],
             'SpecialNeeds' => ['text' => __('Special Needs')],
+            'Attachments' => ['text' => __('Attachments')],
+            'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')]
         ];
 
         foreach ($tabElements as $key => $value) {
-
             if ($key == $this->name) {
                 $tabElements[$key]['url']['action'] = 'Profiles';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+            } else if ($key == 'Comments') {
+                $url = [
+                    'plugin' => $plugin,
+                    'controller' => 'ProfileComments',
+                    'action' => 'index'
+                ];
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
