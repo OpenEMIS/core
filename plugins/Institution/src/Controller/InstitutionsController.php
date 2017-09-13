@@ -14,7 +14,6 @@ use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use Cake\I18n\Date;
 use Cake\Controller\Exception\SecurityException;
-use Cake\Utility\Hash;
 
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
