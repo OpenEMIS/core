@@ -3,13 +3,12 @@ namespace Page\View\Helper;
 
 use ArrayObject;
 
-use Cake\ORM\Entity;
-use Cake\I18n\Date;
-use Cake\Log\Log;
 use Cake\View\Helper;
 
 class NavigationHelper extends Helper
 {
+    public $helpers = ['Html'];
+
     private $html = '<ul id="nav-menu-1" class="nav nav-level-1 collapse in" role="tabpanel" data-level="1">';
     private $menuGroup = [];
     private $menuCount = 1;
@@ -90,66 +89,6 @@ class NavigationHelper extends Helper
         $this->menuGroup[$i]['items'][] = $html;
 
         return $this;
-    }
-
-    public function render($navigations)
-    {
-        $InstitutionLink = function($action, $params = []) {
-            $request = $this->request;
-            if (array_key_exists('institutionId', $request->params)) {
-                $institutionId = $request->params['institutionId'];
-                $params['institutionId'] = $institutionId;
-
-                if (in_array($action, ['dashboard', 'Institutions'])) {
-                    $params[] = $institutionId;
-                }
-            }
-            return array_merge(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $action], $params);
-        };
-
-        return $this
-        ->addMenuGroup('Institutions', [
-                'icon' => 'fa kd-institutions',
-                'href' => $InstitutionLink('index')
-            ])
-            ->addMenuItem('Dashboard', $InstitutionLink('dashboard'))
-
-            ->addMenuGroup('General')
-                ->addMenuItem('Overview', $InstitutionLink('Institutions', ['view']))
-                ->addMenuItem('Contacts', $InstitutionLink('Contacts', ['view']))
-                ->addMenuItem('Attachments', $InstitutionLink('Attachments'))
-                ->addMenuItem('History', $InstitutionLink('History'))
-            ->endMenuGroup()
-
-            ->addMenuGroup('Academic')
-                ->addMenuItem('Shifts', $InstitutionLink('Shifts'))
-                ->addMenuItem('Programmes', $InstitutionLink('Programmes'))
-                ->addMenuItem('Classes', $InstitutionLink('Classes'))
-                ->addMenuItem('Subjects', $InstitutionLink('Subjects'))
-                ->addMenuItem('Textbooks', $InstitutionLink('Textbooks'))
-            ->endMenuGroup()
-
-            ->addMenuGroup('Students', ['href' => $InstitutionLink('Students')])
-                ->addMenuItem('General', $InstitutionLink('StudentUser', ['view']))
-            ->endMenuGroup()
-        ->endMenuGroup()
-
-        ->addMenuGroup('Directory', [
-                'icon' => 'fa kd-guardian',
-                'href' => ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']
-            ])
-        ->endMenuGroup()
-
-        ->addMenuGroup('Reports', ['icon' => 'fa kd-reports'])
-            ->addMenuItem('Institutions', ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Institutions'])
-            ->addMenuItem('Students', ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Students'])
-            ->addMenuItem('Staff', ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Staff'])
-            ->addMenuItem('Textbooks', ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Textbooks'])
-            ->addMenuItem('Examinations', ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'Examinations'])
-            ->addMenuItem('Professional Development', ['plugin' => 'Report', 'controller' => 'Reports', 'action' => 'ProfessionalDevelopment'])
-        ->endMenuGroup()
-
-        ->end();
     }
 
     public function end()

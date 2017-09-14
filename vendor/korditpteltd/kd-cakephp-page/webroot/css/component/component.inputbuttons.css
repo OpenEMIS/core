@@ -1,0 +1,423 @@
+/* INPUT BUTTONS v.1.0.3 */
+
+input .btn i {
+    margin: 0;
+}
+
+.input-group-addon.btn-default i {
+    margin-right: 0 !important;
+}
+
+.input-group-addon:not(:first-child) {
+    border-left: 1px solid #6B6B6B !important;
+}
+
+.input-btn-invert .btn-invert,
+.btn-invert,
+.input-btn-invert:focus {
+    background-color: #FFF;
+    color: #999;
+    border-color: #CCC;
+    outline: 0 !important;
+}
+
+.input-btn-invert {
+    width: 100%;
+    z-index: 5;
+}
+
+.input-group-invert input {
+    -webkit-border-top-right-radius: 5px !important;
+    border-top-right-radius: 5px !important;
+    -webkit-border-bottom-right-radius: 5px !important;
+    border-bottom-right-radius: 5px !important;
+}
+
+.input-btn-invert .btn-invert {
+    position: absolute;
+    right: 0;
+    height: 30px;
+}
+
+.input-dropdown-menu {
+    margin-top: 28px !important;
+}
+
+
+/* File Input Buttons */
+
+.fileinput .btn-file {
+    position: absolute !important;
+    right: -1px;
+    top: -1px;
+    height: 30px !important;
+    width: 54px !important;
+    padding: 6px;
+    cursor: pointer;
+    -webkit-border-top-right-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    -webkit-border-bottom-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+}
+
+.fileinput .btn-file-cancel {
+    position: absolute !important;
+    right: 53px !important;
+    top: 0;
+    padding: 8px;
+    border-radius: 0;
+    border-right: 0 !important;
+    height: 30px !important;
+    width: 30px !important;
+    font-size: 13px !important;
+}
+
+.fileinput-preview {
+    width: 25%;
+    clear: both;
+}
+
+.fileinput .btn-file .fileinput-new,
+.fileinput .btn-file .fileinput-new:before {
+    cursor: pointer !important;
+}
+
+.fileinput-preview .btn-file {
+    position: relative !important;
+    width: inherit !important;
+    height: 30px !important;
+}
+
+.fileinput-preview .btn-file a {
+    cursor: pointer !important;
+    height: 34px;
+}
+
+.fileinput-preview #removeBtn a {
+    margin-top: -2px;
+    line-height: 1.4em;
+}
+
+.fileinput-preview .btn-default {
+    margin-right: 10px;
+}
+
+.btn-file-custom {
+    position: absolute !important;
+    right: 104px !important;
+    margin-top: -1px !important;
+    line-height: 18px !important;
+    height: 30px !important;
+    width: 52px !important;
+    font-size: 14px !important;
+}
+
+.fileinput .btn-file-cancel,
+.input-left-btn button,
+.fileinput .btn-file-cancel:focus {
+    background-color: transparent;
+    color: #999;
+    border-color: transparent !important;
+}
+
+.fileinput .btn-file-cancel:hover {
+    color: #6B6B6B;
+    background-color: transparent !important;
+}
+
+.input-left-btn {
+    position: absolute !important;
+    top: -1px;
+    left: 0;
+    border-right: 1px solid #CCC;
+    width: 30px;
+}
+
+.input-left-btn button:first-child {
+    -webkit-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    margin-right: 1px;
+}
+
+.input-left-btn button,
+.input-left-btn button:hover,
+.input-left-btn button:focus {
+    height: 30px;
+    width: 30px;
+    cursor: pointer !important;
+    line-height: 30px;
+    padding: 0;
+    outline: none !important;
+}
+
+.input-left-btn button:hover,
+.input-left-btn button:focus {
+    background-color: #999;
+    color: #FFF;
+    border: 1px solid #6B6B6B !important;
+}
+
+.input-left-btn button:not(:first-child) {
+    -webkit-border-radius: 0 !important;
+    border-radius: 0 !important;
+}
+
+.input-single-btn .form-control {
+    padding-left: 40px;
+}
+
+.input-single-btn .fileinput-filename {
+    padding: 0 80px 0 60px;
+}
+
+.input-double-btn .input-left-btn {
+    width: 62px !important;
+    height: 30px;
+    position: relative;
+    font-size: 0;
+}
+
+.input-double-btn .input-left-btn:after {
+    display: inline-block;
+    content: "";
+    border-right: 1px solid #DDD !important;
+    color: #CCC;
+    position: absolute;
+    left: 30px;
+    top: 5px;
+    width: 1px;
+    height: 20px;
+    z-index: 0;
+}
+
+.input-double-btn .form-control {
+    padding-left: 65px;
+}
+
+.input-double-btn .fileinput-filename {
+    padding: 0 80px;
+}
+
+
+/* Input Inline Buttons */
+
+.form-horizontal .input-inline-btn .input-group-addon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    -webkit-border-top-right-radius: 3px;
+    -moz-border-top-right-radius: 3px;
+    border-top-right-radius: 3px;
+    -webkit-border-bottom-right-radius: 3px;
+    -moz-border-bottom-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    height: 30px;
+}
+
+.form-horizontal .input-inline-btn .btn[disabled="disabled"] {
+    background-color: #EFEFEF !important;
+    color: #AAA !important;
+    opacity: 1 !important;
+    border-left: 1px solid #CCC !important;
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    border-right: 0 !important;
+}
+
+.form-horizontal .input-inline-btn .icon-view-url[disabled="disabled"],
+.form-horizontal .input-inline-btn .icon-clipboard[disabled="disabled"] {
+    border-left: 1px solid #CCC !important;
+    height: 28px !important;
+    top: 1px !important;
+}
+
+.icon-view-url {
+    right: 1px !important;
+}
+
+.icon-clipboard {
+    right: 50px !important;
+}
+
+.form-horizontal .btn-toggle {
+    position: relative;
+    color: #FFF;
+    -webkit-transition: all 0.1s;
+    -moz-transition: all 0.1s;
+    transition: all 0.1s;
+    -webkit-box-shadow: 0px 4px 0px #84261a;
+    -moz-box-shadow: 0px 4px 0px #84261a;
+    box-shadow: 0px 4px 0px #84261a;
+}
+
+.form-horizontal .btn-toggle:active {
+    -webkit-box-shadow: 0px 2px 0px #84261a;
+    -moz-box-shadow: 0px 2px 0px #84261a;
+    box-shadow: 0px 2px 0px #84261a;
+    position: relative;
+}
+
+.form-horizontal .btn[disabled="disabled"] {
+    opacity: 0.3;
+}
+
+.form-horizontal .icon-big i {
+    font-size: 16px;
+}
+
+
+/* RTL v.1.0.0 */
+
+.rtl .icon-view-url {
+    left: 1px !important;
+    right: auto !important;
+}
+
+.rtl .icon-clipboard {
+    left: 50px !important;
+    right: auto !important;
+}
+
+.rtl .form-horizontal .input-inline-btn .icon-view-url[disabled="disabled"],
+.rtl .form-horizontal .input-inline-btn .icon-clipboard[disabled="disabled"] {
+    border-right: 1px solid #CCC !important;
+    border-left: 0 !important;
+}
+
+.rtl .form-horizontal .input-group-addon {
+    left: 0;
+    right: auto !important;
+    -webkit-border-top-right-radius: 0px !important;
+    -moz-border-top-right-radius: 0px !important;
+    -ms-border-top-right-radius: 0px !important;
+    border-top-right-radius: 0px !important;
+    -webkit-border-bottom-right-radius: 0px !important;
+    -moz-border-bottom-right-radius: 0px !important;
+    -ms-border-bottom-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+}
+
+.rtl .fileinput .btn-file-cancel {
+    left: 53px;
+    right: auto !important;
+}
+
+.rtl .fileinput-preview .btn-default {
+    margin-right: 0 !important;
+    margin-left: 10px;
+}
+
+.rtl .input-left-btn {
+    left: auto !important;
+    right: 0;
+    border-right: 0 !important;
+    border-left: 1px solid #CCC;
+    width: 29px;
+}
+
+.rtl .input-left-btn button:first-child:hover,
+.rtl .input-left-btn button:first-child:focus {
+    margin-left: 1px;
+    margin-right: 0 !important;
+    -webkit-border-bottom-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+    -webkit-border-bottom-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.rtl .input-left-btn button:not(:first-child) {
+    -webkit-border-radius: 0 !important;
+    border-radius: 0 !important;
+}
+
+.rtl .input-left-btn button:first-child {
+    -webkit-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-bottom-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-top-right-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    -webkit-border-bottom-right-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    margin-left: 1px;
+    margin-right: 0 !important;
+}
+
+.rtl .input-single-btn .form-control {
+    padding-left: 0 !important;
+    padding-right: 40px;
+}
+
+.rtl .input-single-btn .fileinput-filename {
+    padding: 0 60px 0 80px;
+}
+
+.rtl .input-double-btn .input-left-btn:after {
+    right: 30px;
+    left: auto !important;
+}
+
+.rtl .input-double-btn .form-control {
+    padding-right: 65px;
+    padding-left: 0 !important;
+}
+
+.rtl .input-dropdown-menu .dropdown-arrow {
+    left: auto !important;
+    right: 12px !important;
+}
+
+.rtl .input-dropdown-menu.dropdown-menu-left .dropdown-arrow,
+.rtl .btn-group .action-dropdown.dropdown-menu-left .dropdown-arrow,
+.rtl .btn-group .action-dropdown.dropdown-menu-left {
+    right: auto !important;
+}
+
+.rtl .input-dropdown-menu.dropdown-menu-left .dropdown-arrow {
+    left: 6px !important;
+}
+
+.rtl .btn-group .action-dropdown.dropdown-menu-left .dropdown-arrow {
+    left: 4px !important;
+}
+
+.rtl .btn-group .action-dropdown.dropdown-menu-left {
+    left: 0 !important;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Bigger Screen */
+
+@media only screen and (max-width: 1240px) {
+    .form-horizontal .input-group,
+    .fileinput-preview {
+        width: 30% !important;
+    }
+}
+
+
+/* Medium Devices, Tablets */
+
+@media only screen and (max-width: 800px) {
+    .form-horizontal .input-group {
+        width: 100% !important;
+    }
+    .fileinput-preview {
+        width: 80% !important;
+    }
+}
+
+
+/* Small Devices, Mobile */
+
+@media only screen and (max-width: 480px) {
+    .fileinput-preview {
+        width: 100% !important;
+    }
+}

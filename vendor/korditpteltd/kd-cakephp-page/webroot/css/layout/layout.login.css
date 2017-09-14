@@ -1,0 +1,329 @@
+/* LOGIN v.1.0.2 */
+
+.body-wrapper {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-image: url('../../img/login-bg.jpg');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    margin: 0;
+    overflow-y: auto;
+    top: 0;
+}
+
+.login header {
+    display: none;
+}
+
+.login .form-group {
+    margin: 0;
+}
+
+.login .navbar-left {
+    margin: 0;
+}
+
+.login-box {
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+    color: #FFFFFF;
+    text-align: center;
+    width: 400px;
+    z-index: 1000;
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    -webkit-transform: translate(-50%, -45%);
+    -moz-transform: translate(-50%, -45%);
+    -ms-transform: translate(-50%, -45%);
+    -o-transform: translate(-50%, -45%);
+    transform: translate(-50%, -45%);
+}
+
+.login-box .title {
+    font-size: 25px;
+    padding: 14px 0 14px;
+    background-color: #999999;
+    -webkit-border-top-right-radius: 5px;
+    border-top-right-radius: 5px;
+    -webkit-border-top-left-radius: 5px;
+    border-top-left-radius: 5px;
+}
+
+.login .title i {
+    display: inline-block;
+}
+
+.login .title h1 {
+    display: inline-block;
+    color: #FFF;
+}
+
+.login-box .alert {
+    padding: 12px 8px;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+}
+
+.login-box i {
+    font-size: 45px;
+    vertical-align: top;
+}
+
+.login-box .form-horizontal {
+    text-align: left;
+    width: 75%;
+    margin: 0 auto;
+    padding: 40px 0;
+}
+
+.login .form-horizontal input,
+.login .form-horizontal .input-select-wrapper {
+    font-size: 14px;
+    width: 100% !important;
+    border-color: #FFF !important;
+}
+
+.login .form-horizontal input:focus {
+    outline: 0 !important;
+}
+
+.login .text,
+.login .password,
+.login .select {
+    position: relative;
+}
+
+.login .text:after {
+    font-family: 'FontAwesome';
+    content: "\f007";
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    color: #888;
+    font-size: 14px;
+    padding: 14px 10px;
+    border-right: 1px solid #DDD;
+}
+
+.login .password:after {
+    font-family: 'FontAwesome';
+    content: "\f084";
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    color: #888;
+    font-size: 13px;
+    padding: 14px 9px;
+    border-right: 1px solid #DDD;
+}
+
+.login .select:before {
+    font-family: 'FontAwesome';
+    content: "\f0ac";
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    color: #888;
+    font-size: 14px;
+    padding: 14px 10px;
+    border-right: 1px solid #DDD;
+}
+
+.login .text:after,
+.login .password:after,
+.login .select:before {
+    height: 42px !important;
+}
+
+.login-box .form-group {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.login-box input,
+.login-box select {
+    color: #555;
+    font-weight: 400;
+    width: 100% !important;
+    border: 1px solid transparent;
+    padding: 8px 10px 5px 40px !important;
+    font-size: 14px !important;
+    height: 42px !important;
+}
+
+.chrome .login-box select {
+    padding: 10px 0 10px 41px;
+}
+
+.safari .login-box select {
+    padding: 5px 35px 5px 40px;
+}
+
+.login-box select {
+    color: #555;
+    height: 42px;
+    background: transparent;
+    padding: 8px 35px 5px 40px !important;
+    line-height: 1.4em !important;
+}
+
+.login-box .select {
+    height: 42px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    margin-bottom: 15px;
+    background-color: #FFF;
+}
+
+.login-box .input-select-wrapper {
+    width: 100% !important;
+    height: 42px;
+    clear: both;
+}
+
+.login-box .input-select-wrapper:after {
+    top: 50%;
+}
+
+.login-box .btn-login {
+    background-color: #999;
+    border: 0;
+    width: 100%;
+    font-size: 16px;
+    padding: 10px;
+}
+
+.login-box .btn-login:hover {
+    background-color: #6B6B6B;
+    transition: all 1s ease;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Small Devices, Tablets */
+
+@media only screen and (max-width: 800px) {
+    /* HEADER */
+    .login .navbar-left {
+        padding: 7px 0;
+    }
+    .navbar {
+        border: 0 !important;
+    }
+    .login .brand-logo {
+        padding: 0 !important;
+    }
+    .login .brand-logo i {
+        font-size: 34px;
+    }
+}
+
+
+/* Min Height of 480px for iPhone */
+
+@media only screen and (max-height: 480px) {
+    .login-box {
+        top: 0;
+        -webkit-transform: translate(-50%, 0%);
+        -moz-transform: translate(-50%, 0%);
+        -ms-transform: translate(-50%, 0%);
+        -o-transform: translate(-50%, 0%);
+        transform: translate(-50%, 0%);
+    }
+}
+
+
+/* Extra Small Devices, Phones */
+
+@media only screen and (max-width: 480px) {
+    .login-box {
+        width: 100%;
+        height: auto;
+        padding-bottom: 80px;
+        -webkit-border-radius: 0 !important;
+        border-radius: 0 !important;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        -webkit-transform: translate(0,0);
+           -moz-transform: translate(0,0);
+            -ms-transform: translate(0,0);
+             -o-transform: translate(0,0);
+                transform: translate(0,0);
+    }
+    .login-box .title {
+        background: transparent !important;
+        margin: 30px 0 0;
+    }
+    .login-box .title i {
+        background-color: #999;
+        font-size: 55px;
+        padding: 4px;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        -o-border-radius: 5px;
+        -ms-border-radius: 5px;
+        border-radius: 5px;
+        -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        -o-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        -ms-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    }
+    .login-box .title h1 {
+        display: block !important;
+        padding: 5px 0;
+        font-size: 1.2em;
+    }
+    .login-box .form-horizontal {
+        padding: 10px 0;
+    }
+    .login-box select {
+        border: 0 !important;
+    }
+}
+
+@media only screen and (max-height: 320px) {
+    .login-box {
+        height: auto !important;
+    }
+}
+
+
+/* RTL */
+
+.rtl .login .text:after,
+.rtl .login .password:after,
+.rtl .login .select:before {
+    right: 0;
+    left: auto;
+    border-left: 1px solid #DDD;
+    border-right-color: transparent !important;
+    display: block;
+}
+
+.rtl .login .select:before {
+    right: 0;
+    left: auto;
+    border-left: 1px solid #DDD;
+}
+
+.rtl .login-box .input-select-wrapper:after {
+    left: 12px;
+    right: auto;
+}
+
+.rtl .login-box input,
+.rtl .login-box select {
+    padding: 10px 40px 10px 5px !important;
+}

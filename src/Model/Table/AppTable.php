@@ -14,6 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\UtilityTrait;
 use ControllerAction\Model\Traits\ControllerActionTrait;
+use Page\Traits\OptionListTrait;
 
 class AppTable extends Table
 {
@@ -91,6 +92,10 @@ class AppTable extends Table
 
         $this->addBehavior('TrackDelete');
         $this->addBehavior('ControllerAction.Security');
+
+        $this->_controllerActionEvents['Restful.Model.onRenderDatetime'] = 'onRestfulRenderDatetime';
+        $this->_controllerActionEvents['Restful.Model.onRenderDate'] = 'onRestfulRenderDate';
+        $this->_controllerActionEvents['Restful.Model.onRenderTime'] = 'onRestfulRenderTime';
     }
 
     public function validationDefault(Validator $validator)
@@ -172,33 +177,35 @@ class AppTable extends Table
     // Event: 'Model.excel.onFormatDate' ExcelBehavior
     public function onExcelRenderDate(Event $event, Entity $entity, $attr)
     {
-        if (!empty($entity->$attr['field'])) {
-            if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
-                return $this->formatDate($entity->$attr['field']);
+        $field = $entity->{$attr['field']};
+        if (!empty($field)) {
+            if ($field instanceof Time || $field instanceof Date) {
+                return $this->formatDate($field);
             } else {
-                if ($entity->$attr['field'] != '0000-00-00') {
-                    $date = new Date($entity->$attr['field']);
+                if ($field != '0000-00-00') {
+                    $date = new Date($field);
                     return $this->formatDate($date);
                 } else {
                     return '';
                 }
             }
         } else {
-            return $entity->$attr['field'];
+            return $field;
         }
     }
 
     public function onExcelRenderDateTime(Event $event, Entity $entity, $attr)
     {
-        if (!empty($entity->$attr['field'])) {
-            if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
-                return $this->formatDate($entity->$attr['field']);
+        $field = $entity->{$attr['field']};
+        if (!empty($field)) {
+            if ($field instanceof Time || $field instanceof Date) {
+                return $this->formatDate($field);
             } else {
-                $date = new Time($entity->$attr['field']);
+                $date = new Time($field);
                 return $this->formatDate($date);
             }
         } else {
-            return $entity->$attr['field'];
+            return $field;
         }
     }
 
@@ -266,6 +273,27 @@ class AppTable extends Table
             $value = $dateObject->format($format);
         }
         return $value;
+    }
+
+    // Not using $extra parameter to be backward compatible with restfulv1
+    public function onRestfulRenderDatetime(Event $event, $entity, $property)
+    {
+        $dateTimeObj = $entity[$property];
+        return $this->formatDateTime($dateTimeObj);
+    }
+
+    // Not using $extra parameter to be backward compatible with restfulv1
+    public function onRestfulRenderDate(Event $event, $entity, $property)
+    {
+        $dateTimeObj = $entity[$property];
+        return $this->formatDate($dateTimeObj);
+    }
+
+    // Not using $extra parameter to be backward compatible with restfulv1
+    public function onRestfulRenderTime(Event $event, $entity, $property)
+    {
+        $dateTimeObj = $entity[$property];
+        return $this->formatTime($dateTimeObj);
     }
 
     // Event: 'ControllerAction.Model.onGetFieldLabel'

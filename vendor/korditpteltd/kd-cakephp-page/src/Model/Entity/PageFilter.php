@@ -10,8 +10,9 @@ class PageFilter
 {
     private $name;
     private $options = [];
-    private $defaultOption;
+    private $value;
     private $dependentOn;
+    private $params;
     private $model;
     private $finder;
 
@@ -58,14 +59,14 @@ class PageFilter
         return $this;
     }
 
-    public function getDefaultOption()
+    public function getValue()
     {
-        return $this->defaultOption;
+        return $this->value;
     }
 
-    public function setDefaultOption($defaultOption)
+    public function setValue($value)
     {
-        $this->defaultOption = $defaultOption;
+        $this->value = $value;
         return $this;
     }
 
@@ -77,6 +78,17 @@ class PageFilter
     public function setDependentOn($dependentOn)
     {
         $this->dependentOn = $dependentOn;
+        return $this;
+    }
+
+    public function getParams()
+    {
+        return $this->params;
+    }
+
+    public function setParams($params)
+    {
+        $this->params = $params;
         return $this;
     }
 
@@ -107,10 +119,11 @@ class PageFilter
         // properties to be exposed to client browser
         $visibleProperties = [
             'options' => 'get',
-            'defaultOption' => 'get',
+            'value' => 'get',
             'dependentOn' => 'get',
-            'model' => 'get',
-            'finder' => 'get'
+            'params' => 'get',
+            // 'model' => 'get',
+            // 'finder' => 'get'
         ];
 
         $array = [];

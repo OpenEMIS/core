@@ -50,21 +50,22 @@ class InstitutionStudentsTable extends AppTable  {
 		// Setting request data and modifying fetch condition
 		$requestData = json_decode($settings['process']['params']);
 		$academicPeriodId = $requestData->academic_period_id;
+        $educationGradeId = $requestData->education_grade_id;
 		$statusId = $requestData->status;
 
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 
 		if ($academicPeriodId!=0) {
-			$query->where([
-				$this->aliasField('academic_period_id') => $academicPeriodId
-			]);
+			$query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
 		}
 
+        if ($educationGradeId!=0) {
+            $query->where([$this->aliasField('education_grade_id') => $educationGradeId]);
+        }
+
 		if ($statusId!=0) {
-			$query->where([
-				$this->aliasField('student_status_id') => $statusId
-			]);
+			$query->where([$this->aliasField('student_status_id') => $statusId]);
 		}
 
         $statusOptions = $this->StudentStatuses
@@ -248,26 +249,29 @@ class InstitutionStudentsTable extends AppTable  {
             'label' => '',
         ];
 
-		$extraField[] = [
-			'key' => 'Users.openemis_no',
-			'field' => 'openemis_no',
-			'type' => 'string',
-			'label' => ''
-		];
+        $extraField[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => '',
+            'formatting' => 'string'
+        ];
 
         $extraField[] = [
             'key' => 'Users.username',
             'field' => 'username',
             'type' => 'string',
-            'label' => __('Username')
+            'label' => __('Username'),
+            'formatting' => 'string'
         ];
 
-		$extraField[] = [
-			'key' => 'Users.identity_number',
-			'field' => 'number',
-			'type' => 'string',
-			'label' => __($identity->name)
-		];
+        $extraField[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'number',
+            'type' => 'string',
+            'label' => __($identity->name),
+            'formatting' => 'string'
+        ];
 
 		$extraField[] = [
 			'key' => 'Users.gender_id',

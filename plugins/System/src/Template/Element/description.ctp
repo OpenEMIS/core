@@ -35,6 +35,6 @@ You can review these changes in the latest version of OpenEMIS Core:
 Please click the upgrade button to approve for the OpenEMIS lab to upgrade your instance of OpenEMIS Core to the latest version.
 </p>
 <p>
-Note that it will take 2-3 working daysto complete the upgrade and data migration.
+Note that it will take 2-3 working days to complete the upgrade and data migration.
 </p>
 </div>

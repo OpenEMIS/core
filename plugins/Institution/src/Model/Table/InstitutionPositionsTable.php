@@ -151,7 +151,6 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('position_no', ['visible' => true]);
-        $this->field('is_homeroom', ['visible' => true]);
         $this->field('staff_position_title_id', [
             'visible' => true,
             'type' => 'select'
@@ -186,8 +185,24 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
     {
-        $attr['options'] = $this->getSelectOptions('general.yesno');
+        if ($action == 'add') {
+            $attr['options'] = $this->getSelectOptions('general.yesno');
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $isHomeroom = $entity->is_homeroom;
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $isHomeroom;
+            $attr['attr']['value'] = $this->getSelectOptions('general.yesno')[$isHomeroom];
+        }
+
         return $attr;
+    }
+
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $isHomeroom = $entity->is_homeroom;
+        return $this->getSelectOptions('general.yesno')[$isHomeroom];
     }
 
     public function onGetStaffPositionTitleId(Event $event, Entity $entity)
@@ -200,6 +215,8 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('is_homeroom', ['entity' => $entity]);
+
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
         if ($entity->has('staff_position_title_id')) {
             $types = $this->getSelectOptions('Staff.position_types');
@@ -299,6 +316,8 @@ class InstitutionPositionsTable extends ControllerActionTable
 ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('is_homeroom');
+
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
 
@@ -342,7 +361,6 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event)
     {
-
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
 
@@ -350,6 +368,11 @@ class InstitutionPositionsTable extends ControllerActionTable
             'position_no', 'staff_position_title_id',
             'staff_position_grade_id',
         ]);
+    }
+
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('is_homeroom');
     }
 
 /******************************************************************************************************************
@@ -360,10 +383,13 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event)
     {
+        $this->field('is_homeroom');
 
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id',
             'staff_position_grade_id',
+            'position_no',
+            'staff_position_title_id',
+            'is_homeroom',
             'modified_user_id', 'modified', 'created_user_id', 'created',
             'current_staff_list', 'past_staff_list'
         ]);

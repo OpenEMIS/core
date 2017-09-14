@@ -36,7 +36,7 @@ class FieldOptionBehavior extends Behavior {
         $value = '';
         $primaryKey = $this->_table->primaryKey();
         $entity = $this->getDefaultEntity();
-        return $entity->$primaryKey;
+        return $entity->{$primaryKey};
     }
 
     public function getDefaultEntity()
@@ -87,6 +87,11 @@ class FieldOptionBehavior extends Behavior {
                     ]
                 ]);
         }
+
+        $validator
+            ->requirePresence('visible')
+            ->requirePresence('default')
+            ;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {

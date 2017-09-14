@@ -88,3 +88,7 @@ CREATE TABLE `security_user_logins` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all user logins'
 PARTITION BY HASH(login_period)
 PARTITIONS 101;
+
+-- optional configuration for toggling local login
+UPDATE `config_items` SET `name`='Enable Local Login', `code`='enable_local_login', `label`='Enable Local Login',
+`value`= 1, `default_value`='1', `option_type`='yes_no' WHERE `id`=1001;

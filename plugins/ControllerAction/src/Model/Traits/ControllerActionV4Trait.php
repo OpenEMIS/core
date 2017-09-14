@@ -23,7 +23,7 @@ trait ControllerActionV4Trait {
 		// Copy all component objects from Controller to Model
 		$components = $this->controller->components()->loaded();
 		foreach ($components as $component) {
-			$model->$component = $this->controller->$component;
+			$model->{$component} = $this->controller->{$component};
 		}
 	}
 
@@ -35,6 +35,7 @@ trait ControllerActionV4Trait {
 		} else {
 			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
 		}
+		$this->ctpFolder = $model->alias();
 		$ctp = $this->ctpFolder . DS . $model->action;
 
 		if (file_exists($path . DS . $ctp . '.ctp')) {
@@ -121,33 +122,36 @@ trait ControllerActionV4Trait {
 						$query = $event->result;
 					}
 
-					if ($query instanceof Query) {
-						$queryData = $query->toArray();
-						$hasDefaultField = false;
-						$defaultValue = false;
-						$optionsArray = [];
-						foreach ($queryData as $okey => $ovalue) {
-							$optionsArray[$ovalue->id] = $ovalue->name;
-							if ($ovalue->has('default')) {
-								$hasDefaultField = true;
-								if ($ovalue->default) {
-									$defaultValue = $ovalue->id;
+					if ($model->action != 'index') { // should not populate options for index page
+						if ($query instanceof Query) {
+							$query->limit(500); // to prevent out of memory error, options should not be more than 500 records anyway
+							$queryData = $query->toArray();
+							$hasDefaultField = false;
+							$defaultValue = false;
+							$optionsArray = [];
+							foreach ($queryData as $okey => $ovalue) {
+								$optionsArray[$ovalue->id] = $ovalue->name;
+								if ($ovalue->has('default')) {
+									$hasDefaultField = true;
+									if ($ovalue->default) {
+										$defaultValue = $ovalue->id;
+									}
 								}
 							}
-						}
 
-						if (!empty($defaultValue) && !(is_bool($attr['default']) && !$attr['default'])) {
-							$model->fields[$key]['default'] = $defaultValue;
-						}
-						if ($attr['type'] != 'chosenSelect') {
-                            if (in_array($model->action, ['edit', 'add'])) {
-							    $optionsArray = ['' => __('-- Select --')] + $optionsArray;
-                            }
-						}
+							if (!empty($defaultValue) && !(is_bool($attr['default']) && !$attr['default'])) {
+								$model->fields[$key]['default'] = $defaultValue;
+							}
+							if ($attr['type'] != 'chosenSelect') {
+	                            if (in_array($model->action, ['edit', 'add'])) {
+								    $optionsArray = ['' => __('-- Select --')] + $optionsArray;
+	                            }
+							}
 
-						$model->fields[$key]['options'] = $optionsArray;
-					} else {
-						$model->fields[$key]['options'] = $query;
+							$model->fields[$key]['options'] = $optionsArray;
+						} else {
+							$model->fields[$key]['options'] = $query;
+						}
 					}
 				}
 			}
@@ -187,7 +191,7 @@ trait ControllerActionV4Trait {
 		}
 
 		if (!array_key_exists('className', $options)) {
-			pr('There is no className set for ' . $this->$request->action);
+			pr('There is no className set for ' . $this->request->action);
 			die;
 		}
 

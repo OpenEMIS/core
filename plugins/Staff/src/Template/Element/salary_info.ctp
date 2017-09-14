@@ -49,9 +49,9 @@ switch ($fieldName) {
 							<th></th>
 						</tr>
 					</thead>
-					<?php if (!empty($data->$fieldName)) : ?>
+					<?php if (!empty($data->{$fieldName})) : ?>
 						<tbody id='table_total_salary_<?php echo $fieldName; ?>s'>
-							<?php foreach ($data->$fieldName as $key => $obj) : ?>
+							<?php foreach ($data->{$fieldName} as $key => $obj) : ?>
 								<tr>
 									<td>
 										<?php 

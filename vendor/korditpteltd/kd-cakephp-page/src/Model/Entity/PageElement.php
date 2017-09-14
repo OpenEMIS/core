@@ -3,11 +3,13 @@ namespace Page\Model\Entity;
 
 use ArrayObject;
 
-use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Utility\Inflector;
 
 class PageElement
 {
+    protected $id;
     protected $name;
     protected $type; // data type
     protected $length;
@@ -20,6 +22,7 @@ class PageElement
     protected $fixed;
     protected $collate;
 
+    protected $key;
     protected $model;
     protected $aliasField;
     protected $belongsTo;
@@ -33,20 +36,27 @@ class PageElement
     protected $label;
     protected $sortable;
     protected $visible;
+    protected $dependentOn;
+    protected $params;
     protected $options; // options for dropdown control type
     protected $value; // current selected value
     protected $wildcard;
-    protected $extra; // extra information
+    protected $attributes; // html attributes
+    protected $extra; // any other attributes
 
     public function __construct($fieldName, array $attributes)
     {
+        $this->key = $fieldName;
         $this->name = $fieldName;
         $this->value = '';
         $this->visible = true;
         $this->readonly = false;
         $this->disabled = false;
         $this->wildcard = 'full';
-        $this->extra = [];
+        $this->sortable = false;
+        $this->options = [];
+        $this->attributes = [];
+        $this->extra = new ArrayObject();
 
         foreach ($attributes as $name => $value) {
             if (property_exists($this, $name)) {
@@ -76,14 +86,14 @@ class PageElement
             $this->controlType = $this->type;
         }
 
-        if (in_array($this->type, ['string', 'integer', 'text'])) {
-            $this->setSortable(true);
+        if (array_key_exists('model', $attributes)) {
+            $this->name = $attributes['model'] . '.' . $this->name;
         }
     }
 
-    public static function create($name)
+    public static function create($name, $attributes)
     {
-        $attributes = [
+        $_attributes = [
             'type' => 'string',
             'length' => '0',
             'unsigned' => false,
@@ -93,8 +103,46 @@ class PageElement
             'precision' => false,
             'foreignKey' => false
         ];
+
+        $attributes = array_merge($_attributes, $attributes);
         $field = new PageElement($name, $attributes);
         return $field;
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function set($name, $value)
+    {
+        $this->extra->offsetSet($name, $value);
+        return $this;
+    }
+
+    public function get($name)
+    {
+        if ($this->extra->offsetExists($name)) {
+            return $this->extra->offsetGet($name);
+        }
+        return null;
+    }
+
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
     }
 
     public function getName()
@@ -107,21 +155,31 @@ class PageElement
         return $this->type;
     }
 
-    public function attr($name, $value = null)
+    public function setAttributes($name, $value = null)
     {
         if (is_array($name) && is_null($value)) {
             foreach ($name as $key => $val) {
-                $this->extra[$key] = $val;
+                $this->attributes[$key] = $val;
             }
         } elseif (!is_null($value)) {
-            $this->extra[$name] = $value;
+            $this->attributes[$name] = $value;
+        }
+
+        if ($this->controlType == 'dropdown' && $name == 'multiple' && $value == true) {
+            $this->name .= '._ids';
         }
         return $this;
     }
 
-    public function getExtra()
+    // public function setAttributes($key, $value)
+    // {
+    //     $this->attributes[$key] = $value;
+    //     return $this;
+    // }
+
+    public function getAttributes()
     {
-        return $this->extra;
+        return $this->attributes;
     }
 
     public function isRequired()
@@ -182,7 +240,7 @@ class PageElement
 
     public function getLabel()
     {
-        return __($this->label);
+        return is_array($this->label) ? $this->label : __($this->label);
     }
 
     public function setLabel($label)
@@ -229,6 +287,28 @@ class PageElement
         return $this;
     }
 
+    public function setDependentOn($dependentOn)
+    {
+        $this->dependentOn = $dependentOn;
+        return $this;
+    }
+
+    public function getDependentOn()
+    {
+        return $this->dependentOn;
+    }
+
+    public function setParams($params)
+    {
+        $this->params = $params;
+        return $this;
+    }
+
+    public function getParams()
+    {
+        return $this->params;
+    }
+
     public function getForeignKey()
     {
         return $this->foreignKey;
@@ -239,11 +319,11 @@ class PageElement
         return $this->model;
     }
 
-    public function setModel($model)
-    {
-        $this->model = $model;
-        return $this;
-    }
+    // public function setModel($model)
+    // {
+    //     $this->model = $model;
+    //     return $this;
+    // }
 
     public function getAliasField()
     {
@@ -284,9 +364,31 @@ class PageElement
         return $this->options;
     }
 
-    public function setOptions($options)
+    public function setOptions($options, $empty = true)
     {
-        $this->options = $options;
+        if (empty($options) && $empty !== false) {
+            $this->options = [['value' => '', 'text' => __('No Options')]];
+        } else {
+            $firstOption = current($options);
+            if (is_array($firstOption) && array_key_exists('value', $firstOption) && array_key_exists('text', $firstOption)) {
+                if ($empty === true && !strlen($firstOption['value']) == 0) {
+                    $this->options = array_merge([['value' => '', 'text' => '-- ' . __('Select') . ' --']], $options);
+                } elseif (is_string($empty)) {
+                    $this->options = array_merge([['value' => '', 'text' => __($empty)]], $options);
+                } else {
+                    $this->options = $options;
+                }
+            } else { // TODO: need to convert to [value, text] format
+                if ($empty === true) {
+                    $this->options = ['' => '-- ' . __('Select') . ' --'] + $options;
+                } elseif (is_string($empty)) {
+                    $this->options = ['' => __($empty)] + $options;
+                } else {
+                    $this->options = $options;
+                }
+            }
+        }
+
         return $this;
     }
 
@@ -316,44 +418,70 @@ class PageElement
     {
         // properties to be exposed to client browser
         $visibleProperties = [
-            'name' => 'get',
-            'model' => 'get',
-            'aliasField' => 'get',
+            'key' => 'get',
             'controlType' => 'get',
-            'readonly' => 'is',
-            'disabled' => 'is',
             'displayFrom' => 'get',
             'label' => 'get',
             'sortable' => 'is',
+            'visible' => 'is',
+            'dependentOn' => 'get',
+            'params' => 'get',
+            'foreignKey' => 'get',
+            'attributes' => 'get'
+        ];
+
+        $htmlAttributes = [
+            'id' => 'get',
+            'name' => 'get',
+            'readonly' => 'is',
+            'disabled' => 'is',
             'maxlength' => 'get',
             'required' => 'is',
-            'visible' => 'is',
-            'foreignKey' => 'get',
-            'defaultValue' => 'get',
-            'options' => 'get',
             'value' => 'get'
         ];
 
-        $name = $this->name;
-
-        // if ($this->excludePrimaryKey) {
-        //     $this->exclude($this->table->primaryKey());
-        // }
+        $properties = [];
 
         foreach ($visibleProperties as $property => $method) {
             $propertyMethod = $method . ucfirst($property);
-            if ($property != 'displayFrom') {
-                $array[$property] = $this->$propertyMethod();
-            } elseif ($property == 'displayFrom' && $this->$propertyMethod()) {
-                $array[$property] = $this->$propertyMethod();
+            $propertyValue = $this->$propertyMethod();
+
+            if ($property == 'displayFrom' && $propertyValue) {
+                $properties[$property] = $propertyValue;
+            } else if (!is_null($propertyValue)) {
+                if ($property == 'params') {
+                    $properties[$property] = $this->getControlType() . '/' . $propertyValue;
+                } else {
+                    $properties[$property] = $propertyValue;
+                }
             }
         }
 
-        $extra = $this->getExtra();
-        foreach ($extra as $attr => $value) {
-            $array[$attr] = $value;
+        foreach ($htmlAttributes as $property => $method) {
+            $propertyMethod = $method . ucfirst($property);
+            $propertyValue = $this->$propertyMethod();
+            if (!is_null($propertyValue)) {
+                $properties['attributes'][$property] = $propertyValue;
+            }
         }
 
-        return $array;
+        if ($this->getControlType() == 'dropdown') {
+            $properties['options'] = $this->getOptions();
+        }
+
+        if ($this->extra->count() > 0) {
+            foreach ($this->extra as $property => $value) {
+                if ($value instanceof Time) {
+                    $this->extra[$property] = [
+                        'year' => $value->year,
+                        'month' => str_pad($value->month, 2, '0', STR_PAD_LEFT),
+                        'day' => str_pad($value->day, 2, '0', STR_PAD_LEFT)
+                    ];
+                }
+            }
+            $properties = array_merge($properties, $this->extra->getArrayCopy());
+        }
+
+        return $properties;
     }
 }

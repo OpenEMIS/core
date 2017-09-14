@@ -89,7 +89,7 @@ class ImportInstitutionsTable extends AppTable
             foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }
@@ -113,7 +113,7 @@ class ImportInstitutionsTable extends AppTable
             foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }
@@ -139,7 +139,7 @@ class ImportInstitutionsTable extends AppTable
             foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }

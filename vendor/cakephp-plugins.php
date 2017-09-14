@@ -33,6 +33,7 @@ return [
         'Log' => $baseDir . '/plugins/Log/',
         'Map' => $baseDir . '/plugins/Map/',
         'Migrations' => $baseDir . '/vendor/cakephp/migrations/',
+        'OAuth' => $baseDir . '/plugins/OAuth/',
         'OpenEmis' => $baseDir . '/plugins/OpenEmis/',
         'Page' => $baseDir . '/vendor/korditpteltd/kd-cakephp-page/',
         'Profile' => $baseDir . '/plugins/Profile/',

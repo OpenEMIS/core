@@ -33,6 +33,11 @@ class ExaminationItemResultsTable extends AppTable
         $this->addBehavior('CompositeKey');
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $this->getExamGrading($entity);
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes the mark or grade
@@ -83,7 +88,7 @@ class ExaminationItemResultsTable extends AppTable
             ])
             ->innerJoinWith('Examinations')
             ->innerJoinWith('ExaminationItems')
-            ->innerJoinWith('EducationSubjects')
+            ->leftJoinWith('EducationSubjects')
             ->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,

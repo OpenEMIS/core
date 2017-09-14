@@ -69,7 +69,7 @@ class ImportBehavior extends Behavior
     const NON_TABLE_LIST = 3;
     const CUSTOM = 4;
 
-    const RECORD_HEADER = 2;
+    // const RECORD_HEADER = 2;
     const FIRST_RECORD = 3;
 
     protected $labels = [];
@@ -80,7 +80,8 @@ class ImportBehavior extends Behavior
         'model' => '',
         'max_rows' => 2000,
         'max_size' => 524288,
-        'backUrl' => []
+        'backUrl' => [],
+        'custom_text' => ''
     ];
     protected $rootFolder = 'import';
     private $_fileTypesMap = [
@@ -93,6 +94,8 @@ class ImportBehavior extends Behavior
         'zip'   => ['application/zip']
     ];
     private $institutionId = false;
+    private $recordHeader = '';
+    private $customText = '';
 
     public function initialize(array $config)
     {
@@ -128,6 +131,16 @@ class ImportBehavior extends Behavior
         }
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    }
+
+    private function isCustomText()
+    {
+        $this->customText = $this->config('custom_text');
+        if (!empty($this->customText) && strlen($this->customText) > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
@@ -217,6 +230,7 @@ class ImportBehavior extends Behavior
         $this->_table->ControllerAction->field('lookup_model', ['visible' => false]);
         $this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
         $this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
+        $this->_table->ControllerAction->field('is_optional', ['visible' => false]);
 
         $comment = __('* Format Supported: ' . implode(', ', $this->config('allowable_file_types')));
         $comment .= '<br/>';
@@ -368,13 +382,18 @@ class ImportBehavior extends Behavior
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
                 return false;
             }
-            if ($highestRow == self::RECORD_HEADER) {
+
+            ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
+
+            if ($highestRow == $this->recordHeader) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
 
-            for ($row = 2; $row <= $highestRow; ++$row) {
-                if ($row == self::RECORD_HEADER) { // skip header but check if the uploaded template is correct
+            ($this->isCustomText()) ? $startCheck = 3 : $startCheck = 2;
+            
+            for ($row = $startCheck; $row <= $highestRow; ++$row) {
+                if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
                     if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
                         $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
                         return false;
@@ -534,7 +553,7 @@ class ImportBehavior extends Behavior
 
         $objPHPExcel = new \PHPExcel();
 
-        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header);
+        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
 
         $this->setCodesDataTemplate($objPHPExcel);
 
@@ -620,6 +639,8 @@ class ImportBehavior extends Behavior
         $activeSheet->getRowDimension(1)->setRowHeight(75);
         $activeSheet->getRowDimension(2)->setRowHeight(25);
 
+        ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : ''; 
+
         $headerLastAlpha = $this->getExcelColumnAlpha('last');
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
         $activeSheet->setCellValue("C1", $title);
@@ -629,16 +650,17 @@ class ImportBehavior extends Behavior
                 'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
             ]
         ];
-        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style);
+        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
     }
 
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
-            $applyFillFontSetting = ['s'=>2, 'e'=>2];
+            ($this->isCustomText()) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];            
         }
+
         if (empty($applyCellBorder)) {
-            $applyCellBorder = ['s'=>2, 'e'=>2];
+            ($this->isCustomText()) ? $applyCellBorder = ['s'=>3, 'e'=>3] : $applyCellBorder = ['s'=>2, 'e'=>2];
         }
 
         $activeSheet = $objPHPExcel->getActiveSheet();
@@ -652,7 +674,7 @@ class ImportBehavior extends Behavior
         $activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
     }
 
-    public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header)
+    public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
     {
         $objPHPExcel->setActiveSheetIndex(0);
         // column_name in import_mapping that have date format, after the humanize
@@ -667,13 +689,27 @@ class ImportBehavior extends Behavior
             __('Salary Date') . $description,
         ];
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
+        ($this->isCustomText()) ? $lastRowToAlign = 3 : $lastRowToAlign = 2;
 
         $activeSheet = $objPHPExcel->getActiveSheet();
-        $currentRowHeight = $activeSheet->getRowDimension(2)->getRowHeight();
+
+        if ($this->isCustomText()) {
+            if (!empty($type) && $type == 'failed') { //if failed, then need to merge 4 columns instead of 3
+                $activeSheet->mergeCells('A2:D2');
+            } else if (empty($type) || $type != 'failed') {
+                $activeSheet->mergeCells('A2:C2');
+            }
+            
+            $activeSheet->setCellValue("A2", $this->customText);
+        }
+
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $lastRowToAlign, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
+
+        $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
+        
         foreach ($header as $key => $value) {
             $alpha = $this->getExcelColumnAlpha($key);
-            $activeSheet->setCellValue($alpha . "2", $value);
+            $activeSheet->setCellValue($alpha . $lastRowToAlign, $value);
             $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
             if (strlen($value)<50) {
                 // if the $value is in $dateHeader array, it is a date format.
@@ -684,8 +720,8 @@ class ImportBehavior extends Behavior
                 }
             } else {
                 $currentRowHeight = $this->suggestRowHeight(strlen($value), $currentRowHeight);
-                $activeSheet->getRowDimension(2)->setRowHeight($currentRowHeight);
-                $activeSheet->getStyle($alpha . "2")->getAlignment()->setWrapText(true);
+                $activeSheet->getRowDimension($lastRowToAlign)->setRowHeight($currentRowHeight);
+                $activeSheet->getStyle($alpha . $lastRowToAlign)->getAlignment()->setWrapText(true);
             }
         }
         $headerLastAlpha = $this->getExcelColumnAlpha(count($header)-1);
@@ -752,7 +788,8 @@ class ImportBehavior extends Behavior
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
                 $alpha = $this->getExcelColumnAlpha($columnOrder - 1);
                 $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn);
-                for ($i=3; $i < 103; $i++) {
+                ($this->isCustomText()) ? $lookupStart = 4 : $lookupStart = 3;
+                for ($i=$lookupStart; $i < 103; $i++) {
                     $objPHPExcel->setActiveSheetIndex(0);
                     $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
                     $objValidation->setType(\PHPExcel_Cell_DataValidation::TYPE_LIST);
@@ -788,7 +825,7 @@ class ImportBehavior extends Behavior
         foreach ($columns as $col => $property) {
             /*
             //if value in datetime format, then format it according to the systemDateFormat
-            $value = ( $entity->$property instanceof DateTimeInterface ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
+            $value = ( $entity->{$property} instanceof DateTimeInterface ) ? $entity->{$property}->format( $systemDateFormat ) : $originalRow[$col];
             */
             $value = $originalRow[$col];
             $array[] = $value;
@@ -812,7 +849,9 @@ class ImportBehavior extends Behavior
 
             $objPHPExcel = new \PHPExcel();
 
-            $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader);
+            ($this->isCustomText()) ? $rowData = 4 : $rowData = 3;
+
+            $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader, $type);
             $activeSheet = $objPHPExcel->getActiveSheet();
             foreach ($data as $index => $record) {
                 if ($type == 'failed') {
@@ -821,16 +860,16 @@ class ImportBehavior extends Behavior
                 } else {
                     $values = $record['data'];
                 }
-                $activeSheet->getRowDimension(($index + 3))->setRowHeight(15);
+                $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
                     $alpha = $this->getExcelColumnAlpha($key);
-                    $activeSheet->setCellValue($alpha . ($index + 3), $value);
+                    $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
                     if ($key==(count($values)-1) && $type == 'failed') {
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
-                        $activeSheet->getRowDimension(($index + 3))->setRowHeight($suggestedRowHeight);
-                        $activeSheet->getStyle($alpha . ($index + 3))->getAlignment()->setWrapText(true);
+                        $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
+                        $activeSheet->getStyle($alpha . ($index + $rowData))->getAlignment()->setWrapText(true);
                     }
                 }
             }
@@ -1261,7 +1300,7 @@ class ImportBehavior extends Behavior
             }
             $translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
             $columnDescription = strtolower($mapping[$col]->description);
-            $isOptional = substr_count($columnDescription, 'optional');
+            $isOptional = $mapping[$col]->is_optional;
             if (!$isOptional) {
                 $isOptional = substr_count($columnDescription, 'not required');
             }

@@ -1,22 +1,32 @@
 <?php
 namespace App\Controller;
 
-use App\Controller\AppController;
+use App\Controller\PageController;
 use Cake\Event\Event;
 
-class NoticesController extends AppController {
-	public function initialize() {
-		parent::initialize();
+class NoticesController extends PageController
+{
+    public function initialize()
+    {
+        parent::initialize();
 
-		$this->ControllerAction->model('Notices');
-		$this->loadComponent('Paginator');
+        $this->Page->loadElementsFromTable($this->Notices);
     }
 
-    public function beforeFilter(Event $event) {
-    	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Notices', ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']);
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $this->Page->addCrumb('Notices', ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']);
+    }
 
-    	$header = __('Notices');
-		$this->set('contentHeader', $header);	
+    public function index()
+    {
+        $page = $this->Page;
+        parent::index();
+
+        // created_on
+        $page->addNew('created_on');
+        $page->get('created_on')->setDisplayFrom('created');
+        $page->move('created_on')->first();
     }
 }

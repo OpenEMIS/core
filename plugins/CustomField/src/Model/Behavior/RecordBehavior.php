@@ -256,7 +256,7 @@ class RecordBehavior extends Behavior
     private function processSave(Entity $entity, ArrayObject $data)
     {
         $model = $this->_table;
-        $process = function ($model, $entity) use ($data, $model) {
+        $process = function ($model, $entity) use ($data) {
             $errors = $entity->errors();
 
             $fileErrors = [];
@@ -464,7 +464,7 @@ class RecordBehavior extends Behavior
                         $filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
                     }
 
-                    $filterId = $entity->$filterKey;
+                    $filterId = $entity->{$filterKey};
 
                     // conditions
                     $generalConditions = [

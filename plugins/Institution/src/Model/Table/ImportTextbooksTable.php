@@ -69,7 +69,7 @@ class ImportTextbooksTable extends AppTable
                 $data[$columnOrder]['data'][] = [
                     $row->title,
                     $row->code,
-                    $row->$lookupColumn,
+                    $row->{$lookupColumn},
                     $row->ISBN
                 ];
             }
@@ -98,7 +98,7 @@ class ImportTextbooksTable extends AppTable
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }

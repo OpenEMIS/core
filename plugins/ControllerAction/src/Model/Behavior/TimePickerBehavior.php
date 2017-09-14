@@ -28,8 +28,8 @@ class TimePickerBehavior extends Behavior {
 	
 	public function beforeSave(Event $event, Entity $entity) {
 		foreach ($this->config() as $field) {
-			if (!empty($entity->$field)) {
-				$entity->$field = $this->convertForTimePicker($entity->$field);				
+			if (!empty($entity->{$field})) {
+				$entity->{$field} = $this->convertForTimePicker($entity->{$field});
 			}
 		}
 	}

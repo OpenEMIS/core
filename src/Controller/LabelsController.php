@@ -3,7 +3,7 @@ namespace App\Controller;
 
 use Cake\Event\Event;
 
-use Page\Controller\PageController;
+use App\Controller\PageController;
 
 class LabelsController extends PageController
 {
@@ -17,10 +17,11 @@ class LabelsController extends PageController
 
     public function beforeFilter(Event $event)
     {
-        parent::beforeFilter($event);
-        $this->Navigation->addCrumb('Labels', ['plugin' => false, 'controller' => 'Labels', 'action' => 'index']);
-
         $page = $this->Page;
+
+        parent::beforeFilter($event);
+        $page->addCrumb('Labels', ['plugin' => false, 'controller' => 'Labels', 'action' => 'index']);
+
         $page->exclude(['module', 'field', 'visible']);
     }
 
@@ -29,6 +30,7 @@ class LabelsController extends PageController
         $page = $this->Page;
         $page->get('module_name')->setDisabled(true);
         $page->get('field_name')->setDisabled(true);
+
         parent::edit($id);
     }
 }

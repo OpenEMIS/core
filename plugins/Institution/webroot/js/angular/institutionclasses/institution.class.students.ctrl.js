@@ -48,11 +48,14 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.assignedStudents = {};
     Controller.unassignedStudents = {};
     Controller.shiftOptions = [];
+    Controller.mainTeacherOptions = [];
     Controller.teacherOptions = [];
+    Controller.secondaryTeacherOptions = [];
     Controller.alertUrl = '';
     Controller.redirectUrl = '';
     Controller.selectedShift = null;
     Controller.selectedTeacher = null;
+    Controller.selectedSecondaryTeacher = null;
     Controller.className = '';
     Controller.academicPeriodName = '';
     Controller.institutionSubjects = [];
@@ -63,6 +66,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.setBottom = setBottom;
     Controller.postForm = postForm;
     Controller.updateQueryStringParameter = updateQueryStringParameter;
+    Controller.changeStaff = changeStaff;
 
     angular.element(document).ready(function () {
         InstitutionClassStudentsSvc.init(angular.baseUrl);
@@ -71,6 +75,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             InstitutionClassStudentsSvc.getClassDetails(Controller.classId)
             .then(function(response) {
                 Controller.selectedTeacher = response.staff_id;
+                Controller.selectedSecondaryTeacher = response.secondary_staff_id;
                 Controller.selectedShift = response.institution_shift_id;
                 Controller.className = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
@@ -134,8 +139,9 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 }, unassignedStudentsArr);
                 Controller.unassignedStudents = unassignedStudentsArr;
                 Controller.shiftOptions = promises[1];
-                Controller.teacherOptions = promises[2];
-
+                Controller.mainTeacherOptions = promises[2];
+                Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
+                Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
 
                 var toTranslate = [];
                 angular.forEach(Controller.colDef, function(value, key) {
@@ -161,6 +167,16 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         }
 
     });
+
+    function changeStaff(key) {
+        var newOptions = [];
+        for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
+            if (Controller.mainTeacherOptions[i].id != key) {
+                newOptions.push(Controller.mainTeacherOptions[i]);
+            }
+        }
+        return newOptions;
+    }
 
     function setTop(header, content, key = 'name') {
         for(var i = 0; i < header.length; i++) {
@@ -219,6 +235,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.id = Controller.classId;
         postData.name = Controller.className;
         postData.staff_id = Controller.selectedTeacher;
+        postData.secondary_staff_id = Controller.selectedSecondaryTeacher;
         postData.institution_shift_id = Controller.selectedShift;
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;

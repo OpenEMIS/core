@@ -17,7 +17,7 @@
 			<directory>./tests/TestCase</directory>
 		</testsuite>
 		<!-- Add plugin test suites here. -->
-		
+
         <testsuite name="Institution Test Suite">
             <directory>./plugins/Institution/tests/TestCase</directory>
         </testsuite>
@@ -34,4 +34,11 @@
 		</listener>
 	</listeners>
 
+	<!-- Ignore vendor tests in code coverage reports -->
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./src/</directory>
+            <directory suffix=".php">./plugins/*/src/</directory>
+        </whitelist>
+    </filter>
 </phpunit>

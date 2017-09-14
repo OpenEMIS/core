@@ -19,8 +19,9 @@ class AppTestCase extends IntegrationTestCase
     private $urlPrefix = '';
     // public $dropTables = false;
 
-    public function setup()
+    public function setUp()
     {
+        parent::setUp();
         $this->setAuthSession();
     }
 
@@ -93,6 +94,10 @@ class AppTestCase extends IntegrationTestCase
         return $this->urlPrefix . $action . $namedParamsString;
     }
 
+    /**
+     * Might be deprecated as _method issue seems to have been fixed in CakePHP 3.3.
+     * Leaving the function here for now, if issue comes back again, we will reuse this function in place of enableSecurityToken().
+     */
     private function generateSecurityToken($url, &$data)
     {
         $newData = $data;
@@ -112,28 +117,28 @@ class AppTestCase extends IntegrationTestCase
     public function postData($url, $data = [])
     {
         $this->enableCsrfToken();
-        $this->generateSecurityToken($url, $data);
+        $this->enableSecurityToken();
         $this->post($url, $data);
     }
 
     public function putData($url, $data = [])
     {
         $this->enableCsrfToken();
-        $this->generateSecurityToken($url, $data);
+        $this->enableSecurityToken();
         $this->put($url, $data);
     }
 
     public function patchData($url, $data = [])
     {
         $this->enableCsrfToken();
-        $this->generateSecurityToken($url, $data);
+        $this->enableSecurityToken();
         $this->patch($url, $data);
     }
 
     public function deleteData($url)
     {
         $this->enableCsrfToken();
-        $this->generateSecurityToken($url, $data);
+        $this->enableSecurityToken();
         $this->delete($url);
     }
 

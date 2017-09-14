@@ -1,0 +1,7 @@
+/* SORTABLE v.1.0.1 */
+
+.ui-sortable-helper {
+	background: #FFF !important;
+	border-bottom: 0!important;
+	border-top: 1px solid #DDD !important;
+}

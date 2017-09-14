@@ -648,7 +648,7 @@ class ControllerActionComponent extends Component
         // Copy all component objects from Controller to Model
         $components = $this->controller->components()->loaded();
         foreach ($components as $component) {
-            $this->model->$component = $this->controller->$component;
+            $this->model->{$component} = $this->controller->{$component};
         }
     }
 
@@ -1475,9 +1475,11 @@ class ControllerActionComponent extends Component
 
                     $convertOptions = [];
                     foreach ($convertOptionResults as $key => $value) {
-                        $keysToEncode = $model->getIdKeys($model, $key, false);
+                        $ids = ['id' => $value->id];
+
+                        $keysToEncode = $model->getIdKeys($model, $ids, false);
                         $encodedKey = $model->paramsEncode($keysToEncode);
-                        $convertOptions[$encodedKey] = $value->$extra['valueField'];
+                        $convertOptions[$encodedKey] = $value->{$extra['valueField']};
                     }
 
                     if (empty($convertOptions)) {
@@ -1796,10 +1798,10 @@ class ControllerActionComponent extends Component
         }
 
         $data = $this->model->get($ids);
-        $fileName = $data->$name;
+        $fileName = $data->{$name};
         $pathInfo = pathinfo($fileName);
 
-        $file = $fileUpload->getActualFile($data->$content);
+        $file = $fileUpload->getActualFile($data->{$content});
         $fileType = $fileUpload->getFileType($pathInfo['extension']);
         if (!$fileType) {
             $fileType = 'image/jpg';
@@ -2156,7 +2158,7 @@ class ControllerActionComponent extends Component
             }
         }
         $primaryKey = $model->primaryKey();
-        $id = $entity->$primaryKey;
+        $id = $entity->{$primaryKey};
         $associations = [];
         foreach ($model->associations() as $assoc) {
             if (in_array($assoc->dependent(), $dependent)) {

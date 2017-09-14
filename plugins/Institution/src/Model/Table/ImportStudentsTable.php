@@ -122,7 +122,7 @@ class ImportStudentsTable extends AppTable {
                         $row->name,
                         $row->start_date->format('d/m/Y'),
                         $row->end_date->format('d/m/Y'),
-                        $row->$lookupColumn
+                        $row->{$lookupColumn}
                     ];
                 }
             }
@@ -154,7 +154,7 @@ class ImportStudentsTable extends AppTable {
                     $data[$columnOrder]['data'][] = [
                         $row->education_programme->name,
                         $row->name,
-                        $row->$lookupColumn
+                        $row->{$lookupColumn}
                     ];
                 }
             }

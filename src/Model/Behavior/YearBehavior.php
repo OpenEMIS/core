@@ -23,14 +23,14 @@ class YearBehavior extends Behavior
     {
         $config = $this->config();
         foreach ($config as $date => $year) {
-            if ($entity->has($date) && !empty($entity->$date)) {
-                if ($entity->$date instanceof Date || $entity->$date instanceof Time) {
-                    $entity->$year = $entity->$date->year;
+            if ($entity->has($date) && !empty($entity->{$date})) {
+                if ($entity->{$date} instanceof Date || $entity->{$date} instanceof Time) {
+                    $entity->{$year} = $entity->{$date}->year;
                 } else {
-                    $entity->$year = date('Y', strtotime($entity->$date));
+                    $entity->{$year} = date('Y', strtotime($entity->{$date}));
                 }
             } else {
-                $entity->$year = null;
+                $entity->{$year} = null;
             }
         }
     }

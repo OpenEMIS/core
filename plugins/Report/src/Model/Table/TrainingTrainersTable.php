@@ -37,6 +37,10 @@ class TrainingTrainersTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $requestData = json_decode($settings['process']['params']);
+        $trainingCourseId = $requestData->training_course_id;
+        $trainingSessionId = $requestData->training_session_id;
+
         $query
             ->select([
                 'session_code' => 'Sessions.code',
@@ -47,7 +51,7 @@ class TrainingTrainersTable extends AppTable
                 'identity_type_name' => 'IdentityTypes.name',
                 'identity_number' => 'Trainers.identity_number'
             ])
-            ->contain(['Sessions'])
+            ->matching('Sessions.Courses')
             ->join([
                 'Trainers' => [
                     'type' => 'LEFT',
@@ -64,7 +68,12 @@ class TrainingTrainersTable extends AppTable
                     ]
                 ],
             ])
+            ->where(['Courses.id' => $trainingCourseId])
             ->order([$this->aliasField('name')]);
+
+        if (!empty($trainingSessionId)) {
+            $query->where([$this->aliasField('training_session_id') => $trainingSessionId]);
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

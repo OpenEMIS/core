@@ -1,0 +1,314 @@
+/* KORDIT FONT PACK v.1.0.12 */
+
+@font-face {
+  font-family: 'kordit-fonts';
+  src:  url('fonts/kordit-fonts.eot?tdefq');
+  src:  url('fonts/kordit-fonts.eot?tdefq#iefix') format('embedded-opentype'),
+    url('fonts/kordit-fonts.ttf?tdefq') format('truetype'),
+    url('fonts/kordit-fonts.woff?tdefq') format('woff'),
+    url('fonts/kordit-fonts.svg?tdefq#kordit-fonts') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="kd-"], [class*=" kd-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'kordit-fonts' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  display: inline-block;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.kd-publish:before {
+  content: "\e917";
+}
+.kd-unpublish:before {
+  content: "\e918";
+}
+.kd-add-multiple:before {
+  content: "\e916";
+}
+.kd-user:before {
+  content: "\e915";
+}
+.kd-close-round:before {
+  content: "\e913";
+}
+.kd-close:before {
+  content: "\e914";
+}
+.kd-tab:before {
+  content: "\e912";
+}
+.kd-add-tab:before {
+  content: "\e911";
+}
+.kd-validate-row:before {
+  content: "\e90f";
+}
+.kd-validate-col:before {
+  content: "\e910";
+}
+.kd-alphabet:before {
+  content: "\e906";
+}
+.kd-alphanumeric:before {
+  content: "\e907";
+}
+.kd-numeric:before {
+  content: "\e908";
+}
+.kd-add-column:before {
+  content: "\e909";
+}
+.kd-add-row:before {
+  content: "\e90a";
+}
+.kd-header-row-col:before {
+  content: "\e90b";
+}
+.kd-header-row:before {
+  content: "\e90c";
+}
+.kd-header-col:before {
+  content: "\e90d";
+}
+.kd-remove:before {
+  content: "\e90e";
+}
+.kd-download-success:before {
+  content: "\e905";
+}
+.kd-download-fail:before {
+  content: "\e904";
+}
+.kd-sort-alphabet-asc:before {
+  content: "\e902";
+}
+.kd-sort-alphabet-desc:before {
+  content: "\e903";
+}
+.kd-sort-date-desc:before {
+  content: "\e900";
+}
+.kd-sort-date-asc:before {
+  content: "\e901";
+}
+.kd-shipment:before {
+  content: "\e800";
+}
+.kd-header:before {
+  content: "\e642";
+}
+.kd-rows:before {
+  content: "\e643";
+}
+.kd-table:before {
+  content: "\e644";
+}
+.kd-draggable-line:before {
+  content: "\e641";
+}
+.kd-draggable:before {
+  content: "\e640";
+}
+.kd-reorder:before {
+  content: "\e63f";
+}
+.kd-guardian:before {
+  content: "\e63d";
+}
+.kd-dropout:before {
+  content: "\e63a";
+}
+.kd-transfer:before {
+  content: "\e63b";
+}
+.kd-graduate:before {
+  content: "\e63c";
+}
+.kd-reject:before {
+  content: "\e638";
+}
+.kd-approve:before {
+  content: "\e639";
+}
+.kd-compile:before {
+  content: "\e63e";
+}
+.kd-404-error:before {
+  content: "\e600";
+}
+.kd-403-error:before {
+  content: "\e636";
+}
+.kd-role:before {
+  content: "\e637";
+}
+.kd-preview:before {
+  content: "\e601";
+}
+.kd-staff:before {
+  content: "\e602";
+}
+.kd-institutions:before {
+  content: "\e603";
+}
+.kd-students:before {
+  content: "\e604";
+}
+.kd-dashboard_icon:before {
+  content: "\e605";
+}
+.kd-upload-download:before {
+  content: "\e606";
+}
+.kd-export:before {
+  content: "\e607";
+}
+.kd-import:before {
+  content: "\e608";
+}
+.kd-download:before {
+  content: "\e609";
+}
+.kd-upload:before {
+  content: "\e60a";
+}
+.kd-text:before {
+  content: "\e60b";
+}
+.kd-resolution:before {
+  content: "\e60c";
+}
+.kd-html:before {
+  content: "\e60d";
+}
+.kd-audio:before {
+  content: "\e60e";
+}
+.kd-iframe:before {
+  content: "\e60f";
+}
+.kd-video:before {
+  content: "\e610";
+}
+.kd-image:before {
+  content: "\e611";
+}
+.kd-y-axis:before {
+  content: "\e612";
+}
+.kd-x-axis:before {
+  content: "\e613";
+}
+.kd-redo:before {
+  content: "\e614";
+}
+.kd-undo:before {
+  content: "\e615";
+}
+.kd-save:before {
+  content: "\e616";
+}
+.kd-label:before {
+  content: "\e617";
+}
+.kd-series:before {
+  content: "\e618";
+}
+.kd-legend:before {
+  content: "\e619";
+}
+.kd-grid2:before {
+  content: "\e61a";
+}
+.kd-axis:before {
+  content: "\e61b";
+}
+.kd-customize:before {
+  content: "\e61c";
+}
+.kd-title:before {
+  content: "\e61d";
+}
+.kd-check:before {
+  content: "\e61e";
+}
+.kd-cross:before {
+  content: "\e61f";
+}
+.kd-back:before {
+  content: "\e620";
+}
+.kd-lists:before {
+  content: "\e621";
+}
+.kd-edit:before {
+  content: "\e622";
+}
+.kd-trash:before {
+  content: "\e623";
+}
+.kd-add:before {
+  content: "\e624";
+}
+.kd-data_collection_icon:before {
+  content: "\e625";
+}
+.kd-openemis:before {
+  content: "\e626";
+}
+.kd-administration:before {
+  content: "\e627";
+}
+.kd-web_icon:before {
+  content: "\e628";
+}
+.kd-results:before {
+  content: "\e629";
+}
+.kd-reports:before {
+  content: "\e62a";
+}
+.kd-play:before {
+  content: "\e62b";
+}
+.kd-packages:before {
+  content: "\e62c";
+}
+.kd-mobile_icon:before {
+  content: "\e62d";
+}
+.kd-items:before {
+  content: "\e62e";
+}
+.kd-data_management_icon:before {
+  content: "\e62f";
+}
+.kd-ellipsis:before {
+  content: "\e630";
+}
+.kd-grid:before {
+  content: "\e631";
+}
+.kd-arrow-down:before {
+  content: "\e632";
+}
+.kd-arrow-up:before {
+  content: "\e633";
+}
+.kd-arrow-last:before {
+  content: "\e634";
+}
+.kd-arrow-first:before {
+  content: "\e635";
+}
