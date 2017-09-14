@@ -75,6 +75,11 @@ class HtmlFieldHelper extends Helper
                 $options['value'] = $data->invalid($field);
             }
         }
+        if (array_key_exists('label', $options)) {
+            if (!is_array($options['label'])) {
+                $options['label'] = ['escape' => false, 'text' => $options['label']];
+            }
+        }
         return $options;
     }
 
@@ -157,7 +162,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $data->$attr['field'];
+            $value = $data->{$attr['field']};
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
             if (array_key_exists('length', $attr)) {
@@ -188,7 +193,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $data->$attr['field'];
+            $value = $data->{$attr['field']};
             //check whether value is float
             if (is_float($value)) {
                 $value = sprintf('%0.2f', $value);
@@ -209,7 +214,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $data->$attr['field'];
+            $value = $data->{$attr['field']};
         } elseif ($action == 'edit') {
             $options['type'] = 'number';
             $fieldName = $attr['model'] . '.' . $attr['field'];
@@ -226,7 +231,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            if (!empty($data->$attr['field'])) {
+            if (!empty($data->{$attr['field']})) {
                 $value = '***************';
             }
         } elseif ($action == 'edit') {
@@ -247,11 +252,11 @@ class HtmlFieldHelper extends Helper
         $field = $attr['field'];
         if ($action == 'index' || $action == 'view') {
             if (!empty($attr['options'])) {
-                if ($data->$field === '') {
+                if ($data->{$field} === '') {
                     return '';
                 } else {
-                    if (array_key_exists($data->$field, $attr['options'])) {
-                        $value = $attr['options'][$data->$field];
+                    if (array_key_exists($data->{$field}, $attr['options'])) {
+                        $value = $attr['options'][$data->{$field}];
 
                         if (is_array($value)) {
                             $value = $value['text'];
@@ -263,7 +268,7 @@ class HtmlFieldHelper extends Helper
             }
 
             if (empty($value)) {
-                $value = $data->$field;
+                $value = $data->{$field};
             }
 
             if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
@@ -367,7 +372,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = nl2br($data->$attr['field']);
+            $value = nl2br($data->{$attr['field']});
         } elseif ($action == 'edit') {
             $options['type'] = 'textarea';
             $fieldName = $attr['model'] . '.' . $attr['field'];
@@ -407,7 +412,7 @@ class HtmlFieldHelper extends Helper
             if (array_key_exists('value', $attr)) {
                 $value = $attr['value'];
             } else {
-                $value = $data->$attr['field'];
+                $value = $data->{$attr['field']};
             }
         } elseif ($action == 'edit') {
             $value = $this->disabled($action, $data, $attr, $options);
@@ -576,7 +581,7 @@ class HtmlFieldHelper extends Helper
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
             } else {
-                $value = $data->$field;
+                $value = $data->{$field};
             }
         }
 
@@ -628,7 +633,7 @@ class HtmlFieldHelper extends Helper
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
             } else {
-                $value = $data->$field;
+                $value = $data->{$field};
             }
         }
 
@@ -703,7 +708,7 @@ class HtmlFieldHelper extends Helper
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
             } else {
-                $value = $data->$field;
+                $value = $data->{$field};
             }
         }
 
@@ -761,7 +766,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $data->$attr['field'];
+            $value = $data->{$attr['field']};
             $chosenSelectList = [];
             if (!empty($value)) {
                 if (is_array($value)) {
@@ -848,11 +853,11 @@ class HtmlFieldHelper extends Helper
             $request = $this->request;
             $ids = $this->ControllerAction->getIdKeys($table, $data, false);
             $action = ['action' => $request->action, 'download', $this->ControllerAction->paramsEncode($ids)];
-            $value = $this->link($data->$name, $action);
+            $value = $this->link($data->{$name}, $action);
         } elseif ($action == 'edit') {
             $this->includes['jasny']['include'] = true;
-            if (isset($data->$name)) {
-                $attr['value'] = $data->$name;
+            if (isset($data->{$name})) {
+                $attr['value'] = $data->{$name};
             }
             $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
         }
@@ -863,7 +868,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = '<div style="background-color:'.$data->$attr['field'].'">&nbsp;</div>';
+            $value = '<div style="background-color:'.$data->{$attr['field']}.'">&nbsp;</div>';
         } elseif ($action == 'edit') {
             $options['type'] = 'color';
             $options['onchange'] = 'clickColor(0, -1, -1, 5);';
@@ -880,7 +885,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $data->$attr['field'];
+            $value = $data->{$attr['field']};
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
             $options['class'] = "form-control autocomplete form-error ui-autocomplete-input";

@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
@@ -58,6 +59,17 @@ class EducationGradesTable extends ControllerActionTable
         }
 
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ]);
+        return $validator;
     }
 
     public function implementedEvents()
@@ -123,8 +135,11 @@ class EducationGradesTable extends ControllerActionTable
     * @param bool|true $getNextProgrammeGrades If flag is set to false, it will only fetch all the education
     *                                           grades of the same programme. If set to true it will get all
     *                                           the grades of the next programmes plus the current programme grades
+    * @param bool|true $firstGradeOnly If flag is set to true, it will fetch all first education
+    *                                           grades of the next programme. If set to false it will get all
+    *                                           the grades of the next programmes plus the current programme grades
     */
-    public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades=true) {
+    public function getNextAvailableEducationGrades($gradeId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
         if (!empty($gradeId)) {
             $gradeObj = $this->get($gradeId);
             $programmeId = $gradeObj->education_programme_id;
@@ -133,6 +148,8 @@ class EducationGradesTable extends ControllerActionTable
                     'keyField' => 'id',
                     'valueField' => 'programme_grade_name'
                 ])
+                ->find('visible')
+                ->find('order')
                 ->where([
                     $this->aliasField('education_programme_id') => $programmeId,
                     $this->aliasField('order').' > ' => $order
@@ -141,7 +158,11 @@ class EducationGradesTable extends ControllerActionTable
                 ->toArray();
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
-                $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                if ($firstGradeOnly) {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                } else {
+                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                }
                 $results = $gradeOptions + $nextProgrammesGradesOptions;
             } else {
                 $results = $gradeOptions;
@@ -149,6 +170,21 @@ class EducationGradesTable extends ControllerActionTable
             return $results;
         } else {
             return [];
+        }
+    }
+
+    public function isLastGradeInEducationProgrammes($gradeId)
+    {
+        if (!empty($gradeId)) {
+            $nextAvailableEducationGrades = $this->getNextAvailableEducationGrades($gradeId, false);
+
+            if (!count($nextAvailableEducationGrades)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
     }
 
@@ -234,7 +270,7 @@ class EducationGradesTable extends ControllerActionTable
             $educationSubjects = $entity->extractOriginal(['education_subjects']);
             foreach ($educationSubjects['education_subjects'] as $key => $obj) {
                 if ($obj->_joinData->visible == 1) {
-                    $gradeSubjectId = $gradeSubjectData[$obj->id];
+                    $gradeSubjectId = $obj->id;
 
                     $rowData = [];
                     // link subject to GradeSubjects
@@ -243,7 +279,7 @@ class EducationGradesTable extends ControllerActionTable
                         'controller' => 'Educations',
                         'action' => 'GradeSubjects',
                         '0' => 'view',
-                        '1' => $this->paramsEncode(['id' => $gradeSubjectId])
+                        '1' => $this->paramsEncode(['education_grade_id' => $entity->id, 'education_subject_id' => $gradeSubjectId])
                     ]);
                     $rowData[] = $obj->code;
                     $rowData[] = $obj->_joinData->hours_required;

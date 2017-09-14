@@ -14,6 +14,7 @@ $jsOptions = [
 
 if (isset($datepicker)) {
     foreach ($datepicker as $key => $obj) {
+        $jsOptions = array_merge($jsOptions, $obj['date_options']);
         $initializeDatepicker .= sprintf($datepickerScript, $key, $obj['id'], json_encode($jsOptions));
         $datepickerEvent .= sprintf("datepicker%s.datepicker('place');\n", $key);
     }

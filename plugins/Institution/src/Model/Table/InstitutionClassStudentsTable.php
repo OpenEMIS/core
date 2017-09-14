@@ -537,14 +537,15 @@ class InstitutionClassStudentsTable extends AppTable
 
     private function _setSubjectStudentData($data)
     {
-
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $studentEducationGradeId = $data['education_grade_id'];
 
         //get the education_subject_id and education_subject_id using the institution_id
         $classSubjectsData = $ClassSubjects->find()
             ->innerJoinWith('InstitutionSubjects')
             ->select([
                 'education_subject_id' => 'InstitutionSubjects.education_subject_id',
+                'education_grade_id' => 'InstitutionSubjects.education_grade_id',
                 'institution_subject_id' => 'InstitutionSubjects.id'
             ])
             ->where([
@@ -554,19 +555,44 @@ class InstitutionClassStudentsTable extends AppTable
 
         $subjectStudents = [];
         foreach ($classSubjectsData as $classSubjects) {
-            $subjectStudents[] = [
-                'student_status_id' => $data['student_status_id'],
-                'student_id' => $data['student_id'],
-                'institution_subject_id' => $classSubjects['institution_subject_id'],
-                'institution_class_id' => $data['institution_class_id'],
-                'institution_id' => $data['institution_id'],
-                'academic_period_id' => $data['academic_period_id'],
-                'education_subject_id' => $classSubjects['education_subject_id'],
-                'education_grade_id' => $data['education_grade_id']
-            ];
+            $subjectEducationGradeId = $classSubjects['education_grade_id'];
+            // will check in the education grade subject if the subject is an auto allocation subject
+            $isAutoAddSubject = $this->isAutoAddSubject($classSubjects);
+
+            // if the subject is not an add_auto_subject will not be added automatically to the student.
+            if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
+                $subjectStudents[] = [
+                    'student_status_id' => $data['student_status_id'],
+                    'student_id' => $data['student_id'],
+                    'institution_subject_id' => $classSubjects['institution_subject_id'],
+                    'institution_class_id' => $data['institution_class_id'],
+                    'institution_id' => $data['institution_id'],
+                    'academic_period_id' => $data['academic_period_id'],
+                    'education_subject_id' => $classSubjects['education_subject_id'],
+                    'education_grade_id' => $data['education_grade_id']
+                ];
+            }
         }
 
         return $subjectStudents;
+    }
+
+    private function isAutoAddSubject($subject)
+    {
+        // will check in the education grade subject if the subject is an auto allocation subject
+        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+
+        $educationGradeId = $subject['education_grade_id'];
+        $educationSubjectId = $subject['education_subject_id'];
+        $educationGradesSubjectsData = $EducationGradesSubjects->find()
+            ->where([
+                $EducationGradesSubjects->aliasField('education_grade_id') => $educationGradeId,
+                $EducationGradesSubjects->aliasField('education_subject_id') => $educationSubjectId
+            ])
+            ->first();
+        $addAutoSubject = $educationGradesSubjectsData['auto_allocation'];
+
+        return $addAutoSubject;
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
@@ -575,7 +601,7 @@ class InstitutionClassStudentsTable extends AppTable
         $this->_autoDeleteSubjectStudent($entity);
 
         $listeners = [
-            TableRegistry::get('Institution.StudentCompetencyResults')
+            TableRegistry::get('Institution.InstitutionCompetencyResults')
         ];
         $this->dispatchEventToModels('Model.InstitutionClassStudents.afterDelete', [$entity], $this, $listeners);
     }

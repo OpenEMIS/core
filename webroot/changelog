@@ -1,3 +1,20 @@
+v3.10.10
+- System allows users to record student's Height and Weight in Students > Health > Body Mass page
+- Added Comments field to Students Competencies in Institutions > Competencies > Items page
+- System allows adding of Institution logo to Institutions > Overview page
+- System allows a Secondary Home Room Teacher to be assigned to a class in Institution > Academic > Classes page
+
+v3.10.9
+- Allow for both specialisations and subjects in Staff > Professional Development > Qualifications page
+
+v3.10.8
+- Implemented Counselor Feature in Institution > Students > Counselling
+- Upon generating a report in the Report module, system now includes filter selection in report name
+
+v3.10.7
+- Implemented configuration item to toggle whether the system should automatically add students into all subjects
+- Implemented Staff Transfer report in Reports > Institutions > Staff Transfer
+
 v3.10.6
 - Implemented validation for Programme Code in Administration > Education Structure > Programmes page
 - In Institutions > Attendance page, system will now count user as present when they are flagged as late
