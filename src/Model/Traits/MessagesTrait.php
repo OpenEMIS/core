@@ -1152,14 +1152,11 @@ trait MessagesTrait
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ],
-<<<<<<< HEAD
             'InstitutionAssessments' => [
                 'marks' => [
                     'markHint' => 'Mark should be between %s and %s'
                 ]
             ]
-=======
->>>>>>> 1ba82a3101db3aff703ae44a3cf81b13e4e4f332
         ],
         'User' => [
             'Users' => [

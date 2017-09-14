@@ -2313,7 +2313,6 @@ class ValidationBehavior extends Behavior
         }
     }
 
-<<<<<<< HEAD
     public static function checkAssessmentMarks($field, array $globalData)
     {
         if (strlen($field) > 0) {
@@ -2345,8 +2344,8 @@ class ValidationBehavior extends Behavior
                 }
             }
         }
+    }
 
-=======
     public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
     {
         if ($homeRoomTeacher != 0 && $globalData['data'][$secondaryHomeRoomTeacher] != 0) {
@@ -2354,7 +2353,6 @@ class ValidationBehavior extends Behavior
                 return false;
             }
         }
->>>>>>> 1ba82a3101db3aff703ae44a3cf81b13e4e4f332
         return true;
     }
 }
