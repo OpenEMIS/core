@@ -13,6 +13,8 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 use Cake\I18n\Date;
 
+use Institution\Model\Table\StaffTransfer; // to be able to used the constant set
+
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     // Workflow Steps - category
@@ -143,8 +145,36 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $data = $this->get($id)->toArray();
         $newEntity = $this->patchStaffProfile($data);
+
+        // reject all pending transfer
+        $this->rejectPendingTransfer($data);
+
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $InstitutionStaff->save($newEntity);
+    }
+
+    private function rejectPendingTransfer(array $data)
+    {
+        // reject all pending transfer, update the status to 3 (Rejected)
+        $staffId = $data['staff_id'];
+        $prevInstitutionId = $data['institution_id'];
+
+        $StaffTransferRequests = TableRegistry::get('Institution.StaffTransferRequests');
+        $transferRequestRecords = $StaffTransferRequests->find()
+            ->where([
+                $StaffTransferRequests->aliasField('previous_institution_id') => $prevInstitutionId,
+                $StaffTransferRequests->aliasField('staff_id') => $staffId,
+                $StaffTransferRequests->aliasField('status') => StaffTransfer::PENDING, // 0
+                $StaffTransferRequests->aliasField('type') => StaffTransfer::TRANSFER // 2
+            ])
+            ->all();
+
+        if (!$transferRequestRecords->isEmpty()) {
+            foreach ($transferRequestRecords as $key => $entity) {
+                $entity->status = StaffTransfer::REJECTED; // 2
+                $StaffTransferRequests->save($entity);
+            }
+        }
     }
 
     private function patchStaffProfile(array $data)

@@ -94,7 +94,7 @@ class ImportStaffAttendancesTable extends AppTable {
                 $data[$columnOrder]['data'][] = [
                     $institution->name,
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }
@@ -116,7 +116,7 @@ class ImportStaffAttendancesTable extends AppTable {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->{$lookupColumn}
                 ];
             }
         }

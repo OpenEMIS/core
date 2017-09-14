@@ -490,7 +490,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var dataSource = {
             pageSize: pageSize,
             getRows: function (params) {
-                AlertSvc.reset($scope);
+                // AlertSvc.reset($scope); // POCOR-4009 commented out due to alert class not appear (only white text message appeared) when there is an empty field.
                 if (withData) {
                    InstitutionsStaffSvc.getStaffRecords(
                     {
@@ -1025,6 +1025,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         if (StaffController.selectedStaffData.username == '' || StaffController.selectedStaffData.username == undefined) {
             StaffController.postResponse.error.username = empty;
+            remain = true;
+        }
+
+        if (StaffController.selectedStaffData.password == '' || StaffController.selectedStaffData.password == undefined) {
+            StaffController.postResponse.error.password = empty;
             remain = true;
         }
 

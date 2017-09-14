@@ -4,6 +4,7 @@ namespace App\Controller\Component;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Controller\Exception\SecurityException;
 
 class NavigationComponent extends Component
 {
@@ -64,10 +65,14 @@ class NavigationComponent extends Component
     public function beforeFilter(Event $event)
     {
         $controller = $this->controller;
-        $navigations = $this->buildNavigation();
-        $this->checkSelectedLink($navigations);
-        $this->checkPermissions($navigations);
-        $controller->set('_navigations', $navigations);
+        try {
+            $navigations = $this->buildNavigation();
+            $this->checkSelectedLink($navigations);
+            $this->checkPermissions($navigations);
+            $controller->set('_navigations', $navigations);
+        } catch (SecurityException $ex) {
+            return;
+        }
     }
 
     private function getLink($controllerActionModelLink, $params = [])
@@ -205,7 +210,9 @@ class NavigationComponent extends Component
                         'Institutions.StudentFees',
                         'Institutions.Rubrics',
                         'Institutions.VisitRequests',
-                        'Institution.Competencies'
+                        'Institutions.StudentCompetencies',
+                        'Institutions.Indexes.index',
+                        'Institutions.ReportCards'
                     ];
 
                     $navigationParentList = $this->array_column($navigations, 'parent');
@@ -248,8 +255,13 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses'];
 
-        if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
+        if (in_array($controller->name, $institutionControllers) || (
+            $controller->name == 'Institutions'
+            && $action != 'index'
+            && (!in_array($action, $institutionActions)))
+            ) {
             $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
             $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
             $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
@@ -279,7 +291,7 @@ class NavigationComponent extends Component
                 $session->write('Directory.Directories.reload', true);
             }
         } else if ($controller->name == 'Profiles' && $action != 'index') {
-            $navigations = $this->appendNavigation('Profiles.Profiles.index', $navigations, $this->getProfileNavigation());
+            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
             $isStudent = $session->read('Auth.User.is_student');
@@ -324,11 +336,14 @@ class NavigationComponent extends Component
 
     public function getMainNavigation()
     {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+
         $navigation = [
-            'Profiles.Profiles.index' => [
+            'Profiles.Profiles' => [
                 'title' => 'Profile',
                 'icon' => '<span><i class="fa kd-role"></i></span>',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 'action' => 'Profiles', 0 => 'view', $userId]
             ],
 
             'Institutions.Institutions.index' => [
@@ -364,7 +379,7 @@ class NavigationComponent extends Component
     public function getInstitutionNavigation()
     {
         $session = $this->request->session();
-        $id = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $id = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $id;
         $navigation = [
             'Institutions.dashboard' => [
@@ -508,7 +523,7 @@ class NavigationComponent extends Component
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults', 'Institutions.StudentCompetencyComments'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -656,16 +671,16 @@ class NavigationComponent extends Component
     public function getInstitutionStudentNavigation()
     {
         $session = $this->request->session();
-        $id = !empty($this->controller->ControllerAction->getQueryString('institution_student_id')) ? $this->controller->ControllerAction->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
+        $id = !empty($this->controller->getQueryString('institution_student_id')) ? $this->controller->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
         $studentId = $session->read('Student.Students.id');
-        $institutionIdSession = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
-        $queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $this->controller->ControllerAction->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
+        $queryString = $this->controller->paramsEncode(['institution_id' => $this->controller->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
         $navigation = [
             'Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
-                'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
                     'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys']],
@@ -674,7 +689,14 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
-                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
+                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']
+            ],
+            'Counsellings.index' => [
+                'title' => 'Counselling',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
+            ],
             'Students.BankAccounts' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Students.index',
@@ -684,7 +706,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']],
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete']],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -697,14 +719,14 @@ class NavigationComponent extends Component
     public function getInstitutionStaffNavigation()
     {
         $session = $this->request->session();
-        $institutionIdSession = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
         $id = $session->read('Staff.Staff.id');
         $navigation = [
             'Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
-                'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $id])],
+                'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $id])],
                 'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
                     'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'Staff.Comments', 'Staff.History']
             ],
@@ -753,14 +775,14 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Profiles.view' => [
                 'title' => 'General',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Profiles.view', 'Profiles.Profiles.edit', 'Profiles.Profiles.pull', 'Profiles.Accounts', 'Profiles.Identities', 'Profiles.Nationalities', 'Profiles.Languages', 'Profiles.Comments', 'Profiles.Attachments',
                     'Profiles.History', 'Profiles.SpecialNeeds', 'Profiles.Contacts']
             ],
             'Profiles.Healths' => [
                 'title' => 'Health',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests']
             ]
@@ -793,7 +815,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Staff' => [
                 'title' => 'Staff',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
                 'Profiles.StaffEmployments' => [
@@ -829,7 +851,7 @@ class NavigationComponent extends Component
         $navigation = [
             'Profiles.Student' => [
                 'title' => 'Student',
-                'parent' => 'Profiles.Profiles.index',
+                'parent' => 'Profiles.Profiles',
                 'link' => false,
             ],
                 'Profiles.ProfileGuardians' => [
@@ -967,7 +989,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Report'],
             ],
             'Reports.InstitutionRubrics' => [
-                'title' => 'Quality',
+                'title' => 'Rubrics',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
@@ -1075,10 +1097,20 @@ class NavigationComponent extends Component
                     'parent' => 'SystemSetup',
                     'selected' => ['Configurations.index', 'Configurations.add', 'Configurations.view', 'Configurations.edit']
                 ],
+                'API' => [
+                    'title' => 'APIs',
+                    'parent' => 'SystemSetup',
+                    'link' => false
+                ],
+                    'Credentials.index' => [
+                        'title' => 'Credentials',
+                        'parent' => 'API',
+                        'selected' => ['Credentials.view', 'Credentials.add', 'Credentials.edit', 'Credentials.delete']
+                    ],
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit']
+                    'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit', 'Notices.delete']
                 ],
                 'Indexes.Indexes' => [
                     'title' => 'Indexes',

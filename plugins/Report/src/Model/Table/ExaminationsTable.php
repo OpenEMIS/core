@@ -52,7 +52,7 @@ class ExaminationsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
-    public function addAfterAction(Event $event)
+    public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('academic_period_id');
         $this->ControllerAction->field('examination_id');
@@ -109,9 +109,21 @@ class ExaminationsTable extends AppTable
         if ($action == 'add') {
              $selectedAcademicPeriod = !empty($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id']: $this->AcademicPeriods->getCurrent();
 
-            $examinationOptions = $this->find('list')
+            $examinationOptions = $this->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->select([
+                    'id',
+                    'code_name' => $this->find()->func()->concat(['code' => 'literal', ' - ', 'name' => 'literal'])
+                ])
                 ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
                 ->toArray();
+
+            if (!(isset($this->request->data[$this->alias()]['examination_id']))) {
+                reset($examinationOptions);
+                $this->request->data[$this->alias()]['examination_id'] = key($examinationOptions);
+            }
 
             $attr['options'] = $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';
@@ -141,24 +153,25 @@ class ExaminationsTable extends AppTable
             if (in_array($feature, ['Report.RegisteredStudentsExaminationCentre'])) {
                 $selectedAcademicPeriod = !empty($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id']: $this->AcademicPeriods->getCurrent();
 
-                $examCentreQuery = $this->ExaminationCentres
-                    ->find('list' ,[
-                        'keyField' => 'id',
-                        'valueField' => 'code_name'
-                    ])
-                    ->where([$this->ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod])
-                    ->order([$this->ExaminationCentres->aliasField('code')]);
-
+                $examCentreOptions = [];
                 if (!empty($request->data[$this->alias()]['examination_id'])) {
                     $examinationId = $request->data[$this->alias()]['examination_id'];
-                    $examCentreQuery
+                    $examCentreOptions = $this->ExaminationCentres
+                        ->find('list' ,[
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
                         ->matching('Examinations')
-                        ->where([$this->aliasField('id') => $examinationId]);
-                }
+                        ->where([
+                            $this->aliasField('id') => $examinationId,
+                            $this->ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod
+                        ])
+                        ->order([$this->ExaminationCentres->aliasField('code')])
+                        ->toArray();
 
-                $examCentreOptions = $examCentreQuery->toArray();
-                if (!empty($examCentreOptions)) {
-                    $examCentreOptions =  ['0' => __('All Exam Centres')] + $examCentreOptions;
+                    if (!empty($examCentreOptions)) {
+                        $examCentreOptions =  ['0' => __('All Exam Centres')] + $examCentreOptions;
+                    }
                 }
 
                 $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
@@ -180,12 +193,14 @@ class ExaminationsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
 
             if (in_array($feature, ['Report.ExaminationResults'])) {
+
+                $institutionOptions = [];
                 if (!empty($request->data[$this->alias()]['examination_id'])) {
                     $selectedExamination = $request->data[$this->alias()]['examination_id'];
 
                     $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
                     $institutionOptions = $ExamCentreStudents
-                        ->find('list' ,[
+                        ->find('list', [
                             'keyField' => 'institution_id',
                             'valueField' => 'institution.code_name'
                         ])

@@ -2,6 +2,7 @@
 namespace Institution\Controller;
 
 use ArrayObject;
+use Exception;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
@@ -12,10 +13,11 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use Cake\I18n\Date;
-use ControllerAction\Model\Traits\UtilityTrait;
+use Cake\Controller\Exception\SecurityException;
+
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
-use Exception;
+use ControllerAction\Model\Traits\UtilityTrait;
 
 class InstitutionsController extends AppController
 {
@@ -65,7 +67,8 @@ class InstitutionsController extends AppController
 
         // competencies
         'StudentCompetencies',
-        'StudentCompetencyResults',
+        'StudentCompetencyComments',
+        'InstitutionCompetencyResults',
 
         // assessments
         'Results',
@@ -325,9 +328,9 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']);
     }
-    public function StudentCompetencyResults()
+    public function InstitutionCompetencyResults()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCompetencyResults']);
     }
     public function StudentSurveys()
     {
@@ -503,14 +506,15 @@ class InstitutionsController extends AppController
                     return $this->redirect($url);
                 }
             }
+            $tabElements = $this->getCompetencyTabElements();
             $queryString = $this->ControllerAction->getQueryString();
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentCompetencies';
             $viewUrl[0] = 'view';
 
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -521,9 +525,61 @@ class InstitutionsController extends AppController
             $this->set('classId', $queryString['class_id']);
             $this->set('competencyTemplateId', $queryString['competency_template_id']);
             $this->set('queryString', $queryString);
+            $this->set('tabElements', $tabElements);
+            $this->set('selectedAction', 'StudentCompetencies');
             $this->render('student_competency_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']);
+        }
+    }
+
+    public function StudentCompetencyComments($subaction = 'index')
+    {
+        if ($subaction == 'edit') {
+            $session = $this->request->session();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentCompetencies',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+            $this->Navigation->addCrumb('Student Competencies', $indexUrl);
+
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                $action = 'edit';
+                if (!$AccessControl->check(['Institutions', 'StudentCompetencyComments', $action], $roles)) {
+                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
+                    return $this->redirect($url);
+                }
+            }
+
+            $tabElements = $this->getCompetencyTabElements();
+            $queryString = $this->ControllerAction->getQueryString();
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'StudentCompetencyComments';
+            $viewUrl[0] = 'view';
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('classId', $queryString['class_id']);
+            $this->set('competencyTemplateId', $queryString['competency_template_id']);
+            $this->set('queryString', $queryString);
+            $this->set('tabElements', $tabElements);
+            $this->set('selectedAction', 'StudentCompetencyComments');
+            $this->render('student_competency_comments_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyComments']);
         }
     }
 
@@ -542,8 +598,8 @@ class InstitutionsController extends AppController
                 if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
                         $ClassTable = TableRegistry::get('Institution.InstitutionClasses');
-                        $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id']]);
-                        if ($classRecord->staff_id != $userId) {
+                        $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id', 'secondary_staff_id']]);
+                        if ($userId != $classRecord->staff_id && $userId != $classRecord->secondary_staff_id) {
                             $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                             return $this->redirect($url);
                         }
@@ -565,8 +621,8 @@ class InstitutionsController extends AppController
             ];
 
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -579,16 +635,6 @@ class InstitutionsController extends AppController
             $this->render('institution_classes_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
-        }
-    }
-
-    public function setAlert()
-    {
-        $this->autoRender = false;
-        if ($this->request->query('message') && $this->request->query('alertType')) {
-            $alertType = $this->request->query('alertType');
-            $alertMessage = $this->request->query('message');
-            $this->Alert->$alertType($alertMessage);
         }
     }
 
@@ -628,8 +674,8 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
             $alertUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
@@ -709,9 +755,6 @@ class InstitutionsController extends AppController
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
             return true;
         }
-        if ($this->request->param('action') == 'setAlert') {
-            return true;
-        }
     }
 
     public function changeUserHeader($model, $modelAlias, $userType)
@@ -723,12 +766,13 @@ class InstitutionsController extends AppController
             $id = $session->read('Staff.Staff.id');
         }
         if (!empty($id)) {
-            $Users = TableRegistry::get('Preferences');
+            $Users = TableRegistry::get('Security.Users');
             $entity = $Users->get($id);
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
             $header = $name . ' - ' . __($crumb);
             $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+            $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
             $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             $this->Navigation->addCrumb($crumb);
             $this->set('contentHeader', $header);
@@ -761,29 +805,34 @@ class InstitutionsController extends AppController
         // this is to cater for back links
         $query = $this->request->query;
 
-        if ($this->ControllerAction->getQueryString('institution_id')) {
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            //check for permission
-            $this->checkInstitutionAccess($institutionId, $event);
-            if ($event->isStopped()) {
-                return false;
+        try {
+            if ($this->ControllerAction->getQueryString('institution_id')) {
+                $institutionId = $this->ControllerAction->getQueryString('institution_id');
+                //check for permission
+                $this->checkInstitutionAccess($institutionId, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $institutionId);
+            } elseif (array_key_exists('institution_id', $query)) {
+                //check for permission
+                $this->checkInstitutionAccess($query['institution_id'], $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $query['institution_id']);
             }
-            $session->write('Institution.Institutions.id', $institutionId);
-        } elseif (array_key_exists('institution_id', $query)) {
-            //check for permission
-            $this->checkInstitutionAccess($query['institution_id'], $event);
-            if ($event->isStopped()) {
-                return false;
-            }
-            $session->write('Institution.Institutions.id', $query['institution_id']);
+        } catch (SecurityException $ex) {
+            return;
         }
+
         if ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'index') {
             if ($session->check('Institution.Institutions.search.key')) {
                 $search = $session->read('Institution.Institutions.search.key');
-                $session->delete('Institution.Institutions');
+                $session->delete('Institution.Institutions.id');
                 $session->write('Institution.Institutions.search.key', $search);
             } else {
-                $session->delete('Institution.Institutions');
+                $session->delete('Institution.Institutions.id');
             }
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
@@ -941,6 +990,17 @@ class InstitutionsController extends AppController
                             'alert.svc',
                             'institution.student.competencies.ctrl',
                             'institution.student.competencies.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'StudentCompetencyComments':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'institution.student.competency_comments.ctrl',
+                            'institution.student.competency_comments.svc'
                         ]);
                     }
                 }
@@ -1409,6 +1469,22 @@ class InstitutionsController extends AppController
         return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
     }
 
+    public function getCompetencyTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'StudentCompetencies' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
+                'text' => __('Items')
+            ],
+            'StudentCompetencyComments' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencyComments', 'view', 'queryString' => $queryString],
+                'text' => __('Periods')
+            ]
+        ];
+        return $tabElements;
+    }
+
     public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate = '')
     {
         $this->autoRender= false;
@@ -1498,7 +1574,10 @@ class InstitutionsController extends AppController
             $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
 
-        echo json_encode($options);
+        $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
+        $this->response->type('json');
+
+        return $this->response;
     }
 
     public function getStatusPermission($model)

@@ -31,14 +31,16 @@
     "autoload": {
         "psr-4": {
             "App\\": "src",
-            "ControllerAction\\": "./plugins/ControllerAction/src"
+            "ControllerAction\\": "./plugins/ControllerAction/src",
+            "OAuth\\": "./plugins/OAuth/src"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "App\\Test\\": "tests",
             "Cake\\Test\\": "./vendor/cakephp/cakephp/tests",
-            "ControllerAction\\Test\\": "./plugins/ControllerAction/tests"
+            "ControllerAction\\Test\\": "./plugins/ControllerAction/tests",
+            "OAuth\\Test\\": "./plugins/OAuth/tests"
         }
     },
     "scripts": {
@@ -55,7 +57,7 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories":[
+    "repositories": [
         {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git"
