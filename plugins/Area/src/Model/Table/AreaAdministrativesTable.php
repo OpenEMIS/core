@@ -173,7 +173,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 unset($value);
             } elseif (is_array($value)) {
                 if (isset($value['name']) && isset($value['area_administrative_level']) && isset($value['area_administrative_level']['name'])) {
-                    $value['name'] = $value['name'] . ' - ' . $value['area_administrative_level']['name'];
+                    $value['name'] = __($value['name']) . ' - ' . __($value['area_administrative_level']['name']);
                 }
                 if (isset($value['children'])) {
                     $children = $value['children'];
