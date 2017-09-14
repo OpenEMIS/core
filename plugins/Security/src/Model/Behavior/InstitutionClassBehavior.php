@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\ORM\ResultSet;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class InstitutionClassBehavior extends Behavior
@@ -19,6 +19,63 @@ class InstitutionClassBehavior extends Behavior
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         return $events;
+    }
+
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
+        // This logic will only be triggered when the table is accessed by RestfulController
+        if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
+            $user = $options['user'];
+            if ($user['super_admin'] == 0) { // if he is not super admin
+                $userId = $user['id'];
+
+                $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
+                    'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
+                    'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
+                ])
+                ->innerJoin(['SecurityFunctions' => 'security_functions'], [
+                    'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
+                ])
+                ->where([
+                    // basically if AllClasses permission is granted, the user should see all classes of that institution
+                    // if MyClasses permission is granted, the user must either be a homeroom teacher or a secondary teacher of that class in order to see that class
+                    'OR' => [
+                        [
+                            'OR' => [ // AllClasses permissions
+                                "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
+                                "SecurityFunctions.`_view` LIKE '%AllClasses.view%'"
+                            ]
+                        ], [
+                            'AND' => [
+                                [
+                                    'OR' => [ // MyClasses permissions
+                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                    ]
+                                ], [
+                                    'OR' => [ // cater for both homeroom teacher and secondary teacher
+                                        "InstitutionClasses.staff_id" => $userId,
+                                        "InstitutionClasses.secondary_staff_id" => $userId
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ])
+                ->group([$this->_table->aliasField('id')]); // so it doesn't show duplicate classes
+
+                /* Generated conditions */
+                // INNER JOIN security_role_functions
+                //     ON security_role_functions.security_role_id = security.security_role_id
+                //     AND security_role_functions._view = 1
+                // INNER JOIN security_functions ON security_functions.id = security_role_functions.security_function_id
+                // WHERE (security_functions._view LIKE '%AllClasses.index%' OR security_functions._view LIKE '%AllClasses.view%')
+                // OR ((security_functions._view LIKE '%Classes.index%' OR security_functions._view LIKE '%Classes.view%')
+                //     AND (InstitutionClasses.staff_id = 4 OR InstitutionClasses.secondary_staff_id = 4))
+            }
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
