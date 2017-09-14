@@ -2007,7 +2007,7 @@ class ValidationBehavior extends Behavior
             ->where([
                 $StaffTable->aliasField('staff_id') => $staffId,
                 $StaffTable->aliasField('institution_id') => $data['institution_id'],
-                $StaffTable->aliasField('start_date'). ' <= ' => $startDate,
+                $StaffTable->aliasField('start_date'). ' < ' => $startDate,
                 'OR' => [
                     [$StaffTable->aliasField('end_date').' >= ' => $startDate],
                     [$StaffTable->aliasField('end_date').' IS NULL']
@@ -2027,7 +2027,7 @@ class ValidationBehavior extends Behavior
             ->where([
                 $StaffTable->aliasField('staff_id') => $staffId,
                 $StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
-                $StaffTable->aliasField('start_date'). ' <= ' => $startDate,
+                $StaffTable->aliasField('start_date'). ' < ' => $startDate,
                 'OR' => [
                     [$StaffTable->aliasField('end_date').' >= ' => $startDate],
                     [$StaffTable->aliasField('end_date').' IS NULL']
