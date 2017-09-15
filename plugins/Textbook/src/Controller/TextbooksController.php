@@ -13,6 +13,10 @@ class TextbooksController extends AppController
     public function initialize() {
         parent::initialize();
         $this->loadComponent('Paginator');
+
+        $this->ControllerAction->models = [
+            'ImportTextbooks'=> ['className' => 'Textbook.ImportTextbooks', 'actions' => ['add']]
+        ];
     }
 
     // CAv4

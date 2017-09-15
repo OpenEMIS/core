@@ -1,11 +1,11 @@
 <?php
 namespace Restful\Controller;
 
+use Cake\Core\Configure;
 use Cake\Log\Log;
 
 class RestfulController extends AppController
 {
-    private $bypassAuth = false; // setting this value to true will bypass authentication for debugging purposes
     private $restfulComponent = null;
     private $supportedRestful = [
         'v1' => 'v1',
@@ -27,7 +27,8 @@ class RestfulController extends AppController
         ]);
         $this->restfulComponent = $this->{$componentName};
         $this->Auth->allow('token');
-        if ($this->bypassAuth) {
+        $bypassAuth = Configure::read('bypassAuth');
+        if ($bypassAuth) {
             $this->Auth->allow();
         }
     }

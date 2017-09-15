@@ -1,3 +1,8 @@
+v3.11.11
+- Custom reports will generate based on User's area access
+- System automatically enrols student if User that has permission to approve pending enrolments add those students into the school
+- Implemented Textbook import function in Administration > Textbooks
+
 v3.10.10
 - System allows users to record student's Height and Weight in Students > Health > Body Mass page
 - Added Comments field to Students Competencies in Institutions > Competencies > Items page
