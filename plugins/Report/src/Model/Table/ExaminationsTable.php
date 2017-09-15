@@ -45,6 +45,25 @@ class ExaminationsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+                ->requirePresence('examination_id')
+                ->notEmpty('examination_centre_id', __('This field cannot be left empty'), function ($context) {
+                    if (isset($context['data']['feature'])) {
+                        return in_array($context['data']['feature'], ['Report.RegisteredStudentsExaminationCentre']);
+                    }
+                    return false;
+                })
+                ->notEmpty('institution_id', __('This field cannot be left empty'), function ($context) {
+                    if (isset($context['data']['feature'])) {
+                        return in_array($context['data']['feature'], ['Report.NotRegisteredStudents', 'Report.ExaminationResults']);
+                    }
+                    return false;
+                });
+    }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];

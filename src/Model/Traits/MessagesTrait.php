@@ -246,7 +246,6 @@ trait MessagesTrait
             'education_programme' => 'Education Programme',
             'education_grade' => 'Education Grade',
             'staff_id' => 'Home Room Teacher',
-            'secondary_staff_id' => 'Secondary Home Room Teacher',
             'class' => 'Class',
             'single_grade_field' => 'Single Grade Classes',
             'multi_grade_field' => 'Class Grades',
@@ -840,7 +839,7 @@ trait MessagesTrait
                     'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
                 ],
                 'staff_id' => [
-                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Home Room Teacher cannot be the same person.'
+                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Teacher cannot be the same person.'
                 ]
             ],
 
@@ -1010,7 +1009,7 @@ trait MessagesTrait
                 ],
                 'start_date' => [
                     'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
-                    'checkEndOfAssignmentWithStartDate' => 'Start Date should be later than %s',
+                    'ruleCheckStaffFTE' => 'No available FTE for the Staff within the start date and end date specified.',
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
