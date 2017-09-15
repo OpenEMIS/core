@@ -1,4 +1,4 @@
-v3.11.11
+v3.10.11
 - Custom reports will generate based on User's area access
 - System automatically enrols student if User that has permission to approve pending enrolments add those students into the school
 - Implemented Textbook import function in Administration > Textbooks
