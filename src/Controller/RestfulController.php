@@ -40,6 +40,13 @@ class RestfulController extends BaseController
             'controller' => 'Users',
             'action' => 'login'
         ]);
+
+        // do not load localization component if connecting from external system
+        if (!$this->request->header('authorization')) {
+            $this->loadComponent('Localization.Localization', [
+                'productName' => 'OpenEMIS Core'
+            ]);
+        }
     }
 
     public function beforeFilter(Event $event)

@@ -14,10 +14,9 @@ class StaffValidationBehavior extends Behavior {
 			->add('end_date', 'ruleCompareDateReverse', [
 		        'rule' => ['compareDateReverse', 'start_date', true]
 	    	])
-	    	->add('start_date', 'ruleCheckEndOfAssignmentWithStartDate', [
-                'rule' => ['checkEndOfAssignmentWithStartDate'],
-                'on' => 'create'
-            ])
+	    	->add('start_date', 'ruleCheckStaffFTE', [
+				'rule' => ['checkStaffFTE'],
+			])
 			->add('start_date', 'ruleStaffExistWithinPeriod', [
 				'rule' => ['checkStaffExistWithinPeriod'],
 				'on' => 'update'

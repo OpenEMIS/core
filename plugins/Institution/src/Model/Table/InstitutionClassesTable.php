@@ -66,6 +66,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 
         // this behavior restricts current user to see All Classes or My Classes
+        $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Security.InstitutionClass');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -210,7 +211,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ]);
 
         $this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
-        $this->field('secondary_staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('secondary_staff_id'))]]);
+        $this->field('secondary_staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
         $this->field('multigrade');
 
