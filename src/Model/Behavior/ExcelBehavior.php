@@ -214,8 +214,8 @@ class ExcelBehavior extends Behavior
             $this->contain($query, $fields, $table);
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
-            $query->autoFields(true);
-
+            // $query->autoFields(true)
+            
             $count = $query->count();
             $rowCount = 0;
             $sheetCount = 1;
