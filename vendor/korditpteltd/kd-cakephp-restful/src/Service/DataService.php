@@ -1,7 +1,7 @@
 <?php
 namespace Restful\Service;
 
-use Cake\Http\Client;
+use Cake\Network\Http\Client;
 
 class DataService
 {
@@ -273,8 +273,6 @@ class DataService
         if (is_array($this->_contain)) {
             if (count($this->_contain) > 0) {
                 $params[] = '_contain=' . implode(',', $this->_contain);
-            } else {
-                $params[] = '_contain=true';
             }
         }
 

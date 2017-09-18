@@ -51,6 +51,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('AcademicPeriod.Period');
         // to handle field type (autocomplete)
@@ -671,7 +672,11 @@ class StaffTable extends ControllerActionTable
             }
         } else { // add operation
             $this->addStaffRole($entity);
-            $this->updateStaffStatus($entity, $this->assigned);
+            if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
+                $this->updateStaffStatus($entity, $this->assigned);
+            } else {
+                $this->updateStaffStatus($entity, $this->endOfAssignment);
+            }
         }
 
         $listeners = [
