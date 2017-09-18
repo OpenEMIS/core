@@ -1283,24 +1283,6 @@ class InstitutionClassesTable extends ControllerActionTable
             ->toArray();
     }
 
-    private function isAutoAddSubject($subject)
-    {
-        // will check in the education grade subject if the subject is an auto allocation subject
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-
-        $educationGradeId = $subject['education_grade_id'];
-        $educationSubjectId = $subject['education_subject_id'];
-        $educationGradesSubjectsData = $EducationGradesSubjects->find()
-            ->where([
-                $EducationGradesSubjects->aliasField('education_grade_id') => $educationGradeId,
-                $EducationGradesSubjects->aliasField('education_subject_id') => $educationSubjectId
-            ])
-            ->first();
-        $addAutoSubject = $educationGradesSubjectsData['auto_allocation'];
-
-        return $addAutoSubject;
-    }
-
     // used for student report cards
     public function findTeacherEditPermissions(Query $query, array $options)
     {
