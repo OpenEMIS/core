@@ -183,6 +183,7 @@ class StudentPromotionTable extends AppTable
     public function addOnChangeStudentStatus(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->query['student_status']);
+        unset($data[$this->alias()]['education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $data)) {
@@ -279,7 +280,7 @@ class StudentPromotionTable extends AppTable
             $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
 
             if ($currentData['student_status_id'] == $this->statuses['GRADUATED'] && array_key_exists(key($nextGrades), $listOfInstitutionGrades)) {
-                $gradeName = $this->getMessage($this->aliasField('notEnrolled'));
+                $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('notEnrolled'));
             }
             // end of getting the notEnrolled message
 
@@ -516,6 +517,9 @@ class StudentPromotionTable extends AppTable
                     // list of grades available to promote to
                     // 'false' means only displayed the next level within the same grade level.
                     $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, false);
+
+                    // if is not last grade, listOfGrades show the next grade of the current grade only
+                    $listOfGrades = [key($listOfGrades) => current($listOfGrades)];
                 }
 
                 // list of grades available in the institution
@@ -529,13 +533,12 @@ class StudentPromotionTable extends AppTable
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
-                    // if is last grade in the programme, show All first grade of the next programme,
-                    // else show the next grade of the current grade only
-                    $options = ($isLastGrade) ? $gradeOptions : [key($gradeOptions) => current($gradeOptions)];
-
                     // to cater for graduate
                     if (in_array($studentStatusId, [$statuses['GRADUATED']])) {
-                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $options;
+                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
+                    } else {
+                        // to cater for promote
+                        $options = $gradeOptions;
                     }
                 }
 

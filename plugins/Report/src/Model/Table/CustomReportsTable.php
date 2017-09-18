@@ -79,12 +79,14 @@ class CustomReportsTable extends AppTable
 
             // filters
             if (!empty($customReportData) && !empty($customReportData->filter)) {
+                $validator = $this->validator();
                 $jsonFilters = $customReportData->filter;
                 $filters = json_decode($jsonFilters, true);
 
                 // academic period filter
                 if (array_key_exists('academic_period_id', $filters)) {
                      $this->ControllerAction->field('academic_period_id');
+                     $validator->notEmpty('academic_period_id');
                      unset($filters['academic_period_id']);
                 }
 
@@ -94,13 +96,17 @@ class CustomReportsTable extends AppTable
 
                     if ($fieldType == 'select' || $fieldType == 'chosenSelect') {
                         $params = $this->request->data[$this->alias()];
+                        $params['user_id'] = $this->Auth->user('id');
+                        $params['super_admin'] =$this->Auth->user('super_admin');
 
-                        $options = $this->buildQuery($data, $params, false);
+                        $byaccess = false;
+                        $toSql = false;
+                        $options = $this->buildQuery($data, $params, $byaccess, $toSql);
                         if (array_key_exists('options', $data)) {
                             $options = $data['options'] + $options;
                         }
 
-                        $parameters = $parameters + ['options' => $options, 'select' => false, 'onChangeReload' => true];
+                        $parameters = $parameters + ['options' => $options, 'select' => false, 'onChangeReload' => true, 'required' => true];
 
                         if ($fieldType == 'chosenSelect') {
                             $parameters['attr'] = ['multiple' => false];
@@ -112,6 +118,7 @@ class CustomReportsTable extends AppTable
                     }
 
                     $this->ControllerAction->field($field, $parameters);
+                    $validator->notEmpty($field);
                 }
             }
         }
@@ -172,6 +179,7 @@ class CustomReportsTable extends AppTable
             $attr['default'] = $selectedPeriod;
             $attr['type'] = 'select';
             $attr['select'] = false;
+            $attr['required'] = true;
             return $attr;
         }
     }
@@ -210,7 +218,9 @@ class CustomReportsTable extends AppTable
 
             // csvBehavior can only can handle one query
             $obj = current($jsonQuery);
-            $settings['sql'] = $this->buildQuery($obj, $params, true);
+            $byaccess = true;
+            $toSql = true;
+            $settings['sql'] = $this->buildQuery($obj, $params, $byaccess, $toSql);
         }
     }
 }
