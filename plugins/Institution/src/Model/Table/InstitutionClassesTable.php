@@ -247,37 +247,6 @@ class InstitutionClassesTable extends ControllerActionTable
             $data['class_students'] = $data['classStudents'];
             $data->offsetUnset('classStudents');
         }
-        if ($data->offsetExists('subjects')) {
-            $subjects = json_decode($this->urlsafeB64Decode($data['subjects']), true);
-            $subjectStudents = [];
-            foreach ($subjects as $subject) {
-                $subjectEducationGradeId = $subject['education_grade_id'];
-                // will check in the education grade subject if the subject is an auto allocation subject
-                $isAutoAddSubject = $this->isAutoAddSubject($subject);
-
-                // if the subject is not an add_auto_subject will not be added automatically to the student.
-                if ($isAutoAddSubject) {
-                    foreach ($data['class_students'] as $classStudent) {
-                        $studentEducationGradeId = $classStudent['education_grade_id'];
-                        if ($subjectEducationGradeId == $studentEducationGradeId) {
-                            $subjectStudents[] = [
-                                'student_status_id' => $classStudent['student_status_id'],
-                                'student_id' => $classStudent['student_id'],
-                                'institution_subject_id' => $subject['id'],
-                                'institution_class_id' => $classStudent['institution_class_id'],
-                                'institution_id' => $subject['institution_id'],
-                                'academic_period_id' => $subject['academic_period_id'],
-                                'education_subject_id' => $subject['education_subject_id'],
-                                'education_grade_id' => $classStudent['education_grade_id']
-                            ];
-                        }
-                    }
-                }
-            }
-
-            $data['subject_students'] = $subjectStudents;
-            $data->offsetUnset('subjects');
-        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -485,8 +454,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassStudents.Users.Genders',
                 'ClassStudents.StudentStatuses',
                 'ClassStudents.EducationGrades',
-                'AcademicPeriods',
-                'InstitutionSubjects'
+                'AcademicPeriods'
             ]);
     }
 
