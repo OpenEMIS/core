@@ -628,25 +628,15 @@ class StudentAdmissionTable extends AppTable {
             } else {
                 $entityData['start_date'] = $entity->start_date;
             }
-
             $entityData['end_date'] = $entity->end_date->format('Y-m-d');
+
+            if (!is_null($selectedClassId)) {
+                $entityData['class'] = $selectedClassId;
+            }
+
             $newEntity = $Students->newEntity($entityData);
 
             if ($Students->save($newEntity)) {
-
-                //add student into class
-                if (!is_null($selectedClassId)) {
-                    $classData = [];
-                    $classData['student_id'] = $studentId;
-                    $classData['education_grade_id'] = $gradeId;
-                    $classData['institution_class_id'] = $selectedClassId;
-                    $classData['student_status_id'] = $statuses['CURRENT'];
-                    $classData['institution_id'] = $newSchoolId;
-                    $classData['academic_period_id'] = $periodId;
-                    $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-                    $InstitutionClassStudents->autoInsertClassStudent($classData);
-                }
-
                 // once student is added to institution successfully, the admission status will be set to Approved
                 $entity->status = self::APPROVED;
             } else {
