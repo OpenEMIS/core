@@ -60,10 +60,19 @@ class AssessmentItemResultsTable extends AppTable
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
+
+        $this->getAssessmentGrading($entity);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        // delete record if user removes the mark or grading
+        $marks = $entity->marks;
+        $grading = $entity->assessment_grading_option_id;
+        if (is_null($marks) && is_null($grading)) {
+            $this->delete($entity);
+        }
+
         $listeners = [
             TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
@@ -219,6 +228,41 @@ class AssessmentItemResultsTable extends AppTable
 
     //     return $reference;
     // }
+
+    private function getAssessmentGrading(Entity $entity)
+    {
+        if ($entity->has('marks') && !$entity->has('assessment_grading_option_id')) {
+            $educationSubjectId = $entity->education_subject_id;
+            $assessmentId = $entity->assessment_id;
+            $assessmentPeriodId = $entity->assessment_period_id;
+
+            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
+                ->find()
+                ->contain('AssessmentGradingTypes.GradingOptions')
+                ->where([
+                    $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                    $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
+                    $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
+                ])
+                ->first();
+
+            if ($assessmentItemsGradingTypeEntity->has('assessment_grading_type')) {
+                $assessmentGradingTypeEntity = $assessmentItemsGradingTypeEntity->assessment_grading_type;
+                $resultType = $assessmentGradingTypeEntity->result_type;
+
+                if (in_array($resultType, ['MARKS', 'DURATION'])) {
+                    if ($assessmentGradingTypeEntity->has('grading_options') && !empty($assessmentGradingTypeEntity->grading_options)) {
+                        foreach ($assessmentGradingTypeEntity->grading_options as $key => $gradingOptionObj) {
+                            if ($entity->marks >= $gradingOptionObj->min && $entity->marks <= $gradingOptionObj->max) {
+                                $entity->assessment_grading_option_id = $gradingOptionObj->id;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId)
     {
