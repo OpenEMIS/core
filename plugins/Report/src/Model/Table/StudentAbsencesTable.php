@@ -16,25 +16,22 @@ class StudentAbsencesTable extends AppTable {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-        $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
+        $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons', 'foreignKey' =>'student_absence_reason_id']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 
-        $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
             'excludes' => [
                 'start_year',
                 'end_year',
-                'student_id',
-                'institution_id',
                 'full_day',
                 'start_date',
                 'start_time',
                 'end_time',
-                'end_date',
-                'student_absence_reason_id',
+                'end_date'
             ],
-            'pages' => false
+            'pages' => false,
+            'autoFields' => true
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
     }
@@ -44,24 +41,31 @@ class StudentAbsencesTable extends AppTable {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
 
-        // if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
-        //  $query->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
-        // }
+        if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $periodEntity = $AcademicPeriods->get($academicPeriodId);
+
+            $startDate = $periodEntity->start_date->format('Y-m-d');
+            $endDate = $periodEntity->end_date->format('Y-m-d');
+        }
 
         $query
             ->select([
                 'openemis_no' => 'Users.openemis_no',
-                'student_id' => 'StudentAbsences.student_id',
-                'institution_id' => 'StudentAbsences.institution_id',
-                'code' => 'Institutions.code',
+                'student_first_name' => 'Users.first_name',
+                'student_middle_name' => 'Users.middle_name',
+                'student_third_name' => 'Users.third_name',
+                'student_last_name' => 'Users.last_name',
+                'student_preferred_name' => 'Users.preferred_name',
+                'institution_name' => 'Institutions.name',
+                'institution_code' => 'Institutions.code',
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'area_administrative_name' => 'AreaAdministratives.name',
                 'area_level_name' => 'AreaLevels.name',
-                'absence_type_id' => 'StudentAbsences.absence_type_id',
                 'absence_type' => 'AbsenceTypes.name',
-                'student_absence_reason_id' => 'StudentAbsences.student_absence_reason_id',
+                'student_absence_reason' => 'StudentAbsenceReasons.name',
                 'comment' => 'StudentAbsences.comment',
                 'full_day' => 'StudentAbsences.full_day',
                 'start_date' => 'StudentAbsences.start_date',
@@ -70,11 +74,11 @@ class StudentAbsencesTable extends AppTable {
                 'end_time' => 'StudentAbsences.end_time'
             ])
             ->where([
-                $this->aliasField('start_date >= ') => '2017-01-01',
-                $this->aliasField('end_date <= ') => '2017-12-31'
+                $this->aliasField('start_date >= ') => $startDate,
+                $this->aliasField('end_date <= ') => $endDate
             ])
             ->contain([
-                //'Users', 'Institutions', 'StudentAbsenceReasons', 'AbsenceTypes',
+                'Users',
                 'Institutions.Areas.AreaLevels',
                 'Institutions.AreaAdministratives',
 
@@ -90,7 +94,6 @@ class StudentAbsencesTable extends AppTable {
 
     // To select another one more field from the containable data
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-        pr($fields);die;
         $newArray = [];
         $newArray[] = [
             'key' => 'Users.openemis_no',
@@ -99,20 +102,20 @@ class StudentAbsencesTable extends AppTable {
             'label' => ''
         ];
         $newArray[] = [
-            'key' => 'StudentAbsences.student_id',
-            'field' => 'student_id',
-            'type' => 'integer',
-            'label' => ''
+            'key' => 'Users.student_name',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => __('Student')
         ];
         $newArray[] = [
-            'key' => 'StudentAbsences.institution_id',
-            'field' => 'institution_id',
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
             'type' => 'string',
             'label' => ''
         ];
         $newArray[] = [
             'key' => 'Institutions.code',
-            'field' => 'code',
+            'field' => 'institution_code',
             'type' => 'string',
             'label' => ''
         ];
@@ -156,20 +159,26 @@ class StudentAbsencesTable extends AppTable {
             'label' => __('Absences')
         ];
         $newArray[] = [
+            'key' => 'StudentAbsences.comment',
+            'field' => 'comment',
+            'type' => 'text',
+            'label' => __('Comment')
+        ];
+        $newArray[] = [
+            'key' => 'StudentAbsences.absence_type_id',
+            'field' => 'absence_type_id',
+            'type' => 'integer',
+            'label' => __('Absence Type'),
+        ];        
+        $newArray[] = [
             'key' => 'StudentAbsences.student_absence_reason_id',
             'field' => 'student_absence_reason_id',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Absence Reason')
         ];
 
-        $newFields = array_merge($newArray, $fields->getArrayCopy());
-        $fields->exchangeArray($newFields);
-    }
-
-    public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity) {
-        if ($entity->student_absence_reason_id == 0) {
-            return __('Unexcused');
-        }
+        // $newFields = array_merge($newArray, $fields->getArrayCopy());
+        $fields->exchangeArray($newArray);
     }
 
     public function onExcelGetAbsences(Event $event, Entity $entity) {
@@ -198,7 +207,32 @@ class StudentAbsencesTable extends AppTable {
     }
 
     public function onExcelGetAbsenceTypeId(Event $event, Entity $entity) {
-        // return $entity->absence_type;
-        pr($entity);
+        return $entity->absence_type;
+    }
+
+    public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity) {
+        if (empty($entity->student_absence_reason)) {
+            return __('Unexcused');
+        } else {
+            return $entity->student_absence_reason;
+        }
+    }
+
+    public function onExcelGetInstitutionName(Event $event, Entity $entity) {
+        
+        return $entity->institution_id;
+    }
+
+    public function onExcelGetStudentName(Event $event, Entity $entity) {
+        //cant use $this->Users->get() since it will load big data and cause memory allocation problem
+        //return $this->Users->get($entity->student_id)->name;
+        
+        $studentName = [];
+        ($entity->student_first_name) ? $studentName[] = $entity->student_first_name : '';
+        ($entity->student_middle_name) ? $studentName[] = $entity->student_middle_name : '';
+        ($entity->student_third_name) ? $studentName[] = $entity->student_third_name : '';
+        ($entity->student_last_name) ? $studentName[] = $entity->student_last_name : '';
+        
+        return implode(' ', $studentName);
     }
 }
