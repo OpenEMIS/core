@@ -11,7 +11,8 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
 class StudentAbsencesTable extends AppTable {
-    public function initialize(array $config) {
+    public function initialize(array $config) 
+    {
         $this->table('institution_student_absences');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
@@ -36,7 +37,8 @@ class StudentAbsencesTable extends AppTable {
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    {
 
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -93,7 +95,8 @@ class StudentAbsencesTable extends AppTable {
     }
 
     // To select another one more field from the containable data
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+    {
         $newArray = [];
         $newArray[] = [
             'key' => 'Users.openemis_no',
@@ -181,7 +184,8 @@ class StudentAbsencesTable extends AppTable {
         $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetAbsences(Event $event, Entity $entity) {
+    public function onExcelGetAbsences(Event $event, Entity $entity) 
+    {
         $startDate = "";
         $endDate = "";
 
@@ -206,11 +210,13 @@ class StudentAbsencesTable extends AppTable {
         }
     }
 
-    public function onExcelGetAbsenceTypeId(Event $event, Entity $entity) {
+    public function onExcelGetAbsenceTypeId(Event $event, Entity $entity) 
+    {
         return $entity->absence_type;
     }
 
-    public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity) {
+    public function onExcelGetStudentAbsenceReasonId(Event $event, Entity $entity) 
+    {
         if (empty($entity->student_absence_reason)) {
             return __('Unexcused');
         } else {
@@ -218,14 +224,15 @@ class StudentAbsencesTable extends AppTable {
         }
     }
 
-    public function onExcelGetInstitutionName(Event $event, Entity $entity) {
+    public function onExcelGetInstitutionName(Event $event, Entity $entity) 
+    {
         
         return $entity->institution_id;
     }
 
-    public function onExcelGetStudentName(Event $event, Entity $entity) {
+    public function onExcelGetStudentName(Event $event, Entity $entity) 
+    {
         //cant use $this->Users->get() since it will load big data and cause memory allocation problem
-        //return $this->Users->get($entity->student_id)->name;
         
         $studentName = [];
         ($entity->student_first_name) ? $studentName[] = $entity->student_first_name : '';
