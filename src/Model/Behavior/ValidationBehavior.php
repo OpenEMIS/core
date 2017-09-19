@@ -2331,4 +2331,32 @@ class ValidationBehavior extends Behavior
         }
         return true;
     }
+
+    //check whether position assigned to class(es)
+    public static function checkHomeRoomTeacherAssignments($field, array $globalData)
+    {       
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
+        $query = $InstitutionClasses->find()
+                ->matching('Staff.InstitutionStaff.Positions')
+                ->where([
+                    'Positions.id' => $globalData['data']['id']
+                ])
+                ->count();
+        
+        if ($query > 0) {
+            return false;
+        }
+
+        $query = $InstitutionClasses->find()
+                ->matching('SecondaryStaff.InstitutionStaff.Positions')
+                ->where([
+                    'Positions.id' => $globalData['data']['id']
+                ])
+                ->count();
+
+        if ($query > 0) {
+            return false;
+        }
+    }
 }
