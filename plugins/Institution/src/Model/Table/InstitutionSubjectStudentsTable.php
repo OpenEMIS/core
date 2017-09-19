@@ -51,7 +51,8 @@ class InstitutionSubjectStudentsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
-        $events['Model.ClassStudents.afterSave'] = 'classStudentsAfterSave';
+        $events['Model.InstitutionClassStudents.afterSave'] = 'institutionClassStudentsAfterSave';
+        $events['Model.InstitutionClassStudents.afterDelete'] = 'institutionClassStudentsAfterDelete';
         $events['Model.AssessmentResults.afterSave'] = 'assessmentResultsAfterSave';
         return $events;
     }
@@ -80,7 +81,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         }
     }
 
-    public function classStudentsAfterSave(Event $event, $student)
+    public function institutionClassStudentsAfterSave(Event $event, $student)
     {
         if ($student->isNew()) {
             // to automatically add the student into class subjects when the student is added to a class
@@ -122,6 +123,21 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $this->save($entity);
                 }
             }
+        }
+    }
+
+    public function institutionClassStudentsAfterDelete(Event $event, $student)
+    {
+        $deleteSubjectStudent = $this->find()
+            ->where([
+                $this->aliasField('student_id') => $student->student_id,
+                $this->aliasField('institution_class_id') => $student->institution_class_id
+            ])
+            ->toArray();
+
+        // delete one by one so that afterDelete() will be triggered
+        foreach ($deleteSubjectStudent as $key => $value) {
+            $this->delete($value);
         }
     }
 
