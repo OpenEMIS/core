@@ -81,13 +81,13 @@ class InstitutionSubjectStudentsTable extends AppTable
         }
     }
 
-    public function institutionClassStudentsAfterSave(Event $event, $student)
+    public function institutionClassStudentsAfterSave(Event $event, Entity $student)
     {
         if ($student->isNew()) {
             // to automatically add the student into class subjects when the student is added to a class
             $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-            $studentEducationGradeId = $student['education_grade_id'];
-            $classId = $student['institution_class_id'];
+            $studentEducationGradeId = $student->education_grade_id;
+            $classId = $student->institution_class_id;
 
             $classSubjectsData = $ClassSubjects->find()
                 ->select([
@@ -99,14 +99,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 ->where([$ClassSubjects->aliasField('institution_class_id') => $classId])
                 ->toArray();
 
-            $studentData = [
-                'student_id' => $student['student_id'],
-                'institution_class_id' => $student['institution_class_id'],
-                'institution_id' => $student['institution_id'],
-                'academic_period_id' => $student['academic_period_id'],
-                'education_grade_id' => $student['education_grade_id'],
-                'student_status_id' => $student['student_status_id']
-            ];
+            $subjectStudent = $student->toArray();
 
             foreach ($classSubjectsData as $classSubject) {
                 $isAutoAddSubject = $this->isAutoAddSubject($classSubject);
@@ -114,8 +107,6 @@ class InstitutionSubjectStudentsTable extends AppTable
 
                 // only add subjects that have auto_allocation flag set as true
                 if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
-                    $subjectStudent = [];
-                    $subjectStudent = $studentData;
                     $subjectStudent['education_subject_id'] = $classSubject['education_subject_id'];
                     $subjectStudent['institution_subject_id'] = $classSubject['institution_subject_id'];
 
@@ -126,7 +117,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         }
     }
 
-    public function institutionClassStudentsAfterDelete(Event $event, $student)
+    public function institutionClassStudentsAfterDelete(Event $event, Entity $student)
     {
         $deleteSubjectStudent = $this->find()
             ->where([
