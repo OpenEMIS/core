@@ -2325,9 +2325,10 @@ class ValidationBehavior extends Behavior
     public static function checkAssessmentMarks($field, array $globalData)
     {
         if (strlen($field) > 0) {
+            $model = $globalData['providers']['table'];
+
             if (array_key_exists('education_subject_id', $globalData['data']) && !empty($globalData['data']['education_subject_id']) && array_key_exists('assessment_id', $globalData['data']) && !empty($globalData['data']['assessment_id']) && array_key_exists('assessment_period_id', $globalData['data']) && !empty($globalData['data']['assessment_period_id'])) {
 
-                $model = $globalData['providers']['table'];
                 $educationSubjectId = $globalData['data']['education_subject_id'];
                 $assessmentId = $globalData['data']['assessment_id'];
                 $assessmentPeriodId = $globalData['data']['assessment_period_id'];
@@ -2337,8 +2338,8 @@ class ValidationBehavior extends Behavior
                     ->find()
                     ->contain('AssessmentGradingTypes')
                     ->where([
-                        $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
                         $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                        $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
                         $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
                     ])
                     ->first();
@@ -2350,9 +2351,13 @@ class ValidationBehavior extends Behavior
                     if ($field < $minMark || $field > $maxMark) {
                         return $model->getMessage('Institution.InstitutionAssessments.marks.markHint', ['sprintf' => [$minMark, $maxMark]]);
                     }
+                } else {
+                    return $model->getMessage('Institution.InstitutionAssessments.grading_type.notFound');
                 }
             }
         }
+
+        return true;
     }
 
     public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)

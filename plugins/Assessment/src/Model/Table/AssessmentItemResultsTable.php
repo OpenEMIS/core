@@ -35,6 +35,13 @@ class AssessmentItemResultsTable extends AppTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->requirePresence('student_id')
+            ->requirePresence('assessment_id')
+            ->requirePresence('education_subject_id')
+            ->requirePresence('education_grade_id')
+            ->requirePresence('academic_period_id')
+            ->requirePresence('assessment_period_id')
+            ->requirePresence('institution_id')
             ->allowEmpty('marks')
             ->add('marks', 'ruleCheckAssessmentMarks', [
                 'rule' => ['checkAssessmentMarks']

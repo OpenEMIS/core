@@ -1154,6 +1154,9 @@ trait MessagesTrait
             'InstitutionAssessments' => [
                 'marks' => [
                     'markHint' => 'Mark should be between %s and %s'
+                ],
+                'grading_type' => [
+                    'notFound' => 'No Grading Type found'
                 ]
             ]
         ],
