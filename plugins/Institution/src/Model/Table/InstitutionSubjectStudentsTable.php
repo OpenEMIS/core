@@ -59,7 +59,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     public function studentsAfterSave(Event $event, $student)
     {
-        // saving of new subject students is handled by classStudentsAfterSave
+        // saving of new subject students is handled by institutionClassStudentsAfterSave
         if (!$student->isNew()) {
             // to update student status in subject if student status in school has been changed
             $subjectStudents = $this->find()
@@ -112,7 +112,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $isAutoAddSubject = $this->isAutoAddSubject($classSubject);
                 $subjectEducationGradeId = $classSubject['education_grade_id'];
 
-                // only add subjects that is auto allocated
+                // only add subjects that have auto_allocation flag set as true
                 if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
                     $subjectStudent = [];
                     $subjectStudent = $studentData;
