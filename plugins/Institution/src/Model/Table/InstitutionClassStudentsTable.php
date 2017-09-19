@@ -354,9 +354,9 @@ class InstitutionClassStudentsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
-            TableRegistry::get('Institution.InstitutionSubjectStudents'),
+            TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
-        $this->dispatchEventToModels('Model.ClassStudents.afterSave', [$entity], $this, $listeners);
+        $this->dispatchEventToModels('Model.InstitutionClassStudents.afterSave', [$entity], $this, $listeners);
     }
 
     public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
@@ -544,29 +544,11 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        // PHPOE-2338 - implement afterDelete in InstitutionClassStudentsTable.php to delete from InstitutionSubjectStudentsTable
-        $this->_autoDeleteSubjectStudent($entity);
-
         $listeners = [
-            TableRegistry::get('Institution.InstitutionCompetencyResults')
+            TableRegistry::get('Institution.InstitutionCompetencyResults'),
+            TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
         $this->dispatchEventToModels('Model.InstitutionClassStudents.afterDelete', [$entity], $this, $listeners);
-    }
-
-    private function _autoDeleteSubjectStudent(Entity $entity)
-    {
-        $InstitutionSubjectStudentsTable = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $deleteSubjectStudent = $InstitutionSubjectStudentsTable->find()
-            ->where([
-                $InstitutionSubjectStudentsTable->aliasField('student_id') => $entity->student_id,
-                $InstitutionSubjectStudentsTable->aliasField('institution_class_id') => $entity->institution_class_id
-            ])
-            ->toArray();
-
-        // have to delete one by one so that InstitutionSubjectStudents->afterDelete() will be triggered
-        foreach ($deleteSubjectStudent as $key => $value) {
-            $InstitutionSubjectStudentsTable->delete($value);
-        }
     }
 
     public function findUnassignedSubjectStudents(Query $query, array $options)
