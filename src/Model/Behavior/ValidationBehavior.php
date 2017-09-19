@@ -2358,5 +2358,7 @@ class ValidationBehavior extends Behavior
         if ($query > 0) {
             return false;
         }
+
+        return true;
     }
 }
