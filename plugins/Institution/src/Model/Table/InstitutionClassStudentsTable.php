@@ -351,6 +351,14 @@ class InstitutionClassStudentsTable extends AppTable
         }
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Institution.InstitutionSubjectStudents')
+        ];
+        $this->dispatchEventToModels('Model.InstitutionClassStudents.afterSave', [$entity], $this, $listeners);
+    }
+
     public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
     {
         $studentId = $entity->student_id;
@@ -513,7 +521,6 @@ class InstitutionClassStudentsTable extends AppTable
         $studentId = $data['student_id'];
         $gradeId = $data['education_grade_id'];
         $classId = $data['institution_class_id'];
-        $data['subject_students'] = $this->_setSubjectStudentData($data);
         $data['id'] = Text::uuid();
         $entity = $this->newEntity($data);
 
@@ -535,91 +542,13 @@ class InstitutionClassStudentsTable extends AppTable
         $this->save($entity);
     }
 
-    private function _setSubjectStudentData($data)
-    {
-        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $studentEducationGradeId = $data['education_grade_id'];
-
-        //get the education_subject_id and education_subject_id using the institution_id
-        $classSubjectsData = $ClassSubjects->find()
-            ->innerJoinWith('InstitutionSubjects')
-            ->select([
-                'education_subject_id' => 'InstitutionSubjects.education_subject_id',
-                'education_grade_id' => 'InstitutionSubjects.education_grade_id',
-                'institution_subject_id' => 'InstitutionSubjects.id'
-            ])
-            ->where([
-                $ClassSubjects->aliasField('institution_class_id') => $data['institution_class_id']
-            ])
-            ->toArray();
-
-        $subjectStudents = [];
-        foreach ($classSubjectsData as $classSubjects) {
-            $subjectEducationGradeId = $classSubjects['education_grade_id'];
-            // will check in the education grade subject if the subject is an auto allocation subject
-            $isAutoAddSubject = $this->isAutoAddSubject($classSubjects);
-
-            // if the subject is not an add_auto_subject will not be added automatically to the student.
-            if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
-                $subjectStudents[] = [
-                    'student_status_id' => $data['student_status_id'],
-                    'student_id' => $data['student_id'],
-                    'institution_subject_id' => $classSubjects['institution_subject_id'],
-                    'institution_class_id' => $data['institution_class_id'],
-                    'institution_id' => $data['institution_id'],
-                    'academic_period_id' => $data['academic_period_id'],
-                    'education_subject_id' => $classSubjects['education_subject_id'],
-                    'education_grade_id' => $data['education_grade_id']
-                ];
-            }
-        }
-
-        return $subjectStudents;
-    }
-
-    private function isAutoAddSubject($subject)
-    {
-        // will check in the education grade subject if the subject is an auto allocation subject
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-
-        $educationGradeId = $subject['education_grade_id'];
-        $educationSubjectId = $subject['education_subject_id'];
-        $educationGradesSubjectsData = $EducationGradesSubjects->find()
-            ->where([
-                $EducationGradesSubjects->aliasField('education_grade_id') => $educationGradeId,
-                $EducationGradesSubjects->aliasField('education_subject_id') => $educationSubjectId
-            ])
-            ->first();
-        $addAutoSubject = $educationGradesSubjectsData['auto_allocation'];
-
-        return $addAutoSubject;
-    }
-
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        // PHPOE-2338 - implement afterDelete in InstitutionClassStudentsTable.php to delete from InstitutionSubjectStudentsTable
-        $this->_autoDeleteSubjectStudent($entity);
-
         $listeners = [
-            TableRegistry::get('Institution.InstitutionCompetencyResults')
+            TableRegistry::get('Institution.InstitutionCompetencyResults'),
+            TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
         $this->dispatchEventToModels('Model.InstitutionClassStudents.afterDelete', [$entity], $this, $listeners);
-    }
-
-    private function _autoDeleteSubjectStudent(Entity $entity)
-    {
-        $InstitutionSubjectStudentsTable = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $deleteSubjectStudent = $InstitutionSubjectStudentsTable->find()
-            ->where([
-                $InstitutionSubjectStudentsTable->aliasField('student_id') => $entity->student_id,
-                $InstitutionSubjectStudentsTable->aliasField('institution_class_id') => $entity->institution_class_id
-            ])
-            ->toArray();
-
-        // have to delete one by one so that InstitutionSubjectStudents->afterDelete() will be triggered
-        foreach ($deleteSubjectStudent as $key => $value) {
-            $InstitutionSubjectStudentsTable->delete($value);
-        }
     }
 
     public function findUnassignedSubjectStudents(Query $query, array $options)
