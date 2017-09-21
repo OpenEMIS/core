@@ -1,6 +1,7 @@
 <?php
 namespace Assessment\Model\Entity;
 
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use DateTimeInterface;
 
@@ -12,14 +13,15 @@ class AssessmentPeriod extends Entity
     	$dateToday = date('Y-m-d');
 		$dateEnabled = $this->date_enabled;
 		$dateDisabled = $this->date_disabled;
+
 		if ($dateEnabled instanceof DateTimeInterface && $dateDisabled instanceof DateTimeInterface) {
 			return ($dateToday >= $dateEnabled->format('Y-m-d') && $dateToday <= $dateDisabled->format('Y-m-d')) ? 1 : 0;
 		} else {
-			$today = strtotime($dateToday);
-			$dateEnabled = strtotime($this->date_enabled);
-			$dateDisabled = strtotime($this->date_disabled);
+			$today = new Date();
+			$dateEnabled = Date::createFromFormat("d/m/Y", $this->date_enabled);
+			$dateDisabled = Date::createFromFormat("d/m/Y", $this->date_disabled);
 
-			return ($today >= $dateEnabled && $today <= $dateDisabled) ? 1 : 0;
+            return $today->between($dateEnabled, $dateDisabled);
 		}
 	}
 }
