@@ -672,7 +672,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if ($data->offsetExists('subject_students')) {
             if (!empty($data['subject_students'])) { //if not empty, then process save manually
                 $data['subjectStudent'] = $data['subject_students'];
-                $data['subject_students'] = []; 
+                $data->offsetUnset('subject_students');
             }
         }
 
