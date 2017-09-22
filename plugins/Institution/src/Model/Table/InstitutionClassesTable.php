@@ -274,7 +274,6 @@ class InstitutionClassesTable extends ControllerActionTable
                                         ])
                                         ->toArray();
 
-                $existingStudent = [];
                 foreach ($existingStudents as $key => $classStudentEntity) {
                     if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
                         $this->ClassStudents->delete($classStudentEntity);
