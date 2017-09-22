@@ -14,6 +14,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Date;
+use Cake\Log\Log;
 
 use Cake\Routing\Router;
 
@@ -240,7 +241,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        if ($data->offsetExists('classStudents')) {
+        if ($data->offsetExists('classStudents') && empty($data['classStudents'])) { //only utilize save by association when class student empty.
             foreach ($data['classStudents'] as &$student) {
                 $student = json_decode($this->urlsafeB64Decode($student), true);
             }
@@ -253,6 +254,68 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
+        } else {
+            //empty class student is handled by beforeMarshal
+            //in another case, it will be save manually to avoid unecessary queries during save by association
+            if ($entity->has('classStudents') && !empty($entity->classStudents)) { 
+                //decode string sent through form
+                foreach ($entity->classStudents as &$student) {
+                    $student = json_decode($this->urlsafeB64Decode($student), true);
+                }
+                $entity->class_students = $entity->classStudents;
+                unset($entity->classStudents);
+
+                //find existing class student to make comparison
+                $institutionClassId = current($entity->class_students)['institution_class_id'];
+
+                //to accomodate multi-grade class
+                $educationGradeId = $this->getClassGradeOptions($institutionClassId);
+
+                //extract student_id only for comparison later
+                $selectedStudent = [];
+                foreach ($entity->class_students as $key => $value) {
+                    $selectedStudent[] = $value['student_id'];
+                }
+
+                $existingStudentQuery = $this->ClassStudents
+                                        ->find('all')
+                                        ->select([
+                                            'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id', 'student_status_id'
+                                        ])
+                                        ->where([
+                                            $this->ClassStudents->aliasField('institution_class_id') => $institutionClassId,
+                                            $this->ClassStudents->aliasField('education_grade_id IN ') => $educationGradeId
+                                        ])
+                                        ->toArray();
+                
+                $existingStudent = [];
+                foreach ($existingStudentQuery as $key => $value) {
+                    $existingStudent[] = $value->student_id;
+                }
+
+                $removedStudent = array_diff($existingStudent, $selectedStudent);
+
+                //remove class student that is no longer selected
+                foreach ($existingStudentQuery as $key => $value) {
+                    if (in_array($value->student_id, $removedStudent)) {
+                        //user delete() so afterDelete event can be triggered.
+                        $this->ClassStudents->delete($this->ClassStudents->get([$value->student_id, $value->institution_class_id, $value->education_grade_id]));
+                    }
+                }
+
+                if (!empty($existingStudent)) {
+                    $newStudent = array_diff($selectedStudent, $existingStudent);
+                } else {
+                    $newStudent = $selectedStudent;
+                }
+
+                //add new selected student that is not exist before
+                foreach ($newStudent as $key => $value) {
+                    $selectedStudentKey = array_search($value, $selectedStudent);
+                    $newClassStudentEntity = $this->ClassStudents->newEntity($entity->class_students[$selectedStudentKey]);
+                    $this->ClassStudents->save($newClassStudentEntity);
+                }
+            }
         }
     }
 
