@@ -9,8 +9,10 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
-class PotentialStudentDuplicatesTable extends AppTable  {
-	public function initialize(array $config) {
+class PotentialStudentDuplicatesTable extends AppTable
+{
+	public function initialize(array $config)
+    {
 		$this->table('security_users');
 		parent::initialize($config);
 		
@@ -27,13 +29,15 @@ class PotentialStudentDuplicatesTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event)
+    {
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
 	}
