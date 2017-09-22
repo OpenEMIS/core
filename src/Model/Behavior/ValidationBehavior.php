@@ -2322,6 +2322,44 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    public static function checkAssessmentMarks($field, array $globalData)
+    {
+        if (strlen($field) > 0) {
+            $model = $globalData['providers']['table'];
+
+            if (array_key_exists('education_subject_id', $globalData['data']) && !empty($globalData['data']['education_subject_id']) && array_key_exists('assessment_id', $globalData['data']) && !empty($globalData['data']['assessment_id']) && array_key_exists('assessment_period_id', $globalData['data']) && !empty($globalData['data']['assessment_period_id'])) {
+
+                $educationSubjectId = $globalData['data']['education_subject_id'];
+                $assessmentId = $globalData['data']['assessment_id'];
+                $assessmentPeriodId = $globalData['data']['assessment_period_id'];
+
+                $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+                $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
+                    ->find()
+                    ->contain('AssessmentGradingTypes')
+                    ->where([
+                        $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                        $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
+                        $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
+                    ])
+                    ->first();
+
+                if ($assessmentItemsGradingTypeEntity) {
+                    $minMark = 0;
+                    $maxMark = $assessmentItemsGradingTypeEntity->assessment_grading_type->max;
+
+                    if ($field < $minMark || $field > $maxMark) {
+                        return $model->getMessage('Institution.InstitutionAssessments.marks.markHint', ['sprintf' => [$minMark, $maxMark]]);
+                    }
+                } else {
+                    return $model->getMessage('Institution.InstitutionAssessments.grading_type.notFound');
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
     {
         if ($homeRoomTeacher != 0 && $globalData['data'][$secondaryHomeRoomTeacher] != 0) {
