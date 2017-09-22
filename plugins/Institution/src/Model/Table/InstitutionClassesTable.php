@@ -14,6 +14,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Date;
+use Cake\Log\Log;
 
 use Cake\Routing\Router;
 
@@ -240,11 +241,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        if ($data->offsetExists('classStudents')) {
-            foreach ($data['classStudents'] as &$student) {
-                $student = json_decode($this->urlsafeB64Decode($student), true);
-            }
-            $data['class_students'] = $data['classStudents'];
+        if ($data->offsetExists('classStudents') && empty($data['classStudents'])) { //only utilize save by association when class student empty.
+            $data['class_students'] = [];
             $data->offsetUnset('classStudents');
         }
     }
@@ -253,6 +251,43 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
+        } else {
+            //empty class student is handled by beforeMarshal
+            //in another case, it will be save manually to avoid unecessary queries during save by association
+            if ($entity->has('classStudents') && !empty($entity->classStudents)) {
+                $newStudents = [];
+                //decode string sent through form
+                foreach ($entity->classStudents as $item) {
+                    $student = json_decode($this->urlsafeB64Decode($item), true);
+                    $newStudents[$student['student_id']] = $student;
+                }
+
+                $institutionClassId = $entity->id;
+
+                $existingStudents = $this->ClassStudents
+                                        ->find('all')
+                                        ->select([
+                                            'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id', 'student_status_id'
+                                        ])
+                                        ->where([
+                                            $this->ClassStudents->aliasField('institution_class_id') => $institutionClassId
+                                        ])
+                                        ->toArray();
+
+                $existingStudent = [];
+                foreach ($existingStudents as $key => $classStudentEntity) {
+                    if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
+                        $this->ClassStudents->delete($classStudentEntity);
+                    } else { // if student exists, then remove from the array to get the new student records to be added
+                        unset($newStudents[$classStudentEntity->student_id]);
+                    }
+                }
+
+                foreach ($newStudents as $key => $student) {
+                    $newClassStudentEntity = $this->ClassStudents->newEntity($student);
+                    $this->ClassStudents->save($newClassStudentEntity);
+                }
+            }
         }
     }
 
