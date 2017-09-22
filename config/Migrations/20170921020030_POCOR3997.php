@@ -99,19 +99,6 @@ class POCOR3997 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Cancel',
-                'description' => NULL,
-                'action' => '1',
-                'visible' => '1',
-                'comment_required' => '0',
-                'allow_by_assignee' => '1',
-                'event_key' => NULL,
-                'workflow_step_id' => $openStatusId,
-                'next_workflow_step_id' => $closedStatusId,
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
                 'name' => 'Approve',
                 'description' => NULL,
                 'action' => '0',
@@ -233,24 +220,22 @@ class POCOR3997 extends AbstractMigration
         $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $this->workflowModelId);
 
         // delete workflows
-        $workflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1001' AND `workflow_model_id` = " . $this->workflowModelId)['id'];
+        $workflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1001'
+            AND `workflow_model_id` = " . $this->workflowModelId)['id'];
         $this->execute("DELETE FROM `workflows` WHERE `id` = " . $workflowId);
 
         // delete workflow_actions
-        $this->execute("DELETE FROM `workflow_actions`
-            WHERE `workflow_actions`.`workflow_step_id` IN (
+        $this->execute("DELETE FROM `workflow_actions` WHERE `workflow_actions`.`workflow_step_id` IN (
                 SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = " . $workflowId . "
             )");
 
         // delete workflow_steps_roles
-        $this->execute("DELETE FROM `workflow_steps_roles`
-            WHERE `workflow_steps_roles`.`workflow_step_id` IN (
+        $this->execute("DELETE FROM `workflow_steps_roles` WHERE `workflow_steps_roles`.`workflow_step_id` IN (
                 SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = " . $workflowId . "
             )");
 
         // delete workflow_statuses_steps
-        $this->execute("DELETE FROM `workflow_statuses_steps`
-            WHERE `workflow_statuses_steps`.`workflow_step_id` IN (
+        $this->execute("DELETE FROM `workflow_statuses_steps` WHERE `workflow_statuses_steps`.`workflow_step_id` IN (
                 SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = " . $workflowId . "
             )");
 
