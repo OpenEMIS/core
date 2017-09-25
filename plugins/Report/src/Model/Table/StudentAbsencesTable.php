@@ -32,7 +32,7 @@ class StudentAbsencesTable extends AppTable {
                 'end_date'
             ],
             'pages' => false,
-            'autoFields' => true
+            'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
     }
