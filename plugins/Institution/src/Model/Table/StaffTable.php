@@ -729,7 +729,7 @@ class StaffTable extends ControllerActionTable
             $url['action'] = 'StaffUser';
             $url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
             $url['id'] = $encodeValue;
-            $buttons['view']['url'] = $url;
+            $buttons['view']['url'] = $this->setQueryString($url, ['institution_staff_id' => $entity->id]);
         }
 
         if (isset($buttons['edit'])) {
