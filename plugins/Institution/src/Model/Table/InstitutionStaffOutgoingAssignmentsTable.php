@@ -19,9 +19,7 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    // Position Types
-    const FULL_TIME = 1;
-    const PART_TIME = 2;
+    private $fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 
     public function initialize(array $config)
     {
@@ -41,10 +39,10 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
 
     private $workflowEvents = [
         [
-            'value' => 'Workflow.onTriggerIncomingStaffTransferWorkflow',
-            'text' => 'Trigger Incoming Staff Transfer Workflow',
-            'description' => 'Performing this action will trigger the staff transfer workflow in the incoming institution.',
-            'method' => 'onTriggerIncomingStaffTransferWorkflow'
+            'value' => 'Workflow.onRequestTransferFromIncomingInstitution',
+            'text' => 'Request Transfer From Incoming Institution',
+            'description' => 'Performing this action will initiate the staff transfer workflow in the incoming institution.',
+            'method' => 'onRequestTransferFromIncomingInstitution'
         ]
     ];
 
@@ -68,7 +66,7 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
         }
     }
 
-    public function onTriggerIncomingStaffTransferWorkflow(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onRequestTransferFromIncomingInstitution(Event $event, $id, Entity $workflowTransitionEntity)
     {
 
     }
@@ -77,22 +75,6 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
     {
         $extra['institution_staff_id'] = $this->getQueryString('institution_staff_id');
         $extra['user_id'] = $this->getQueryString('user_id');
-    }
-
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        // pr('viewBeforeAction');
-        // die;
-    }
-
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        // pr('viewAfterAction');
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        // pr('afterAction');
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -105,13 +87,12 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
         $this->field('status_id', ['type' => 'hidden']);
 
         $this->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
-        $this->field('previous_institution_id', ['type' => 'readonly', 'entity' => $staffEntity]);
+        $this->field('institution_id', ['type' => 'readonly', 'entity' => $staffEntity]);
         $this->field('previous_institution_position', ['type' => 'readonly', 'entity' => $staffEntity]);
         $this->field('previous_staff_type', ['type' => 'readonly', 'entity' => $staffEntity]);
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
-        $this->field('institution_id', ['type' => 'chosenSelect', 'entity' => $staffEntity]);
-        // $this->field('position_type', ['type' => 'select']);
+        $this->field('next_institution_id', ['type' => 'chosenSelect', 'entity' => $staffEntity]);
         $this->field('staff_type_id', ['type' => 'select']);
         $this->field('FTE', ['type' => 'select']);
         $this->field('institution_position_id', ['type' => 'select']);
@@ -126,7 +107,17 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
         // other details: staff transfer reason?, comment
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, $request)
+    public function onGetFTE(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('FTE')) {
+            $fte = $entity->FTE;
+            $value = $this->fteOptions["$fte"];
+        }
+        return $value;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -160,7 +151,7 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -176,42 +167,18 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
             $attr['attr']['multiple'] = false;
             $attr['onChangeReload'] = true;
             $attr['options'] = $institutionOptions;
+            $attr['attr']['label']['text'] = 'Institution';
         }
 
         return $attr;
     }
 
-    // public function onUpdateFieldPositionType(Event $event, array $attr, $action, $request)
-    // {
-    //     if ($action == 'add' || $action == 'edit') {
-    //         $typeOptions = [
-    //             self::FULL_TIME => 'Full-Time',
-    //             self::PART_TIME => 'Part-Time'
-    //         ];
-    //         $attr['options'] = $typeOptions;
-    //         $attr['onChangeReload'] = true;
-    //     }
-
-    //     return $attr;
-    // }
-
     public function onUpdateFieldFTE(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            // if (isset($request->data[$this->alias()]['position_type']) && !empty($request->data[$this->alias()]['position_type'])) {
-            //     $positionType = $request->data[$this->alias()]['position_type'];
-
-                // if ($positionType == self::FULL_TIME) {
-                //     $attr['type'] = 'hidden';
-                //     $attr['value'] = 1;
-
-                // } else if ($positionType == self::PART_TIME) {
-                    $fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
-                    $attr['type'] = 'select';
-                    $attr['onChangeReload'] = true;
-                    $attr['options'] = $fteOptions;
-                // }
-            // }
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $this->fteOptions;
         }
 
         return $attr;
@@ -220,6 +187,8 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
     public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
+            $options = [];
+
             if (!empty($request->data[$this->alias()]['FTE']) && !empty($request->data[$this->alias()]['institution_id']) && !empty($request->data[$this->alias()]['start_date'])) {
                 $fte = $request->data[$this->alias()]['FTE'];
                 $institutionId = $request->data[$this->alias()]['institution_id'];
@@ -302,7 +271,6 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
 
                 // Adding the opt group
                 $types = $this->getSelectOptions('Staff.position_types');
-                $options = [];
                 $excludePositions = array_column($excludePositions->toArray(), 'position_id');
                 foreach ($staffPositionsOptions as $position) {
                     $name = $position->name . ' - ' . $position->grade_name;
@@ -315,25 +283,12 @@ class InstitutionStaffOutgoingAssignmentsTable extends ControllerActionTable
                         $options[$id] = $name;
                     }
                 }
-
-                $attr['options'] = $options;
-            } else {
-                $attr['options'] = [];
             }
 
+            $attr['options'] = $options;
             $attr['type'] = 'select';
         }
 
         return $attr;
-    }
-
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        // pr($data);die;
-    }
-
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-        // pr($entity);die;
     }
 }
