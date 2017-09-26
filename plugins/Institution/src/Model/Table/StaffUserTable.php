@@ -138,6 +138,9 @@ class StaffUserTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        // this value comes from the list page from StaffTable->onUpdateActionButtons
+        $extra['institution_staff_id'] = $this->getQueryString('institution_staff_id');
+
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
@@ -207,6 +210,59 @@ class StaffUserTable extends ControllerActionTable
         $this->Session->write('Staff.Staff.id', $entity->id);
         $this->Session->write('Staff.Staff.name', $entity->name);
         $this->setupTabElements($entity);
+
+        $this->addTransferButton($entity, $extra);
+    }
+
+    private function addTransferButton(Entity $entity, ArrayObject $extra)
+    {
+        // if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+            $toolbarButtons = $extra['toolbarButtons'];
+
+            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffOutgoingAssignments = TableRegistry::get('Institution.InstitutionStaffOutgoingAssignments');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $Statuses = $StaffOutgoingAssignments->Statuses;
+
+            $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+            $doneStatus = $StaffOutgoingAssignments::DONE;
+
+            $institutionStaffId = $extra['institution_staff_id'];
+            $staffEntity = $StaffTable->get($institutionStaffId);
+            $institutionId = $staffEntity->institution_id;
+            $staffId = $staffEntity->staff_id;
+            $staffStatusId = $staffEntity->staff_status_id;
+
+            if ($staffStatusId == $assignedStatus) {
+                $url = ['controller' => $this->controller->name, 'action' => 'InstitutionStaffOutgoingAssignments', 'add'];
+
+                $transferButton = $toolbarButtons['back'];
+                $transferButton['type'] = 'button';
+                $transferButton['label'] = '<i class="fa kd-transfer"></i>';
+                $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+                $transferButton['attr']['title'] = __('Transfer');
+                $transferButton['url'] = $this->setQueryString($url, ['institution_staff_id' => $institutionStaffId, 'user_id' => $entity->id]);
+
+                // check if there is an existing outgoing transfer request
+                $staffTransferRequest = $StaffOutgoingAssignments
+                    ->find()
+                    ->matching($Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                        return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+                    })
+                    ->where([
+                        $StaffOutgoingAssignments->aliasField('institution_id') => $institutionId,
+                        $StaffOutgoingAssignments->aliasField('staff_id') => $staffId
+                    ])
+                    ->first();
+
+                if (!empty($staffTransferRequest)) {
+                    $transferButton['url'][0] = 'view';
+                    $transferButton['url'][1] = $this->paramsEncode(['id' => $staffTransferRequest->id]);
+                }
+
+                $toolbarButtons['transfer'] = $transferButton;
+            }
+        // }
     }
 
     public function editAfterAction(Event $event, Entity $entity)
