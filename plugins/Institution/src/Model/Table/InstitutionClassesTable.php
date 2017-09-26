@@ -14,6 +14,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Date;
+use Cake\Log\Log;
 
 use Cake\Routing\Router;
 
@@ -35,7 +36,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
 
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-        $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace']);
+        $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
 
         $this->belongsToMany('EducationGrades', [
@@ -66,6 +67,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 
         // this behavior restricts current user to see All Classes or My Classes
+        $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Security.InstitutionClass');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -210,7 +212,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ]);
 
         $this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
-        $this->field('secondary_staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('secondary_staff_id'))]]);
+        $this->field('secondary_staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
         $this->field('multigrade');
 
@@ -239,43 +241,9 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        if ($data->offsetExists('classStudents')) {
-            foreach ($data['classStudents'] as &$student) {
-                $student = json_decode($this->urlsafeB64Decode($student), true);
-            }
-            $data['class_students'] = $data['classStudents'];
+        if ($data->offsetExists('classStudents') && empty($data['classStudents'])) { //only utilize save by association when class student empty.
+            $data['class_students'] = [];
             $data->offsetUnset('classStudents');
-        }
-        if ($data->offsetExists('subjects')) {
-            $subjects = json_decode($this->urlsafeB64Decode($data['subjects']), true);
-            $subjectStudents = [];
-            foreach ($subjects as $subject) {
-                $subjectEducationGradeId = $subject['education_grade_id'];
-                // will check in the education grade subject if the subject is an auto allocation subject
-                $isAutoAddSubject = $this->isAutoAddSubject($subject);
-
-                // if the subject is not an add_auto_subject will not be added automatically to the student.
-                if ($isAutoAddSubject) {
-                    foreach ($data['class_students'] as $classStudent) {
-                        $studentEducationGradeId = $classStudent['education_grade_id'];
-                        if ($subjectEducationGradeId == $studentEducationGradeId) {
-                            $subjectStudents[] = [
-                                'student_status_id' => $classStudent['student_status_id'],
-                                'student_id' => $classStudent['student_id'],
-                                'institution_subject_id' => $subject['id'],
-                                'institution_class_id' => $classStudent['institution_class_id'],
-                                'institution_id' => $subject['institution_id'],
-                                'academic_period_id' => $subject['academic_period_id'],
-                                'education_subject_id' => $subject['education_subject_id'],
-                                'education_grade_id' => $classStudent['education_grade_id']
-                            ];
-                        }
-                    }
-                }
-            }
-
-            $data['subject_students'] = $subjectStudents;
-            $data->offsetUnset('subjects');
         }
     }
 
@@ -283,6 +251,42 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
+        } else {
+            //empty class student is handled by beforeMarshal
+            //in another case, it will be save manually to avoid unecessary queries during save by association
+            if ($entity->has('classStudents') && !empty($entity->classStudents)) {
+                $newStudents = [];
+                //decode string sent through form
+                foreach ($entity->classStudents as $item) {
+                    $student = json_decode($this->urlsafeB64Decode($item), true);
+                    $newStudents[$student['student_id']] = $student;
+                }
+
+                $institutionClassId = $entity->id;
+
+                $existingStudents = $this->ClassStudents
+                                        ->find('all')
+                                        ->select([
+                                            'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id', 'student_status_id'
+                                        ])
+                                        ->where([
+                                            $this->ClassStudents->aliasField('institution_class_id') => $institutionClassId
+                                        ])
+                                        ->toArray();
+
+                foreach ($existingStudents as $key => $classStudentEntity) {
+                    if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
+                        $this->ClassStudents->delete($classStudentEntity);
+                    } else { // if student exists, then remove from the array to get the new student records to be added
+                        unset($newStudents[$classStudentEntity->student_id]);
+                    }
+                }
+
+                foreach ($newStudents as $key => $student) {
+                    $newClassStudentEntity = $this->ClassStudents->newEntity($student);
+                    $this->ClassStudents->save($newClassStudentEntity);
+                }
+            }
         }
     }
 
@@ -484,8 +488,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassStudents.Users.Genders',
                 'ClassStudents.StudentStatuses',
                 'ClassStudents.EducationGrades',
-                'AcademicPeriods',
-                'InstitutionSubjects'
+                'AcademicPeriods'
             ]);
     }
 
@@ -1312,24 +1315,6 @@ class InstitutionClassesTable extends ControllerActionTable
                 return $q->where(['InstitutionSubjects.education_subject_id' => $subjectId]);
             })
             ->toArray();
-    }
-
-    private function isAutoAddSubject($subject)
-    {
-        // will check in the education grade subject if the subject is an auto allocation subject
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-
-        $educationGradeId = $subject['education_grade_id'];
-        $educationSubjectId = $subject['education_subject_id'];
-        $educationGradesSubjectsData = $EducationGradesSubjects->find()
-            ->where([
-                $EducationGradesSubjects->aliasField('education_grade_id') => $educationGradeId,
-                $EducationGradesSubjects->aliasField('education_subject_id') => $educationSubjectId
-            ])
-            ->first();
-        $addAutoSubject = $educationGradesSubjectsData['auto_allocation'];
-
-        return $addAutoSubject;
     }
 
     // used for student report cards
