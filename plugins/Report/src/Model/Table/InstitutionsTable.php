@@ -70,7 +70,7 @@ class InstitutionsTable extends AppTable
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            ->notEmpty('education_grade_id')
+            ->notEmpty('education_programme_id')
             ->notEmpty('status');
         return $validator;
     }
@@ -101,7 +101,7 @@ class InstitutionsTable extends AppTable
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('type', ['type' => 'hidden']);
 		$this->ControllerAction->field('module', ['type' => 'hidden']);
@@ -357,24 +357,23 @@ class InstitutionsTable extends AppTable
 		}
 	}
 
-	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request) {
 		if (isset($this->request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
 			if (in_array($feature, ['Report.InstitutionStudents'])) {
-				$EducationGrades = TableRegistry::get('Education.EducationGrades');
-				$gradeOptions = $EducationGrades
-					->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+				$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+				$programmeOptions = $EducationProgrammes
+					->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
 					->find('visible')
-					->contain(['EducationProgrammes.EducationCycles'])
+					->contain(['EducationCycles'])
 					->order([
 						'EducationCycles.order' => 'ASC',
-						'EducationProgrammes.order' => 'ASC',
-						$EducationGrades->aliasField('order') => 'ASC'
+						$EducationProgrammes->aliasField('order') => 'ASC'
 					])
 					->toArray();
 
 				$attr['type'] = 'select';
-				$attr['options'] = $gradeOptions;
+				$attr['options'] = $programmeOptions;
 			} else {
 				$attr['value'] = self::NO_FILTER;
 			}
