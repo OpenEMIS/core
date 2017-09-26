@@ -14,18 +14,24 @@ class POCOR3997 extends AbstractMigration
                     'model' => 'Institution.InstitutionStaffOutgoingAssignments'
                 ],
                 'workflow' => [
-                    'code' => 'OUTGOING-STAFF-TRANSFER-1001',
-                    'name' => 'Outgoing Staff Transfer'
+                    'code' => 'STAFF-OUTGOING-TRANSFER-1001',
+                    'name' => 'Staff Outgoing Transfer'
+                ],
+                'workflow_action' => [
+                    'approve_event_key' => 'Workflow.onRequestTransferFromIncomingInstitution'
                 ]
             ],
             '14' => [
                 'workflow_model' => [
                     'name' => 'Institutions > Staff > Incoming Transfer',
-                    'model' => 'Institution.InstitutionStaffIncomingaAssignments'
+                    'model' => 'Institution.InstitutionStaffIncomingAssignments'
                 ],
                 'workflow' => [
-                    'code' => 'INCOMING-STAFF-TRANSFER-1001',
-                    'name' => 'Incoming Staff Transfer'
+                    'code' => 'STAFF-INCOMING-TRANSFER-1001',
+                    'name' => 'Staff Incoming Transfer'
+                ],
+                'workflow_action' => [
+                    'approve_event_key' => 'Workflow.onTransferStaff'
                 ]
             ]
         ];
@@ -127,7 +133,7 @@ class POCOR3997 extends AbstractMigration
                     'visible' => '1',
                     'comment_required' => '0',
                     'allow_by_assignee' => '0',
-                    'event_key' => 'Workflow.onTriggerIncomingStaffTransferWorkflow',
+                    'event_key' => $arr['workflow_action']['approve_event_key'],
                     'workflow_step_id' => $pendingApprovalStatusId,
                     'next_workflow_step_id' => $approvedStatusId,
                     'created_user_id' => '1',
@@ -143,19 +149,6 @@ class POCOR3997 extends AbstractMigration
                     'event_key' => NULL,
                     'workflow_step_id' => $pendingApprovalStatusId,
                     'next_workflow_step_id' => $closedStatusId,
-                    'created_user_id' => '1',
-                    'created' => date('Y-m-d H:i:s')
-                ],
-                [
-                    'name' => 'Reopen',
-                    'description' => NULL,
-                    'action' => NULL,
-                    'visible' => '1',
-                    'comment_required' => '1',
-                    'allow_by_assignee' => '0',
-                    'event_key' => NULL,
-                    'workflow_step_id' => $closedStatusId,
-                    'next_workflow_step_id' => $openStatusId,
                     'created_user_id' => '1',
                     'created' => date('Y-m-d H:i:s')
                 ]
@@ -180,6 +173,12 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -192,35 +191,35 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
-            ->addColumn('institution_id', 'integer', [
+            ->addColumn('next_institution_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to institutions.id'
             ])
+            ->addColumn('institution_staff_incoming_assignment_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to institution_staff_incoming_assignments.id'
+            ])
             ->addColumn('staff_type_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => false,
+                'null' => true,
                 'comment' => 'links to staff_types.id'
             ])
             ->addColumn('institution_position_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => false,
+                'null' => true,
                 'comment' => 'links to institution_positions.id'
             ])
             ->addColumn('FTE', 'decimal', [
                 'default' => null,
                 'precision' => 5,
                 'scale' => 2,
-                'null' => false
-            ])
-            ->addColumn('next_institution_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true,
-                'comment' => 'links to institutions.id'
+                'null' => true
             ])
             ->addColumn('comment', 'text', [
                 'default' => null,
@@ -245,12 +244,13 @@ class POCOR3997 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('staff_id')
+            ->addIndex('institution_id')
             ->addIndex('status_id')
             ->addIndex('assignee_id')
-            ->addIndex('institution_id')
+            ->addIndex('next_institution_id')
+            ->addIndex('institution_staff_incoming_assignment_id')
             ->addIndex('staff_type_id')
             ->addIndex('institution_position_id')
-            ->addIndex('next_institution_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
@@ -273,6 +273,18 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
+            ->addColumn('previous_institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to institutions.id'
+            ])
+            ->addColumn('institution_staff_outgoing_assignment_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to institution_staff_outgoing_assignments.id'
+            ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -309,18 +321,6 @@ class POCOR3997 extends AbstractMigration
                 'scale' => 2,
                 'null' => false
             ])
-            ->addColumn('previous_institution_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true,
-                'comment' => 'links to institutions.id'
-            ])
-            ->addColumn('institution_staff_outgoing_assignment_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true,
-                'comment' => 'links to institution_staff_outgoing_assignments.id'
-            ])
             ->addColumn('comment', 'text', [
                 'default' => null,
                 'null' => true
@@ -344,13 +344,13 @@ class POCOR3997 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('staff_id')
+            ->addIndex('previous_institution_id')
+            ->addIndex('institution_staff_outgoing_assignment_id')
             ->addIndex('status_id')
             ->addIndex('assignee_id')
             ->addIndex('institution_id')
             ->addIndex('staff_type_id')
             ->addIndex('institution_position_id')
-            ->addIndex('previous_institution_id')
-            ->addIndex('institution_staff_outgoing_assignment_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
@@ -359,7 +359,7 @@ class POCOR3997 extends AbstractMigration
     // rollback
     public function down()
     {
-        $workflowModels = ['13' => 'OUTGOING-STAFF-TRANSFER-1001', '14' => 'INCOMING-STAFF-TRANSFER-1001'];
+        $workflowModels = ['13' => 'STAFF-OUTGOING-TRANSFER-1001', '14' => 'STAFF-INCOMING-TRANSFER-1001'];
 
         foreach ($workflowModels as $workflowModelId => $workflowCode) {
             // delete workflow_models
