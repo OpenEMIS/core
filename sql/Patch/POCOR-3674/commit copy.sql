@@ -1259,14 +1259,12 @@ DELETE FROM `translations` WHERE `id` = 2512 And `en` = 'Institution Students';
 DELETE FROM `translations` WHERE `id` = 2514 And `en` = 'Staff End Date';
 DELETE FROM `translations` WHERE `id` = 2515 And `en` = 'Pinding For Approval';
 DELETE FROM `translations` WHERE `id` = 2520 And `en` = 'Synchronisation';
-DELETE FROM `translations` WHERE `id` = 2536 And `en` = 'Password';
 
 -- adding translate word.
 INSERT INTO `translations` (`code`, `en`, `editable`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (NULL, 'Allocated To', 1, NULL, NULL, 1, NOW()),
 (NULL, 'Textbook ID', 1, NULL, NULL, 1, NOW()),
 (NULL, 'Condition', 1, NULL, NULL, 1, NOW()),
-(NULL, 'Password', 1, NULL, NULL, 1, NOW()),
 (NULL, 'Profile', 1, NULL, NULL, 1, NOW()),
 (NULL, 'Profiles', 1, NULL, NULL, 1, NOW()),
 (NULL, 'Height', 1, NULL, NULL, 1, NOW()),
@@ -1683,11 +1681,15 @@ CREATE TABLE IF NOT EXISTS `locale_content_translations` (
   `translation` TEXT NULL,
   `locale_content_id` INT(11) NOT NULL,
   `locale_id` INT(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
   `created_user_id` INT(11) NOT NULL,
   `created` DATETIME NOT NULL,
   PRIMARY KEY (`locale_content_id`, `locale_id`),
   INDEX `locale_content_id` (`locale_content_id`),
-  INDEX `locale_id` (`locale_id`)
+  INDEX `locale_id` (`locale_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- locale_contents
@@ -1695,9 +1697,13 @@ DROP TABLE IF EXISTS `locale_contents`;
 CREATE TABLE IF NOT EXISTS `locale_contents` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `en` TEXT NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
   `created_user_id` INT(11) NOT NULL,
   `created` DATETIME NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `locale_contents` (`id`, `en`, `created_user_id`, `created`)
