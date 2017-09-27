@@ -203,6 +203,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                             'name' => $obj['name'],
                             'min' => $obj['min'],
                             'max' => $obj['max'],
+                            'default' => $obj['default'],
+                            'visible' => $obj['visible'],
                             '_joinData' => ['rating' => 0]
                         ];
                     }
@@ -452,6 +454,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                             'name' => 'Competencies.name',
                             'min' => 'Competencies.min',
                             'max' => 'Competencies.max',
+                            'default' => 'Competencies.default',
+                            'visible' => 'Competencies.visible',
                             'rating' => $StaffAppraisalsCompetencies->aliasField('rating')
                         ])
                         ->contain(['Competencies'])
@@ -469,6 +473,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                             'name' => $competencyObj->name,
                             'min' => $competencyObj->min,
                             'max' => $competencyObj->max,
+                            'default' => $competencyObj->default,
+                            'visible' => $competencyObj->visible,
                             'rating' => $competencyObj->rating
                         ];
                     }
@@ -481,6 +487,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                                 'name' => $competencies->get($obj['competency_id'])->name,
                                 'min' => $competencies->get($obj['competency_id'])->min,
                                 'max' => $competencies->get($obj['competency_id'])->max,
+                                'default' => $competencies->get($obj['competency_id'])->default,
+                                'visible' => $competencies->get($obj['competency_id'])->visible,
                                 'rating' => 'Deleted'
                             ];
                         }
@@ -496,6 +504,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                             'name' => $obj['name'],
                             'min' => $obj['min'],
                             'max' => $obj['max'],
+                            'default' => $obj['default'],
+                            'visible' => $obj['visible'],
                             'rating' => $obj['_joinData']['rating']
                         ];
                     }
@@ -526,6 +536,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                         $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
                         $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
                         $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
+                        $cellData .= $form->hidden($fieldPrefix.".default", ['value' => $obj['default']]);
+                        $cellData .= $form->hidden($fieldPrefix.".visible", ['value' => $obj['visible']]);
                     }
 
                     $rowData = [];

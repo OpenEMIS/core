@@ -71,7 +71,7 @@ $this->start('panelBody');
         </div>
     </div>
     <div class="input select">
-        <label><?= __('Secondary Home Room Teacher') ?></label>
+        <label><?= __('Secondary Teacher') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[secondary_staff_id]" id="institutionclasses-secondary-staff-id"
                 ng-options="option.id as option.name for option in InstitutionClassStudentsController.secondaryTeacherOptions"
