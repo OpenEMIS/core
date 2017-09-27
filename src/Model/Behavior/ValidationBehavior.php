@@ -2043,47 +2043,6 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-    public static function checkStaffFTE($field, array $globalData)
-    {
-        $model = $globalData['providers']['table'];
-        $registryAlias = $model->registryAlias();
-        $recordId = isset($globalData['data']['id']) ? $globalData['data']['id'] : null;
-        $startDate = $globalData['data']['start_date'];
-        $endDate = isset($globalData['data']['end_date']) ? $globalData['data']['end_date'] : null;
-        $staffId = $globalData['data']['staff_id'];
-        $staffFTE = isset($globalData['data']['FTE']) && !empty($globalData['data']['FTE']) ? $globalData['data']['FTE'] : 0;
-
-        $StaffTable = TableRegistry::get('Institution.Staff');
-        $conditions = [
-            $StaffTable->aliasField('staff_id') => $staffId
-        ];
-
-        if (!is_null($recordId)) {
-            $conditions[$StaffTable->aliasField('id <> ')] = $recordId;
-        }
-
-        $overlappingStaffRecords = $StaffTable
-            ->find('inDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
-            ->where($conditions)
-            ->all();
-
-        $staffExistingTotalFTE = 0;
-        if (!$overlappingStaffRecords->isEmpty()) {
-            foreach ($overlappingStaffRecords as $staffRecordObj) {
-                $staffExistingTotalFTE += $staffRecordObj->FTE;
-            }
-        }
-
-        // total FTE for a staff cannot more than 1 over the same period of time
-        $staffTotalFTE = $staffExistingTotalFTE + $staffFTE;
-        if ($staffTotalFTE > 1) {
-            $validationErrorMsg = "$registryAlias.start_date.ruleCheckStaffFTE";
-            return $model->getMessage($validationErrorMsg);
-        }
-
-        return true;
-    }
-
     public static function checkPendingStaffTransfer($field, array $globalData)
     {
         $data = $globalData['data'];
@@ -2372,7 +2331,7 @@ class ValidationBehavior extends Behavior
 
     //check whether position assigned to class(es)
     public static function checkHomeRoomTeacherAssignments($field, array $globalData)
-    {       
+    {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
         $query = $InstitutionClasses->find()
@@ -2381,7 +2340,7 @@ class ValidationBehavior extends Behavior
                     'Positions.id' => $globalData['data']['id']
                 ])
                 ->count();
-        
+
         if ($query > 0) {
             return false;
         }
