@@ -165,9 +165,18 @@ class LocalizationComponent extends Component
 
     private function updateLocaleFile($lang)
     {
+// pr('updateLocaleFile');
+// pr($this->defaultLocale);
+// pr($lang);
         if ($this->defaultLocale != $lang) {
             $isChanged = $this->isChanged($lang);
+// pr('is Changed');
+// pr($isChanged);
+// pr('is Changed');
             if ($isChanged) {
+// pr('is changed');
+// die;
+
                 $this->convertPO($lang, $isChanged);
             }
         }
@@ -210,6 +219,10 @@ class LocalizationComponent extends Component
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
         $lastModified = $this->getModifiedDate();
+// pr($localeDir);
+// pr($fileLocation);
+// pr($lastModified);
+// die;
         if (file_exists($fileLocation)) {
             $file = fopen($fileLocation, "r");
             while (!feof($file)) {
@@ -231,6 +244,11 @@ class LocalizationComponent extends Component
 
             fclose($file);
         }
+// $lastModified = true;
+// pr('isChanged');
+// pr($locale);
+// pr($lastModified);
+// die;
         return $lastModified;
     }
 
