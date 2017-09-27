@@ -34,6 +34,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => ['textbook_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportTextbooks']);
 
         $this->EducationLevels = TableRegistry::get('Education.EducationLevels');
         $this->EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
