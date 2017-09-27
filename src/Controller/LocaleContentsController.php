@@ -21,6 +21,7 @@ class LocaleContentsController extends PageController
 
         $this->loadModel('Locales');
         $this->loadModel('LocaleContents');
+        $this->loadModel('LocaleContentTranslations');
 
         $this->Page->loadElementsFromTable($this->LocaleContents);
     }
@@ -65,13 +66,50 @@ class LocaleContentsController extends PageController
         $modelAlias = $model->alias();
         $localeNames = $this->Locales->find('allLocale');
         $counter = 0;
+
+        $localeContentId = $page->decode($id)['id'];
+        $page->setQueryString('locale_content_id', $localeContentId, true); // true will replace the locale content id
+
+        parent::edit($id);
+
+        $entity = $page->getVar('data');
+
+        foreach ($localeNames as $key => $value) {
+            $translation = $entity->locales[$counter]->_joinData->translation;
+
+            $page->addNew($value['name'])
+                ->setControlType('string')
+                ->setValue($translation)
+            ;
+
+            $counter++;
+        }
+
+        if ($request->is(['post', 'put', 'patch'])) {
+            // $requestData = $request->data;
+            $entityLocales = $entity->locales;
+            // pr('post');
+            // pr($entityLocales);
+            foreach ($entityLocales as $locale) {
+                $localeName = $locale->name;
+                $localeTranslation = $locale['_joinData']->translation;
+                $newLocaleTranslation = $entity->$localeName;
+
+                if ($entity->has($localeName)) {
+                    $locale['_joinData']->translation = $newLocaleTranslation;
+                }
+            }
+        }
+
+        /*
         foreach ($localeNames as $key => $value) {
             $page->addNew($key)->setAliasField("$modelAlias.locales.$counter._joinData.translation")->setLabel($value['name']);
             $page->addNew($key.'_id')->setAliasField("$modelAlias.locales.$counter.id")->setControlType('hidden')->setValue($value['id']);
             $counter++;
         }
+        */
+        // parent::edit($id);
 
-        parent::edit($id);
     }
 
     public function view($id)
@@ -83,12 +121,21 @@ class LocaleContentsController extends PageController
         $modelAlias = $model->alias();
         $counter = 0;
 
+        $localeContentId = $page->decode($id)['id'];
+        $page->setQueryString('locale_content_id', $localeContentId, true); // true will replace the locale content id
+
+        parent::view($id);
+
+        $entity = $page->getVar('data');
+
         foreach ($localeNames as $key => $value) {
-            $page->addNew($key)->setDisplayFrom("locales.$counter._joinData.translation")->setLabel($value['name']);
+            $translation = $entity->locales[$counter]->_joinData->translation;
+            $page->addNew($key)
+                ->setLabel($value['name'])
+                ->setValue($translation);
 
             $counter++;
         }
 
-        parent::view($id);
     }
 }
