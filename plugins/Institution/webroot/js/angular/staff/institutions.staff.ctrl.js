@@ -677,7 +677,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }, log);
 
             var staffAssignmentError = (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment'));
-            var staffAssignmentAndFTEError = (counter == 2 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment') && postResponse.data.error.hasOwnProperty('start_date') && postResponse.data.error.start_date.hasOwnProperty('ruleCheckStaffFTE'));
+            var staffAssignmentAndFTEError = (counter == 2 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment') && postResponse.data.error.hasOwnProperty('start_date'));
 
             if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
