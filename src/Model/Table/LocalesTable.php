@@ -65,4 +65,14 @@ class LocalesTable extends AppTable
                 return $returnResult;
             });
     }
+
+    public function getLangDir($iso)
+    {
+        $langDir = $this->find()
+            ->where([$this->aliasField('iso') => $iso])
+            ->extract('direction')
+            ->first();
+
+        return $langDir;
+    }
 }

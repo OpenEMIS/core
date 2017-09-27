@@ -12,9 +12,5 @@ DROP TABLE IF EXISTS `translations`;
 DROP TABLE IF EXISTS `z_3674_translations`;
 RENAME TABLE `z_3674_translations_backup` TO `translations`;
 
--- translations
--- RENAME TABLE `z_3674_translations` TO `translations`;
-
-
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3674';
