@@ -376,6 +376,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffOutgoingAssignments']);
     }
+    public function InstitutionStaffIncomingAssignments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffIncomingAssignments']);
+    }
     // End
 
     // AngularJS

@@ -35,6 +35,8 @@ class StaffTable extends ControllerActionTable
     const PENDING_PROFILE = -1;
     const PENDING_TRANSFERIN = -2;
     const PENDING_TRANSFEROUT = -3;
+    const NEW_PENDING_TRANSFERIN = -4;
+    const NEW_PENDING_TRANSFEROUT = -5;
 
     private $dashboardQuery = null;
 
@@ -343,6 +345,14 @@ class StaffTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferApprovals']);
                 break;
+            case self::NEW_PENDING_TRANSFERIN:
+                $event->stopPropagation();
+                return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionStaffIncomingAssignments']);
+                break;
+            case self::NEW_PENDING_TRANSFEROUT:
+                $event->stopPropagation();
+                return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionStaffOutgoingAssignments']);
+                break;
         }
     }
 
@@ -455,9 +465,27 @@ class StaffTable extends ControllerActionTable
             ])
             ->count();
 
+        $IncomingAssignmentsTable = TableRegistry::get('Institution.InstitutionStaffIncomingAssignments');
+        $newStaffTransferInRecord = $IncomingAssignmentsTable->find()
+            ->where([
+                $IncomingAssignmentsTable->aliasField('institution_id') => $institutionId,
+                // $StaffTransferTable->aliasField('status'). ' IN ' => [self::PENDING, self::APPROVED]
+            ])
+            ->count();
+
+        $OutgoingAssignmentsTable = TableRegistry::get('Institution.InstitutionStaffOutgoingAssignments');
+        $newStaffTransferOutRecord = $OutgoingAssignmentsTable->find()
+            ->where([
+                $OutgoingAssignmentsTable->aliasField('institution_id') => $institutionId,
+                // $StaffTransferTable->aliasField('status'). ' IN ' => [self::PENDING]
+            ])
+            ->count();
+
         $statusOptions[self::PENDING_PROFILE] = __('Pending Change in Assignment'). ' - '. $staffPositionProfilesRecordCount;
         $statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In'). ' - ' . $staffTransferInRecord;
         $statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out'). ' - ' . $staffTransferOutRecord;
+        $statusOptions[self::NEW_PENDING_TRANSFERIN] = __('NEW Pending Transfer In'). ' - ' . $newStaffTransferInRecord;
+        $statusOptions[self::NEW_PENDING_TRANSFEROUT] = __('NEW Pending Transfer Out'). ' - ' . $newStaffTransferOutRecord;
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
