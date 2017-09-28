@@ -29,6 +29,7 @@ class CustomReportBehavior extends Behavior
                 ]
             ]);
 
+            // find byAccess (not used for filters)
             $userId = $params['user_id'];
             $superAdmin = $params['super_admin'];
             if ($byaccess) {
