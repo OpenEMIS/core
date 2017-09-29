@@ -12,7 +12,6 @@ function SgTreeController($scope, $window, SgTreeSvc) {
     $scope.outputModelText = [];
     Controller.outputValue = null;
     Controller.displayCountry = 0;
-    Controller.appendLoader = false;
     Controller.loaded = false;
     Controller.triggerLoad = triggerLoad;
     $scope.textConfig = {
