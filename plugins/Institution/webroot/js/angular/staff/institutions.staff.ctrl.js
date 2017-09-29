@@ -675,10 +675,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             angular.forEach(postResponse.data.error , function(value) {
                 counter++;
             }, log);
-
-            var staffAssignmentError = (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment'));
-            var staffAssignmentAndFTEError = (counter == 2 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment') && postResponse.data.error.hasOwnProperty('start_date') && postResponse.data.error.start_date.hasOwnProperty('ruleCheckStaffFTE'));
-
             if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
@@ -688,7 +684,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.warning($scope, 'There is an existing transfer in request.');
                 $window.location.href = postResponse.data.error.staff_assignment.ruleTransferRequestExists;
                 deferred.resolve(StaffController.postResponse);
-            } else if (staffAssignmentError || staffAssignmentAndFTEError) {
+            } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
                 InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
                 .then(function(response) {
                     StaffController.selectedStaff = response.id;
