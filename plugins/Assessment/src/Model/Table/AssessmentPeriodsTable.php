@@ -342,7 +342,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         //disable edit academic term if no period
-        if ($data->count() < 1) {
+        if (isset($extra['toolbarButtons']['editAcademicTerm']) && $data->count() < 1) {
             unset($extra['toolbarButtons']['editAcademicTerm']);
         }
     }
