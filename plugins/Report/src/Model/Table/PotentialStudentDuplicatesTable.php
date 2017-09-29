@@ -104,7 +104,8 @@ class PotentialStudentDuplicatesTable extends AppTable
 			])
 			->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
 				$EducationGrades->aliasField('id') . ' = ' . $Students->aliasField('education_grade_id')
-			]);
+			])
+            ->group([$this->aliasField('id')]);
 	}
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
