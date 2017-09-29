@@ -1011,8 +1011,7 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
-                    'ruleCheckStaffFTE' => 'No available FTE for the Staff within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.'
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
