@@ -1,9 +1,9 @@
-angular.module('sg.tree.ctrl', ['kd-angular-tree-dropdown', 'utils.svc', 'sg.tree.svc'])
+angular.module('sg.tree.ctrl', ['kd-angular-tree-dropdown', 'sg.tree.svc'])
     .controller('SgTreeCtrl', SgTreeController);
 
-SgTreeController.$inject = ['$scope', '$window', 'UtilsSvc', 'SgTreeSvc'];
+SgTreeController.$inject = ['$scope', '$window', 'SgTreeSvc'];
 
-function SgTreeController($scope, $window, UtilsSvc, SgTreeSvc) {
+function SgTreeController($scope, $window, SgTreeSvc) {
 
     $scope.outputFlag = false;
     var Controller = this;
