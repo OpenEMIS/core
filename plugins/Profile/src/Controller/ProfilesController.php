@@ -33,9 +33,20 @@ class ProfilesController extends AppController
     public function initialize()
     {
         parent::initialize();
+
+        $this->loadModel('Configuration.ConfigItems');
+
+        // get the configuration for change_password
+        $changePasswordAllowed = $this->ConfigItems->value('change_password');
+        // check if the current logged in user is a super admin
+        $isSuperAdmin = $this->Auth->User('super_admin');
+
+        // if user is super admin and change_password is not allowed, then remove the edit action from account page
+        $accountPermissions = (!$changePasswordAllowed && $isSuperAdmin) ? ['view'] : ['view', 'edit'];
+
         $this->ControllerAction->models = [
             // Users
-            'Accounts'              => ['className' => 'Profile.Accounts', 'actions' => ['view', 'edit']],
+            'Accounts'              => ['className' => 'Profile.Accounts', 'actions' => $accountPermissions],
             'History'               => ['className' => 'User.UserActivities', 'actions' => ['index']],
 
             // Student
