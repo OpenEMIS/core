@@ -12,8 +12,10 @@ function SgTreeController($scope, $window, SgTreeSvc) {
     $scope.outputModelText = [];
     Controller.outputValue = null;
     Controller.displayCountry = 0;
+    Controller.loaded = false;
+    Controller.triggerLoad = triggerLoad;
     $scope.textConfig = {
-        noSelection: '-- Select --',
+        noSelection: 'Loading...',
         multipleSelection: '%tree_no_of_item items selected'
     };
 
@@ -22,19 +24,47 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         var userId = JSON.parse(Controller.userId);
         var authArea = [];
         var counter = 0;
-        SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue)
-        .then(function(response) {
-            Controller.inputModelText = response;
-            return SgTreeSvc.translate($scope.textConfig);
-        }, function(error){
-            console.log(error)
-        })
-        .then(function(res) {
-            $scope.textConfig = res;
-        }, function (error) {
-            console.log(error);
-        });
+        SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue, true)
+            .then(function(response) {
+                Controller.inputModelText = response;
+                return SgTreeSvc.translate($scope.textConfig);
+            }, function(error){
+                console.log(error)
+            })
+            .then(function(res) {
+                $scope.textConfig = res;
+            }, function (error) {
+                console.log(error);
+            });
     });
+
+    $scope.$on("clickEvent", function(event, args) {
+        event.stopPropagation();
+        triggerLoad();
+    });
+
+    function triggerLoad() {
+        if (!Controller.loaded) {
+            Controller.inputModelText = [];
+            Controller.loaded = true;
+            var userId = JSON.parse(Controller.userId);
+            var authArea = [];
+            var counter = 0;
+            SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue)
+            .then(function(response) {
+                Controller.inputModelText = response;
+                return SgTreeSvc.translate($scope.textConfig);
+            }, function(error){
+                console.log(error)
+            })
+            .then(function(res) {
+                $scope.textConfig = res;
+            }, function (error) {
+                console.log(error);
+
+            });
+        }
+    }
 
     $scope.$watch('outputModelText', function (newValue) {
         if (typeof newValue !== 'undefined' && newValue.length > 0) {
