@@ -211,7 +211,6 @@ class POCOR3674 extends AbstractMigration
         $this->execute('DELETE FROM `translations` WHERE `id` = 340 And `en` = "Good"');
         $this->execute('DELETE FROM `translations` WHERE `id` = 341 And `en` = "Fair"');
         $this->execute('DELETE FROM `translations` WHERE `id` = 342 And `en` = "Poor"');
-        $this->execute('DELETE FROM `translations` WHERE `id` = 343 And `en` = "Current Password"');
         $this->execute('DELETE FROM `translations` WHERE `id` = 348 And `en` = "Please enter your current password."');
         $this->execute('DELETE FROM `translations` WHERE `id` = 353 And `en` = "Edit Area Levels"');
         $this->execute('DELETE FROM `translations` WHERE `id` = 354 And `en` = "Structure"');
@@ -1375,19 +1374,25 @@ class POCOR3674 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Total Index',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
                 'en' => 'Indexes Criterias',
                 'editable' => 1,
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
             [
+                'en' => 'Institution Student Indexes',
+                'editable' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
                 'en' => 'Operator',
+                'editable' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Less than or equal to',
                 'editable' => 1,
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
@@ -1531,6 +1536,12 @@ class POCOR3674 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
+                'en' => 'Secondary Teacher',
+                'editable' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
                 'en' => 'Multi-grade',
                 'editable' => 1,
                 'created_user_id' => 1,
@@ -1627,13 +1638,19 @@ class POCOR3674 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
+                'en' => 'The current password was not matched.',
+                'editable' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
                 'en' => 'Password should contain at least 1 uppercase character',
                 'editable' => 1,
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Password should contain at least 1 lowercase character',
+                'en' => 'Password should contain at least 1 number',
                 'editable' => 1,
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
