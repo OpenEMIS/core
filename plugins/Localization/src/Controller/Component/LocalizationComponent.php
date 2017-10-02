@@ -175,12 +175,12 @@ class LocalizationComponent extends Component
 
     private function getModifiedDate()
     {
-        $LocaleContents = TableRegistry::get('LocaleContents');
+        $LocaleContentTranslations = TableRegistry::get('LocaleContentTranslations');
 
         // using modified so when new word modified able to refresh the default.po
-        $lastModified = $LocaleContents
+        $lastModified = $LocaleContentTranslations
             ->find()
-            ->order([$LocaleContents->aliasField('modified') => 'DESC'])
+            ->order([$LocaleContentTranslations->aliasField('modified') => 'DESC'])
             ->extract('modified')
             ->first();
 
