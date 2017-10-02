@@ -50,7 +50,7 @@ use Cake\Utility\Inflector;
                                 <option value=""><?= __('-- Select --'); ?></option>
                                 <?php foreach ($filters[$field]['options'] as $optKey=>$optVal): ?>
                                     <?php $selected = ($optKey==$filters[$field]['selected']) ? 'selected' : ''; ?>
-                                    <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
+                                    <option value="<?= $optKey ?>" <?= $selected ?>><?= __($optVal) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -77,7 +77,7 @@ use Cake\Utility\Inflector;
                                     <option value=""><?= __('-- Select --'); ?></option>
                                     <?php foreach ($varName[$field]['options'] as $optKey=>$optVal): ?>
                                         <?php $selected = ($optKey==$varName[$field]['selected']) ? 'selected' : ''; ?>
-                                    <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
+                                    <option value="<?= $optKey ?>" <?= $selected ?>><?= __($optVal) ?></option>
                                  <?php endforeach; ?>
                                 </select>
                             </div>
