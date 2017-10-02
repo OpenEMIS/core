@@ -86,10 +86,16 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'validateUnique',
                 'provider' => 'table'
             ])
-
             ->add('position_no', 'ruleNoSpaces', [
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
+            ])
+            ->add('is_homeroom', 'ruleCheckHomeRoomTeacherAssignments', [
+                'rule' => 'checkHomeRoomTeacherAssignments',
+                'on' => function ($context) {
+                    //trigger validation only when homeroom teacher set to no and edit operation
+                    return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']); 
+                }
             ]);
 
         return $validator;
@@ -191,9 +197,9 @@ class InstitutionPositionsTable extends ControllerActionTable
             $entity = $attr['entity'];
             $isHomeroom = $entity->is_homeroom;
 
-            $attr['type'] = 'readonly';
-            $attr['value'] = $isHomeroom;
-            $attr['attr']['value'] = $this->getSelectOptions('general.yesno')[$isHomeroom];
+            $attr['type'] = 'select';
+            $attr['options'] = $this->getSelectOptions('general.yesno');
+            $attr['default'] = $isHomeroom;
         }
 
         return $attr;
