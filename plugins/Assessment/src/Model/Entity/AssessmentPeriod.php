@@ -19,8 +19,11 @@ class AssessmentPeriod extends Entity
             return ($dateToday >= $dateEnabled->format('Y-m-d') && $dateToday <= $dateDisabled->format('Y-m-d')) ? 1 : 0;
         } else {
             $today = new Date();
-            $dateEnabled = Date::createFromFormat("d/m/Y", $this->date_enabled);
-            $dateDisabled = Date::createFromFormat("d/m/Y", $this->date_disabled);
+            $dateEnabled = date('d/m/Y', strtotime($this->date_enabled));
+            $dateDisabled = date('d/m/Y', strtotime($this->date_disabled));
+
+            $dateEnabled = Date::createFromFormat("d/m/Y", $dateEnabled);
+            $dateDisabled = Date::createFromFormat("d/m/Y", $dateDisabled);
 
             return $today->between($dateEnabled, $dateDisabled);
         }
