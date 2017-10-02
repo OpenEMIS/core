@@ -58,7 +58,6 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.selectedSecondaryTeacher = null;
     Controller.className = '';
     Controller.academicPeriodName = '';
-    Controller.institutionSubjects = [];
     Controller.postError = [];
 
     // Function mapping
@@ -81,7 +80,6 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
-                Controller.institutionSubjects = response.institution_subjects;
                 var assignedStudents = [];
                 angular.forEach(response.class_students, function(value, key) {
                     var toPush = {
@@ -240,11 +238,6 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
-        var subjects = angular.copy(Controller.institutionSubjects);
-        angular.forEach(subjects, function(value, key) {
-            delete value.name;
-        });
-        postData.subjects = UtilsSvc.urlsafeBase64Encode(JSON.stringify(subjects));
         InstitutionClassStudentsSvc.saveClass(postData)
         .then(function(response) {
             var error = response.data.error;
