@@ -32,7 +32,7 @@ class StudentAbsencesTable extends AppTable {
                 'end_date'
             ],
             'pages' => false,
-            'autoFields' => true
+            'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
     }
@@ -90,8 +90,6 @@ class StudentAbsencesTable extends AppTable {
                 $this->aliasField('institution_id'),
                 $this->aliasField('start_date')
             ]);
-        
-        // pr($query);//die;
     }
 
     // To select another one more field from the containable data
