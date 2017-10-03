@@ -37,6 +37,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',
@@ -53,6 +54,8 @@ class WorkflowStepsTable extends AppTable {
 			'through' => 'Workflow.WorkflowStepsRoles',
 			'dependent' => true
 		]);
+
+		$this->addBehavior('Workflow.StaffTransfer');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -138,11 +141,6 @@ class WorkflowStepsTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('is_system_defined', ['visible' => false]);
-		$this->ControllerAction->setFieldOrder(['workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
-	}
-
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($modelOptions, $selectedModel) = array_values($this->getModelOptions());
 		list($workflowOptions, $selectedWorkflow) = array_values($this->getWorkflowOptions($selectedModel));
@@ -159,8 +157,9 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		$session = $this->request->session();
+		$this->setupFields();
 
+		$session = $this->request->session();
 		$sessionKey = $this->registryAlias() . '.warning';
 		if ($session->check($sessionKey)) {
 			$warningKey = $session->read($sessionKey);
@@ -209,7 +208,7 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'view' || $action == 'edit') {
+		if ($action == 'view' || $action == 'edit' || $action == 'index') {
 			$attr['visible'] = false;
 		} else if ($action == 'add') {
 			list($modelOptions) = array_values($this->getModelOptions());
@@ -331,20 +330,20 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
-	private function setupFields(Entity $entity) {
+	private function setupFields(Entity $entity = null) {
+		$attr = [];
+		if (!is_null($entity)) {
+			$attr['attr'] = ['entity' => $entity];
+		}
+
 		$this->ControllerAction->field('workflow_model_id');
-		$this->ControllerAction->field('workflow_id', [
-			'attr' => ['entity' => $entity]
-		]);
-		$this->ControllerAction->field('name', [
-			'attr' => ['entity' => $entity]
-		]);
-		$this->ControllerAction->field('category', [
-			'attr' => ['entity' => $entity]
-		]);
+		$this->ControllerAction->field('workflow_id', $attr);
+		$this->ControllerAction->field('name', $attr);
+		$this->ControllerAction->field('category', $attr);
 		$this->ControllerAction->field('is_editable');
 		$this->ControllerAction->field('is_removable');
 		$this->ControllerAction->field('is_system_defined', ['type' => 'hidden']);
+		$this->ControllerAction->field('params', ['type' => 'hidden']);
 
 		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
 	}
