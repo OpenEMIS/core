@@ -47,9 +47,15 @@ class TrainingResultsTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$session = $this->request->session();
 		$sessionKey = 'Staff.Staff.id';
-		if ($session->check($sessionKey)) {
-			$userId = $session->read($sessionKey);
 
+		if (!$session->check($sessionKey)) {
+			$sessionKey = 'Auth.User.id';
+		}
+		
+		$userId = $session->read($sessionKey);
+
+		if ($userId) {
+			
 			// Filter by trainee
 			$query->where([
 				$this->aliasField('trainee_id') => $userId
