@@ -651,7 +651,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function onExcelGetIsHomeroom(Event $event, Entity $entity) 
     {
-        return ($entity->is_homeroom) ? 'Yes' : 'No';
+        return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
 
     public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity) 
