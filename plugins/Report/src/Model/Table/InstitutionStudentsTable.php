@@ -50,7 +50,7 @@ class InstitutionStudentsTable extends AppTable  {
 		// Setting request data and modifying fetch condition
 		$requestData = json_decode($settings['process']['params']);
 		$academicPeriodId = $requestData->academic_period_id;
-        $educationGradeId = $requestData->education_grade_id;
+        $educationProgrammeId = $requestData->education_programme_id;
 		$statusId = $requestData->status;
 
         $Class = TableRegistry::get('Institution.InstitutionClasses');
@@ -60,8 +60,8 @@ class InstitutionStudentsTable extends AppTable  {
 			$query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
 		}
 
-        if ($educationGradeId!=0) {
-            $query->where([$this->aliasField('education_grade_id') => $educationGradeId]);
+        if ($educationProgrammeId!=0) {
+            $query->where(['EducationProgrammes.id' => $educationProgrammeId]);
         }
 
 		if ($statusId!=0) {
@@ -73,7 +73,7 @@ class InstitutionStudentsTable extends AppTable  {
             ->toArray();
 		
 		$query
-			->contain(['Users.Genders', 'Users.MainNationalities', 'Users.Nationalities.NationalitiesLookUp', 'Institutions.Areas', 'Institutions.AreaAdministratives', 'Institutions.Types', 'Institutions.Providers'])
+			->contain(['Users.Genders', 'Users.MainNationalities', 'Users.Nationalities.NationalitiesLookUp', 'Institutions.Areas', 'Institutions.AreaAdministratives', 'Institutions.Types', 'Institutions.Providers','EducationGrades.EducationProgrammes'])
 			->select([
                 'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'username' => 'Users.username', 'code' => 'Institutions.code', 'preferred_nationality' => 'MainNationalities.name',
                 'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'institution_type' => 'Types.name', 'institution_provider' => 'Providers.name',
