@@ -612,27 +612,23 @@ class StudentUserTable extends ControllerActionTable
         if (!empty($dateOfBirth)) {
             $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');;
         }
-        if (!empty($identityNumber)) {
-            $conditions['identity_number LIKE'] = $identityNumber . '%';
-        }
         
-        //disabled search through entire user identity record.
-        // $identityConditions = [];
-        // if (!empty($identityNumber)) {
-        //     $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
-        // }
+        $identityConditions = [];
+        if (!empty($identityNumber)) {
+            $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
+        }
 
-        // $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
-        // $query->join([
-        //     [
-        //         'type' => $identityJoinType,
-        //         'table' => 'user_identities',
-        //         'alias' => 'Identities',
-        //         'conditions' => array_merge([
-        //                 'Identities.security_user_id = ' . $this->aliasField('id')
-        //             ], $identityConditions)
-        //     ]
-        // ]);
+        $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
+        $query->join([
+            [
+                'type' => $identityJoinType,
+                'table' => 'user_identities',
+                'alias' => 'Identities',
+                'conditions' => array_merge([
+                        'Identities.security_user_id = ' . $this->aliasField('id')
+                    ], $identityConditions)
+            ]
+        ]);
 
         $query->group([$this->aliasField('id')]);
 
