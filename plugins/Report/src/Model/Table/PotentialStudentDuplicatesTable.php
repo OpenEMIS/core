@@ -106,6 +106,7 @@ class PotentialStudentDuplicatesTable extends AppTable
             ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
                 $EducationGrades->aliasField('id') . ' = ' . $Students->aliasField('education_grade_id')
             ])
+            ->where([$this->aliasField('is_student') => 1])
             ->group([$this->aliasField('id')]);
     }
 
