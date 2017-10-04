@@ -16,6 +16,7 @@ use App\Model\Table\ControllerActionTable;
 class AreaAdministrativesTable extends ControllerActionTable
 {
     private $fieldsOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
+    private $worldId;
 
     public function initialize(array $config)
     {
@@ -46,6 +47,9 @@ class AreaAdministrativesTable extends ControllerActionTable
         return $validator
             ->add('is_main_country', 'ruleValidateAreaAdministrativeMainCountry', [
                 'rule' => ['validateAreaAdministrativeMainCountry'],
+                'on' => function ($context) {
+                    return $context['data']['parent_id'] == $this->worldId;
+                },
                 'provider' => 'table'
             ]);
     }
@@ -67,6 +71,13 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
         $this->fields['lft']['visible'] = false;
         $this->fields['rght']['visible'] = false;
+
+        $query = $this->find()
+                ->select([$this->aliasField('id')])
+                ->where([$this->aliasField('parent_id').' IS NULL'])
+                ->first();
+
+        $this->worldId = $query->id;
     }
 
     public function rebuildLftRght()
@@ -125,6 +136,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->find()
                 ->select([$this->aliasField('id')])
                 ->where([
+                    $this->aliasField('is_main_country') => true,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
                 ->hydrate(false)
@@ -233,6 +245,14 @@ class AreaAdministrativesTable extends ControllerActionTable
                 $action = $this->url('index');
                 $action['parent'] = $parentId;
                 return $this->controller->redirect($action);
+            }
+        }
+
+        //to hide / show is main country field on index
+        $request = $this->request;
+        if (array_key_exists('parent', $request->query)) {
+            if ($request->query['parent'] != $this->worldId) {
+                $this->fields['is_main_country']['visible'] = false;
             }
         }
     }
@@ -451,11 +471,12 @@ class AreaAdministrativesTable extends ControllerActionTable
     {
         if ($entity->dirty('is_main_country')) {
             if ($entity->is_main_country == 1) { //if set as main country
+
                 // update the rest of areas to non main country
                 $this->updateAll(
                     ['is_main_country' => 0],
                     [
-                        'area_administrative_level_id' => 1,
+                        'parent_id' => $this->worldId,
                         'id <> ' => $entity->id
                     ]
                 );

@@ -37,7 +37,9 @@ class POCOR3890 extends AbstractMigration
         $this->execute('UPDATE `area_administratives` SET `is_main_country` = 0');
         $this->execute('UPDATE `area_administratives` 
                         SET `is_main_country` = 1
-                        WHERE `area_administrative_level_id` = 1
+                        WHERE `parent_id` IN (
+                            SELECT `id` AS `WorldId` FROM `z_3890_area_administratives` WHERE `parent_id` IS NULL
+                        )
                         ORDER BY `order`
                         LIMIT 1');
 
