@@ -320,6 +320,34 @@ class AreasTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
+        $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
+
+        if (isset($options['recordOnly']) && $options['recordOnly']) {
+            return $query
+                ->contain(['AreaLevels'])
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('name'),
+                    $this->aliasField('parent_id'),
+                    'AreaLevels.name',
+                    $this->aliasField('order')
+                ])
+                ->where([$this->aliasField('id') => $selected])
+                ->hydrate(false)
+                ->formatResults(function ($results) use ($selected) {
+                    $results = $results->toArray();
+                    foreach ($results as &$result) {
+                        $result['name'] = $result['name'] . ' - ' . __($result['area_level']['name']);
+                        $result['selected'] = true;
+                    }
+                    $defaultSelect = ['id' => null, 'name' => __('-- Select --')];
+                    if (is_null($selected)) {
+                        $defaultSelect['selected'] = true;
+                    }
+                    array_unshift($results, $defaultSelect);
+                    return $results;
+                });
+        }
         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
         $authorisedAreas = $SecurityGroupAreas->getAreasByUser($options['userId']);
         $authorisedAreaIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id']);
@@ -342,7 +370,7 @@ class AreasTable extends ControllerActionTable
             $authorisedAreaIds = [];
         }
 
-        $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
+
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',

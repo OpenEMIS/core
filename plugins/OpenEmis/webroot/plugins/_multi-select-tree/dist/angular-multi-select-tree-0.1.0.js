@@ -77,13 +77,6 @@
           activeItem.isActive = true;
         }
       };
-
-      $scope.emitClick = function(item){
-        if($scope.expandClick){
-          $scope.expandClick({item: item});
-        }
-      }
-
       /**
      * Copies the selectedItems in to output model.
      */
@@ -154,19 +147,7 @@
      */
       $scope.onControlClicked = function ($event) {
         $event.stopPropagation();
-
-        $scope.$emit("clickEvent");
-
         $scope.showTree = !$scope.showTree;
-        //collapse other tree-view element
-        var thisEl = this;
-        angular.forEach(angular.element(".tree-view"), function(value, key){
-          var treeViewEl = angular.element(value);
-          if(treeViewEl.scope().$id != thisEl.$id){
-            treeViewEl.scope().showTree = false;
-          }
-        });
-        //end of collapsing other tree-view element
         if ($scope.showTree) {
           $document.on('click', docClickHide);
         }
@@ -216,7 +197,7 @@
      * @param item the selected item.
      */
       $scope.itemSelected = function (item) {
-        $scope.refreshChild();
+        // console.log("itemSelected", item);
         if ($scope.useCallback && $scope.canSelectItem(item) === false || $scope.selectOnlyLeafs && item.children && item.children.length > 0) {
           return;
         }
@@ -243,27 +224,8 @@
         }
         this.refreshOutputModel();
       };
-
-      $scope.refreshChild = function(){
-        this.refreshOutputModel();
-        this.refreshSelectedItems();
-
-      }
-
     }
-
   ]);
-
-
-
-
-
-
-
-
-
-
-
   /**
    * sortableItem directive.
    */
@@ -282,8 +244,7 @@
         callback: '&',
         defaultLabel: '@',
         isRadio: '=?',
-        treeId: '@',
-        expandClick: '&'
+        treeId: '@'
       },
       link: function (scope, element, attrs) {
         if (attrs.callback) {
@@ -343,19 +304,6 @@
     };
   });
 }());
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*jshint indent: 2 */
 /*global angular: false */
 (function () {
@@ -369,8 +317,7 @@
   mainModule.controller('treeItemCtrl', [
     '$scope',
     function ($scope) {
-      //$scope.item.isExpanded = false; //nova
-
+      $scope.item.isExpanded = false;
       /**
      * Shows the expand option.
      *
@@ -389,9 +336,6 @@
       $scope.onExpandClicked = function (item, $event) {
         $event.stopPropagation();
         item.isExpanded = !item.isExpanded;
-        if ($scope.emitClick) {
-          $scope.emitClick({ item: item });
-        }
       };
       /**
      * Event on click of select item.
@@ -427,13 +371,6 @@
           $scope.onActiveItem({ item: item });
         }
       };
-
-      $scope.emitSubItem = function (item, $event) {
-        if ($scope.emitClick) {
-          $scope.emitClick({ item: item });
-        }
-      };
-
       /**
      * On mouse over event.
      *
@@ -451,7 +388,7 @@
      *
      * @returns {*}
      */
-      $scope.showCheckbox = function (item) {
+      $scope.showCheckbox = function () {
         if (!$scope.multiSelect) {
           return false;
         }
@@ -467,19 +404,6 @@
       };
     }
   ]);
-
-
-
-
-
-
-
-
-
-
-
-
-
   /**
    * sortableItem directive.
    */
@@ -499,9 +423,7 @@
           useCallback: '=',
           canSelectItem: '=',
           isRadio: '=?',
-          treeId: '@',
-          emitClick: '&',
-          callback: '&'
+          treeId: '@'
         },
         controller: 'treeItemCtrl',
         compile: function (element, attrs, link) {
