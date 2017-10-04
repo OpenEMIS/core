@@ -619,10 +619,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->select([
                 'openemis_no' => 'Users.openemis_no',
                 'staff_id' => 'InstitutionStaff.staff_id',
-                'fte' => 'InstitutionStaff.FTE'
+                'fte' => 'InstitutionStaff.FTE',
+                'staff_status' => 'StaffStatuses.name',
             ])
             ->where([$this->aliasField('institution_id') => $institutionId])
-            ->leftJoinWith('InstitutionStaff.Users');
+            ->leftJoinWith('InstitutionStaff.Users')
+            ->leftJoinWith('InstitutionStaff.StaffStatuses');
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
@@ -644,6 +646,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             'field' => 'fte',
             'type' => 'string',
             'label' => __('FTE')
+        ];
+        $newArray[] = [
+            'key' => 'StaffStatuses.name',
+            'field' => 'staff_status',
+            'type' => 'string',
+            'label' => __('Status')
         ];
         $newFields = array_merge($fields->getArrayCopy(), $newArray);
         $fields->exchangeArray($newFields);
