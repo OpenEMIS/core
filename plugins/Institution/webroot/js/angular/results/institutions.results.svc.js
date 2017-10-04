@@ -679,6 +679,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
 
                         } else {
                             // don't allow input if student is not enrolled
+                            var value = params.data[params.colDef.field];
+
                             if (!isNaN(parseFloat(value))) {
                                 var duration = String(value).replace(".", " : ");
                                 return duration;
