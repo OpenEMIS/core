@@ -2133,14 +2133,25 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('is_main_country', $globalData['data'])) {
             if ($field == 0) { //if set as not main country
                 $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+                
+                $query = $AreaAdministratives->find()
+                        ->select([$AreaAdministratives->aliasField('id')])
+                        ->where([$AreaAdministratives->aliasField('parent_id').' IS NULL'])
+                        ->first();
+                $worldId = $query->id;
+
+                $conditions = [
+                    $AreaAdministratives->aliasField('parent_id') => $worldId,
+                    $AreaAdministratives->aliasField('is_main_country') => 1
+                ];
+                
+                if (!$globalData['newRecord']) { //for edit
+                    $conditions[$AreaAdministratives->aliasField('id <> ')] = $globalData['data']['id'];
+                }
 
                 $query = $AreaAdministratives
                         ->find()
-                        ->where([
-                            $AreaAdministratives->aliasField('area_administrative_level_id') => 1,
-                            $AreaAdministratives->aliasField('is_main_country') => 1,
-                            $AreaAdministratives->aliasField('id <> ') => $globalData['data']['id'],
-                        ])
+                        ->where($conditions)
                         ->count();
                 
                 if ($query > 0) {
