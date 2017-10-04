@@ -136,7 +136,6 @@ class InstitutionsController extends AppController
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],
-            'History'           => ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
@@ -711,7 +710,7 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             $this->set('externalDataSource', $externalDataSource);
-            
+
             $admissionExecutePermission = true;
             if (!$this->AccessControl->isAdmin()) {
                 $admissionExecutePermission = $session->read('Permissions.Institutions.StudentAdmission.execute');
@@ -1333,7 +1332,6 @@ class InstitutionsController extends AppController
             'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')],
             'Guardians' => ['text' => __('Guardians')],
             'StudentSurveys' => ['text' => __('Surveys')]
         ];

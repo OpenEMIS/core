@@ -16,7 +16,6 @@ class DirectoriesController extends AppController {
 		$this->ControllerAction->models = [
 			// Users
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
-			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 
 			// Student
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
@@ -364,8 +363,7 @@ class DirectoriesController extends AppController {
             'Languages' => ['text' => __('Languages')],
             'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
-            'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')]
+            'Comments' => ['text' => __('Comments')]
         ];
 
         foreach ($tabElements as $key => $value) {

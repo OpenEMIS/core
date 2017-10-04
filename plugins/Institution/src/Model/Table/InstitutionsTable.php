@@ -963,6 +963,19 @@ class InstitutionsTable extends ControllerActionTable
                 $button['url']['institutionId'] = $button['url'][1];
             }
         }
+
+        if (isset($buttons['view'])) {
+            // history button need to check permission ??
+            $icon = '<i class="fa fa-history"></i>';
+
+            $buttons['history'] = $buttons['view'];
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url']['plugin'] = 'Institution';
+            $buttons['history']['url']['controller'] = 'InstitutionHistories';
+            $buttons['history']['url']['action'] = 'index';
+            // end history button
+        }
+
         return $buttons;
     }
 

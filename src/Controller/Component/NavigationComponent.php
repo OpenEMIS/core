@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InstitutionHistories', 'UserHistories'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -387,7 +387,7 @@ class NavigationComponent extends Component
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.dashboard'],
+                'selected' => ['Institutions.dashboard', 'UserHistories.index'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
@@ -415,13 +415,6 @@ class NavigationComponent extends Component
                     'title' => 'Attachments',
                     'parent' => 'Institution.General',
                     'selected' => ['Institutions.Attachments'],
-                    'params' => ['plugin' => 'Institution']
-                ],
-
-                'Institutions.History.index' => [
-                    'title' => 'History',
-                    'parent' => 'Institution.General',
-                    'selected' => ['Institutions.History'],
                     'params' => ['plugin' => 'Institution']
                 ],
 
