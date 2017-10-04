@@ -66,46 +66,46 @@ class PotentialStudentDuplicatesTable extends AppTable
             ->group('latest_student.student_id');
 
         $query
-        ->select([
-            $this->aliasField('username'),
-            $this->aliasField('openemis_no'),
-            $this->aliasField('first_name'),
-            $this->aliasField('middle_name'),
-            $this->aliasField('third_name'),
-            $this->aliasField('last_name'),
-            $this->aliasField('preferred_name'),
-            $this->aliasField('email'),
-            $this->aliasField('address'),
-            $this->aliasField('postal_code'),
-            $this->aliasField('address_area_id'),
-            $this->aliasField('birthplace_area_id'),
-            $this->aliasField('gender_id'),
-            $this->aliasField('date_of_birth'),
-            $this->aliasField('date_of_death'),
-            $this->aliasField('nationality_id'),
-            $this->aliasField('identity_type_id'),
-            $this->aliasField('identity_number'),
-            'institution_code' => $Institutions->aliasField('code'),
-            'institution_name' => $Institutions->aliasField('name'),
-            'education_grade' => $EducationGrades->aliasField('name')
-        ])
-        ->innerJoin(['DuplicateStudents' => $duplicateStudentSubquery], [
-            'DuplicateStudents.first_name = ' . $this->aliasField('first_name'),
-            'DuplicateStudents.last_name = ' . $this->aliasField('last_name'),
-            'DuplicateStudents.gender_id = ' . $this->aliasField('gender_id'),
-            'DuplicateStudents.date_of_birth = ' . $this->aliasField('date_of_birth')
-        ])
-        ->leftJoin([$Students->alias() => $Students->table()], [
-            $Students->aliasField('student_id') . ' = ' . $this->aliasField('id'),
-            $Students->aliasField('created') => $latestStudentSubquery
-        ])
-        ->leftJoin([$Institutions->alias() => $Institutions->table()], [
-            $Institutions->aliasField('id') . ' = ' . $Students->aliasField('institution_id')
-        ])
-        ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
-            $EducationGrades->aliasField('id') . ' = ' . $Students->aliasField('education_grade_id')
-        ])
-        ->group([$this->aliasField('id')]);
+            ->select([
+                $this->aliasField('username'),
+                $this->aliasField('openemis_no'),
+                $this->aliasField('first_name'),
+                $this->aliasField('middle_name'),
+                $this->aliasField('third_name'),
+                $this->aliasField('last_name'),
+                $this->aliasField('preferred_name'),
+                $this->aliasField('email'),
+                $this->aliasField('address'),
+                $this->aliasField('postal_code'),
+                $this->aliasField('address_area_id'),
+                $this->aliasField('birthplace_area_id'),
+                $this->aliasField('gender_id'),
+                $this->aliasField('date_of_birth'),
+                $this->aliasField('date_of_death'),
+                $this->aliasField('nationality_id'),
+                $this->aliasField('identity_type_id'),
+                $this->aliasField('identity_number'),
+                'institution_code' => $Institutions->aliasField('code'),
+                'institution_name' => $Institutions->aliasField('name'),
+                'education_grade' => $EducationGrades->aliasField('name')
+            ])
+            ->innerJoin(['DuplicateStudents' => $duplicateStudentSubquery], [
+                'DuplicateStudents.first_name = ' . $this->aliasField('first_name'),
+                'DuplicateStudents.last_name = ' . $this->aliasField('last_name'),
+                'DuplicateStudents.gender_id = ' . $this->aliasField('gender_id'),
+                'DuplicateStudents.date_of_birth = ' . $this->aliasField('date_of_birth')
+            ])
+            ->leftJoin([$Students->alias() => $Students->table()], [
+                $Students->aliasField('student_id') . ' = ' . $this->aliasField('id'),
+                $Students->aliasField('created') => $latestStudentSubquery
+            ])
+            ->leftJoin([$Institutions->alias() => $Institutions->table()], [
+                $Institutions->aliasField('id') . ' = ' . $Students->aliasField('institution_id')
+            ])
+            ->leftJoin([$EducationGrades->alias() => $EducationGrades->table()], [
+                $EducationGrades->aliasField('id') . ' = ' . $Students->aliasField('education_grade_id')
+            ])
+            ->group([$this->aliasField('id')]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
