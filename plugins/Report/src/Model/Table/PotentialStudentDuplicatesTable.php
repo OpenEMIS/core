@@ -24,7 +24,8 @@ class PotentialStudentDuplicatesTable extends AppTable
 
         $this->addBehavior('Excel', [
             'excludes' => ['is_student', 'is_staff', 'is_guardian', 'external_reference', 'super_admin', 'status', 'last_login', 'photo_name', 'photo_content', 'preferred_language'],
-            'pages' => false
+            'pages' => false,
+            'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
     }
