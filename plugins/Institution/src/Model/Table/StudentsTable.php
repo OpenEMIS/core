@@ -905,6 +905,25 @@ class StudentsTable extends ControllerActionTable
             $userId = $this->paramsEncode(['id' => $entity->_matchingData['Users']->id]);
             $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', $userId]);
             $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
+
+            // POCOR-3125 history button permission???
+            $userId = $entity->_matchingData['Users']->id;
+
+            $icon = '<i class="fa fa-history"></i>';
+            $url = [
+                'plugin' => 'User',
+                'controller' => 'UserHistories',
+                'action' => 'index'
+            ];
+
+            $buttons['history'] = $buttons['view'];
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
+                'security_user_id' => $userId,
+                'user_type' => 'Student'
+            ]);
+
+            // end POCOR-3125 history button permission???
         }
 
         // Remove in POCOR-3010
