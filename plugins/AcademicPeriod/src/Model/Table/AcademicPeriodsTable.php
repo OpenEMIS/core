@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 
 class AcademicPeriodsTable extends AppTable
@@ -95,59 +96,6 @@ class AcademicPeriodsTable extends AppTable
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
             ])
             ;
-    }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Restful.Model.onBeforeGetData'] = 'onBeforeGetData';
-        $events['Restful.Model.onBeforeFormatResult'] = 'onBeforeFormatResult';
-        return $events;
-    }
-
-    public function onBeforeGetData(Event $event, $action, ArrayObject $extra)
-    {
-        switch ($action) {
-            case 'weeklist':
-                $todayDate = date("Y-m-d");
-                $weekOptions = [];
-
-                if (isset($extra['primaryKey']) && is_array($extra['primaryKey']) && isset($extra['primaryKey']['id'])) {
-                    $academicPeriodId = $extra['primaryKey']['id'];
-
-                    $weeks = $this->getAttendanceWeeks($academicPeriodId);
-                    $weekStr = __('Week') . ' %d (%s - %s)';
-                    $currentWeek = null;
-
-                    foreach ($weeks as $index => $dates) {
-                        $startDay = $dates[0]->format('Y-m-d');
-                        $endDay = $dates[1]->format('Y-m-d');
-                        $weekAttr = [];
-                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
-                            $weekStr = __('Current Week') . ' %d (%s - %s)';
-                            $weekAttr['current'] = true;
-                            $currentWeek = $index;
-                        } else {
-                            $weekStr = __('Week') . ' %d (%s - %s)';
-                        }
-
-                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
-                        $weekAttr['start_day'] = $startDay;
-                        $weekAttr['end_day'] = $endDay;
-                        $weekOptions[$index] = $weekAttr;
-                    }
-                }
-
-                return $weekOptions;
-                break;
-            default:
-                break;
-        }
-    }
-
-    public function onBeforeFormatResult(Event $event, $data, ArrayObject $extra)
-    {
-        return $data;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -833,6 +781,46 @@ class AcademicPeriodsTable extends AppTable
             ->find('visible')
             ->find('order')
             ->where([$this->aliasField('academic_period_level_id') => $level->id]);
+    }
+
+    public function findWeeklist(Query $query, array $options)
+    {
+        $model = $this;
+
+        $query->formatResults(function (ResultSetInterface $results) use ($model) {
+            return $results->map(function ($row) use ($model) {
+                $academicPeriodId = $row->id;
+
+                $todayDate = date("Y-m-d");
+                $weekOptions = [];
+
+                $weeks = $model->getAttendanceWeeks($academicPeriodId);
+                $weekStr = __('Week') . ' %d (%s - %s)';
+                $currentWeek = null;
+
+                foreach ($weeks as $index => $dates) {
+                    $startDay = $dates[0]->format('Y-m-d');
+                    $endDay = $dates[1]->format('Y-m-d');
+                    $weekAttr = [];
+                    if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                        $weekStr = __('Current Week') . ' %d (%s - %s)';
+                        $weekAttr['current'] = true;
+                        $currentWeek = $index;
+                    } else {
+                        $weekStr = __('Week') . ' %d (%s - %s)';
+                    }
+
+                    $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                    $weekAttr['start_day'] = $startDay;
+                    $weekAttr['end_day'] = $endDay;
+                    $weekOptions[$index] = $weekAttr;
+                }
+
+                $row->weeks = $weekOptions;
+
+                return $row;
+            });
+        });
     }
 
     private function checkIfCanCopy(Entity $entity)

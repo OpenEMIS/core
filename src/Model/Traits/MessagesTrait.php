@@ -1011,8 +1011,7 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
-                    'ruleCheckStaffFTE' => 'No available FTE for the Staff within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.'
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -1154,6 +1153,14 @@ trait MessagesTrait
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ],
+            'InstitutionAssessments' => [
+                'marks' => [
+                    'markHint' => 'Mark should be between %s and %s'
+                ],
+                'grading_type' => [
+                    'notFound' => 'No Grading Type found'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [
