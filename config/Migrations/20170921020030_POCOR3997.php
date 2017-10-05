@@ -19,27 +19,31 @@ class POCOR3997 extends AbstractMigration
             'comment' => 'This table contains all the staff transfer requests'
         ]);
         $InstitutionStaffTransfers
+            ->addColumn('start_date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('end_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
             ->addColumn('staff_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
-            ->addColumn('outgoing_institution_id', 'integer', [
+            ->addColumn('institution_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to institutions.id'
             ])
-            ->addColumn('incoming_institution_id', 'integer', [
+            ->addColumn('previous_institution_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to institutions.id'
-            ])
-            ->addColumn('incoming_start_date', 'date', [
-                'default' => null,
-                'null' => false
             ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
@@ -77,7 +81,7 @@ class POCOR3997 extends AbstractMigration
                 'scale' => 2,
                 'null' => true
             ])
-            ->addColumn('outgoing_end_date', 'date', [
+            ->addColumn('previous_end_date', 'date', [
                 'default' => null,
                 'null' => true
             ])
@@ -110,8 +114,8 @@ class POCOR3997 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('staff_id')
-            ->addIndex('outgoing_institution_id')
-            ->addIndex('incoming_institution_id')
+            ->addIndex('previous_institution_id')
+            ->addIndex('institution_id')
             ->addIndex('status_id')
             ->addIndex('assignee_id')
             ->addIndex('institution_staff_id')
