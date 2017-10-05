@@ -63,73 +63,77 @@ class PageController extends BaseController
 
     public function onRenderBinary(Event $event, Entity $entity, PageElement $element)
     {
-        $attributes = $element->getAttributes();
-        $type = isset($attributes['type']) ? $attributes['type'] : 'binary';
-        $attributes = $element->getAttributes();
-        $fileNameField = $attributes['fileNameField'];
         $fileContentField = $element->getKey();
-        if ($type == 'image') {
-            switch ($this->request->getParam('action')) {
-                case 'view':
-                    $fileName = $entity->{$fileNameField};
-                    $pathInfo = pathinfo($fileName);
-                    if ($entity->{$fileContentField}) {
-                        $file = stream_get_contents($entity->{$fileContentField});
-                        $entity->{$fileNameField} = 'data:'.$this->response->getMimeType($pathInfo['extension']).';base64,'. base64_encode($file);
-                        return $entity->{$fileNameField};
-                    }
-                    break;
-                case 'index':
-                    $primaryKey = $entity->primaryKey;
-                    $source = $entity->source();
-                    if ($entity->{$fileContentField}) {
-                        return Router::url([
-                            'plugin' => null,
-                            '_method' => 'GET',
-                            'version' => 'v2',
-                            'model' => $source,
-                            'controller' => 'Restful',
-                            'action' => 'image',
-                            'id' => $primaryKey,
-                            'fileName' => $fileNameField,
-                            'fileContent' => $fileContentField,
-                            '_ext' => 'json'
-                        ], true);
-                    }
-                    break;
-                default:
-                    $fileName = $entity->{$fileNameField};
-                    $pathInfo = pathinfo($fileName);
-                    if ($entity->{$fileContentField}) {
-                        $file = stream_get_contents($entity->{$fileContentField});
-                        $returnValue = [
-                            'extension' => $pathInfo['extension'],
-                            'filename' => $fileName,
-                            'src' => 'data:'.$this->response->getMimeType($pathInfo['extension']).';base64,'. base64_encode($file)
-                        ];
-                        return $returnValue;
-                    }
-                    break;
-            }
-        } else {
-            $primaryKey = $entity->primaryKey;
-            $source = $entity->source();
-            $fileName = $entity->{$fileNameField};
-            $element->setAttributes('file_name', $fileName);
-            if ($entity->{$fileContentField}) {
-                return Router::url([
-                    'plugin' => null,
-                    '_method' => 'GET',
-                    'version' => 'v2',
-                    'model' => $source,
-                    'controller' => 'Restful',
-                    'action' => 'download',
-                    'id' => $primaryKey,
-                    'fileName' => $fileNameField,
-                    'fileContent' => $fileContentField,
-                    '_ext' => 'json'
-                ], true);
+        if (!$this->Page->isExcluded($fileContentField)) {
+            $attributes = $element->getAttributes();
+            $type = isset($attributes['type']) ? $attributes['type'] : 'binary';
+            $attributes = $element->getAttributes();
+            $fileNameField = $attributes['fileNameField'];
+            if ($type == 'image') {
+                switch ($this->request->getParam('action')) {
+                    case 'view':
+                        $fileName = $entity->{$fileNameField};
+                        $pathInfo = pathinfo($fileName);
+                        if ($entity->{$fileContentField}) {
+                            $file = stream_get_contents($entity->{$fileContentField});
+                            $entity->{$fileNameField} = 'data:'.$this->response->getMimeType($pathInfo['extension']).';base64,'. base64_encode($file);
+                            return $entity->{$fileNameField};
+                        }
+                        break;
+                    case 'index':
+                        $primaryKey = $entity->primaryKey;
+                        $source = $entity->source();
+                        if ($entity->{$fileContentField}) {
+                            return Router::url([
+                                'plugin' => null,
+                                '_method' => 'GET',
+                                'version' => 'v2',
+                                'model' => $source,
+                                'controller' => 'Restful',
+                                'action' => 'image',
+                                'id' => $primaryKey,
+                                'fileName' => $fileNameField,
+                                'fileContent' => $fileContentField,
+                                '_ext' => 'json'
+                            ], true);
+                        }
+                        break;
+                    default:
+                        $fileName = $entity->{$fileNameField};
+                        $pathInfo = pathinfo($fileName);
+                        if ($entity->{$fileContentField}) {
+                            $file = stream_get_contents($entity->{$fileContentField});
+                            $returnValue = [
+                                'extension' => $pathInfo['extension'],
+                                'filename' => $fileName,
+                                'src' => 'data:'.$this->response->getMimeType($pathInfo['extension']).';base64,'. base64_encode($file)
+                            ];
+                            return $returnValue;
+                        }
+                        break;
+                }
+            } else {
+
+                $primaryKey = $entity->primaryKey;
+                $source = $entity->source();
+                $fileName = $entity->{$fileNameField};
+                $element->setAttributes('file_name', $fileName);
+                if ($entity->{$fileContentField}) {
+                    return Router::url([
+                        'plugin' => null,
+                        '_method' => 'GET',
+                        'version' => 'v2',
+                        'model' => $source,
+                        'controller' => 'Restful',
+                        'action' => 'download',
+                        'id' => $primaryKey,
+                        'fileName' => $fileNameField,
+                        'fileContent' => $fileContentField,
+                        '_ext' => 'json'
+                    ], true);
+                }
             }
         }
+
     }
 }
