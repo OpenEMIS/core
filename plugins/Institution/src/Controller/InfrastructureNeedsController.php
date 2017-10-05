@@ -127,12 +127,12 @@ class InfrastructureNeedsController extends PageController
 
         // set need_type
         $page->get('infrastructure_need_type_id')
-            ->setControlType('dropdown')
+            ->setControlType('select')
             ->setOptions($this->needTypeOptions);
 
         // set need_priority
         $page->get('priority')
-            ->setControlType('dropdown')
+            ->setControlType('select')
             ->setOptions($this->needPrioritiesOptions);
 
         // set the file upload for attachment
