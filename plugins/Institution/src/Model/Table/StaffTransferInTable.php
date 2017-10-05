@@ -22,6 +22,16 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->toggle('add', false);
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('staff_id', 'ruleTransferRequestExists', [
+                'rule' => ['checkPendingStaffTransferIn'],
+                'on' => 'create'
+            ]);
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('FTE', ['type' => 'hidden']);
