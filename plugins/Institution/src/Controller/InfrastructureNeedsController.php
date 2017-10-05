@@ -100,8 +100,14 @@ class InfrastructureNeedsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        $page->exclude(['file_content']);
-        $page->get('file_name')->setControlType('link')->setLabel(__('Attachment'));
+        // $page->exclude(['file_content']);
+        // $page->setAttributes('', 'file_content')->setLabel(__('Attachment'));
+
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
+
+
         parent::view($id);
 
         $entity = $this->getIdName($page->getData());
