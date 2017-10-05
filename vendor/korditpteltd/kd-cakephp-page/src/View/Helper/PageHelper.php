@@ -63,7 +63,9 @@ class PageHelper extends Helper
         $includes = new ArrayObject($this->includes);
 
         foreach ($includes as $include) {
-            if ($include['include'] == false) continue;
+            if ($include['include'] == false) {
+                continue;
+            }
 
             if (array_key_exists('css', $include)) {
                 if (is_array($include['css'])) {
@@ -244,7 +246,6 @@ class PageHelper extends Helper
                 } else {
                     $row[] = $this->getValue($entity, $attr);
                 }
-
             }
             $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
 
@@ -344,9 +345,9 @@ class PageHelper extends Helper
         if ($isDateTimeType && $hasDateTimeFormat && $valueIsNotEmpty) {
             $valueIsDateObject = $value instanceof Date;
             if ($valueIsDateObject) {
-                $value = $value->format($field['format']);
+                $value = $value->i18nFormat($field['format']);
             } else {
-                $value = date($field['format'], strtotime($value));
+                $value = (new Date($value))->i18nFormat($field['format']);
             }
         } elseif ($isStringType && $valueIsNotEmpty) {
             $value = $this->highlight($value);
@@ -393,28 +394,31 @@ EOT;
             $controlType = $attr['controlType'];
             $isVisible = $attr['visible'];
 
-            if (in_array($controlType, $excludedTypes) || $isVisible == false) {
-                continue;
-            }
-
-            $label = $attr['label'];
-            if (is_array($label)) {
-                $label = $label['text'];
-            }
-            $value = '';
-            if (array_key_exists('value', $attr['attributes'])) {
-                $value = $attr['attributes']['value'];
-                if (!$this->isRTL($value)) {
-                    $value = '<div style = "direction:ltr !important">' . $value . '</div>';
+            if (in_array($controlType, ['section', 'table', 'binary']) && $isVisible) {
+                $html .= $this->{$controlType}($attr, null, 'view');
+            } else {
+                if (in_array($controlType, $excludedTypes) || $isVisible == false) {
+                    continue;
                 }
 
-            }
+                $label = $attr['label'];
+                if (is_array($label)) {
+                    $label = $label['text'];
+                }
+                $value = '';
+                if (array_key_exists('value', $attr['attributes'])) {
+                    $value = $attr['attributes']['value'];
+                    if ($controlType != 'binary' && !$this->isRTL($value)) {
+                        $value = '<div style = "direction:ltr !important">' . $value . '</div>';
+                    }
+                }
 
-            if ($controlType == 'link' && array_key_exists('href', $attr['attributes'])) {
-                $value = $this->Html->link($value, $attr['attributes']['href']);
-            }
+                if ($controlType == 'link' && array_key_exists('href', $attr['attributes'])) {
+                    $value = $this->Html->link($value, $attr['attributes']['href']);
+                }
 
-            $html .= sprintf($row, $label, $value);
+                $html .= sprintf($row, $label, $value);
+            }
         }
         return $html;
     }
@@ -443,73 +447,104 @@ EOT;
         return $options;
     }
 
-    private function binary(array $field, $data)
+    private function binary(array $field, $data, $action = 'edit')
     {
-        $options = ['type' => 'file', 'class' => 'form-control', 'label' => false];
-        $required = $field['attributes']['required'];
-        $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
-        $fileSizeLimit = isset($field['fileSizeLimit']) ? $field['fileSizeLimit'] : 1;
-        $formatSupported = isset($field['supportedFileFormat']) ? $field['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
-        $fileContent = '';
-        if (is_resource($data[$field['key']])) {
-            $streamedContent = stream_get_contents($data[$field['key']]);
-            $fileContent = base64_encode($streamedContent);
-            $fileContentSize = strlen($streamedContent);
+        if ($action == 'view') {
+            $html = '';
+            $row = <<<EOT
+<div class="row">
+    <div class="col-xs-6 col-md-3 form-label">%s</div>
+    <div class="form-input">%s</div>
+</div>
+EOT;
+            if ($field['attributes']['value']) {
+                if (isset($field['attributes']['type']) && $field['attributes']['type'] == 'image') {
+                    $link = '<div class="table-thumb"><img src="%s" style="max-width:60px;"></div>';
+                    $link = sprintf($link, $field['attributes']['value']);
+                } else {
+                    $link = $this->Html->link($field['attributes']['file_name'], $field['attributes']['value']);
+                }
+            } else {
+                $link = '';
+            }
+
+            $label = $field['label'];
+            $html = sprintf($row, $label, $link);
+            return $html;
         } else {
-            $fileContent = isset($data[$field['key'].'_content']) ? $data[$field['key'].'_content'] : null;
-            $fileContentSize = isset($data[$field['key'].'_file_size']) ? $data[$field['key'].'_file_size'] : null;
+            $options = ['type' => 'file', 'class' => 'form-control', 'label' => false];
+            $required = $field['attributes']['required'];
+            $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
+            $fileSizeLimit = isset($field['fileSizeLimit']) ? $field['fileSizeLimit'] : 1;
+            $formatSupported = isset($field['supportedFileFormat']) ? $field['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
+            $fileContent = '';
+            if (is_resource($data[$field['key']])) {
+                $streamedContent = stream_get_contents($data[$field['key']]);
+                $fileContent = base64_encode($streamedContent);
+                $fileContentSize = strlen($streamedContent);
+            } else {
+                $fileContent = isset($data[$field['key'].'_content']) ? $data[$field['key'].'_content'] : null;
+                $fileContentSize = isset($data[$field['key'].'_file_size']) ? $data[$field['key'].'_file_size'] : null;
+            }
+
+
+            $comments = '';
+            $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+            $extensionSupported = '';
+            $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+            foreach ($formatSupported as &$format) {
+                $format = '\''.$format.'\'';
+            }
+            $extensionSupported = implode(', ', $formatSupported);
+            $comments .= $fileSizeMessage . '<br/>' . $fileFormatMessage;
+            $fileName = '';
+            if ($data instanceof Entity) {
+                $fileName = $data->offsetExists($fileNameColumn) ? $data->$fileNameColumn : null;
+            } elseif (is_array($data)) {
+                $fileName = isset($data[$fileNameColumn]) ? $data[$fileNameColumn] : null;
+            }
+
+            if ($required) {
+                $options['required'] = 'required';
+            }
+
+            $alias = explode('.', $field['attributes']['name'])[0];
+
+            $attr = [
+                'id' => str_replace('.', '_', $field['attributes']['name']),
+                'key' => $field['key'],
+                'alias' => $alias,
+                'name' => $field['attributes']['name'],
+                'label' => $field['label'],
+                'options' => $options,
+                'required' => $required ? ' required' : '',
+                'comments' => $comments ? $comments : '',
+                'fileNameColumn' => $fileNameColumn,
+                'fileName' => $fileName,
+                'fileSizeLimit' => $fileSizeLimit,
+                'fileContent' => $fileContent,
+                'fileContentSize' => $fileContentSize,
+                'extensionSupported' => $extensionSupported
+            ];
+            $this->includes['jasny']['include'] = true;
+            return $this->_View->element('Page.file_upload', $attr);
         }
-
-
-        $comments = '';
-        $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
-        $extensionSupported = '';
-        $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
-        foreach ($formatSupported as &$format) {
-            $format = '\''.$format.'\'';
-        }
-        $extensionSupported = implode(', ', $formatSupported);
-        $comments .= $fileSizeMessage . '<br/>' . $fileFormatMessage;
-        $fileName = '';
-        if ($data instanceof Entity) {
-            $fileName = $data->offsetExists($fileNameColumn) ? $data->$fileNameColumn : null;
-        } elseif (is_array($data)) {
-            $fileName = isset($data[$fileNameColumn]) ? $data[$fileNameColumn] : null;
-        }
-
-        if ($required) {
-            $options['required'] = 'required';
-        }
-
-        $alias = explode('.', $field['attributes']['name'])[0];
-
-        $attr = [
-            'id' => str_replace('.', '_', $field['attributes']['name']),
-            'key' => $field['key'],
-            'alias' => $alias,
-            'name' => $field['attributes']['name'],
-            'label' => $field['label'],
-            'options' => $options,
-            'required' => $required ? ' required' : '',
-            'comments' => $comments ? $comments : '',
-            'fileNameColumn' => $fileNameColumn,
-            'fileName' => $fileName,
-            'fileSizeLimit' => $fileSizeLimit,
-            'fileContent' => $fileContent,
-            'fileContentSize' => $fileContentSize,
-            'extensionSupported' => $extensionSupported
-        ];
-        $this->includes['jasny']['include'] = true;
-        return $this->_View->element('Page.file_upload', $attr);
     }
 
     private function string(array $field, $data)
     {
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'string';
+        $html = '';
+        if (array_key_exists('disabled', $options) && array_key_exists('displayFrom', $field)) {
+            $options['type'] = 'hidden';
+            unset($options['disabled']);
+            $value = $this->getValue($data, $field);
+            $html = $this->Form->input($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+        }
 
-        $value = $this->Form->input($field['attributes']['name'], $options);
-        return $value;
+        $html .= $this->Form->input($field['attributes']['name'], $options);
+        return $html;
     }
 
     private function integer(array $field, $data)
@@ -528,6 +563,11 @@ EOT;
         $html .= $this->Form->input($field['attributes']['name'], $options);
 
         return $html;
+    }
+
+    private function section(array $field, $data, $action = 'edit')
+    {
+        return $this->Html->div('section-header', $field['label']);
     }
 
     private function float(array $field, $data)
@@ -550,6 +590,12 @@ EOT;
 
     private function dropdown(array $field, $data)
     {
+        // Log::write('debug', 'Deprecated')
+        return $this->select($field, $data);
+    }
+
+    private function select(array $field, $data)
+    {
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'select';
 
@@ -565,7 +611,6 @@ EOT;
     {
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'hidden';
-
         return $this->Form->input($field['attributes']['name'], $options);
     }
 
@@ -600,13 +645,13 @@ EOT;
 
         if (!empty($value)) {
             if ($value instanceof Date) {
-                $options['value'] = $value->format('d-m-Y');
+                $options['value'] = $value->i18nFormat('dd-MM-YYYY');
             } else {
-                $options['value'] = date('d-m-Y', strtotime($value));
+                $options['value'] = (new Date($value))->i18nFormat('dd-MM-YYYY');
             }
         } else {
             if ($required) {
-                $options['value'] = date('d-m-Y', time());
+                $options['value'] = (new Date())->i18nFormat('dd-MM-YYYY');
             }
         }
 
@@ -666,7 +711,7 @@ EOT;
         $options['time_options'] = array_merge($_options, $options['time_options']);
 
         if (($data instanceof Entity && $data->offsetExists($field['key'])) || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
-            $options['value'] = $data[$field['key']]->format('h:i A');
+            $options['value'] = $data[$field['key']]->i18nFormat('h:mm a');
             $options['time_options']['defaultTime'] = $options['value'];
         } else {
             $options['value'] = date('h:i A', strtotime($data[$field['key']]));
@@ -697,26 +742,55 @@ EOT;
         return $value;
     }
 
-    public function table(array $field, $data)
+    public function table(array $field, $data, $action = 'edit')
     {
-        $html = '
-            <div class="input clearfix">
-                <label>%s</label>
-                <div class="table-wrapper">
-                    <div class="table-in-view">
-                        <table class="table">
-                            <thead>%s</thead>
-                            <tbody>%s</tbody>
-                        </table>
+        $html = '';
+        if ($action == 'view') {
+            $html = '
+                <div class="row">
+                    <div class="col-xs-6 col-md-3 form-label">%s</div>
+                    <div class="table-wrapper">
+                        <div class="table-in-view">
+                            <table class="table">
+                                <thead>%s</thead>
+                                <tbody>%s</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>';
+        } else {
+            $html = '
+                <div class="input clearfix">
+                    <label>%s</label>
+                    <div class="table-wrapper">
+                        <div class="table-in-view">
+                            <table class="table">
+                                <thead>%s</thead>
+                                <tbody>%s</tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
-        ';
+            ';
+        }
+        $header = array_column($field['attributes']['column'], 'label');
+        $headers = $this->Html->tableHeaders($header);
 
-        $headers = $this->Html->tableHeaders($field['headers']);
-        $cells = $this->Html->tableCells($field['cells']);
-
+        $cells = [];
+        foreach ($field['attributes']['row'] as $row) {
+            $r = [];
+            foreach ($row as $k => $v) {
+                foreach (array_column($field['attributes']['column'], 'key') as $h) {
+                    if ($h == $k) {
+                        $r[] = $v;
+                    }
+                }
+            }
+            $cells[] = $r;
+        }
+        $cells = $this->Html->tableCells($cells);
         $html = sprintf($html, $field['label'], $headers, $cells);
+
         return $html;
     }
 
