@@ -852,12 +852,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             staff_type_id: staffTypeId,
             FTE: fte,
             institution_position_id: institutionPositionId,
-            status: 0,
+            status_id: 0,
             institution_id: StaffController.institutionId,
             previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
-            type: 2,
             comment: StaffController.comment,
-            update: 0
+            initiated_by: 1
         };
 
         InstitutionsStaffSvc.addStaffTransferRequest(data)
@@ -866,9 +865,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (data.error.length == 0) {
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
                 $window.location.href = 'add?staff_transfer_added=true';
-            } else if (data.error.hasOwnProperty('update') && data.error.update.hasOwnProperty('ruleTransferRequestExists')) {
+            } else if (data.error.hasOwnProperty('staff_id') && data.error.staff_id.hasOwnProperty('ruleTransferRequestExists')) {
                 AlertSvc.warning($scope, 'There is an existing transfer in request.');
-                $window.location.href = data.error.update.ruleTransferRequestExists;
+                $window.location.href = data.error.staff_id.ruleTransferRequestExists;
             } else {
                 console.log(response);
                 AlertSvc.error($scope, 'There is an error in adding staff transfer request.');

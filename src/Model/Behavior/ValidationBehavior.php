@@ -2084,27 +2084,25 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-    public static function checkPendingStaffTransfer($field, array $globalData)
+    public static function checkPendingStaffTransferIn($field, array $globalData)
     {
         $data = $globalData['data'];
         $staffId = $data['staff_id'];
         $institutionId = $data['institution_id'];
-        $newTransferStatus = 0;
-        $type = 2;
-        $TransferRequest = TableRegistry::get('Institution.StaffTransferRequests');
+        $StaffTransferInTable = TableRegistry::get('Institution.StaffTransferIn');
 
-        $transferRecord = $TransferRequest
+        $transferRecord = $StaffTransferInTable
             ->find()
+            ->matching('Statuses')
             ->where([
-                $TransferRequest->aliasField('institution_id') => $institutionId,
-                $TransferRequest->aliasField('staff_id') => $staffId,
-                $TransferRequest->aliasField('type') => $type,
-                $TransferRequest->aliasField('status') => $newTransferStatus
+                $StaffTransferInTable->aliasField('institution_id') => $institutionId,
+                $StaffTransferInTable->aliasField('staff_id') => $staffId,
+                'Statuses.category <> ' => $StaffTransferInTable::DONE
             ])
             ->first();
 
         if ($transferRecord) {
-            $url = Router::url(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferRequests', 'view', $TransferRequest->paramsEncode(['id' => $transferRecord->id])], true);
+            $url = Router::url(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferIn', 'view', $StaffTransferInTable->paramsEncode(['id' => $transferRecord->id])], true);
             return $url;
         }
 
