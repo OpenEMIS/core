@@ -21,6 +21,7 @@ class RestfulController extends AppController
         $componentName = 'Restful'. ucfirst($version);
         $this->loadComponent('Restful.' . $componentName);
         $this->loadComponent('RequestHandler');
+        $this->loadComponent('Restful.DownloadFile');
         $this->loadComponent('Auth', [
             'authorize' => 'Controller',
             'unauthorizedRedirect' => false

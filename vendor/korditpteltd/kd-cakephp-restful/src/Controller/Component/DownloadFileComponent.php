@@ -25,12 +25,15 @@ class DownloadFileComponent extends Component
                 '_serialize' => ['extension', 'filename', 'src']
             ]);
         } else {
-            return $this->response
-                ->withStringBody($file)
-                ->type('application/force-download')
-                ->type('application/octet-stream')
-                ->type($pathInfo['extension'])
-                ->download($fileName);
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $this->response->getMimeType($pathInfo['extension']));
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+            echo $file;
+            exit();
         }
     }
 }
