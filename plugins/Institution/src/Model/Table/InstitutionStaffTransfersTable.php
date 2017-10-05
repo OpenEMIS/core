@@ -20,6 +20,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+        $this->table('institution_staff_transfers');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);

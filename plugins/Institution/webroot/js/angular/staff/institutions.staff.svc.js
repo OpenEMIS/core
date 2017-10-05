@@ -57,7 +57,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     var models = {
         Genders: 'User.Genders',
-        StaffAssignment: 'Institution.StaffTransferRequests',
+        StaffTransferIn: 'Institution.StaffTransferIn',
         StaffUser: 'Institution.StaffUser',
         StaffRecord: 'Institution.Staff',
         StaffTypes: 'Staff.StaffTypes',
@@ -436,7 +436,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function addStaffTransferRequest(data)
     {
-        return StaffAssignment.save(data);
+        return StaffTransferIn.save(data);
     };
 
     function getUserRecord(externalRef)
