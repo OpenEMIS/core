@@ -37,6 +37,7 @@ class InfrastructureNeedsController extends PageController
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
         $page->addCrumb(__('Needs'));
 
+        // set institution_id
         $page->get('institution_id')->setControlType('hidden')->setValue($institutionId);
 
         // set header
@@ -100,13 +101,12 @@ class InfrastructureNeedsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        // $page->exclude(['file_content']);
-        // $page->setAttributes('', 'file_content')->setLabel(__('Attachment'));
+        $page->exclude(['file_name']);
 
+        // set the file download for attachment
         $page->get('file_content')
             ->setLabel('Attachment')
             ->setAttributes('fileNameField', 'file_name');
-
 
         parent::view($id);
 
@@ -137,9 +137,8 @@ class InfrastructureNeedsController extends PageController
 
         // set the file upload for attachment
         $page->get('file_content')
-            ->set('fileName', 'file_name')
-            ->set('fileSizeLimit', '2')
-            ->setLabel(__('Attachment'));
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
     }
 
     private function getIdName($entity)
