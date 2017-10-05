@@ -113,6 +113,17 @@ class RestfulController extends AppController
         $this->restfulComponent->delete();
     }
 
+    public function download($id, $fileNameField, $fileContentField)
+    {
+        return $this->DownloadFile->download($id, $fileNameField, $fileContentField);
+    }
+
+    public function image($id, $fileNameField, $fileContentField)
+    {
+        $this->DownloadFile->config('base64Encode', true);
+        return $this->DownloadFile->download($id, $fileNameField, $fileContentField);
+    }
+
     public function translate()
     {
         $original = $this->request->data;
