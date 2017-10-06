@@ -14,7 +14,6 @@ class InfrastructureNeedsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('InfrastructureNeeds');
         $this->Page->loadElementsFromTable($this->InfrastructureNeeds);
 
         $this->Page->enable(['download']);
