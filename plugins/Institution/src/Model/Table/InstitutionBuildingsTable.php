@@ -59,6 +59,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true],
             'tableCellClass' => null
         ]);
+        $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
@@ -223,6 +224,15 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // get the list of owner institution id
+        $ownerInstitutionIds = $this->getOwnerInstitutionId();
+
+        if (!empty($ownerInstitutionIds)) {
+            $conditions = [];
+            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+            $query->where($conditions, [], true);
+        }
+
         $parentId = $this->getQueryString('institution_land_id');
         $parentRecord = $this->InstitutionLands->get($parentId)->toArray();
         if (isset($extra['toolbarButtons']['add'])) {
@@ -799,6 +809,17 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['value'] = $this->getQueryString('institution_land_id');
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'index' || $action == 'view') {
+            if (!empty($this->getOwnerInstitutionId())) {
+                $attr['type'] = 'select';
+            }
+        }
+
         return $attr;
     }
 
