@@ -79,6 +79,24 @@ class ContactsTable extends ControllerActionTable {
 		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
 	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	{
+		//to check if contact is new for its type. if yes, then set as preferred
+		if ($entity->isNew()) {
+			$contactOption = $entity->contact_option_id;
+	        $contacts = $this->find()
+	                    ->matching('ContactTypes', function ($q) use ($contactOption) {
+	                        return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+	                    })
+	                    ->where([
+	                        $this->aliasField('security_user_id') => $entity->security_user_id
+	                    ]);
+            if (empty($contacts->toArray())) {
+                $entity->preferred = 1;
+            }
+		}
+	}
+
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //if preferred set, then unset other preferred for the same contact option
