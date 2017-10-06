@@ -29,6 +29,7 @@ class CustomReportBehavior extends Behavior
                 ]
             ]);
 
+            // find byAccess (not used for filters)
             $userId = $params['user_id'];
             $superAdmin = $params['super_admin'];
             if ($byaccess) {
@@ -228,7 +229,8 @@ class CustomReportBehavior extends Behavior
             $select = [];
 
             foreach($values as $field => $value) {
-                $select[$field] = $query->newExpr()->add($value);
+                // manually append backticks to column alias to cater for arabic text
+                $select['`'.$field.'`'] = $query->newExpr()->add($value);
             }
 
             $query->select($select);

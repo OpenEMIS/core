@@ -113,6 +113,22 @@ class SystemUpdatesTable extends ControllerActionTable
                     }
                 }
             }
+
+            $version = trim(file_get_contents(WWW_ROOT . 'version'));
+            $entity = $this->find()->where(['version' => $version])->first();
+
+            if (!is_null($entity)) {
+                $this->updateAll(
+                    [
+                        'date_approved' => $entity->date_released,
+                        'approved_by' => 1,
+                        'status' => 2
+                    ], [
+                        'id <=' => $entity->id,
+                        'status' => 1
+                    ]
+                );
+            }
         } else {
             try {
                 Log::write('error', 'Unable to retrieve system versions (Status Code: ' . $response->getStatusCode() . ')');
