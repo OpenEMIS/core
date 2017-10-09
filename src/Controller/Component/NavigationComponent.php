@@ -628,7 +628,7 @@ class NavigationComponent extends Component
             ],
 
                 'Institutions.InstitutionLands' => [
-                    'title' => 'Infrastructures',
+                    'title' => 'Overview',
                     'parent' => 'Infrastructures',
                     'params' => ['plugin' => 'Institution'],
                     'selected' => ['Institutions.InstitutionLands', 'Institutions.InstitutionBuildings', 'Institutions.InstitutionFloors', 'Institutions.InstitutionRooms']
