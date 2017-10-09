@@ -228,7 +228,12 @@ class PageHelper extends Helper
             $headers[] = $label;
         }
 
-        $headers[] = [__('Actions') => ['class' => 'cell-action']];
+        $disabledActions = $this->_View->get('disabledActions');
+        $actionButtons = ['view', 'edit', 'delete'];
+        if (count(array_intersect($actionButtons, $disabledActions)) < 3) {
+            $headers[] = [__('Actions') => ['class' => 'cell-action']];
+        }
+
         return $headers;
     }
 
@@ -247,7 +252,11 @@ class PageHelper extends Helper
                     $row[] = $this->getValue($entity, $attr);
                 }
             }
-            $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
+            $disabledActions = $this->_View->get('disabledActions');
+            $actionButtons = ['view', 'edit', 'delete'];
+            if (count(array_intersect($actionButtons, $disabledActions)) < 3) {
+                $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
+            }
 
             $tableData[] = $row;
         }

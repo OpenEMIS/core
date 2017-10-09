@@ -3963,7 +3963,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-            "reference": "41c0e52df5c8e54ec7c414858c11bd01b57a14c5"
+            "reference": "60c1f5210784d811719770ed6ad31c92fdeac258"
         },
         "require": {
             "cakephp/cakephp": ">=3.3.0 <3.5"
@@ -3972,7 +3972,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-10-05T08:24:53+00:00",
+        "time": "2017-10-06T07:53:43+00:00",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
@@ -4007,7 +4007,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "c75bbc7032f0ff3829bab0f6c1fec761341b51c2"
+            "reference": "742037629875de54e30481e8fe70146fd6f6ac8f"
         },
         "require": {
             "admad/cakephp-jwt-auth": "^2.0",
@@ -4017,7 +4017,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-10-05T08:06:45+00:00",
+        "time": "2017-10-05T09:11:36+00:00",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
