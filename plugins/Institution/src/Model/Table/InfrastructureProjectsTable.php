@@ -10,21 +10,21 @@ use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
 
-class InfrastructureNeedsTable extends AppTable
+class InfrastructureProjectsTable extends AppTable
 {
-    private $needPriorities = [
-        1 => 'High',
-        2 => 'Medium',
-        3 => 'Low'
+    private $projectStatuses = [
+        1 => 'Active',
+        2 => 'Inactive'
     ];
 
     public function initialize(array $config)
     {
-        $this->table('infrastructure_needs');
+        $this->table('infrastructure_projects');
         parent::initialize($config);
 
-        $this->belongsTo('InfrastructureNeedTypes',   ['className' => 'Institution.InfrastructureNeedTypes', 'foreign_key' => 'infrastructure_need_type_id']);
-        $this->hasmany('InfrastructureProjects', ['className' => 'Institution.InfrastructureProjects', 'foreign_key' => 'infrastructure_need_id']);
+        $this->belongsTo('InfrastructureProjectFundingSources',   ['className' => 'Institution.InfrastructureProjectFundingSources', 'foreign_key' => 'infrastructure_project_funding_source_id']);
+        $this->belongsTo('InfrastructureNeeds',   ['className' => 'Institution.InfrastructureNeeds', 'foreign_key' => 'infrastructure_need_id']);
+
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
@@ -87,20 +87,30 @@ class InfrastructureNeedsTable extends AppTable
         ;
     }
 
-    public function getNeedTypesOptions()
+    public function getFundingSourceOptions()
     {
         // should be auto, if auto the reorder and visible not working
-        $needTypeOptions = $this->InfrastructureNeedTypes
+        $fundingSourceOptions = $this->InfrastructureProjectFundingSources
             ->find('list')
             ->find('visible')
             ->find('order')
             ->toArray();
 
-        return $needTypeOptions;
+        return $fundingSourceOptions;
     }
 
-    public function getNeedPrioritiesOptions()
+    public function getProjectStatusesOptions()
     {
-        return $this->needPriorities;
+        return $this->projectStatuses;
+    }
+
+    public function getNeedsOptions()
+    {
+        // $needsOptions = $this->Needs->
+        $needsOptions = $this->InfrastructureNeeds->
+            find('list')
+            ->toArray();
+
+        return $needsOptions;
     }
 }
