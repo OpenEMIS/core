@@ -148,9 +148,10 @@ class PageComponent extends Component
                     }
 
                     foreach ($this->elements as $element) {
+                        $key = $element->getKey();
                         $displayFrom = $element->getDisplayFrom();
 
-                        if (is_null($displayFrom)) {
+                        if (is_null($displayFrom) && !$this->isExcluded($key)) {
                             $value = null;
                             $key = $element->getKey();
                             $controlType = $element->getControlType();
