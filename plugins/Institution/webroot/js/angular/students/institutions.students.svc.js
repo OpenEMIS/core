@@ -233,7 +233,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         StudentUser.reset();
         StudentUser.find('Students', params);
         StudentUser.find('enrolledInstitutionStudents');
-        StudentUser.contain(['Genders']);
+        StudentUser.contain(['Genders', 'MainIdentityTypes', 'MainNationalities']);
 
         return StudentUser.ajax({defer: true, success: success});
     };
