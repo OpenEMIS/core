@@ -58,6 +58,7 @@ class InstitutionLandsTable extends ControllerActionTable
             'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
             'tableCellClass' => null
         ]);
+        $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
@@ -245,6 +246,15 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // get the list of owner institution id
+        $ownerInstitutionIds = $this->getOwnerInstitutionId();
+
+        if (!empty($ownerInstitutionIds)) {
+            $conditions = [];
+            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+            $query->where($conditions, [], true);
+        }
+
         // Academic Period
         list($periodOptions, $selectedPeriod) = array_values($this->getPeriodOptions());
         $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
@@ -752,6 +762,17 @@ class InstitutionLandsTable extends ControllerActionTable
                 $attr['type'] = 'readonly';
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
+            }
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'index' || $action == 'view') {
+            if (!empty($this->getOwnerInstitutionId())) {
+                $attr['type'] = 'select';
             }
         }
 
