@@ -167,6 +167,9 @@ class POCOR3997 extends AbstractMigration
             ])
             ->save();
 
+        $incomingInstitutionOwner = json_encode(['institution_owner' => 1], JSON_NUMERIC_CHECK);
+        $outgoingInstitutionOwner = json_encode(['institution_owner' => 2], JSON_NUMERIC_CHECK);
+
         // STAFF-TRANSFER-1001 (by incoming)
         $byIncomingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1001'")['id'];
 
@@ -179,7 +182,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '1',
                 'is_system_defined' => '1',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => '{"institution_owner":"1"}',
+                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -190,7 +193,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '1',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => '{"institution_owner":"1"}',
+                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -201,7 +204,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => '{"institution_owner":"2"}',
+                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -212,7 +215,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => '{"institution_owner":"1"}',
+                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -223,7 +226,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '1',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => '{"institution_owner":"1"}',
+                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -234,7 +237,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => '{"institution_owner":"1"}',
+                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -344,7 +347,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '1',
                 'is_system_defined' => '1',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => '{"institution_owner":"2"}',
+                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -355,7 +358,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '1',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => '{"institution_owner":"2"}',
+                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -366,7 +369,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => '{"institution_owner":"1"}',
+                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -377,7 +380,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => '{"institution_owner":"2"}',
+                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -388,7 +391,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '1',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => '{"institution_owner":"2"}',
+                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -399,7 +402,7 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => '{"institution_owner":"2"}',
+                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
