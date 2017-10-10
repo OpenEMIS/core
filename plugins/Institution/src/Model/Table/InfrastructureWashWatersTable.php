@@ -25,15 +25,6 @@ class InfrastructureWashWatersTable extends AppTable
         $this->belongsTo('InfrastructureWashWaterAccessibilities',   ['className' => 'Institution.InfrastructureWashWaterAccessibilities', 'foreign_key' => 'infrastructure_wash_water_accessibility_id']);
     }
 
-    public function findIndex(Query $query, array $options)
-    {
-// pr($options['querystring']);
-// die;
-        // pr($query->contain([])->toArray());
-// die;
-        // return $query->where(['visible' => 1]);
-    }
-
     public function getWaterTypeOptions()
     {
         // should be auto, if auto the reorder and visible not working
