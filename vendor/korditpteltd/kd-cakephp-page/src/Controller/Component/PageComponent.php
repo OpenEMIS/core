@@ -563,7 +563,7 @@ class PageComponent extends Component
         $OR = [];
         foreach ($columns as $name) {
             $columnInfo = $schema->column($name);
-            if ($name == 'id' || $name == 'password') {
+            if ($name == 'id' || $name == 'password' || $this->isExcluded($name)) {
                 continue;
             }
 
@@ -833,6 +833,7 @@ class PageComponent extends Component
     public function get($key)
     {
         $element = null;
+
         if (array_key_exists($key, $this->order)) {
             if ($this->elements->offsetExists($this->order[$key])) {
                 $element = $this->elements->offsetGet($this->order[$key]);

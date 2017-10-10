@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a5bf96d7fc2bb69a1ee67399ba99a3a9",
+    "content-hash": "40c973c91520439796451048e442d574",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -389,11 +389,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-page",
-            "version": "dev-hchiang",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-                "reference": "60c1f5210784d811719770ed6ad31c92fdeac258"
+                "reference": "7abdd8b2c2f291afe42438e10e3ba4975a599044"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.5"
@@ -427,7 +427,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
             },
-            "time": "2017-10-06 07:53:43"
+            "time": "2017-10-10T07:41:27+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
@@ -482,7 +482,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2017-10-05 09:11:36"
+            "time": "2017-10-05T09:11:36+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
@@ -527,7 +527,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-07-11 07:25:42"
+            "time": "2017-07-11T07:25:42+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
@@ -770,7 +770,7 @@
                 "xls",
                 "xlsx"
             ],
-            "time": "2015-05-05 00:10:25"
+            "time": "2015-05-05T00:10:25+00:00"
         },
         {
             "name": "phpseclib/phpseclib",
@@ -3927,7 +3927,6 @@
         "phpoffice/phpexcel": 20,
         "korditpteltd/kd-cakephp-restful": 20,
         "korditpteltd/kd-cakephp-sso": 20,
-        "korditpteltd/kd-cakephp-page": 20,
         "psy/psysh": 0
     },
     "prefer-stable": true,
