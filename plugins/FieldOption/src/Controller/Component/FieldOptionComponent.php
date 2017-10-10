@@ -119,7 +119,6 @@ class FieldOptionComponent extends Component
         'InfrastructureWashWaterQualities' => ['className' => 'Institution.InfrastructureWashWaterQualities', 'parent' => 'Infrastructure'],
         'InfrastructureWashWaterAccessibilities' => ['className' => 'Institution.InfrastructureWashWaterAccessibilities', 'parent' => 'Infrastructure'],
 
-
     // Health
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
         'Conditions' => ['className' => 'Health.Conditions', 'parent' => 'Health'],
