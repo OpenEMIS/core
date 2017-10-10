@@ -11,7 +11,7 @@ class InfrastructureNeedTypesTable extends ControllerActionTable
         $this->table('infrastructure_need_types');
         parent::initialize($config);
 
-        $this->hasMany('InfrastructureNeeds', ['className' => 'Institution.InfrastructureNeeds', 'foreignKey' => 'infrastructure_need_specification_id']);
+        $this->hasMany('InfrastructureNeeds', ['className' => 'Institution.InfrastructureNeeds', 'foreignKey' => 'infrastructure_need_type_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
