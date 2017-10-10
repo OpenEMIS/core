@@ -115,7 +115,7 @@ class StaffTransferBehavior extends Behavior
 
                 if (isset($data['institution_owner']) && !empty($data['institution_owner'])) {
                     $institutionOwner = ['institution_owner' => $data['institution_owner']];
-                    $data->offsetSet('params', json_encode($institutionOwner));
+                    $data->offsetSet('params', json_encode($institutionOwner, JSON_NUMERIC_CHECK));
                 }
             }
         }
