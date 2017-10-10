@@ -235,17 +235,9 @@ class WorkflowBehavior extends Behavior {
 
         $model = $this->_table;
         if ($model->hasField('assignee_id')) {
-            if ($this->isCAv4()) {
-                $model->field('assignee_id', [
-                    'type' => 'string',
-                    'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
-                ]);
-            } else {
-                $model->ControllerAction->field('assignee_id', [
-                    'type' => 'string',
-                    'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
-                ]);
-            }
+            // directly modify type and visible to avoid additional trigger to onUpdateFieldAssigneeId event
+            $model->fields['assignee_id']['type'] = 'string';
+            $model->fields['assignee_id']['visible'] = ['index' => true, 'view' => true, 'add' => false, 'edit' => false];
         }
     }
 
