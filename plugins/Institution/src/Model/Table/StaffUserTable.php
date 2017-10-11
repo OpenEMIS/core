@@ -220,12 +220,12 @@ class StaffUserTable extends ControllerActionTable
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StaffTable = TableRegistry::get('Institution.Staff');
-            $StaffOutgoingAssignments = TableRegistry::get('Institution.InstitutionStaffOutgoingAssignments');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $Statuses = $StaffOutgoingAssignments->Statuses;
+            $StaffTransferOut = TableRegistry::get('Institution.StaffTransferOut');
+            $Statuses = $StaffTransferOut->Statuses;
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-            $doneStatus = $StaffOutgoingAssignments::DONE;
+            $doneStatus = $StaffTransferOut::DONE;
 
             $institutionStaffId = $extra['institution_staff_id'];
             $staffEntity = $StaffTable->get($institutionStaffId);
@@ -234,7 +234,7 @@ class StaffUserTable extends ControllerActionTable
             $staffStatusId = $staffEntity->staff_status_id;
 
             if ($staffStatusId == $assignedStatus) {
-                $url = ['controller' => $this->controller->name, 'action' => 'InstitutionStaffOutgoingAssignments', 'add'];
+                $url = ['controller' => $this->controller->name, 'action' => 'StaffTransferOut', 'add'];
 
                 $transferButton = $toolbarButtons['back'];
                 $transferButton['type'] = 'button';
@@ -244,14 +244,13 @@ class StaffUserTable extends ControllerActionTable
                 $transferButton['url'] = $this->setQueryString($url, ['institution_staff_id' => $institutionStaffId, 'user_id' => $entity->id]);
 
                 // check if there is an existing outgoing transfer request
-                $staffTransferRequest = $StaffOutgoingAssignments
-                    ->find()
+                $staffTransferRequest = $StaffTransferOut->find()
                     ->matching($Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                         return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
                     })
                     ->where([
-                        $StaffOutgoingAssignments->aliasField('institution_id') => $institutionId,
-                        $StaffOutgoingAssignments->aliasField('staff_id') => $staffId
+                        $StaffTransferOut->aliasField('previous_institution_id') => $institutionId,
+                        $StaffTransferOut->aliasField('staff_id') => $staffId
                     ])
                     ->first();
 
