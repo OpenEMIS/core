@@ -98,10 +98,7 @@ class StaffLeaveTable extends ControllerActionTable
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         $this->field('staff_id', ['type' => 'hidden']);
-    }
 
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 
@@ -122,6 +119,9 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $this->field('staff_leave_type_id');
         $this->field('assignee_id', ['entity' => $entity]); //send entity information
+
+        // after $this->field(), field ordering will mess up, so need to reset the field order
+        $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
     }
 
     public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
@@ -366,8 +366,8 @@ class StaffLeaveTable extends ControllerActionTable
             $registryAlias = $this->registryAlias();
 
             $isNew = $entity->has('id') ? false : true;
-            $filterId = $entity->staff_leave_type_id;
-            $statusId = $entity->status_id;
+            $filterId = $entity->has('staff_leave_type_id') ? $entity->staff_leave_type_id : null;
+            $statusId = $entity->has('status_id') ? $entity->status_id : null;
 
             $workflowEntity = $this->getWorkflow($registryAlias, $entity, $filterId);
 
