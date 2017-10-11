@@ -162,7 +162,9 @@ class InfrastructureProjectsController extends PageController
         // set infrastructure needs
         $page->get('infrastructure_need_id')
             ->setControlType('select')
-            ->setOptions($this->needsOptions);
+            ->setAttributes('multiple', true)
+            ->setAttributes('placeholder', __('Select Needs'))
+            ->setOptions($this->needsOptions, false);
 
         // set the file upload for attachment
         $page->get('file_content')
