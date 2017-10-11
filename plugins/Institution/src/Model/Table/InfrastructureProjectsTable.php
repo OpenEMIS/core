@@ -23,7 +23,15 @@ class InfrastructureProjectsTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('InfrastructureProjectFundingSources',   ['className' => 'Institution.InfrastructureProjectFundingSources', 'foreign_key' => 'infrastructure_project_funding_source_id']);
-        $this->belongsTo('InfrastructureNeeds',   ['className' => 'Institution.InfrastructureNeeds', 'foreign_key' => 'infrastructure_need_id']);
+
+        $this->belongsToMany('InfrastructureNeeds', [
+            'className' => 'Institution.InfrastructureNeeds',
+            'joinTable' => 'infrastructure_projects_needs',
+            'foreignKey' => 'infrastructure_project_id',
+            'targetForeignKey' => 'infrastructure_need_id',
+            'through' => 'Institution.InfrastructureProjectsNeeds',
+            'dependent' => true
+        ]);
 
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
@@ -106,7 +114,6 @@ class InfrastructureProjectsTable extends AppTable
 
     public function getNeedsOptions()
     {
-        // $needsOptions = $this->Needs->
         $needsOptions = $this->InfrastructureNeeds->
             find('list')
             ->toArray();
