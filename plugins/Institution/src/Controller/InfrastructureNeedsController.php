@@ -117,7 +117,7 @@ class InfrastructureNeedsController extends PageController
         $associatedProjects = $this->getAssociatedRecords($entity);
 
         if (!empty($associatedProjects)) {
-            $page->addNew('associated_project')
+            $page->addNew('infrastructure_project')
                 ->setControlType('table')
                 ->setAttributes('column', [
                     ['label' => __('Project Name')],
@@ -126,7 +126,7 @@ class InfrastructureNeedsController extends PageController
                 ->setAttributes('row',$associatedProjects) // $associatedProject is an array
             ;
 
-            $page->move('associated_project')->after('priority');
+            $page->move('infrastructure_project')->after('priority')->setLabel(__('Associated Projects'));
         }
         // end if have infrastructure_project association will show the link
     }
