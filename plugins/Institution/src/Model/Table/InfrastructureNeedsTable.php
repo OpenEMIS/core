@@ -24,7 +24,16 @@ class InfrastructureNeedsTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('InfrastructureNeedTypes',   ['className' => 'Institution.InfrastructureNeedTypes', 'foreign_key' => 'infrastructure_need_type_id']);
-        $this->hasmany('InfrastructureProjects', ['className' => 'Institution.InfrastructureProjects', 'foreign_key' => 'infrastructure_need_id']);
+
+        $this->belongsToMany('InfrastructureProjects', [
+            'className' => 'Institution.InfrastructureProjects',
+            'joinTable' => 'infrastructure_projects_needs',
+            'foreignKey' => 'infrastructure_need_id',
+            'targetForeignKey' => 'infrastructure_project_id',
+            'through' => 'Institution.InfrastructureProjectsNeeds',
+            'dependent' => true
+        ]);
+
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
