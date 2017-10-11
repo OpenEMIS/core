@@ -177,22 +177,41 @@ class PageElement
         if (is_array($name) && is_null($value)) {
             foreach ($name as $key => $val) {
                 $this->attributes[$key] = $val;
+
+                if ($key == 'multiple') {
+                    if (!is_bool($value)) {
+                        die($this->key . ': value of attribute (multiple) must be true/false');
+                    }
+
+                    if ($value) {
+                        if ($this->controlType == 'select') {
+                            $this->name .= '._ids';
+                        }
+                    } else { // if $value is false then remove the attribute because it should not appear in html
+                        unset($this->attributes[$key]);
+                    }
+                }
             }
         } elseif (!is_null($value)) {
             $this->attributes[$name] = $value;
+
+            if ($name == 'multiple') {
+                if (!is_bool($value)) {
+                    die($this->key . ': value of attribute (multiple) must be true/false');
+                }
+
+                if ($value) {
+                    if ($this->controlType == 'select') {
+                        $this->name .= '._ids';
+                    }
+                } else { // if $value is false then remove the attribute because it should not appear in html
+                    unset($this->attributes[$name]);
+                }
+            }
         }
 
-        if ($this->controlType == 'select' && $name == 'multiple' && $value == true) {
-            $this->name .= '._ids';
-        }
         return $this;
     }
-
-    // public function setAttributes($key, $value)
-    // {
-    //     $this->attributes[$key] = $value;
-    //     return $this;
-    // }
 
     public function getAttributes()
     {
