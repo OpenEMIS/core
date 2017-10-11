@@ -95,6 +95,11 @@ class InfrastructureProjectsTable extends AppTable
         ;
     }
 
+    public function findEdit(Query $query, array $options)
+    {
+        return $query->contain(['InfrastructureNeeds']);
+    }
+
     public function getFundingSourceOptions()
     {
         // should be auto, if auto the reorder and visible not working
