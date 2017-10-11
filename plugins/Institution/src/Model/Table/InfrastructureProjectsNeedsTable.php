@@ -18,6 +18,7 @@ class InfrastructureProjectsNeedsTable extends AppTable
 
         $this->belongsTo('InfrastructureProjects', ['className' => 'Institution.InfrastructureProjects']);
         $this->belongsTo('InfrastructureNeeds',  ['className' => 'Institution.InfrastructureNeeds']);
+
         $this->addBehavior('CompositeKey');
     }
 }
