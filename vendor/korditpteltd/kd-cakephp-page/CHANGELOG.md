@@ -1,3 +1,7 @@
+### [1.1.2] - 2017-10-11
+- Fixed an issue on Edit action where value are not returning the correct format for multiple select control
+- Added hasAttribute function in PageElement for checking the existence of an attribute
+
 ### [1.1.1] - 2017-10-11
 - Fixed an issue with the i18nFormat. Change the formatting from dd-MM-YYYY to dd-MM-yyyy to address an issue with the year value in the final week of the year.
 

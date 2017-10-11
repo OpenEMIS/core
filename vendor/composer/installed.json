@@ -4015,12 +4015,12 @@
     },
     {
         "name": "korditpteltd/kd-cakephp-page",
-        "version": "1.1.1",
-        "version_normalized": "1.1.1.0",
+        "version": "1.1.2",
+        "version_normalized": "1.1.2.0",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-            "reference": "9933597904c931066a1939c30db0b5f451298029"
+            "reference": "a9d238f2af26e0ecacba40279b3aeaabf7bfef77"
         },
         "require": {
             "cakephp/cakephp": ">=3.3.0 <3.5"
@@ -4029,7 +4029,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-10-11T02:13:37+00:00",
+        "time": "2017-10-11T10:45:33+00:00",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
