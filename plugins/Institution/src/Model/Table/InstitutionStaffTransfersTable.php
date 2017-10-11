@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionStaffTransfersTable extends ControllerActionTable
@@ -78,6 +79,36 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function onTransferStaff(Event $event, $id, Entity $workflowTransitionEntity)
     {
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+        $entity = $this->get($id);
+
+        $incomingStaff = [
+            'FTE' => $entity->FTE,
+            'start_date' => $entity->start_date,
+            'start_year' => $entity->start_date->year,
+            'staff_id' => $entity->staff_id,
+            'staff_type_id' => $entity->staff_type_id,
+            'staff_status_id' => $StaffStatusesTable->getIdByCode('ASSIGNED'),
+            'institution_id' => $entity->institution_id,
+            'institution_position_id' => $entity->institution_position_id
+        ];
+        if (!empty($entity->end_date)) {
+            $incomingStaff['end_date'] = $entity->end_date;
+            $incomingStaff['end_year'] = $entity->end_date->year;
+        }
+        $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => false]);
+
+        if ($StaffTable->save($newEntity)) {
+            // end previous institution staff record
+            if (!empty($entity->institution_staff_id) && !empty($entity->previous_end_date)) {
+                $StaffTable->updateAll([
+                    'end_date' => $entity->previous_end_date,
+                    'end_year' => $entity->previous_end_date->year,
+                    'staff_status_id' => $StaffStatusesTable->getIdByCode('END_OF_ASSIGNMENT')
+                ], ['id' => $entity->institution_staff_id]);
+            }
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
