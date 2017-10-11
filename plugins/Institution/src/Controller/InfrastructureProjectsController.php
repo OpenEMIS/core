@@ -119,7 +119,7 @@ class InfrastructureProjectsController extends PageController
         $associatedNeeds = $this->getAssociatedRecords($entity);
 
         if (!empty($associatedNeeds)) {
-            $page->addNew('associated_needs')
+            $page->addNew('infrastructure_needs')
                 ->setControlType('table')
                 ->setAttributes('column', [
                     ['label' => __('Need Name')],
@@ -128,7 +128,7 @@ class InfrastructureProjectsController extends PageController
                 ->setAttributes('row',$associatedNeeds) // $associatedNeeds is an array
             ;
 
-            $page->move('associated_needs')->after('date_completed');
+            $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
         }
         // end if have infrastructure_need association will show the link
     }
@@ -156,13 +156,13 @@ class InfrastructureProjectsController extends PageController
             ->setOptions($this->projectStatusesOptions);
 
         // set infrastructure needs
-        $page->addNew('associated_needs')
+        $page->addNew('infrastructure_needs')
             ->setControlType('select')
             ->setAttributes('multiple', true)
             ->setAttributes('placeholder', __('Select Needs'))
             ->setOptions($this->needsOptions, false);
 
-        $page->move('associated_needs')->after('date_completed');
+        $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
 
         // set the file upload for attachment
         $page->get('file_content')
