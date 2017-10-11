@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Collection\Collection;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -787,6 +788,14 @@ class PageComponent extends Component
                         }
                     } else {
                         $value = $entity->$key;
+
+                        // this is to change value to an array of ids for multiselect to work
+                        if ($controlType == 'select' && $element->hasAttribute('multiple')) {
+                            if (is_array($value) && !empty($value) && $value[0] instanceof Entity) { // array of Entity objects
+                                $entityCollections = new Collection($value);
+                                $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                            }
+                        }
                     }
                 }
             }

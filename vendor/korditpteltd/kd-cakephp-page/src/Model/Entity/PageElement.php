@@ -218,6 +218,11 @@ class PageElement
         return $this->attributes;
     }
 
+    public function hasAttribute($name)
+    {
+        return array_key_exists($name, $this->attributes);
+    }
+
     public function isRequired()
     {
         return $this->required;
