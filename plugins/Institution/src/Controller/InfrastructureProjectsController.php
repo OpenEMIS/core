@@ -2,6 +2,7 @@
 namespace Institution\Controller;
 
 use Cake\Event\Event;
+use Cake\Routing\Router;
 
 use App\Controller\PageController;
 
@@ -15,6 +16,7 @@ class InfrastructureProjectsController extends PageController
     {
         parent::initialize();
 
+        $this->loadModel('Institution.InfrastructureProjectsNeeds');
         $this->Page->loadElementsFromTable($this->InfrastructureProjects);
 
         $this->Page->enable(['download']);
@@ -53,7 +55,6 @@ class InfrastructureProjectsController extends PageController
 
         // set field order
         $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding source'));
-        $page->move('infrastructure_need_id')->after('date_completed')->setLabel(__('Associated Needs'));
     }
 
     public function index()
@@ -64,7 +65,7 @@ class InfrastructureProjectsController extends PageController
         $page->setQueryOption('order', [$this->InfrastructureProjects->aliasField('created') => 'DESC']);
 
         // set field
-        $page->exclude(['description', 'funding_source_description', 'contract_amount', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'infrastructure_need_id', 'institution_id']);
+        $page->exclude(['description', 'funding_source_description', 'contract_amount', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id']);
 
         $page->get('infrastructure_project_funding_source_id')->setSortable(false);
         $page->get('contract_date')->setSortable(false);
@@ -115,24 +116,19 @@ class InfrastructureProjectsController extends PageController
         $entity = $this->getIdName($page->getData());
 
         // if have infrastructure_need association will show the link
-        if (!empty($entity->infrastructure_need_id)) {
-            $institutionId = $entity->institution_id;
-            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        $associatedNeeds = $this->getAssociatedRecords($entity);
 
-            $needId = $page->encode(['id' => $entity->infrastructure_need_id]);
+        if (!empty($associatedNeeds)) {
+            $page->addNew('infrastructure_needs')
+                ->setControlType('table')
+                ->setAttributes('column', [
+                    ['label' => __('Need Name')],
+                    ['key' => 'link'],
+                ])
+                ->setAttributes('row',$associatedNeeds) // $associatedNeeds is an array
+            ;
 
-            $url = ['
-                plugin' => 'Institution',
-                'controller' => 'InfrastructureNeeds',
-                'action' => 'view',
-                'institutionId' => $encodedInstitutionId,
-                $needId
-            ];
-
-            $page->get('infrastructure_need_id')
-                ->setControlType('link')
-                ->setAttributes('href', $url)
-                ->setValue($entity->infrastructure_need->name);
+            $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
         }
         // end if have infrastructure_need association will show the link
     }
@@ -160,9 +156,13 @@ class InfrastructureProjectsController extends PageController
             ->setOptions($this->projectStatusesOptions);
 
         // set infrastructure needs
-        $page->get('infrastructure_need_id')
+        $page->addNew('infrastructure_needs')
             ->setControlType('select')
-            ->setOptions($this->needsOptions);
+            ->setAttributes('multiple', true)
+            ->setAttributes('placeholder', __('Select Needs'))
+            ->setOptions($this->needsOptions, false);
+
+        $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
 
         // set the file upload for attachment
         $page->get('file_content')
@@ -179,5 +179,41 @@ class InfrastructureProjectsController extends PageController
         }
 
         return $entity;
+    }
+
+    private function getAssociatedRecords($entity)
+    {
+        $page = $this->Page;
+        $needData = $this->InfrastructureProjectsNeeds->find()
+            ->contain(['InfrastructureNeeds'])
+            ->where([$this->InfrastructureProjectsNeeds->aliasField('infrastructure_project_id') => $entity->id])
+            ->all();
+
+        $associatedRecords = [];
+        if (count($needData)) {
+            $institutionId = $entity->institution_id;
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
+            foreach ($needData as $key => $need) {
+                $encodedNeedId = $page->encode(['id' => $need->infrastructure_need_id]);
+                $needName = $need->infrastructure_need->name;
+
+                // build the url
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'controller' => 'InfrastructureNeeds',
+                    'action' => 'view',
+                    'institutionId' => $encodedInstitutionId,
+                    $encodedNeedId
+                ]);
+
+                $associatedRecords[] = [
+                    'need_name' => $needName,
+                    'link' => '<a href=' . $url . ')> ' . $needName . '</a>'
+                ];
+            }
+        }
+
+        return $associatedRecords;
     }
 }
