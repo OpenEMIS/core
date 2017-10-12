@@ -21,6 +21,7 @@ class RestfulController extends AppController
         $componentName = 'Restful'. ucfirst($version);
         $this->loadComponent('Restful.' . $componentName);
         $this->loadComponent('RequestHandler');
+        $this->loadComponent('Restful.DownloadFile');
         $this->loadComponent('Auth', [
             'authorize' => 'Controller',
             'unauthorizedRedirect' => false
@@ -111,6 +112,17 @@ class RestfulController extends AppController
     public function delete()
     {
         $this->restfulComponent->delete();
+    }
+
+    public function download($id, $fileNameField, $fileContentField)
+    {
+        return $this->DownloadFile->download($id, $fileNameField, $fileContentField);
+    }
+
+    public function image($id, $fileNameField, $fileContentField)
+    {
+        $this->DownloadFile->config('base64Encode', true);
+        return $this->DownloadFile->download($id, $fileNameField, $fileContentField);
     }
 
     public function translate()
