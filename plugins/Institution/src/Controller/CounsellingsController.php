@@ -78,8 +78,12 @@ class CounsellingsController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        $page->exclude(['file_content']);
-        $page->get('file_name')->setControlType('link');
+        $page->exclude(['file_name']);
+
+        // set the file download for attachment
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
         parent::view($id);
     }
 
@@ -97,13 +101,15 @@ class CounsellingsController extends PageController
         $institutionId = $page->getQueryString('institution_id');
         $studentId = $page->getQueryString('student_id');
 
-        $page->get('guidance_type_id')->setControlType('dropdown');
+        $page->get('guidance_type_id')->setControlType('select');
 
         // set the options for counselor_id
         $counselorOptions = $this->Counsellings->getCounselorOptions($institutionId);
-        $page->get('counselor_id')->setControlType('dropdown')->setOptions($counselorOptions);
+        $page->get('counselor_id')->setControlType('select')->setOptions($counselorOptions);
 
         // set the file upload for attachment
-        $page->get('file_content')->set('fileName', 'file_name')->set('fileSizeLimit', '2');
+        $page->get('file_content')
+            ->setLabel('Attachment')
+            ->setAttributes('fileNameField', 'file_name');
     }
 }
