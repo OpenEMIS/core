@@ -139,7 +139,7 @@ class SystemUpdatesTable extends ControllerActionTable
             }
         }
 
-        $changelogUrl = $domain . '/changelog';
+        $changelogUrl = $domain . '/CHANGELOG.md';
         $changelogBtn = $this->getButtonTemplate();
         $changelogBtn['attr']['title'] = __('Changelog');
         $changelogBtn['attr']['target'] = '_blank';
