@@ -8,7 +8,8 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 
-class FieldOptionsController extends AppController {
+class FieldOptionsController extends AppController
+{
     public function initialize()
     {
         parent::initialize();
@@ -118,3 +119,4 @@ class FieldOptionsController extends AppController {
     public function InfrastructureWashWaterQuantities ()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function InfrastructureWashWaterQualities ()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function InfrastructureWashWaterAccessibilities ()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+}
