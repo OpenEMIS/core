@@ -119,9 +119,7 @@ class InfrastructureProjectsTable extends AppTable
 
     public function getNeedsOptions()
     {
-        $needsOptions = $this->InfrastructureNeeds->
-            find('list')
-            ->toArray();
+        $needsOptions = $this->InfrastructureNeeds->find('list')->toArray();
 
         return $needsOptions;
     }
