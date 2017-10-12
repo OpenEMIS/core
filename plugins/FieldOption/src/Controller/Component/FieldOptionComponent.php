@@ -110,6 +110,7 @@ class FieldOptionComponent extends Component
     // Infrastructure
         'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
         'InfrastructureConditions' => ['className' => 'FieldOption.InfrastructureConditions', 'parent' => 'Infrastructure'],
+        'InfrastructureNeedTypes' => ['className' => 'Institution.InfrastructureNeedTypes', 'parent' => 'Infrastructure'],
 
     // Health
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],

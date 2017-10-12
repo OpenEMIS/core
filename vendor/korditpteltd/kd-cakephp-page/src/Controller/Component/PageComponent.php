@@ -27,6 +27,7 @@ class PageComponent extends Component
 {
     use EncodingTrait;
 
+    public $components = ['Auth'];
     private $debug = false;
     private $controller = null;
     private $mainTable = null;
@@ -147,9 +148,10 @@ class PageComponent extends Component
                     }
 
                     foreach ($this->elements as $element) {
+                        $key = $element->getKey();
                         $displayFrom = $element->getDisplayFrom();
 
-                        if (is_null($displayFrom)) {
+                        if (is_null($displayFrom) && !$this->isExcluded($key)) {
                             $value = null;
                             $key = $element->getKey();
                             $controlType = $element->getControlType();
@@ -235,7 +237,8 @@ class PageComponent extends Component
         $this->controller->set('status', $this->status->toArray());
 
         if ($this->isDebugMode()) {
-            pr($this->controller->viewVars);die;
+            pr($this->controller->viewVars);
+            die;
         }
     }
 
@@ -560,7 +563,9 @@ class PageComponent extends Component
         $OR = [];
         foreach ($columns as $name) {
             $columnInfo = $schema->column($name);
-            if ($name == 'id' || $name == 'password') continue;
+            if ($name == 'id' || $name == 'password') {
+                continue;
+            }
 
             // if the field is of a searchable type and it is part of the table schema
             if (in_array($columnInfo['type'], $types)) {
@@ -621,8 +626,8 @@ class PageComponent extends Component
             if (!is_null($key)) {
                 $querystring = null;
             } else {
-            $querystring = [];
-        }
+                $querystring = [];
+            }
         }
         return $querystring;
     }
@@ -649,6 +654,11 @@ class PageComponent extends Component
     {
         $querystring = $this->getQueryString();
         $this->queryOptions->offsetSet('querystring', $querystring);
+
+        // Load user information into all the finder and query
+        $user = $this->Auth->user();
+        $this->queryOptions['user'] = $user;
+
         return $this->queryOptions;
     }
 
@@ -751,37 +761,33 @@ class PageComponent extends Component
             $controlType = $element->getControlType();
             $value = $element->getValue();
 
-            if ($this->isExcluded($key) || !empty($value)) continue; // skip excluded elements or if element already has a value
+            if ($this->isExcluded($key) || !empty($value)) {
+                continue; // skip excluded elements or if element already has a value
+            }
 
-            if ($callback) {
-                $prefix = 'Controller.Page.onRender';
-                $eventName = $prefix . ucfirst($controlType);
-                $eventParams = [$entity, $element];
-                $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
-                if ($event->result) { // trigger render<Format>
-                    $value = $event->result;
-                } else {
-                    $eventName = $prefix . Inflector::camelize($key);
-                    $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
-                    if ($event->result) { // trigger render<Field>
-                        $value = $event->result;
-                    } elseif ($entity->has($key)) { // lastly, get value from Entity
-                        $displayFrom = $element->getDisplayFrom();
-                        if ($displayFrom) {
-                            $data = Hash::flatten($entity->toArray());
-                            if (array_key_exists($displayFrom, $data)) {
-                                $value = $data[$displayFrom];
-                            } else {
-                                Log::write('error', 'DisplayFrom: ' . $displayFrom . ' does not exists in $data');
-                            }
-                        } else {
-                            $value = $entity->$key;
-                        }
-                    }
-                }
+            $prefix = 'Controller.Page.onRender';
+            $eventName = $prefix . ucfirst($controlType);
+            $eventParams = [$entity, $element];
+            $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
+            if ($event->result) { // trigger render<Format>
+                $value = $event->result;
             } else {
-                if ($entity->has($key)) {
-                    $value = $entity->$key;
+                $eventName = $prefix . Inflector::camelize($key);
+                $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
+                if ($event->result) { // trigger render<Field>
+                    $value = $event->result;
+                } elseif ($entity->has($key)) { // lastly, get value from Entity
+                    $displayFrom = $element->getDisplayFrom();
+                    if ($displayFrom && $callback) {
+                        $data = Hash::flatten($entity->toArray());
+                        if (array_key_exists($displayFrom, $data)) {
+                            $value = $data[$displayFrom];
+                        } else {
+                            Log::write('error', 'DisplayFrom: ' . $displayFrom . ' does not exists in $data');
+                        }
+                    } else {
+                        $value = $entity->$key;
+                    }
                 }
             }
 
@@ -813,8 +819,7 @@ class PageComponent extends Component
                     if ($attr['null'] === false // not nullable
                         && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
                         && $key !== $table->primaryKey() // not a primary key
-                        && !in_array($key, $this->excludedFields)) // fields not excluded
-                    {
+                        && !in_array($key, $this->excludedFields)) { // fields not excluded
                         $validator->add($key, 'notBlank', ['rule' => 'notBlank']);
                         if ($this->isForeignKey($table, $key)) {
                             $validator->requirePresence($key);
@@ -833,7 +838,8 @@ class PageComponent extends Component
                 $element = $this->elements->offsetGet($this->order[$key]);
             }
         } else {
-            pr($key . ' does not exists');die;
+            pr($key . ' does not exists');
+            die;
         }
         return $element;
     }
@@ -877,12 +883,15 @@ class PageComponent extends Component
             $key = $element->getKey();
             if (!$this->isExcluded($key)) {
                 $controlType = $element->getControlType();
-                $isDropdownType = $controlType == 'dropdown';
+                $isDropdownType = $controlType == 'select';
                 $noDropdownOptions = empty($element->getOptions());
 
-                // auto populate dropdown options based on foreign keys if no options are provided
+                // auto populate select options based on foreign keys if no options are provided
                 if ($isDropdownType && $noDropdownOptions) {
-                    $this->populateDropdownOptions($element);
+                    $attributes = $element->getAttributes();
+                    $defaultOption = !array_key_exists('multiple', $attributes); // if multiple flag is set to true, turn off default option
+
+                    $this->populateDropdownOptions($element, $defaultOption);
                     if (empty($element->getValue())) {
                         $querystring = $this->getQueryString();
                         if (array_key_exists($key, $querystring)) {
@@ -915,13 +924,13 @@ class PageComponent extends Component
         return $array;
     }
 
-    private function populateDropdownOptions(PageElement $element)
+    private function populateDropdownOptions(PageElement $element, $defaultOption = true)
     {
         if ($this->hasMainTable()) {
             $table = $this->getMainTable();
             $foreignKey = $element->getForeignKey();
             if (!is_null($element->getParams())) {
-                $element->setOptions($this->getFilterOptions($element->getParams()));
+                $element->setOptions($this->getFilterOptions($element->getParams()), $defaultOption);
             } elseif ($foreignKey) {
                 $associationName = $foreignKey['name'];
                 $association = $table->{$associationName};
@@ -931,7 +940,7 @@ class PageComponent extends Component
                 // else call findList and format results
 
                 if ($association->hasFinder('optionList')) {
-                    $query = $association->find('optionList');
+                    $query = $association->find('optionList', ['defaultOption' => $defaultOption]);
                 } else {
                     $query = $association->find('list')
                         ->formatResults(function ($results) {
@@ -959,7 +968,7 @@ class PageComponent extends Component
 
                 // default limit to 1000 to prevent out of memory error
                 $options = $query->limit(1000)->toArray();
-                $element->setOptions($options);
+                $element->setOptions($options, $defaultOption);
             }
         }
     }
@@ -988,7 +997,8 @@ class PageComponent extends Component
     public function move($source)
     {
         if (!array_key_exists($source, $this->order)) {
-            pr($source . ' does not exists');die;
+            pr($source . ' does not exists');
+            die;
         }
         $this->moveSourceField = $source;
         return $this;
