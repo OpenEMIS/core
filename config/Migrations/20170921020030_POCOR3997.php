@@ -488,8 +488,8 @@ class POCOR3997 extends AbstractMigration
         ];
         $this->insert('workflow_steps_params', $validateApprove);
 
-        // STAFF-TRANSFER-1002 (by outgoing)
-        $byOutgoingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1002'")['id'];
+        // STAFF-TRANSFER-2001 (by outgoing)
+        $byOutgoingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId)['id'];
 
         // workflow_steps
         $workflowStepData = [
@@ -500,7 +500,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '1',
                 'is_system_defined' => '1',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -509,9 +508,8 @@ class POCOR3997 extends AbstractMigration
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '1',
+                'is_system_defined' => '0',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -520,9 +518,8 @@ class POCOR3997 extends AbstractMigration
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '0',
+                'is_system_defined' => '1',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -533,7 +530,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -544,7 +540,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '1',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -555,7 +550,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byOutgoingWorkflowId,
-                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -649,9 +643,136 @@ class POCOR3997 extends AbstractMigration
                 'next_workflow_step_id' => $transferredStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingTransferStatusId,
+                'next_workflow_step_id' => $rejectedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('workflow_actions', $workflowActionData);
+
+        $institutionOwner = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $openStatusId,
+                'name' => 'institution_owner',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'name' => 'institution_owner',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalIncomingStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingTransferStatusId,
+                'name' => 'institution_owner',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $transferredStatusId,
+                'name' => 'institution_owner',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $rejectedStatusId,
+                'name' => 'institution_owner',
+                'value' => '2'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $institutionOwner);
+
+        $institutionVisible = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $openStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalIncomingStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalIncomingStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingTransferStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingTransferStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $transferredStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $transferredStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $rejectedStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $rejectedStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $institutionVisible);
+
+        $validateApprove = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalIncomingStatusId,
+                'name' => 'validate_approve',
+                'value' => '1'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $validateApprove);
     }
 
     // rollback
@@ -706,10 +827,11 @@ class POCOR3997 extends AbstractMigration
         $this->execute("DELETE FROM `workflow_steps` WHERE `workflow_id` = " . $byOutgoingWorkflowId);
 
         // delete workflow_statuses
-        $this->execute("DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = " . $this->workflowModelId);
+        $this->execute("DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId);
+        $this->execute("DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId);
 
         // delete workflow_transitions
-        $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->workflowModelId);
-
+        $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId);
+        $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId);
     }
 }
