@@ -153,6 +153,7 @@ class POCOR4214 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('priority')
             ->addIndex('infrastructure_need_type_id')
             ->addIndex('institution_id')
             ->addIndex('modified_user_id')
