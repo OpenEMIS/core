@@ -1,10 +1,12 @@
 <?php
 namespace Institution\Controller;
 
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Routing\Router;
 
 use App\Controller\PageController;
+use Page\Model\Entity\PageElement;
 
 class InfrastructureNeedsController extends PageController
 {
@@ -19,6 +21,21 @@ class InfrastructureNeedsController extends PageController
         $this->Page->loadElementsFromTable($this->InfrastructureNeeds);
 
         $this->Page->enable(['download']);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+
+        $events['Controller.Page.onRenderPriority'] = 'onRenderPriority';
+        return $events;
+    }
+
+    public function onRenderPriority(Event $event, Entity $entity, PageElement $element)
+    {
+        $key = $element->getKey();
+        $value = $entity->{$key};
+        return array_key_exists($value, $this->needPrioritiesOptions) ? $this->needPrioritiesOptions[$value] : '';
     }
 
     public function beforeFilter(Event $event)
@@ -52,7 +69,7 @@ class InfrastructureNeedsController extends PageController
         $this->needPrioritiesOptions = $this->InfrastructureNeeds->getNeedPrioritiesOptions();
 
         // set field order
-        $page->move('infrastructure_need_type_id')->after('name')->setLabel(__('Need Type'));
+        $page->move('infrastructure_need_type_id')->after('name')->setLabel('Need Type');
         $page->move('priority')->after('description');
     }
 
@@ -66,7 +83,7 @@ class InfrastructureNeedsController extends PageController
         // set field
         $page->exclude(['description', 'date_determined', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id']);
 
-        $page->get('infrastructure_need_type_id')->setSortable(false)->setLabel(__('Need Type'));
+        $page->get('infrastructure_need_type_id')->setSortable(false)->setLabel('Need Type');
         $page->get('priority')->setSortable(false);
 
         // set need type filter
@@ -80,11 +97,6 @@ class InfrastructureNeedsController extends PageController
             ->setOptions($needPrioritiesOptions);
 
         parent::index();
-
-        $data = $page->getData();
-        foreach ($data as $key => $entity) {
-            $this->getIdName($entity);
-        }
     }
 
     public function add()
@@ -111,7 +123,7 @@ class InfrastructureNeedsController extends PageController
 
         parent::view($id);
 
-        $entity = $this->getIdName($page->getData());
+        $entity = $page->getData();
 
         // if have infrastructure_project association will show the link
         $associatedProjects = $this->getAssociatedRecords($entity);
@@ -126,7 +138,7 @@ class InfrastructureNeedsController extends PageController
                 ->setAttributes('row',$associatedProjects) // $associatedProject is an array
             ;
 
-            $page->move('infrastructure_project')->after('priority')->setLabel(__('Associated Projects'));
+            $page->move('infrastructure_project')->after('priority')->setLabel('Associated Projects');
         }
         // end if have infrastructure_project association will show the link
     }
@@ -157,17 +169,6 @@ class InfrastructureNeedsController extends PageController
         $page->get('file_content')
             ->setLabel('Attachment')
             ->setAttributes('fileNameField', 'file_name');
-    }
-
-    private function getIdName($entity)
-    {
-        // get the name from provided id in entity, because the data is hardcoded, like onUpdateField function
-        // priority
-        if ($entity->has('priority') && !empty($entity->priority)) {
-            $entity->priority = $this->needPrioritiesOptions[$entity->priority];
-        }
-
-        return $entity;
     }
 
     private function getAssociatedRecords($entity)
