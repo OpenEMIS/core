@@ -9,13 +9,16 @@ document.addEventListener("DOMContentLoaded", function() {
         if (elements[i].hasAttribute('dependent-on')) {
             element = elements[i];
             dependentOn = element.getAttribute('dependent-on');
-            source = document.getElementById(dependentOn);
-
+            var sources = dependentOn.split(" ");
             (function (s, e) {
-                s.addEventListener('change', function() {
-                    Page.onChange(s, e);
-                });
-            }) (source, element);
+                for (var i = 0; i < s.length; i++) {
+                    var source = document.getElementById(s[i]);
+                    source.addEventListener('change', function() {
+                        Page.onChange(s, e);
+                    });
+                }
+
+            }) (sources, element);
         }
     }
 });
@@ -68,17 +71,21 @@ Page.querystring = function(key, value, obj) {
     }
     // If there is a dependent flag on the object that is change, then only the parent, search and the object will retain
     else if (obj.getAttribute('dependenton') != undefined) {
-        var dependentOn = obj.getAttribute('dependenton');
-        while (dependentOn != null) {
-            retainedDependentKey.push(dependentOn);
-            dependentOn = dependentOn.replace(/_/g, "-");
-            var dependentObj = document.getElementById(dependentOn);
-            if (dependentObj != null && dependentObj.getAttribute('dependenton') != undefined) {
-                dependentOn = dependentObj.getAttribute('dependenton');
-            } else {
-                dependentOn = null;
+        var dependentOnString = obj.getAttribute('dependenton');
+        var dependentOnArr = dependentOnString.split(" ");
+        for (var i = 0 ; i < dependentOnArr.length ; i++) {
+            var dependentOn = dependentOnArr[i];
+            while (dependentOn != null) {
+                retainedDependentKey.push(dependentOn);
+                var dependentObj = document.getElementById(dependentOn);
+                if (dependentObj != null && dependentObj.getAttribute('dependenton') != undefined) {
+                    dependentOn = dependentObj.getAttribute('dependenton');
+                } else {
+                    dependentOn = null;
+                }
             }
         }
+
     }
     // If not all the query string value will retain
     else {
@@ -113,14 +120,19 @@ Page.getParamValue = function(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
 }
 
-Page.onChange = function(source, target) {
-    target.innerHTML = '<option>Updating</option>';
+Page.onChange = function(sources, target) {
+    var targetValue = target.value;
+    target.innerHTML = '<option value=0>Updating</option>';
     var xhr = new XMLHttpRequest();
     var isMultiple = target.getAttribute('multiple') != null;
     var method = 'onchange/' + target.getAttribute('params');
     // var isReset = source.value.length == 0;
     var params = {};
-    params[source.id] = source.value;
+    for (var i = 0; i < sources.length ; i++) {
+        var source = document.getElementById(sources[i]);
+        params[source.id] = source.value;
+    }
+
 
     if (isMultiple) {
         params['multiple'] = 'true';
@@ -138,6 +150,9 @@ Page.onChange = function(source, target) {
                 var option = document.createElement('option');
                 option.innerHTML = data[i]['text'];
                 option.setAttribute('value', data[i]['value']);
+                if (data[i]['value'] == targetValue) {
+                    option.setAttribute('selected', true);
+                }
                 if (data[i].hasOwnProperty('disabled')) {
                     option.setAttribute('disabled', true);
                 }
