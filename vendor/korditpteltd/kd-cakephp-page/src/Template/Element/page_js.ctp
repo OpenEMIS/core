@@ -126,13 +126,23 @@ Page.onChange = function(sources, target) {
     var xhr = new XMLHttpRequest();
     var isMultiple = target.getAttribute('multiple') != null;
     var method = 'onchange/' + target.getAttribute('params');
-    // var isReset = source.value.length == 0;
+
+    // Logic added to fix the bug where the base url is with the id parameter
+    var baseUrl = window.location.href;
+    baseUrl = baseUrl.split('?')[0];
+    var segments = baseUrl.split('/');
+    var segmentCount = segments.length;
+    var selectedSegment = segments[segmentCount - 2];
+    if (selectedSegment[0].toUpperCase() != selectedSegment[0]) {
+        method = '../' + method;
+    }
+    // End of fix
+
     var params = {};
     for (var i = 0; i < sources.length ; i++) {
         var source = document.getElementById(sources[i]);
         params[source.id] = source.value;
     }
-
 
     if (isMultiple) {
         params['multiple'] = 'true';
