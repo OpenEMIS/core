@@ -8,12 +8,6 @@ use App\Controller\PageController;
 class InfrastructureWashWatersController extends PageController
 {
     private $academicPeriodOptions = [];
-    private $waterTypeOptions = [];
-    private $waterFunctionalityOptions = [];
-    private $waterProximityOptions = [];
-    private $waterQuantityOptions = [];
-    private $waterQualityOptions = [];
-    private $waterAccessibilityOptions = [];
 
     public function initialize()
     {
@@ -50,20 +44,14 @@ class InfrastructureWashWatersController extends PageController
 
         // set options
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $this->waterTypeOptions = $this->InfrastructureWashWaters->getWaterTypeOptions();
-        $this->waterFunctionalityOptions = $this->InfrastructureWashWaters->getWaterFunctionalityOptions();
-        $this->waterProximityOptions = $this->InfrastructureWashWaters->getWaterProximityOptions();
-        $this->waterQuantityOptions = $this->InfrastructureWashWaters->getWaterQuantityOptions();
-        $this->waterQualityOptions = $this->InfrastructureWashWaters->getWaterQualityOptions();
-        $this->waterAccessibilityOptions = $this->InfrastructureWashWaters->getWaterAccessibilityOptions();
 
         // set fields
-        $page->get('infrastructure_wash_water_type_id')->setLabel(__('Type'));
-        $page->get('infrastructure_wash_water_functionality_id')->setLabel(__('Functionality'));
-        $page->get('infrastructure_wash_water_proximity_id')->setLabel(__('Proximity'));
-        $page->get('infrastructure_wash_water_quantity_id')->setLabel(__('Quantity'));
-        $page->get('infrastructure_wash_water_quality_id')->setLabel(__('Quality'));
-        $page->get('infrastructure_wash_water_accessibility_id')->setLabel(__('Accessibility'));
+        $page->get('infrastructure_wash_water_type_id')->setLabel('Type');
+        $page->get('infrastructure_wash_water_functionality_id')->setLabel('Functionality');
+        $page->get('infrastructure_wash_water_proximity_id')->setLabel('Proximity');
+        $page->get('infrastructure_wash_water_quantity_id')->setLabel('Quantity');
+        $page->get('infrastructure_wash_water_quality_id')->setLabel('Quality');
+        $page->get('infrastructure_wash_water_accessibility_id')->setLabel('Accessibility');
 
         // set queryString
         $page->setQueryString('institution_id', $institutionId);
@@ -92,17 +80,17 @@ class InfrastructureWashWatersController extends PageController
 
     public function add()
     {
-        $this->addEditWaters();
+        $this->addEdit();
         parent::add();
     }
 
     public function edit($id)
     {
-        $this->addEditWaters();
+        $this->addEdit();
         parent::edit($id);
     }
 
-    private function addEditWaters()
+    private function addEdit()
     {
         $page = $this->Page;
 
@@ -113,32 +101,26 @@ class InfrastructureWashWatersController extends PageController
 
         // set type
         $page->get('infrastructure_wash_water_type_id')
-            ->setControlType('select')
-            ->setOptions($this->waterTypeOptions);
+            ->setControlType('select');
 
         // set functionality
         $page->get('infrastructure_wash_water_functionality_id')
-            ->setControlType('select')
-            ->setOptions($this->waterFunctionalityOptions);
+            ->setControlType('select');
 
         // set proximity
         $page->get('infrastructure_wash_water_proximity_id')
-            ->setControlType('select')
-            ->setOptions($this->waterProximityOptions);
+            ->setControlType('select');
 
         // set quantity
         $page->get('infrastructure_wash_water_quantity_id')
-            ->setControlType('select')
-            ->setOptions($this->waterQuantityOptions);
+            ->setControlType('select');
 
         // set quality
         $page->get('infrastructure_wash_water_quality_id')
-            ->setControlType('select')
-            ->setOptions($this->waterQualityOptions);
+            ->setControlType('select');
 
         // set accessibility
         $page->get('infrastructure_wash_water_accessibility_id')
-            ->setControlType('select')
-            ->setOptions($this->waterAccessibilityOptions);
+            ->setControlType('select');
     }
 }
