@@ -2,15 +2,50 @@
 
 use Phinx\Migration\AbstractMigration;
 
-class POCOR4214 extends AbstractMigration
+class POCOR4215 extends AbstractMigration
 {
     // commit
     public function up()
     {
-        // infrastructure_need_types
-        $table = $this->table('infrastructure_need_types', [
+        // infrastructure_projects_needs
+        $table = $this->table('infrastructure_projects_needs', [
+            'id' => false,
+            'primary_key' => [
+                'infrastructure_project_id',
+                'infrastructure_need_id',
+            ],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the infrastructure_needs for the infrastructure_projects'
+        ]);
+
+        $table
+            ->addColumn('id', 'char', [
+                'default' => null,
+                'limit' => 64,
+                'null' => false
+            ])
+            ->addColumn('infrastructure_project_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to infrastructure_projects.id'
+            ])
+            ->addColumn('infrastructure_need_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to infrastructure_needs.id'
+            ])
+            ->addIndex('id')
+            ->addIndex('infrastructure_project_id')
+            ->addIndex('infrastructure_need_id')
+            ->save();
+        // end infrastructure_projects_needs
+
+        // infrastructure_project_funding_sources
+        $table = $this->table('infrastructure_project_funding_sources', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains types of infrastructure need types'
+                'comment' => 'This field options table contains funding sources of infrastructure projects'
             ]);
         $table
             ->addColumn('name', 'string', [
@@ -69,12 +104,12 @@ class POCOR4214 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end infrastructure_need_types
+        // end infrastructure_project_funding_sources
 
-        // infrastructure_needs
-        $table = $this->table('infrastructure_needs', [
+        // infrastructure_projects
+        $table = $this->table('infrastructure_projects', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This table contains infrastructure needs'
+                'comment' => 'This table contains infrastructure project'
             ]);
         $table
             ->addColumn('code', 'string', [
@@ -91,9 +126,25 @@ class POCOR4214 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('date_determined', 'date', [
+            ->addColumn('funding_source_description', 'text', [
                 'default' => null,
                 'null' => true
+            ])
+            ->addColumn('contract_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('contract_amount', 'decimal', [
+                'default' => null,
+                'precision' => 50, // total digit
+                'scale' => 2, // digit after decimal point
+                'null' => true
+            ])
+            ->addColumn('status', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => '1 => Active, 2 => Inactive'
             ])
             ->addColumn('date_started', 'date', [
                 'default' => null,
@@ -117,17 +168,11 @@ class POCOR4214 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('infrastructure_need_type_id', 'integer', [
+            ->addColumn('infrastructure_project_funding_source_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to infrastructure_need_types.id'
-            ])
-            ->addColumn('priority', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => '1 => High, 2 => Medium, 3 => Low'
+                'comment' => 'links to infrastructure_project_funding_sources.id'
             ])
             ->addColumn('institution_id', 'integer', [
                 'default' => null,
@@ -153,21 +198,21 @@ class POCOR4214 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addIndex('priority')
-            ->addIndex('infrastructure_need_type_id')
+            ->addIndex('status')
+            ->addIndex('infrastructure_project_funding_source_id')
             ->addIndex('institution_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end infrastructure_needs
+        // end infrastructure_projects
 
         // security_functions
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 11');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 12');
 
         $this->insert('security_functions', [
-            'id' => 1063,
-            'name' => 'Infrastructure Need',
-            'controller' => 'InfrastructureNeeds',
+            'id' => 1064,
+            'name' => 'Infrastructure Project',
+            'controller' => 'InfrastructureProjects',
             'module' => 'Institutions',
             'category' => 'Details',
             'parent_id' => 8,
@@ -175,7 +220,7 @@ class POCOR4214 extends AbstractMigration
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => 12,
+            'order' => 13,
             'visible' => 1,
             'created_user_id' => 1,
             'created' => date('Y-m-d H:i:s')
@@ -186,9 +231,10 @@ class POCOR4214 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->execute('DROP TABLE infrastructure_need_types');
-        $this->execute('DROP TABLE infrastructure_needs');
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 11');
-        $this->execute('DELETE FROM security_functions WHERE id = 1063');
+        $this->execute('DROP TABLE infrastructure_projects_needs');
+        $this->execute('DROP TABLE infrastructure_project_funding_sources');
+        $this->execute('DROP TABLE infrastructure_projects');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 12');
+        $this->execute('DELETE FROM security_functions WHERE id = 1064');
     }
 }
