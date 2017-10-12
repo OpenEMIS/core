@@ -14,16 +14,16 @@
                 'label' => false,
                 'options' => $filter['options'],
                 'default' => $default,
-                'onchange' => "Page.querystring('$name', this.value, this)"
+                'onchange' => "Page.querystring('$name', this.value, this)",
+                'id' => $name
             ];
 
             if (isset($filter['dependentOn']) && $filter['dependentOn']) {
                 if (is_string($filter['dependentOn'])) {
                     $inputOptions['dependenton'] = [$filter['dependentOn']];
                 } elseif (is_array($filter['dependentOn'])) {
-                    $inputOptions['dependenton'] = explode($filter['dependentOn']);
+                    $inputOptions['dependenton'] = $filter['dependentOn'];
                 }
-
             }
             echo $this->Form->input($name, $inputOptions);
         }
