@@ -14,7 +14,7 @@
         "korditpteltd/kd-cakephp-webhooks": "^1.0",
         "mk-j/php_xlsxwriter": "^0.32",
         "korditpteltd/kd-cakephp-sso": "1.2.x-dev",
-        "korditpteltd/kd-cakephp-page": "dev-hchiang"
+        "korditpteltd/kd-cakephp-page": "^1.0.2"
     },
     "require-dev": {
         "psy/psysh": "@stable",

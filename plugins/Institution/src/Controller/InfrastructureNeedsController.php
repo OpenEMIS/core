@@ -15,7 +15,7 @@ class InfrastructureNeedsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Institution.InfrastructureProjects');
+        $this->loadModel('Institution.InfrastructureProjectsNeeds');
         $this->Page->loadElementsFromTable($this->InfrastructureNeeds);
 
         $this->Page->enable(['download']);
@@ -114,43 +114,20 @@ class InfrastructureNeedsController extends PageController
         $entity = $this->getIdName($page->getData());
 
         // if have infrastructure_project association will show the link
-        $projectData = $this->InfrastructureProjects->find()
-            ->where([$this->InfrastructureProjects->aliasField('infrastructure_need_id') => $entity->id])
-            ->all();
+        $associatedProjects = $this->getAssociatedRecords($entity);
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $entity->id]);
+        if (!empty($associatedProjects)) {
+            $page->addNew('infrastructure_project')
+                ->setControlType('table')
+                ->setAttributes('column', [
+                    ['label' => __('Project Name')],
+                    ['key' => 'link'],
+                ])
+                ->setAttributes('row',$associatedProjects) // $associatedProject is an array
+            ;
 
-        $associatedProject = [];
-        if (!empty($projectData)) {
-            foreach ($projectData as $project) {
-                $encodedProjectId = $page->encode(['id' => $project->id]);
-
-                // build the url
-                $url = Router::url([
-                    'plugin' => 'Institution',
-                    'controller' => 'InfrastructureProjects',
-                    'action' => 'view',
-                    'institutionId' => $encodedInstitutionId,
-                    $encodedProjectId
-                ]);
-
-                $associatedProject[] = [
-                    'project_name' => $project->name,
-                    'link' => '<a href=' . $url . ')> ' . $project->name . '</a>'
-                ];
-            }
+            $page->move('infrastructure_project')->after('priority')->setLabel(__('Associated Projects'));
         }
-
-        $page->addNew('associated_project')
-            ->setControlType('table')
-            ->setAttributes('column', [
-                ['label' => __('Project Name')],
-                ['key' => 'link'],
-            ])
-            ->setAttributes('row',$associatedProject) // $associatedProject is an array
-        ;
-
-        $page->move('associated_project')->after('priority');
         // end if have infrastructure_project association will show the link
     }
 
@@ -191,5 +168,41 @@ class InfrastructureNeedsController extends PageController
         }
 
         return $entity;
+    }
+
+    private function getAssociatedRecords($entity)
+    {
+        $page = $this->Page;
+        $projectData = $this->InfrastructureProjectsNeeds->find()
+            ->contain(['InfrastructureProjects'])
+            ->where([$this->InfrastructureProjectsNeeds->aliasField('infrastructure_need_id') => $entity->id])
+            ->all();
+
+        $associatedRecords = [];
+        if (count($projectData)) {
+            $institutionId = $entity->institution_id;
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
+            foreach ($projectData as $key => $project) {
+                $encodedProjectId = $page->encode(['id' => $project->infrastructure_project_id]);
+                $projectName = $project->infrastructure_project->name;
+
+                // build the url
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'controller' => 'InfrastructureProjects',
+                    'action' => 'view',
+                    'institutionId' => $encodedInstitutionId,
+                    $encodedProjectId
+                ]);
+
+                $associatedRecords[] = [
+                    'need_name' => $projectName,
+                    'link' => '<a href=' . $url . ')> ' . $projectName . '</a>'
+                ];
+            }
+        }
+
+        return $associatedRecords;
     }
 }
