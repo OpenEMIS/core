@@ -1,3 +1,9 @@
+v3.10.12
+- Implemented export feature in Institution > Positions page
+
+v3.10.11.3
+- Enhance the system performance during loading of Institution/Directory pages
+
 v3.10.11
 - Custom reports will generate based on User's area access
 - System automatically enrols student if User that has permission to approve pending enrolments add those students into the school
