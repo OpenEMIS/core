@@ -1,10 +1,12 @@
 <?php
 namespace Institution\Controller;
 
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Routing\Router;
 
 use App\Controller\PageController;
+use Page\Model\Entity\PageElement;
 
 class InfrastructureProjectsController extends PageController
 {
@@ -20,6 +22,21 @@ class InfrastructureProjectsController extends PageController
         $this->Page->loadElementsFromTable($this->InfrastructureProjects);
 
         $this->Page->enable(['download']);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+
+        $events['Controller.Page.onRenderStatus'] = 'onRenderStatus';
+        return $events;
+    }
+
+    public function onRenderStatus(Event $event, Entity $entity, PageElement $element)
+    {
+        $key = $element->getKey();
+        $value = $entity->{$key};
+        return array_key_exists($value, $this->projectStatusesOptions) ? $this->projectStatusesOptions[$value] : '';
     }
 
     public function beforeFilter(Event $event)
@@ -82,11 +99,6 @@ class InfrastructureProjectsController extends PageController
             ->setOptions($projectStatusesOptions);
 
         parent::index();
-
-        $data = $page->getData();
-        foreach ($data as $key => $entity) {
-            $this->getIdName($entity);
-        }
     }
 
     public function add()
@@ -113,7 +125,7 @@ class InfrastructureProjectsController extends PageController
 
         parent::view($id);
 
-        $entity = $this->getIdName($page->getData());
+        $entity = $page->getData();
 
         // if have infrastructure_need association will show the link
         $associatedNeeds = $this->getAssociatedRecords($entity);
@@ -125,10 +137,10 @@ class InfrastructureProjectsController extends PageController
                     ['label' => __('Need Name')],
                     ['key' => 'link'],
                 ])
-                ->setAttributes('row',$associatedNeeds) // $associatedNeeds is an array
+                ->setAttributes('row', $associatedNeeds) // $associatedNeeds is an array
             ;
 
-            $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
+            $page->move('infrastructure_needs')->after('date_completed')->setLabel('Associated Needs');
         }
         // end if have infrastructure_need association will show the link
     }
@@ -162,23 +174,12 @@ class InfrastructureProjectsController extends PageController
             ->setAttributes('placeholder', __('Select Needs'))
             ->setOptions($this->needsOptions, false);
 
-        $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
+        $page->move('infrastructure_needs')->after('date_completed')->setLabel('Associated Needs');
 
         // set the file upload for attachment
         $page->get('file_content')
             ->setLabel('Attachment')
             ->setAttributes('fileNameField', 'file_name');
-    }
-
-    private function getIdName($entity)
-    {
-        // get the name from provided id in entity, because the data is hardcoded, like onUpdateField function
-        // status
-        if ($entity->has('status') && !empty($entity->status)) {
-            $entity->status = $this->projectStatusesOptions[$entity->status];
-        }
-
-        return $entity;
     }
 
     private function getAssociatedRecords($entity)
