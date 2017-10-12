@@ -394,6 +394,10 @@ class PageController extends AppController
             $elements = $page->getElements();
             foreach ($elements as $element) {
                 $type = $element->getControlType();
+                if ($type == 'select') {
+                    $element->setControlType('string');
+                    $type = 'string';
+                }
                 if (in_array($type, $displayTypes)) {
                     $element->setDisabled(true);
                 } else {

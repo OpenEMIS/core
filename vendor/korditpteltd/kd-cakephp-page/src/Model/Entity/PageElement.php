@@ -330,7 +330,7 @@ class PageElement
 
     public function setDependentOn($dependentOn)
     {
-        $this->dependentOn = $dependentOn;
+        $this->dependentOn = (array) $dependentOn;
         return $this;
     }
 
@@ -489,7 +489,7 @@ class PageElement
 
             if ($property == 'displayFrom' && $propertyValue) {
                 $properties[$property] = $propertyValue;
-            } else if (!is_null($propertyValue)) {
+            } elseif (!is_null($propertyValue)) {
                 if ($property == 'params') {
                     $properties[$property] = $this->getControlType() . '/' . $propertyValue;
                 } else {
