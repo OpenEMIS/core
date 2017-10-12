@@ -1,10 +1,12 @@
 <?php
 
+use Cake\Utility\Text;
 use Phinx\Migration\AbstractMigration;
 
 class POCOR3997 extends AbstractMigration
 {
-    private $workflowModelId = 13;
+    private $incomingWorkflowModelId = 13;
+    private $outgoingWorkflowModelId = 14;
 
     // commit
     public function up()
@@ -19,14 +21,6 @@ class POCOR3997 extends AbstractMigration
             'comment' => 'This table contains all the staff transfer requests'
         ]);
         $InstitutionStaffTransfers
-            ->addColumn('start_date', 'date', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addColumn('end_date', 'date', [
-                'default' => null,
-                'null' => true
-            ])
             ->addColumn('staff_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -57,12 +51,6 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
-            ->addColumn('institution_staff_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true,
-                'comment' => 'links to institution_staff.id'
-            ])
             ->addColumn('institution_position_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -80,6 +68,20 @@ class POCOR3997 extends AbstractMigration
                 'precision' => 5,
                 'scale' => 2,
                 'null' => true
+            ])
+            ->addColumn('start_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('end_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('institution_staff_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to institution_staff.id'
             ])
             ->addColumn('previous_end_date', 'date', [
                 'default' => null,
@@ -127,15 +129,57 @@ class POCOR3997 extends AbstractMigration
 
         // NOTE data migration here
 
+        // workflow_steps_params
+        $WorkflowStepsParams = $this->table('workflow_steps_params', [
+            'id' => false,
+            'primary_key' => 'id',
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of params belonging to which step'
+        ]);
+        $WorkflowStepsParams
+            ->addColumn('id', 'uuid', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('workflow_step_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to workflow_steps.id'
+            ])
+            ->addColumn('name', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false
+            ])
+            ->addColumn('value', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false
+            ])
+            ->addIndex('workflow_step_id')
+            ->save();
+
         // workflow_models
         $workflowModelData = [
-            'id' => $this->workflowModelId,
-            'name' => 'Institutions > Staff > Transfer',
-            'model' => 'Institution.InstitutionStaffTransfers',
-            'filter' => NULL,
-            'is_school_based' => '1',
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
+            [
+                'id' => $this->incomingWorkflowModelId,
+                'name' => 'Institutions > Staff > Incoming Transfer',
+                'model' => 'Institution.StaffTransferIn',
+                'filter' => NULL,
+                'is_school_based' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => $this->outgoingWorkflowModelId,
+                'name' => 'Institutions > Staff > Outgoing Transfer',
+                'model' => 'Institution.StaffTransferOut',
+                'filter' => NULL,
+                'is_school_based' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
         ];
         $this->insert('workflow_models', $workflowModelData);
 
@@ -144,34 +188,22 @@ class POCOR3997 extends AbstractMigration
             [
                 'code' => 'STAFF-TRANSFER-1001',
                 'name' => 'Staff Transfer - Initiated By Incoming Institution',
-                'workflow_model_id' => $this->workflowModelId,
+                'workflow_model_id' => $this->incomingWorkflowModelId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'code' => 'STAFF-TRANSFER-1002',
+                'code' => 'STAFF-TRANSFER-2001',
                 'name' => 'Staff Transfer - Initiated By Outgoing Institution',
-                'workflow_model_id' => $this->workflowModelId,
+                'workflow_model_id' => $this->outgoingWorkflowModelId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('workflows', $workflowData);
 
-        // workflow_steps
-        $WorkflowSteps = $this->table('workflow_steps');
-        $WorkflowSteps->addColumn('params', 'text', [
-                'after' => 'workflow_id',
-                'default' => null,
-                'null' => true
-            ])
-            ->save();
-
-        $incomingInstitutionOwner = json_encode(['institution_owner' => 1], JSON_NUMERIC_CHECK);
-        $outgoingInstitutionOwner = json_encode(['institution_owner' => 2], JSON_NUMERIC_CHECK);
-
         // STAFF-TRANSFER-1001 (by incoming)
-        $byIncomingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1001'")['id'];
+        $byIncomingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId)['id'];
 
         // workflow_steps
         $workflowStepData = [
@@ -182,7 +214,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '1',
                 'is_system_defined' => '1',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -191,9 +222,8 @@ class POCOR3997 extends AbstractMigration
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '1',
+                'is_system_defined' => '0',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -202,9 +232,8 @@ class POCOR3997 extends AbstractMigration
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '0',
+                'is_system_defined' => '1',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => $outgoingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -215,7 +244,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -226,7 +254,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '1',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -237,7 +264,6 @@ class POCOR3997 extends AbstractMigration
                 'is_removable' => '0',
                 'is_system_defined' => '0',
                 'workflow_id' => $byIncomingWorkflowId,
-                'params' => $incomingInstitutionOwner,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -326,14 +352,141 @@ class POCOR3997 extends AbstractMigration
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => 'Workflow.onTransferStaff',
                 'workflow_step_id' => $pendingAsssignmentStatusId,
                 'next_workflow_step_id' => $assignedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingAsssignmentStatusId,
+                'next_workflow_step_id' => $rejectedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('workflow_actions', $workflowActionData);
+
+        $institutionOwner = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $openStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'name' => 'institution_owner',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingAsssignmentStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $assignedStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $rejectedStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $institutionOwner);
+
+        $institutionVisible = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $openStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingAsssignmentStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingAsssignmentStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $assignedStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $assignedStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $rejectedStatusId,
+                'name' => 'institution_visible',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $rejectedStatusId,
+                'name' => 'institution_visible',
+                'value' => '2'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $institutionVisible);
+
+        $validateApprove = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'name' => 'validate_approve',
+                'value' => '1'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $validateApprove);
 
         // STAFF-TRANSFER-1002 (by outgoing)
         $byOutgoingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1002'")['id'];
@@ -511,13 +664,16 @@ class POCOR3997 extends AbstractMigration
         // drop institution_staff_transfers
         $this->dropTable('institution_staff_transfers');
 
-        // delete workflow_models
-        $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $this->workflowModelId);
+        // drop workflow_steps_params
+        $this->dropTable('workflow_steps_params');
 
-        $byIncomingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1001'")['id'];
-        $byOutgoingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = 'STAFF-TRANSFER-1002'")['id'];
+        // delete workflow_models
+        $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $this->incomingWorkflowModelId);
+        $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $this->outgoingWorkflowModelId);
 
         // delete workflows
+        $byIncomingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId)['id'];
+        $byOutgoingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId)['id'];
         $this->execute("DELETE FROM `workflows` WHERE `id` = " . $byIncomingWorkflowId);
         $this->execute("DELETE FROM `workflows` WHERE `id` = " . $byOutgoingWorkflowId);
 
@@ -555,9 +711,5 @@ class POCOR3997 extends AbstractMigration
         // delete workflow_transitions
         $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->workflowModelId);
 
-        // remove params column in workflow_steps
-        $WorkflowSteps = $this->table('workflow_steps');
-        $WorkflowSteps->removeColumn('params')
-            ->save();
     }
 }
