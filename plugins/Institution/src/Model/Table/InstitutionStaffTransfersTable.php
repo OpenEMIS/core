@@ -155,4 +155,48 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         }
         return $value;
     }
+
+    public function findInstitutionStaffTransferIn(Query $query, array $options)
+    {
+        $StatusesTable = $this->Statuses;
+        $institutionId = $options['institution_id'];
+        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+
+        $query
+            ->matching('Statuses')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                'OR' => [
+                    $this->aliasField('initiated_by') => self::INCOMING,
+                    $StatusesTable->aliasField('params') => $this->incomingOwnerParams
+                ]
+            ]);
+
+        if ($pending) {
+            $query->where(['Statuses.category <> ' => self::DONE]);
+        }
+        return $query;
+    }
+
+    public function findInstitutionStaffTransferOut(Query $query, array $options)
+    {
+        $StatusesTable = $this->Statuses;
+        $institutionId = $options['institution_id'];
+        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+
+        $query
+            ->matching('Statuses')
+            ->where([
+                $this->aliasField('previous_institution_id') => $institutionId,
+                'OR' => [
+                    $this->aliasField('initiated_by') => self::OUTGOING,
+                    $StatusesTable->aliasField('params') => $this->outgoingOwnerParams
+                ]
+            ]);
+
+        if ($pending) {
+            $query->where(['Statuses.category <> ' => self::DONE]);
+        }
+        return $query;
+    }
 }
