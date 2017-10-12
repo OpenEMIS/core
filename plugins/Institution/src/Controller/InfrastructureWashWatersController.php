@@ -102,23 +102,6 @@ class InfrastructureWashWatersController extends PageController
         parent::edit($id);
     }
 
-    public function view($id)
-    {
-        parent::view($id);
-
-        $page = $this->Page;
-        $academicPeriodId = $page->getData()->academic_period_id;
-        $academicPeriodName = $this->academicPeriodOptions[$academicPeriodId];
-
-        $page->get('academic_period_id')->setValue($academicPeriodName);
-    }
-
-    public function delete($id)
-    {
-        $page = $this->Page;
-        parent::delete($id);
-    }
-
     private function addEditWaters()
     {
         $page = $this->Page;
