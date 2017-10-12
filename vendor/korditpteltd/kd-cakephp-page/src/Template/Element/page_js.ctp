@@ -52,24 +52,46 @@ Page.removeUrlParam = function(key) {
 
 Page.querystring = function(key, value, obj) {
     var querystringValue = this.querystringValue;
-    if (obj.getAttribute('dependenton') != undefined) {
-        if (querystringValue != null) {
-            querystringValue = JSON.parse(querystringValue.hexDecode());
-        } else {
-            querystringValue = {};
-        }
-        var dependentOn = obj.getAttribute('dependenton').split(' ');
-
-        var retainedQueryStringValue = {};
-        dependentOn.forEach(function (val, k) {
-            if (querystringValue[val] != undefined) {
-                retainedQueryStringValue[val] = querystringValue[val];
-            }
-        });
-        queryStringValue = retainedQueryStringValue
+    if (querystringValue != null) {
+        querystringValue = JSON.parse(querystringValue.hexDecode());
     } else {
         querystringValue = {};
     }
+    var retainedDependentKey = ['search'];
+    var resetAllKey = false;
+    var retainedQueryStringValue = {};
+
+    // Check to see if the object has the reset all flag, if yes then only the search and the value for the object will retain
+    if (obj.getAttribute('resetall') == 1) {
+        retainedDependentKey.push(key);
+        resetAllKey = true;
+    }
+    // If there is a dependent flag on the object that is change, then only the parent, search and the object will retain
+    else if (obj.getAttribute('dependenton') != undefined) {
+        var dependentOn = obj.getAttribute('dependenton');
+        while (dependentOn != null) {
+            retainedDependentKey.push(dependentOn);
+            dependentOn = dependentOn.replace(/_/g, "-");
+            var dependentObj = document.getElementById(dependentOn);
+            if (dependentObj != null && dependentObj.getAttribute('dependenton') != undefined) {
+                dependentOn = dependentObj.getAttribute('dependenton');
+            } else {
+                dependentOn = null;
+            }
+        }
+    }
+    // If not all the query string value will retain
+    else {
+        retainedQueryStringValue = querystringValue;
+    }
+    retainedDependentKey.forEach(function (val, k) {
+        if (querystringValue[val] != undefined) {
+            retainedQueryStringValue[val] = querystringValue[val];
+        }
+    });
+
+    querystringValue = retainedQueryStringValue;
+
     if (value == null || value.trim().length == 0) {
         delete querystringValue[key];
     } else {
@@ -80,7 +102,6 @@ Page.querystring = function(key, value, obj) {
         if(querystringValue.hasOwnProperty(prop)) ++count;
     }
     if (count > 0) {
-
         querystringValue = JSON.stringify(querystringValue).hexEncode();
         window.location.href = this.updateUrlParamValue('querystring', querystringValue);
     } else {
