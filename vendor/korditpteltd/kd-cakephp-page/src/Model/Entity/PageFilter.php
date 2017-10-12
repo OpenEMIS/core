@@ -78,7 +78,7 @@ class PageFilter
 
     public function setDependentOn($dependentOn)
     {
-        $this->dependentOn = $dependentOn;
+        $this->dependentOn = (array) $dependentOn;
         return $this;
     }
 

@@ -23,21 +23,6 @@ class InfrastructureNeedsController extends PageController
         $this->Page->enable(['download']);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-
-        $events['Controller.Page.onRenderPriority'] = 'onRenderPriority';
-        return $events;
-    }
-
-    public function onRenderPriority(Event $event, Entity $entity, PageElement $element)
-    {
-        $key = $element->getKey();
-        $value = $entity->{$key};
-        return array_key_exists($value, $this->needPrioritiesOptions) ? $this->needPrioritiesOptions[$value] : '';
-    }
-
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
@@ -67,6 +52,11 @@ class InfrastructureNeedsController extends PageController
         // set options
         $this->needTypeOptions = $this->InfrastructureNeeds->getNeedTypesOptions();
         $this->needPrioritiesOptions = $this->InfrastructureNeeds->getNeedPrioritiesOptions();
+
+        // set need_priority
+        $page->get('priority')
+            ->setControlType('select')
+            ->setOptions($this->needPrioritiesOptions);
 
         // set field order
         $page->move('infrastructure_need_type_id')->after('name')->setLabel('Need Type');
@@ -159,11 +149,6 @@ class InfrastructureNeedsController extends PageController
         $page->get('infrastructure_need_type_id')
             ->setControlType('select')
             ->setOptions($this->needTypeOptions);
-
-        // set need_priority
-        $page->get('priority')
-            ->setControlType('select')
-            ->setOptions($this->needPrioritiesOptions);
 
         // set the file upload for attachment
         $page->get('file_content')
