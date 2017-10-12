@@ -170,7 +170,17 @@ class PageComponent extends Component
                                 }
                             }
                             if (!is_null($value)) {
-                                $entity->$key = $value;
+                                $entity->{$key} = $value;
+                            } else {
+                                if ($controlType == 'select') {
+                                    $selectOptions = $element->getOptions();
+                                    if (!$this->isForeignKey($this->mainTable, $key) && !empty($selectOptions)) { // to render values if set from predefined options
+                                        $value = $entity->{$key};
+                                        if (array_key_exists($value, $selectOptions) && $value != '') {
+                                            $entity->{$key} = $selectOptions[$entity->{$key}];
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -377,6 +387,25 @@ class PageComponent extends Component
         }
     }
 
+    // to check if the current page is the action
+    public function is($actions)
+    {
+        $currentAction = $this->getAction();
+
+        if (is_array($actions)) {
+            return in_array($currentAction, $actions);
+        } else {
+            return $currentAction == $actions;
+        }
+    }
+
+    // to get the action handling the current request
+    public function getAction()
+    {
+        $action = version_compare(Configure::version(), '3.4.0', '>=') ? $this->request->getParam('action') : $this->request->param('action');
+        return $action;
+    }
+
     public function getActions()
     {
         return $this->actions;
@@ -530,12 +559,12 @@ class PageComponent extends Component
 
         if ($entity instanceof Entity) {
             if (!is_array($primaryKey)) { // primary key is not composite key
-                $key = [$primaryKey => $entity->$primaryKey];
+                $key = [$primaryKey => $entity->{$primaryKey}];
                 $entity->primaryKey = $this->strToHex(json_encode($key));
             } else {
                 $keyArray = [];
                 foreach ($primaryKey as $key) {
-                    $keyArray[$key] = $entity->$key;
+                    $keyArray[$key] = $entity->{$key};
                 }
                 $entity->primaryKey = $this->encode($keyArray);
             }
@@ -777,20 +806,26 @@ class PageComponent extends Component
                 $event = $this->controller->dispatchEvent($eventName, $eventParams, $this);
                 if ($event->result) { // trigger render<Field>
                     $value = $event->result;
-                } elseif ($entity->has($key)) { // lastly, get value from Entity
+                } else { // lastly, get value from Entity
                     $displayFrom = $element->getDisplayFrom();
-                    if ($displayFrom && $callback) {
-                        $data = Hash::flatten($entity->toArray());
-                        if (array_key_exists($displayFrom, $data)) {
-                            $value = $data[$displayFrom];
-                        } else {
-                            Log::write('error', 'DisplayFrom: ' . $displayFrom . ' does not exists in $data');
-                        }
-                    } else {
-                        $value = $entity->$key;
+                    $data = Hash::flatten($entity->toArray());
+                    if ($displayFrom && !array_key_exists($displayFrom, $data) && $callback) {
+                        Log::write('error', 'DisplayFrom: ' . $displayFrom . ' does not exists in $data');
+                    } elseif ($displayFrom && array_key_exists($displayFrom, $data) && $callback) {
+                        $value = $data[$displayFrom];
+                    } elseif ($entity->has($key)) {
+                        $value = $entity->{$key};
+                        $selectOptions = $element->getOptions();
 
-                        // this is to change value to an array of ids for multiselect to work
-                        if ($controlType == 'select' && $element->hasAttribute('multiple')) {
+                        // if the value can be retrieved from $options, display the labels from $options for index/view/delete pages
+                        // we are not checking for 'select' control type because delete page requires the control type to be 'string'
+                        if (!$this->isForeignKey($this->mainTable, $key) && !empty($selectOptions) && $callback) {
+                            if (array_key_exists($value, $selectOptions)) {
+                                $value = $selectOptions[$value];
+                            }
+                        } elseif ($controlType == 'select' && $element->hasAttribute('multiple')) {
+                            // this is to change value to an array of ids for multiselect to work
+
                             if (is_array($value) && !empty($value) && $value[0] instanceof Entity) { // array of Entity objects
                                 $entityCollections = new Collection($value);
                                 $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
