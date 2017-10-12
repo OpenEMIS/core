@@ -161,20 +161,4 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             return $attr;
         }
     }
-
-    public function findInstitutionStaffTransferIn(Query $query, array $options)
-    {
-        $StatusesTable = $this->Statuses;
-        $institutionId = $options['institution_id'];
-
-        $query
-            ->matching('Statuses')
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                'OR' => [
-                    $this->aliasField('initiated_by') => self::INCOMING,
-                    $StatusesTable->aliasField('params') => $this->incomingOwnerParams
-                ]
-            ]);
-    }
 }
