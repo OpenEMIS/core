@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -659,6 +659,32 @@ class NavigationComponent extends Component
                         'parent' => 'Wash',
                         'params' => ['plugin' => 'Institution'],
                         'selected' => ['InfrastructureWashWaters.view', 'InfrastructureWashWaters.add', 'InfrastructureWashWaters.edit', 'InfrastructureWashWaters.delete']
+                    ],
+
+                'Utilities' => [
+                    'title' => 'Utilities',
+                    'parent' => 'Infrastructures',
+                    'link' => false
+                ],
+                    'InfrastructureUtilityElectricities.index' => [
+                        'title' => 'Electricity',
+                        'parent' => 'Utilities',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureUtilityElectricities.view', 'InfrastructureUtilityElectricities.add', 'InfrastructureUtilityElectricities.edit', 'InfrastructureUtilityElectricities.delete']
+                    ],
+
+                    'InfrastructureUtilityInternets.index' => [
+                        'title' => 'Internet',
+                        'parent' => 'Utilities',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureUtilityInternets.view', 'InfrastructureUtilityInternets.add', 'InfrastructureUtilityInternets.edit', 'InfrastructureUtilityInternets.delete']
+                    ],
+
+                    'InfrastructureUtilityTelephones.index' => [
+                        'title' => 'Telephone',
+                        'parent' => 'Utilities',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
                     ],
 
             'Survey' => [
