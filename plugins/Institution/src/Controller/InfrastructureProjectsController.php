@@ -1,10 +1,12 @@
 <?php
 namespace Institution\Controller;
 
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Routing\Router;
 
 use App\Controller\PageController;
+use Page\Model\Entity\PageElement;
 
 class InfrastructureProjectsController extends PageController
 {
@@ -53,6 +55,11 @@ class InfrastructureProjectsController extends PageController
         $this->projectStatusesOptions = $this->InfrastructureProjects->getProjectStatusesOptions();
         $this->needsOptions = $this->InfrastructureProjects->getNeedsOptions();
 
+        // set project status
+        $page->get('status')
+            ->setControlType('select')
+            ->setOptions($this->projectStatusesOptions);
+
         // set field order
         $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding source'));
     }
@@ -82,22 +89,17 @@ class InfrastructureProjectsController extends PageController
             ->setOptions($projectStatusesOptions);
 
         parent::index();
-
-        $data = $page->getData();
-        foreach ($data as $key => $entity) {
-            $this->getIdName($entity);
-        }
     }
 
     public function add()
     {
-        $this->addEditProjects();
+        $this->addEdit();
         parent::add();
     }
 
     public function edit($id)
     {
-        $this->addEditProjects();
+        $this->addEdit();
         parent::edit($id);
     }
 
@@ -113,7 +115,7 @@ class InfrastructureProjectsController extends PageController
 
         parent::view($id);
 
-        $entity = $this->getIdName($page->getData());
+        $entity = $page->getData();
 
         // if have infrastructure_need association will show the link
         $associatedNeeds = $this->getAssociatedRecords($entity);
@@ -125,10 +127,10 @@ class InfrastructureProjectsController extends PageController
                     ['label' => __('Need Name')],
                     ['key' => 'link'],
                 ])
-                ->setAttributes('row',$associatedNeeds) // $associatedNeeds is an array
+                ->setAttributes('row', $associatedNeeds) // $associatedNeeds is an array
             ;
 
-            $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
+            $page->move('infrastructure_needs')->after('date_completed')->setLabel('Associated Needs');
         }
         // end if have infrastructure_need association will show the link
     }
@@ -140,20 +142,14 @@ class InfrastructureProjectsController extends PageController
         parent::delete($id);
     }
 
-    private function addEditProjects()
+    private function addEdit()
     {
         $page = $this->Page;
         $page->exclude(['file_name']);
 
         // set funding source
         $page->get('infrastructure_project_funding_source_id')
-            ->setControlType('select')
-            ->setOptions($this->fundingSourceOptions);
-
-        // set project status
-        $page->get('status')
-            ->setControlType('select')
-            ->setOptions($this->projectStatusesOptions);
+            ->setControlType('select');
 
         // set infrastructure needs
         $page->addNew('infrastructure_needs')
@@ -162,23 +158,12 @@ class InfrastructureProjectsController extends PageController
             ->setAttributes('placeholder', __('Select Needs'))
             ->setOptions($this->needsOptions, false);
 
-        $page->move('infrastructure_needs')->after('date_completed')->setLabel(__('Associated Needs'));
+        $page->move('infrastructure_needs')->after('date_completed')->setLabel('Associated Needs');
 
         // set the file upload for attachment
         $page->get('file_content')
             ->setLabel('Attachment')
             ->setAttributes('fileNameField', 'file_name');
-    }
-
-    private function getIdName($entity)
-    {
-        // get the name from provided id in entity, because the data is hardcoded, like onUpdateField function
-        // status
-        if ($entity->has('status') && !empty($entity->status)) {
-            $entity->status = $this->projectStatusesOptions[$entity->status];
-        }
-
-        return $entity;
     }
 
     private function getAssociatedRecords($entity)

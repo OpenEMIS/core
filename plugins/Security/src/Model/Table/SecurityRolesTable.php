@@ -351,7 +351,9 @@ class SecurityRolesTable extends AppTable
         return $this->find('list')
             ->find('visible')
             ->where([
-                $this->aliasField('security_group_id').' IN ' => $systemRoleGroupIds
+                $this->aliasField('security_group_id') . ' IN ' => $systemRoleGroupIds,
+                // to exclude homeroom teacher role from selection as this role will be added to user from institution position is_homeroom = true
+                $this->aliasField('code') . ' NOT LIKE ' => 'HOMEROOM_TEACHER'
             ])
             ->order([$this->aliasField('order')])
             ->hydrate(false)
