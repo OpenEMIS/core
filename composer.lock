@@ -389,11 +389,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-page",
-            "version": "1.1.2",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-                "reference": "a9d238f2af26e0ecacba40279b3aeaabf7bfef77"
+                "reference": "875c758ff3fc03973006d9c9e008a080a4e11b49"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.5"
@@ -427,7 +427,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
             },
-            "time": "2017-10-11T10:45:33+00:00"
+            "time": "2017-10-12T09:15:12+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
