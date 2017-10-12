@@ -23,21 +23,6 @@ class InfrastructureUtilityInternetsController extends PageController
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-
-        $events['Controller.Page.onRenderInternetPurpose'] = 'onRenderInternetPurpose';
-        return $events;
-    }
-
-    public function onRenderInternetPurpose(Event $event, Entity $entity, PageElement $element)
-    {
-        $key = $element->getKey();
-        $value = $entity->{$key};
-        return array_key_exists($value, $this->purposeOptions) ? $this->purposeOptions[$value] : '';
-    }
-
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
@@ -68,10 +53,15 @@ class InfrastructureUtilityInternetsController extends PageController
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $this->purposeOptions = $this->InfrastructureUtilityInternets->getPurposeOptions();
 
+        // set purpose
+        $page->get('internet_purpose')
+            ->setControlType('select')
+            ->setOptions($this->purposeOptions);
+
         // set fields
         $page->get('utility_internet_type_id')->setLabel('Type');
         $page->get('utility_internet_condition_id')->setLabel('Condition');
-        $page->get('internet_purpose')->setLabel('Purpose');
+        $page->get('internet_purpose')->setSortable(false)->setLabel('Purpose');
 
         // set fields order
         $page->move('academic_period_id')->first();
@@ -130,10 +120,5 @@ class InfrastructureUtilityInternetsController extends PageController
         // set condition
         $page->get('utility_internet_condition_id')
             ->setControlType('select');
-
-        // set purpose
-        $page->get('internet_purpose')
-            ->setControlType('select')
-            ->setOptions($this->purposeOptions);
     }
 }
