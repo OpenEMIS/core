@@ -120,13 +120,13 @@ class POCOR4214 extends AbstractMigration
             ->addColumn('infrastructure_need_type_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true,
+                'null' => false,
                 'comment' => 'links to infrastructure_need_types.id'
             ])
             ->addColumn('priority', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true,
+                'null' => false,
                 'comment' => '1 => High, 2 => Medium, 3 => Low'
             ])
             ->addColumn('institution_id', 'integer', [
