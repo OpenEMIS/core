@@ -38,7 +38,7 @@ class PageElement
     protected $visible;
     protected $dependentOn;
     protected $params;
-    protected $options; // options for dropdown control type
+    protected $options; // options for select control type
     protected $value; // current selected value
     protected $wildcard;
     protected $attributes; // html attributes
@@ -155,6 +155,23 @@ class PageElement
         return $this->type;
     }
 
+    public function addColumn($name, array $options = [])
+    {
+        $newColumn = $this::create($name, $options)->getJSON();
+        if (isset($this->getAttributes()['column'])) {
+            $returnColumn = $this->getAttributes()['column'];
+            $returnColumn[] = $newColumn;
+            return $this->setAttributes('column', $returnColumn);
+        } else {
+            return $this->setAttributes('column', [$newColumn]);
+        }
+    }
+
+    public function addRows(array $rowData)
+    {
+        return $this->setAttributes('row', $rowData);
+    }
+
     public function setAttributes($name, $value = null)
     {
         if (is_array($name) && is_null($value)) {
@@ -165,7 +182,7 @@ class PageElement
             $this->attributes[$name] = $value;
         }
 
-        if ($this->controlType == 'dropdown' && $name == 'multiple' && $value == true) {
+        if ($this->controlType == 'select' && $name == 'multiple' && $value == true) {
             $this->name .= '._ids';
         }
         return $this;
@@ -465,7 +482,11 @@ class PageElement
             }
         }
 
-        if ($this->getControlType() == 'dropdown') {
+        if ($this->getControlType() == 'integer') {
+            if ($this->isDisabled()) {
+                $properties['controlType'] = 'string';
+            }
+        } elseif ($this->getControlType() == 'select') {
             $properties['options'] = $this->getOptions();
         }
 
