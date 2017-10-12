@@ -143,7 +143,7 @@ class POCOR4215 extends AbstractMigration
             ->addColumn('status', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true,
+                'null' => false,
                 'comment' => '1 => Active, 2 => Inactive'
             ])
             ->addColumn('date_started', 'date', [
@@ -171,7 +171,7 @@ class POCOR4215 extends AbstractMigration
             ->addColumn('infrastructure_project_funding_source_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true,
+                'null' => false,
                 'comment' => 'links to infrastructure_project_funding_sources.id'
             ])
             ->addColumn('institution_id', 'integer', [
@@ -198,6 +198,7 @@ class POCOR4215 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('status')
             ->addIndex('infrastructure_project_funding_source_id')
             ->addIndex('institution_id')
             ->addIndex('modified_user_id')
