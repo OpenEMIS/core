@@ -1,3 +1,6 @@
+### [1.2.1] - 2017-10-12
+- Fixed a bug on the onchange that causes a 404 error when trying to fetch the dependent options [Issue #13](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/13/executing-on-change-logic-in-edit-page)
+
 ### [1.2.0] - 2017-10-12
 - Added logic to render labels (in index/view/delete pages) from predefined select options automatically.
 - Added new function 'is' in PageComponent to check if the current request action is in the list of provided actions.
