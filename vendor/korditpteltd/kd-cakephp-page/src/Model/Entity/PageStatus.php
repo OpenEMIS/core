@@ -14,15 +14,18 @@ class PageStatus
     private $message;
 
     const SUCCESS = 200;
-    const RECORD_NOT_FOUND = 204;
-    const VALIDATION_ERROR = 400;
-    const UNEXPECTED_ERROR = 404;
+    const BAD_REQUEST = 400;
+    const UNAUTHORISED = 401;
+    const RECORD_NOT_FOUND = 404;
+    const UNSUPPORTED_MEDIA_TYPE = 415;
+    const VALIDATION_ERROR = 422;
+    const UNEXPECTED_ERROR = 500;
 
     public function __construct()
     {
         $this->code = self::SUCCESS;
         $this->type = 'success';
-        $this->error = 'false';
+        $this->error = false;
         $this->message = 'Success';
     }
 
@@ -55,7 +58,7 @@ class PageStatus
 
     public function setError($error)
     {
-        $this->error = $error ? 'true' : 'false';
+        $this->error = $error ? true : false;
         return $this;
     }
 

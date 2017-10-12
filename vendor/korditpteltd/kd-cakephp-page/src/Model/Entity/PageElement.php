@@ -38,7 +38,7 @@ class PageElement
     protected $visible;
     protected $dependentOn;
     protected $params;
-    protected $options; // options for dropdown control type
+    protected $options; // options for select control type
     protected $value; // current selected value
     protected $wildcard;
     protected $attributes; // html attributes
@@ -155,31 +155,72 @@ class PageElement
         return $this->type;
     }
 
+    public function addColumn($name, array $options = [])
+    {
+        $newColumn = $this::create($name, $options)->getJSON();
+        if (isset($this->getAttributes()['column'])) {
+            $returnColumn = $this->getAttributes()['column'];
+            $returnColumn[] = $newColumn;
+            return $this->setAttributes('column', $returnColumn);
+        } else {
+            return $this->setAttributes('column', [$newColumn]);
+        }
+    }
+
+    public function addRows(array $rowData)
+    {
+        return $this->setAttributes('row', $rowData);
+    }
+
     public function setAttributes($name, $value = null)
     {
         if (is_array($name) && is_null($value)) {
             foreach ($name as $key => $val) {
                 $this->attributes[$key] = $val;
+
+                if ($key == 'multiple') {
+                    if (!is_bool($value)) {
+                        die($this->key . ': value of attribute (multiple) must be true/false');
+                    }
+
+                    if ($value) {
+                        if ($this->controlType == 'select') {
+                            $this->name .= '._ids';
+                        }
+                    } else { // if $value is false then remove the attribute because it should not appear in html
+                        unset($this->attributes[$key]);
+                    }
+                }
             }
         } elseif (!is_null($value)) {
             $this->attributes[$name] = $value;
+
+            if ($name == 'multiple') {
+                if (!is_bool($value)) {
+                    die($this->key . ': value of attribute (multiple) must be true/false');
+                }
+
+                if ($value) {
+                    if ($this->controlType == 'select') {
+                        $this->name .= '._ids';
+                    }
+                } else { // if $value is false then remove the attribute because it should not appear in html
+                    unset($this->attributes[$name]);
+                }
+            }
         }
 
-        if ($this->controlType == 'dropdown' && $name == 'multiple' && $value == true) {
-            $this->name .= '._ids';
-        }
         return $this;
     }
-
-    // public function setAttributes($key, $value)
-    // {
-    //     $this->attributes[$key] = $value;
-    //     return $this;
-    // }
 
     public function getAttributes()
     {
         return $this->attributes;
+    }
+
+    public function hasAttribute($name)
+    {
+        return array_key_exists($name, $this->attributes);
     }
 
     public function isRequired()
@@ -465,7 +506,11 @@ class PageElement
             }
         }
 
-        if ($this->getControlType() == 'dropdown') {
+        if ($this->getControlType() == 'integer') {
+            if ($this->isDisabled()) {
+                $properties['controlType'] = 'string';
+            }
+        } elseif ($this->getControlType() == 'select') {
             $properties['options'] = $this->getOptions();
         }
 
