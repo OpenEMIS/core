@@ -24,21 +24,6 @@ class InfrastructureProjectsController extends PageController
         $this->Page->enable(['download']);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-
-        $events['Controller.Page.onRenderStatus'] = 'onRenderStatus';
-        return $events;
-    }
-
-    public function onRenderStatus(Event $event, Entity $entity, PageElement $element)
-    {
-        $key = $element->getKey();
-        $value = $entity->{$key};
-        return array_key_exists($value, $this->projectStatusesOptions) ? $this->projectStatusesOptions[$value] : '';
-    }
-
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
@@ -69,6 +54,11 @@ class InfrastructureProjectsController extends PageController
         $this->fundingSourceOptions = $this->InfrastructureProjects->getFundingSourceOptions();
         $this->projectStatusesOptions = $this->InfrastructureProjects->getProjectStatusesOptions();
         $this->needsOptions = $this->InfrastructureProjects->getNeedsOptions();
+
+        // set project status
+        $page->get('status')
+            ->setControlType('select')
+            ->setOptions($this->projectStatusesOptions);
 
         // set field order
         $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding source'));
@@ -103,13 +93,13 @@ class InfrastructureProjectsController extends PageController
 
     public function add()
     {
-        $this->addEditProjects();
+        $this->addEdit();
         parent::add();
     }
 
     public function edit($id)
     {
-        $this->addEditProjects();
+        $this->addEdit();
         parent::edit($id);
     }
 
@@ -152,20 +142,14 @@ class InfrastructureProjectsController extends PageController
         parent::delete($id);
     }
 
-    private function addEditProjects()
+    private function addEdit()
     {
         $page = $this->Page;
         $page->exclude(['file_name']);
 
         // set funding source
         $page->get('infrastructure_project_funding_source_id')
-            ->setControlType('select')
-            ->setOptions($this->fundingSourceOptions);
-
-        // set project status
-        $page->get('status')
-            ->setControlType('select')
-            ->setOptions($this->projectStatusesOptions);
+            ->setControlType('select');
 
         // set infrastructure needs
         $page->addNew('infrastructure_needs')
