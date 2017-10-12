@@ -613,6 +613,31 @@ EOT;
             $options['params'] = $field['params'];
         }
 
+        if (array_key_exists('multiple', $options)) {
+            return $this->multiselect($field, $data);
+        }
+
+        return $this->Form->input($field['attributes']['name'], $options);
+    }
+
+    private function multiselect(array $field, $data)
+    {
+        $options = $this->extractHtmlAttributes($field, $data);
+        $options['type'] = 'select';
+        $options['multiple'] = 'multiple';
+        $options['class'] = (I18n::locale() == 'ar') ? 'chosen-select chosen-rtl' : 'chosen-select';
+
+        $options['data-placeholder'] = '';
+        if (array_key_exists('placeholder', $options)) {
+            $options['data-placeholder'] = $options['placeholder'];
+            unset($options['placeholder']);
+        }
+
+        if (empty($options['options'])) {
+            $options['data-placeholder'] = __('No Options');
+        }
+        $this->includes['chosen']['include'] = true;
+
         return $this->Form->input($field['attributes']['name'], $options);
     }
 
@@ -654,13 +679,13 @@ EOT;
 
         if (!empty($value)) {
             if ($value instanceof Date) {
-                $options['value'] = $value->i18nFormat('dd-MM-YYYY');
+                $options['value'] = $value->i18nFormat('dd-MM-yyyy');
             } else {
-                $options['value'] = (new Date($value))->i18nFormat('dd-MM-YYYY');
+                $options['value'] = (new Date($value))->i18nFormat('dd-MM-yyyy');
             }
         } else {
             if ($required) {
-                $options['value'] = (new Date())->i18nFormat('dd-MM-YYYY');
+                $options['value'] = (new Date())->i18nFormat('dd-MM-yyyy');
             }
         }
 
