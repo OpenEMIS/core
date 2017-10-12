@@ -2043,6 +2043,7 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+<<<<<<< HEAD
     public static function checkStaffFTE($field, array $globalData)
     {
         $model = $globalData['providers']['table'];
@@ -2085,6 +2086,9 @@ class ValidationBehavior extends Behavior
     }
 
     public static function checkPendingStaffTransferIn($field, array $globalData)
+=======
+    public static function checkPendingStaffTransfer($field, array $globalData)
+>>>>>>> 6b8534d51cd07a6656f7f44c192f444f5538f49d
     {
         $data = $globalData['data'];
         $staffId = $data['staff_id'];
@@ -2320,6 +2324,44 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    public static function checkAssessmentMarks($field, array $globalData)
+    {
+        if (strlen($field) > 0) {
+            $model = $globalData['providers']['table'];
+
+            if (array_key_exists('education_subject_id', $globalData['data']) && !empty($globalData['data']['education_subject_id']) && array_key_exists('assessment_id', $globalData['data']) && !empty($globalData['data']['assessment_id']) && array_key_exists('assessment_period_id', $globalData['data']) && !empty($globalData['data']['assessment_period_id'])) {
+
+                $educationSubjectId = $globalData['data']['education_subject_id'];
+                $assessmentId = $globalData['data']['assessment_id'];
+                $assessmentPeriodId = $globalData['data']['assessment_period_id'];
+
+                $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+                $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
+                    ->find()
+                    ->contain('AssessmentGradingTypes')
+                    ->where([
+                        $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                        $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
+                        $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
+                    ])
+                    ->first();
+
+                if ($assessmentItemsGradingTypeEntity) {
+                    $minMark = 0;
+                    $maxMark = $assessmentItemsGradingTypeEntity->assessment_grading_type->max;
+
+                    if ($field < $minMark || $field > $maxMark) {
+                        return $model->getMessage('Institution.InstitutionAssessments.marks.markHint', ['sprintf' => [$minMark, $maxMark]]);
+                    }
+                } else {
+                    return $model->getMessage('Institution.InstitutionAssessments.grading_type.notFound');
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
     {
         if ($homeRoomTeacher != 0 && $globalData['data'][$secondaryHomeRoomTeacher] != 0) {
@@ -2332,7 +2374,7 @@ class ValidationBehavior extends Behavior
 
     //check whether position assigned to class(es)
     public static function checkHomeRoomTeacherAssignments($field, array $globalData)
-    {       
+    {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
         $query = $InstitutionClasses->find()
@@ -2341,7 +2383,7 @@ class ValidationBehavior extends Behavior
                     'Positions.id' => $globalData['data']['id']
                 ])
                 ->count();
-        
+
         if ($query > 0) {
             return false;
         }
