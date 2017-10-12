@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -647,6 +647,19 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution'],
                     'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
                 ],
+
+                'Wash' => [
+                    'title' => 'WASH',
+                    'parent' => 'Infrastructures',
+                    'link' => false
+                ],
+
+                    'InfrastructureWashWaters.index' => [
+                        'title' => 'Water',
+                        'parent' => 'Wash',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureWashWaters.view', 'InfrastructureWashWaters.add', 'InfrastructureWashWaters.edit', 'InfrastructureWashWaters.delete']
+                    ],
 
             'Survey' => [
                 'title' => 'Survey',
