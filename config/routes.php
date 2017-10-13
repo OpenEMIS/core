@@ -145,6 +145,18 @@ Router::scope('/restful', [], function ($routes) {
             ['pass' => ['id']]
         );
 
+        // Download
+        $routes->connect( '/:version/:model/download/:id/:fileName/:fileContent',
+            ['action' => 'download', '_method' => 'GET'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id', 'fileName', 'fileContent']]
+        );
+
+        // Image
+        $routes->connect( '/:version/:model/image/:id/:fileName/:fileContent',
+            ['action' => 'image', '_method' => 'GET'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id', 'fileName', 'fileContent']]
+        );
+
         // Add
         $routes->connect( '/:version/:model',
             ['action' => 'add', '_method' => 'POST'],

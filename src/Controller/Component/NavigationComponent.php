@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -621,12 +621,71 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.StudentFees'],
                 ],
 
-            'Institutions.InstitutionLands' => [
+            'Infrastructures' => [
                 'title' => 'Infrastructures',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.InstitutionLands', 'Institutions.InstitutionBuildings', 'Institutions.InstitutionFloors', 'Institutions.InstitutionRooms']
+                'link' => false
             ],
+
+                'Institutions.InstitutionLands' => [
+                    'title' => 'Overview',
+                    'parent' => 'Infrastructures',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.InstitutionLands', 'Institutions.InstitutionBuildings', 'Institutions.InstitutionFloors', 'Institutions.InstitutionRooms']
+                ],
+
+                'InfrastructureNeeds.index' => [
+                    'title' => 'Needs',
+                    'parent' => 'Infrastructures',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['InfrastructureNeeds.view', 'InfrastructureNeeds.add', 'InfrastructureNeeds.edit', 'InfrastructureNeeds.delete']
+                ],
+
+                'InfrastructureProjects.index' => [
+                    'title' => 'Projects',
+                    'parent' => 'Infrastructures',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['InfrastructureProjects.view', 'InfrastructureProjects.add', 'InfrastructureProjects.edit', 'InfrastructureProjects.delete']
+                ],
+
+                'Wash' => [
+                    'title' => 'WASH',
+                    'parent' => 'Infrastructures',
+                    'link' => false
+                ],
+
+                    'InfrastructureWashWaters.index' => [
+                        'title' => 'Water',
+                        'parent' => 'Wash',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureWashWaters.view', 'InfrastructureWashWaters.add', 'InfrastructureWashWaters.edit', 'InfrastructureWashWaters.delete']
+                    ],
+
+                'Utilities' => [
+                    'title' => 'Utilities',
+                    'parent' => 'Infrastructures',
+                    'link' => false
+                ],
+                    'InfrastructureUtilityElectricities.index' => [
+                        'title' => 'Electricity',
+                        'parent' => 'Utilities',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureUtilityElectricities.view', 'InfrastructureUtilityElectricities.add', 'InfrastructureUtilityElectricities.edit', 'InfrastructureUtilityElectricities.delete']
+                    ],
+
+                    'InfrastructureUtilityInternets.index' => [
+                        'title' => 'Internet',
+                        'parent' => 'Utilities',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureUtilityInternets.view', 'InfrastructureUtilityInternets.add', 'InfrastructureUtilityInternets.edit', 'InfrastructureUtilityInternets.delete']
+                    ],
+
+                    'InfrastructureUtilityTelephones.index' => [
+                        'title' => 'Telephone',
+                        'parent' => 'Utilities',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
+                    ],
 
             'Survey' => [
                 'title' => 'Survey',
@@ -658,7 +717,7 @@ class NavigationComponent extends Component
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution']
-            ]
+            ],
         ];
 
         foreach ($navigation as &$n) {
