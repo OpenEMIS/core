@@ -12,6 +12,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 
 class StaffLeaveTable extends ControllerActionTable
@@ -56,7 +57,17 @@ class StaffLeaveTable extends ControllerActionTable
                 'rule' => ['compareDateReverse', 'date_from', true]
             ])
             ->allowEmpty('file_content')
-        ;
+            ->requirePresence('assignee_id', function ($context) { // assignee_id is mandatory only when it is editable
+                if (isset($context['data']['staff_leave_type_id']) && !empty($context['data']['staff_leave_type_id'])) {
+                    $model = $context['providers']['table'];
+                    $entity = $model->newEntity();
+                    $entity = $model->patchEntity($entity, $context['data'], ['validate' => false]);
+
+                    return $model->assigneeEditable($entity);
+                }
+
+                return false;
+            });
     }
 
     public function implementedEvents()
@@ -77,7 +88,6 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('staff_leave_type_id', ['type' => 'select']);
         $this->field('number_of_days', [
             'visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]
         ]);
@@ -105,6 +115,15 @@ class StaffLeaveTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('staff_leave_type_id');
+        $this->field('assignee_id', ['entity' => $entity]); //send entity information
+
+        // after $this->field(), field ordering will mess up, so need to reset the field order
+        $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
+    }
+
     public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
@@ -122,6 +141,59 @@ class StaffLeaveTable extends ControllerActionTable
             $userId = $this->getUserId();
 
             $attr['value'] = $userId;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = 'changeStaffLeaveType';
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $assigneeEditable = $this->assigneeEditable($entity);
+
+            if ($assigneeEditable && $entity->has('staff_leave_type_id')) {
+                $filterId = $entity->staff_leave_type_id;
+
+                $registryAlias = $this->registryAlias();
+                $workflowModelEntity = $this->getWorkflowSetup($registryAlias);
+
+                $workflowEntity = $this->getWorkflow($registryAlias, $entity, $filterId);
+
+                $workflowId = $workflowEntity->id;
+                $firstStepEntity = $this->getFirstWorkflowStep($workflowId);
+                $firstStepId = $firstStepEntity->id;
+
+                $isSchoolBased = $workflowModelEntity->is_school_based;
+                $params = [
+                    'is_school_based' => $isSchoolBased,
+                    'workflow_step_id' => $firstStepId
+                ];
+
+                $session = $request->session();
+                if ($session->check('Institution.Institutions.id')) {
+                    $institutionId = $session->read('Institution.Institutions.id');
+                    $params['institution_id'] = $institutionId;
+                }
+
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+
+                $attr['type'] = 'select';
+                $attr['visible'] = true;
+                $attr['options'] = $assigneeOptions;
+            }
         }
 
         return $attr;
@@ -284,5 +356,49 @@ class StaffLeaveTable extends ControllerActionTable
             ;
 
         return $licenseData->toArray();
+    }
+
+    public function assigneeEditable(Entity $entity)
+    {
+        // by default assignee is not editable
+        // if security roles is configured for the first step, then assignee is editable in the first step
+        if ($entity->has('staff_leave_type_id')) {
+            $registryAlias = $this->registryAlias();
+
+            $isNew = $entity->has('id') ? false : true;
+            $filterId = $entity->has('staff_leave_type_id') ? $entity->staff_leave_type_id : null;
+            $statusId = $entity->has('status_id') ? $entity->status_id : null;
+
+            $workflowEntity = $this->getWorkflow($registryAlias, $entity, $filterId);
+
+            $workflowId = $workflowEntity->id;
+            $firstStepEntity = $this->getFirstWorkflowStep($workflowId);
+
+            $firstStepId = $firstStepEntity->id;
+            // if is new or if is existing record and current status is first step
+            if ($isNew || !$isNew && $statusId == $firstStepId) {
+                if (!empty($firstStepEntity->security_roles)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function getFirstWorkflowStep($workflowId)
+    {
+        $firstStepEntity = $this->Statuses
+            ->find()
+            ->matching('Workflows.WorkflowModels', function ($q) use ($workflowId) {
+                return $q->where(['Workflows.id' => $workflowId]);
+            })
+            ->contain(['SecurityRoles'])
+            ->where([
+                $this->Statuses->aliasField('category') => WorkflowSteps::TO_DO
+            ])
+            ->first();
+
+        return $firstStepEntity;
     }
 }
