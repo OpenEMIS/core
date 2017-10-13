@@ -53,7 +53,7 @@ class InfrastructureProjectsController extends PageController
         // set options
         $this->fundingSourceOptions = $this->InfrastructureProjects->getFundingSourceOptions();
         $this->projectStatusesOptions = $this->InfrastructureProjects->getProjectStatusesOptions();
-        $this->needsOptions = $this->InfrastructureProjects->getNeedsOptions();
+        $this->needsOptions = $this->InfrastructureProjects->getNeedsOptions($institutionId);
 
         // set project status
         $page->get('status')

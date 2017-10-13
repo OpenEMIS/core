@@ -117,9 +117,9 @@ class InfrastructureProjectsTable extends AppTable
         return $this->projectStatuses;
     }
 
-    public function getNeedsOptions()
+    public function getNeedsOptions($institutionId)
     {
-        $needsOptions = $this->InfrastructureNeeds->find('list')->toArray();
+        $needsOptions = $this->InfrastructureNeeds->find('list')->where([$this->InfrastructureNeeds->aliasField('institution_id') => $institutionId])->toArray();
 
         return $needsOptions;
     }
