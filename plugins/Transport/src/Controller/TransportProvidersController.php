@@ -10,4 +10,12 @@ class TransportProvidersController extends PageController
         parent::initialize();
         $this->Page->loadElementsFromTable($this->TransportProviders);
     }
+
+	public function index()
+    {
+        $page = $this->Page;
+        $page->exclude(['comment']);
+
+        parent::index();
+    }
 }

@@ -2021,6 +2021,13 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'Transport' => [
+            'TransportProviders' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ]
+        ],
     ];
 
 
