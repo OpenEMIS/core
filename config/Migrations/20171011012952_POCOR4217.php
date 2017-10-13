@@ -580,26 +580,62 @@ class POCOR4217 extends AbstractMigration
             ->save();
         // end infrastructure_utility_electricities
 
-        // // security_functions
-        // $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 13');
+        // security_functions
+        $this->execute('UPDATE security_functions SET `order` = `order` + 3 WHERE `order` > 14');
 
-        // $this->insert('security_functions', [
-        //     'id' => 1065,
-        //     'name' => 'Infrastructure Wash Water',
-        //     'controller' => 'InfrastructureWashWaters',
-        //     'module' => 'Institutions',
-        //     'category' => 'Details',
-        //     'parent_id' => 8,
-        //     '_view' => 'index|view|download',
-        //     '_edit' => 'edit',
-        //     '_add' => 'add',
-        //     '_delete' => 'delete',
-        //     'order' => 14,
-        //     'visible' => 1,
-        //     'created_user_id' => 1,
-        //     'created' => date('Y-m-d H:i:s')
-        // ]);
-        // // end security_functions
+        $data = [
+            [
+                'id' => 1066,
+                'name' => 'Infrastructure Utility Electricity',
+                'controller' => 'InfrastructureUtilityElectricities',
+                'module' => 'Institutions',
+                'category' => 'Details',
+                'parent_id' => 8,
+                '_view' => 'index|view|download',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 15,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => 1067,
+                'name' => 'Infrastructure Utility Internet',
+                'controller' => 'InfrastructureUtilityInternets',
+                'module' => 'Institutions',
+                'category' => 'Details',
+                'parent_id' => 8,
+                '_view' => 'index|view|download',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 16,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => 1068,
+                'name' => 'Infrastructure Utility Telephone',
+                'controller' => 'InfrastructureUtilityTelephones',
+                'module' => 'Institutions',
+                'category' => 'Details',
+                'parent_id' => 8,
+                '_view' => 'index|view|download',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 17,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('security_functions', $data);
+        // end security_functions
     }
 
     // rollback
@@ -617,7 +653,9 @@ class POCOR4217 extends AbstractMigration
         $this->execute('DROP TABLE utility_telephone_conditions');
         $this->execute('DROP TABLE utility_telephone_types');
 
-        // $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 13');
-        // $this->execute('DELETE FROM security_functions WHERE id = 1065');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 3 WHERE `order` > 14');
+        $this->execute('DELETE FROM security_functions WHERE id = 1066');
+        $this->execute('DELETE FROM security_functions WHERE id = 1067');
+        $this->execute('DELETE FROM security_functions WHERE id = 1068');
     }
 }
