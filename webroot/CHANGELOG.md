@@ -1,4 +1,4 @@
-### [3.10.13] - 
+### [3.10.13] - 2017-10-13
 - Implemented Projects feature in Institutions > Infrastructure module 
 - Implemented Needs feature in Institutions > Infrastructure module
 - Implemented WASH feature in Institutions module
