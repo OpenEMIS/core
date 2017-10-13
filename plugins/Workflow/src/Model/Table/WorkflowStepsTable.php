@@ -28,6 +28,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('WorkflowStepsParams', ['className' => 'Workflow.WorkflowStepsParams', 'foreignKey' => 'workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
 
 		$this->hasMany('StaffLeave', ['className' => 'Institution.StaffLeave', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -62,6 +63,7 @@ class WorkflowStepsTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
+			->requirePresence('name', 'create')
 			->requirePresence('category')
 			->requirePresence('is_editable')
 			->requirePresence('is_removable')
@@ -152,7 +154,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 
 		$query
-			->contain(['SecurityRoles'])
+			->contain(['SecurityRoles', 'WorkflowStepsParams'])
 			->where([$this->aliasField('workflow_id') => $selectedWorkflow]);
 	}
 
@@ -170,7 +172,7 @@ class WorkflowStepsTable extends AppTable {
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->matching('Workflows')
-			->contain(['SecurityRoles']);
+			->contain(['SecurityRoles', 'WorkflowStepsParams']);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -227,6 +229,7 @@ class WorkflowStepsTable extends AppTable {
 			list($workflowOptions) = array_values($this->getWorkflowOptions($selectedModel));
 
 			$attr['options'] = $workflowOptions;
+			$attr['onChangeReload'] = true;
 		} else if ($action == 'edit') {
 			$entity = $attr['attr']['entity'];
 			$workflow = $entity->_matchingData['Workflows'];
@@ -396,6 +399,8 @@ class WorkflowStepsTable extends AppTable {
 			$this->TrainingNeeds->registryAlias() => $this->TrainingNeeds->alias(),
 			$this->InstitutionPositions->registryAlias() => $this->InstitutionPositions->alias(),
 			$this->StaffPositionProfiles->registryAlias() => $this->StaffPositionProfiles->alias(),
+			$this->InstitutionStaffTransfers->registryAlias() => $this->InstitutionStaffTransfers->alias(),
+			$this->WorkflowStepsParams->registryAlias() => $this->WorkflowStepsParams->alias()
 		];
 
 		$statusId = $entity->id;
