@@ -3957,57 +3957,13 @@
         }
     },
     {
-        "name": "korditpteltd/kd-cakephp-page",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
-        "source": {
-            "type": "git",
-            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-            "reference": "a5ef1f221b09c78be0fdbe24fb319960a801c3af"
-        },
-        "require": {
-            "cakephp/cakephp": ">=3.3.0 <3.4"
-        },
-        "require-dev": {
-            "cakephp/cakephp-codesniffer": "^2.3",
-            "phpunit/phpunit": "^5.7"
-        },
-        "time": "2017-08-24T06:50:34+00:00",
-        "type": "cakephp-plugin",
-        "installation-source": "source",
-        "autoload": {
-            "psr-4": {
-                "Page\\": "src"
-            }
-        },
-        "license": [
-            "GPL-2.0"
-        ],
-        "authors": [
-            {
-                "name": "KORDIT PHP DEVELOPERS",
-                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-page/commits/all"
-            }
-        ],
-        "description": "KORDIT CakePHP Page Plugin",
-        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-page",
-        "keywords": [
-            "cakephp",
-            "kordit",
-            "page"
-        ],
-        "support": {
-            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
-        }
-    },
-    {
         "name": "korditpteltd/kd-cakephp-restful",
         "version": "1.1.x-dev",
         "version_normalized": "1.1.9999999.9999999-dev",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "47fd7a44822ccb18632e8718dfb0af49e553e7a5"
+            "reference": "742037629875de54e30481e8fe70146fd6f6ac8f"
         },
         "require": {
             "admad/cakephp-jwt-auth": "^2.0",
@@ -4017,7 +3973,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-09-13T09:30:09+00:00",
+        "time": "2017-10-05T09:11:36+00:00",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
@@ -4055,6 +4011,50 @@
         ],
         "support": {
             "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
+        }
+    },
+    {
+        "name": "korditpteltd/kd-cakephp-page",
+        "version": "1.2.1",
+        "version_normalized": "1.2.1.0",
+        "source": {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
+            "reference": "7d176a394bf2ca68026508e2ad9d3404a37e1b01"
+        },
+        "require": {
+            "cakephp/cakephp": ">=3.3.0 <3.5"
+        },
+        "require-dev": {
+            "cakephp/cakephp-codesniffer": "^2.3",
+            "phpunit/phpunit": "^5.7"
+        },
+        "time": "2017-10-12T09:48:24+00:00",
+        "type": "cakephp-plugin",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "Page\\": "src"
+            }
+        },
+        "license": [
+            "GPL-2.0"
+        ],
+        "authors": [
+            {
+                "name": "KORDIT PHP DEVELOPERS",
+                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-page/commits/all"
+            }
+        ],
+        "description": "KORDIT CakePHP Page Plugin",
+        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-page",
+        "keywords": [
+            "cakephp",
+            "kordit",
+            "page"
+        ],
+        "support": {
+            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
         }
     }
 ]

@@ -970,6 +970,28 @@ trait MessagesTrait
                     'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
+            'InfrastructureNeeds' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name'
+                ],
+                'date_completed' => [
+                    'compareWithDateStarted' => 'Date completed should not be earlier than date started'
+                ],
+            ],
+            'InfrastructureProjects' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name'
+                ],
+                'date_completed' => [
+                    'compareWithDateStarted' => 'Date completed should not be earlier than date started'
+                ],
+            ],
             'Students' => [
                 'student_name' => [
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
