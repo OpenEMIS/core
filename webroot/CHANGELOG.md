@@ -1,3 +1,10 @@
+### [3.10.13] - 
+- Implemented Projects feature in Institutions > Infrastructure module 
+- Implemented Needs feature in Institutions > Infrastructure module
+- Implemented WASH feature in Institutions module
+- Implemented Utilities feature in Institutions module 
+- Implemented Area to Administration > Training > Sessions	
+
 ### [3.10.12] - 2017-10-06
 - Implemented export feature in Institution > Positions page
 
