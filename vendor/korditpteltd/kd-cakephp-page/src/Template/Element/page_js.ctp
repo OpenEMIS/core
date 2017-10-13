@@ -9,13 +9,16 @@ document.addEventListener("DOMContentLoaded", function() {
         if (elements[i].hasAttribute('dependent-on')) {
             element = elements[i];
             dependentOn = element.getAttribute('dependent-on');
-            source = document.getElementById(dependentOn);
-
+            var sources = dependentOn.split(" ");
             (function (s, e) {
-                s.addEventListener('change', function() {
-                    Page.onChange(s, e);
-                });
-            }) (source, element);
+                for (var i = 0; i < s.length; i++) {
+                    var source = document.getElementById(s[i]);
+                    source.addEventListener('change', function() {
+                        Page.onChange(s, e);
+                    });
+                }
+
+            }) (sources, element);
         }
     }
 });
@@ -52,24 +55,50 @@ Page.removeUrlParam = function(key) {
 
 Page.querystring = function(key, value, obj) {
     var querystringValue = this.querystringValue;
-    if (obj.getAttribute('dependenton') != undefined) {
-        if (querystringValue != null) {
-            querystringValue = JSON.parse(querystringValue.hexDecode());
-        } else {
-            querystringValue = {};
-        }
-        var dependentOn = obj.getAttribute('dependenton').split(' ');
-
-        var retainedQueryStringValue = {};
-        dependentOn.forEach(function (val, k) {
-            if (querystringValue[val] != undefined) {
-                retainedQueryStringValue[val] = querystringValue[val];
-            }
-        });
-        queryStringValue = retainedQueryStringValue
+    if (querystringValue != null) {
+        querystringValue = JSON.parse(querystringValue.hexDecode());
     } else {
         querystringValue = {};
     }
+    var retainedDependentKey = ['search'];
+    var resetAllKey = false;
+    var retainedQueryStringValue = {};
+
+    // Check to see if the object has the reset all flag, if yes then only the search and the value for the object will retain
+    if (obj.getAttribute('resetall') == 1) {
+        retainedDependentKey.push(key);
+        resetAllKey = true;
+    }
+    // If there is a dependent flag on the object that is change, then only the parent, search and the object will retain
+    else if (obj.getAttribute('dependenton') != undefined) {
+        var dependentOnString = obj.getAttribute('dependenton');
+        var dependentOnArr = dependentOnString.split(" ");
+        for (var i = 0 ; i < dependentOnArr.length ; i++) {
+            var dependentOn = dependentOnArr[i];
+            while (dependentOn != null) {
+                retainedDependentKey.push(dependentOn);
+                var dependentObj = document.getElementById(dependentOn);
+                if (dependentObj != null && dependentObj.getAttribute('dependenton') != undefined) {
+                    dependentOn = dependentObj.getAttribute('dependenton');
+                } else {
+                    dependentOn = null;
+                }
+            }
+        }
+
+    }
+    // If not all the query string value will retain
+    else {
+        retainedQueryStringValue = querystringValue;
+    }
+    retainedDependentKey.forEach(function (val, k) {
+        if (querystringValue[val] != undefined) {
+            retainedQueryStringValue[val] = querystringValue[val];
+        }
+    });
+
+    querystringValue = retainedQueryStringValue;
+
     if (value == null || value.trim().length == 0) {
         delete querystringValue[key];
     } else {
@@ -80,7 +109,6 @@ Page.querystring = function(key, value, obj) {
         if(querystringValue.hasOwnProperty(prop)) ++count;
     }
     if (count > 0) {
-
         querystringValue = JSON.stringify(querystringValue).hexEncode();
         window.location.href = this.updateUrlParamValue('querystring', querystringValue);
     } else {
@@ -92,14 +120,29 @@ Page.getParamValue = function(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
 }
 
-Page.onChange = function(source, target) {
-    target.innerHTML = '<option>Updating</option>';
+Page.onChange = function(sources, target) {
+    var targetValue = target.value;
+    target.innerHTML = '<option value=0>Updating</option>';
     var xhr = new XMLHttpRequest();
     var isMultiple = target.getAttribute('multiple') != null;
     var method = 'onchange/' + target.getAttribute('params');
-    // var isReset = source.value.length == 0;
+
+    // Logic added to fix the bug where the base url is with the id parameter
+    var baseUrl = window.location.href;
+    baseUrl = baseUrl.split('?')[0];
+    var segments = baseUrl.split('/');
+    var segmentCount = segments.length;
+    var selectedSegment = segments[segmentCount - 2];
+    if (selectedSegment[0].toUpperCase() != selectedSegment[0]) {
+        method = '../' + method;
+    }
+    // End of fix
+
     var params = {};
-    params[source.id] = source.value;
+    for (var i = 0; i < sources.length ; i++) {
+        var source = document.getElementById(sources[i]);
+        params[source.id] = source.value;
+    }
 
     if (isMultiple) {
         params['multiple'] = 'true';
@@ -117,6 +160,9 @@ Page.onChange = function(source, target) {
                 var option = document.createElement('option');
                 option.innerHTML = data[i]['text'];
                 option.setAttribute('value', data[i]['value']);
+                if (data[i]['value'] == targetValue) {
+                    option.setAttribute('selected', true);
+                }
                 if (data[i].hasOwnProperty('disabled')) {
                     option.setAttribute('disabled', true);
                 }
