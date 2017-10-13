@@ -118,6 +118,12 @@ class FieldOptionComponent extends Component
         'InfrastructureWashWaterQuantities' => ['className' => 'Institution.InfrastructureWashWaterQuantities', 'parent' => 'Infrastructure'],
         'InfrastructureWashWaterQualities' => ['className' => 'Institution.InfrastructureWashWaterQualities', 'parent' => 'Infrastructure'],
         'InfrastructureWashWaterAccessibilities' => ['className' => 'Institution.InfrastructureWashWaterAccessibilities', 'parent' => 'Infrastructure'],
+        'UtilityElectricityTypes' => ['className' => 'Institution.UtilityElectricityTypes', 'parent' => 'Infrastructure'],
+        'UtilityElectricityConditions' => ['className' => 'Institution.UtilityElectricityConditions', 'parent' => 'Infrastructure'],
+        'UtilityInternetTypes' => ['className' => 'Institution.UtilityInternetTypes', 'parent' => 'Infrastructure'],
+        'UtilityInternetConditions' => ['className' => 'Institution.UtilityInternetConditions', 'parent' => 'Infrastructure'],
+        'UtilityTelephoneTypes' => ['className' => 'Institution.UtilityTelephoneTypes', 'parent' => 'Infrastructure'],
+        'UtilityTelephoneConditions' => ['className' => 'Institution.UtilityTelephoneConditions', 'parent' => 'Infrastructure'],
 
     // Health
         'AllergyTypes' => ['className' => 'Health.AllergyTypes', 'parent' => 'Health'],
