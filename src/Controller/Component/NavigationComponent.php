@@ -1291,6 +1291,27 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'ReportCard'],
                 'selected' => ['ReportCards.Templates']
             ],
+
+            'Administration.Transport' => [
+                'title' => 'Transport',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+
+                'TransportProviders.index' => [
+                    'title' => 'Transport Providers',
+                    'parent' => 'Administration.Transport',
+                    'params' => ['plugin' => 'Transport'],
+                    'selected' => ['TransportProviders.add', 'TransportProviders.edit', 'TransportProviders.view', 'TransportProviders.delete']
+                ],
+
+                'Buses.index' => [
+                    'title' => 'Buses',
+                    'parent' => 'Administration.Transport',
+                    'params' => ['plugin' => 'Transport'],
+                    'selected' => ['Buses.add', 'Buses.edit', 'Buses.view', 'Buses.delete']
+                ],
+
             'Workflows.Workflows' => [
                 'title' => 'Workflow',
                 'parent' => 'Administration',
