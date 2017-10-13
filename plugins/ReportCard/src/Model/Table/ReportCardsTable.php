@@ -189,6 +189,17 @@ class ReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
     }
 
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // populate subjects data
+        if ($entity->has('report_card_subjects') && !empty($entity->report_card_subjects)) {
+            foreach ($entity->report_card_subjects as $subject) {
+                $subjectsArr[] = $subject->education_subject_id;
+            }
+            $entity->subjects = isset($subjectsArr) ? $subjectsArr : [];
+        }
+    }
+
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
@@ -353,16 +364,7 @@ class ReportCardsTable extends ControllerActionTable
             } else if($action == 'edit') {
                 $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
                 $selectedGrade = $attr['entity']->education_grade_id;
-
-                // populate chosenSelect data
-                if ($attr['entity']->has('report_card_subjects')) {
-                    $subjects = $attr['entity']->report_card_subjects;
-                    foreach ($subjects as $subject) {
-                        $request->data[$this->alias()]['subjects'][] = $subject->education_subject_id;
-                    }
-                }
             }
-
 
             if (empty($teacherComments) || $teacherComments == self::ALL_SUBJECTS) {
                 $attr['type'] = 'hidden';
