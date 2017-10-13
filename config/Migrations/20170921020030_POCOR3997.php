@@ -632,13 +632,13 @@ class POCOR3997 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Assign',
+                'name' => 'Transfer',
                 'description' => NULL,
                 'action' => '0',
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => 'Workflow.onTransferStaff',
                 'workflow_step_id' => $pendingTransferStatusId,
                 'next_workflow_step_id' => $transferredStatusId,
                 'created_user_id' => '1',
