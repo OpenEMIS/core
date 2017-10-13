@@ -48,7 +48,11 @@ class AreaAdministrativesTable extends ControllerActionTable
             ->add('is_main_country', 'ruleValidateAreaAdministrativeMainCountry', [
                 'rule' => ['validateAreaAdministrativeMainCountry'],
                 'on' => function ($context) {
-                    return $context['data']['parent_id'] == $this->worldId;
+                    $query = $this->find()
+                            ->select([$this->aliasField('id')])
+                            ->where([$this->aliasField('parent_id').' IS NULL'])
+                            ->first();
+                    return $context['data']['parent_id'] == $query->id;
                 },
                 'provider' => 'table'
             ]);
