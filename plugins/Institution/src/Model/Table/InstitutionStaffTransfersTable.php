@@ -19,10 +19,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     const INCOMING = 1;
     const OUTGOING = 2;
 
-    // institution_owner params
-    public $incomingOwnerParams = '';
-    public $outgoingOwnerParams = '';
-
     // fte options
     public $fteOptions = [];
 
@@ -39,12 +35,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'staff_type_id']);
 
-        $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.InstitutionStaffTransfers']);
+        $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('OpenEmis.Section');
 
-        $this->incomingOwnerParams = json_encode(['institution_owner' => self::INCOMING], JSON_NUMERIC_CHECK);
-        $this->outgoingOwnerParams = json_encode(['institution_owner' => self::OUTGOING], JSON_NUMERIC_CHECK);
         $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
     }
 
@@ -160,17 +154,17 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $StatusesTable = $this->Statuses;
         $institutionId = $options['institution_id'];
+        $incomingInstitution = self::INCOMING;
         $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
 
         $query
-            ->matching('Statuses')
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                'OR' => [
-                    $this->aliasField('initiated_by') => self::INCOMING,
-                    $StatusesTable->aliasField('params') => $this->incomingOwnerParams
-                ]
-            ]);
+            ->matching('Statuses.WorkflowStepsParams', function ($q) use ($incomingInstitution) {
+                return $q->where([
+                    'WorkflowStepsParams.name' => 'institution_visible',
+                    'WorkflowStepsParams.value' => $incomingInstitution
+                ]);
+            })
+            ->where([$this->aliasField('institution_id') => $institutionId]);
 
         if ($pending) {
             $query->where(['Statuses.category <> ' => self::DONE]);
@@ -182,17 +176,17 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $StatusesTable = $this->Statuses;
         $institutionId = $options['institution_id'];
+        $outgoingInstitution = self::OUTGOING;
         $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
 
         $query
-            ->matching('Statuses')
-            ->where([
-                $this->aliasField('previous_institution_id') => $institutionId,
-                'OR' => [
-                    $this->aliasField('initiated_by') => self::OUTGOING,
-                    $StatusesTable->aliasField('params') => $this->outgoingOwnerParams
-                ]
-            ]);
+            ->matching('Statuses.WorkflowStepsParams', function ($q) use ($outgoingInstitution) {
+                return $q->where([
+                    'WorkflowStepsParams.name' => 'institution_visible',
+                    'WorkflowStepsParams.value' => $outgoingInstitution
+                ]);
+            })
+            ->where([$this->aliasField('previous_institution_id') => $institutionId]);
 
         if ($pending) {
             $query->where(['Statuses.category <> ' => self::DONE]);
