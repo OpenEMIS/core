@@ -1223,6 +1223,12 @@ class WorkflowBehavior extends Behavior {
             $params['institution_id'] = $entity->institution_id;
         }
 
+        $event = $this->_table->dispatchEvent('Workflow.onSetCustomAssigneeParams', [$entity, $params], $this);
+        if ($event->isStopped()) { return $event->result; }
+        if ($event->result) {
+            $params = $event->result;
+        }
+
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
 
