@@ -11,5 +11,7 @@ class BusesTransportFeaturesTable extends AppTable
 
 		$this->belongsTo('Buses', ['className' => 'Transport.Buses']);
 		$this->belongsTo('TransportFeatures', ['className' => 'Transport.TransportFeatures']);
+
+		$this->addBehavior('CompositeKey');
 	}
 }
