@@ -56,6 +56,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         $events['Workflow.checkIfCanAddButtons'] = 'checkIfCanAddButtons';
+        $events['Workflow.onSetCustomAssigneeParams'] = 'onSetCustomAssigneeParams';
 
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
@@ -109,22 +110,27 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function checkIfCanAddButtons(Event $event, Entity $entity)
     {
         $canAddButtons = false;
-        $stepsEntity = $this->Statuses->get($entity->status_id, ['contain' => ['WorkflowStepsParams']]);
-        $stepsParams = $stepsEntity->workflow_steps_params;
+        $institutionOwner = $this->getInstitutionOwner($entity->status_id);
+        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        if (!empty($stepsParams)) {
-            $key = array_search('institution_owner', array_column($stepsParams, 'name'));
-            $institutionOwner = $stepsParams[$key]['value'];
-            $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
-
-            if ($institutionOwner == self::INCOMING && $entity->institution_id == $currentInstitutionId) {
-                $canAddButtons = $this->Institutions->isActive($entity->institution_id);
-
-            } else if ($institutionOwner == self::OUTGOING && $entity->previous_institution_id == $currentInstitutionId) {
-                $canAddButtons = $this->Institutions->isActive($entity->previous_institution_id);
-            }
+        if ($institutionOwner == self::INCOMING && $entity->institution_id == $currentInstitutionId) {
+            $canAddButtons = $this->Institutions->isActive($entity->institution_id);
+        } else if ($institutionOwner == self::OUTGOING && $entity->previous_institution_id == $currentInstitutionId) {
+            $canAddButtons = $this->Institutions->isActive($entity->previous_institution_id);
         }
         return $canAddButtons;
+    }
+
+    public function onSetCustomAssigneeParams(Event $event, Entity $entity, $params)
+    {
+        $institutionOwner = $this->getInstitutionOwner($entity->status_id);
+
+        if ($institutionOwner == self::INCOMING) {
+            $params['institution_id'] = $entity->institution_id;
+        } else if ($institutionOwner == self::OUTGOING) {
+            $params['institution_id'] = $entity->previous_institution_id;
+        }
+        return $params;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -170,6 +176,18 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $value = $entity->institution->code_name;
         }
         return $value;
+    }
+
+    public function getInstitutionOwner($workflowStepId)
+    {
+        $stepsEntity = $this->Statuses->get($workflowStepId, ['contain' => ['WorkflowStepsParams']]);
+        $stepsParams = $stepsEntity->workflow_steps_params;
+
+        if (!empty($stepsParams)) {
+            $key = array_search('institution_owner', array_column($stepsParams, 'name'));
+            $institutionOwner = $stepsParams[$key]['value'];
+        }
+        return isset($institutionOwner) ? $institutionOwner : 0;
     }
 
     public function findInstitutionStaffTransferIn(Query $query, array $options)
