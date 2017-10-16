@@ -1414,6 +1414,13 @@ class WorkflowBehavior extends Behavior {
             }
         }
 
+        // check additional conditions to show buttons
+        $event = $this->_table->dispatchEvent('Workflow.checkIfCanAddButtons', [$entity], $this);
+        if ($event->isStopped()) { return $event->result; }
+        if ($event->result) {
+            $canAddButtons = $event->result;
+        }
+
         return $canAddButtons;
     }
 }
