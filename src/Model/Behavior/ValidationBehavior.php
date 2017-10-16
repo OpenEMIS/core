@@ -2130,19 +2130,20 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $registryAlias = $model->registryAlias();
         $data = $globalData['data'];
+        $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
 
         if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                     ->find()
                     ->where([
                         $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
-                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                        $InstitutionGrades->aliasField('institution_id') => $previousInstitutionId
                     ])
                     ->first();
 
-            $programmeEndDate = $query->end_date;
+            if (!empty($query->end_date)) {
+                $programmeEndDate = $query->end_date;
 
-            if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $today = new DateTime('now');
                 $validationErrorMsg = '';
@@ -2162,18 +2163,19 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
 
-        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+        if (array_key_exists('new_education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                     ->find()
                     ->where([
-                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                        // $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $InstitutionGrades->aliasField('education_grade_id') => $data['new_education_grade_id'],
                         $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
                     ])
                     ->first();
 
-            $programmeEndDate = $query->end_date;
+            if (!empty($query->end_date)) {
+                $programmeEndDate = $query->end_date;
 
-            if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $studentStartDate = new DateTime($data['start_date']);
 
@@ -2182,6 +2184,7 @@ class ValidationBehavior extends Behavior
                 }
             }
         }
+
         return true;
     }
 
