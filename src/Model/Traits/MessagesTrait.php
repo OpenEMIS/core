@@ -1188,6 +1188,11 @@ trait MessagesTrait
                     'ruleUnique' => 'This field has to be unique'
                 ]
             ],
+            'InstitutionBuses' => [
+                'plate_number' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
