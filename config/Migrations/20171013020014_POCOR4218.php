@@ -6,10 +6,10 @@ class POCOR4218 extends AbstractMigration
     // commit
     public function up()
     {
-        // transport_providers
-        $table = $this->table('transport_providers', [
+        // institution_transport_providers
+        $table = $this->table('institution_transport_providers', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains list of providers used by transport'
+            'comment' => 'This table contains list of transport providers manage by school'
         ]);
 
         $table
@@ -41,6 +41,12 @@ class POCOR4218 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -59,15 +65,16 @@ class POCOR4218 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('institution_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end transport_providers
+        // end institution_transport_providers
 
-        // buses
-        $table = $this->table('buses', [
+        // institution_buses
+        $table = $this->table('institution_buses', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains list of buses operate by transport providers'
+            'comment' => 'This table contains list of buses operate by transport providers from school'
         ]);
 
         $table
@@ -85,11 +92,11 @@ class POCOR4218 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('transport_provider_id', 'integer', [
+            ->addColumn('institution_transport_provider_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to transport_providers.id'
+                'comment' => 'links to institution_transport_providers.id'
             ])
             ->addColumn('bus_type_id', 'integer', [
                 'default' => null,
@@ -102,6 +109,12 @@ class POCOR4218 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to transport_statuses.id'
+            ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -121,13 +134,14 @@ class POCOR4218 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addIndex('transport_provider_id')
+            ->addIndex('institution_transport_provider_id')
             ->addIndex('bus_type_id')
             ->addIndex('transport_status_id')
+            ->addIndex('institution_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end buses
+        // end institution_buses
 
         // bus_types
         $table = $this->table('bus_types', [
@@ -324,11 +338,11 @@ class POCOR4218 extends AbstractMigration
             ->save();
         // end transport_features
 
-        // buses_transport_features
-        $table = $this->table('buses_transport_features', [
+        // institution_buses_transport_features
+        $table = $this->table('institution_buses_transport_features', [
             'id' => false,
             'primary_key' => [
-                'bus_id',
+                'institution_bus_id',
                 'transport_feature_id',
             ],
             'collation' => 'utf8mb4_unicode_ci',
@@ -341,11 +355,11 @@ class POCOR4218 extends AbstractMigration
                 'limit' => 64,
                 'null' => false
             ])
-            ->addColumn('bus_id', 'integer', [
+            ->addColumn('institution_bus_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to buses.id'
+                'comment' => 'links to institution_buses.id'
             ])
             ->addColumn('transport_feature_id', 'integer', [
                 'default' => null,
@@ -353,20 +367,303 @@ class POCOR4218 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to transport_features.id'
             ])
-            ->addIndex('bus_id')
+            ->addIndex('institution_bus_id')
             ->addIndex('transport_feature_id')
             ->save();
-        // end buses_transport_features
+        // end institution_buses_transport_features
+
+        // institution_trips
+        $table = $this->table('institution_trips', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains list of trips for school'
+        ]);
+
+        $table
+            ->addColumn('name', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false
+            ])
+            ->addColumn('repeat', 'integer', [
+                'default' => 0,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('trip_type_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to trip_types.id'
+            ])
+            ->addColumn('institution_transport_provider_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_transport_providers.id'
+            ])
+            ->addColumn('institution_bus_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_buses.id'
+            ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('academic_period_id')
+            ->addIndex('trip_type_id')
+            ->addIndex('institution_transport_provider_id')
+            ->addIndex('institution_bus_id')
+            ->addIndex('institution_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // end institution_trips
+
+        // trip_types
+        $table = $this->table('trip_types', [
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This field options table contains types of trips'
+            ]);
+
+        $table
+            ->addColumn('name', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => false
+            ])
+            ->addColumn('order', 'integer', [
+                'default' => null,
+                'limit' => 3,
+                'null' => false
+            ])
+            ->addColumn('visible', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('editable', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('default', 'integer', [
+                'default' => 0,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('international_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
+            ])
+            ->addColumn('national_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // end trip_types
+
+        // institution_trip_days
+        $table = $this->table('institution_trip_days', [
+            'id' => false,
+            'primary_key' => [
+                'institution_trip_id',
+                'day',
+            ],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the days for trips'
+        ]);
+
+        $table
+            ->addColumn('id', 'char', [
+                'default' => null,
+                'limit' => 36,
+                'null' => false
+            ])
+            ->addColumn('institution_trip_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_trips.id'
+            ])
+            ->addColumn('day', 'integer', [
+                'default' => null,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('institution_trip_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // end institution_trip_days
+
+        // institution_trip_passengers
+        $table = $this->table('institution_trip_passengers', [
+            'id' => false,
+            'primary_key' => [
+                'student_id',
+                'institution_class_id',
+                'education_grade_id',
+                'institution_trip_id',
+            ],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the passengers for trips'
+        ]);
+
+        $table
+            ->addColumn('id', 'char', [
+                'default' => null,
+                'limit' => 36,
+                'null' => false
+            ])
+            ->addColumn('student_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('institution_class_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_classes.id'
+            ])
+            ->addColumn('education_grade_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to education_grades.id'
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('institution_trip_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_trips.id'
+            ])
+            ->addColumn('day', 'integer', [
+                'default' => null,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('student_id')
+            ->addIndex('institution_class_id')
+            ->addIndex('education_grade_id')
+            ->addIndex('academic_period_id')
+            ->addIndex('institution_trip_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+        // end institution_trip_passengers
     }
 
     // rollback
     public function down()
     {
-        $this->execute('DROP TABLE `transport_providers`');
-        $this->execute('DROP TABLE `buses`');
+        $this->execute('DROP TABLE `institution_transport_providers`');
+        $this->execute('DROP TABLE `institution_buses`');
         $this->execute('DROP TABLE `bus_types`');
         $this->execute('DROP TABLE `transport_statuses`');
         $this->execute('DROP TABLE `transport_features`');
-        $this->execute('DROP TABLE `buses_transport_features`');
+        $this->execute('DROP TABLE `institution_buses_transport_features`');
+
+        $this->execute('DROP TABLE `institution_trips`');
+        $this->execute('DROP TABLE `trip_types`');
+        $this->execute('DROP TABLE `institution_trip_days`');
+        $this->execute('DROP TABLE `institution_trip_passengers`');
     }
 }
