@@ -1,15 +1,15 @@
 <?php
-namespace Transport\Model\Table;
+namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class BusesTransportFeaturesTable extends AppTable
+class InstitutionBusesTransportFeaturesTable extends AppTable
 {
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
 
-		$this->belongsTo('Buses', ['className' => 'Transport.Buses']);
+		$this->belongsTo('InstitutionBuses', ['className' => 'Institution.InstitutionBuses']);
 		$this->belongsTo('TransportFeatures', ['className' => 'Transport.TransportFeatures']);
 
 		$this->addBehavior('CompositeKey');

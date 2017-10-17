@@ -1182,7 +1182,12 @@ trait MessagesTrait
                 'grading_type' => [
                     'notFound' => 'No Grading Type found'
                 ]
-            ]
+            ],
+            'InstitutionTransportProviders' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
@@ -2042,13 +2047,6 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
-        ],
-        'Transport' => [
-            'TransportProviders' => [
-                'name' => [
-                    'ruleUnique' => 'This field has to be unique'
-                ]
-            ]
         ],
     ];
 

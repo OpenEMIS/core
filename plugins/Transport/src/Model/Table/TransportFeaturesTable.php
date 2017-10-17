@@ -10,12 +10,12 @@ class TransportFeaturesTable extends ControllerActionTable
         $this->table('transport_features');
         parent::initialize($config);
 
-		$this->belongsToMany('Buses', [
-			'className' => 'Transport.Buses',
-			'joinTable' => 'buses_transport_features',
+		$this->belongsToMany('InstitutionBuses', [
+			'className' => 'Institution.InstitutionBuses',
+			'joinTable' => 'institution_buses_transport_features',
 			'foreignKey' => 'transport_feature_id',
-			'targetForeignKey' => 'bus_id',
-			'through' => 'Transport.BusesTransportFeatures',
+			'targetForeignKey' => 'institution_bus_id',
+			'through' => 'Institution.InstitutionBusesTransportFeatures',
 			'dependent' => true,
 			'cascadeCallbacks' => true
 		]);
