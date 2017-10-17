@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -712,6 +712,26 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.VisitRequests', 'Institutions.Visits']
             ],
+
+            'Institutions.Transport' => [
+                'title' => 'Transport',
+                'parent' => 'Institutions.Institutions.index',
+                'link' => false,
+            ],
+
+                'InstitutionTransportProviders.index' => [
+                    'title' => 'Transport Providers',
+                    'parent' => 'Institutions.Transport',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['InstitutionTransportProviders.add', 'InstitutionTransportProviders.edit', 'InstitutionTransportProviders.view', 'InstitutionTransportProviders.delete']
+                ],
+
+                'InstitutionBuses.index' => [
+                    'title' => 'Buses',
+                    'parent' => 'Institutions.Transport',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['InstitutionBuses.add', 'InstitutionBuses.edit', 'InstitutionBuses.view', 'InstitutionBuses.delete']
+                ],
 
             'Institutions.Cases' => [
                 'title' => 'Cases',
@@ -1350,26 +1370,6 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'ReportCard'],
                 'selected' => ['ReportCards.Templates']
             ],
-
-            'Administration.Transport' => [
-                'title' => 'Transport',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-
-                'TransportProviders.index' => [
-                    'title' => 'Transport Providers',
-                    'parent' => 'Administration.Transport',
-                    'params' => ['plugin' => 'Transport'],
-                    'selected' => ['TransportProviders.add', 'TransportProviders.edit', 'TransportProviders.view', 'TransportProviders.delete']
-                ],
-
-                'Buses.index' => [
-                    'title' => 'Buses',
-                    'parent' => 'Administration.Transport',
-                    'params' => ['plugin' => 'Transport'],
-                    'selected' => ['Buses.add', 'Buses.edit', 'Buses.view', 'Buses.delete']
-                ],
 
             'Workflows.Workflows' => [
                 'title' => 'Workflow',

@@ -1,44 +1,61 @@
 <?php
-namespace Transport\Controller;
+namespace Institution\Controller;
 
 use Cake\Event\Event;
 use App\Controller\PageController;
 
-class BusesController extends PageController
+class InstitutionBusesController extends PageController
 {
     public function initialize()
     {
         parent::initialize();
 
-        $this->Page->loadElementsFromTable($this->Buses);
+        $this->Page->loadElementsFromTable($this->InstitutionBuses);
     }
 
 	public function beforeFilter(Event $event)
     {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionName = $session->read('Institution.Institutions.name');
+
     	parent::beforeFilter($event);
+
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+
 		$page = $this->Page;
 
         // set Breadcrumb
-    	$page->addCrumb('Buses', ['plugin' => $this->plugin, 'controller' => $this->name]);
+        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
+        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Buses');
+
+        // set header
+        $page->setHeader($institutionName . ' - ' . __('Buses'));
+
+        // set institution_id
+        $page->get('institution_id')->setControlType('hidden')->setValue($institutionId);
     }
 
     public function index()
     {
+        parent::index();
+
         $page = $this->Page;
-        $page->exclude(['comment']);
+        $page->exclude(['comment', 'institution_id']);
 
         // Transport Providers
-        $transportProviders = $this->Buses->TransportProviders
+        $transportProviders = $this->InstitutionBuses->InstitutionTransportProviders
             ->getList()
             ->toArray();
 
         $transportProviderOptions = [null => __('All Transport Providers')] + $transportProviders;
-        $page->addFilter('transport_provider_id')
+        $page->addFilter('institution_transport_provider_id')
             ->setOptions($transportProviderOptions);
         // end Transport Providers
 
         // Bus Types
-        $busTypes = $this->Buses->BusTypes
+        $busTypes = $this->InstitutionBuses->BusTypes
             ->getList()
             ->toArray();
 
@@ -48,7 +65,7 @@ class BusesController extends PageController
         // end Bus Types
 
         // Transport Statuses
-        $transportStatuses = $this->Buses->TransportStatuses
+        $transportStatuses = $this->InstitutionBuses->TransportStatuses
             ->getList()
             ->toArray();
 
@@ -58,34 +75,30 @@ class BusesController extends PageController
         // end Transport Statuses
 
         // reorder fields
-        $page->move('transport_provider_id')->after('plate_number');
-        $page->move('bus_type_id')->after('transport_provider_id');
+        $page->move('institution_transport_provider_id')->after('plate_number');
+        $page->move('bus_type_id')->after('institution_transport_provider_id');
         $page->move('capacity')->after('bus_type_id');
         $page->move('transport_status_id')->after('capacity');
         // end reorder fields
-
-        parent::index();
     }
 
-	public function add()
+    public function add()
     {
-        $this->addEdit();
         parent::add();
-        $this->reorderFields();
+        $this->addEdit();
     }
 
     public function edit($id)
     {
-        $this->addEdit();
         parent::edit($id);
-        $this->reorderFields();
+        $this->addEdit();
     }
 
 	private function addEdit()
     {
         $page = $this->Page;
 
-        $page->get('transport_provider_id')
+        $page->get('institution_transport_provider_id')
             ->setControlType('select');
 
         $page->get('bus_type_id')
@@ -94,7 +107,7 @@ class BusesController extends PageController
         $page->get('transport_status_id')
             ->setControlType('select');
 
-        $transportFeatureOptions = $this->Buses->TransportFeatures
+        $transportFeatureOptions = $this->InstitutionBuses->TransportFeatures
             ->getList()
             ->toArray();
 
@@ -103,14 +116,16 @@ class BusesController extends PageController
             ->setAttributes('multiple', true)
             ->setAttributes('placeholder', __('Select Transport Features'))
             ->setOptions($transportFeatureOptions, false);
+
+        $this->reorderFields();
     }
 
     private function reorderFields()
     {
         $page = $this->Page;
 
-        $page->move('transport_provider_id')->after('plate_number');
-        $page->move('bus_type_id')->after('transport_provider_id');
+        $page->move('institution_transport_provider_id')->after('plate_number');
+        $page->move('bus_type_id')->after('institution_transport_provider_id');
         $page->move('capacity')->after('bus_type_id');
         $page->move('transport_status_id')->after('capacity');
         $page->move('transport_features')->after('transport_status_id');
