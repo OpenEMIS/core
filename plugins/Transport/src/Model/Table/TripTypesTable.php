@@ -10,7 +10,7 @@ class TripTypesTable extends ControllerActionTable
         $this->table('trip_types');
         parent::initialize($config);
 
-        // $this->hasMany('Buses', ['className' => 'Transport.Buses']);
+        $this->hasMany('InstitutionTrips', ['className' => 'Institution.InstitutionTrips']);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');
