@@ -98,6 +98,19 @@ class InstitutionBusesController extends PageController
         // end reorder fields
     }
 
+    public function view($id)
+    {
+        parent::view($id);
+
+        $page = $this->Page;
+
+        $page->addNew('transport_features')
+            ->setControlType('select')
+            ->setAttributes('multiple', true);
+
+        $this->reorderFields();
+    }
+
     public function add()
     {
         parent::add();

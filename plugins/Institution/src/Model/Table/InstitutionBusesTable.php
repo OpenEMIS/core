@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
@@ -35,5 +36,19 @@ class InstitutionBusesTable extends AppTable
 				'rule' => 'validateUnique',
 				'provider' => 'table'
 			]);
+    }
+
+	public function findView(Query $query, array $options)
+    {
+        $query->contain(['TransportFeatures']);
+
+        return $query;
+    }
+
+	public function findEdit(Query $query, array $options)
+    {
+        $query->contain(['TransportFeatures']);
+
+        return $query;
     }
 }
