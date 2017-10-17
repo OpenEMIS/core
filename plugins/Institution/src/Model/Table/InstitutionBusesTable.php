@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class InstitutionBusesTable extends AppTable
@@ -23,5 +24,16 @@ class InstitutionBusesTable extends AppTable
 			'dependent' => true,
 			'cascadeCallbacks' => true
 		]);
+    }
+
+	public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+		return $validator
+			->add('plate_number', 'ruleUnique', [
+				'rule' => 'validateUnique',
+				'provider' => 'table'
+			]);
     }
 }
