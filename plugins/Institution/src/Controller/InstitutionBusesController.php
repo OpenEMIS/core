@@ -63,7 +63,7 @@ class InstitutionBusesController extends PageController
 
         // Transport Providers
         $transportProviders = $this->InstitutionTransportProviders
-            ->find('transportProvidersList', ['querystring' => $page->getQueryString()])
+            ->find('transportProviderList', ['querystring' => $page->getQueryString()])
             ->toArray();
 
         $transportProviderOptions = [null => __('All Transport Providers')] + $transportProviders;
@@ -133,7 +133,7 @@ class InstitutionBusesController extends PageController
         $page->get('institution_transport_provider_id')
             ->setControlType('select')
             ->setDependentOn('institution_id')
-            ->setParams('InstitutionTransportProviders/TransportProvidersList');
+            ->setParams('InstitutionTransportProviders/TransportProviderList');
 
         $page->get('bus_type_id')
             ->setControlType('select');

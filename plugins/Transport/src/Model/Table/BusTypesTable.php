@@ -10,7 +10,7 @@ class BusTypesTable extends ControllerActionTable
         $this->table('bus_types');
         parent::initialize($config);
 
-        $this->hasMany('InstitutionBuses', ['className' => 'Institution.InstitutionBuses']);
+        $this->hasMany('InstitutionBuses', ['className' => 'Institution.InstitutionBuses', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');

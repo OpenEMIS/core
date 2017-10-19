@@ -12,7 +12,7 @@ class InstitutionTransportProvidersTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->hasMany('InstitutionBuses', ['className' => 'Institution.InstitutionBuses']);
+        $this->hasMany('InstitutionBuses', ['className' => 'Institution.InstitutionBuses', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
 	public function validationDefault(Validator $validator)
@@ -30,7 +30,7 @@ class InstitutionTransportProvidersTable extends AppTable
 			]);
     }
 
-    public function findTransportProvidersList(Query $query, array $options)
+    public function findTransportProviderList(Query $query, array $options)
     {
         $queryString = array_key_exists('querystring', $options) ? $options['querystring'] : [];
         $institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : 0;
