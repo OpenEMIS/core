@@ -63,7 +63,14 @@ class InstitutionTripsTable extends AppTable
 
     public function findView(Query $query, array $options)
     {
-        $query->contain(['InstitutionTripDays', 'InstitutionTripPassengers']);
+        $query->contain([
+            'InstitutionTripDays',
+            'InstitutionTripPassengers' => [
+                'Students',
+                'InstitutionClasses',
+                'EducationGrades'
+            ]
+        ]);
 
         return $query;
     }
