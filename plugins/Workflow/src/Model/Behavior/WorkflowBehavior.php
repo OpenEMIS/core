@@ -1049,6 +1049,12 @@ class WorkflowBehavior extends Behavior {
                                 $visibleField[] = $actionEvent->result;
                             }
 
+                            $autoAssignAssignee = 0;
+                            $event = $this->_table->dispatchEvent('Workflow.setAutoAssignAssigneeFlag', [$actionObj], $this->_table);
+                            if (is_int($event->result)) {
+                                $autoAssignAssignee = $event->result;
+                            }
+
                             $actionType = $actionObj->action;
                             $button = [
                                 'id' => $actionObj->id,
@@ -1060,9 +1066,9 @@ class WorkflowBehavior extends Behavior {
                                 'comment_required' => $actionObj->comment_required,
                                 'event_description' => $eventDescription,
                                 'is_school_based' => $isSchoolBased,
+                                'auto_assign_assignee' => $autoAssignAssignee,
                                 'modal_visible_field' => $visibleField
                             ];
-
 
                             $json = json_encode($button, JSON_NUMERIC_CHECK);
 
@@ -1224,7 +1230,6 @@ class WorkflowBehavior extends Behavior {
         }
 
         $event = $this->_table->dispatchEvent('Workflow.onSetCustomAssigneeParams', [$entity, $params], $this);
-        if ($event->isStopped()) { return $event->result; }
         if ($event->result) {
             $params = $event->result;
         }
@@ -1242,12 +1247,16 @@ class WorkflowBehavior extends Behavior {
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
                 if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
                     $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
+                    if ($assigneeId == '-1') {
+                        $this->autoAssignAssignee($entity);
+                    } else {
+                        $entity->assignee_id = $assigneeId;
+                    }
                 } else {
-                    $assigneeId = 0;
+                    $entity->assignee_id = 0;
                 }
 
                 // change to save instead of update all to trigger after save function.
-                $entity->assignee_id = $assigneeId;
                 $model->save($entity);
             }
         }
@@ -1284,8 +1293,10 @@ class WorkflowBehavior extends Behavior {
     public function workflowAfterTransition(Event $event, $id=null, $requestData)
     {
         $entity = $this->_table->get($id);
-
         $this->setStatusId($entity, $requestData);
+
+        // get the latest entity after status is updated
+        $entity = $this->_table->get($id);
         $this->setAssigneeId($entity, $requestData);
     }
 
@@ -1422,8 +1433,7 @@ class WorkflowBehavior extends Behavior {
 
         // check additional conditions to show buttons
         $event = $this->_table->dispatchEvent('Workflow.checkIfCanAddButtons', [$entity], $this);
-        if ($event->isStopped()) { return $event->result; }
-        if ($event->result) {
+        if (is_bool($event->result)) {
             $canAddButtons = $event->result;
         }
 
