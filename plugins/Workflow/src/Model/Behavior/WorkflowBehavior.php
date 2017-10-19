@@ -31,7 +31,8 @@ class WorkflowBehavior extends Behavior {
             'WorkflowStepsRoles' => 'Workflow.WorkflowStepsRoles',
             'WorkflowActions' => 'Workflow.WorkflowActions',
             'WorkflowComments' => 'Workflow.WorkflowComments',
-            'WorkflowTransitions' => 'Workflow.WorkflowTransitions'
+            'WorkflowTransitions' => 'Workflow.WorkflowTransitions',
+            'WorkflowStepsParams' => 'Workflow.WorkflowStepsParams'
         ]
     ];
 
@@ -1438,5 +1439,17 @@ class WorkflowBehavior extends Behavior {
         }
 
         return $canAddButtons;
+    }
+
+    public function getWorkflowStepsParamValue($workflowStepId, $name)
+    {
+        $value = $this->WorkflowStepsParams->find()
+            ->where([
+                $this->WorkflowStepsParams->aliasField('workflow_step_id') => $workflowStepId,
+                $this->WorkflowStepsParams->aliasField('name') => $name
+            ])
+            ->extract('value')
+            ->first();
+        return $value;
     }
 }
