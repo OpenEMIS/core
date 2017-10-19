@@ -644,6 +644,61 @@ class POCOR4218 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
         // end institution_trip_passengers
+
+        // security_functions
+        $data = [
+            [
+                'id' => 1069,
+                'name' => 'Transport Providers',
+                'controller' => 'InstitutionTransportProviders',
+                'module' => 'Institutions',
+                'category' => 'Transport',
+                'parent_id' => 1000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 70,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => 1070,
+                'name' => 'Buses',
+                'controller' => 'InstitutionBuses',
+                'module' => 'Institutions',
+                'category' => 'Transport',
+                'parent_id' => 1000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 71,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => 1071,
+                'name' => 'Trips',
+                'controller' => 'InstitutionTrips',
+                'module' => 'Institutions',
+                'category' => 'Transport',
+                'parent_id' => 1000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 72,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('security_functions', $data);
+        // end security_functions
     }
 
     // rollback
@@ -660,5 +715,9 @@ class POCOR4218 extends AbstractMigration
         $this->execute('DROP TABLE `trip_types`');
         $this->execute('DROP TABLE `institution_trip_days`');
         $this->execute('DROP TABLE `institution_trip_passengers`');
+
+        $this->execute('DELETE FROM `security_functions` WHERE `id` = 1069');
+        $this->execute('DELETE FROM `security_functions` WHERE `id` = 1070');
+        $this->execute('DELETE FROM `security_functions` WHERE `id` = 1071');
     }
 }
