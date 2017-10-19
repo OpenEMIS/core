@@ -9,6 +9,7 @@ class InstitutionTransportProvidersController extends PageController
     public function initialize()
     {
         parent::initialize();
+
         $this->Page->loadElementsFromTable($this->InstitutionTransportProviders);
     }
 
@@ -43,9 +44,9 @@ class InstitutionTransportProvidersController extends PageController
 
 	public function index()
     {
+        parent::index();
+
         $page = $this->Page;
         $page->exclude(['comment', 'institution_id']);
-
-        parent::index();
     }
 }
