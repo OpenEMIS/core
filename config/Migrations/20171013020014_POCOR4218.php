@@ -617,11 +617,6 @@ class POCOR4218 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to institution_trips.id'
             ])
-            ->addColumn('day', 'integer', [
-                'default' => null,
-                'limit' => 1,
-                'null' => false
-            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
