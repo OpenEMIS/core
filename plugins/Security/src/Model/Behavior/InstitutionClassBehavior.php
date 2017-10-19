@@ -38,6 +38,12 @@ class InstitutionClassBehavior extends Behavior
                     'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
                     "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
                 ])
+                ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                    'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id'
+                ])
+                ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                    'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                ])
                 ->where([
                     // basically if AllClasses permission is granted, the user should see all classes of that institution
                     // if MyClasses permission is granted, the user must either be a homeroom teacher or a secondary teacher of that class in order to see that class
@@ -45,7 +51,9 @@ class InstitutionClassBehavior extends Behavior
                         [
                             'OR' => [ // AllClasses permissions
                                 "SecurityFunctions.`_view` LIKE '%AllClasses.index%'",
-                                "SecurityFunctions.`_view` LIKE '%AllClasses.view%'"
+                                "SecurityFunctions.`_view` LIKE '%AllClasses.view%'",
+                                "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
+                                "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
                             ]
                         ], [
                             'AND' => [
@@ -60,6 +68,16 @@ class InstitutionClassBehavior extends Behavior
                                         "InstitutionClasses.secondary_staff_id" => $userId
                                     ]
                                 ]
+                            ]
+                        ], [
+                            'AND' => [
+                                [
+                                    'OR' => [ // MySubjects permissions
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
+                                    ]
+                                ],
+                                'InstitutionSubjectStaff.staff_id' => $userId
                             ]
                         ]
                     ]
