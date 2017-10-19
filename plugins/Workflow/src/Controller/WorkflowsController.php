@@ -124,6 +124,7 @@ class WorkflowsController extends AppController
 
         $isSchoolBased = $this->request->query('is_school_based');
         $nextStepId = $this->request->query('next_step_id');
+        $autoAssignAssignee = $this->request->query('auto_assign_assignee');
 
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $params = [
@@ -144,9 +145,15 @@ class WorkflowsController extends AppController
         Log::write('debug', $assigneeOptions);
 
         $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
+        $options = $assigneeOptions;
+
+        if ($autoAssignAssignee) {
+            $options = empty($assigneeOptions) ? [] : ['-1' => __('Auto Assign')];
+        }
+
         $responseData = [
             'default_key' => $defaultKey,
-            'assignees' => $assigneeOptions
+            'assignees' => $options
         ];
 
         $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));

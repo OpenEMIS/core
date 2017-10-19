@@ -58,6 +58,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $events['Workflow.checkIfCanAddButtons'] = 'checkIfCanAddButtons';
         $events['Workflow.onSetCustomAssigneeParams'] = 'onSetCustomAssigneeParams';
 
+        $events['Workflow.setAutoAssignAssigneeFlag'] = 'setAutoAssignAssigneeFlag';
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
@@ -131,6 +132,13 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $params['institution_id'] = $entity->previous_institution_id;
         }
         return $params;
+    }
+
+    public function setAutoAssignAssigneeFlag(Event $event, Entity $action)
+    {
+        $currentInstitutionOwner = $this->getWorkflowStepsParamValue($action->workflow_step_id, 'institution_owner');
+        $nextInstitutionOwner = $this->getWorkflowStepsParamValue($action->next_workflow_step_id, 'institution_owner');
+        return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
