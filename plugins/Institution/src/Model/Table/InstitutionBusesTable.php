@@ -51,18 +51,4 @@ class InstitutionBusesTable extends AppTable
 
         return $query;
     }
-
-    public function findBusList(Query $query, array $options)
-    {
-        $queryString = array_key_exists('querystring', $options) ? $options['querystring'] : [];
-        $transportProviderId = isset($queryString['institution_transport_provider_id']) ? $queryString['institution_transport_provider_id'] : 0;
-
-        $query
-            ->find('list')
-            ->where([
-                $this->aliasField('institution_transport_provider_id') => $transportProviderId
-            ]);
-
-        return $query;
-    }
 }

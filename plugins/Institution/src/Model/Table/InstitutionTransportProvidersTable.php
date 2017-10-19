@@ -30,17 +30,11 @@ class InstitutionTransportProvidersTable extends AppTable
 			]);
     }
 
-    public function findTransportProviderList(Query $query, array $options)
+    public function findOptionList(Query $query, array $options)
     {
-        $queryString = array_key_exists('querystring', $options) ? $options['querystring'] : [];
-        $institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : 0;
-
-        $query
-            ->find('list')
-            ->where([
-                $this->aliasField('institution_id') => $institutionId
-            ]);
-
-        return $query;
+        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
+        $query->where(['institution_id' => $institutionId]);
+        
+        return parent::findOptionList($query, $options);
     }
 }
