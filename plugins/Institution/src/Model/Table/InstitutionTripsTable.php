@@ -54,6 +54,13 @@ class InstitutionTripsTable extends AppTable
         $data['institution_trip_days'] = $tripDays;
     }
 
+    public function findIndex(Query $query, array $options)
+    {
+        $query->contain(['InstitutionTripDays']);
+
+        return $query;
+    }
+
     public function findView(Query $query, array $options)
     {
         $query->contain(['InstitutionTripDays', 'InstitutionTripPassengers']);

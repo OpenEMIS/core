@@ -2,6 +2,8 @@
 namespace Institution\Controller;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
 class InstitutionTripsController extends PageController
@@ -16,6 +18,13 @@ class InstitutionTripsController extends PageController
         $this->loadModel('Institution.InstitutionBuses');
 
         $this->Page->loadElementsFromTable($this->InstitutionTrips);
+    }
+
+    public function implementedEvents()
+    {
+        $event = parent::implementedEvents();
+        $event['Controller.Page.onRenderDays'] = 'onRenderDays';
+        return $event;
     }
 
 	public function beforeFilter(Event $event)
@@ -45,12 +54,18 @@ class InstitutionTripsController extends PageController
         $page->get('institution_transport_provider_id')
             ->setLabel('Transport Provider');
         $page->get('institution_bus_id')
-            ->setLabel('Bus');
+            ->setLabel('Bus')
+            ->setDisplayFrom('institution_bus.plate_number');
 
         // set institution_id
         $page->get('institution_id')
             ->setControlType('hidden')
             ->setValue($institutionId);
+
+        $repeatOptions = [1 => __('Yes'), 0 => __('No')];
+        $page->get('repeat')
+            ->setControlType('select')
+            ->setOptions($repeatOptions, false);
     }
 
 	public function index()
@@ -72,7 +87,7 @@ class InstitutionTripsController extends PageController
 
         // Trip Types
         $tripTypes = $this->TripTypes
-            ->getList()
+            ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
         $tripTypeOptions = [null => __('All Trip Types')] + $tripTypes;
@@ -80,34 +95,70 @@ class InstitutionTripsController extends PageController
             ->setOptions($tripTypeOptions);
         // end Trip Types
 
+        $page->addNew('days')
+            ->setControlType('select')
+            ->setAttributes('multiple', true);
+
         // reorder fields
-        $page->move('name')->after('academic_period_id');
-        $page->move('trip_type_id')->after('name');
-        $page->move('institution_transport_provider_id')->after('trip_type_id');
-        $page->move('institution_bus_id')->after('institution_transport_provider_id');
+        $page->move('academic_period_id')->first();
         $page->move('repeat')->after('institution_bus_id');
+        $page->move('days')->after('repeat');
         // end reorder fields
     }
 
     public function view($id)
     {
         parent::view($id);
-        $this->setupFields($id);
+
+        $page = $this->Page;
+
+        $page->addNew('information')
+            ->setControlType('section');
+
+        $page->addNew('capacity')
+            ->setControlType('integer');
+
+        $page->addNew('days')
+            ->setControlType('select')
+            ->setAttributes('multiple', true);
+
+        $page->addNew('passengers')
+            ->setControlType('section');
+
+        $this->reorderFields();
     }
 
     public function add()
     {
         parent::add();
-        $this->setupFields($id);
+        $this->addEdit();
     }
 
     public function edit($id)
     {
         parent::edit($id);
-        $this->setupFields($id);
+        $this->addEdit($id);
     }
 
-    private function setupFields($id)
+    public function onRenderDays(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['index', 'view'])) {
+            if ($entity->has('institution_trip_days')) {
+                $dayOptions = $this->AcademicPeriods->getWorkingDaysOfWeek();
+                $list = [];
+                foreach ($entity->institution_trip_days as $obj) {
+                    $list[$obj->day] = $dayOptions[$obj->day];
+                }
+
+                $value = implode(", ", $list);
+                return $value;
+            }
+        }
+    }
+
+    private function addEdit($id=0)
     {
         $page = $this->Page;
 
@@ -127,28 +178,18 @@ class InstitutionTripsController extends PageController
             ->setControlType('select');
 
         $page->get('institution_transport_provider_id')
-            ->setControlType('select')
-            ->setDependentOn('institution_id')
-            ->setParams('InstitutionTransportProviders/TransportProviderList');
-
-        $busOptions = $this->InstitutionBuses
-            ->getList()
-            ->toArray();
+            ->setId('institution_transport_provider_id')
+            ->setControlType('select');
 
         $page->get('institution_bus_id')
             ->setControlType('select')
-            ->setOptions($busOptions);
-            // ->setDependentOn('institution_transport_provider_id')
-            // ->setParams('InstitutionBuses/BusList');
+            ->setOptions(false)
+            ->setDependentOn('institution_transport_provider_id')
+            ->setParams('InstitutionBuses');
 
         $page->addNew('capacity')
             ->setControlType('integer')
             ->setDisabled(true);
-
-        $repeatOptions = [1 => __('Yes'), 0 => __('No')];
-        $page->get('repeat')
-            ->setControlType('select')
-            ->setOptions($repeatOptions, false);
 
         $dayOptions = $this->AcademicPeriods->getWorkingDaysOfWeek();
         $page->addNew('days')
@@ -162,15 +203,16 @@ class InstitutionTripsController extends PageController
 
         // set days to entity
         $entity = $page->getData();
+
         $days = [];
         if ($entity->has('institution_trip_days')) {
             foreach ($entity->institution_trip_days as $tripDayEntity) {
                 $tripDayEntity->id = $tripDayEntity->day;
-                $tripDayEntity->name = $dayOptions[$tripDayEntity->day];
 
                 $days[] = $tripDayEntity;
             }
         }
+
         $entity->days = $days;
         // end set days to entity
 
@@ -181,11 +223,8 @@ class InstitutionTripsController extends PageController
     {
         $page = $this->Page;
 
+        $page->move('information')->first();
         $page->move('academic_period_id')->after('information');
-        $page->move('name')->after('academic_period_id');
-        $page->move('trip_type_id')->after('name');
-        $page->move('institution_transport_provider_id')->after('trip_type_id');
-        $page->move('institution_bus_id')->after('institution_transport_provider_id');
         $page->move('capacity')->after('institution_bus_id');
         $page->move('repeat')->after('capacity');
         $page->move('days')->after('repeat');

@@ -25,6 +25,8 @@ class InstitutionBusesTable extends AppTable
 			'dependent' => true,
 			'cascadeCallbacks' => true
 		]);
+
+        $this->displayField('plate_number');
     }
 
 	public function validationDefault(Validator $validator)

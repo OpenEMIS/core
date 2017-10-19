@@ -1193,6 +1193,11 @@ trait MessagesTrait
                     'ruleUnique' => 'This field has to be unique'
                 ]
             ],
+            'InstitutionTrips' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
