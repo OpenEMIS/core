@@ -10,6 +10,12 @@ class InstitutionBusesController extends PageController
     {
         parent::initialize();
 
+        $this->loadModel('Institution.InstitutionTransportProviders');
+        $this->loadModel('Institution.InstitutionBuses');
+        $this->loadModel('Transport.BusTypes');
+        $this->loadModel('Transport.TransportStatuses');
+        $this->loadModel('Transport.TransportFeatures');
+
         $this->Page->loadElementsFromTable($this->InstitutionBuses);
     }
 
@@ -36,6 +42,7 @@ class InstitutionBusesController extends PageController
         // to filter by institution_id
         $page->setQueryString('institution_id', $institutionId);
 
+        // to rename field label
         $page->get('institution_transport_provider_id')
             ->setLabel('Transport Provider');
 
@@ -55,12 +62,8 @@ class InstitutionBusesController extends PageController
         $institutionId = $page->getQueryString('institution_id');
 
         // Transport Providers
-        $TransportProviderTable = $this->InstitutionBuses->InstitutionTransportProviders;
-        $transportProviders = $TransportProviderTable
-            ->getList()
-            ->where([
-                $TransportProviderTable->aliasField('institution_id') => $institutionId
-            ])
+        $transportProviders = $this->InstitutionTransportProviders
+            ->find('transportProvidersList', ['querystring' => $page->getQueryString()])
             ->toArray();
 
         $transportProviderOptions = [null => __('All Transport Providers')] + $transportProviders;
@@ -69,8 +72,7 @@ class InstitutionBusesController extends PageController
         // end Transport Providers
 
         // Bus Types
-        $BusTypeTable = $this->InstitutionBuses->BusTypes;
-        $busTypes = $BusTypeTable
+        $busTypes = $this->BusTypes
             ->getList()
             ->toArray();
 
@@ -80,8 +82,7 @@ class InstitutionBusesController extends PageController
         // end Bus Types
 
         // Transport Statuses
-        $TransportStatusTable = $this->InstitutionBuses->TransportStatuses;
-        $transportStatuses = $TransportStatusTable
+        $transportStatuses = $this->TransportStatuses
             ->getList()
             ->toArray();
 
@@ -129,17 +130,10 @@ class InstitutionBusesController extends PageController
 
         $institutionId = $page->getQueryString('institution_id');
 
-        $TransportProviderTable = $this->InstitutionBuses->InstitutionTransportProviders;
-        $transportProviderOptions = $TransportProviderTable
-            ->getList()
-            ->where([
-                $TransportProviderTable->aliasField('institution_id') => $institutionId
-            ])
-            ->toArray();
-
         $page->get('institution_transport_provider_id')
             ->setControlType('select')
-            ->setOptions($transportProviderOptions);
+            ->setDependentOn('institution_id')
+            ->setParams('InstitutionTransportProviders/TransportProvidersList');
 
         $page->get('bus_type_id')
             ->setControlType('select');
@@ -147,8 +141,7 @@ class InstitutionBusesController extends PageController
         $page->get('transport_status_id')
             ->setControlType('select');
 
-        $TransportFeatureTable = $this->InstitutionBuses->TransportFeatures;
-        $transportFeatureOptions = $TransportFeatureTable
+        $transportFeatureOptions = $this->TransportFeatures
             ->getList()
             ->toArray();
 
