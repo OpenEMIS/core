@@ -15,6 +15,7 @@ class InstitutionBusesTable extends AppTable
         $this->belongsTo('BusTypes', ['className' => 'Transport.BusTypes']);
         $this->belongsTo('InstitutionTransportProviders', ['className' => 'Institution.InstitutionTransportProviders']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+
         $this->belongsToMany('TransportFeatures', [
 			'className' => 'Transport.TransportFeatures',
 			'joinTable' => 'institution_buses_transport_features',
@@ -47,6 +48,20 @@ class InstitutionBusesTable extends AppTable
 	public function findEdit(Query $query, array $options)
     {
         $query->contain(['TransportFeatures']);
+
+        return $query;
+    }
+
+    public function findBusList(Query $query, array $options)
+    {
+        $queryString = array_key_exists('querystring', $options) ? $options['querystring'] : [];
+        $transportProviderId = isset($queryString['institution_transport_provider_id']) ? $queryString['institution_transport_provider_id'] : 0;
+
+        $query
+            ->find('list')
+            ->where([
+                $this->aliasField('institution_transport_provider_id') => $transportProviderId
+            ]);
 
         return $query;
     }
