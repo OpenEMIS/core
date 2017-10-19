@@ -10,7 +10,7 @@ class TripTypesTable extends ControllerActionTable
         $this->table('trip_types');
         parent::initialize($config);
 
-        $this->hasMany('InstitutionTrips', ['className' => 'Institution.InstitutionTrips']);
+        $this->hasMany('InstitutionTrips', ['className' => 'Institution.InstitutionTrips', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');
