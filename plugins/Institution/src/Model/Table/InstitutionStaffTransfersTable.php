@@ -111,7 +111,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function checkIfCanAddButtons(Event $event, Entity $entity)
     {
         $canAddButtons = false;
-        $institutionOwner = $this->getInstitutionOwner($entity->status_id);
+        $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         if ($institutionOwner == self::INCOMING && $entity->institution_id == $currentInstitutionId) {
@@ -124,7 +124,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function onSetCustomAssigneeParams(Event $event, Entity $entity, $params)
     {
-        $institutionOwner = $this->getInstitutionOwner($entity->status_id);
+        $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
 
         if ($institutionOwner == self::INCOMING) {
             $params['institution_id'] = $entity->institution_id;
@@ -186,21 +186,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function getInstitutionOwner($workflowStepId)
-    {
-        $stepsEntity = $this->Statuses->get($workflowStepId, ['contain' => ['WorkflowStepsParams']]);
-        $stepsParams = $stepsEntity->workflow_steps_params;
-
-        if (!empty($stepsParams)) {
-            $key = array_search('institution_owner', array_column($stepsParams, 'name'));
-            $institutionOwner = $stepsParams[$key]['value'];
-        }
-        return isset($institutionOwner) ? $institutionOwner : 0;
-    }
-
     public function findInstitutionStaffTransferIn(Query $query, array $options)
     {
-        $StatusesTable = $this->Statuses;
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
         $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
@@ -222,7 +209,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function findInstitutionStaffTransferOut(Query $query, array $options)
     {
-        $StatusesTable = $this->Statuses;
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
         $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;

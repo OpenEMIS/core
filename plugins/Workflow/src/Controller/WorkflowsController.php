@@ -148,7 +148,7 @@ class WorkflowsController extends AppController
         $options = $assigneeOptions;
 
         if ($autoAssignAssignee) {
-            $options = empty($assigneeOptions) ? [] : ['-1' => __('Auto Assign')];
+            $options = ['-1' => __('Auto Assign')];
         }
 
         $responseData = [
