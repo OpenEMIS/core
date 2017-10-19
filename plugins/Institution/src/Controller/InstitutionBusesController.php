@@ -63,7 +63,10 @@ class InstitutionBusesController extends PageController
 
         // Transport Providers
         $transportProviders = $this->InstitutionTransportProviders
-            ->find('transportProviderList', ['querystring' => $page->getQueryString()])
+            ->find('optionList', [
+                'defaultOption' => false,
+                'institution_id' => $institutionId
+            ])
             ->toArray();
 
         $transportProviderOptions = [null => __('All Transport Providers')] + $transportProviders;
@@ -73,7 +76,7 @@ class InstitutionBusesController extends PageController
 
         // Bus Types
         $busTypes = $this->BusTypes
-            ->getList()
+            ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
         $busTypeOptions = [null => __('All Bus Types')] + $busTypes;
@@ -83,7 +86,7 @@ class InstitutionBusesController extends PageController
 
         // Transport Statuses
         $transportStatuses = $this->TransportStatuses
-            ->getList()
+            ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
         $transportStatusOptions = [null => __('All Transport Statuses')] + $transportStatuses;
@@ -92,10 +95,7 @@ class InstitutionBusesController extends PageController
         // end Transport Statuses
 
         // reorder fields
-        $page->move('institution_transport_provider_id')->after('plate_number');
-        $page->move('bus_type_id')->after('institution_transport_provider_id');
         $page->move('capacity')->after('bus_type_id');
-        $page->move('transport_status_id')->after('capacity');
         // end reorder fields
     }
 
@@ -131,9 +131,7 @@ class InstitutionBusesController extends PageController
         $institutionId = $page->getQueryString('institution_id');
 
         $page->get('institution_transport_provider_id')
-            ->setControlType('select')
-            ->setDependentOn('institution_id')
-            ->setParams('InstitutionTransportProviders/TransportProviderList');
+            ->setControlType('select');
 
         $page->get('bus_type_id')
             ->setControlType('select');
@@ -142,7 +140,7 @@ class InstitutionBusesController extends PageController
             ->setControlType('select');
 
         $transportFeatureOptions = $this->TransportFeatures
-            ->getList()
+            ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
         $page->addNew('transport_features')
@@ -158,11 +156,8 @@ class InstitutionBusesController extends PageController
     {
         $page = $this->Page;
 
-        $page->move('institution_transport_provider_id')->after('plate_number');
-        $page->move('bus_type_id')->after('institution_transport_provider_id');
+        $page->move('plate_number')->first();
         $page->move('capacity')->after('bus_type_id');
-        $page->move('transport_status_id')->after('capacity');
-        $page->move('transport_features')->after('transport_status_id');
         $page->move('comment')->after('transport_features');
     }
 }
