@@ -11,11 +11,10 @@ class InstitutionBusesTable extends AppTable
     {
         parent::initialize($config);
 
-		$this->belongsTo('TransportStatuses', ['className' => 'Transport.TransportStatuses', 'foreignKey' => 'transport_status_id']);
-        $this->belongsTo('BusTypes', ['className' => 'Transport.BusTypes', 'foreignKey' => 'bus_type_id']);
-        $this->belongsTo('InstitutionTransportProviders', ['className' => 'Institution.InstitutionTransportProviders', 'foreignKey' => 'institution_transport_provider_id']);
+		$this->belongsTo('TransportStatuses', ['className' => 'Transport.TransportStatuses']);
+        $this->belongsTo('BusTypes', ['className' => 'Transport.BusTypes']);
+        $this->belongsTo('InstitutionTransportProviders', ['className' => 'Institution.InstitutionTransportProviders']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-
         $this->belongsToMany('TransportFeatures', [
 			'className' => 'Transport.TransportFeatures',
 			'joinTable' => 'institution_buses_transport_features',
