@@ -1,3 +1,6 @@
+### [1.3.2] - 2017-10-20
+- Fixed an issue where onchange function is not accessible due to permission checks
+
 ### [1.3.1] - 2017-10-19
 - Fixed an issue where value is not rendered with break lines for textarea fields
 
