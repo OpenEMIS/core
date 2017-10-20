@@ -402,31 +402,42 @@ EOT;
         foreach ($fields as $field => $attr) {
             $controlType = $attr['controlType'];
             $isVisible = $attr['visible'];
+            $value = '';
 
-            if (in_array($controlType, ['section', 'table', 'binary']) && $isVisible) {
-                $html .= $this->{$controlType}($attr, null, 'view');
-            } else {
-                if (in_array($controlType, $excludedTypes) || $isVisible == false) {
-                    continue;
-                }
+            if (!$isVisible || $controlType == 'hidden') {
+                continue;
+            }
 
-                $label = $attr['label'];
-                if (is_array($label)) {
-                    $label = $label['text'];
+            $label = $attr['label'];
+            if (is_array($label)) {
+                $label = $label['text'];
+            }
+
+            if (array_key_exists('value', $attr['attributes'])) {
+                $value = $attr['attributes']['value'];
+                if (!$this->isRTL($value)) {
+                    $value = '<div style = "direction:ltr !important">' . $value . '</div>';
                 }
-                $value = '';
-                if (array_key_exists('value', $attr['attributes'])) {
-                    $value = $attr['attributes']['value'];
-                    if ($controlType != 'binary' && !$this->isRTL($value)) {
-                        $value = '<div style = "direction:ltr !important">' . $value . '</div>';
+            }
+
+            switch ($controlType) {
+                case 'section':
+                case 'table':
+                case 'binary':
+                    $html .= $this->{$controlType}($attr, null, 'view');
+                    break;
+
+                case 'link':
+                    if (array_key_exists('href', $attr['attributes'])) {
+                        $value = $this->Html->link($value, $attr['attributes']['href']);
                     }
-                }
 
-                if ($controlType == 'link' && array_key_exists('href', $attr['attributes'])) {
-                    $value = $this->Html->link($value, $attr['attributes']['href']);
-                }
+                case 'textarea':
+                    $value = nl2br($value);
 
-                $html .= sprintf($row, $label, $value);
+                default:
+                    $html .= sprintf($row, $label, $value);
+                    break;
             }
         }
         return $html;
