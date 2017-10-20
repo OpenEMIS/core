@@ -28,10 +28,10 @@ class InstitutionTransportProvidersController extends PageController
         // set Breadcrumb
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Transport Providers');
+        $page->addCrumb('Providers');
 
         // set header
-        $page->setHeader($institutionName . ' - ' . __('Transport Providers'));
+        $page->setHeader($institutionName . ' - ' . __('Providers'));
 
         // to filter by institution_id
         $page->setQueryString('institution_id', $institutionId);
