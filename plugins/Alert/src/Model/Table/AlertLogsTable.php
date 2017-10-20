@@ -48,9 +48,17 @@ class AlertLogsTable extends ControllerActionTable
     public function alertAssigneeAfterSave(Event $mainEvent, Entity $recordEntity)
     {
         $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
         $Users = TableRegistry::get('User.Users');
-        $model = TableRegistry::get($recordEntity->source());
+
+        if ($recordEntity->has('status_id') && $recordEntity->status_id > 0) {
+            $stepEntity = $WorkflowSteps->get($recordEntity->status_id, ['contain' => ['Workflows.WorkflowModels']]);
+            $model = TableRegistry::get($stepEntity->workflow->workflow_model->model);
+        } else {
+            $model = TableRegistry::get($recordEntity->source());
+        }
+
         $modelAlias = $model->alias();
         $modelRegistryAlias = $model->registryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
