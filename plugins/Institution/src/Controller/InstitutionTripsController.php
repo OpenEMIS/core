@@ -203,9 +203,29 @@ class InstitutionTripsController extends PageController
 
         $page->get('institution_bus_id')
             ->setControlType('select')
-            ->setOptions(false)
             ->setDependentOn('institution_transport_provider_id')
             ->setParams('InstitutionBuses');
+
+        // show empty list when add and show bus option list filter by transport provider when edit
+        if ($entity->isNew()) {
+            $page->get('institution_bus_id')
+                ->setOptions(false);
+        } else {
+            if ($entity->has('institution_transport_provider_id')) {
+                $busOptions = $this->InstitutionBuses
+                    ->find('optionList')
+                    ->where([
+                        $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
+                    ])
+                    ->toArray();
+            } else {
+                $busOptions = [];
+            }
+
+            $page->get('institution_bus_id')
+                ->setOptions($busOptions);
+        }
+        // end 
 
         $page->addNew('capacity')
             ->setControlType('integer')
