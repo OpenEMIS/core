@@ -132,6 +132,12 @@ class FieldOptionComponent extends Component
         'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
         'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
+
+    // Transport
+        'TransportStatuses' => ['className' => 'Transport.TransportStatuses', 'parent' => 'Transport'],
+        'TransportFeatures' => ['className' => 'Transport.TransportFeatures', 'parent' => 'Transport'],
+        'BusTypes' => ['className' => 'Transport.BusTypes', 'parent' => 'Transport'],
+        'TripTypes' => ['className' => 'Transport.TripTypes', 'parent' => 'Transport'],
     ];
 
     public $components = ['AccessControl'];
@@ -154,5 +160,3 @@ class FieldOptionComponent extends Component
         return $this->fieldOptions[$key]['className'];
     }
 }
-
-
