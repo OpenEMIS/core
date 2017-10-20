@@ -1,8 +1,11 @@
 <?php
 namespace App\Test;
+
 use Cake\TestSuite\IntegrationTestCase;
 use Cake\Utility\Hash;
 use Cake\Utility\Security;
+
+use ControllerAction\Model\Traits\SecurityTrait;
 
 // attempt to create extending classes and traits fail maybe because of link below
 // https://getcomposer.org/doc/04-schema.md#autoload-dev
@@ -13,6 +16,8 @@ use Cake\Utility\Security;
 
 class AppTestCase extends IntegrationTestCase
 {
+    use SecurityTrait;
+
     private $urlPrefix = '';
     // public $dropTables = false;
 
@@ -137,21 +142,5 @@ class AppTestCase extends IntegrationTestCase
         $this->enableCsrfToken();
         $this->enableSecurityToken();
         $this->delete($url);
-    }
-
-    public function urlsafeB64Encode($input)
-    {
-        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
-    }
-
-    public function paramsEncode($params = [])
-    {
-        $sessionId = Security::hash('session_id', 'sha256');
-        $params[$sessionId] = session_id();
-        $jsonParam = json_encode($params);
-        $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256', true);
-        $base64Signature = $this->urlsafeB64Encode($signature);
-        return "$base64Param.$base64Signature";
     }
 }
