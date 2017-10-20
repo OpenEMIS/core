@@ -120,9 +120,6 @@ class InstitutionTripsController extends PageController
         $page->addNew('information')
             ->setControlType('section');
 
-        $page->addNew('capacity')
-            ->setControlType('integer');
-
         $page->addNew('days')
             ->setControlType('select')
             ->setAttributes('multiple', true);
@@ -136,13 +133,19 @@ class InstitutionTripsController extends PageController
             ->setAttributes('column', [
                 ['label' => __('OpenEMIS ID'), 'key' => 'openemis_no'],
                 ['label' => __('Student'), 'key' => 'student'],
-                ['label' => __('Education Grade'), 'key' => 'education_grade'],
-                ['label' => __('Class'), 'key' => 'class']
+                ['label' => __('Education Grade'), 'key' => 'education_grade']
             ])
             ->setAttributes('row', $assignedStudents);
 
-        $this->reorderFields();
+        // reorder fields
+        $page->move('information')->first();
+        $page->move('academic_period_id')->after('information');
+        $page->move('repeat')->after('institution_bus_id');
+        $page->move('days')->after('repeat');
+        $page->move('comment')->after('days');
+        $page->move('passengers')->after('comment');
         $page->move('assigned_students')->after('passengers');
+        // end reorder fields
     }
 
     public function add()
@@ -183,13 +186,9 @@ class InstitutionTripsController extends PageController
 
         $institutionId = $page->getQueryString('institution_id');
 
-        $page->addNew('information')
-            ->setControlType('section');
-
         // Academic Period
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $page->get('academic_period_id')
-            ->setId('academic_period_id')
             ->setControlType('select')
             ->setOptions($academicPeriodOptions, false);
         // end Academic Period
@@ -206,10 +205,6 @@ class InstitutionTripsController extends PageController
             ->setDependentOn('institution_transport_provider_id')
             ->setParams('InstitutionBuses');
 
-        $page->addNew('capacity')
-            ->setControlType('integer')
-            ->setDisabled(true);
-
         $dayOptions = $this->AcademicPeriods->getWorkingDaysOfWeek();
         $page->addNew('days')
             ->setControlType('select')
@@ -217,50 +212,15 @@ class InstitutionTripsController extends PageController
             ->setAttributes('placeholder', __('Select Days'))
             ->setOptions($dayOptions, false);
 
-        $page->addNew('passengers')
-            ->setControlType('section');
-
-        $page->addNew('education_grade_id')
-            ->setId('education_grade_id')
-            ->setLabel('Education Grade')
-            ->setControlType('select')
-            ->setDependentOn('academic_period_id')
-            ->setParams('EducationGrades');
-
-        $page->addNew('institution_class_id')
-            ->setLabel('Class')
-            ->setControlType('select')
-            ->setDependentOn(['academic_period_id', 'education_grade_id'])
-            ->setParams('InstitutionClasses');
-
-        $assignedStudents = [];
-        $page->addNew('assigned_students')
-            ->setControlType('table')
-            ->setAttributes('column', [
-                ['label' => __('OpenEMIS ID'), 'key' => 'openemis_no'],
-                ['label' => __('Student'), 'key' => 'student'],
-                ['label' => __('Education Grade'), 'key' => 'education_grade'],
-                ['label' => __('Class'), 'key' => 'class']
-            ])
-            ->setAttributes('row', $assignedStudents);
-
         $this->setBusOptions($entity);
         $this->setDaysValue($entity);
 
-        $this->reorderFields();
-    }
-
-    private function reorderFields()
-    {
-        $page = $this->Page;
-
-        $page->move('information')->first();
-        $page->move('academic_period_id')->after('information');
-        $page->move('capacity')->after('institution_bus_id');
-        $page->move('repeat')->after('capacity');
+        // reorder fields
+        $page->move('academic_period_id')->first();
+        $page->move('repeat')->after('institution_bus_id');
         $page->move('days')->after('repeat');
         $page->move('comment')->after('days');
-        $page->move('passengers')->after('comment');
+        // end reorder fields
     }
 
     private function setBusOptions(Entity $entity)
@@ -312,7 +272,6 @@ class InstitutionTripsController extends PageController
                     'openemis_no' => $obj->student->openemis_no,
                     'student' => $obj->student->name,
                     'education_grade' => $obj->education_grade->name,
-                    'class' => $obj->institution_class->name
                 ];
             }
         }
