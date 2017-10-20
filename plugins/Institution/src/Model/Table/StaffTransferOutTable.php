@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use Institution\Model\Table\InstitutionStaffTransfersTable;
 
@@ -21,6 +22,10 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function initialize(array $config)
     {
         parent::initialize($config);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
+        ]);
 
         $this->transferTypeOptions = [
             self::FULL_TRANSFER => 'Full Transfer',
@@ -288,5 +293,83 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 $data->offsetSet('previous_end_date', NULL);
             }
         }
+    }
+
+    public function findWorkbench(Query $query, array $options)
+    {
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $StepsParams = $this->Statuses->WorkflowStepsParams;
+        $doneStatus = self::DONE;
+        $outgoingInstitution = self::OUTGOING;
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('previous_institution_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->PreviousInstitutions->aliasField('code'),
+                $this->PreviousInstitutions->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+            ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
+                return $q->where([
+                    $Statuses->aliasField('category <> ') => $doneStatus,
+                    $StepsParams->aliasField('name') => 'institution_owner',
+                    $StepsParams->aliasField('value') => $outgoingInstitution
+                ]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId])
+            ->order([$this->aliasField('created') => 'DESC'])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffTransferOut',
+                        'view',
+                        $this->paramsEncode(['id' => $row->id]),
+                        'institution_id' => $row->previous_institution_id
+                    ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
+                    } else {
+                        $receivedDate = $this->formatDate($row->modified);
+                    }
+
+                    $row['url'] = $url;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    $row['request_title'] = sprintf(__('%s to %s'), $row->user->name_with_id, $row->institution->code_name);
+                    $row['institution'] = $row->previous_institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
     }
 }
