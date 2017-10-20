@@ -67,7 +67,6 @@ class InstitutionTripsTable extends AppTable
             'InstitutionTripDays',
             'InstitutionTripPassengers' => [
                 'Students',
-                'InstitutionClasses',
                 'EducationGrades'
             ]
         ]);
@@ -77,7 +76,7 @@ class InstitutionTripsTable extends AppTable
 
     public function findEdit(Query $query, array $options)
     {
-        $query->contain(['InstitutionTripDays', 'InstitutionTripPassengers']);
+        $query->contain(['InstitutionTripDays']);
 
         return $query;
     }
