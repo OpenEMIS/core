@@ -3,6 +3,7 @@ namespace Institution\Controller;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Datasource\ResultSetInterface;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
@@ -177,17 +178,6 @@ class InstitutionTripsController extends PageController
 
         $institutionId = $page->getQueryString('institution_id');
 
-        $page->addNew('information')
-            ->setControlType('section');
-
-        // Academic Period
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $page->get('academic_period_id')
-            ->setId('academic_period_id')
-            ->setControlType('select')
-            ->setOptions($academicPeriodOptions, false);
-        // end Academic Period
-
         $page->get('trip_type_id')
             ->setControlType('select');
 
@@ -207,21 +197,79 @@ class InstitutionTripsController extends PageController
             ->setAttributes('placeholder', __('Select Days'))
             ->setOptions($dayOptions, false);
 
-        $page->addNew('passengers')
-            ->setControlType('section');
-
-        $page->addNew('assigned_students')
-            ->setControlType('select')
-            ->setAttributes('multiple', true)
-            ->setAttributes('placeholder', __('Select Students'))
-            ->setDependentOn('academic_period_id')
-            ->setParams('Students/TripPassengers');
-
         $this->setBusOptions($entity);
         $this->setDaysValue($entity);
-        $this->setAssignedStudentsValue($entity);
 
-        $this->reorderFields();
+        if ($entity->isNew()) {
+            // Academic Period
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            $page->get('academic_period_id')
+                ->setControlType('select')
+                ->setOptions($academicPeriodOptions, false);
+            // end Academic Period
+
+            // reorder fields
+            $page->move('academic_period_id')->first();
+            $page->move('repeat')->after('institution_bus_id');
+            $page->move('days')->after('repeat');
+            $page->move('comment')->after('days');
+            // end reorder fields
+        } else {
+            $page->addNew('information')
+                ->setControlType('section');
+
+            $page->get('academic_period_id')
+                ->setDisabled(true);
+
+            $page->addNew('passengers')
+                ->setControlType('section');
+
+            $institutionId = $entity->institution_id;
+            $academicPeriodId = $entity->academic_period_id;
+
+            $studentOptions = $this->Students
+                ->find()
+                ->select([
+                    $this->Students->aliasField('id'),
+                    $this->Students->Users->aliasField('openemis_no'),
+                    $this->Students->Users->aliasField('first_name'),
+                    $this->Students->Users->aliasField('middle_name'),
+                    $this->Students->Users->aliasField('third_name'),
+                    $this->Students->Users->aliasField('last_name'),
+                    $this->Students->Users->aliasField('preferred_name')
+                ])
+                ->contain([$this->Students->Users->alias()])
+                ->where([
+                    $this->Students->aliasField('institution_id') => $institutionId,
+                    $this->Students->aliasField('academic_period_id') => $academicPeriodId
+                ])
+                ->group([
+                    $this->Students->aliasField('student_id')
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    $returnResult = [];
+
+                    foreach ($results as $result) {
+                        $returnResult[] = [
+                            'value' => $result->id,
+                            'text' => $result->user->name_with_id
+                        ];
+                    }
+
+                    return $returnResult;
+                })
+                ->toArray();
+
+            $page->addNew('assigned_students')
+                ->setControlType('select')
+                ->setAttributes('multiple', true)
+                ->setAttributes('placeholder', __('Select Students'))
+                ->setOptions($studentOptions, false);
+
+            $this->setAssignedStudentsValue($entity);
+
+            $this->reorderFields();
+        }
     }
 
     private function reorderFields()
