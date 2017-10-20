@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Network\Session;
+use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
 use Cake\Routing\Router;
@@ -95,6 +96,7 @@ class WorkflowBehavior extends Behavior {
         $events['ControllerAction.Model.view.afterAction']      = ['callable' => 'viewAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
+        $events['ControllerAction.Model.edit.afterAction']      = ['callable' => 'editAfterAction', 'priority' => 1];
         $events['Model.custom.onUpdateToolbarButtons']          = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
         $events['Model.custom.onUpdateActionButtons']           = ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
         $events['Workflow.afterTransition'] = 'workflowAfterTransition';
@@ -273,6 +275,13 @@ class WorkflowBehavior extends Behavior {
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
             if ($event->isStopped()) { return $event->result; }
             // End
+        }
+    }
+
+    public function afterSaveCommit(Event $event, EntityInterface $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->has('validate_approve')) {
+            $this->processWorkflow();
         }
     }
 
@@ -519,6 +528,99 @@ class WorkflowBehavior extends Behavior {
         $this->setFilterNotEditable($entity);
     }
 
+    public function editAfterAction(Event $event, Entity $entity)
+    {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $validateApprove = $model->getQueryString('validate_approve');
+
+        if ($validateApprove) {
+            $actionAttr = json_decode($model->getQueryString('action_attr'), true);
+            $this->setupValidateApproveFields($entity, $actionAttr);
+        }
+    }
+
+    public function setupValidateApproveFields(Entity $entity, array $actionAttr)
+    {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $alias = $this->WorkflowTransitions->alias();
+
+        // show postEvent description
+        if (!empty($actionAttr['event_description'])) {
+            $model->Alert->info($actionAttr['event_description'], ['type' => 'string', 'reset' => true]);
+        }
+
+        $workflowStep = $this->getWorkflowStep($entity);
+        $workflow = $workflowStep->_matchingData['Workflows'];
+
+        // visible fields
+        $model->field('workflow_information_header', [
+            'type' => 'section',
+            'title' => __('Status')
+        ]);
+        $model->field('current_step', [
+            'type' => 'readonly',
+            'fieldName' => $alias.'.prev_workflow_step_name',
+            'value' => $workflowStep->name,
+            'attr' => ['value' => $workflowStep->name]
+        ]);
+        $model->field('action', [
+            'type' => 'readonly',
+            'fieldName' => $alias.'.workflow_action_name',
+            'value' => $actionAttr['name'],
+            'attr' => ['value' => $actionAttr['name']]
+        ]);
+        $model->field('description', [
+            'type' => 'readonly',
+            'attr' => ['value' => $actionAttr['description']]
+        ]);
+        $model->field('next_step', [
+            'type' => 'readonly',
+            'fieldName' => $alias.'.workflow_step_name',
+            'value' => $actionAttr['next_step_name'],
+            'attr' => ['value' => $actionAttr['next_step_name']]
+        ]);
+        $model->field('workflow_assignee_id', [
+            'type' => 'select',
+            'fieldName' => $alias.'.assignee_id',
+            'entity' => $actionAttr
+        ]);
+        $model->field('comments', [
+            'fieldName' => $alias.'.comment'
+        ]);
+
+
+        // hidden fields
+        $model->field('prev_workflow_step_id', [
+            'type' => 'hidden',
+            'fieldName' => $alias.'.prev_workflow_step_id',
+            'value' => $workflowStep->id
+        ]);
+        $model->field('workflow_step_id', [
+            'type' => 'hidden',
+            'fieldName' => $alias.'.workflow_step_id',
+            'value' => $actionAttr['next_step_id']
+        ]);
+        $model->field('workflow_action_id', [
+            'type' => 'hidden',
+            'fieldName' => $alias.'.workflow_action_id',
+            'value' => $actionAttr['id']
+        ]);
+        $model->field('workflow_model_id', [
+            'type' => 'hidden',
+            'fieldName' => $alias.'.workflow_model_id',
+            'value' => $workflow->workflow_model_id
+        ]);
+        $model->field('model_reference', [
+            'type' => 'hidden',
+            'fieldName' => $alias.'.model_reference',
+            'value' => $entity->id
+        ]);
+        $model->field('validate_approve', [
+            'type' => 'hidden',
+            'value' => 1
+        ]);
+    }
+
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);
     }
@@ -576,6 +678,33 @@ class WorkflowBehavior extends Behavior {
         }
 
         return $attr;
+    }
+
+    public function onUpdateFieldWorkflowAssigneeId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'edit') {
+            $actionAttr = $attr['entity'];
+
+            if ($actionAttr['auto_assign_assignee']) {
+                $assigneeOptions = ['-1' => __('Auto Assign')];
+            } else {
+                $model = $this->_table;
+                $session = $model->request->session();
+                $institutionId = isset($model->request->params['institutionId']) ? $model->paramsDecode($model->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $params = [
+                    'is_school_based' => $actionAttr['is_school_based'],
+                    'workflow_step_id' => $actionAttr['next_step_id'],
+                    'institution_id' => $institutionId
+                ];
+
+                $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+            }
+
+            $attr['options'] = $assigneeOptions;
+            return $attr;
+        }
     }
 
     public function reorderFields() {
@@ -1101,10 +1230,17 @@ class WorkflowBehavior extends Behavior {
                                     $approveButton = [];
                                     $approveButton['type'] = 'button';
                                     $approveButton['label'] = '<i class="fa kd-approve"></i>';
-                                    $approveButton['url'] = '#';
-                                    $approveButton['attr'] = $buttonAttr;
-                                    $approveButton['attr']['title'] = __($actionObj->name);
 
+                                    $validateApprove = $this->getWorkflowStepsParamValue($workflowStep->id, 'validate_approve');
+                                    if (!$validateApprove) {
+                                        $approveButton['url'] = '#';
+                                        $approveButton['attr'] = $buttonAttr;
+                                    } else {
+                                        $approveButton['url'] = $this->_table->setQueryString($this->_table->url('edit'), ['validate_approve' => 1, 'action_attr' => $json]);
+                                        $approveButton['attr'] = $attr;
+                                    }
+
+                                    $approveButton['attr']['title'] = __($actionObj->name);
                                     $toolbarButtons['approve'] = $approveButton;
                                 } else if ($actionType == 1) { // Reject
                                     $rejectButton = [];
