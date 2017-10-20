@@ -10,9 +10,9 @@ class InstitutionTripPassengersTable extends AppTable
         parent::initialize($config);
 
 		$this->belongsTo('Students', ['className' => 'User.Users']);
-		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('InstitutionTrips', ['className' => 'Institution.InstitutionTrips']);
     }
 }
