@@ -3,36 +3,39 @@ namespace App\Test\TestCases;
 
 use Cake\ORM\TableRegistry;
 
-use App\Test\PageTestCase;
+use App\Test\AppTestCase;
+use App\Test\SystemFixturesTrait;
+use Page\Traits\EncodingTrait;
 
-class LabelsControllerTest extends PageTestCase
+class LabelsControllerTest extends AppTestCase
 {
-    public $fixtures = [
-        'app.config_items',
-        'app.config_product_lists',
-        'app.labels',
-        'app.security_users',
-        'app.user_identities',
-        'app.identity_types',
-        'app.workflow_models',
-        'app.workflow_steps',
-        'app.workflow_statuses',
-        'app.workflow_statuses_steps'
-    ];
+    use SystemFixturesTrait;
+    use EncodingTrait;
 
     private $primaryKey = ['id' => '017c68d8-e914-11e6-a68b-525400b263eb'];
+    private $modelPlugin = '';
+    private $modelAlias = 'Labels';
 
     public function testIndex()
     {
         $this->get('/Labels');
-        $this->assertResponseCode(200);
+        $this->assertResponseOk();
+        $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
+    }
+
+    public function testSearch()
+    {
+        $search = $this->encode(['search' => 'option']);
+        $this->get('/Labels?querystring=' . $search);
+
+        $this->assertResponseOk();
         $this->assertEquals(true, (count($this->viewVariable('data')) >= 1));
     }
 
     public function testRead()
     {
         $this->get('/Labels/view/' . $this->encode($this->primaryKey));
-        $this->assertResponseCode(200);
+        $this->assertResponseOk();
         $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
     }
 
@@ -40,24 +43,31 @@ class LabelsControllerTest extends PageTestCase
     {
         $url = '/Labels/edit/' . $this->encode($this->primaryKey);
         $this->get($url);
-        $this->assertResponseCode(200);
+        $this->assertResponseOk();
         $this->assertEquals(true, (count($this->viewVariable('data')) == 1));
 
         $data = [
-            'Labels' => [
+            $this->modelAlias => [
                 'id' => $this->primaryKey['id'],
-                'code' => 'LABEL001',
-                'name' => 'New Label Test'
+                'code' => 'NEW LABEL CODE',
+                'name' => 'NEW LABEL NAME'
             ]
         ];
 
-        // $this->enableCsrfToken();
-        // $this->enableSecurityToken();
         $this->postData($url, $data);
 
-        $table = TableRegistry::get('Labels');
-        $entity = $table->get($this->primaryKey['id']);
-// pr($entity);
-        $this->assertEquals($data['Labels']['code'], $entity->code);
+        $table = TableRegistry::get($this->modelAlias);
+        $entity = $table->get($this->primaryKey);
+        $this->assertEquals($data[$this->modelAlias]['name'], $entity->name);
     }
+
+    // no add function for Labels
+    // public function testCreate()
+    // {
+    // }
+
+    // no delete function for Labels
+    // public function testDelete()
+    // {
+    // }
 }

@@ -1182,7 +1182,22 @@ trait MessagesTrait
                 'grading_type' => [
                     'notFound' => 'No Grading Type found'
                 ]
-            ]
+            ],
+            'InstitutionTransportProviders' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
+            'InstitutionBuses' => [
+                'plate_number' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
+            'InstitutionTrips' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [

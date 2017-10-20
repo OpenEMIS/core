@@ -429,7 +429,13 @@ class PageComponent extends Component
 
     public function isActionAllowed($action)
     {
-        return array_key_exists($action, $this->actions) && $this->actions[$action];
+        if (method_exists($this->controller, $action)) {
+            if (array_key_exists($action, $this->actions)) {
+                return $this->actions[$action];
+            }
+        }
+        // return true so that missing action will be caught by Controller::invokeAction
+        return true;
     }
 
     public function isAutoContain()
@@ -748,6 +754,7 @@ class PageComponent extends Component
 
     public function loadElementsFromTable(Table $table)
     {
+        $this->clear();
         $this->mainTable = $table;
         $schema = $table->schema();
         $columns = $schema->columns();
@@ -828,7 +835,14 @@ class PageComponent extends Component
 
                             if (is_array($value) && !empty($value) && $value[0] instanceof Entity) { // array of Entity objects
                                 $entityCollections = new Collection($value);
-                                $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+
+                                if ($callback) {
+                                    $displayField = TableRegistry::get($value[0]->source())->displayField();
+                                    $list = $entityCollections->extract($displayField)->toArray();
+                                    $value = implode(", ", $list);
+                                } else {
+                                    $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                                }
                             }
                         }
                     }
@@ -911,6 +925,12 @@ class PageComponent extends Component
         }
         $this->elements->offsetSet($this->elements->count(), $element);
         $this->order[$element->getKey()] = count($this->order);
+    }
+
+    public function clear()
+    {
+        $this->elements->exchangeArray([]);
+        $this->order = [];
     }
 
     public function addFilter($name)
