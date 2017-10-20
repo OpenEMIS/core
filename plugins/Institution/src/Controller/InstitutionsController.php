@@ -1117,10 +1117,9 @@ class InstitutionsController extends AppController
                         $params[$primaryKey] = $modelIds[$primaryKey];
                     }
 
-
                     $exists = false;
 
-                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
+                    if (in_array($model->alias(), ['StaffTransferOut'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
@@ -1178,7 +1177,7 @@ class InstitutionsController extends AppController
                     $this->Alert->error('general.notExists');
                     // should redirect
                 } else {
-                    if ($model->alias() != 'Programmes') {
+                    if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut'])) {
                         $institutionId = $this->request->param('institutionId');
                         try {
                             $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];
