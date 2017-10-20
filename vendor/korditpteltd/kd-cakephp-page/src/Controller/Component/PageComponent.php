@@ -991,6 +991,8 @@ class PageComponent extends Component
 
     private function populateDropdownOptions(PageElement $element, $defaultOption = true)
     {
+        $querystring = $this->getQueryString();
+
         if ($this->hasMainTable()) {
             $table = $this->getMainTable();
             $foreignKey = $element->getForeignKey();
@@ -1005,7 +1007,9 @@ class PageComponent extends Component
                 // else call findList and format results
 
                 if ($association->hasFinder('optionList')) {
-                    $query = $association->find('optionList', ['defaultOption' => $defaultOption]);
+                    $finderOptions = $querystring;
+                    $finderOptions['defaultOption'] = $defaultOption;
+                    $query = $association->find('optionList', $finderOptions);
                 } else {
                     $query = $association->find('list')
                         ->formatResults(function ($results) {
