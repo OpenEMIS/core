@@ -16,6 +16,7 @@ class InstitutionTripsController extends PageController
         $this->loadModel('Transport.TripTypes');
         $this->loadModel('Institution.InstitutionTransportProviders');
         $this->loadModel('Institution.InstitutionBuses');
+        $this->loadModel('Institution.Students');
 
         $this->Page->loadElementsFromTable($this->InstitutionTrips);
     }
@@ -135,15 +136,7 @@ class InstitutionTripsController extends PageController
             ])
             ->setAttributes('row', $assignedStudents);
 
-        // reorder fields
-        $page->move('information')->first();
-        $page->move('academic_period_id')->after('information');
-        $page->move('repeat')->after('institution_bus_id');
-        $page->move('days')->after('repeat');
-        $page->move('comment')->after('days');
-        $page->move('passengers')->after('comment');
-        $page->move('assigned_students')->after('passengers');
-        // end reorder fields
+        $this->reorderFields();
     }
 
     public function add()
@@ -184,9 +177,13 @@ class InstitutionTripsController extends PageController
 
         $institutionId = $page->getQueryString('institution_id');
 
+        $page->addNew('information')
+            ->setControlType('section');
+
         // Academic Period
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $page->get('academic_period_id')
+            ->setId('academic_period_id')
             ->setControlType('select')
             ->setOptions($academicPeriodOptions, false);
         // end Academic Period
@@ -210,15 +207,34 @@ class InstitutionTripsController extends PageController
             ->setAttributes('placeholder', __('Select Days'))
             ->setOptions($dayOptions, false);
 
+        $page->addNew('passengers')
+            ->setControlType('section');
+
+        $page->addNew('assigned_students')
+            ->setControlType('select')
+            ->setAttributes('multiple', true)
+            ->setAttributes('placeholder', __('Select Students'))
+            ->setDependentOn('academic_period_id')
+            ->setParams('Students/TripPassengers');
+
         $this->setBusOptions($entity);
         $this->setDaysValue($entity);
+        $this->setAssignedStudentsValue($entity);
 
-        // reorder fields
-        $page->move('academic_period_id')->first();
+        $this->reorderFields();
+    }
+
+    private function reorderFields()
+    {
+        $page = $this->Page;
+
+        $page->move('information')->first();
+        $page->move('academic_period_id')->after('information');
         $page->move('repeat')->after('institution_bus_id');
         $page->move('days')->after('repeat');
         $page->move('comment')->after('days');
-        // end reorder fields
+        $page->move('passengers')->after('comment');
+        $page->move('assigned_students')->after('passengers');
     }
 
     private function setBusOptions(Entity $entity)
@@ -258,6 +274,34 @@ class InstitutionTripsController extends PageController
         }
 
         $entity->days = $days;
+    }
+
+    private function setAssignedStudentsValue(Entity $entity)
+    {
+        $assignedStudents = [];
+
+        if ($entity->has('institution_trip_passengers')) {
+            foreach ($entity->institution_trip_passengers as $obj) {
+                $institutionStudentEntity = $this->Students
+                    ->find()
+                    ->select([
+                        $this->Students->aliasField('id')
+                    ])
+                    ->where([
+                        'student_id' => $obj->student_id,
+                        'education_grade_id' => $obj->education_grade_id,
+                        'academic_period_id' => $obj->academic_period_id,
+                        'institution_id' => $obj->institution_id
+                    ])
+                    ->first();
+
+                if (!empty($institutionStudentEntity)) {
+                    $assignedStudents[] = $institutionStudentEntity;
+                }
+            }
+        }
+
+        $entity->assigned_students = $assignedStudents;
     }
 
     private function getAssignedStudents(Entity $entity)
