@@ -202,7 +202,7 @@ class PageComponent extends Component
 
                 foreach ($this->filters as $filter) {
                     $dependentOn = $filter->getDependentOn();
-                    if ($dependentOn && array_key_exists($dependentOn, $querystring)) {
+                    if ($dependentOn && array_intersect_key(array_flip($dependentOn), $querystring)) {
                         $filterOptions = $this->getFilterOptions($filter->getParams());
                         $filter->setOptions($filterOptions);
                     }
@@ -312,7 +312,14 @@ class PageComponent extends Component
 
     public function isJson()
     {
-        $ext = $this->request->params['_ext'];
+        $cakephpVersion = Configure::version();
+
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            $ext = $this->request->getParam('_ext');
+        } else {
+            $ext = $this->request->param('_ext');
+        }
+
         return $ext === 'json';
     }
 
