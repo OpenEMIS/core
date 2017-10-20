@@ -1119,7 +1119,7 @@ class InstitutionsController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['StaffTransferOut'])) {
+                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferOut'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
