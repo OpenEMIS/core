@@ -158,6 +158,7 @@ class InstitutionBusesController extends PageController
 
         $page->move('plate_number')->first();
         $page->move('capacity')->after('bus_type_id');
+        $page->move('transport_features')->after('transport_status_id');
         $page->move('comment')->after('transport_features');
     }
 }
