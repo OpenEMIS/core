@@ -44,7 +44,7 @@ class InstitutionBusesController extends PageController
 
         // to rename field label
         $page->get('institution_transport_provider_id')
-            ->setLabel('Transport Provider');
+            ->setLabel('Provider');
 
         // set institution_id
         $page->get('institution_id')
@@ -61,7 +61,7 @@ class InstitutionBusesController extends PageController
 
         $institutionId = $page->getQueryString('institution_id');
 
-        // Transport Providers
+        // Providers
         $transportProviders = $this->InstitutionTransportProviders
             ->find('optionList', [
                 'defaultOption' => false,
@@ -69,10 +69,10 @@ class InstitutionBusesController extends PageController
             ])
             ->toArray();
 
-        $transportProviderOptions = [null => __('All Transport Providers')] + $transportProviders;
+        $transportProviderOptions = [null => __('All Providers')] + $transportProviders;
         $page->addFilter('institution_transport_provider_id')
             ->setOptions($transportProviderOptions);
-        // end Transport Providers
+        // end Providers
 
         // Bus Types
         $busTypes = $this->BusTypes
@@ -158,6 +158,7 @@ class InstitutionBusesController extends PageController
 
         $page->move('plate_number')->first();
         $page->move('capacity')->after('bus_type_id');
+        $page->move('transport_features')->after('transport_status_id');
         $page->move('comment')->after('transport_features');
     }
 }
