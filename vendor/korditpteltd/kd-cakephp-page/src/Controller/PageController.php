@@ -29,6 +29,8 @@ class PageController extends AppController
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
 
+        $this->Auth->allow(['onchange']);
+
         if ($this->{$this->name} instanceof Table) {
             $this->Page->loadElementsFromTable($this->{$this->name});
         }
