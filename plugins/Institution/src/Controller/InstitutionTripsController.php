@@ -16,8 +16,6 @@ class InstitutionTripsController extends PageController
         $this->loadModel('Transport.TripTypes');
         $this->loadModel('Institution.InstitutionTransportProviders');
         $this->loadModel('Institution.InstitutionBuses');
-        $this->loadModel('Education.EducationGrades');
-        $this->loadModel('Institution.InstitutionClasses');
 
         $this->Page->loadElementsFromTable($this->InstitutionTrips);
     }
@@ -55,7 +53,7 @@ class InstitutionTripsController extends PageController
 
         // to rename field label
         $page->get('institution_transport_provider_id')
-            ->setLabel('Transport Provider');
+            ->setLabel('Provider');
         $page->get('institution_bus_id')
             ->setLabel('Bus')
             ->setDisplayFrom('institution_bus.plate_number');
