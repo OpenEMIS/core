@@ -833,15 +833,23 @@ class PageComponent extends Component
                         } elseif ($controlType == 'select' && $element->hasAttribute('multiple')) {
                             // this is to change value to an array of ids for multiselect to work
 
-                            if (is_array($value) && !empty($value) && $value[0] instanceof Entity) { // array of Entity objects
-                                $entityCollections = new Collection($value);
+                            if (is_array($value)) { // array of Entity objects
+                                if (!empty($value)) {
+                                    if ($value[0] instanceof Entity) {
+                                        $entityCollections = new Collection($value);
 
-                                if ($callback) {
-                                    $displayField = TableRegistry::get($value[0]->source())->displayField();
-                                    $list = $entityCollections->extract($displayField)->toArray();
-                                    $value = implode(", ", $list);
-                                } else {
-                                    $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                                        if ($callback) {
+                                            $displayField = TableRegistry::get($value[0]->source())->displayField();
+                                            $list = $entityCollections->extract($displayField)->toArray();
+                                            $value = implode(", ", $list);
+                                        } else {
+                                            $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                                        }
+                                    } else { // if not Entity objects
+                                        // no implementation yet as we have not encountered this use case
+                                    }
+                                } else { // if the array is empty
+                                    $value = ''; // then display empty string
                                 }
                             }
                         }
