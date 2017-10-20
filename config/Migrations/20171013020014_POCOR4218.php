@@ -611,6 +611,12 @@ class POCOR4218 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to academic_periods.id'
             ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
             ->addColumn('institution_trip_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -639,6 +645,7 @@ class POCOR4218 extends AbstractMigration
             ->addIndex('institution_class_id')
             ->addIndex('education_grade_id')
             ->addIndex('academic_period_id')
+            ->addIndex('institution_id')
             ->addIndex('institution_trip_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
