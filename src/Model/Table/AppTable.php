@@ -21,6 +21,7 @@ class AppTable extends Table
     use ControllerActionTrait;
     use UtilityTrait;
     use LogTrait;
+    use OptionListTrait;
 
     public function initialize(array $config)
     {

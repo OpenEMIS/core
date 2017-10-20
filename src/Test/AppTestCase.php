@@ -3,7 +3,6 @@ namespace App\Test;
 use Cake\TestSuite\IntegrationTestCase;
 use Cake\Utility\Hash;
 use Cake\Utility\Security;
-use App\Test\FixturesTrait;
 
 // attempt to create extending classes and traits fail maybe because of link below
 // https://getcomposer.org/doc/04-schema.md#autoload-dev
@@ -14,8 +13,6 @@ use App\Test\FixturesTrait;
 
 class AppTestCase extends IntegrationTestCase
 {
-    use FixturesTrait; // consists of fixtures for the entire database
-
     private $urlPrefix = '';
     // public $dropTables = false;
 
