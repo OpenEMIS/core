@@ -206,27 +206,6 @@ class InstitutionTripsController extends PageController
             ->setDependentOn('institution_transport_provider_id')
             ->setParams('InstitutionBuses');
 
-        // show empty list when add and show bus option list filter by transport provider when edit
-        if ($entity->isNew()) {
-            $page->get('institution_bus_id')
-                ->setOptions(false);
-        } else {
-            if ($entity->has('institution_transport_provider_id')) {
-                $busOptions = $this->InstitutionBuses
-                    ->find('optionList')
-                    ->where([
-                        $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
-                    ])
-                    ->toArray();
-            } else {
-                $busOptions = [];
-            }
-
-            $page->get('institution_bus_id')
-                ->setOptions($busOptions);
-        }
-        // end 
-
         $page->addNew('capacity')
             ->setControlType('integer')
             ->setDisabled(true);
@@ -265,18 +244,8 @@ class InstitutionTripsController extends PageController
             ])
             ->setAttributes('row', $assignedStudents);
 
-        // set days to entity
-        $days = [];
-        if ($entity->has('institution_trip_days')) {
-            foreach ($entity->institution_trip_days as $tripDayEntity) {
-                $tripDayEntity->id = $tripDayEntity->day;
-
-                $days[] = $tripDayEntity;
-            }
-        }
-
-        $entity->days = $days;
-        // end set days to entity
+        $this->setBusOptions($entity);
+        $this->setDaysValue($entity);
 
         $this->reorderFields();
     }
@@ -292,6 +261,45 @@ class InstitutionTripsController extends PageController
         $page->move('days')->after('repeat');
         $page->move('comment')->after('days');
         $page->move('passengers')->after('comment');
+    }
+
+    private function setBusOptions(Entity $entity)
+    {
+        $page = $this->Page;
+
+        // show empty list when add and show bus option list filter by transport provider when edit
+        if ($entity->isNew()) {
+            $page->get('institution_bus_id')
+                ->setOptions(false);
+        } else {
+            if ($entity->has('institution_transport_provider_id')) {
+                $busOptions = $this->InstitutionBuses
+                    ->find('optionList')
+                    ->where([
+                        $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
+                    ])
+                    ->toArray();
+            } else {
+                $busOptions = [];
+            }
+
+            $page->get('institution_bus_id')
+                ->setOptions($busOptions);
+        }
+    }
+
+    private function setDaysValue(Entity $entity)
+    {
+        $days = [];
+
+        if ($entity->has('institution_trip_days')) {
+            foreach ($entity->institution_trip_days as $obj) {
+                $obj->id = $obj->day;
+                $days[] = $obj;
+            }
+        }
+
+        $entity->days = $days;
     }
 
     private function getAssignedStudents(Entity $entity)
