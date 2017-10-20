@@ -1191,6 +1191,9 @@ trait MessagesTrait
             'InstitutionBuses' => [
                 'plate_number' => [
                     'ruleUnique' => 'This field has to be unique'
+                ],
+                'capacity' => [
+                    'notZero' => 'Capacity must be more than 0',
                 ]
             ],
             'InstitutionTrips' => [
