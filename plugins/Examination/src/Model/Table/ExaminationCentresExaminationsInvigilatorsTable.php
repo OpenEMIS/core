@@ -327,6 +327,10 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.openemis_no", ['value' => $openemisId]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
 
+                    $Form->unlockField("$alias.$fieldKey.$key.id");
+                    $Form->unlockField("$alias.$fieldKey.$key.openemis_no");
+                    $Form->unlockField("$alias.$fieldKey.$key.name");
+
                     $rowData[] = $openemisId;
                     $rowData[] = $cell;
                     $rowData[] = $this->getDeleteButton();

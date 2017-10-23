@@ -1182,7 +1182,31 @@ trait MessagesTrait
                 'grading_type' => [
                     'notFound' => 'No Grading Type found'
                 ]
-            ]
+            ],
+            'InstitutionTransportProviders' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
+            'InstitutionBuses' => [
+                'plate_number' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ],
+                'capacity' => [
+                    'notZero' => 'Capacity must be more than 0',
+                ]
+            ],
+            'InstitutionTrips' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ],
+                'days' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'assigned_students' => [
+                    'checkMaxLimit' => 'Total passengers should not be more than bus capacity %d'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
