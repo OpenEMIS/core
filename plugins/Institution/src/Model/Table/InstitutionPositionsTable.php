@@ -40,7 +40,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffAttendances', ['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StaffTransferRequests', ['className' => 'Institution.StaffTransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaffTransfer', ['className' => 'Institution.InstitutionStaffTransfer', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Workflow.Workflow');
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
