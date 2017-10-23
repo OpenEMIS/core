@@ -719,7 +719,7 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             $this->set('externalDataSource', $externalDataSource);
-            
+
             $admissionExecutePermission = true;
             if (!$this->AccessControl->isAdmin()) {
                 $admissionExecutePermission = $session->read('Permissions.Institutions.StudentAdmission.execute');
@@ -1081,6 +1081,9 @@ class InstitutionsController extends AppController
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
+                } else if ($model->table() == 'staff_appraisals'  && !$isDownload) {
+                    $ids = array_key_exists('user_id', $requestQuery) ? $requestQuery['user_id']: $session->read('Staff.Staff.id');
+                    $persona = $model->Users->get($ids);
                 }
             } elseif (isset($requestQuery['user_id'][1])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
