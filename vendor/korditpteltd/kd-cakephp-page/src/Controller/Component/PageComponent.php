@@ -176,7 +176,7 @@ class PageComponent extends Component
                                     $selectOptions = $element->getOptions();
                                     if (!$this->isForeignKey($this->mainTable, $key) && !empty($selectOptions)) { // to render values if set from predefined options
                                         $value = $entity->{$key};
-                                        if (array_key_exists($value, $selectOptions) && $value != '') {
+                                        if (array_key_exists($value, $selectOptions) && strlen($value) > 0) {
                                             $entity->{$key} = $selectOptions[$entity->{$key}];
                                         }
                                     }
@@ -202,7 +202,7 @@ class PageComponent extends Component
 
                 foreach ($this->filters as $filter) {
                     $dependentOn = $filter->getDependentOn();
-                    if ($dependentOn && array_key_exists($dependentOn, $querystring)) {
+                    if ($dependentOn && array_intersect_key(array_flip($dependentOn), $querystring)) {
                         $filterOptions = $this->getFilterOptions($filter->getParams());
                         $filter->setOptions($filterOptions);
                     }
@@ -312,7 +312,14 @@ class PageComponent extends Component
 
     public function isJson()
     {
-        $ext = $this->request->params['_ext'];
+        $cakephpVersion = Configure::version();
+
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            $ext = $this->request->getParam('_ext');
+        } else {
+            $ext = $this->request->param('_ext');
+        }
+
         return $ext === 'json';
     }
 
@@ -429,7 +436,13 @@ class PageComponent extends Component
 
     public function isActionAllowed($action)
     {
-        return array_key_exists($action, $this->actions) && $this->actions[$action];
+        if (method_exists($this->controller, $action)) {
+            if (array_key_exists($action, $this->actions)) {
+                return $this->actions[$action];
+            }
+        }
+        // return true so that missing action will be caught by Controller::invokeAction
+        return true;
     }
 
     public function isAutoContain()
@@ -476,14 +489,10 @@ class PageComponent extends Component
             foreach ($table->associations() as $assoc) {
                 if ($assoc->type() == 'manyToOne') { // belongsTo associations
                     $columns = $assoc->schema()->columns();
-                    if (in_array('name', $columns)) {
-                        $contain[$assoc->name()] = ['fields' => [
-                            $assoc->aliasField('id'),
-                            $assoc->aliasField('name')
-                        ]];
-                    } else {
-                        $contain[] = $assoc->name();
-                    }
+                    $contain[$assoc->name()] = ['fields' => [
+                        $assoc->aliasField('id'),
+                        $assoc->aliasField($assoc->displayField())
+                    ]];
                 }
             }
             $this->queryOptions->offsetSet('contain', $contain);
@@ -590,6 +599,15 @@ class PageComponent extends Component
         $columns = $schema->columns();
         $wildcard = $options['wildcard'];
 
+        $searchValue = $value;
+        if ($wildcard === true) {
+            $searchValue = '%' . $value . '%';
+        } elseif ($wildcard == 'left') {
+            $searchValue = '%' . $value;
+        } elseif ($wildcard == 'right') {
+            $searchValue = $value . '%';
+        }
+
         $OR = [];
         foreach ($columns as $name) {
             $columnInfo = $schema->column($name);
@@ -599,15 +617,20 @@ class PageComponent extends Component
 
             // if the field is of a searchable type and it is part of the table schema
             if (in_array($columnInfo['type'], $types)) {
-                $searchValue = $value;
-                if ($wildcard === true) {
-                    $searchValue = '%' . $value . '%';
-                } elseif ($wildcard == 'left') {
-                    $searchValue = '%' . $value;
-                } elseif ($wildcard == 'right') {
-                    $searchValue = $value . '%';
-                }
                 $OR[$table->aliasField($name) . ' LIKE'] = $searchValue;
+            }
+        }
+
+        // To add foreign keys as part of the search if it is visible on index page
+        foreach ($this->elements as $element) {
+            if ($element->isVisible() && $element->getControlType() != 'hidden') {
+                $field = $element->getKey();
+                $foreignKey = $this->isForeignKey($table, $field);
+                if ($foreignKey !== false) { // if it is a foreign key, search by the display field
+                    $association = $table->{$foreignKey['name']};
+                    $displayField = $association->displayField();
+                    $OR[$foreignKey['name'] . '.' . $displayField . ' LIKE'] = $searchValue;
+                }
             }
         }
 
@@ -748,6 +771,7 @@ class PageComponent extends Component
 
     public function loadElementsFromTable(Table $table)
     {
+        $this->clear();
         $this->mainTable = $table;
         $schema = $table->schema();
         $columns = $schema->columns();
@@ -767,11 +791,7 @@ class PageComponent extends Component
                     $belongsTo = $table->{$foreignKey['name']};
                     $entity = $belongsTo->newEntity();
 
-                    $columns = array_merge($entity->visibleProperties(), $belongsTo->schema()->columns());
-
-                    if (in_array('name', $columns)) {
-                        $element->setDisplayFrom($foreignKey['property'].'.name');
-                    }
+                    $element->setDisplayFrom($foreignKey['property'].'.'.$belongsTo->displayField());
                 }
 
                 $this->add($element);
@@ -826,11 +846,32 @@ class PageComponent extends Component
                         } elseif ($controlType == 'select' && $element->hasAttribute('multiple')) {
                             // this is to change value to an array of ids for multiselect to work
 
-                            if (is_array($value) && !empty($value) && $value[0] instanceof Entity) { // array of Entity objects
-                                $entityCollections = new Collection($value);
-                                $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                            if (is_array($value)) { // array of Entity objects
+                                if (!empty($value)) {
+                                    if (isset($value[0]) && $value[0] instanceof Entity) {
+                                        $entityCollections = new Collection($value);
+
+                                        if ($callback) {
+                                            $displayField = TableRegistry::get($value[0]->source())->displayField();
+                                            $list = $entityCollections->extract($displayField)->toArray();
+                                            $value = implode(", ", $list);
+                                        } else {
+                                            $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                                        }
+                                    } else { // if not Entity objects
+                                        if (array_key_exists('_ids', $value)) {
+                                            $value = $value['_ids'];
+                                        } else {
+                                            // no implementation yet as we have not encountered this use case
+                                        }
+                                    }
+                                } else { // if the array is empty
+                                    $value = ''; // then display empty string
+                                }
                             }
                         }
+                    } else {
+                        // no implementation yet as we have not encountered this use case
                     }
                 }
             }
@@ -913,6 +954,12 @@ class PageComponent extends Component
         $this->order[$element->getKey()] = count($this->order);
     }
 
+    public function clear()
+    {
+        $this->elements->exchangeArray([]);
+        $this->order = [];
+    }
+
     public function addFilter($name)
     {
         $filter = new PageFilter($name);
@@ -971,6 +1018,8 @@ class PageComponent extends Component
 
     private function populateDropdownOptions(PageElement $element, $defaultOption = true)
     {
+        $querystring = $this->getQueryString();
+
         if ($this->hasMainTable()) {
             $table = $this->getMainTable();
             $foreignKey = $element->getForeignKey();
@@ -985,7 +1034,9 @@ class PageComponent extends Component
                 // else call findList and format results
 
                 if ($association->hasFinder('optionList')) {
-                    $query = $association->find('optionList', ['defaultOption' => $defaultOption]);
+                    $finderOptions = $querystring;
+                    $finderOptions['defaultOption'] = $defaultOption;
+                    $query = $association->find('optionList', $finderOptions);
                 } else {
                     $query = $association->find('list')
                         ->formatResults(function ($results) {
