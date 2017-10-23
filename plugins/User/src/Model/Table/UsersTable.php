@@ -71,6 +71,8 @@ class UsersTable extends AppTable
             'OpenEMIS_Classroom' => ['view', 'edit'],
             'API' => ['index', 'view']
         ]);
+
+        $this->displayField('first_name');
     }
 
     public function implementedEvents()
