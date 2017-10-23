@@ -202,7 +202,7 @@ class PageComponent extends Component
 
                 foreach ($this->filters as $filter) {
                     $dependentOn = $filter->getDependentOn();
-                    if ($dependentOn && array_key_exists($dependentOn, $querystring)) {
+                    if ($dependentOn && array_intersect_key(array_flip($dependentOn), $querystring)) {
                         $filterOptions = $this->getFilterOptions($filter->getParams());
                         $filter->setOptions($filterOptions);
                     }
@@ -312,7 +312,14 @@ class PageComponent extends Component
 
     public function isJson()
     {
-        $ext = $this->request->params['_ext'];
+        $cakephpVersion = Configure::version();
+
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            $ext = $this->request->getParam('_ext');
+        } else {
+            $ext = $this->request->param('_ext');
+        }
+
         return $ext === 'json';
     }
 
@@ -833,15 +840,23 @@ class PageComponent extends Component
                         } elseif ($controlType == 'select' && $element->hasAttribute('multiple')) {
                             // this is to change value to an array of ids for multiselect to work
 
-                            if (is_array($value) && !empty($value) && $value[0] instanceof Entity) { // array of Entity objects
-                                $entityCollections = new Collection($value);
+                            if (is_array($value)) { // array of Entity objects
+                                if (!empty($value)) {
+                                    if ($value[0] instanceof Entity) {
+                                        $entityCollections = new Collection($value);
 
-                                if ($callback) {
-                                    $displayField = TableRegistry::get($value[0]->source())->displayField();
-                                    $list = $entityCollections->extract($displayField)->toArray();
-                                    $value = implode(", ", $list);
-                                } else {
-                                    $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                                        if ($callback) {
+                                            $displayField = TableRegistry::get($value[0]->source())->displayField();
+                                            $list = $entityCollections->extract($displayField)->toArray();
+                                            $value = implode(", ", $list);
+                                        } else {
+                                            $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
+                                        }
+                                    } else { // if not Entity objects
+                                        // no implementation yet as we have not encountered this use case
+                                    }
+                                } else { // if the array is empty
+                                    $value = ''; // then display empty string
                                 }
                             }
                         }
@@ -991,6 +1006,8 @@ class PageComponent extends Component
 
     private function populateDropdownOptions(PageElement $element, $defaultOption = true)
     {
+        $querystring = $this->getQueryString();
+
         if ($this->hasMainTable()) {
             $table = $this->getMainTable();
             $foreignKey = $element->getForeignKey();
@@ -1005,7 +1022,9 @@ class PageComponent extends Component
                 // else call findList and format results
 
                 if ($association->hasFinder('optionList')) {
-                    $query = $association->find('optionList', ['defaultOption' => $defaultOption]);
+                    $finderOptions = $querystring;
+                    $finderOptions['defaultOption'] = $defaultOption;
+                    $query = $association->find('optionList', $finderOptions);
                 } else {
                     $query = $association->find('list')
                         ->formatResults(function ($results) {

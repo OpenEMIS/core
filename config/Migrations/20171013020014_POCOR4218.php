@@ -573,8 +573,9 @@ class POCOR4218 extends AbstractMigration
             'id' => false,
             'primary_key' => [
                 'student_id',
-                'institution_class_id',
                 'education_grade_id',
+                'academic_period_id',
+                'institution_id',
                 'institution_trip_id',
             ],
             'collation' => 'utf8mb4_unicode_ci',
@@ -593,12 +594,6 @@ class POCOR4218 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
-            ->addColumn('institution_class_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to institution_classes.id'
-            ])
             ->addColumn('education_grade_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -610,6 +605,12 @@ class POCOR4218 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('institution_trip_id', 'integer', [
                 'default' => null,
@@ -636,9 +637,9 @@ class POCOR4218 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('student_id')
-            ->addIndex('institution_class_id')
             ->addIndex('education_grade_id')
             ->addIndex('academic_period_id')
+            ->addIndex('institution_id')
             ->addIndex('institution_trip_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
