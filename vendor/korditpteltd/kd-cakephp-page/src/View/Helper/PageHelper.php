@@ -370,7 +370,7 @@ class PageHelper extends Helper
             } else {
                 $value = (new Date($value))->i18nFormat($field['format']);
             }
-        } elseif ($isStringType && $valueIsNotEmpty) {
+        } elseif (($isStringType || $field['foreignKey'] != false) && $valueIsNotEmpty) {
             $value = $this->highlight($value);
         }
         return $value;
