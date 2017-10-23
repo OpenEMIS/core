@@ -914,20 +914,20 @@ class StaffTable extends ControllerActionTable
         $extra['excludedModels'] = [$this->StaffPositionProfiles->alias()];
 
         // staff transfer in
-        $StaffTransferRequests = TableRegistry::get('Institution.StaffTransferRequests');
-        $transferInRecordsCount = $StaffTransferRequests->find()
+        $InstitutionStaffTransfer = TableRegistry::get('Institution.InstitutionStaffTransfer');
+        $transferInRecordsCount = $InstitutionStaffTransfer->find()
             ->where([
-                $StaffTransferRequests->aliasField('staff_id') => $entity->staff_id,
-                $StaffTransferRequests->aliasField('institution_id') => $entity->institution_id
+                $InstitutionStaffTransfer->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionStaffTransfer->aliasField('institution_id') => $entity->institution_id
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'StaffTransferIn', 'count' => $transferInRecordsCount];
 
         // staff transfer out
-        $transferOutRecordsCount = $StaffTransferRequests->find()
+        $transferOutRecordsCount = $InstitutionStaffTransfer->find()
             ->where([
-                $StaffTransferRequests->aliasField('staff_id') => $entity->staff_id,
-                $StaffTransferRequests->aliasField('previous_institution_id') => $entity->institution_id
+                $InstitutionStaffTransfer->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionStaffTransfer->aliasField('previous_institution_id') => $entity->previous_institution_id
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
