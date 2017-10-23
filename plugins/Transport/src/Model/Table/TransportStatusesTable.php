@@ -1,9 +1,9 @@
 <?php
 namespace Transport\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 
-class TransportStatusesTable extends ControllerActionTable
+class TransportStatusesTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -11,8 +11,5 @@ class TransportStatusesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->hasMany('InstitutionBuses', ['className' => 'Institution.InstitutionBuses', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-        $this->addBehavior('FieldOption.FieldOption');
-        $this->setDeleteStrategy('restrict');
     }
 }
