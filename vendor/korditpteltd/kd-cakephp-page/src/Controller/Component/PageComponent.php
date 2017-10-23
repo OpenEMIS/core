@@ -489,14 +489,10 @@ class PageComponent extends Component
             foreach ($table->associations() as $assoc) {
                 if ($assoc->type() == 'manyToOne') { // belongsTo associations
                     $columns = $assoc->schema()->columns();
-                    if (in_array('name', $columns)) {
-                        $contain[$assoc->name()] = ['fields' => [
-                            $assoc->aliasField('id'),
-                            $assoc->aliasField('name')
-                        ]];
-                    } else {
-                        $contain[] = $assoc->name();
-                    }
+                    $contain[$assoc->name()] = ['fields' => [
+                        $assoc->aliasField('id'),
+                        $assoc->aliasField($assoc->displayField())
+                    ]];
                 }
             }
             $this->queryOptions->offsetSet('contain', $contain);
@@ -603,6 +599,15 @@ class PageComponent extends Component
         $columns = $schema->columns();
         $wildcard = $options['wildcard'];
 
+        $searchValue = $value;
+        if ($wildcard === true) {
+            $searchValue = '%' . $value . '%';
+        } elseif ($wildcard == 'left') {
+            $searchValue = '%' . $value;
+        } elseif ($wildcard == 'right') {
+            $searchValue = $value . '%';
+        }
+
         $OR = [];
         foreach ($columns as $name) {
             $columnInfo = $schema->column($name);
@@ -612,15 +617,20 @@ class PageComponent extends Component
 
             // if the field is of a searchable type and it is part of the table schema
             if (in_array($columnInfo['type'], $types)) {
-                $searchValue = $value;
-                if ($wildcard === true) {
-                    $searchValue = '%' . $value . '%';
-                } elseif ($wildcard == 'left') {
-                    $searchValue = '%' . $value;
-                } elseif ($wildcard == 'right') {
-                    $searchValue = $value . '%';
-                }
                 $OR[$table->aliasField($name) . ' LIKE'] = $searchValue;
+            }
+        }
+
+        // To add foreign keys as part of the search if it is visible on index page
+        foreach ($this->elements as $element) {
+            if ($element->isVisible() && $element->getControlType() != 'hidden') {
+                $field = $element->getKey();
+                $foreignKey = $this->isForeignKey($table, $field);
+                if ($foreignKey !== false) { // if it is a foreign key, search by the display field
+                    $association = $table->{$foreignKey['name']};
+                    $displayField = $association->displayField();
+                    $OR[$foreignKey['name'] . '.' . $displayField . ' LIKE'] = $searchValue;
+                }
             }
         }
 
@@ -781,11 +791,7 @@ class PageComponent extends Component
                     $belongsTo = $table->{$foreignKey['name']};
                     $entity = $belongsTo->newEntity();
 
-                    $columns = array_merge($entity->visibleProperties(), $belongsTo->schema()->columns());
-
-                    if (in_array('name', $columns)) {
-                        $element->setDisplayFrom($foreignKey['property'].'.name');
-                    }
+                    $element->setDisplayFrom($foreignKey['property'].'.'.$belongsTo->displayField());
                 }
 
                 $this->add($element);

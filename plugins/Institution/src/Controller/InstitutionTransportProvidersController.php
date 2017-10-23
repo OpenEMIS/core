@@ -2,6 +2,7 @@
 namespace Institution\Controller;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use App\Controller\PageController;
 
 class InstitutionTransportProvidersController extends PageController
@@ -48,5 +49,42 @@ class InstitutionTransportProvidersController extends PageController
 
         $page = $this->Page;
         $page->exclude(['comment', 'institution_id']);
+    }
+
+    public function view($id)
+    {
+        parent::view($id);
+
+        $page = $this->Page;
+        $entity = $page->getData();
+
+        $buses = $this->getBuses($entity);
+        $page->addNew('buses')
+            ->setControlType('table')
+            ->setAttributes('column', [
+                ['label' => __('Plate Number'), 'key' => 'plate_number'],
+                ['label' => __('Capacity'), 'key' => 'capacity'],
+                ['label' => __('Status'), 'key' => 'status']
+            ])
+            ->setAttributes('row', $buses);
+
+        $page->move('buses')->after('comment');
+    }
+
+    private function getBuses(Entity $entity)
+    {
+        $rows = [];
+
+        if ($entity->has('institution_buses')) {
+            foreach ($entity->institution_buses as $obj) {
+                $rows[] = [
+                    'plate_number' => $obj->plate_number,
+                    'capacity' => $obj->capacity,
+                    'status' => $obj->transport_status->name
+                ];
+            }
+        }
+
+        return $rows;
     }
 }
