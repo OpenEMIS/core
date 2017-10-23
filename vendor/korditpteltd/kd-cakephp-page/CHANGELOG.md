@@ -1,3 +1,6 @@
+### [1.3.4] - 2017-10-23
+- Fixed an issue where visible foreign key display fields are not part of the search in Index page
+
 ### [1.3.3] - 2017-10-20
 - Fixed an issue where notice error is displayed on View page if there are no values set for a multiple select control
 - Fixed an issue in isJson() where _ext is retrieved using a deprecated function
