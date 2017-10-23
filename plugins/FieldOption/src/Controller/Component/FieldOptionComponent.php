@@ -134,7 +134,6 @@ class FieldOptionComponent extends Component
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
 
     // Transport
-        'TransportStatuses' => ['className' => 'Transport.TransportStatuses', 'parent' => 'Transport'],
         'TransportFeatures' => ['className' => 'Transport.TransportFeatures', 'parent' => 'Transport'],
         'BusTypes' => ['className' => 'Transport.BusTypes', 'parent' => 'Transport'],
         'TripTypes' => ['className' => 'Transport.TripTypes', 'parent' => 'Transport'],
