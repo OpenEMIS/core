@@ -346,7 +346,6 @@ class WorkflowStepsTable extends AppTable {
 		$this->ControllerAction->field('is_editable');
 		$this->ControllerAction->field('is_removable');
 		$this->ControllerAction->field('is_system_defined', ['type' => 'hidden']);
-		$this->ControllerAction->field('params', ['type' => 'hidden']);
 
 		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
 	}
