@@ -8,6 +8,8 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
+// This file serves as an abstract class for StaffTransferIn and StaffTransferOut
+
 class InstitutionStaffTransfersTable extends ControllerActionTable
 {
     // Workflow Steps - category
@@ -57,7 +59,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         $events['Workflow.checkIfCanAddButtons'] = 'checkIfCanAddButtons';
         $events['Workflow.onSetCustomAssigneeParams'] = 'onSetCustomAssigneeParams';
-
         $events['Workflow.setAutoAssignAssigneeFlag'] = 'setAutoAssignAssigneeFlag';
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];

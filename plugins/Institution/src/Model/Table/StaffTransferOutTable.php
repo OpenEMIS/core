@@ -69,7 +69,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('institution_id', ['type' => 'integer']);
         $this->setFieldOrder(['status_id', 'assignee_id', 'initiated_by', 'staff_id', 'institution_id', 'previous_end_date']);
 
-        if ($extra['toolbarButtons']['add']) {
+        if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
         }
     }
@@ -121,9 +121,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     private function setupFields(Entity $entity)
     {
-        $this->field('staff_id', ['entity' => $entity]);
-
         $this->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
+        $this->field('staff_id', ['entity' => $entity]);
         $this->field('transfer_type', ['type' => 'select', 'options' => $this->transferTypeOptions, 'onChangeReload' => true]);
         $this->field('previous_institution_id', ['entity' => $entity]);
         $this->field('staff_positions', ['type' => 'staff_positions', 'entity' => $entity]);
@@ -199,7 +198,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     'selected' => $selected,
                     'position' => $obj->position->name,
                     'staff_type' => $obj->staff_type->name,
-                    'fte' => $this->fteOptions[$obj->FTE],
+                    'fte' => $this->fteOptions["$obj->FTE"],
                     'start_date' => $this->formatDate($obj->start_date)
                 ];
             }
