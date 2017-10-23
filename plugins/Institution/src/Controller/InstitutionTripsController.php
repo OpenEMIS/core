@@ -321,44 +321,48 @@ class InstitutionTripsController extends PageController
 
     private function setDaysValue(Entity $entity)
     {
-        $days = [];
+        if ($this->request->is(['get'])) {
+            $days = [];
 
-        if ($entity->has('institution_trip_days')) {
-            foreach ($entity->institution_trip_days as $obj) {
-                $obj->id = $obj->day;
-                $days[] = $obj;
+            if ($entity->has('institution_trip_days')) {
+                foreach ($entity->institution_trip_days as $obj) {
+                    $obj->id = $obj->day;
+                    $days[] = $obj;
+                }
             }
-        }
 
-        $entity->days = $days;
+            $entity->days = $days;
+        }
     }
 
     private function setAssignedStudentsValue(Entity $entity)
     {
-        $assignedStudents = [];
+        if ($this->request->is(['get'])) {
+            $assignedStudents = [];
 
-        if ($entity->has('institution_trip_passengers')) {
-            foreach ($entity->institution_trip_passengers as $obj) {
-                $institutionStudentEntity = $this->Students
-                    ->find()
-                    ->select([
-                        $this->Students->aliasField('id')
-                    ])
-                    ->where([
-                        'student_id' => $obj->student_id,
-                        'education_grade_id' => $obj->education_grade_id,
-                        'academic_period_id' => $obj->academic_period_id,
-                        'institution_id' => $obj->institution_id
-                    ])
-                    ->first();
+            if ($entity->has('institution_trip_passengers')) {
+                foreach ($entity->institution_trip_passengers as $obj) {
+                    $institutionStudentEntity = $this->Students
+                        ->find()
+                        ->select([
+                            $this->Students->aliasField('id')
+                        ])
+                        ->where([
+                            'student_id' => $obj->student_id,
+                            'education_grade_id' => $obj->education_grade_id,
+                            'academic_period_id' => $obj->academic_period_id,
+                            'institution_id' => $obj->institution_id
+                        ])
+                        ->first();
 
-                if (!empty($institutionStudentEntity)) {
-                    $assignedStudents[] = $institutionStudentEntity;
+                    if (!empty($institutionStudentEntity)) {
+                        $assignedStudents[] = $institutionStudentEntity;
+                    }
                 }
             }
-        }
 
-        $entity->assigned_students = $assignedStudents;
+            $entity->assigned_students = $assignedStudents;
+        }
     }
 
     private function getAssignedStudents(Entity $entity)
