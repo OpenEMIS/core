@@ -625,6 +625,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 staffRecords[key]['education_grade_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? staffRecords[key].institution_students['0'].education_grade.name: '-';
             }
 
+            if (staffRecords[key]['main_nationality'] != null) {
+                staffRecords[key]['nationality_name'] = staffRecords[key]['main_nationality']['name'];
+                staffRecords[key]['identity_type_name'] = staffRecords[key]['main_identity_type']['name'];
+            }
+
             staffRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(staffRecords[key]['date_of_birth']);
             staffRecords[key]['gender_name'] = staffRecords[key]['gender']['name'];
 

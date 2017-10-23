@@ -1,0 +1,30 @@
+### [1.2.1] - 2017-10-12
+- Fixed a bug on the onchange that causes a 404 error when trying to fetch the dependent options [Issue #13](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/13/executing-on-change-logic-in-edit-page)
+
+### [1.2.0] - 2017-10-12
+- Added logic to render labels (in index/view/delete pages) from predefined select options automatically.
+- Added new function 'is' in PageComponent to check if the current request action is in the list of provided actions.
+- Added new function 'getAction' in PageComponent to get the current request action.
+
+### [1.1.3] - 2017-10-12
+- Fixed an issue where the displayFrom is not mapped to newly added field. [Issue #10](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/10/values-from-the-displayfrom-are-not-mapped)
+- Fixed multiple dependent on for dropdown and page filters. [Issue #11](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/11/filter-or-select-control-type-having)
+
+### [1.1.2] - 2017-10-11
+- Fixed an issue on Edit action where value are not returning the correct format for multiple select control. [Issue #9](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/9/multiselect-dropdown-chosen-select-edit)
+- Added hasAttribute function in PageElement for checking the existence of an attribute.
+
+### [1.1.1] - 2017-10-11
+- Fixed an issue with the i18nFormat. Change the formatting from dd-MM-YYYY to dd-MM-yyyy to address an issue with the year value in the final week of the year. [Issue #8](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/8/intl-date-formatter-returning-wrong-year)
+
+### [1.1.0] - 2017-10-11
+- Added support for multiple select control using Chosen plugin in PageHelper. [Issue #5](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/5/multiselect-dropdown)
+
+### [1.0.2] - 2017-10-10
+- Fixed an issue in PageHelper that still shows Action button even though there are no actions. [Issue #1](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/1/action-button-still-showing-and-adding)
+- Fixed an issue in PageHelper that display html elements wrongly for binary control type in view page. [Issue #3](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/3/view-page-show-link-for-attachment-even)
+- Fixed an issue which caused querystring to reset when performing search with filter option selected. [Issue #4](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/4/filter-and-search-will-reset-each-other)
+- Added logic not to perform search conditions on excluded fields. [Issue #7](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/7/search-function-also-search-the-file_name)
+
+### [1.0.1]
+- Initial setup
