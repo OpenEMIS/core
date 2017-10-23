@@ -260,11 +260,6 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function getDataBetweenDate($data, $alias)
     {
-// pr($this->request);
-// pr($this->alias());
-// pr($data);
-// pr($alias);
-// die;
         $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
         $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -538,10 +533,6 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        // pr('editOnInitialize');
-        // pr($entity);
-        // die;
-        // Set all selected values only
         $this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
         $this->request->data[$this->alias()]['transfer_status'] = $entity->status;
         $this->request->data[$this->alias()]['student_id'] = $entity->student_id;
