@@ -1,0 +1,54 @@
+<?php
+namespace App\Test\Fixture;
+
+use Cake\TestSuite\Fixture\TestFixture;
+
+class InstitutionStaffTransfersFixture extends TestFixture
+{
+    public $import = ['table' => 'institution_staff_transfers'];
+    public $records = [
+        [
+            'id' => '1',
+            'staff_id' => '3',
+            'institution_id' => '1',
+            'previous_institution_id' => '2',
+            'status_id' => '43',
+            'assignee_id' => '6',
+            'institution_position_id' => '4',
+            'staff_type_id' => '3',
+            'FTE' => '0.75',
+            'start_date' => '2017-06-01',
+            'end_date' => null,
+            'institution_staff_id' => '4',
+            'previous_end_date' => '2017-05-31',
+            'comment' => null,
+            'initiated_by' => '1',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2017-10-23 09:32:36'
+        ],
+        [
+            'id' => '2',
+            'staff_id' => '4',
+            'institution_id' => '1',
+            'previous_institution_id' => '2',
+            'status_id' => '49',
+            'assignee_id' => '7',
+            'institution_position_id' => '5',
+            'staff_type_id' => '3',
+            'FTE' => '0.5',
+            'start_date' => '2017-12-01',
+            'end_date' => null,
+            'institution_staff_id' => null,
+            'previous_end_date' => null,
+            'comment' => null,
+            'initiated_by' => '2',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2017-10-23 09:32:36'
+        ]
+    ];
+}
+
