@@ -474,7 +474,7 @@ EOT;
         $invalidFields = $data->invalid();
         if (array_key_exists($key, $invalidFields)) {
             $value = $invalidFields[$key];
-            if (array_key_exists('_ids', $value)) { // for multi select
+            if (is_array($value) && array_key_exists('_ids', $value)) { // for multi select
                 $value = $invalidFields[$key]['_ids'];
             }
             $options['value'] = $value;
