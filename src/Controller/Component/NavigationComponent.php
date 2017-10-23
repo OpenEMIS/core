@@ -720,7 +720,7 @@ class NavigationComponent extends Component
             ],
 
                 'InstitutionTransportProviders.index' => [
-                    'title' => 'Transport Providers',
+                    'title' => 'Providers',
                     'parent' => 'Institutions.Transport',
                     'params' => ['plugin' => 'Institution'],
                     'selected' => ['InstitutionTransportProviders.add', 'InstitutionTransportProviders.edit', 'InstitutionTransportProviders.view', 'InstitutionTransportProviders.delete']

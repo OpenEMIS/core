@@ -37,7 +37,14 @@ class InstitutionBusesTable extends AppTable
 			->add('plate_number', 'ruleUnique', [
 				'rule' => 'validateUnique',
 				'provider' => 'table'
-			]);
+			])
+            ->allowEmpty('capacity')
+            ->add('capacity', [
+                'notZero' => [
+                    'rule' => ['comparison', '>', 0],
+                    'last' => true
+                ]
+            ]);
     }
 
 	public function findView(Query $query, array $options)

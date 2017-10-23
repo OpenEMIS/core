@@ -1,3 +1,11 @@
+### [1.3.3] - 2017-10-20
+- Fixed an issue where notice error is displayed on View page if there are no values set for a multiple select control
+- Fixed an issue in isJson() where _ext is retrieved using a deprecated function
+- Fixed missing control type 'password' in PageHelper
+
+### [1.3.2] - 2017-10-20
+- Fixed an issue where onchange function is not accessible due to permission checks
+
 ### [1.3.1] - 2017-10-19
 - Fixed an issue where value is not rendered with break lines for textarea fields
 
