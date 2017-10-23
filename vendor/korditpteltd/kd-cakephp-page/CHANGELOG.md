@@ -1,3 +1,22 @@
+### [1.3.3] - 2017-10-20
+- Fixed an issue where notice error is displayed on View page if there are no values set for a multiple select control
+- Fixed an issue in isJson() where _ext is retrieved using a deprecated function
+- Fixed missing control type 'password' in PageHelper
+
+### [1.3.2] - 2017-10-20
+- Fixed an issue where onchange function is not accessible due to permission checks
+
+### [1.3.1] - 2017-10-19
+- Fixed an issue where value is not rendered with break lines for textarea fields
+
+### [1.3.0] - 2017-10-19
+- Added logic to multiple select control to render values as comma-separated in view/delete page
+- Added logic to PageController to load elements from controller's default model on initialised
+- Added new function 'clear' in PageComponent to empty the elements array
+
+### [1.2.2] - 2017-10-17
+- Changed MissingActionException checks to move from Controller actions to beforeFilter
+
 ### [1.2.1] - 2017-10-12
 - Fixed a bug on the onchange that causes a 404 error when trying to fetch the dependent options [Issue #13](https://bitbucket.org/korditpteltd/kd-cakephp-page/issues/13/executing-on-change-logic-in-edit-page)
 
