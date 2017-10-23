@@ -52,7 +52,22 @@ class StaffPositionTitlesFixture extends TestFixture
             'modified' => '2015-08-23 17:35:47',
             'created_user_id' => '2',
             'created' => '2015-07-23 03:16:22'
-        ],
+        ], [
+            'id' => '495',
+            'name' => 'Lecturer',
+            'type' => '1',
+            'security_role_id' => '7',
+            'order' => '39',
+            'visible' => '1',
+            'editable' => '1',
+            'default' => '0',
+            'international_code' => '39',
+            'national_code' => '39',
+            'modified_user_id' => '2',
+            'modified' => '2015-08-23 17:45:22',
+            'created_user_id' => '2',
+            'created' => '2015-07-23 03:21:48'
+        ]
     ];
 }
 
