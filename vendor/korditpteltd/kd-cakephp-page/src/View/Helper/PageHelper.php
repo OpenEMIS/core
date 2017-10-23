@@ -11,6 +11,7 @@ use Cake\Log\Log;
 use Cake\Utility\Hash;
 use Cake\Utility\Text;
 use Cake\View\Helper;
+use Cake\Core\Configure;
 
 use Page\Traits\RTLTrait;
 use Page\Traits\EncodingTrait;
@@ -280,13 +281,24 @@ class PageHelper extends Helper
         $html = '';
         $limit = $this->getQueryString('limit') !== false ? $this->getQueryString('limit') : '';
         if (!empty($limitOptions)) {
-            $html .= $this->Form->input('Search.limit', [
-                'label' => false,
-                'options' => $limitOptions,
-                'value' => $limit,
-                'templates' => ['select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'],
-                'onchange' => "Page.querystring('limit', this.value, this)"
-            ]);
+            $cakephpVersion = Configure::version();
+            if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+                $html .= $this->Form->control('Search.limit', [
+                    'label' => false,
+                    'options' => $limitOptions,
+                    'value' => $limit,
+                    'templates' => ['select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'],
+                    'onchange' => "Page.querystring('limit', this.value, this)"
+                ]);
+            } else {
+                $html .= $this->Form->input('Search.limit', [
+                    'label' => false,
+                    'options' => $limitOptions,
+                    'value' => $limit,
+                    'templates' => ['select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'],
+                    'onchange' => "Page.querystring('limit', this.value, this)"
+                ]);
+            }
         }
         return $html;
     }
@@ -402,31 +414,42 @@ EOT;
         foreach ($fields as $field => $attr) {
             $controlType = $attr['controlType'];
             $isVisible = $attr['visible'];
+            $value = '';
 
-            if (in_array($controlType, ['section', 'table', 'binary']) && $isVisible) {
-                $html .= $this->{$controlType}($attr, null, 'view');
-            } else {
-                if (in_array($controlType, $excludedTypes) || $isVisible == false) {
-                    continue;
-                }
+            if (!$isVisible || $controlType == 'hidden') {
+                continue;
+            }
 
-                $label = $attr['label'];
-                if (is_array($label)) {
-                    $label = $label['text'];
+            $label = $attr['label'];
+            if (is_array($label)) {
+                $label = $label['text'];
+            }
+
+            if (array_key_exists('value', $attr['attributes'])) {
+                $value = $attr['attributes']['value'];
+                if (!$this->isRTL($value)) {
+                    $value = '<div style = "direction:ltr !important">' . $value . '</div>';
                 }
-                $value = '';
-                if (array_key_exists('value', $attr['attributes'])) {
-                    $value = $attr['attributes']['value'];
-                    if ($controlType != 'binary' && !$this->isRTL($value)) {
-                        $value = '<div style = "direction:ltr !important">' . $value . '</div>';
+            }
+
+            switch ($controlType) {
+                case 'section':
+                case 'table':
+                case 'binary':
+                    $html .= $this->{$controlType}($attr, null, 'view');
+                    break;
+
+                case 'link':
+                    if (array_key_exists('href', $attr['attributes'])) {
+                        $value = $this->Html->link($value, $attr['attributes']['href']);
                     }
-                }
 
-                if ($controlType == 'link' && array_key_exists('href', $attr['attributes'])) {
-                    $value = $this->Html->link($value, $attr['attributes']['href']);
-                }
+                case 'textarea':
+                    $value = nl2br($value);
 
-                $html .= sprintf($row, $label, $value);
+                default:
+                    $html .= sprintf($row, $label, $value);
+                    break;
             }
         }
         return $html;
@@ -545,14 +568,39 @@ EOT;
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'string';
         $html = '';
+        $cakephpVersion = Configure::version();
+
         if (array_key_exists('disabled', $options) && array_key_exists('displayFrom', $field)) {
             $options['type'] = 'hidden';
             unset($options['disabled']);
             $value = $this->getValue($data, $field);
-            $html = $this->Form->input($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+            if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+                $html .= $this->Form->control($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+            } else {
+                $html .= $this->Form->input($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+            }
         }
 
-        $html .= $this->Form->input($field['attributes']['name'], $options);
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            $html .= $this->Form->control($field['attributes']['name'], $options);
+        } else {
+            $html .= $this->Form->input($field['attributes']['name'], $options);
+        }
+        return $html;
+    }
+
+    private function password(array $field, $data)
+    {
+        $options = $this->extractHtmlAttributes($field, $data);
+        $options['type'] = 'password';
+        $html = '';
+        $cakephpVersion = Configure::version();
+
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            $html .= $this->Form->control($field['attributes']['name'], $options);
+        } else {
+            $html .= $this->Form->input($field['attributes']['name'], $options);
+        }
         return $html;
     }
 
@@ -561,16 +609,24 @@ EOT;
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'number';
         $html = '';
+        $cakephpVersion = Configure::version();
 
         if (array_key_exists('disabled', $options) && array_key_exists('displayFrom', $field)) {
             $options['type'] = 'hidden';
             unset($options['disabled']);
             $value = $this->getValue($data, $field);
-            $html .= $this->Form->input($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+            if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+                $html .= $this->Form->control($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+            } else {
+                $html .= $this->Form->input($field['key'].'_name', ['value' => $value, 'disabled' => 'disabled', 'label' => $field['label']]);
+            }
         }
 
-        $html .= $this->Form->input($field['attributes']['name'], $options);
-
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            $html .= $this->Form->control($field['attributes']['name'], $options);
+        } else {
+            $html .= $this->Form->input($field['attributes']['name'], $options);
+        }
         return $html;
     }
 
@@ -593,8 +649,12 @@ EOT;
     {
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'textarea';
-
-        return $this->Form->input($field['attributes']['name'], $options);
+        $cakephpVersion = Configure::version();
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            return $this->Form->control($field['attributes']['name'], $options);
+        } else {
+            return $this->Form->input($field['attributes']['name'], $options);
+        }
     }
 
     private function dropdown(array $field, $data)
@@ -617,7 +677,12 @@ EOT;
             return $this->multiselect($field, $data);
         }
 
-        return $this->Form->input($field['attributes']['name'], $options);
+        $cakephpVersion = Configure::version();
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            return $this->Form->control($field['attributes']['name'], $options);
+        } else {
+            return $this->Form->input($field['attributes']['name'], $options);
+        }
     }
 
     private function multiselect(array $field, $data)
@@ -638,14 +703,18 @@ EOT;
         }
         $this->includes['chosen']['include'] = true;
 
-        return $this->Form->input($field['attributes']['name'], $options);
+        $cakephpVersion = Configure::version();
+        if (version_compare($cakephpVersion, '3.4.0', '>=')) {
+            return $this->Form->control($field['attributes']['name'], $options);
+        } else {
+            return $this->Form->input($field['attributes']['name'], $options);
+        }
     }
 
     private function hidden(array $field, $data)
     {
         $options = $this->extractHtmlAttributes($field, $data);
-        $options['type'] = 'hidden';
-        return $this->Form->input($field['attributes']['name'], $options);
+        return $this->Form->hidden($field['attributes']['name'], $options);
     }
 
     private function date(array $field, $data)

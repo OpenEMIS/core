@@ -5,6 +5,7 @@ use ArrayObject;
 use Exception;
 
 use Cake\Event\Event;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
@@ -27,6 +28,12 @@ class PageController extends AppController
         $this->loadComponent('Page.Page');
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
+
+        $this->Auth->allow(['onchange']);
+
+        if ($this->{$this->name} instanceof Table) {
+            $this->Page->loadElementsFromTable($this->{$this->name});
+        }
     }
 
     public function beforeFilter(Event $event)
@@ -35,15 +42,15 @@ class PageController extends AppController
         if (in_array($action, ['index', 'add', 'edit', 'delete'])) {
             $this->Page->exclude($this->excludedFields);
         }
+        if (!$this->Page->isActionAllowed($action) && $action != 'onchange') {
+            $this->Page->throwMissingActionException();
+        }
     }
 
     public function index()
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
         $requestQueries = $request->query;
 
         $showData = !array_key_exists('data', $requestQueries);
@@ -116,9 +123,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($page->hasMainTable()) {
             $table = $page->getMainTable();
@@ -180,9 +184,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($request->is(['get', 'ajax']) && $page->hasMainTable()) {
             $primaryKeyValue = $page->decode($id);
@@ -211,9 +212,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($page->hasMainTable()) {
             $primaryKeyValue = $page->decode($id);
@@ -290,9 +288,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
         $extra = new ArrayObject();
         $entity = null;
         $pageStatus = $page->getStatus();
@@ -421,9 +416,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($page->hasMainTable()) {
             $table = $page->getMainTable();

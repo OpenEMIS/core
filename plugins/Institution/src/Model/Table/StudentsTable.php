@@ -13,6 +13,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Chronos\Date;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -429,6 +430,40 @@ class StudentsTable extends ControllerActionTable
                     $Classes->aliasField('institution_id') => $institutionId
                 ]
             );
+    }
+
+    public function findTripPassengers(Query $query, array $options)
+    {
+        $queryString = array_key_exists('querystring', $options) ? $options['querystring'] : [];
+        $institutionId = array_key_exists('institution_id', $queryString) ? $queryString['institution_id'] : 0;
+        $academicPeriodId = array_key_exists('academic_period_id', $queryString) ? $queryString['academic_period_id'] : 0;
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name')
+            ])
+            ->contain($this->Users->alias())
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->formatResults(function (ResultSetInterface $results) {
+                $returnResult = [];
+
+                foreach ($results as $result) {
+                    $returnResult[] = ['value' => $result->id, 'text' => $result->user->name_with_id];
+                }
+
+                return $returnResult;
+            });
+
+        return $query;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
