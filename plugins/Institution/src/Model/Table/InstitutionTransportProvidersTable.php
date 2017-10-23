@@ -32,7 +32,14 @@ class InstitutionTransportProvidersTable extends AppTable
 
     public function findView(Query $query, array $options)
     {
-        $query->contain(['InstitutionBuses.TransportStatuses']);
+        $query->contain([
+            'InstitutionBuses' => [
+                'TransportStatuses',
+                'sort' => [
+                    'InstitutionBuses.plate_number' => 'ASC'
+                ]
+            ]
+        ]);
 
         return $query;
     }
