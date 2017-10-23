@@ -211,66 +211,36 @@ class POCOR4218 extends AbstractMigration
         // transport_statuses
         $table = $this->table('transport_statuses', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains statuses of transport'
+                'comment' => 'This table contains the fixed list of statuses for transport'
             ]);
 
         $table
+            ->addColumn('code', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false
+            ])
             ->addColumn('name', 'string', [
                 'default' => null,
-                'limit' => 50,
+                'limit' => 250,
                 'null' => false
             ])
-            ->addColumn('order', 'integer', [
-                'default' => null,
-                'limit' => 3,
-                'null' => false
-            ])
-            ->addColumn('visible', 'integer', [
-                'default' => 1,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('editable', 'integer', [
-                'default' => 1,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('default', 'integer', [
-                'default' => 0,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('international_code', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => true
-            ])
-            ->addColumn('national_code', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => true
-            ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
             ->save();
+
+        $data = [
+            [
+                'id' => 1,
+                'code' => 'OPERATING',
+                'name' => 'Operating'
+            ],
+            [
+                'id' => 2,
+                'code' => 'NOT_OPERATING',
+                'name' => 'Not Operating'
+            ]
+        ];
+
+        $this->insert('transport_statuses', $data);
         // end transport_statuses
 
         // transport_features

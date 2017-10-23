@@ -144,6 +144,11 @@ class InstitutionTripsController extends PageController
     {
         parent::add();
         $this->addEdit();
+        $page = $this->Page;
+
+        // set default academic period to current year
+        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $page->get('academic_period_id')->setValue($academicPeriodId);
     }
 
     public function edit($id)
