@@ -151,9 +151,11 @@ class InstitutionTripsController extends PageController
         $this->addEdit();
         $page = $this->Page;
 
-        // set default academic period to current year
-        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $page->get('academic_period_id')->setValue($academicPeriodId);
+        if ($this->request->is(['get'])) {
+            // set default academic period to current year
+            $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+            $page->get('academic_period_id')->setValue($academicPeriodId);
+        }
     }
 
     public function edit($id)
@@ -205,7 +207,7 @@ class InstitutionTripsController extends PageController
             ->setControlType('select')
             ->setAttributes('multiple', true)
             ->setAttributes('placeholder', __('Select Days'))
-            ->setAttributes('required', 'required')
+            ->setRequired(true)
             ->setOptions($dayOptions, false);
 
         $this->setBusOptions($entity);
