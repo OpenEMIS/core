@@ -33,7 +33,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                 'rule' => ['checkPendingStaffTransferIn'],
                 'on' => 'create'
             ])
-            ->notEmpty(['institution_position_id', 'FTE', 'staff_type_id']);
+            ->notEmpty(['institution_position_id', 'FTE', 'staff_type_id', 'start_date']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -58,8 +58,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('previous_end_date', ['type' => 'hidden']);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'initiated_by', 'staff_id', 'previous_institution_id', 'staff_type_id', 'FTE', 'institution_position_id', 'start_date', 'end_date', 'comment'
-    ]);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'initiated_by', 'staff_id', 'previous_institution_id', 'staff_type_id', 'FTE', 'institution_position_id', 'start_date', 'end_date', 'comment']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -79,19 +78,19 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('initiated_by', ['type' => 'hidden']);
-        $this->field('previous_end_date', ['type' => 'hidden']);
+        $this->field('previous_end_date', ['type' => 'hidden', 'value' => $entity->previous_end_date->format('Y-m-d')]);
 
-        $this->field('staff_id', ['entity' => $entity]);
         $this->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
-        $this->field('previous_institution_id', ['entity' => $entity]);
+        $this->field('staff_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('previous_institution_id', ['type' => 'readonly', 'entity' => $entity]);
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
-        $this->field('institution_id', ['entity' => $entity]);
-        $this->field('staff_type_id');
-        $this->field('FTE', ['type' => 'select', 'options' => $this->fteOptions, 'onChangeReload' => true]);
-        $this->field('institution_position_id');
+        $this->field('institution_id', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('start_date', ['type' => 'date', 'onChangeReload' => true]);
         $this->field('end_date', ['type' => 'date', 'onChangeReload' => true, 'default_date' => false]);
+        $this->field('FTE', ['type' => 'select', 'options' => $this->fteOptions, 'onChangeReload' => true]);
+        $this->field('institution_position_id', ['type' => 'select']);
+        $this->field('staff_type_id', ['type' => 'select']);
 
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
         $this->field('comment');
@@ -101,7 +100,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
-            $attr['type'] = 'readonly';
             $attr['value'] = $entity->staff_id;
             $attr['attr']['value'] = $entity->user->name_with_id;
             return $attr;
@@ -112,7 +110,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
-            $attr['type'] = 'readonly';
             $attr['value'] = $entity->previous_institution_id;
             $attr['attr']['value'] = $entity->previous_institution->code_name;
             return $attr;
@@ -123,7 +120,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
-            $attr['type'] = 'readonly';
             $attr['value'] = $entity->institution_id;
             $attr['attr']['value'] = $entity->institution->code_name;
             return $attr;
@@ -147,18 +143,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
                 $options = $PositionsTable->getInstitutionPositions($userId, $isAdmin, $activeStatusId, $institutionId, $fte, $startDate, $endDate);
             }
-
-            $attr['type'] = 'select';
-            $attr['options'] = $options;
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldStaffTypeId(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'edit') {
-            $options = $this->StaffTypes->find('list')->toArray();
-            $attr['type'] = 'select';
             $attr['options'] = $options;
             return $attr;
         }
