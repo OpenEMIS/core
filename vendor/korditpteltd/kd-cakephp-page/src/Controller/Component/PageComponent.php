@@ -848,7 +848,7 @@ class PageComponent extends Component
 
                             if (is_array($value)) { // array of Entity objects
                                 if (!empty($value)) {
-                                    if ($value[0] instanceof Entity) {
+                                    if (isset($value[0]) && $value[0] instanceof Entity) {
                                         $entityCollections = new Collection($value);
 
                                         if ($callback) {
@@ -859,13 +859,19 @@ class PageComponent extends Component
                                             $value = $entityCollections->extract('id')->toArray(); // extract all ids from the Entity objects
                                         }
                                     } else { // if not Entity objects
-                                        // no implementation yet as we have not encountered this use case
+                                        if (array_key_exists('_ids', $value)) {
+                                            $value = $value['_ids'];
+                                        } else {
+                                            // no implementation yet as we have not encountered this use case
+                                        }
                                     }
                                 } else { // if the array is empty
                                     $value = ''; // then display empty string
                                 }
                             }
                         }
+                    } else {
+                        // no implementation yet as we have not encountered this use case
                     }
                 }
             }
