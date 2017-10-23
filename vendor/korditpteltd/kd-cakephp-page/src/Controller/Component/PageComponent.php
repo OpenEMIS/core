@@ -176,7 +176,7 @@ class PageComponent extends Component
                                     $selectOptions = $element->getOptions();
                                     if (!$this->isForeignKey($this->mainTable, $key) && !empty($selectOptions)) { // to render values if set from predefined options
                                         $value = $entity->{$key};
-                                        if (array_key_exists($value, $selectOptions) && $value != '') {
+                                        if (array_key_exists($value, $selectOptions) && strlen($value) > 0) {
                                             $entity->{$key} = $selectOptions[$entity->{$key}];
                                         }
                                     }

@@ -620,7 +620,7 @@ class POCOR4218 extends AbstractMigration
         $data = [
             [
                 'id' => 1069,
-                'name' => 'Transport Providers',
+                'name' => 'Providers',
                 'controller' => 'InstitutionTransportProviders',
                 'module' => 'Institutions',
                 'category' => 'Transport',
