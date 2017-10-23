@@ -1199,6 +1199,12 @@ trait MessagesTrait
             'InstitutionTrips' => [
                 'name' => [
                     'ruleUnique' => 'This field has to be unique'
+                ],
+                'days' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'assigned_students' => [
+                    'checkMaxLimit' => 'Total passengers should not be more than bus capacity %d'
                 ]
             ],
         ],
