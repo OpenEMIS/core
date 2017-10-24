@@ -136,6 +136,12 @@ class WorkflowStepsTable extends AppTable {
 		return $entity->is_removable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+    	// needed to show tooltip for staff transfer workflows
+    	return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',

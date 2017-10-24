@@ -465,6 +465,10 @@ trait MessagesTrait
             'systemDefined' => 'This is a system defined record',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
+        'WorkflowStepsParams' => [
+            'institutionOwner' => 'The selected institution can execute workflow actions on this step',
+            'institutionVisible' => 'The selected institutions can view this step'
+        ],
         'WorkflowActions' => [
             'add_event' => 'Add Event',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
