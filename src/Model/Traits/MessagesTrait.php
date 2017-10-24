@@ -788,6 +788,9 @@ trait MessagesTrait
         'UserBodyMasses' => [
             'dateNotWithinPeriod' => 'Date should be within %s and %s'
         ],
+        'StaffTransferOut' => [
+            'noStaffPositionSelected' => 'Please select a Staff Position to transfer'
+        ],
 
         // Validation Messages
         'Institution' => [
