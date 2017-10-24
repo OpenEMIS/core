@@ -6,9 +6,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
-use App\Model\Table\ControllerActionTable;
 use Institution\Model\Table\InstitutionStaffTransfersTable;
 
 class StaffTransferInTable extends InstitutionStaffTransfersTable
@@ -36,6 +36,11 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             ->notEmpty(['institution_position_id', 'FTE', 'staff_type_id', 'start_date']);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('institution_staff_id', ['type' => 'hidden']);
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('end_date', ['type' => 'hidden']);
@@ -43,7 +48,9 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('staff_type_id', ['type' => 'hidden']);
         $this->field('previous_end_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'initiated_by', 'staff_id', 'previous_institution_id', 'start_date', 'institution_position_id']);
+        $this->field('initiated_by', ['type' => 'hidden']);
+        $this->field('currently_assigned_to');
+        $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'previous_institution_id', 'institution_position_id', 'start_date']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -55,10 +62,10 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'Institutions' => ['code']];
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('previous_end_date', ['type' => 'hidden']);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'initiated_by', 'staff_id', 'previous_institution_id', 'staff_type_id', 'FTE', 'institution_position_id', 'start_date', 'end_date', 'comment']);
+        $this->field('currently_assigned_to');
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -78,11 +85,11 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('initiated_by', ['type' => 'hidden']);
-        $this->field('previous_end_date', ['type' => 'hidden', 'value' => $entity->previous_end_date->format('Y-m-d')]);
 
         $this->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('staff_id', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('previous_institution_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('previous_end_date', ['entity' => $entity]);
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
         $this->field('institution_id', ['type' => 'readonly', 'entity' => $entity]);
@@ -96,7 +103,23 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('comment');
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $type = 'hidden';
+
+            if (!empty($entity->previous_end_date)) {
+                $type = 'readonly';
+                $attr['value'] = $entity->previous_end_date->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($entity->previous_end_date);
+            }
+            $attr['type'] = $type;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -106,7 +129,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -116,7 +139,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -126,7 +149,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInstitutionPositionId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $options = [];

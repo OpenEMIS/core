@@ -142,11 +142,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('institution_staff_id', ['type' => 'hidden']);
-    }
-
     public function onGetFTE(Event $event, Entity $entity)
     {
         $value = '';
