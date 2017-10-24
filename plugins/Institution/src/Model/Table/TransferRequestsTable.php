@@ -327,6 +327,11 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
+        if (!$entity->has('requested_date') ) {
+           $entity->requested_date = $entity->created;
+           $this->save($entity);
+        }
+
         $extra['redirect']['action'] = 'StudentUser';
         $extra['redirect'][0] = 'view';
         $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->student_id]);
