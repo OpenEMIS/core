@@ -96,7 +96,7 @@ class HtmlFieldHelper extends Helper
         return $subject->eventManager()->dispatch($event);
     }
 
-    public function render($type, $action, Entity $data = null, array $attr, array $options = [])
+    public function render($type, $action, Entity $data, array $attr, array $options = [])
     {
         $html = '';
 
@@ -111,7 +111,7 @@ class HtmlFieldHelper extends Helper
 
         if (isset($event->result)) {
             $html = $event->result;
-        } else if (!is_null($data)) {
+        } else {
             if (method_exists($this, $type)) {
                 $html = $this->$type($action, $data, $attr, $options);
             }
