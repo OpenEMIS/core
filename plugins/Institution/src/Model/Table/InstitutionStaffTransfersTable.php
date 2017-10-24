@@ -157,6 +157,21 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetCurrentlyAssignedTo(Event $event, Entity $entity)
+    {
+        $value = '';
+
+        if ($entity->has('status')) {
+            $institutionOwner = $this->getWorkflowStepsParamValue($entity->status->id, 'institution_owner');
+            if ($institutionOwner == self::INCOMING && $entity->has('institution')) {
+                $value = $entity->institution->code_name;
+            } else if ($institutionOwner == self::OUTGOING && $entity->has('previous_institution')) {
+                $value = $entity->previous_institution->code_name;
+            }
+        }
+        return $value;
+    }
+
     public function onGetInitiatedBy(Event $event, Entity $entity)
     {
         $value = '';
