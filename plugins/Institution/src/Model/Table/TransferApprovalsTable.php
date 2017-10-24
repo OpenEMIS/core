@@ -127,7 +127,7 @@ class TransferApprovalsTable extends ControllerActionTable
         $this->request->data[$this->alias()]['new_education_grade_id'] = $entity->new_education_grade_id;
         $this->request->data[$this->alias()]['start_date'] = ''; //index start_date is needed when the value being given later on.
         $this->request->data[$this->alias()]['end_date'] = $entity->end_date;
-        $this->request->data[$this->alias()]['requested_date'] = $entity->requested_date;
+        $this->request->data[$this->alias()]['requested_date'] = !empty($entity->requested_date) ? $entity->requested_date : $entity->created;
         $this->request->data[$this->alias()]['student_transfer_reason_id'] = $entity->student_transfer_reason_id;
         $this->request->data[$this->alias()]['status'] = $entity->status;
     }
@@ -211,8 +211,9 @@ class TransferApprovalsTable extends ControllerActionTable
                 $newData['end_date'] = $entity->end_date->format('Y-m-d');
                 $newEntity = $Students->newEntity($newData);
                 if ($Students->save($newEntity)) {
-                    $classId = $data[$this->alias()]['institution_class'];
-                    if (!empty($classId)) {
+
+                    if (!empty($data[$this->alias()]['institution_class_id'])) {
+                        $classId = $data[$this->alias()]['institution_class_id'];
                         $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
                         $institutionClassStudentObj = [
                             'student_id' => $newEntity->student_id,
