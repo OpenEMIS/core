@@ -368,7 +368,7 @@ class ControllerActionHelper extends Helper
         return $html;
     }
 
-    public function getEditElements(Entity $data, $fields = [], $exclude = [])
+    public function getEditElements(Entity $data = null, $fields = [], $exclude = [])
     {
         $config = $this->_View->get('ControllerAction');
         $_fields = $config['fields'];
@@ -469,7 +469,7 @@ class ControllerActionHelper extends Helper
         }
     }
 
-    public function getViewElements(Entity $data, $fields = [], $exclude = [])
+    public function getViewElements(Entity $data = null, $fields = [], $exclude = [])
     {
         //  1. implemented override param for nav_tabs to omit label
         //  2. for case 'element', implemented $elementData for $this->_View->element($element, $elementData)
