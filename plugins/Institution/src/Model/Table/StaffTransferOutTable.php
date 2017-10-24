@@ -57,7 +57,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('institution_staff_id', ['type' => 'hidden']);
-        $this->field('end_date', ['type' => 'hidden']);
         $this->field('FTE', ['type' => 'hidden']);
         $this->field('staff_type_id', ['type' => 'hidden']);
         $this->field('institution_position_id', ['type' => 'hidden']);
@@ -73,6 +72,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('previous_institution_id', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
         $this->field('initiated_by', ['type' => 'hidden']);
+        $this->field('end_date', ['type' => 'hidden']);
         $this->field('currently_assigned_to');
         $this->field('institution_id', ['type' => 'integer']);
         $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'institution_id', 'previous_end_date']);
@@ -91,6 +91,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     {
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('previous_institution_id', ['type' => 'hidden']);
+        $this->field('end_date', ['type' => 'hidden']);
         $this->field('currently_assigned_to');
         $this->field('institution_id', ['type' => 'integer']);
         $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'institution_id', 'previous_end_date', 'comment', 'initiated_by']);
@@ -148,6 +149,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('comment');
 
         $this->field('initiated_by', ['type' => 'hidden']);
+        $this->field('end_date', ['type' => 'hidden', 'entity' => $entity]);
     }
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
@@ -292,6 +294,17 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 $attr['attr']['value'] = $this->formatDate($entity->start_date);
             }
             $attr['type'] = $type;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+            if (!empty($entity->end_date)) {
+                $attr['value'] = $entity->end_date->format('Y-m-d');
+            }
             return $attr;
         }
     }
