@@ -38,6 +38,7 @@ class StaffTransferBehavior extends Behavior
         $events['ControllerAction.Model.edit.onInitialize'] = 'editOnInitialize';
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+        $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 100];
         return $events;
     }
 
@@ -74,13 +75,13 @@ class StaffTransferBehavior extends Behavior
                 if ($param->name == 'institution_visible') {
                     $visibleArr[] = $param->value;
                 } else if ($param->name == 'institution_owner') {
-                    $ownerArr['id'] = $param->value;
+                    $institutionOwner = $param->value;
                 } else if ($param->name == 'validate_approve') {
                     $validateApprove = $param->value;
                 }
             }
             $entity->visible = isset($visibleArr) ? $visibleArr : [];
-            $entity->institution_owner = isset($ownerArr) ? $ownerArr : [];
+            $entity->institution_owner = isset($institutionOwner) ? $institutionOwner : '';
             $entity->validate_approve = isset($validateApprove) ? $validateApprove : '';
         }
     }
@@ -101,9 +102,9 @@ class StaffTransferBehavior extends Behavior
     {
         if (in_array($workflowId, $this->transferWorkflowIds)) {
             $this->_table->ControllerAction->field('institution_owner', ['type' => 'select', 'options' => $this->institutionTypeOptions]);
-            $this->_table->ControllerAction->field('visible', ['type' => 'chosenSelect', 'options' => $this->institutionTypeOptions, 'fieldName' => $this->_table->alias().'.visible']);
+            $this->_table->ControllerAction->field('visible', ['type' => 'chosenSelect', 'options' => $this->institutionTypeOptions]);
             $this->_table->ControllerAction->field('validate_approve', ['type' => 'hidden']);
-            $this->_table->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'institution_owner', 'visible', 'security_roles', 'category', 'is_editable', 'is_removable']);
+            $this->_table->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable', 'institution_owner', 'visible']);
         }
     }
 
@@ -132,6 +133,49 @@ class StaffTransferBehavior extends Behavior
         return $value;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        $action = $this->_table->action;
+        if (in_array($action, ['index', 'view'])) {
+            if ($field == 'institution_owner') {
+                $message = $this->_table->getMessage('WorkflowStepsParams.institutionOwner');
+                return __('Institution Owner') . $this->tooltipMessage($action, $message);
+
+            } else if ($field == 'visible') {
+                $message = $this->_table->getMessage('WorkflowStepsParams.institutionVisible');
+                return __('Visible') . $this->tooltipMessage($action, $message);
+            }
+        }
+    }
+
+    public function onUpdateFieldInstitutionOwner(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['add', 'edit'])) {
+            $message = $this->_table->getMessage('WorkflowStepsParams.institutionOwner');
+
+            $attr['attr']['required'] = true;
+            $attr['attr']['label']['escape'] = false;
+            $attr['attr']['label']['class'] = 'tooltip-desc';
+            $attr['attr']['label']['text'] = __('Institution Owner') . $this->tooltipMessage($action, $message);
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['add', 'edit'])) {
+            $message = $this->_table->getMessage('WorkflowStepsParams.institutionVisible');
+
+            $attr['attr']['required'] = true;
+            $attr['attr']['label']['escape'] = false;
+            $attr['attr']['label']['class'] = 'tooltip-desc';
+            $attr['attr']['label']['text'] = __('Visible') . $this->tooltipMessage($action, $message);
+            $attr['fieldName'] = $this->_table->alias().'.visible';
+            return $attr;
+        }
+    }
+
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
@@ -144,8 +188,8 @@ class StaffTransferBehavior extends Behavior
                     $params[] = ['name' => 'institution_owner', 'value' => $data['institution_owner']];
                 }
                 if (isset($data['visible']) && !empty($data['visible'])) {
-                    foreach ($data['visible'] as $id) {
-                        $params[] = ['name' => 'institution_visible', 'value' => $id];
+                    foreach ($data['visible'] as $value) {
+                        $params[] = ['name' => 'institution_visible', 'value' => $value];
                     }
                 }
                 if (isset($data['validate_approve']) && !empty($data['validate_approve'])) {
@@ -157,5 +201,16 @@ class StaffTransferBehavior extends Behavior
                 }
             }
         }
+    }
+
+    protected function tooltipMessage($action, $message)
+    {
+        if (in_array($action, ['index', 'view'])) {
+            $tooltipMessage = '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="' . $message . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+
+        } else if (in_array($action, ['add', 'edit'])) {
+            $tooltipMessage = '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+        }
+        return $tooltipMessage;
     }
 }
