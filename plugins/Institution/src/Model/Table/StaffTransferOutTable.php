@@ -93,7 +93,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('previous_institution_id', ['type' => 'hidden']);
         $this->field('currently_assigned_to');
         $this->field('institution_id', ['type' => 'integer']);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'institution_id', 'previous_end_date', 'initiated_by', 'comment']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'institution_id', 'previous_end_date', 'comment', 'initiated_by']);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
