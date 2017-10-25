@@ -590,17 +590,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (!$entity->isNew()) {
             //empty subject student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
-            if ($entity->has('subjectStudent') && !empty($entity->subjectStudent)) { 
-
+            if ($entity->has('subjectStudent') && !empty($entity->subjectStudent)) {
+                $institutionClassId = 0;
                 $newStudents = [];
                 //decode string sent through form
                 foreach ($entity->subjectStudent as $item) {
                     $student = json_decode($this->urlsafeB64Decode($item), true);
                     $newStudents[$student['student_id']] = $student;
+                    if ($institutionClassId == 0) {
+                        $institutionClassId = $student['institution_class_id'];
+                    }
                 }
 
                 //find existing subject student to make comparison
-                $institutionClassId = $entity->subjectStudent[0]['institution_class_id'];
                 $educationGradeId = $entity->education_grade_id;
                 $educationSubjectId = $entity->education_subject_id;
                 $institutionSubjectId = $entity->id;
@@ -608,7 +610,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $existingStudents = $this->SubjectStudents
                                         ->find('all')
                                         ->select([
-                                            'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id', 
+                                            'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id',
                                             'student_status_id', 'institution_subject_id', 'education_subject_id'
                                         ])
                                         ->where([

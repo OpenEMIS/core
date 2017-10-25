@@ -295,7 +295,7 @@ class StaffUserTable extends ControllerActionTable
             $conditions['openemis_no LIKE'] = $openemisNo . '%';
         }
         if (!empty($dateOfBirth)) {
-            $conditions['date_of_birth'] = $dateOfBirth;
+            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');;
         }
 
         $identityConditions = [];

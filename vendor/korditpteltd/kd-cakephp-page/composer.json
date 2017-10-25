@@ -15,7 +15,7 @@
         "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
     },
     "require": {
-        "cakephp/cakephp": ">=3.3.0 <3.4"
+        "cakephp/cakephp": ">=3.3.0 <3.5"
     },
     "require-dev": {
         "cakephp/cakephp-codesniffer": "^2.3",

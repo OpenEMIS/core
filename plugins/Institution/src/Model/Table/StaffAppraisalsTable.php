@@ -72,7 +72,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'staff';
-        $userId = $this->Auth->user('id');
+        $userId = $this->request->query('user_id');
         if (!is_null($userId)) {
             $options['user_id'] = $userId;
         }
