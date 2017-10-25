@@ -114,12 +114,43 @@ class TransferRequestsTable extends ControllerActionTable
 
         $this->field('student');
         $this->field('requested_date');
-        $this->field('associated_records', ['type' => 'readonly']);
+
+        $this->field('associated_records', ['type' => 'associated_records']);
 
         $entity = $this->newEntity();
 
         $this->controller->set('data', $entity);
         return $entity;
+    }
+
+    public function onGetAssociatedRecordsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        $fieldKey = 'associated_records';
+
+        $dataBetweenDate = [];
+        $sessionKey = $this->registryAlias() . '.associatedData';
+
+        if ($this->Session->check($sessionKey)) {
+            $dataBetweenDate = $this->Session->read($sessionKey);
+
+            if (!empty($dataBetweenDate)) {
+                $tableHeaders =[__('Feature'), __('No of Records')];
+                $tableCells = [];
+
+                foreach ($dataBetweenDate as $feature => $count) {
+                    $rowData = [];
+                    $rowData[] = __($feature);
+                    $rowData[] = __($count);
+
+                    $tableCells[] = $rowData;
+                }
+
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
+            }
+        }
+
+        return $event->subject()->renderElement('StudentTransfer/' . $fieldKey, ['attr' => $attr]);;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -210,6 +241,14 @@ class TransferRequestsTable extends ControllerActionTable
 
                 $extra['params'] = $params;
             }
+        }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // if requested date it empty will get today date as the requested_date
+        if (!$entity->has('requested_date')) {
+            $entity->requested_date = $entity->created;
         }
     }
 
@@ -327,11 +366,6 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!$entity->has('requested_date') ) {
-           $entity->requested_date = $entity->created;
-           $this->save($entity);
-        }
-
         $extra['redirect']['action'] = 'StudentUser';
         $extra['redirect'][0] = 'view';
         $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->student_id]);
@@ -576,8 +610,6 @@ class TransferRequestsTable extends ControllerActionTable
     {
         if ($this->action == 'index') {
             $buttons->exchangeArray([]);
-        } else if ($this->action == 'add') {
-            $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
         } else if ($this->action == 'associated') {
             $sessionKey = $this->registryAlias() . '.associatedData';
             if ($this->Session->check($sessionKey) && !empty($this->Session->read($sessionKey))) {
@@ -596,25 +628,6 @@ class TransferRequestsTable extends ControllerActionTable
                 }
             }
         }
-    }
-
-    public function onUpdateFieldAssociatedRecords(Event $event, array $attr, $action, $request)
-    {
-        $dataBetweenDate = [];
-        switch ($action) {
-            case 'associated':
-                $sessionKey = $this->registryAlias() . '.associatedData';
-                if ($this->Session->check($sessionKey)) {
-                    $dataBetweenDate = $this->Session->read($sessionKey);
-                }
-                break;
-        }
-
-        $attr['type'] = 'element';
-        $attr['element'] = 'Institution.StudentTransfer/associatedRecords';
-        $attr['data'] = $dataBetweenDate;
-
-        return $attr;
     }
 
     public function onUpdateFieldTransferStatus(Event $event, array $attr, $action, $request)
