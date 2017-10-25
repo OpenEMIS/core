@@ -71,18 +71,19 @@ class TrackDeleteBehavior extends Behavior
             // Change to manual insertion to due to 404 error in cakephp orm save propagation
             $query = $DeletedRecords->query();
             $query
-                ->insert(['reference_table', 'reference_key', 'data', 'created_user_id', 'created'])
+                ->insert(['reference_table', 'reference_key', 'data', 'deleted_date', 'created_user_id', 'created'])
                 ->values([
                     'reference_table' => $source,
                     'reference_key' => $referenceKey,
                     'data' => json_encode($entityData),
+                    'deleted_date' => Time::now()->format('Ymd'),
                     'created_user_id' => $userId,
                     'created' => Time::now()
                 ]);
             $statement = $query->execute();
             $statement->closeCursor();
         } catch (Exception $e) {
-            Log::write('error', __METHOD__ . ': ' . $e->getMessage());
+            Log::write('error', $this->_table->alias() . ' -> ' . __METHOD__ . ': ' . $e->getMessage());
         }
     }
 

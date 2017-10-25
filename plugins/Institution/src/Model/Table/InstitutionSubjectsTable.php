@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -584,6 +585,58 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew()) {
+            //empty subject student is handled by beforeMarshal
+            //in another case, it will be save manually to avoid unecessary queries during save by association
+            if ($entity->has('subjectStudent') && !empty($entity->subjectStudent)) {
+                $institutionClassId = 0;
+                $newStudents = [];
+                //decode string sent through form
+                foreach ($entity->subjectStudent as $item) {
+                    $student = json_decode($this->urlsafeB64Decode($item), true);
+                    $newStudents[$student['student_id']] = $student;
+                    if ($institutionClassId == 0) {
+                        $institutionClassId = $student['institution_class_id'];
+                    }
+                }
+
+                //find existing subject student to make comparison
+                $educationGradeId = $entity->education_grade_id;
+                $educationSubjectId = $entity->education_subject_id;
+                $institutionSubjectId = $entity->id;
+
+                $existingStudents = $this->SubjectStudents
+                                        ->find('all')
+                                        ->select([
+                                            'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id',
+                                            'student_status_id', 'institution_subject_id', 'education_subject_id'
+                                        ])
+                                        ->where([
+                                            $this->SubjectStudents->aliasField('institution_class_id') => $institutionClassId,
+                                            $this->SubjectStudents->aliasField('education_grade_id') => $educationGradeId,
+                                            $this->SubjectStudents->aliasField('education_subject_id') => $educationSubjectId,
+                                            $this->SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId
+                                        ])
+                                        ->toArray();
+
+                foreach ($existingStudents as $key => $subjectStudentEntity) {
+                    if (!array_key_exists($subjectStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
+                        $this->SubjectStudents->delete($subjectStudentEntity);
+                    } else { // if student exists, then remove from the array to get the new student records to be added
+                        unset($newStudents[$subjectStudentEntity->student_id]);
+                    }
+                }
+
+                foreach ($newStudents as $key => $student) {
+                    $subjectStudentEntity = $this->SubjectStudents->newEntity($student);
+                    $this->SubjectStudents->save($subjectStudentEntity);
+                }
+            }
+        }
+    }
+
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $Staff = TableRegistry::get('Institution.Staff');
@@ -619,8 +672,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('subject_students')) {
-            foreach ($data['subject_students'] as &$subjectStudent) {
-                $subjectStudent = json_decode($this->urlsafeB64Decode($subjectStudent), true);
+            if (!empty($data['subject_students'])) { //if not empty, then process save manually
+                $data['subjectStudent'] = $data['subject_students'];
+                $data->offsetUnset('subject_students');
             }
         }
 

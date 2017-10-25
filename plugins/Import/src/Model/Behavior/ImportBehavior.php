@@ -687,6 +687,7 @@ class ImportBehavior extends Behavior
             __('End Date') . $description,
             __('Date Of Birth') . $description,
             __('Salary Date') . $description,
+            __('Expiry Date') . $description,
         ];
 
         ($this->isCustomText()) ? $lastRowToAlign = 3 : $lastRowToAlign = 2;

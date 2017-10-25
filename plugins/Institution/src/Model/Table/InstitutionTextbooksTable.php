@@ -50,7 +50,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportTextbooks']);
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionTextbooks']);
     }
 
     public function validationDefault(Validator $validator) {

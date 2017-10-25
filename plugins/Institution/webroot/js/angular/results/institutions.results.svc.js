@@ -83,11 +83,13 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 var allSubjectsPermission = response[0];
                 var mySubjectsPermission = response[1];
 
+                // Only get assessment items that are available for the class
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
-                    .contain(['EducationSubjects'])
-                    .where({assessment_id: assessmentId})
-                    .order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
+                    .find('AssessmentItemsInClass', {
+                        class_id: classId,
+                        assessment_id: assessmentId
+                    });
 
                 // For no subjects
                 var fail = function(response, deferred) {
@@ -677,6 +679,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
 
                         } else {
                             // don't allow input if student is not enrolled
+                            var value = params.data[params.colDef.field];
+
                             if (!isNaN(parseFloat(value))) {
                                 var duration = String(value).replace(".", " : ");
                                 return duration;
