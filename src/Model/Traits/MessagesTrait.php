@@ -970,6 +970,28 @@ trait MessagesTrait
                     'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
+            'InfrastructureNeeds' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name'
+                ],
+                'date_completed' => [
+                    'compareWithDateStarted' => 'Date completed should not be earlier than date started'
+                ],
+            ],
+            'InfrastructureProjects' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name'
+                ],
+                'date_completed' => [
+                    'compareWithDateStarted' => 'Date completed should not be earlier than date started'
+                ],
+            ],
             'Students' => [
                 'student_name' => [
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
@@ -1160,7 +1182,31 @@ trait MessagesTrait
                 'grading_type' => [
                     'notFound' => 'No Grading Type found'
                 ]
-            ]
+            ],
+            'InstitutionTransportProviders' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
+            'InstitutionBuses' => [
+                'plate_number' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ],
+                'capacity' => [
+                    'notZero' => 'Capacity must be more than 0',
+                ]
+            ],
+            'InstitutionTrips' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ],
+                'days' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'assigned_students' => [
+                    'checkMaxLimit' => 'Total passengers should not be more than bus capacity %d'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
