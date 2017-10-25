@@ -370,7 +370,7 @@ class PageHelper extends Helper
             } else {
                 $value = (new Date($value))->i18nFormat($field['format']);
             }
-        } elseif ($isStringType && $valueIsNotEmpty) {
+        } elseif (($isStringType || $field['foreignKey'] != false) && $valueIsNotEmpty) {
             $value = $this->highlight($value);
         }
         return $value;
@@ -473,8 +473,12 @@ EOT;
 
         $invalidFields = $data->invalid();
         if (array_key_exists($key, $invalidFields)) {
-            $options['value'] = $invalidFields[$key];
-            $field['attributes']['value'] = $invalidFields[$key];
+            $value = $invalidFields[$key];
+            if (is_array($value) && array_key_exists('_ids', $value)) { // for multi select
+                $value = $invalidFields[$key]['_ids'];
+            }
+            $options['value'] = $value;
+            $field['attributes']['value'] = $value;
         }
         return $options;
     }
