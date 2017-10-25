@@ -47,6 +47,20 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         return $validator;
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'education_subject_id';
+        $searchableFields[] = 'code';
+    }
+
     private function setupFields(Entity $entity)
     {
         $this->field('code', ['entity' => $entity]);
@@ -76,6 +90,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $searchKey = $this->getSearchKey();
+
         // Add controls filter to index page
         list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme, $gradeOptions, $selectedGrade) = array_values($this->_getSelectOptions());
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -84,6 +100,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $query->where([$this->aliasField('education_grade_id') => $selectedGrade]);
 
         $extra['auto_contain_fields'] = ['EducationSubjects' => ['code']];
+
+        if (strlen($searchKey)) {
+            $extra['OR'] = [
+                $this->EducationSubjects->aliasField('code').' LIKE' => '%' . $searchKey . '%',
+                $this->EducationSubjects->aliasField('name').' LIKE' => '%' . $searchKey . '%',
+            ];
+        }
 
         //check for grades setup, if nothing is set, then hide the add button to prevent error
         $educationGradeCount = $this->EducationGrades->find('visible');

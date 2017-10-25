@@ -5,6 +5,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
 
@@ -23,6 +24,22 @@ class CounsellingsTable extends AppTable
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
         ]);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
+        return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'download' || $action == 'image') {
+            // check for the user permission to download here
+            $event->stopPropagation();
+            return true;
+        }
     }
 
     public function validationDefault(Validator $validator)
