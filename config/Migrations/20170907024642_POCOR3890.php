@@ -42,6 +42,7 @@ class POCOR3890 extends AbstractMigration
                         )
                         ORDER BY `order`
                         LIMIT 1');
+    }
 
     public function down()
     {
