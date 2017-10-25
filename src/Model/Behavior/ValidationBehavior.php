@@ -2167,7 +2167,6 @@ class ValidationBehavior extends Behavior
             $query = $InstitutionGrades
                     ->find()
                     ->where([
-                        // $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
                         $InstitutionGrades->aliasField('education_grade_id') => $data['new_education_grade_id'],
                         $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
                     ])
