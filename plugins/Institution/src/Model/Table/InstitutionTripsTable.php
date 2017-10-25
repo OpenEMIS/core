@@ -40,7 +40,43 @@ class InstitutionTripsTable extends AppTable
                     ]
                 ],
 				'provider' => 'table'
-			]);
+			])
+            ->add('days', 'ruleNotEmpty', [
+                'rule' => function ($value, $context) {
+                    if (empty($value)) {
+                        return false;
+                    } elseif (isset($value['_ids']) && empty($value['_ids'])) {
+                        return false;
+                    }
+
+                    return true;
+                }
+            ])
+            ->add('assigned_students', 'ruleMaxLimit', [
+                'rule' => function ($value, $context) {
+                    $model = $context['providers']['table'];
+                    if (isset($value['_ids']) && !empty($value['_ids'])) {
+                        $passengerCount = sizeof($value['_ids']);
+
+                        $data = array_key_exists('data', $context) ? $context['data'] : [];
+                        if (array_key_exists('institution_bus_id', $data) && !empty($data['institution_bus_id'])) {
+                            $busId = $data['institution_bus_id'];
+                            try {
+                                $InstitutionBuses = TableRegistry::get('Institution.InstitutionBuses');
+                                $busCapacity = $InstitutionBuses->get($busId)->capacity;
+
+                                if ($passengerCount > $busCapacity) {
+                                    return $model->getMessage('Institution.InstitutionTrips.assigned_students.checkMaxLimit', ['sprintf' => $busCapacity]);
+                                }
+                            } catch (RecordNotFoundException $e) {
+                                Log::write('debug', $e->getMessage());
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+            ]);
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -90,10 +126,7 @@ class InstitutionTripsTable extends AppTable
     {
         $query->contain([
             'InstitutionTripDays',
-            'InstitutionTripPassengers' => [
-                'Students',
-                'EducationGrades'
-            ]
+            'InstitutionTripPassengers'
         ]);
 
         return $query;
@@ -104,5 +137,20 @@ class InstitutionTripsTable extends AppTable
         $query->contain(['InstitutionTripDays', 'InstitutionTripPassengers']);
 
         return $query;
+    }
+
+    public function getDays()
+    {
+        $days = [
+            1 => __('Monday'),
+            2 => __('Tuesday'),
+            3 => __('Wednesday'),
+            4 => __('Thursday'),
+            5 => __('Friday'),
+            6 => __('Saturday'),
+            7 => __('Sunday')
+        ];
+
+        return $days;
     }
 }

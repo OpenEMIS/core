@@ -18,6 +18,7 @@ class InstitutionTripsController extends PageController
         $this->loadModel('Institution.InstitutionTransportProviders');
         $this->loadModel('Institution.InstitutionBuses');
         $this->loadModel('Institution.Students');
+        $this->loadModel('Student.StudentStatuses');
 
         $this->Page->loadElementsFromTable($this->InstitutionTrips);
     }
@@ -65,7 +66,10 @@ class InstitutionTripsController extends PageController
             ->setControlType('hidden')
             ->setValue($institutionId);
 
-        $repeatOptions = [1 => __('Yes'), 0 => __('No')];
+        $repeatOptions = [
+            1 => __('Yes'),
+            0 => __('No')
+        ];
         $page->get('repeat')
             ->setControlType('select')
             ->setOptions($repeatOptions, false);
@@ -133,7 +137,8 @@ class InstitutionTripsController extends PageController
             ->setAttributes('column', [
                 ['label' => __('OpenEMIS ID'), 'key' => 'openemis_no'],
                 ['label' => __('Student'), 'key' => 'student'],
-                ['label' => __('Education Grade'), 'key' => 'education_grade']
+                ['label' => __('Education Grade'), 'key' => 'education_grade'],
+                ['label' => __('Status'), 'key' => 'status']
             ])
             ->setAttributes('row', $assignedStudents);
 
@@ -144,6 +149,13 @@ class InstitutionTripsController extends PageController
     {
         parent::add();
         $this->addEdit();
+        $page = $this->Page;
+
+        if ($this->request->is(['get'])) {
+            // set default academic period to current year
+            $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+            $page->get('academic_period_id')->setValue($academicPeriodId);
+        }
     }
 
     public function edit($id)
@@ -158,7 +170,7 @@ class InstitutionTripsController extends PageController
 
         if ($page->is(['index', 'view'])) {
             if ($entity->has('institution_trip_days')) {
-                $dayOptions = $this->AcademicPeriods->getWorkingDaysOfWeek();
+                $dayOptions = $this->InstitutionTrips->getDays();
                 $list = [];
                 foreach ($entity->institution_trip_days as $obj) {
                     $list[$obj->day] = $dayOptions[$obj->day];
@@ -190,11 +202,12 @@ class InstitutionTripsController extends PageController
             ->setDependentOn('institution_transport_provider_id')
             ->setParams('InstitutionBuses');
 
-        $dayOptions = $this->AcademicPeriods->getWorkingDaysOfWeek();
+        $dayOptions = $this->InstitutionTrips->getDays();
         $page->addNew('days')
             ->setControlType('select')
             ->setAttributes('multiple', true)
             ->setAttributes('placeholder', __('Select Days'))
+            ->setRequired(true)
             ->setOptions($dayOptions, false);
 
         $this->setBusOptions($entity);
@@ -226,6 +239,7 @@ class InstitutionTripsController extends PageController
 
             $institutionId = $entity->institution_id;
             $academicPeriodId = $entity->academic_period_id;
+            $enrolledStatus = $this->StudentStatuses->getIdByCode('CURRENT');
 
             $studentOptions = $this->Students
                 ->find()
@@ -241,7 +255,8 @@ class InstitutionTripsController extends PageController
                 ->contain([$this->Students->Users->alias()])
                 ->where([
                     $this->Students->aliasField('institution_id') => $institutionId,
-                    $this->Students->aliasField('academic_period_id') => $academicPeriodId
+                    $this->Students->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->Students->aliasField('student_status_id') => $enrolledStatus
                 ])
                 ->group([
                     $this->Students->aliasField('student_id')
@@ -289,52 +304,88 @@ class InstitutionTripsController extends PageController
     {
         $page = $this->Page;
 
-        // show empty list when add and show bus option list filter by transport provider when edit
-        if ($entity->isNew()) {
-            $page->get('institution_bus_id')
-                ->setOptions(false);
+        if ($entity->has('institution_transport_provider_id')) {
+            $busOptions = $this->InstitutionBuses
+                ->find('optionList')
+                ->where([
+                    $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
+                ])
+                ->toArray();
         } else {
-            if ($entity->has('institution_transport_provider_id')) {
-                $busOptions = $this->InstitutionBuses
-                    ->find('optionList')
-                    ->where([
-                        $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
-                    ])
-                    ->toArray();
-            } else {
-                $busOptions = [];
-            }
-
-            $page->get('institution_bus_id')
-                ->setOptions($busOptions);
+            $busOptions = [];
         }
+
+        $page->get('institution_bus_id')
+            ->setOptions($busOptions);
     }
 
     private function setDaysValue(Entity $entity)
     {
-        $days = [];
+        if ($this->request->is(['get'])) {
+            $days = [];
 
-        if ($entity->has('institution_trip_days')) {
-            foreach ($entity->institution_trip_days as $obj) {
-                $obj->id = $obj->day;
-                $days[] = $obj;
+            if ($entity->has('institution_trip_days')) {
+                foreach ($entity->institution_trip_days as $obj) {
+                    $obj->id = $obj->day;
+                    $days[] = $obj;
+                }
             }
-        }
 
-        $entity->days = $days;
+            $entity->days = $days;
+        }
     }
 
     private function setAssignedStudentsValue(Entity $entity)
     {
-        $assignedStudents = [];
+        if ($this->request->is(['get'])) {
+            $assignedStudents = [];
+
+            if ($entity->has('institution_trip_passengers')) {
+                foreach ($entity->institution_trip_passengers as $obj) {
+                    $institutionStudentEntity = $this->Students
+                        ->find()
+                        ->select([
+                            $this->Students->aliasField('id')
+                        ])
+                        ->where([
+                            'student_id' => $obj->student_id,
+                            'education_grade_id' => $obj->education_grade_id,
+                            'academic_period_id' => $obj->academic_period_id,
+                            'institution_id' => $obj->institution_id
+                        ])
+                        ->first();
+
+                    if (!empty($institutionStudentEntity)) {
+                        $assignedStudents[] = $institutionStudentEntity;
+                    }
+                }
+            }
+
+            $entity->assigned_students = $assignedStudents;
+        }
+    }
+
+    private function getAssignedStudents(Entity $entity)
+    {
+        $students = [];
 
         if ($entity->has('institution_trip_passengers')) {
             foreach ($entity->institution_trip_passengers as $obj) {
                 $institutionStudentEntity = $this->Students
                     ->find()
                     ->select([
-                        $this->Students->aliasField('id')
+                        $this->Students->Users->aliasField('openemis_no'),
+                        $this->Students->Users->aliasField('first_name'),
+                        $this->Students->Users->aliasField('middle_name'),
+                        $this->Students->Users->aliasField('third_name'),
+                        $this->Students->Users->aliasField('last_name'),
+                        $this->Students->Users->aliasField('preferred_name'),
+                        $this->Students->EducationGrades->aliasField('code'),
+                        $this->Students->EducationGrades->aliasField('name'),
+                        $this->Students->EducationGrades->aliasField('education_programme_id'),
+                        $this->Students->StudentStatuses->aliasField('name')
                     ])
+                    ->contain(['Users', 'EducationGrades', 'StudentStatuses'])
                     ->where([
                         'student_id' => $obj->student_id,
                         'education_grade_id' => $obj->education_grade_id,
@@ -344,25 +395,13 @@ class InstitutionTripsController extends PageController
                     ->first();
 
                 if (!empty($institutionStudentEntity)) {
-                    $assignedStudents[] = $institutionStudentEntity;
+                    $students[] = [
+                        'openemis_no' => $institutionStudentEntity->Users->openemis_no,
+                        'student' => $institutionStudentEntity->Users->name,
+                        'education_grade' => $institutionStudentEntity->EducationGrades->name,
+                        'status' => $institutionStudentEntity->StudentStatuses->name
+                    ];
                 }
-            }
-        }
-
-        $entity->assigned_students = $assignedStudents;
-    }
-
-    private function getAssignedStudents(Entity $entity)
-    {
-        $students = [];
-
-        if ($entity->has('institution_trip_passengers')) {
-            foreach ($entity->institution_trip_passengers as $obj) {
-                $students[] = [
-                    'openemis_no' => $obj->student->openemis_no,
-                    'student' => $obj->student->name,
-                    'education_grade' => $obj->education_grade->name,
-                ];
             }
         }
 
