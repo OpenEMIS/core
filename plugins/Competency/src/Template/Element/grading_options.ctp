@@ -60,7 +60,7 @@
 									$trClass = '';
 								}
 						?>
-						<tr class="<?= $trClass ?>">
+						<tr>
 
 							<?php
 								// iterate each field in a row
