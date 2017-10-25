@@ -1,11 +1,11 @@
 <?php
 namespace Restful\Controller;
 
+use Cake\Core\Configure;
 use Cake\Log\Log;
 
 class RestfulController extends AppController
 {
-    private $bypassAuth = false; // setting this value to true will bypass authentication for debugging purposes
     private $restfulComponent = null;
     private $supportedRestful = [
         'v1' => 'v1',
@@ -21,13 +21,15 @@ class RestfulController extends AppController
         $componentName = 'Restful'. ucfirst($version);
         $this->loadComponent('Restful.' . $componentName);
         $this->loadComponent('RequestHandler');
+        $this->loadComponent('Restful.DownloadFile');
         $this->loadComponent('Auth', [
             'authorize' => 'Controller',
             'unauthorizedRedirect' => false
         ]);
         $this->restfulComponent = $this->{$componentName};
         $this->Auth->allow('token');
-        if ($this->bypassAuth) {
+        $bypassAuth = Configure::read('bypassAuth');
+        if ($bypassAuth) {
             $this->Auth->allow();
         }
     }
@@ -110,6 +112,17 @@ class RestfulController extends AppController
     public function delete()
     {
         $this->restfulComponent->delete();
+    }
+
+    public function download($id, $fileNameField, $fileContentField)
+    {
+        return $this->DownloadFile->download($id, $fileNameField, $fileContentField);
+    }
+
+    public function image($id, $fileNameField, $fileContentField)
+    {
+        $this->DownloadFile->config('base64Encode', true);
+        return $this->DownloadFile->download($id, $fileNameField, $fileContentField);
     }
 
     public function translate()

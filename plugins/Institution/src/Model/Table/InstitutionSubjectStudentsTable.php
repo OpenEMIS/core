@@ -51,19 +51,15 @@ class InstitutionSubjectStudentsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        $events['Model.InstitutionClassStudents.afterSave'] = 'institutionClassStudentsAfterSave';
+        $events['Model.InstitutionClassStudents.afterDelete'] = 'institutionClassStudentsAfterDelete';
         $events['Model.AssessmentResults.afterSave'] = 'assessmentResultsAfterSave';
         return $events;
     }
 
-    // public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-    // 	if ($entity->isNew()) {
-    // 		$entity->id = Text::uuid();
-    // 	}
-    // }
-
     public function studentsAfterSave(Event $event, $student)
     {
-        // saving of new students is handled by _setSubjectStudentData in InstitutionClassStudents
+        // saving of new subject students is handled by institutionClassStudentsAfterSave
         if (!$student->isNew()) {
             // to update student status in subject if student status in school has been changed
             $subjectStudents = $this->find()
@@ -82,6 +78,57 @@ class InstitutionSubjectStudentsTable extends AppTable
                     }
                 }
             }
+        }
+    }
+
+    public function institutionClassStudentsAfterSave(Event $event, Entity $student)
+    {
+        if ($student->isNew()) {
+            // to automatically add the student into class subjects when the student is added to a class
+            $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $studentEducationGradeId = $student->education_grade_id;
+            $classId = $student->institution_class_id;
+
+            $classSubjectsData = $ClassSubjects->find()
+                ->select([
+                    'education_subject_id' => 'InstitutionSubjects.education_subject_id',
+                    'education_grade_id' => 'InstitutionSubjects.education_grade_id',
+                    'institution_subject_id' => 'InstitutionSubjects.id'
+                ])
+                ->innerJoinWith('InstitutionSubjects')
+                ->where([$ClassSubjects->aliasField('institution_class_id') => $classId])
+                ->toArray();
+
+            $subjectStudent = $student->toArray();
+
+            foreach ($classSubjectsData as $classSubject) {
+                $isAutoAddSubject = $this->isAutoAddSubject($classSubject);
+                $subjectEducationGradeId = $classSubject['education_grade_id'];
+
+                // only add subjects that have auto_allocation flag set as true
+                if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
+                    $subjectStudent['education_subject_id'] = $classSubject['education_subject_id'];
+                    $subjectStudent['institution_subject_id'] = $classSubject['institution_subject_id'];
+
+                    $entity = $this->newEntity($subjectStudent);
+                    $this->save($entity);
+                }
+            }
+        }
+    }
+
+    public function institutionClassStudentsAfterDelete(Event $event, Entity $student)
+    {
+        $deleteSubjectStudent = $this->find()
+            ->where([
+                $this->aliasField('student_id') => $student->student_id,
+                $this->aliasField('institution_class_id') => $student->institution_class_id
+            ])
+            ->toArray();
+
+        // delete one by one so that afterDelete() will be triggered
+        foreach ($deleteSubjectStudent as $key => $value) {
+            $this->delete($value);
         }
     }
 
@@ -376,5 +423,22 @@ class InstitutionSubjectStudentsTable extends AppTable
                     'education_grade_id' => 'InstitutionClassGrades.education_grade_id'
                 ])
                 ->toArray();
+    }
+
+    private function isAutoAddSubject($subject)
+    {
+        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+        $educationGradeId = $subject['education_grade_id'];
+        $educationSubjectId = $subject['education_subject_id'];
+
+        $educationGradesSubjectsData = $EducationGradesSubjects->find()
+            ->where([
+                $EducationGradesSubjects->aliasField('education_grade_id') => $educationGradeId,
+                $EducationGradesSubjects->aliasField('education_subject_id') => $educationSubjectId
+            ])
+            ->first();
+        $autoAddSubject = $educationGradesSubjectsData['auto_allocation'];
+
+        return $autoAddSubject;
     }
 }
