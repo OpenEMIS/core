@@ -985,3 +985,17 @@ a,
 }
 
 /* End of fix for adding error border */
+
+/* Temp fix for core error border for POCOR-3783 */
+
+.table .error input, 
+.table .error .input-select-wrapper,
+.table .error textarea {
+    border-color: #CC5C5C !important;
+}
+
+.table div.input > label {
+    display: none !important;
+}
+
+/* End of temp fix for error border */
