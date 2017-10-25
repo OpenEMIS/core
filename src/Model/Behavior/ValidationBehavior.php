@@ -2095,6 +2095,44 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function validateAreaAdministrativeMainCountry($field, array $globalData)
+    {
+        //check at least one main country is set
+        if (array_key_exists('is_main_country', $globalData['data'])) {
+            if ($field == 0) { //if set as not main country
+                $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+                
+                $query = $AreaAdministratives->find()
+                        ->select([$AreaAdministratives->aliasField('id')])
+                        ->where([$AreaAdministratives->aliasField('parent_id').' IS NULL'])
+                        ->first();
+                $worldId = $query->id;
+
+                $conditions = [
+                    $AreaAdministratives->aliasField('parent_id') => $worldId,
+                    $AreaAdministratives->aliasField('is_main_country') => 1
+                ];
+                
+                if (!$globalData['newRecord']) { //for edit
+                    $conditions[$AreaAdministratives->aliasField('id <> ')] = $globalData['data']['id'];
+                }
+
+                $query = $AreaAdministratives
+                        ->find()
+                        ->where($conditions)
+                        ->count();
+                
+                if ($query > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+    }
+
     public static function checkStudentInEducationProgrammes($field, array $globalData)
     {
         $endDate = new DateTime($field);
