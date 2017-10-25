@@ -17,6 +17,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         parent::initialize($config);
 
+        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index'],
             'Staff' => ['index', 'add']
@@ -33,7 +34,24 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                 'rule' => ['checkPendingStaffTransferIn'],
                 'on' => 'create'
             ])
+            ->add('start_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'end_date', true]
+            ])
+            ->add('start_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'previous_end_date', true],
+                'on' => function ($context) {
+                    return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
+                }
+            ])
+            ->requirePresence(['institution_position_id', 'FTE', 'staff_type_id', 'start_date'])
             ->notEmpty(['institution_position_id', 'FTE', 'staff_type_id', 'start_date']);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        return $events;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -49,8 +67,12 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('previous_end_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
         $this->field('initiated_by', ['type' => 'hidden']);
+
+        $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('currently_assigned_to');
-        $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'previous_institution_id', 'institution_position_id', 'start_date']);
+        $this->field('previous_institution_id', ['sort' => ['field' => 'PreviousInstitutions.code']]);
+        $this->field('start_date', ['sort' => ['field' => 'start_date']]);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'previous_institution_id', 'start_date', 'institution_position_id']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -60,6 +82,25 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
         $query->find('InstitutionStaffTransferIn', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'Institutions' => ['code']];
+
+        // sort
+        $sortList = ['assignee_id', 'PreviousInstitutions.code', 'start_date'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
+        }
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'staff_id';
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
