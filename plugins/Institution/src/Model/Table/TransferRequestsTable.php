@@ -114,7 +114,6 @@ class TransferRequestsTable extends ControllerActionTable
 
         $this->field('student');
         $this->field('requested_date');
-
         $this->field('associated_records', ['type' => 'associated_records']);
 
         $entity = $this->newEntity();
@@ -139,7 +138,8 @@ class TransferRequestsTable extends ControllerActionTable
 
                 foreach ($dataBetweenDate as $feature => $count) {
                     $rowData = [];
-                    $rowData[] = __($feature);
+
+                    $rowData[] = __(Inflector::humanize(Inflector::underscore($feature)));
                     $rowData[] = __($count);
 
                     $tableCells[] = $rowData;

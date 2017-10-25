@@ -105,12 +105,43 @@ class TransferApprovalsTable extends ControllerActionTable
 
         $this->field('student');
         $this->field('requested_date');
-        $this->field('associated_records', ['type' => 'readonly']);
+        $this->field('associated_records', ['type' => 'associated_records']);
 
         $entity = $this->newEntity();
 
         $this->controller->set('data', $entity);
         return $entity;
+    }
+
+    public function onGetAssociatedRecordsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        $fieldKey = 'associated_records';
+
+        $dataBetweenDate = [];
+        $sessionKey = $this->registryAlias() . '.associatedData';
+
+        if ($this->Session->check($sessionKey)) {
+            $dataBetweenDate = $this->Session->read($sessionKey);
+
+            if (!empty($dataBetweenDate)) {
+                $tableHeaders =[__('Feature'), __('No of Records')];
+                $tableCells = [];
+
+                foreach ($dataBetweenDate as $feature => $count) {
+                    $rowData = [];
+
+                    $rowData[] = __(Inflector::humanize(Inflector::underscore($feature)));
+                    $rowData[] = __($count);
+
+                    $tableCells[] = $rowData;
+                }
+
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
+            }
+        }
+
+        return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);;
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -528,25 +559,6 @@ class TransferApprovalsTable extends ControllerActionTable
         $attr['type'] = 'readonly';
         $attr['value'] = $requestedDate->format('d-m-Y');
         $attr['attr']['value'] = $requestedDate->format('d-m-Y');
-
-        return $attr;
-    }
-
-    public function onUpdateFieldAssociatedRecords(Event $event, array $attr, $action, $request)
-    {
-        $dataBetweenDate = [];
-        switch ($action) {
-            case 'associated':
-                $sessionKey = $this->registryAlias() . '.associatedData';
-                if ($this->Session->check($sessionKey)) {
-                    $dataBetweenDate = $this->Session->read($sessionKey);
-                }
-                break;
-        }
-
-        $attr['type'] = 'element';
-        $attr['element'] = 'Institution.StudentTransfer/associatedRecords';
-        $attr['data'] = $dataBetweenDate;
 
         return $attr;
     }
