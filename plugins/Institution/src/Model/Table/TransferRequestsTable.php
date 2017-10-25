@@ -328,7 +328,7 @@ class TransferRequestsTable extends ControllerActionTable
                         ->all();
 
                     if (count($data)) {
-                        $dataBetweenDate [$model->alias()] = count($data);
+                        $dataBetweenDate[$model->alias()] = count($data);
                     }
                     break;
 
@@ -342,7 +342,7 @@ class TransferRequestsTable extends ControllerActionTable
                         ->all();
 
                     if (count($data)) {
-                        $dataBetweenDate [$model->alias()] = count($data);
+                        $dataBetweenDate[$model->alias()] = count($data);
                     }
                     break;
 
@@ -355,7 +355,7 @@ class TransferRequestsTable extends ControllerActionTable
                         ->all();
 
                     if (count($data)) {
-                        $dataBetweenDate [$model->alias()] = count($data);
+                        $dataBetweenDate[$model->alias()] = count($data);
                     }
                     break;
             }
