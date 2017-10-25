@@ -14,13 +14,30 @@ class CustomReportBehavior extends Behavior
 {
     private $Table = null;
 
-    public function buildQuery($jsonArray, array $params, $returnSql = false)
+    public function buildQuery($jsonArray, array $params, $byaccess = false, $returnSql = false)
     {
         $result = [];
         if (array_key_exists('model', $jsonArray)) {
             $model = $jsonArray['model'];
             $this->Table = TableRegistry::get($model);
             $query = $this->Table->find();
+
+            // rename to avoid duplicate finders
+            $this->Table->addBehavior('Report.InstitutionSecurity', [
+                'implementedFinders' => [
+                    'byReportAccess' => 'findByAccess',
+                ]
+            ]);
+
+            // find byAccess (not used for filters)
+            $userId = $params['user_id'];
+            $superAdmin = $params['super_admin'];
+            if ($byaccess) {
+                // don't implement super admin checking for now as not consistent with sql type
+                // if (!$superAdmin) {
+                    $query->find('byReportAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
+                // }
+            }
 
             $methods = ['join', 'contain', 'matching', 'select', 'find', 'where', 'whereExpression', 'group', 'having', 'order'];
             foreach ($methods as $method) {
@@ -212,7 +229,8 @@ class CustomReportBehavior extends Behavior
             $select = [];
 
             foreach($values as $field => $value) {
-                $select[$field] = $query->newExpr()->add($value);
+                // manually append backticks to column alias to cater for arabic text
+                $select['`'.$field.'`'] = $query->newExpr()->add($value);
             }
 
             $query->select($select);

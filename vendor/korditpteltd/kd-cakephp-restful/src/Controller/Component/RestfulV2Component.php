@@ -81,7 +81,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         $serialize = $this->serialize;
 
         if ($this->schema == true) {
-            $serialize['schema'] = $this->model->getSchema()->toArray();
+            $schema = $this->model->getSchema();
+            $serialize['schema'] = $schema->toArray();
+            if ($schema->hasFilters()) {
+                $serialize['filters'] = $schema->getFilters();
+            }
         }
 
         if (array_key_exists('_serialize', $controller->viewVars)) {
@@ -213,6 +217,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
         $controller = $this->controller;
         $extra = $this->extra;
+        $user = $controller->getAuthorizedUser();
+        $extra['user'] = $user;
         $serialize = $this->serialize;
         $table = $this->initTable($this->model);
         if ($table instanceof RestfulAppTable) {
@@ -417,7 +423,9 @@ class RestfulV2Component extends Component implements RestfulInterface
         $OR = [];
         foreach ($schema as $field) {
             $name = $field->name();
-            if ($name == 'id' || $field->controlType() == 'password') continue;
+            if ($name == 'id' || $field->controlType() == 'password') {
+                continue;
+            }
 
             // if the field is of a searchable type and it is part of the table schema
             if (in_array($field->type(), $types) && in_array($name, $columns)) {
@@ -509,6 +517,26 @@ class RestfulV2Component extends Component implements RestfulInterface
                 }
             }
             $extra['innerJoinWith'] = $innerJoinAssoc;
+        }
+    }
+
+    private function _leftJoinWith($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $leftJoinAssoc = [];
+
+            if (strpos($value, ',')) {
+                $leftJoinAssoc[] = $value;
+            } else {
+                $leftJoinAssoc = explode(',', $value);
+            }
+
+            if (!is_null($query)) {
+                foreach ($leftJoinAssoc as $assoc) {
+                    $query->leftJoinWith($assoc);
+                }
+            }
+            $extra['leftJoinWith'] = $leftJoinAssoc;
         }
     }
 
@@ -707,8 +735,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         // onBuildSchema will always be called to build the schema, but $this->schema will control if the schema information
         // should be included in the json response
         $event = $table->dispatchEvent('Restful.Model.onBuildSchema', [$this->extra], $this->controller);
-
-        if (array_key_exists('_flatten', $requestQueries) && $requestQueries['_flatten'] == 'true') {
+        if (array_key_exists('_flatten', $requestQueries) && $requestQueries['_flatten'] == true) {
             unset($this->request->query['_flatten']);
             $this->extra['flatten'] = true;
         }
@@ -740,7 +767,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
 
         // methods have to be executed in the correct sequence
-        $indexMethods = ['_search', '_fields', '_finder', '_contain', '_innerJoinWith', '_conditions', '_orWhere', '_group', '_order', '_limit', '_page'];
+        $indexMethods = ['_search', '_fields', '_finder', '_contain', '_innerJoinWith', '_leftJoinWith', '_conditions', '_orWhere', '_group', '_order', '_limit', '_page'];
         $viewMethods = ['_fields', '_finder', '_contain'];
 
         if ($action == 'index') {
