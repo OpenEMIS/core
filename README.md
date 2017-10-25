@@ -5,7 +5,7 @@ OpenEMIS Core is a sector wide Open Source Education Management Information Syst
 The following instructions will get you a copy of OpenEMIS Core, install, and setup the application accordingly.
 
 ### Pre-requisites
-![OS](https://img.shields.io/badge/OS-Linux-lightgrey.svg) ![WebServer](https://img.shields.io/badge/WebServer-Apache/NGINX-blue.svg) ![MySQL](https://img.shields.io/badge/MySQL->=5.7.0-orange.svg) ![PHP](https://img.shields.io/badge/PHP->=7.0-green.svg)
+![OS](https://img.shields.io/badge/OS-Linux-lightgrey.svg) ![WebServer](https://img.shields.io/badge/WebServer-Apache/NGINX-blue.svg) ![MySQL](https://img.shields.io/badge/MySQL->=5.7.0-orange.svg) ![PHP](https://img.shields.io/badge/PHP->=7.0-brightgreen.svg)
 
 ## Installation
 #### Sourcetree
