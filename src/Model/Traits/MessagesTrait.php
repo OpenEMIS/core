@@ -1208,6 +1208,11 @@ trait MessagesTrait
                     'ruleUnique' => 'This field has to be unique'
                 ]
             ],
+            'StaffTransferIn' => [
+                'start_date' => [
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Requested End Date'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [
