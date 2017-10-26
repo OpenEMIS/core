@@ -665,13 +665,13 @@ class InstitutionPositionsTable extends ControllerActionTable
             'key' => 'IdentityTypes.name',
             'field' => 'identity_type',
             'type' => 'string',
-            'label' => __('identity Type')
+            'label' => __('Identity Type')
         ];
         $newArray[] = [
             'key' => 'Users.identity_number',
             'field' => 'identity_number',
             'type' => 'string',
-            'label' => __('identity Number')
+            'label' => __('Identity Number')
         ];
         $newFields = array_merge($fields->getArrayCopy(), $newArray);
         $fields->exchangeArray($newFields);
