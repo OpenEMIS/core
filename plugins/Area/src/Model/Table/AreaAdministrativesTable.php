@@ -169,7 +169,6 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->find()
                 ->select([$this->aliasField('id')])
                 ->where([
-                    $this->aliasField('is_main_country') => true,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
                 ->hydrate(false)
