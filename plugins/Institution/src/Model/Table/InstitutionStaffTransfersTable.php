@@ -95,16 +95,14 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $incomingStaff['end_date'] = $entity->end_date;
             $incomingStaff['end_year'] = $entity->end_date->year;
         }
-        $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => false]);
+        $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
 
         if ($StaffTable->save($newEntity)) {
             // end previous institution staff record
             if (!empty($entity->institution_staff_id) && !empty($entity->previous_end_date)) {
-                $StaffTable->updateAll([
-                    'end_date' => $entity->previous_end_date,
-                    'end_year' => $entity->previous_end_date->year,
-                    'staff_status_id' => $StaffStatusesTable->getIdByCode('END_OF_ASSIGNMENT')
-                ], ['id' => $entity->institution_staff_id]);
+                $oldRecord = $StaffTable->get($entity->institution_staff_id);
+                $oldRecord->end_date = $entity->previous_end_date;
+                $StaffTable->save($oldRecord);
             }
         }
     }

@@ -335,12 +335,12 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         return $this->processStaffPositionsError($entity);
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         return $this->processStaffPositionsError($entity);
     }
