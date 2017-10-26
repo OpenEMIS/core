@@ -627,9 +627,11 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'staff_id' => 'InstitutionStaff.staff_id',
                 'fte' => 'InstitutionStaff.FTE',
                 'staff_status' => 'StaffStatuses.name',
+                'identity_type' => 'IdentityTypes.name',
+                'identity_number' => 'Users.identity_number'
             ])
             ->where([$this->aliasField('institution_id') => $institutionId])
-            ->leftJoinWith('InstitutionStaff.Users')
+            ->leftJoinWith('InstitutionStaff.Users.IdentityTypes')
             ->leftJoinWith('InstitutionStaff.StaffStatuses');
     }
 
@@ -658,6 +660,18 @@ class InstitutionPositionsTable extends ControllerActionTable
             'field' => 'staff_status',
             'type' => 'string',
             'label' => __('Status')
+        ];
+        $newArray[] = [
+            'key' => 'IdentityTypes.name',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+        $newArray[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
         ];
         $newFields = array_merge($fields->getArrayCopy(), $newArray);
         $fields->exchangeArray($newFields);
