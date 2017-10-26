@@ -450,7 +450,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_type_id');
         $this->field('institution_gender_id', ['type' => 'select']);
         $this->field('institution_network_connectivity_id', ['type' => 'select']);
-        $this->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => true]);
+        $this->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
 
         $this->field('information_section', ['type' => 'section', 'title' => __('Information')]);
