@@ -1204,7 +1204,9 @@ trait MessagesTrait
                     'ruleNotEmpty' => 'This field cannot be left empty'
                 ],
                 'assigned_students' => [
-                    'checkMaxLimit' => 'Total passengers should not be more than bus capacity %d'
+                    'checkMaxLimit' => 'Total passengers should not be more than bus capacity %d',
+                    'busNotFound' => 'Bus record not found',
+                    'busCapacityNotSet' => 'There is no capacity configured for the selected bus'
                 ]
             ],
         ],

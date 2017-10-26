@@ -61,15 +61,23 @@ class InstitutionTripsTable extends AppTable
                         $data = array_key_exists('data', $context) ? $context['data'] : [];
                         if (array_key_exists('institution_bus_id', $data) && !empty($data['institution_bus_id'])) {
                             $busId = $data['institution_bus_id'];
+
                             try {
                                 $InstitutionBuses = TableRegistry::get('Institution.InstitutionBuses');
-                                $busCapacity = $InstitutionBuses->get($busId)->capacity;
+                                $busEntity = $InstitutionBuses->get($busId);
 
-                                if ($passengerCount > $busCapacity) {
-                                    return $model->getMessage('Institution.InstitutionTrips.assigned_students.checkMaxLimit', ['sprintf' => $busCapacity]);
+                                if ($busEntity->has('capacity')) {
+                                    $busCapacity = $busEntity->capacity;
+
+                                    if ($passengerCount > $busCapacity) {
+                                        return $model->getMessage('Institution.InstitutionTrips.assigned_students.checkMaxLimit', ['sprintf' => $busCapacity]);
+                                    }
+                                } else {
+                                    return $model->getMessage('Institution.InstitutionTrips.assigned_students.busCapacityNotSet');
                                 }
                             } catch (RecordNotFoundException $e) {
                                 Log::write('debug', $e->getMessage());
+                                return $model->getMessage('Institution.InstitutionTrips.assigned_students.busNotFound');
                             }
                         }
                     }
