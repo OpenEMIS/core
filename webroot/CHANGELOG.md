@@ -1,3 +1,6 @@
+### [3.10.15] - 2017-10-27
+- Implemented export feature in Institution > Positions page
+
 ### [3.10.14] - 2017-10-23
 - Implemented Transport feature in Institution module
 
