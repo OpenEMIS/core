@@ -25,7 +25,8 @@ class StudentsTable extends AppTable
 
         $this->addBehavior('Excel', [
             'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
-            'pages' => false
+            'pages' => false,
+            'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.CustomFieldList', [
@@ -51,24 +52,80 @@ class StudentsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $query->where([$this->aliasField('is_student') => 1]);
+        $query
+            ->select([
+                'username' => 'Students.username',
+                'openemis_no' => 'Students.openemis_no',
+                'first_name' => 'Students.first_name',
+                'middle_name' => 'Students.middle_name',
+                'third_name' => 'Students.third_name',
+                'last_name' => 'Students.last_name',
+                'preferred_name' => 'Students.preferred_name',
+                'email' => 'Students.email',
+                'address' => 'Students.address',
+                'postal_code' => 'Students.postal_code',
+                'address_area' => 'AddressAreas.name',
+                'birthplace_area' => 'BirthplaceAreas.name',
+                'gender' => 'Genders.name',
+                'date_of_birth' => 'Students.date_of_birth',
+                'date_of_death' => 'Students.date_of_death',
+                'nationality_name' => 'MainNationalities.name',
+                'identity_type' => 'MainIdentityTypes.name',
+                'identity_number' => 'Students.identity_number',
+                'external_reference' => 'Students.external_reference',
+                'last_login' => 'Students.last_login',
+                'preferred_language' => 'Students.preferred_language'
+            ])
+            ->contain(['Genders', 'AddressAreas', 'BirthplaceAreas', 'MainNationalities', 'MainIdentityTypes'])
+            ->where([$this->aliasField('is_student') => 1]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-        $identity = $IdentityType->getDefaultEntity();
-
-        foreach ($fields as $key => $field) {
-            //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') {
+        foreach ($fields as $key => $field) { 
+            if ($field['field'] == 'identity_type_id') { 
                 $fields[$key] = [
-                    'key' => 'Students.identity_number',
-                    'field' => 'identity_number',
+                    'key' => 'MainIdentityTypes.name',
+                    'field' => 'identity_type',
                     'type' => 'string',
-                    'label' => __($identity->name)
+                    'label' => __('Main Identity Type')
                 ];
-                break;
+            }
+
+            if ($field['field'] == 'nationality_id') { 
+                $fields[$key] = [
+                    'key' => 'MainNationalities.name',
+                    'field' => 'nationality_name',
+                    'type' => 'string',
+                    'label' => __('Main Nationality')
+                ];
+            }
+
+            if ($field['field'] == 'address_area_id') { 
+                $fields[$key] = [
+                    'key' => 'AddressAreas.name',
+                    'field' => 'address_area',
+                    'type' => 'string',
+                    'label' => __('Address Area')
+                ];
+            }
+
+            if ($field['field'] == 'birthplace_area_id') { 
+                $fields[$key] = [
+                    'key' => 'BirthplaceAreas.name',
+                    'field' => 'birthplace_area',
+                    'type' => 'string',
+                    'label' => __('Birthplace Area')
+                ];
+            }
+
+            if ($field['field'] == 'gender_id') { 
+                $fields[$key] = [
+                    'key' => 'Genders.name',
+                    'field' => 'gender',
+                    'type' => 'string',
+                    'label' => __('Gender')
+                ];
             }
         }
     }
