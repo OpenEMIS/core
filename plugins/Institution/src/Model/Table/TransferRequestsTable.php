@@ -301,9 +301,8 @@ class TransferRequestsTable extends ControllerActionTable
     {
         $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
-        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
 
-        $relatedModels = [$StudentAbsences, $StudentBehaviours, $AssessmentItemResults];
+        $relatedModels = [$StudentAbsences, $StudentBehaviours];
 
         $studentId = $data[$alias]['student_id'];
         $institutionId = $data[$alias]['institution_id'];
@@ -322,6 +321,7 @@ class TransferRequestsTable extends ControllerActionTable
                     $data = $model->find()
                         ->where([
                             $model->aliasField('student_id') => $studentId,
+                            $model->aliasField('institution_id') => $institutionId,
                             $model->aliasField('start_date >=') => $dateRequested,
                             $model->aliasField('end_date <=') => $today
                         ])
@@ -336,21 +336,9 @@ class TransferRequestsTable extends ControllerActionTable
                     $data = $model->find()
                         ->where([
                             $model->aliasField('student_id') => $studentId,
+                            $model->aliasField('institution_id') => $institutionId,
                             $model->aliasField('date_of_behaviour >=') => $dateRequested,
                             $model->aliasField('date_of_behaviour <=') => $today
-                        ])
-                        ->all();
-
-                    if (count($data)) {
-                        $dataBetweenDate[$model->alias()] = count($data);
-                    }
-                    break;
-
-                case 'AssessmentItemResults':
-                    $data = $model->find()
-                        ->where([
-                            $model->aliasField('student_id') => $studentId,
-                            $model->aliasField('academic_period_id') => $academicPeriodId,
                         ])
                         ->all();
 
