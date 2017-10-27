@@ -139,16 +139,29 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->select([$this->aliasField('id')])
                 ->where([$this->aliasField('parent_id').' IS NULL'])
                 ->first();
+
+        $conditions = [$this->aliasField('parent_id').' IS NOT NULL'];
         if (isset($options['displayCountry']) && !$options['displayCountry']) {
             $authorisedAreaIds = $this
                 ->find()
-                ->select([$this->aliasField('id')])
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('lft'),
+                    $this->aliasField('rght')
+                ])
                 ->where([
                     $this->aliasField('is_main_country') => true,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
                 ->hydrate(false)
                 ->toArray();
+
+            foreach ($authorisedAreaIds as $area) {
+                $conditions[] = [
+                    $this->aliasField('lft').' >= ' => $area['lft'],
+                    $this->aliasField('rght').' <= ' => $area['rght']
+                ];
+            }
 
             $removeAreas = $this
                 ->find()
@@ -192,7 +205,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             ])
             ->hydrate(false)
             // Remove world record
-            ->where([$this->aliasField('parent_id').' IS NOT NULL'])
+            ->where($conditions)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
                 $results = $results->toArray();
                 $this->unsetEmptyArr($results, $authorisedAreaIds, $selected);
