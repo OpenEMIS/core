@@ -14,9 +14,12 @@ use Cake\Network\Request;
 use Cake\Core\Configure;
 use Firebase\JWT\JWT;
 use Restful\Controller\RestfulController as BaseController;
+use Page\Traits\EncodingTrait;
 
 class RestfulController extends BaseController
 {
+    use EncodingTrait;
+
     public function initialize()
     {
         parent::initialize();
@@ -93,5 +96,17 @@ class RestfulController extends BaseController
             $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
             $this->request->env('HTTP_X_CSRF_TOKEN', $token);
         }
+    }
+
+    public function image($id, $fileNameField, $fileContentField)
+    {
+        $id = $this->decode($id);
+        return parent::image($id, $fileNameField, $fileContentField);
+    }
+
+    public function download($id, $fileNameField, $fileContentField)
+    {
+        $id = $this->decode($id);
+        return parent::download($id, $fileNameField, $fileContentField);
     }
 }

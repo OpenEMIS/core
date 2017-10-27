@@ -11,6 +11,7 @@ class PageTab
     private $title;
     private $url;
     private $active;
+    private $attributes = [];
 
     public function __construct()
     {
@@ -52,12 +53,24 @@ class PageTab
         return $this->active;
     }
 
+    public function setAttributes($key, $value)
+    {
+        $this->attributes[$key] = $value;
+        return $this;
+    }
+
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
     public function toArray()
     {
         $array = [
             'title' => $this->getTitle(),
             'url' => $this->getUrl(),
-            'active' => $this->getActive()
+            'active' => $this->getActive(),
+            'attributes' => $this->getAttributes()
         ];
         return $array;
     }

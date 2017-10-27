@@ -13,7 +13,7 @@ class AcademicPeriodsFixture extends TestFixture
         [
             'id' => 1,
             'code' => 'All',
-            'name' => 'All Data Test',
+            'name' => 'All Data',
             'start_date' => '1900-01-01',
             'start_year' => '1900',
             'end_date' => '1900-12-31',
@@ -32,7 +32,6 @@ class AcademicPeriodsFixture extends TestFixture
             'created_user_id' => '1',
             'created' => '2015-01-01 00:00:00'
         ],
-        // testingId
         [
             'id' => 2,
             'code' => '2015',

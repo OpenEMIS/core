@@ -186,9 +186,13 @@ class WorkflowBehavior extends Behavior {
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
         if ($entity->isNew()) {
             $this->setStatusAsOpen($entity);
+        }
+        
+        if (!$entity->has('assignee_id')) {
             $this->autoAssignAssignee($entity);
         }
     }
@@ -231,17 +235,9 @@ class WorkflowBehavior extends Behavior {
 
         $model = $this->_table;
         if ($model->hasField('assignee_id')) {
-            if ($this->isCAv4()) {
-                $model->field('assignee_id', [
-                    'type' => 'string',
-                    'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
-                ]);
-            } else {
-                $model->ControllerAction->field('assignee_id', [
-                    'type' => 'string',
-                    'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
-                ]);
-            }
+            // directly modify type and visible to avoid additional trigger to onUpdateFieldAssigneeId event
+            $model->fields['assignee_id']['type'] = 'string';
+            $model->fields['assignee_id']['visible'] = ['index' => true, 'view' => true, 'add' => false, 'edit' => false];
         }
     }
 
@@ -266,7 +262,7 @@ class WorkflowBehavior extends Behavior {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('assignee_id')) {
+        if (!$entity->isNew() && $entity->dirty('assignee_id') && $entity->dirty('status_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
