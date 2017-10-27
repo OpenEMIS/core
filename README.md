@@ -1,26 +1,55 @@
-# CakePHP Application Skeleton
+# OpenEMIS Core (POCOR)
+OpenEMIS Core is a sector wide Open Source Education Management Information System (EMIS) that facilitates the collection, processing and management of education information. OpenEMIS Core is a customizable web application that supports the day-to-day activities involved in managing a sector wide education system.
 
-[![Build Status](https://img.shields.io/travis/cakephp/app/master.svg?style=flat-square)](https://travis-ci.org/cakephp/app)
-[![License](https://img.shields.io/packagist/l/cakephp/app.svg?style=flat-square)](https://packagist.org/packages/cakephp/app)
+## Getting Started
+The following instructions will get you a copy of OpenEMIS Core, install, and setup the application accordingly.
 
-A skeleton for creating applications with [CakePHP](http://cakephp.org) 3.x.
-
-The framework source code can be found here: [cakephp/cakephp](https://github.com/cakephp/cakephp).
+### Pre-requisites
+![OS](https://img.shields.io/badge/OS-Linux-lightgrey.svg) ![WebServer](https://img.shields.io/badge/WebServer-Apache/NGINX-blue.svg) ![MySQL](https://img.shields.io/badge/MySQL->=5.7.0-orange.svg) ![PHP](https://img.shields.io/badge/PHP->=7.0-brightgreen.svg)
 
 ## Installation
+#### Sourcetree
+* Clone the application's repository
+```
+New -> Clone from URL
+```
+* Fill in the details
+```
+Source URL : [username]@bitbucket.org:korditpteltd/pocor-openemis-core.git
+Destination Path : /your/working/path/here/
+Name : pocor-openemis-core (this is an example)
+```
+* Press Clone
 
-1. Download [Composer](http://getcomposer.org/doc/00-intro.md) or update `composer self-update`.
-2. Run `php composer.phar create-project --prefer-dist cakephp/app [app_name]`.
+#### Command Line Interface
+* Clone the application's respository
+```
+git clone [username]@bitbucket.org:korditpteltd/pocor-openemis-core.git
 
-If Composer is installed globally, run
-```bash
-composer create-project --prefer-dist cakephp/app [app_name]
 ```
 
-You should now be able to visit the path to where you installed the app and see
-the setup traffic lights.
-
 ## Configuration
-
-Read and edit `config/app.php` and setup the 'Datasources' and any other
-configuration relevant for your application.
+* Go to the application's config directory
+```
+cd config/
+```
+* Create a datasource.php from the default file
+```
+cp datasource.default.php datasource.php
+```
+* Update datasource.php with the database connection details
+```
+vi datasource.php
+```
+* Create app_extra.php from the default file
+```
+cp app_extra.default.php app_extra.php
+```
+* Generate a private key
+```
+openssl genrsa -out private.key 1024
+```
+* Generate a public key
+```
+openssl rsa -in private.key -pubout -out public.key
+```

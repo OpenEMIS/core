@@ -2068,6 +2068,13 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'Area' => [
+            'AreaAdministratives' => [
+                'is_main_country' => [
+                    'ruleValidateAreaAdministrativeMainCountry' => 'There must be at least one Main Country'
+                ]
+            ],
+        ],
     ];
 
 
