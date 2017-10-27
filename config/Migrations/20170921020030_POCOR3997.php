@@ -27,7 +27,7 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
-            ->addColumn('institution_id', 'integer', [
+            ->addColumn('new_institution_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
@@ -51,37 +51,49 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to security_users.id'
             ])
-            ->addColumn('institution_position_id', 'integer', [
+            ->addColumn('new_institution_position_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => true,
                 'comment' => 'links to institution_positions.id'
             ])
-            ->addColumn('staff_type_id', 'integer', [
+            ->addColumn('new_staff_type_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => true,
                 'comment' => 'links to staff_types.id'
             ])
-            ->addColumn('FTE', 'decimal', [
+            ->addColumn('new_FTE', 'decimal', [
                 'default' => null,
                 'precision' => 5,
                 'scale' => 2,
                 'null' => true
             ])
-            ->addColumn('start_date', 'date', [
+            ->addColumn('new_start_date', 'date', [
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('end_date', 'date', [
+            ->addColumn('new_end_date', 'date', [
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('institution_staff_id', 'integer', [
+            ->addColumn('previous_institution_staff_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => true,
                 'comment' => 'links to institution_staff.id'
+            ])
+            ->addColumn('previous_staff_type_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to staff_types.id'
+            ])
+            ->addColumn('previous_FTE', 'decimal', [
+                'default' => null,
+                'precision' => 5,
+                'scale' => 2,
+                'null' => true
             ])
             ->addColumn('previous_end_date', 'date', [
                 'default' => null,
@@ -116,13 +128,14 @@ class POCOR3997 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('staff_id')
+            ->addIndex('new_institution_id')
             ->addIndex('previous_institution_id')
-            ->addIndex('institution_id')
             ->addIndex('status_id')
             ->addIndex('assignee_id')
-            ->addIndex('institution_staff_id')
-            ->addIndex('institution_position_id')
-            ->addIndex('staff_type_id')
+            ->addIndex('new_institution_position_id')
+            ->addIndex('new_staff_type_id')
+            ->addIndex('previous_institution_staff_id')
+            ->addIndex('previous_staff_type_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
