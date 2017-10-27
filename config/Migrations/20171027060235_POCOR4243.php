@@ -6,6 +6,8 @@ class POCOR4243 extends AbstractMigration
 {
     public function up()
     {
+        $this->execute('ALTER TABLE `reports` CHANGE `query` `query` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+
         // ALTER TABLE `institution_classes` ADD `total_male_students` INT(11) NOT NULL DEFAULT 0 AFTER `class_number`, ADD INDEX (`total_male_students`);
         // ALTER TABLE `institution_classes` ADD `total_female_students` INT(11) NOT NULL DEFAULT 0 AFTER `total_male_students`, ADD INDEX (`total_female_students`);
 
