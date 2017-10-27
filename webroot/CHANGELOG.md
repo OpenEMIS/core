@@ -1,4 +1,5 @@
 ### [3.10.15] - 2017-10-27
+- User can now generate report of students from all programmes in Reports > Institution > Students
 - Implemented export feature in Institution > Positions page
 
 ### [3.10.14] - 2017-10-23
