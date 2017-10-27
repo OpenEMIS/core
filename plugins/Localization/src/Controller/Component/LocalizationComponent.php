@@ -184,6 +184,15 @@ class LocalizationComponent extends Component
             ->extract('modified')
             ->first();
 
+        // if the table is a new table and no modified records, will be sort by created and get the created date.
+        if (empty($lastModified)) {
+            $lastModified = $LocaleContentTranslations
+            ->find()
+            ->order([$LocaleContentTranslations->aliasField('created') => 'DESC'])
+            ->extract('created')
+            ->first();
+        }
+
         return $lastModified;
     }
 
