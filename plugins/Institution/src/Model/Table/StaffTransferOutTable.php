@@ -73,8 +73,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('comment', ['type' => 'hidden']);
         $this->field('initiated_by', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
+
+        $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('currently_assigned_to');
-        $this->field('institution_id', ['type' => 'integer']);
+        $this->field('institution_id', ['type' => 'integer', 'sort' => ['field' => 'Institutions.code']]);
+        $this->field('previous_end_date', ['sort' => ['field' => 'previous_end_date']]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'institution_id', 'previous_end_date']);
     }
 
@@ -85,6 +88,20 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
         $query->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'Institutions' => ['code']];
+
+        // sort
+        $sortList = ['assignee_id', 'Institutions.code', 'previous_end_date'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
