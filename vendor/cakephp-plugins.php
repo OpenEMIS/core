@@ -52,6 +52,7 @@ return [
         'System' => $baseDir . '/plugins/System/',
         'Textbook' => $baseDir . '/plugins/Textbook/',
         'Training' => $baseDir . '/plugins/Training/',
+        'Transport' => $baseDir . '/plugins/Transport/',
         'User' => $baseDir . '/plugins/User/',
         'Webhook' => $baseDir . '/vendor/korditpteltd/kd-cakephp-webhooks/',
         'Workflow' => $baseDir . '/plugins/Workflow/'

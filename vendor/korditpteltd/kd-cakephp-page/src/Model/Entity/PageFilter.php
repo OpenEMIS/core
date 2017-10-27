@@ -15,6 +15,7 @@ class PageFilter
     private $params;
     private $model;
     private $finder;
+    private $resetAll;
 
     public function __construct($name)
     {
@@ -77,7 +78,7 @@ class PageFilter
 
     public function setDependentOn($dependentOn)
     {
-        $this->dependentOn = $dependentOn;
+        $this->dependentOn = (array) $dependentOn;
         return $this;
     }
 
@@ -114,6 +115,17 @@ class PageFilter
         return $this;
     }
 
+    public function setResetAll(bool $reset)
+    {
+        $this->resetAll = $reset;
+        return $this;
+    }
+
+    public function getResetAll()
+    {
+        return $this->resetAll;
+    }
+
     public function getJSON()
     {
         // properties to be exposed to client browser
@@ -121,6 +133,7 @@ class PageFilter
             'options' => 'get',
             'value' => 'get',
             'dependentOn' => 'get',
+            'resetAll' => 'get',
             'params' => 'get',
             // 'model' => 'get',
             // 'finder' => 'get'
