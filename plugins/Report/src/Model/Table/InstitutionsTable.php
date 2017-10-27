@@ -373,7 +373,8 @@ class InstitutionsTable extends AppTable
 					->toArray();
 
 				$attr['type'] = 'select';
-				$attr['options'] = $programmeOptions;
+				$attr['select'] = false;
+				$attr['options'] = ['0' => __('All Programmes')] + $programmeOptions;
 			} else {
 				$attr['value'] = self::NO_FILTER;
 			}

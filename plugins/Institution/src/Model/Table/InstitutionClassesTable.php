@@ -216,6 +216,9 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('multigrade');
 
+        $this->field('total_male_students', ['visible' => false]);
+        $this->field('total_female_students', ['visible' => false]);
+
         $this->setFieldOrder([
             'name', 'staff_id', 'multigrade', 'male_students', 'female_students', 'total_students', 'subjects',
         ]);
