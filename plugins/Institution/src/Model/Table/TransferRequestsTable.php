@@ -346,11 +346,6 @@ class TransferRequestsTable extends ControllerActionTable
                         $dataBetweenDate [$model->alias()] = count($data);
                     }
                     break;
-
-                    if (count($data)) {
-                        $dataBetweenDate [$model->alias()] = count($data);
-                    }
-                    break;
             }
         }
 
