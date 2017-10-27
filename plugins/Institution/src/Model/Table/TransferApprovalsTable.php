@@ -538,9 +538,13 @@ class TransferApprovalsTable extends ControllerActionTable
     {
         if ($action == 'edit') {
             $endDate = $request->data[$this->alias()]['end_date'];
+
+            if ($this->request->is(['get'])) { // $requestedDate is Date object during HTTP GET
+                $endDate = $endDate->format('d-m-Y');
+            }
             $attr['type'] = 'readonly';
-            $attr['value'] = $endDate->format('d-m-Y');
-            $attr['attr']['value'] = $endDate->format('d-m-Y');
+            $attr['value'] = $endDate;
+            $attr['attr']['value'] = $endDate;
         }
 
         return $attr;
@@ -550,15 +554,18 @@ class TransferApprovalsTable extends ControllerActionTable
     {
         if ($action == 'edit') {
             $requestedDate = $request->data[$this->alias()]['requested_date'];
+            if ($this->request->is(['get'])) { // $requestedDate is Date object during HTTP GET
+                $requestedDate = $requestedDate->format('d-m-Y');
+            }
         } else if ($action == 'associated') {
             $sessionKey = $this->registryAlias() . '.associated';
             $entity = $this->Session->read($sessionKey);
-            $requestedDate = $entity->start_date;
+            $requestedDate = $entity->start_date->format('d-m-Y');
         }
 
         $attr['type'] = 'readonly';
-        $attr['value'] = $requestedDate->format('d-m-Y');
-        $attr['attr']['value'] = $requestedDate->format('d-m-Y');
+        $attr['value'] = $requestedDate;
+        $attr['attr']['value'] = $requestedDate;
 
         return $attr;
     }
