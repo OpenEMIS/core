@@ -40,6 +40,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('User.AdvancedNameSearch');
 
         $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
     }
@@ -60,6 +61,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $events['Workflow.checkIfCanAddButtons'] = 'checkIfCanAddButtons';
         $events['Workflow.onSetCustomAssigneeParams'] = 'onSetCustomAssigneeParams';
         $events['Workflow.setAutoAssignAssigneeFlag'] = 'setAutoAssignAssigneeFlag';
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
@@ -138,6 +141,11 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $currentInstitutionOwner = $this->getWorkflowStepsParamValue($action->workflow_step_id, 'institution_owner');
         $nextInstitutionOwner = $this->getWorkflowStepsParamValue($action->next_workflow_step_id, 'institution_owner');
         return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'staff_id';
     }
 
     public function onGetFTE(Event $event, Entity $entity)

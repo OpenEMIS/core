@@ -17,7 +17,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         parent::initialize($config);
 
-        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index'],
             'Staff' => ['index', 'add']
@@ -35,7 +34,10 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                 'on' => 'create'
             ])
             ->add('start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'end_date', true]
+                'rule' => ['compareDate', 'end_date', true],
+                'on' => function ($context) {
+                    return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
+                }
             ])
             ->add('start_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'previous_end_date', true],
@@ -45,13 +47,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             ])
             ->requirePresence(['institution_position_id', 'FTE', 'staff_type_id', 'start_date'])
             ->notEmpty(['institution_position_id', 'FTE', 'staff_type_id', 'start_date']);
-    }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
-        return $events;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -96,11 +91,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
             $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
         }
-    }
-
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
-    {
-        $searchableFields[] = 'staff_id';
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
