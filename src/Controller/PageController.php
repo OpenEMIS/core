@@ -3,6 +3,9 @@ namespace App\Controller;
 
 use Cake\Event\Event;
 use Page\Controller\PageController as BaseController;
+use Cake\ORM\Entity;
+use Page\Model\Entity\PageElement;
+use Cake\Routing\Router;
 
 class PageController extends BaseController
 {
@@ -29,6 +32,13 @@ class PageController extends BaseController
         $this->loadComponent('RenderDatetime');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.Page.onRenderBinary'] = 'onRenderBinary';
+        return $events;
+    }
+
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
@@ -49,5 +59,81 @@ class PageController extends BaseController
                 $this->viewBuilder()->template($viewFile);
             }
         }
+    }
+
+    public function onRenderBinary(Event $event, Entity $entity, PageElement $element)
+    {
+        $fileContentField = $element->getKey();
+        if (!$this->Page->isExcluded($fileContentField)) {
+            $attributes = $element->getAttributes();
+            $type = isset($attributes['type']) ? $attributes['type'] : 'binary';
+            $attributes = $element->getAttributes();
+            $fileNameField = $attributes['fileNameField'];
+            if ($type == 'image') {
+                switch ($this->request->getParam('action')) {
+                    case 'view':
+                        $fileName = $entity->{$fileNameField};
+                        $pathInfo = pathinfo($fileName);
+                        if ($entity->{$fileContentField}) {
+                            $file = stream_get_contents($entity->{$fileContentField});
+                            $entity->{$fileNameField} = 'data:'.$this->response->getMimeType($pathInfo['extension']).';base64,'. base64_encode($file);
+                            return $entity->{$fileNameField};
+                        }
+                        break;
+                    case 'index':
+                        $primaryKey = $entity->primaryKey;
+                        $source = $entity->source();
+                        if ($entity->{$fileContentField}) {
+                            return Router::url([
+                                'plugin' => null,
+                                '_method' => 'GET',
+                                'version' => 'v2',
+                                'model' => $source,
+                                'controller' => 'Restful',
+                                'action' => 'image',
+                                'id' => $primaryKey,
+                                'fileName' => $fileNameField,
+                                'fileContent' => $fileContentField,
+                                '_ext' => 'json'
+                            ], true);
+                        }
+                        break;
+                    default:
+                        $fileName = $entity->{$fileNameField};
+                        $pathInfo = pathinfo($fileName);
+                        if ($entity->{$fileContentField}) {
+                            $file = stream_get_contents($entity->{$fileContentField});
+                            $returnValue = [
+                                'extension' => $pathInfo['extension'],
+                                'filename' => $fileName,
+                                'src' => 'data:'.$this->response->getMimeType($pathInfo['extension']).';base64,'. base64_encode($file)
+                            ];
+                            return $returnValue;
+                        }
+                        break;
+                }
+            } else {
+
+                $primaryKey = $entity->primaryKey;
+                $source = $entity->source();
+                $fileName = $entity->{$fileNameField};
+                $element->setAttributes('file_name', $fileName);
+                if ($entity->{$fileContentField}) {
+                    return Router::url([
+                        'plugin' => null,
+                        '_method' => 'GET',
+                        'version' => 'v2',
+                        'model' => $source,
+                        'controller' => 'Restful',
+                        'action' => 'download',
+                        'id' => $primaryKey,
+                        'fileName' => $fileNameField,
+                        'fileContent' => $fileContentField,
+                        '_ext' => 'json'
+                    ], true);
+                }
+            }
+        }
+
     }
 }

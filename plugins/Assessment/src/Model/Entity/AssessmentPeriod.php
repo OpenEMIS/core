@@ -1,9 +1,11 @@
 <?php
 namespace Assessment\Model\Entity;
 
+use DateTimeInterface;
+
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
-use DateTimeInterface;
+use Cake\Log\Log;
 
 class AssessmentPeriod extends Entity
 {
@@ -11,21 +13,13 @@ class AssessmentPeriod extends Entity
 
     protected function _getEditable()
     {
-        $dateToday = date('Y-m-d');
-        $dateEnabled = $this->date_enabled;
-        $dateDisabled = $this->date_disabled;
+        $today = new Date();
+        $dateEnabled = $this->getOriginal('date_enabled');
+        $dateDisabled = $this->getOriginal('date_disabled');
 
         if ($dateEnabled instanceof DateTimeInterface && $dateDisabled instanceof DateTimeInterface) {
-            return ($dateToday >= $dateEnabled->format('Y-m-d') && $dateToday <= $dateDisabled->format('Y-m-d')) ? 1 : 0;
-        } else {
-            $today = new Date();
-            $dateEnabled = date('d/m/Y', strtotime($this->date_enabled));
-            $dateDisabled = date('d/m/Y', strtotime($this->date_disabled));
-
-            $dateEnabled = Date::createFromFormat("d/m/Y", $dateEnabled);
-            $dateDisabled = Date::createFromFormat("d/m/Y", $dateDisabled);
-
             return $today->between($dateEnabled, $dateDisabled);
         }
+        return false;
     }
 }

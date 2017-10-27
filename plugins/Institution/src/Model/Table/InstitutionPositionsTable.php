@@ -46,6 +46,10 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+
+        $this->addBehavior('Excel', [
+            'pages' => ['index']
+        ]);
     }
 
     public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -614,4 +618,72 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         return $query;
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $query
+            ->select([
+                'openemis_no' => 'Users.openemis_no',
+                'staff_id' => 'InstitutionStaff.staff_id',
+                'fte' => 'InstitutionStaff.FTE',
+                'staff_status' => 'StaffStatuses.name',
+            ])
+            ->where([$this->aliasField('institution_id') => $institutionId])
+            ->leftJoinWith('InstitutionStaff.Users')
+            ->leftJoinWith('InstitutionStaff.StaffStatuses');
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+        $newArray = [];
+        $newArray[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+        $newArray[] = [
+            'key' => 'InstitutionStaff.staff_id',
+            'field' => 'staff_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+        $newArray[] = [
+            'key' => 'InstitutionStaff.FTE',
+            'field' => 'fte',
+            'type' => 'string',
+            'label' => __('FTE')
+        ];
+        $newArray[] = [
+            'key' => 'StaffStatuses.name',
+            'field' => 'staff_status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+        $newFields = array_merge($fields->getArrayCopy(), $newArray);
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetIsHomeroom(Event $event, Entity $entity) 
+    {
+        return ($entity->is_homeroom) ? __('Yes') : __('No');
+    }
+
+    public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity) 
+    {
+        if ($entity->has('staff_position_title') && !empty($entity->staff_position_title)) {
+            $isTeaching = ($entity->staff_position_title->type) ? __('Teaching') : __('Non-Teaching');
+            return $entity->staff_position_title->name . ' - ' . $isTeaching;
+        }
+    }
+
+    public function onExcelGetStaffId(Event $event, Entity $entity) 
+    {
+        $UsersTable = TableRegistry::get('Security.Users');
+
+        if (!empty($entity->staff_id)) {
+            return $UsersTable->get($entity->staff_id)->name;
+        }
+    }
+
+    
 }
