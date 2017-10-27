@@ -306,7 +306,6 @@ class TransferRequestsTable extends ControllerActionTable
 
         $studentId = $data[$alias]['student_id'];
         $institutionId = $data[$alias]['institution_id'];
-        $previousInstitutionId = $data[$alias]['previous_institution_id'];
         $academicPeriodId = $data[$alias]['academic_period_id'];
         $dateRequested = new Date($data[$alias]['requested_date']);
         $today = new Date();
@@ -322,7 +321,7 @@ class TransferRequestsTable extends ControllerActionTable
                     $data = $model->find()
                         ->where([
                             $model->aliasField('student_id') => $studentId,
-                            $model->aliasField('institution_id') => $previousInstitutionId,
+                            $model->aliasField('institution_id') => $institutionId,
                             $model->aliasField('start_date >=') => $dateRequested,
                             $model->aliasField('end_date <=') => $today
                         ])
@@ -337,7 +336,7 @@ class TransferRequestsTable extends ControllerActionTable
                     $data = $model->find()
                         ->where([
                             $model->aliasField('student_id') => $studentId,
-                            $model->aliasField('institution_id') => $previousInstitutionId,
+                            $model->aliasField('institution_id') => $institutionId,
                             $model->aliasField('date_of_behaviour >=') => $dateRequested,
                             $model->aliasField('date_of_behaviour <=') => $today
                         ])
