@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\Network\Response;
 use Cake\Controller\Exception\MissingActionException;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
@@ -239,6 +240,8 @@ trait ControllerActionV4Trait {
 		if ($event->isStopped()) { return $event->result; }
 		if ($event->result instanceof Entity) {
 			$entity = $event->result;
+		} else if ($event->result instanceof Response) {
+			return $event->result;
 		} else if (is_null($event->result)) {
 			throw new MissingActionException([
                 'controller' => $controller->name . "Controller",

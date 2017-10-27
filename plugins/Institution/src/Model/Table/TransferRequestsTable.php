@@ -328,7 +328,7 @@ class TransferRequestsTable extends ControllerActionTable
                         ->all();
 
                     if (count($data)) {
-                        $dataBetweenDate [$model->alias()] = count($data);
+                        $dataBetweenDate[$model->alias()] = count($data);
                     }
                     break;
 
@@ -343,9 +343,25 @@ class TransferRequestsTable extends ControllerActionTable
                         ->all();
 
                     if (count($data)) {
-                        $dataBetweenDate [$model->alias()] = count($data);
+                        $dataBetweenDate[$model->alias()] = count($data);
                     }
                     break;
+<<<<<<< HEAD
+=======
+
+                case 'AssessmentItemResults':
+                    $data = $model->find()
+                        ->where([
+                            $model->aliasField('student_id') => $studentId,
+                            $model->aliasField('academic_period_id') => $academicPeriodId,
+                        ])
+                        ->all();
+
+                    if (count($data)) {
+                        $dataBetweenDate[$model->alias()] = count($data);
+                    }
+                    break;
+>>>>>>> 55985358a20ef53bdf902a2c2864c6b5281293cb
             }
         }
 
