@@ -2095,6 +2095,44 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function validateAreaAdministrativeMainCountry($field, array $globalData)
+    {
+        //check at least one main country is set
+        if (array_key_exists('is_main_country', $globalData['data'])) {
+            if ($field == 0) { //if set as not main country
+                $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+                
+                $query = $AreaAdministratives->find()
+                        ->select([$AreaAdministratives->aliasField('id')])
+                        ->where([$AreaAdministratives->aliasField('parent_id').' IS NULL'])
+                        ->first();
+                $worldId = $query->id;
+
+                $conditions = [
+                    $AreaAdministratives->aliasField('parent_id') => $worldId,
+                    $AreaAdministratives->aliasField('is_main_country') => 1
+                ];
+                
+                if (!$globalData['newRecord']) { //for edit
+                    $conditions[$AreaAdministratives->aliasField('id <> ')] = $globalData['data']['id'];
+                }
+
+                $query = $AreaAdministratives
+                        ->find()
+                        ->where($conditions)
+                        ->count();
+                
+                if ($query > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+    }
+
     public static function checkStudentInEducationProgrammes($field, array $globalData)
     {
         $endDate = new DateTime($field);
@@ -2130,19 +2168,20 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $registryAlias = $model->registryAlias();
         $data = $globalData['data'];
+        $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
 
         if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                     ->find()
                     ->where([
                         $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
-                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                        $InstitutionGrades->aliasField('institution_id') => $previousInstitutionId
                     ])
                     ->first();
 
-            $programmeEndDate = $query->end_date;
+            if (!empty($query->end_date)) {
+                $programmeEndDate = $query->end_date;
 
-            if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $today = new DateTime('now');
                 $validationErrorMsg = '';
@@ -2162,18 +2201,18 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
 
-        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+        if (array_key_exists('new_education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                     ->find()
                     ->where([
-                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $InstitutionGrades->aliasField('education_grade_id') => $data['new_education_grade_id'],
                         $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
                     ])
                     ->first();
 
-            $programmeEndDate = $query->end_date;
+            if (!empty($query->end_date)) {
+                $programmeEndDate = $query->end_date;
 
-            if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $studentStartDate = new DateTime($data['start_date']);
 
@@ -2182,6 +2221,7 @@ class ValidationBehavior extends Behavior
                 }
             }
         }
+
         return true;
     }
 
