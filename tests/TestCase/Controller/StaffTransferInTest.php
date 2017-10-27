@@ -201,7 +201,7 @@ class StaffTransferInTest extends AppTestCase
         $this->assertFalse($exists);
     }
 
-    public function testFullTransferWorkflow()
+    public function testApproveFullTransferWorkflow()
     {
         // Open to Pending Approval
         $data = [
@@ -218,7 +218,7 @@ class StaffTransferInTest extends AppTestCase
                 'assignee_required' => '1',
                 'comment_required' => '0',
                 'assignee_id' => '6',
-                'comment' => 'null'
+                'comment' => null
             ]
         ];
         $this->postData("/Institution/Institutions/$this->encodedInstitutionId/StaffTransferIn/processWorkflow", $data);
@@ -239,7 +239,7 @@ class StaffTransferInTest extends AppTestCase
                 'assignee_required' => '1',
                 'comment_required' => '0',
                 'assignee_id' => '-1', // set assignee to -1 to autoAssign to role in other school
-                'comment' => 'null'
+                'comment' => null
             ]
         ];
         $this->postData("/Institution/Institutions/$this->encodedInstitutionId/StaffTransferIn/processWorkflow", $data);
@@ -268,7 +268,7 @@ class StaffTransferInTest extends AppTestCase
                 'assignee_required' => '1',
                 'comment_required' => '0',
                 'assignee_id' => '-1',
-                'comment' => 'null'
+                'comment' => null
             ],
             'submit' => 'save'
         ];
@@ -299,7 +299,7 @@ class StaffTransferInTest extends AppTestCase
                 'assignee_required' => '1',
                 'comment_required' => '0',
                 'assignee_id' => '6',
-                'comment' => 'null'
+                'comment' => null
             ]
         ];
         $this->postData("/Institution/Institutions/$this->encodedInstitutionId/StaffTransferIn/processWorkflow", $data);
@@ -311,7 +311,7 @@ class StaffTransferInTest extends AppTestCase
         $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
         $transferEntity = $this->InstitutionStaffTransfers->get($this->primaryKey);
 
-        $oldStaffRecord = $StaffTable->get($entity->institution_staff_id);
+        $oldStaffRecord = $StaffTable->get($transferEntity->institution_staff_id);
         $this->assertEquals($oldStaffRecord->staff_status_id, $StaffStatusesTable->getIdByCode('END_OF_ASSIGNMENT'));
         $this->assertEquals($oldStaffRecord->end_date->format('Y-m-d'), $transferEntity->previous_end_date->format('Y-m-d'));
         $this->assertEquals($oldStaffRecord->end_year, $transferEntity->previous_end_date->year);
@@ -347,6 +347,153 @@ class StaffTransferInTest extends AppTestCase
             ])
             ->first();
         $this->assertEquals(true, (!empty($newSecurityGroupUsersRecord)));
+    }
+
+    public function testRejectWorkflow()
+    {
+        // Open to Pending Approval
+        $data = [
+            'WorkflowTransitions' => [
+                'prev_workflow_step_id' => '43',
+                'prev_workflow_step_name' => 'Open',
+                'workflow_step_id' => '44',
+                'workflow_step_name' => 'Pending Approval',
+                'workflow_action_id' => '7',
+                'workflow_action_name' => 'Submit For Approval',
+                'workflow_action_description' => '',
+                'workflow_model_id' => '13',
+                'model_reference' => '1',
+                'assignee_required' => '1',
+                'comment_required' => '0',
+                'assignee_id' => '6',
+                'comment' => null
+            ]
+        ];
+        $this->postData("/Institution/Institutions/$this->encodedInstitutionId/StaffTransferIn/processWorkflow", $data);
+        $this->checkSuccessfulWorkflowTransition($data, false);
+
+        // Pending Approval to Pending Approval From Outgoing Institution
+        $data = [
+            'WorkflowTransitions' => [
+                'prev_workflow_step_id' => '44',
+                'prev_workflow_step_name' => 'Pending Approval',
+                'workflow_step_id' => '45',
+                'workflow_step_name' => 'Pending Approval From Outgoing Institution',
+                'workflow_action_id' => '8',
+                'workflow_action_name' => 'Approve',
+                'workflow_action_description' => '',
+                'workflow_model_id' => '13',
+                'model_reference' => '1',
+                'assignee_required' => '1',
+                'comment_required' => '0',
+                'assignee_id' => '-1', // set assignee to -1 to autoAssign to role in other school
+                'comment' => null
+            ]
+        ];
+        $this->postData("/Institution/Institutions/$this->encodedInstitutionId/StaffTransferIn/processWorkflow", $data);
+        $this->checkSuccessfulWorkflowTransition($data, true);
+
+        // Pending Approval From Outgoing Institution to Pending Staff Assignment
+        $data = [
+            'StaffTransferOut' => [
+                'id' => $this->primaryKey,
+                'staff_positions' => '4',
+                'previous_end_date' => '2017-05-31',
+                'comment' => 'test validate approve',
+                'validate_approve' => '1',
+                'transfer_type' => '1'
+            ],
+            'WorkflowTransitions' => [
+                'prev_workflow_step_id' => '45',
+                'prev_workflow_step_name' => 'Pending Approval From Outgoing Institution',
+                'workflow_step_id' => '46',
+                'workflow_step_name' => 'Pending Staff Assignment',
+                'workflow_action_id' => '10',
+                'workflow_action_name' => 'Approve',
+                'workflow_action_description' => '',
+                'workflow_model_id' => '13',
+                'model_reference' => '1',
+                'assignee_required' => '1',
+                'comment_required' => '0',
+                'assignee_id' => '-1',
+                'comment' => null
+            ],
+            'submit' => 'save'
+        ];
+
+        $id = $this->paramsEncode(['id' => $this->primaryKey]);
+        $url = "/Institution/Institutions/$this->encodedInstitutionId/StaffTransferOut/edit/$id";
+        $this->postData($url, $data);
+
+        $entity = $this->InstitutionStaffTransfers->get($data['StaffTransferOut']['id']);
+        $this->assertEquals($data['StaffTransferOut']['staff_positions'], $entity->institution_staff_id);
+        $this->assertEquals($data['StaffTransferOut']['previous_end_date'], $entity->previous_end_date->format('Y-m-d'));
+        $this->assertEquals($data['StaffTransferOut']['comment'], $entity->comment);
+
+        $this->checkSuccessfulWorkflowTransition($data, true);
+
+        // Pending Approval to Rejected
+        $data = [
+            'WorkflowTransitions' => [
+                'prev_workflow_step_id' => '46',
+                'prev_workflow_step_name' => 'Pending Staff Assignment',
+                'workflow_step_id' => '48',
+                'workflow_step_name' => 'Rejected',
+                'workflow_action_id' => '13',
+                'workflow_action_name' => 'Reject',
+                'workflow_action_description' => '',
+                'workflow_model_id' => '13',
+                'model_reference' => '1',
+                'assignee_required' => '1',
+                'comment_required' => '1',
+                'assignee_id' => '6',
+                'comment' => 'Test'
+            ]
+        ];
+        $this->postData("/Institution/Institutions/$this->encodedInstitutionId/StaffTransferIn/processWorkflow", $data);
+        $this->checkSuccessfulWorkflowTransition($data, false);
+
+        // check staff not transferred
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+        $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+        $transferEntity = $this->InstitutionStaffTransfers->get($this->primaryKey);
+
+        $oldStaffRecord = $StaffTable->get($transferEntity->institution_staff_id);
+        $this->assertEquals($oldStaffRecord->staff_status_id, $StaffStatusesTable->getIdByCode('ASSIGNED'));
+        $this->assertEquals($oldStaffRecord->end_date, null);
+        $this->assertEquals($oldStaffRecord->end_year, null);
+
+        $oldSecurityGroupUsersRecord = $SecurityGroupUsersTable->find()
+            ->where([
+                $SecurityGroupUsersTable->aliasField('security_group_id') => '2',
+                $SecurityGroupUsersTable->aliasField('security_user_id') => '3',
+            ])
+            ->first();
+        $this->assertEquals(true, (!empty($oldSecurityGroupUsersRecord)));
+
+        // check new record not added
+        $newStaffRecord = $StaffTable->find()
+            ->where([
+                $StaffTable->aliasField('start_date') => $transferEntity->start_date->format('Y-m-d'),
+                $StaffTable->aliasField('start_year') => $transferEntity->start_date->year,
+                $StaffTable->aliasField('staff_id') => $transferEntity->staff_id,
+                $StaffTable->aliasField('staff_type_id') => $transferEntity->staff_type_id,
+                $StaffTable->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED'),
+                $StaffTable->aliasField('institution_id') => $transferEntity->institution_id,
+                $StaffTable->aliasField('institution_position_id') => $transferEntity->institution_position_id,
+                $StaffTable->aliasField('FTE') => $transferEntity->FTE
+            ])
+            ->first();
+        $this->assertEquals(true, (empty($newStaffRecord)));
+
+        $newSecurityGroupUsersRecord = $SecurityGroupUsersTable->find()
+            ->where([
+                $SecurityGroupUsersTable->aliasField('security_group_id') => '1',
+                $SecurityGroupUsersTable->aliasField('security_user_id') => '3',
+            ])
+            ->first();
+        $this->assertEquals(true, (empty($newSecurityGroupUsersRecord)));
     }
 
     private function checkSuccessfulWorkflowTransition($data, $autoAssign = false)
