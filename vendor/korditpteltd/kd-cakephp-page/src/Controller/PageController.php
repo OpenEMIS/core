@@ -5,6 +5,7 @@ use ArrayObject;
 use Exception;
 
 use Cake\Event\Event;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Response;
 use Cake\Network\Exception\NotFoundException;
@@ -13,6 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 use Page\Model\Entity\PageStatus;
+use Page\Model\Entity\PageElement;
 use App\Controller\AppController;
 
 class PageController extends AppController
@@ -27,6 +29,12 @@ class PageController extends AppController
         $this->loadComponent('Page.Alert');
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
+
+        $this->Auth->allow(['onchange']);
+
+        if ($this->{$this->name} instanceof Table) {
+            $this->Page->loadElementsFromTable($this->{$this->name});
+        }
     }
 
     public function beforeFilter(Event $event)
@@ -35,15 +43,15 @@ class PageController extends AppController
         if (in_array($action, ['index', 'add', 'edit', 'delete'])) {
             $this->Page->exclude($this->excludedFields);
         }
+        if (!$this->Page->isActionAllowed($action) && $action != 'onchange') {
+            $this->Page->throwMissingActionException();
+        }
     }
 
     public function index()
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
         $requestQueries = $request->query;
 
         $showData = !array_key_exists('data', $requestQueries);
@@ -116,9 +124,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($page->hasMainTable()) {
             $table = $page->getMainTable();
@@ -131,8 +136,10 @@ class PageController extends AppController
                 $pageStatus = $page->getStatus();
 
                 try {
-                    $entity = $table->newEntity($request->data);
-                    $result = $table->save($entity);
+                    $queryOptions = $page->getQueryOptions();
+                    $patchOption = $queryOptions['user'];
+                    $entity = $table->newEntity($request->data, $patchOption);
+                    $result = $table->save($entity, $patchOption);
 
                     if ($page->isDebugMode()) {
                         pr($request->data);
@@ -143,6 +150,11 @@ class PageController extends AppController
                         $response = $page->redirect(['action' => 'index']);
                     } else {
                         Log::write('debug', $entity->errors());
+
+                        if ($entity->errors()) {
+                            $page->setVar('error', $entity->errors());
+                        }
+
                         $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
                             ->setType('error')
                             ->setMessage('The record is not added due to errors encountered.');
@@ -160,6 +172,7 @@ class PageController extends AppController
                     $page->setAlert($pageStatus->getMessage(), 'error');
                 }
             }
+            $page->attachPrimaryKey($table, $entity);
             $page->setVar('data', $entity);
 
             if (!is_null($response)) {
@@ -172,9 +185,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($request->is(['get', 'ajax']) && $page->hasMainTable()) {
             $primaryKeyValue = $page->decode($id);
@@ -203,9 +213,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($page->hasMainTable()) {
             $primaryKeyValue = $page->decode($id);
@@ -223,14 +230,14 @@ class PageController extends AppController
                 if ($table->hasFinder('Edit')) {
                     $queryOptions->offsetSet('finder', 'Edit');
                 }
-
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
                 $page->attachPrimaryKey($table, $entity);
 
                 if ($request->is(['post', 'put', 'patch'])) {
                     try {
-                        $entity = $table->patchEntity($entity, $request->data, []);
-                        $result = $table->save($entity);
+                        $patchOption = ['user' => $queryOptions['user']];
+                        $entity = $table->patchEntity($entity, $request->data, $patchOption);
+                        $result = $table->save($entity, $patchOption);
 
                         if ($result) {
                             $pageStatus->setMessage('The record has been updated successfully.');
@@ -238,6 +245,10 @@ class PageController extends AppController
                             $response = $page->redirect(['action' => 'view']);
                         } else {
                             Log::write('debug', $entity->errors());
+                            if ($entity->errors()) {
+                                $page->setVar('error', $entity->errors());
+                            }
+
                             $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
                                 ->setType('error')
                                 ->setMessage('The record is not updated due to errors encountered.');
@@ -278,9 +289,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
         $extra = new ArrayObject();
         $entity = null;
         $pageStatus = $page->getStatus();
@@ -300,25 +308,39 @@ class PageController extends AppController
 
                 return $response;
             }
+            $queryOptions = $page->getQueryOptions();
 
             if ($request->is(['get'])) {
                 $page->autoContains($table);
-                $queryOptions = $page->getQueryOptions();
-
                 if ($table->hasFinder('Delete')) {
                     $queryOptions->offsetSet('finder', 'Delete');
                 }
 
                 $entity = $table->get($primaryKeyValue, $queryOptions->getArrayCopy());
             } elseif ($request->is(['delete'])) {
+                $patchOption = ['user' => $queryOptions['user']];
                 $entity = $table->get($primaryKeyValue);
-                $table->delete($entity);
-                $pageStatus->setMessage('The record has been deleted successfully.');
-
-                $page->setAlert($pageStatus->getMessage());
-                $response = $page->redirect(['action' => 'index'], 'QUERY');
-
-                return $response;
+                $table->delete($entity, $patchOption);
+                $errors = $entity->errors();
+                if ($errors) {
+                    $errorFieldKeys = array_keys($errors);
+                    $pageStatus->setCode(PageStatus::VALIDATION_ERROR)
+                        ->setError(true)
+                        ->setType('error');
+                    if (in_array('associated_records', $errorFieldKeys)) {
+                        $pageStatus->setMessage($entity->errors('associated_records')['restrictDelete']);
+                    } else {
+                        $pageStatus->setMessage('The record is not deleted due to errors encountered.');
+                    }
+                    $page->setVar('errors', $errors);
+                    $page->setAlert($pageStatus->getMessage(), 'error');
+                } else {
+                    $pageStatus->setMessage('The record has been deleted successfully.');
+                    $page->setAlert($pageStatus->getMessage());
+                    $response = $page->redirect(['action' => 'index'], 'QUERY');
+                    $page->setVar('data', $entity);
+                    return $response;
+                }
             }
 
             $page->attachPrimaryKey($table, $entity);
@@ -349,7 +371,7 @@ class PageController extends AppController
 
                         $query = $assocTable->find()->where($conditions);
                         $count = $query->count();
-                        $title = $assoc->name();
+                        $title = Inflector::humanize(Inflector::underscore($assoc->name()));
 
                         $isAssociated = true;
                         // if ($extra->offsetExists('excludedModels')) {
@@ -358,7 +380,7 @@ class PageController extends AppController
                         //     }
                         // }
                         if ($isAssociated) {
-                            $cells[] = [$title, $count];
+                            $cells[] = ['feature' => $title, 'record' => $count];
                         }
                     }
                 }
@@ -368,6 +390,10 @@ class PageController extends AppController
             $elements = $page->getElements();
             foreach ($elements as $element) {
                 $type = $element->getControlType();
+                if ($type == 'select') {
+                    $element->setControlType('string');
+                    $type = 'string';
+                }
                 if (in_array($type, $displayTypes)) {
                     $element->setDisabled(true);
                 } else {
@@ -378,9 +404,9 @@ class PageController extends AppController
             if (!empty($cells)) {
                 $page->addNew('associated_records')
                     ->setControlType('table')
-                    ->set('headers', [__('Feature'), __('No of records')])
-                    ->set('cells', $cells)
-                    ;
+                    ->addColumn('feature', ['label' => __('Features')])
+                    ->addColumn('record', ['label' => __('Records')])
+                    ->addRows($cells);
             }
 
             $page->setVar('data', $entity);
@@ -391,9 +417,6 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        if (!$page->isActionAllowed(__FUNCTION__)) {
-            $page->throwMissingActionException();
-        }
 
         if ($page->hasMainTable()) {
             $table = $page->getMainTable();

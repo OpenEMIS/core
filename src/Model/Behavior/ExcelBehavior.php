@@ -34,6 +34,7 @@ class ExcelBehavior extends Behavior
         'excludes' => [],
         'limit' => 300,
         'pages' => [],
+        'autoFields' => true,
         'orientation' => 'landscape', // or portrait
         'sheet_limit' =>  1000000 // 1 mil rows and header row
     ];

@@ -41,6 +41,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
         $this->belongsTo('TrainingProviders', ['className' => 'Training.TrainingProviders', 'foreignKey' => 'training_provider_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
+        $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         // revert back the association for Trainers to hasMany to handle saving of External Trainers
         $this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('TrainingApplications', ['className' => 'Training.TrainingApplications', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -60,6 +61,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+        $this->addBehavior('Area.Areapicker');
     }
 
     public function validationDefault(Validator $validator)
@@ -85,6 +87,25 @@ class TrainingSessionsTable extends ControllerActionTable
         $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
         $this->field('end_date', ['visible' => $visible]);
         $this->field('comment', ['visible' => $visible]);
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $userId = $this->Session->read('Auth.User.id');
+        
+        if (!$this->AccessControl->isAdmin()) {
+            if ($entity->created_user_id != $userId) {
+                if (!$this->AccessControl->check(['Trainings', 'Sessions', 'edit'])) {
+                    unset($buttons['edit']);
+                }
+
+                if (!$this->AccessControl->check(['Trainings', 'Sessions', 'delete'])) {
+                    unset($buttons['delete']);
+                }
+            }
+        }
+        return $buttons;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -622,7 +643,7 @@ class TrainingSessionsTable extends ControllerActionTable
     {
         $fieldOrder = [
             'training_course_id', 'training_provider_id',
-            'code', 'name', 'start_date', 'end_date', 'comment',
+            'code', 'name', 'start_date', 'end_date', 'area_id', 'comment',
             'trainers'
         ];
 
@@ -632,6 +653,12 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->field('training_provider_id', [
             'type' => 'select',
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
+        $this->field('area_id', [
+            'type' => 'areapicker',
+            'source_model' => 'Area.Areas',
+            'displayCountry' => false,
+            'entity' => $entity
         ]);
         $this->field('trainers', [
             'type' => 'custom_trainers',

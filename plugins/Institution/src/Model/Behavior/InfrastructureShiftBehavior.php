@@ -29,6 +29,7 @@ class InfrastructureShiftBehavior extends Behavior
         $events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';
         $events['ControllerAction.Model.edit.beforeAction'] = 'editBeforeAction';
         $events['ControllerAction.Model.delete.beforeAction'] = 'deleteBeforeAction';
+        $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         return $events;
     }
 
@@ -102,6 +103,16 @@ class InfrastructureShiftBehavior extends Behavior
             $messageKey = $session->read($sessionKey);
             $model->Alert->warning($messageKey);
             $session->delete($sessionKey);
+        }
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($this->isOccupier) {
+            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+            unset($toolbarButtonsArray['edit']);
+            unset($toolbarButtonsArray['remove']);
+            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         }
     }
 
