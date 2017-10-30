@@ -46,6 +46,9 @@ class InstitutionBusesController extends PageController
         $page->get('institution_transport_provider_id')
             ->setLabel('Provider');
 
+        $page->get('transport_status_id')
+            ->setLabel('Status');
+
         // set institution_id
         $page->get('institution_id')
             ->setControlType('hidden')
@@ -74,22 +77,12 @@ class InstitutionBusesController extends PageController
             ->setOptions($transportProviderOptions);
         // end Providers
 
-        // Bus Types
-        $busTypes = $this->BusTypes
-            ->find('optionList', ['defaultOption' => false])
-            ->toArray();
-
-        $busTypeOptions = [null => __('All Bus Types')] + $busTypes;
-        $page->addFilter('bus_type_id')
-            ->setOptions($busTypeOptions);
-        // end Bus Types
-
         // Transport Statuses
         $transportStatuses = $this->TransportStatuses
             ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
-        $transportStatusOptions = [null => __('All Transport Statuses')] + $transportStatuses;
+        $transportStatusOptions = [null => __('All Statuses')] + $transportStatuses;
         $page->addFilter('transport_status_id')
             ->setOptions($transportStatusOptions);
         // end Transport Statuses
@@ -106,6 +99,7 @@ class InstitutionBusesController extends PageController
         $page = $this->Page;
 
         $page->addNew('transport_features')
+            ->setLabel('Features')
             ->setControlType('select')
             ->setAttributes('multiple', true);
 
@@ -144,9 +138,10 @@ class InstitutionBusesController extends PageController
             ->toArray();
 
         $page->addNew('transport_features')
+            ->setLabel('Features')
             ->setControlType('select')
             ->setAttributes('multiple', true)
-            ->setAttributes('placeholder', __('Select Transport Features'))
+            ->setAttributes('placeholder', __('Select Features'))
             ->setOptions($transportFeatureOptions, false);
 
         $this->reorderFields();
