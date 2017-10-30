@@ -1341,7 +1341,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $classId = $options['institution_class_id'];
         $staffId = $options['staff_id'];
 
-        $today = Date::now();
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $ReportCardSubjects = TableRegistry::get('ReportCards.ReportCardSubjects');
@@ -1357,20 +1356,7 @@ class InstitutionClassesTable extends ControllerActionTable
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('id') => $classId,
-                'ReportCardSubjects.report_card_id' => $reportCardId,
-                'OR' => [
-                    [
-                        'SubjectStaff.staff_id' => $staffId,
-                        'OR' => [
-                            'SubjectStaff.end_date IS NULL',
-                            'SubjectStaff.end_date >= ' => $today->format('Y-m-d')
-                        ]
-                    ],
-                    [
-                        $this->aliasField('secondary_staff_id') => $staffId
-                    ]
-                ]
-            ])
-            ;
+                'ReportCardSubjects.report_card_id' => $reportCardId
+            ]);
     }
 }
