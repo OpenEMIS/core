@@ -175,7 +175,7 @@ class StaffUserTable extends ControllerActionTable
                 'on' => 'create'
             ])
             ->add('staff_assignment', 'ruleTransferRequestExists', [
-                'rule' => ['checkPendingStaffTransferIn'],
+                'rule' => ['checkPendingStaffTransfer'],
                 'on' => 'create'
             ])
             ->add('staff_assignment', 'ruleCheckStaffAssignment', [

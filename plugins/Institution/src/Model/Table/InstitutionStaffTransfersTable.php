@@ -153,10 +153,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $searchableFields[] = 'staff_id';
     }
 
-    public function onGetFTE(Event $event, Entity $entity)
+    public function onGetNewFTE(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('FTE')) {
+        if ($entity->has('new_FTE')) {
             $fte = $entity->new_FTE;
             $value = $this->fteOptions["$fte"];
         }

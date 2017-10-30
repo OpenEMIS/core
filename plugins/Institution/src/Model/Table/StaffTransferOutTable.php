@@ -153,7 +153,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     private function setupFields(Entity $entity)
     {
-        $this->field('existing_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
+        $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('staff_id', ['entity' => $entity]);
         $this->field('transfer_type', ['type' => 'select', 'options' => $this->transferTypeOptions, 'onChangeReload' => true]);
         $this->field('previous_institution_id', ['entity' => $entity]);
@@ -402,8 +402,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 $this->Users->aliasField('third_name'),
                 $this->Users->aliasField('last_name'),
                 $this->Users->aliasField('preferred_name'),
-                $this->Institutions->aliasField('code'),
-                $this->Institutions->aliasField('name'),
+                $this->NewInstitutions->aliasField('code'),
+                $this->NewInstitutions->aliasField('name'),
                 $this->PreviousInstitutions->aliasField('code'),
                 $this->PreviousInstitutions->aliasField('name'),
                 $this->CreatedUser->aliasField('openemis_no'),

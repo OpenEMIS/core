@@ -171,7 +171,7 @@ class StaffTable extends ControllerActionTable
                 'on' => 'create'
             ])
             ->add('staff_assignment', 'ruleTransferRequestExists', [
-                'rule' => ['checkPendingStaffTransferIn'],
+                'rule' => ['checkPendingStaffTransfer'],
                 'on' => 'create'
             ])
             ->add('staff_assignment', 'ruleCheckStaffAssignment', [
@@ -914,16 +914,16 @@ class StaffTable extends ControllerActionTable
         $extra['excludedModels'] = [$this->StaffPositionProfiles->alias()];
 
         // staff transfer out
-        $InstitutionStaffTransfer = TableRegistry::get('Institution.InstitutionStaffTransfers');
-        $doneStatus = $InstitutionStaffTransfer::DONE;
+        $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $doneStatus = $InstitutionStaffTransfers::DONE;
 
-        $transferOutRecordsCount = $InstitutionStaffTransfer->find()
+        $transferOutRecordsCount = $InstitutionStaffTransfers->find()
             ->matching('Statuses', function ($q) use ($doneStatus) {
                 return $q->where(['category <> ' => $doneStatus]);
             })
             ->where([
-                $InstitutionStaffTransfer->aliasField('staff_id') => $entity->staff_id,
-                $InstitutionStaffTransfer->aliasField('previous_institution_id') => $entity->institution_id
+                $InstitutionStaffTransfers->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionStaffTransfers->aliasField('previous_institution_id') => $entity->institution_id
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
