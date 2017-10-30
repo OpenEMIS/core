@@ -60,7 +60,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'student_id';
     }
 
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
