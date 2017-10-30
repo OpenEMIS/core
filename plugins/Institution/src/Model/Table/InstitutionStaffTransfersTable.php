@@ -121,9 +121,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        if ($institutionOwner == self::INCOMING && $entity->new_institution_id == $currentInstitutionId) {
+        if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
             $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
-        } else if ($institutionOwner == self::OUTGOING && $entity->previous_institution_id == $currentInstitutionId) {
+        } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
             $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
         }
         return $canAddButtons;
@@ -151,6 +151,36 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'staff_id';
+    }
+
+    // for index
+    public function onGetStatusId(Event $event, Entity $entity)
+    {
+        $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
+        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+
+        $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
+
+        if ($belongsToCurrentInstitution) {
+            return '<span class="status highlight">' . $entity->status->name . '</span>';
+        } else {
+            return '<span class="status past">' . $entity->status->name . '</span>';
+        }
+    }
+
+    // for view
+    public function onGetWorkflowStatus(Event $event, Entity $entity)
+    {
+        $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
+        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+
+        $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
+
+        if ($belongsToCurrentInstitution) {
+            return '<span class="status highlight">' . $entity->workflow_status . '</span>';
+        } else {
+            return '<span class="status past">' . $entity->workflow_status . '</span>';
+        }
     }
 
     public function onGetNewFTE(Event $event, Entity $entity)
