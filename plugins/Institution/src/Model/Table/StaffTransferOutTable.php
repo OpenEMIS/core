@@ -16,6 +16,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     // Transfer Type
     const FULL_TRANSFER = 1;
     const PARTIAL_TRANSFER = 2;
+    const NO_CHANGE = 3;
 
     private $transferTypeOptions = [];
 
@@ -29,7 +30,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
         $this->transferTypeOptions = [
             self::FULL_TRANSFER => 'Full Transfer',
-            self::PARTIAL_TRANSFER => 'Partial Transfer'
+            self::PARTIAL_TRANSFER => 'Partial Transfer',
+            self::NO_CHANGE => 'No Change'
         ];
     }
 
@@ -38,11 +40,13 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $validator = parent::validationDefault($validator);
         return $validator
             ->add('staff_id', 'ruleTransferRequestExists', [
-                'rule' => ['checkPendingStaffTransferIn'],
+                'rule' => ['checkPendingStaffTransfer'],
                 'on' => 'create'
             ])
+            ->requirePresence('transfer_type')
             ->notEmpty('transfer_type')
-            ->notEmpty('institution_id', null, 'create');
+            ->requirePresence('new_institution_id', 'create')
+            ->notEmpty('new_institution_id');
     }
 
     public function validationFullTransfer(Validator $validator)
@@ -56,10 +60,10 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_staff_id', ['type' => 'hidden']);
-        $this->field('FTE', ['type' => 'hidden']);
-        $this->field('staff_type_id', ['type' => 'hidden']);
-        $this->field('institution_position_id', ['type' => 'hidden']);
+        $this->field('previous_institution_staff_id', ['type' => 'hidden']);
+        $this->field('new_FTE', ['type' => 'hidden']);
+        $this->field('new_staff_type_id', ['type' => 'hidden']);
+        $this->field('new_institution_position_id', ['type' => 'hidden']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -68,17 +72,16 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             unset($extra['toolbarButtons']['add']);
         }
 
-        $this->field('start_date', ['type' => 'hidden']);
+        $this->field('new_start_date', ['type' => 'hidden']);
+        $this->field('new_end_date', ['type' => 'hidden']);
         $this->field('previous_institution_id', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
         $this->field('initiated_by', ['type' => 'hidden']);
-        $this->field('end_date', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
-        $this->field('currently_assigned_to');
-        $this->field('institution_id', ['type' => 'integer', 'sort' => ['field' => 'Institutions.code']]);
+        $this->field('new_institution_id', ['type' => 'integer', 'sort' => ['field' => 'NewInstitutions.code']]);
         $this->field('previous_end_date', ['sort' => ['field' => 'previous_end_date']]);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'institution_id', 'previous_end_date']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'new_institution_id', 'previous_end_date']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -87,10 +90,10 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
 
         $query->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId]);
-        $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'Institutions' => ['code']];
+        $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'NewInstitutions' => ['code']];
 
         // sort
-        $sortList = ['assignee_id', 'Institutions.code', 'previous_end_date'];
+        $sortList = ['assignee_id', 'NewInstitutions.code', 'previous_end_date'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -106,12 +109,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('start_date', ['type' => 'hidden']);
+        $this->field('new_start_date', ['type' => 'hidden']);
         $this->field('previous_institution_id', ['type' => 'hidden']);
-        $this->field('end_date', ['type' => 'hidden']);
-        $this->field('currently_assigned_to');
-        $this->field('institution_id', ['type' => 'integer']);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'currently_assigned_to', 'staff_id', 'institution_id', 'previous_end_date', 'comment', 'initiated_by']);
+        $this->field('new_end_date', ['type' => 'hidden']);
+        $this->field('new_institution_id', ['type' => 'integer']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'new_institution_id', 'previous_end_date', 'comment', 'initiated_by']);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -131,9 +133,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if (!empty($entity->institution_staff_id) && !empty($entity->previous_end_date)) {
+        if (!empty($entity->previous_institution_staff_id) && !empty($entity->previous_end_date)) {
             $this->request->data[$this->alias()]['transfer_type'] = self::FULL_TRANSFER;
-            $this->request->data[$this->alias()]['staff_positions'] = $entity->institution_staff_id;
+            $this->request->data[$this->alias()]['staff_positions'] = $entity->previous_institution_staff_id;
         } else {
             $this->request->data[$this->alias()]['transfer_type'] = self::PARTIAL_TRANSFER;
         }
@@ -141,7 +143,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Users', 'Institutions', 'PreviousInstitutions']);
+        $query->contain(['Users', 'NewInstitutions', 'PreviousInstitutions']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -156,17 +158,17 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('transfer_type', ['type' => 'select', 'options' => $this->transferTypeOptions, 'onChangeReload' => true]);
         $this->field('previous_institution_id', ['entity' => $entity]);
         $this->field('staff_positions', ['type' => 'staff_positions', 'entity' => $entity]);
-        $this->field('previous_end_date', ['type' => 'date']);
+        $this->field('previous_end_date');
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
-        $this->field('institution_id', ['entity' => $entity]);
-        $this->field('start_date', ['entity' => $entity]);
+        $this->field('new_institution_id', ['entity' => $entity]);
+        $this->field('new_start_date', ['entity' => $entity]);
 
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
         $this->field('comment');
 
         $this->field('initiated_by', ['type' => 'hidden']);
-        $this->field('end_date', ['type' => 'hidden', 'entity' => $entity]);
+        $this->field('new_end_date', ['type' => 'hidden', 'entity' => $entity]);
     }
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
@@ -271,18 +273,18 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
 
             if ($action == 'add') {
                 // using institution_staff entity
-                $options = $this->Institutions->find('list', [
+                $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'code_name'
                     ])
-                    ->where([$this->Institutions->aliasField('id <>') => $entity->institution_id])
+                    ->where([$this->NewInstitutions->aliasField('id <>') => $entity->institution_id])
                     ->toArray();
 
                 $attr['type'] = 'chosenSelect';
@@ -292,35 +294,35 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             } else {
                 // using institution_staff_transfer entity
                 $attr['type'] = 'readonly';
-                $attr['value'] = $entity->institution_id;
-                $attr['attr']['value'] = $entity->institution->code_name;
+                $attr['value'] = $entity->new_institution_id;
+                $attr['attr']['value'] = $entity->new_institution->code_name;
             }
             return $attr;
         }
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
             $type = 'hidden';
 
-            if ($action == 'edit' && !empty($entity->start_date)) {
+            if ($action == 'edit' && !empty($entity->new_start_date)) {
                 $type = 'readonly';
-                $attr['value'] = $entity->start_date->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($entity->start_date);
+                $attr['value'] = $entity->new_start_date->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($entity->new_start_date);
             }
             $attr['type'] = $type;
             return $attr;
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewEndDate(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
-            if (!empty($entity->end_date)) {
-                $attr['value'] = $entity->end_date->format('Y-m-d');
+            if (!empty($entity->new_end_date)) {
+                $attr['value'] = $entity->new_end_date->format('Y-m-d');
             }
             return $attr;
         }
@@ -337,17 +339,19 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
-            $transferType = $data->offsetGet('transfer_type');
+            if ($data->offsetExists('staff_positions')) {
+                $transferType = $data->offsetGet('transfer_type');
 
-            if ($transferType == self::FULL_TRANSFER) {
-                $options['validate'] = 'fullTransfer';
-                if ($data->offsetExists('staff_positions')) {
-                    $institutionStaffId = $data->offsetGet('staff_positions');
-                    $data->offsetSet('institution_staff_id', $institutionStaffId);
+                if ($transferType == self::FULL_TRANSFER) {
+                    $options['validate'] = 'fullTransfer';
+                    if ($data->offsetExists('staff_positions')) {
+                        $institutionStaffId = $data->offsetGet('staff_positions');
+                        $data->offsetSet('previous_institution_staff_id', $institutionStaffId);
+                    }
+                } else if ($transferType == self::PARTIAL_TRANSFER) {
+                    $data->offsetSet('previous_institution_staff_id', NULL);
+                    $data->offsetSet('previous_end_date', NULL);
                 }
-            } else if ($transferType == self::PARTIAL_TRANSFER) {
-                $data->offsetSet('institution_staff_id', NULL);
-                $data->offsetSet('previous_end_date', NULL);
             }
         }
     }
@@ -387,7 +391,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
-                $this->aliasField('institution_id'),
+                $this->aliasField('new_institution_id'),
                 $this->aliasField('previous_institution_id'),
                 $this->aliasField('modified'),
                 $this->aliasField('created'),
@@ -409,7 +413,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
             ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
@@ -438,7 +442,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
-                    $row['request_title'] = sprintf(__('%s to %s'), $row->user->name_with_id, $row->institution->code_name);
+                    $row['request_title'] = sprintf(__('%s to %s'), $row->user->name_with_id, $row->new_institution->code_name);
                     $row['institution'] = $row->previous_institution->code_name;
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;

@@ -28,14 +28,19 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $this->table('institution_staff_transfers');
         parent::initialize($config);
+
+        // Mandatory data
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('NewInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'new_institution_id']);
         $this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_id']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
-        $this->belongsTo('Staff', ['className' => 'Institution.Staff', 'foreignKey' => 'institution_staff_id']);
-        $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
-        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'staff_type_id']);
+        // New institution data
+        $this->belongsTo('NewPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'new_institution_position_id']);
+        $this->belongsTo('NewStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'new_staff_type_id']);
+        // Previous institution data
+        $this->belongsTo('PreviousInstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'previous_institution_staff_id']);
+        $this->belongsTo('PreviousStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'previous_staff_type_id']);
 
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
@@ -85,25 +90,25 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $entity = $this->get($id);
 
         $incomingStaff = [
-            'FTE' => $entity->FTE,
-            'start_date' => $entity->start_date,
-            'start_year' => $entity->start_date->year,
+            'FTE' => $entity->new_FTE,
+            'start_date' => $entity->new_start_date,
+            'start_year' => $entity->new_start_date->year,
             'staff_id' => $entity->staff_id,
-            'staff_type_id' => $entity->staff_type_id,
+            'staff_type_id' => $entity->new_staff_type_id,
             'staff_status_id' => $StaffStatusesTable->getIdByCode('ASSIGNED'),
-            'institution_id' => $entity->institution_id,
-            'institution_position_id' => $entity->institution_position_id
+            'institution_id' => $entity->new_institution_id,
+            'institution_position_id' => $entity->new_institution_position_id
         ];
-        if (!empty($entity->end_date)) {
-            $incomingStaff['end_date'] = $entity->end_date;
-            $incomingStaff['end_year'] = $entity->end_date->year;
+        if (!empty($entity->new_end_date)) {
+            $incomingStaff['end_date'] = $entity->new_end_date;
+            $incomingStaff['end_year'] = $entity->new_end_date->year;
         }
         $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
 
         if ($StaffTable->save($newEntity)) {
             // end previous institution staff record
-            if (!empty($entity->institution_staff_id) && !empty($entity->previous_end_date)) {
-                $oldRecord = $StaffTable->get($entity->institution_staff_id);
+            if (!empty($entity->previous_institution_staff_id) && !empty($entity->previous_end_date)) {
+                $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
                 $oldRecord->end_date = $entity->previous_end_date;
                 $StaffTable->save($oldRecord);
             }
@@ -116,10 +121,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        if ($institutionOwner == self::INCOMING && $entity->institution_id == $currentInstitutionId) {
-            $canAddButtons = $this->Institutions->isActive($entity->institution_id);
+        if ($institutionOwner == self::INCOMING && $entity->new_institution_id == $currentInstitutionId) {
+            $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
         } else if ($institutionOwner == self::OUTGOING && $entity->previous_institution_id == $currentInstitutionId) {
-            $canAddButtons = $this->Institutions->isActive($entity->previous_institution_id);
+            $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
         }
         return $canAddButtons;
     }
@@ -129,7 +134,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
 
         if ($institutionOwner == self::INCOMING) {
-            $params['institution_id'] = $entity->institution_id;
+            $params['institution_id'] = $entity->new_institution_id;
         } else if ($institutionOwner == self::OUTGOING) {
             $params['institution_id'] = $entity->previous_institution_id;
         }
@@ -152,23 +157,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $value = '';
         if ($entity->has('FTE')) {
-            $fte = $entity->FTE;
+            $fte = $entity->new_FTE;
             $value = $this->fteOptions["$fte"];
-        }
-        return $value;
-    }
-
-    public function onGetCurrentlyAssignedTo(Event $event, Entity $entity)
-    {
-        $value = '';
-
-        if ($entity->has('status')) {
-            $institutionOwner = $this->getWorkflowStepsParamValue($entity->status->id, 'institution_owner');
-            if ($institutionOwner == self::INCOMING && $entity->has('institution')) {
-                $value = $entity->institution->code_name;
-            } else if ($institutionOwner == self::OUTGOING && $entity->has('previous_institution')) {
-                $value = $entity->previous_institution->code_name;
-            }
         }
         return $value;
     }
@@ -176,8 +166,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function onGetInitiatedBy(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->initiated_by == self::INCOMING && $entity->has('institution')) {
-            $value = $entity->institution->code_name;
+        if ($entity->initiated_by == self::INCOMING && $entity->has('new_institution')) {
+            $value = $entity->new_institution->code_name;
 
         } else if ($entity->initiated_by == self::OUTGOING && $entity->has('previous_institution')) {
             $value = $entity->previous_institution->code_name;
@@ -194,11 +184,11 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetNewInstitutionId(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('institution')) {
-            $value = $entity->institution->code_name;
+        if ($entity->has('new_institution')) {
+            $value = $entity->new_institution->code_name;
         }
         return $value;
     }
@@ -216,7 +206,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                     'WorkflowStepsParams.value' => $incomingInstitution
                 ]);
             })
-            ->where([$this->aliasField('institution_id') => $institutionId]);
+            ->where([$this->aliasField('new_institution_id') => $institutionId]);
 
         if ($pending) {
             $query->where(['Statuses.category <> ' => self::DONE]);
