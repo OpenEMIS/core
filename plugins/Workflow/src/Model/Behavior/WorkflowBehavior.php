@@ -15,8 +15,11 @@ use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
 use Cake\Routing\Router;
+use App\Model\Traits\OptionsTrait;
 
 class WorkflowBehavior extends Behavior {
+    use OptionsTrait;
+
     // Workflow Steps - category
     const TO_DO = 1;
     const IN_PROGRESS = 2;
@@ -321,7 +324,6 @@ class WorkflowBehavior extends Behavior {
             $filter = $workflowModel->filter;
             $model = $workflowModel->model;
 
-            $workflowId = 0;
             if (!empty($filter)) {
                 // Wofkflow Filter Options
                 $filterOptions = TableRegistry::get($filter)->getList()->toArray();
@@ -340,36 +342,13 @@ class WorkflowBehavior extends Behavior {
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
-
-                // Set Workflow Id
-                if ($selectedFilter != -1) {
-                    $workflow = $this->getWorkflow($registryAlias, null, $selectedFilter);
-                    if (!empty($workflow)) {
-                        $workflowId = $workflow->id;
-                    }
-                }
-                // End
-            } else {
-                $workflow = $this->getWorkflow($registryAlias, null, $selectedFilter);
-                if (!empty($workflow)) {
-                    $workflowId = $workflow->id;
-                }
             }
 
-            // Status Options
-            if (!empty($workflowId)) {
-                $statusQuery = $this->WorkflowSteps
-                    ->find('list')
-                    ->where([
-                        $this->WorkflowSteps->aliasField('workflow_id') => $workflowId
-                    ]);
-
-                $statusOptions = $statusQuery->toArray();
-                $statusOptions = ['-1' => '-- ' . __('All Statuses') . ' --'] + $statusOptions;
-                $selectedStatus = $this->_table->queryString('status', $statusOptions);
-                $this->_table->advancedSelectOptions($statusOptions, $selectedStatus);
-                $this->_table->controller->set(compact('statusOptions', 'selectedStatus'));
-            }
+            // Categories Options
+            $categoryOptions = ['-1' => '-- ' . __('All Categories') . ' --'] + $this->getSelectOptions('WorkflowSteps.category');
+            $selectedCategory = $this->_table->queryString('category', $categoryOptions);
+            $this->_table->advancedSelectOptions($categoryOptions, $selectedCategory);
+            $this->_table->controller->set(compact('categoryOptions', 'selectedCategory'));
             // End
         }
     }
@@ -381,8 +360,6 @@ class WorkflowBehavior extends Behavior {
         $workflowModel = $this->getWorkflowSetup($registryAlias);
 
         $filter = $workflowModel->filter;
-
-        $selectedStatus = null;
         if (!empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
 
@@ -393,17 +370,15 @@ class WorkflowBehavior extends Behavior {
                 $query->where([
                     $this->_table->aliasField($filterKey) => $selectedFilter
                 ]);
-
-                $selectedStatus = $this->_table->ControllerAction->getVar('selectedStatus');
             }
-        } else {
-            $selectedStatus = $this->_table->ControllerAction->getVar('selectedStatus');
         }
 
-        if (!is_null($selectedStatus) && $selectedStatus != -1) {
-            $query->where([
-                $this->_table->aliasField('status_id') => $selectedStatus
-            ]);
+        $selectedCategory = $this->_table->ControllerAction->getVar('selectedCategory');
+        if (!is_null($selectedCategory) && $selectedCategory != -1) {
+            $query
+                ->matching('Statuses', function ($q) use ($selectedCategory) {
+                    return $q->where(['category' => $selectedCategory]);
+                });
         }
 
         if ($this->isCAv4()) { $extra['options'] = $options; }
