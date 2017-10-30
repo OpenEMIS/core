@@ -77,15 +77,6 @@ class SecurityUsersFixture extends TestFixture
             "created" => "1970-01-01 00:00:00"
         ], [
             "id" => "3",
-<<<<<<< HEAD
-            "username" => "teacher",
-            "password" => '$2y$10$pDYCdZfAk2kn6k/CLgZvIeO1tYBtvGzUkRKL0NJg69edQKRSLLYeu',
-            "openemis_no" => "teacher",
-            "first_name" => "Teacher",
-            "middle_name" => null,
-            "third_name" => null,
-            "last_name" => "Demo User",
-=======
             "username" => "1508479923",
             "password" => '$2y$10$gHnaBHEopcVyRuHy6LRTI.4CaOgTxlIfyKEDqWvVn8FN3F1MoSmqq',
             "openemis_no" => "1508479923",
@@ -93,7 +84,6 @@ class SecurityUsersFixture extends TestFixture
             "middle_name" => null,
             "third_name" => null,
             "last_name" => "ZU",
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "preferred_name" => null,
             "email" => null,
             "address" => null,
@@ -101,17 +91,10 @@ class SecurityUsersFixture extends TestFixture
             "address_area_id" => "51",
             "birthplace_area_id" => "51",
             "gender_id" => "1",
-<<<<<<< HEAD
-            "date_of_birth" => "2000-01-01",
-            "date_of_death" => null,
-            "nationality_id" => null,
-            "identity_type_id" => null,
-=======
             "date_of_birth" => "2014-10-20",
             "date_of_death" => null,
             "nationality_id" => 1,
             "identity_type_id" => 161,
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "identity_number" => null,
             "external_reference" => null,
             "super_admin" => "0",
@@ -119,21 +102,119 @@ class SecurityUsersFixture extends TestFixture
             "last_login" => null,
             "photo_name" => null,
             "photo_content" => null,
-<<<<<<< HEAD
-            "is_student" => "0",
-            "is_staff" => "1",
-=======
             "is_student" => "1",
             "is_staff" => "0",
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "is_guardian" => "0",
             "modified_user_id" => null,
             "modified" => null,
             "created_user_id" => "1",
-<<<<<<< HEAD
-            "created" => "1970-01-01 00:00:00"
+            "created" => "2017-10-20 00:00:00"
         ], [
             "id" => "4",
+            "username" => "1508479923",
+            "password" => '$2y$10$gHnaBHEopcVyRuHy6LRTI.4CaOgTxlIfyKEDqWvVn8FN3F1MoSmqq',
+            "openemis_no" => "1508479923",
+            "first_name" => "Nursery",
+            "middle_name" => null,
+            "third_name" => null,
+            "last_name" => "ZZ",
+            "preferred_name" => null,
+            "email" => null,
+            "address" => null,
+            "postal_code" => null,
+            "address_area_id" => "51",
+            "birthplace_area_id" => "51",
+            "gender_id" => "1",
+            "date_of_birth" => "2014-10-20",
+            "date_of_death" => null,
+            "nationality_id" => 1,
+            "identity_type_id" => 161,
+            "identity_number" => null,
+            "external_reference" => null,
+            "super_admin" => "0",
+            "status" => "1",
+            "last_login" => null,
+            "photo_name" => null,
+            "photo_content" => null,
+            "is_student" => "1",
+            "is_staff" => "0",
+            "is_guardian" => "0",
+            "modified_user_id" => null,
+            "modified" => null,
+            "created_user_id" => "1",
+            "created" => "2017-10-20 00:00:00"
+        ],
+        [
+            "id" => "7",
+            "username" => "1508479927",
+            "password" => '$2y$10$gHnaBHEopcVyRuHy6LRTI.4CaOgTxlIfyKEDqWvVn8FN3F1MoSmqq',
+            "openemis_no" => "1508479927",
+            "first_name" => "Nursery",
+            "middle_name" => null,
+            "third_name" => null,
+            "last_name" => "YY",
+            "preferred_name" => null,
+            "email" => null,
+            "address" => null,
+            "postal_code" => null,
+            "address_area_id" => "51",
+            "birthplace_area_id" => "51",
+            "gender_id" => "1",
+            "date_of_birth" => "2014-10-20",
+            "date_of_death" => null,
+            "nationality_id" => 1,
+            "identity_type_id" => 161,
+            "identity_number" => null,
+            "external_reference" => null,
+            "super_admin" => "0",
+            "status" => "1",
+            "last_login" => null,
+            "photo_name" => null,
+            "photo_content" => null,
+            "is_student" => "1",
+            "is_staff" => "0",
+            "is_guardian" => "0",
+            "modified_user_id" => null,
+            "modified" => null,
+            "created_user_id" => "1",
+            "created" => "2017-10-20 00:00:00"
+        ],
+        [
+            "id" => "8",
+            "username" => "teacher",
+            "password" => '$2y$10$pDYCdZfAk2kn6k/CLgZvIeO1tYBtvGzUkRKL0NJg69edQKRSLLYeu',
+            "openemis_no" => "teacher",
+            "first_name" => "Teacher",
+            "middle_name" => null,
+            "third_name" => null,
+            "last_name" => "Demo User",
+            "preferred_name" => null,
+            "email" => null,
+            "address" => null,
+            "postal_code" => null,
+            "address_area_id" => "51",
+            "birthplace_area_id" => "51",
+            "gender_id" => "1",
+            "date_of_birth" => "2000-01-01",
+            "date_of_death" => null,
+            "nationality_id" => null,
+            "identity_type_id" => null,
+            "identity_number" => null,
+            "external_reference" => null,
+            "super_admin" => "0",
+            "status" => "1",
+            "last_login" => null,
+            "photo_name" => null,
+            "photo_content" => null,
+            "is_student" => "0",
+            "is_staff" => "1",
+            "is_guardian" => "0",
+            "modified_user_id" => null,
+            "modified" => null,
+            "created_user_id" => "1",
+            "created" => "1970-01-01 00:00:00"
+        ], [
+            "id" => "9",
             "username" => "asstTeacher",
             "password" => '$2y$10$pDYCdZfAk2kn6k/CLgZvIeO1tYBtvGzUkRKL0NJg69edQKRSLLYeu',
             "openemis_no" => "asstTeacher",
@@ -167,7 +248,7 @@ class SecurityUsersFixture extends TestFixture
             "created_user_id" => "1",
             "created" => "1970-01-01 00:00:00"
         ], [
-            "id" => "5",
+            "id" => "10",
             "username" => "testTeacher",
             "password" => '$2y$10$pDYCdZfAk2kn6k/CLgZvIeO1tYBtvGzUkRKL0NJg69edQKRSLLYeu',
             "openemis_no" => "testTeacher",
@@ -201,7 +282,7 @@ class SecurityUsersFixture extends TestFixture
             "created_user_id" => "1",
             "created" => "1970-01-01 00:00:00"
         ], [
-            "id" => "6",
+            "id" => "11",
             "username" => "abacusPrincipal",
             "password" => '$2y$10$pDYCdZfAk2kn6k/CLgZvIeO1tYBtvGzUkRKL0NJg69edQKRSLLYeu',
             "openemis_no" => "abacusPrincipal",
@@ -209,18 +290,6 @@ class SecurityUsersFixture extends TestFixture
             "middle_name" => null,
             "third_name" => null,
             "last_name" => "Demo User",
-=======
-            "created" => "2017-10-20 00:00:00"
-        ], [
-            "id" => "4",
-            "username" => "1508479923",
-            "password" => '$2y$10$gHnaBHEopcVyRuHy6LRTI.4CaOgTxlIfyKEDqWvVn8FN3F1MoSmqq',
-            "openemis_no" => "1508479923",
-            "first_name" => "Nursery",
-            "middle_name" => null,
-            "third_name" => null,
-            "last_name" => "ZZ",
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "preferred_name" => null,
             "email" => null,
             "address" => null,
@@ -228,17 +297,10 @@ class SecurityUsersFixture extends TestFixture
             "address_area_id" => "51",
             "birthplace_area_id" => "51",
             "gender_id" => "1",
-<<<<<<< HEAD
             "date_of_birth" => "2000-01-01",
             "date_of_death" => null,
             "nationality_id" => null,
             "identity_type_id" => null,
-=======
-            "date_of_birth" => "2014-10-20",
-            "date_of_death" => null,
-            "nationality_id" => 1,
-            "identity_type_id" => 161,
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "identity_number" => null,
             "external_reference" => null,
             "super_admin" => "0",
@@ -246,21 +308,15 @@ class SecurityUsersFixture extends TestFixture
             "last_login" => null,
             "photo_name" => null,
             "photo_content" => null,
-<<<<<<< HEAD
             "is_student" => "0",
             "is_staff" => "1",
-=======
-            "is_student" => "1",
-            "is_staff" => "0",
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "is_guardian" => "0",
             "modified_user_id" => null,
             "modified" => null,
             "created_user_id" => "1",
-<<<<<<< HEAD
             "created" => "1970-01-01 00:00:00"
         ], [
-            "id" => "7",
+            "id" => "12",
             "username" => "abenPrincipal",
             "password" => '$2y$10$pDYCdZfAk2kn6k/CLgZvIeO1tYBtvGzUkRKL0NJg69edQKRSLLYeu',
             "openemis_no" => "abenPrincipal",
@@ -268,38 +324,17 @@ class SecurityUsersFixture extends TestFixture
             "middle_name" => null,
             "third_name" => null,
             "last_name" => "Demo User",
-=======
-            "created" => "2017-10-20 00:00:00"
-        ],
-        [
-            "id" => "7",
-            "username" => "1508479927",
-            "password" => '$2y$10$gHnaBHEopcVyRuHy6LRTI.4CaOgTxlIfyKEDqWvVn8FN3F1MoSmqq',
-            "openemis_no" => "1508479927",
-            "first_name" => "Nursery",
-            "middle_name" => null,
-            "third_name" => null,
-            "last_name" => "YY",
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "preferred_name" => null,
             "email" => null,
             "address" => null,
             "postal_code" => null,
             "address_area_id" => "51",
             "birthplace_area_id" => "51",
-<<<<<<< HEAD
             "gender_id" => "2",
             "date_of_birth" => "2000-01-01",
             "date_of_death" => null,
             "nationality_id" => null,
             "identity_type_id" => null,
-=======
-            "gender_id" => "1",
-            "date_of_birth" => "2014-10-20",
-            "date_of_death" => null,
-            "nationality_id" => 1,
-            "identity_type_id" => 161,
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "identity_number" => null,
             "external_reference" => null,
             "super_admin" => "0",
@@ -307,22 +342,13 @@ class SecurityUsersFixture extends TestFixture
             "last_login" => null,
             "photo_name" => null,
             "photo_content" => null,
-<<<<<<< HEAD
             "is_student" => "0",
             "is_staff" => "1",
-=======
-            "is_student" => "1",
-            "is_staff" => "0",
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
             "is_guardian" => "0",
             "modified_user_id" => null,
             "modified" => null,
             "created_user_id" => "1",
-<<<<<<< HEAD
             "created" => "1970-01-01 00:00:00"
-=======
-            "created" => "2017-10-20 00:00:00"
->>>>>>> e5ceb1b29534f6f0a34f8818ea01afb71d70b1eb
         ]
     ];
 }
