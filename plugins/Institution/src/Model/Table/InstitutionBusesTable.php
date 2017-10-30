@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Transport\Model\Table\TransportStatusesTable as TransportStatuses;
 
 class InstitutionBusesTable extends AppTable
 {
@@ -59,5 +60,15 @@ class InstitutionBusesTable extends AppTable
         $query->contain(['TransportFeatures']);
 
         return $query;
+    }
+
+    public function findOptionList(Query $query, array $options)
+    {
+        $operatingStatus = TransportStatuses::OPERATING;
+        $query->matching('TransportStatuses', function ($q) use ($operatingStatus) {
+            return $q->where(['TransportStatuses.id' => $operatingStatus]);
+        });
+
+        return parent::findOptionList($query, $options);
     }
 }
