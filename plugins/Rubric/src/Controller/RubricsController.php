@@ -15,7 +15,6 @@ class RubricsController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Templates' => ['className' => 'Rubric.RubricTemplates'],
 			'Sections' => ['className' => 'Rubric.RubricSections'],
 			'Criterias' => ['className' => 'Rubric.RubricCriterias'],
 			'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
@@ -23,6 +22,13 @@ class RubricsController extends AppController
 		];
 		$this->loadComponent('Paginator');
     }
+
+    // CAv4
+    public function Templates()
+    {
+    	$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Rubric.RubricTemplates']);
+    }
+    // end CAv4
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
