@@ -1,3 +1,10 @@
+### [3.10.15] - 2017-10-27
+- User can now generate report of students from all programmes in Reports > Institution > Students
+- Implemented export feature in Institution > Positions page
+
+### [3.10.14] - 2017-10-23
+- Implemented Transport feature in Institution module
+
 ### [3.10.13] - 2017-10-13
 - Implemented Projects feature in Institutions > Infrastructure module 
 - Implemented Needs feature in Institutions > Infrastructure module

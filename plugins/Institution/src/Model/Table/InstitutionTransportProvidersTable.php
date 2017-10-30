@@ -30,6 +30,20 @@ class InstitutionTransportProvidersTable extends AppTable
 			]);
     }
 
+    public function findView(Query $query, array $options)
+    {
+        $query->contain([
+            'InstitutionBuses' => [
+                'TransportStatuses',
+                'sort' => [
+                    'InstitutionBuses.plate_number' => 'ASC'
+                ]
+            ]
+        ]);
+
+        return $query;
+    }
+
     public function findOptionList(Query $query, array $options)
     {
         $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
