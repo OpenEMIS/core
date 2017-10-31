@@ -848,13 +848,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var staffTypeId = (StaffController.staffTypeId != null && StaffController.staffTypeId.hasOwnProperty('id')) ? StaffController.staffTypeId.id : '';
         var data = {
             staff_id: StaffController.selectedStaff,
-            start_date: startDate,
-            end_date: StaffController.endDate,
-            staff_type_id: staffTypeId,
-            FTE: fte,
-            institution_position_id: institutionPositionId,
+            new_start_date: startDate,
+            new_end_date: StaffController.endDate,
+            new_staff_type_id: staffTypeId,
+            new_FTE: fte,
+            new_institution_position_id: institutionPositionId,
             status_id: 0,
-            institution_id: StaffController.institutionId,
+            new_institution_id: StaffController.institutionId,
             previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
             comment: StaffController.comment,
             initiated_by: 1
