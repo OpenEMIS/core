@@ -205,7 +205,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('current_staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $staffType]]);
         $this->field('current_start_date', ['type' => 'readonly', 'attr' => ['value' => $startDate]]);
 
-        $this->field('transfer_type', ['type' => 'select', 'options' => $this->transferTypeOptions, 'onChangeReload' => true]);
+        $this->field('transfer_type');
         $this->field('previous_FTE');
         $this->field('previous_staff_type_id');
         $this->field('previous_end_date');
@@ -291,6 +291,30 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             $attr['type'] = 'select';
             $attr['select'] = false;
+            $attr['options'] = $options;
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldTransferType(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $options = $this->transferTypeOptions;
+
+            if (isset($this->request->data[$this->alias()]['current_staff_positions']) && !empty($this->request->data[$this->alias()]['current_staff_positions'])) {
+                $institutionStaffId = $this->request->data[$this->alias()]['current_staff_positions'];
+                $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId);
+
+                if (!empty($staffEntity)) {
+                    // do not show partial transfer option if current fte is 25%
+                    if ($staffEntity->FTE <= 0.25) {
+                        unset($options[self::PARTIAL_TRANSFER]);
+                    }
+                }
+            }
+
+            $attr['type'] = 'select';
             $attr['options'] = $options;
             $attr['onChangeReload'] = true;
             return $attr;
