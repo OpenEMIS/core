@@ -84,8 +84,13 @@ class CustomReportBehavior extends Behavior
     private function _sql(array $params, $sqlStmt, $stmtParameters)
     {
         foreach ($stmtParameters as $field) {
-            if (array_key_exists($field, $params) && !empty($params[$field])) {
-                $value = $this->escapeSingleQuotes($params[$field]);
+            if (array_key_exists($field, $params)) {
+                if (!empty($params[$field])) {
+                    $value = $this->escapeSingleQuotes($params[$field]);
+                } else {
+                    $value = 0;
+                    Log::write('debug', "No value has been provided for $field parameter");
+                }
                 $sqlStmt = str_replace(":$field", $value, $sqlStmt);
             }
         }

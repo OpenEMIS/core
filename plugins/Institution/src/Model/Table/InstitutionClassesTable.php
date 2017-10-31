@@ -216,6 +216,9 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('multigrade');
 
+        $this->field('total_male_students', ['visible' => false]);
+        $this->field('total_female_students', ['visible' => false]);
+
         $this->setFieldOrder([
             'name', 'staff_id', 'multigrade', 'male_students', 'female_students', 'total_students', 'subjects',
         ]);
@@ -1113,7 +1116,16 @@ class InstitutionClassesTable extends ControllerActionTable
 
             $Staff = $this->Institutions->Staff;
             $query = $Staff->find('all')
-                            ->find('withBelongsTo')
+                            ->select([
+                                $Staff->Users->aliasField('id'),
+                                $Staff->Users->aliasField('openemis_no'),
+                                $Staff->Users->aliasField('first_name'),
+                                $Staff->Users->aliasField('middle_name'),
+                                $Staff->Users->aliasField('third_name'),
+                                $Staff->Users->aliasField('last_name'),
+                                $Staff->Users->aliasField('preferred_name')
+                            ])
+                            ->contain(['Users'])
                             ->matching('Positions', function ($q) {
                                 return $q->where(['Positions.is_homeroom' => 1]);
                             })
@@ -1127,13 +1139,17 @@ class InstitutionClassesTable extends ControllerActionTable
                                     [$Staff->aliasField('end_date IS NULL')]
                                 ]
                             ])
-                            ;
+                            ->formatResults(function ($results) {
+                                $returnArr = [];
+                                foreach ($results as $result) {
+                                    if ($result->has('Users')) {
+                                        $returnArr[$result->Users->id] = $result->Users->name_with_id;
+                                    }
+                                }
+                                return $returnArr;
+                            });
 
-            foreach ($query->toArray() as $value) {
-                if ($value->has('user')) {
-                    $options[$value->user->id] = $value->user->name_with_id;
-                }
-            }
+            $options = $options + $query->toArray();
         }
 
         return $options;
