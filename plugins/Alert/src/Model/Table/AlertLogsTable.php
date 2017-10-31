@@ -53,12 +53,19 @@ class AlertLogsTable extends ControllerActionTable
         $Users = TableRegistry::get('User.Users');
 
         if ($recordEntity->has('status_id') && $recordEntity->status_id > 0) {
-            $stepEntity = $WorkflowSteps->get($recordEntity->status_id, ['contain' => ['Workflows.WorkflowModels']]);
-            $model = TableRegistry::get($stepEntity->workflow->workflow_model->model);
-        } else {
-            $model = TableRegistry::get($recordEntity->source());
+            // used to get correct workflow model for StaffTransferIn and StaffTransferOut
+            $stepEntity = $WorkflowSteps->find()
+                ->matching('Workflows.WorkflowModels')
+                ->where([$WorkflowSteps->aliasField('id') => $recordEntity->status_id])
+                ->first();
+
+            if (!empty($stepEntity)) {
+                $modelName = $stepEntity->_matchingData['WorkflowModels']->model;
+            }
         }
 
+        $workflowModel = isset($modelName) ? $modelName : $recordEntity->source();
+        $model = TableRegistry::get($workflowModel);
         $modelAlias = $model->alias();
         $modelRegistryAlias = $model->registryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
