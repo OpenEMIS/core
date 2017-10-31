@@ -193,6 +193,16 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetPreviousFTE(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('previous_FTE')) {
+            $fte = $entity->previous_FTE;
+            $value = $this->fteOptions["$fte"];
+        }
+        return $value;
+    }
+
     public function onGetInitiatedBy(Event $event, Entity $entity)
     {
         $value = '';
