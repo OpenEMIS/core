@@ -268,7 +268,7 @@ class WorkflowBehavior extends Behavior {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('assignee_id') && $entity->dirty('status_id')) {
+        if (!$entity->isNew() && $entity->dirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
@@ -408,7 +408,14 @@ class WorkflowBehavior extends Behavior {
 
         // setup workflow
         if ($this->attachWorkflow) {
-            $workflow = $this->getWorkflow($this->config('model'), $entity);
+            $workflowStep = $this->getWorkflowStep($entity);
+            if (!is_null($workflowStep)) {
+                // used to get correct workflow model for StaffTransferIn and StaffTransferOut
+                $modelName = $workflowStep->_matchingData['WorkflowModels']->model;
+            }
+
+            $workflowModel = isset($modelName) ? $modelName : $this->config('model');
+            $workflow = $this->getWorkflow($workflowModel, $entity);
 
             if (!empty($workflow)) {
                 $ControllerAction->field('status_id', ['visible' => false]);
