@@ -45,13 +45,15 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                     return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
                 }
             ])
-            ->requirePresence(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date'])
             ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date']);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
+        $this->field('previous_staff_type_id', ['type' => 'hidden']);
+        $this->field('previous_FTE', ['type' => 'hidden']);
+        $this->field('transfer_type', ['type' => 'hidden']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -59,6 +61,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_end_date', ['type' => 'hidden']);
         $this->field('new_FTE', ['type' => 'hidden']);
         $this->field('new_staff_type_id', ['type' => 'hidden']);
+        $this->field('new_institution_id', ['type' => 'hidden']);
         $this->field('previous_end_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
         $this->field('initiated_by', ['type' => 'hidden']);
@@ -94,6 +97,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('new_institution_id', ['type' => 'hidden']);
         $this->field('previous_end_date', ['type' => 'hidden']);
     }
 
@@ -156,14 +160,14 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
-            $type = 'hidden';
 
             if (!empty($entity->previous_end_date)) {
-                $type = 'readonly';
+                $attr['type'] = 'readonly';
                 $attr['value'] = $entity->previous_end_date->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($entity->previous_end_date);
+            } else {
+                $attr['type'] = 'hidden';
             }
-            $attr['type'] = $type;
             return $attr;
         }
     }
@@ -184,6 +188,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             $options = [];
             if (!empty($request->data[$this->alias()]['new_institution_id']) && !empty($request->data[$this->alias()]['new_FTE']) && !empty($request->data[$this->alias()]['new_start_date'])) {
                 $PositionsTable = TableRegistry::get('Institution.InstitutionPositions');
+
                 $userId = $this->Auth->user('id');
                 $isAdmin = $this->AccessControl->isAdmin();
                 $activeStatusId = $this->Workflow->getStepsByModelCode($PositionsTable->registryAlias(), 'ACTIVE');

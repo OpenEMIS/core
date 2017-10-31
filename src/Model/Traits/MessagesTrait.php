@@ -562,18 +562,6 @@ trait MessagesTrait
             'notExists' => 'Staff record no longer exists in the system.',
             'errorApproval' => 'Record cannot be approved due to errors encountered.',
         ],
-        'StaffTransferRequests' => [
-            'alreadyAssigned' => '%s is currently assigned to %s',
-            'confirmRequest' => 'By clicking save, a transfer request will be sent to the institution for approval',
-            'errorApproval' => 'Record cannot be assigned due to errors encountered',
-        ],
-        'StaffTransferApprovals' => [
-            'transferType' => 'Please select the transfer type.',
-            'effectiveDate' => 'Please enter an effective date for the partial transfer.',
-            'effectiveDateCompare' => 'Effective date should be later than Current Start Date.',
-            'newFTE' => 'Please select a new FTE for the partial transfer.',
-            'staffEndOfAssignment' => 'The assignment of this staff has ended.'
-        ],
         'UndoStudentStatus' => [
             'noGrades' => 'No Available Grades',
             'noStudents' => 'No Available Students',
@@ -1216,8 +1204,8 @@ trait MessagesTrait
                 ]
             ],
             'StaffTransferIn' => [
-                'start_date' => [
-                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Requested End Date'
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than Current Institution End Date'
                 ]
             ]
         ],
