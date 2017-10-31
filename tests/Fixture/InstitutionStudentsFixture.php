@@ -40,20 +40,36 @@ class InstitutionStudentsFixture extends TestFixture
             'created' => '2016-01-01 00:00:00'
         ],
         [
-            'id' => 3,
+            'id' => '3333',
             'student_status_id' => 1,
-            'student_id' => 7,
-            'education_grade_id' => 76,
-            'academic_period_id' => 3,
-            'start_date' => '2016-06-01',
-            'start_year' => '2016',
-            'end_date' => '2016-12-31',
-            'end_year' => '2016',
+            'student_id' => 3,
+            'education_grade_id' => 74,
+            'academic_period_id' => 26,
+            'start_date' => '2017-01-01',
+            'start_year' => '2017',
+            'end_date' => '2017-12-31',
+            'end_year' => '2017',
             'institution_id' => 1,
             'modified_user_id' => null,
             'modified' => null,
             'created_user_id' => 1,
-            'created' => '2015-01-01 00:00:00'
+            'created' => '2017-01-01 00:00:00'
+        ],
+        [
+            'id' => '4444',
+            'student_status_id' => 1,
+            'student_id' => 4,
+            'education_grade_id' => 74,
+            'academic_period_id' => 26,
+            'start_date' => '2017-01-01',
+            'start_year' => '2017',
+            'end_date' => '2017-12-31',
+            'end_year' => '2017',
+            'institution_id' => 1,
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => 1,
+            'created' => '2017-01-01 00:00:00'
         ],
     ];
 }
