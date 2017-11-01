@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
 
 // This file serves as an abstract class for StaffTransferIn and StaffTransferOut
@@ -20,6 +21,11 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     // Initiated By
     const INCOMING = 1;
     const OUTGOING = 2;
+
+    // Transfer Type
+    const FULL_TRANSFER = 1;
+    const PARTIAL_TRANSFER = 2;
+    const NO_CHANGE = 3;
 
     // fte options
     public $fteOptions = [];
@@ -89,6 +95,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
         $entity = $this->get($id);
 
+        // add new institution staff record in new institution
         $incomingStaff = [
             'FTE' => $entity->new_FTE,
             'start_date' => $entity->new_start_date,
@@ -106,11 +113,35 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
 
         if ($StaffTable->save($newEntity)) {
-            // end previous institution staff record
-            if (!empty($entity->previous_institution_staff_id) && !empty($entity->previous_end_date)) {
+            if (!empty($entity->previous_institution_staff_id)) {
+                $transferType = $entity->transfer_type;
                 $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
-                $oldRecord->end_date = $entity->previous_end_date;
-                $StaffTable->save($oldRecord);
+
+                if ($transferType == self::FULL_TRANSFER) {
+                    // end previous institution staff record
+                    $oldRecord->end_date = $entity->previous_end_date;
+                    $StaffTable->save($oldRecord);
+
+                } else if ($transferType == self::PARTIAL_TRANSFER) {
+                    // end previous institution staff record
+                    $oldRecord->end_date = $entity->previous_end_date;
+                    $StaffTable->save($oldRecord);
+
+                    // add new institution staff record in previous institution
+                    $newStartDate = (new Date($entity->previous_end_date))->modify('+1 day');
+                    $newRecord = [
+                        'FTE' => $entity->previous_FTE,
+                        'start_date' => $newStartDate->format('Y-m-d'),
+                        'start_year' => $newStartDate->year,
+                        'staff_id' => $entity->staff_id,
+                        'staff_type_id' => $entity->previous_staff_type_id,
+                        'staff_status_id' => $StaffStatusesTable->getIdByCode('ASSIGNED'),
+                        'institution_id' => $oldRecord->institution_id,
+                        'institution_position_id' => $oldRecord->institution_position_id
+                    ];
+                    $newEntity = $StaffTable->newEntity($newRecord, ['validate' => 'AllowPositionType']);
+                    $StaffTable->save($newEntity);
+                }
             }
         }
     }
