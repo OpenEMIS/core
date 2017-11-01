@@ -15,16 +15,17 @@ export class DataService {
     private id: any = 0;
     private headers: any = {};
     private _schema: boolean = false;
-    private _fields: any = [];
+    private _fields: Array<string> = [];
     private _contain: any = [];
     private _innerJoinWith: any = [];
-    private _finder: any = [];
+    private _leftJoinWith: any = [];
+    private _finder: Array<string> = [];
     private _where: Object = {};
     private _orWhere: any = [];
     private _group: any = [];
     private _order: any = [];
-    private _limit = 0;
-    private _page = 0;
+    private _limit: number = 0;
+    private _page: number = 0;
     private _search: string = '';
     private _querystring: string = '';
     private _db = 'default';
@@ -34,7 +35,7 @@ export class DataService {
 
     constructor(private http: Http) {}
 
-    init(className: string, action: string = 'custom') {
+    init(className: string, action: string = 'custom', controller: string = 'restful') {
         let ds = new DataService(this.http);
         // set base to config file
         ds.setBase(this.base);
@@ -43,7 +44,12 @@ export class DataService {
         ds.setAction(action);
         ds.setDB(this._db);
         ds.setHeader(this.headers);
+        ds.setController(controller);
         return ds;
+    }
+
+    setController(controller: string) {
+        this.controller = controller;
     }
 
     setVersion(version: string) {
@@ -107,6 +113,7 @@ export class DataService {
         this._fields = [];
         this._contain = [];
         this._innerJoinWith = [];
+        this._leftJoinWith = [];
         this._finder = [];
         this._where = {};
         this._limit = 0;
@@ -118,7 +125,7 @@ export class DataService {
         this._search = '';
     }
 
-    select(fields: any): DataService {
+    select(fields: Array<string>): DataService {
         if (fields != undefined) {
             this._fields = fields;
         }
@@ -144,7 +151,12 @@ export class DataService {
         return this;
     }
 
-    find(finder: any, params: any = undefined): DataService {
+    leftJoinWith(leftJoinWith: any): DataService {
+        this._leftJoinWith = leftJoinWith;
+        return this;
+    }
+
+    find(finder: string, params: Object = undefined): DataService {
         if (params === undefined) {
             this._finder.push(finder);
         } else if (params instanceof Object) {
@@ -185,7 +197,7 @@ export class DataService {
         return this;
     }
 
-    limit(limit: any): DataService {
+    limit(limit: number): DataService {
         this._limit = limit;
         return this;
     }
@@ -196,7 +208,6 @@ export class DataService {
     }
 
     search(searchText: string): DataService {
-
         if (searchText == '') {
             this._search = searchText;
         } else {
@@ -222,14 +233,18 @@ export class DataService {
         if ((typeof this._contain === 'object')) {
             if (this._contain.length > 0) {
                 params.push('_contain=' + this._contain.join(','));
-            } else {
-                params.push('_contain=true');
             }
         }
 
         if ((typeof this._innerJoinWith === 'object')) {
             if (this._innerJoinWith.length > 0) {
                 params.push('_innerJoinWith=' + this._innerJoinWith.join(','));
+            }
+        }
+
+        if ((typeof this._leftJoinWith === 'object')) {
+            if (this._leftJoinWith.length > 0) {
+                params.push('_leftJoinWith=' + this._leftJoinWith.join(','));
             }
         }
 

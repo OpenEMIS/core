@@ -246,7 +246,6 @@ trait MessagesTrait
             'education_programme' => 'Education Programme',
             'education_grade' => 'Education Grade',
             'staff_id' => 'Home Room Teacher',
-            'secondary_staff_id' => 'Secondary Home Room Teacher',
             'class' => 'Class',
             'single_grade_field' => 'Single Grade Classes',
             'multi_grade_field' => 'Class Grades',
@@ -502,7 +501,8 @@ trait MessagesTrait
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
             'hasWithdrawApplication' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
-            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.'
+            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.',
+            'unableToTransfer' => 'Unable to do student transfer due to associated records.'
         ],
         'TransferApprovals' => [
             'existsInNewSchool' => 'Student is already exists in the new school',
@@ -840,7 +840,7 @@ trait MessagesTrait
                     'ruleUniqueNamePerAcademicPeriod' => 'Class name has to be unique',
                 ],
                 'staff_id' => [
-                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Home Room Teacher cannot be the same person.'
+                    'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Teacher cannot be the same person.'
                 ]
             ],
 
@@ -912,6 +912,9 @@ trait MessagesTrait
                 'position_no' => [
                     'ruleUnique' => 'The position number that you have entered already existed, please try again.',
                     'ruleNoSpaces' => 'Only alphabets and numbers are allowed'
+                ],
+                'is_homeroom' => [
+                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes'
                 ]
             ],
             'InstitutionShifts' => [
@@ -968,6 +971,28 @@ trait MessagesTrait
                     'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
+            'InfrastructureNeeds' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name'
+                ],
+                'date_completed' => [
+                    'compareWithDateStarted' => 'Date completed should not be earlier than date started'
+                ],
+            ],
+            'InfrastructureProjects' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name'
+                ],
+                'date_completed' => [
+                    'compareWithDateStarted' => 'Date completed should not be earlier than date started'
+                ],
+            ],
             'Students' => [
                 'student_name' => [
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
@@ -1009,8 +1034,7 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
-                    'checkEndOfAssignmentWithStartDate' => 'Start Date should be later than %s',
+                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.'
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -1150,6 +1174,38 @@ trait MessagesTrait
             'InstitutionTextbooks' => [
                 'code' => [
                     'ruleUnique' => 'Code must be unique for the same academic period',
+                ]
+            ],
+            'InstitutionAssessments' => [
+                'marks' => [
+                    'markHint' => 'Mark should be between %s and %s'
+                ],
+                'grading_type' => [
+                    'notFound' => 'No Grading Type found'
+                ]
+            ],
+            'InstitutionTransportProviders' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ]
+            ],
+            'InstitutionBuses' => [
+                'plate_number' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ],
+                'capacity' => [
+                    'notZero' => 'Capacity must be more than 0',
+                ]
+            ],
+            'InstitutionTrips' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique'
+                ],
+                'days' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'assigned_students' => [
+                    'checkMaxLimit' => 'Total passengers should not be more than bus capacity %d'
                 ]
             ],
         ],
@@ -2009,6 +2065,13 @@ trait MessagesTrait
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ],
+        ],
+        'Area' => [
+            'AreaAdministratives' => [
+                'is_main_country' => [
+                    'ruleValidateAreaAdministrativeMainCountry' => 'There must be at least one Main Country'
                 ]
             ],
         ],

@@ -236,7 +236,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         params['institution_id'] = institutionId;
         StaffUser.reset();
         StaffUser.find('Staff', params);
-        StaffUser.contain(['Genders']);
+        StaffUser.contain(['Genders', 'MainIdentityTypes', 'MainNationalities']);
 
         return StaffUser.ajax({defer: true, success: success});
     };
@@ -598,7 +598,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         data['staff_status_id'] = 1;
         data['start_date'] = this.formatDateForSaving(data['start_date']);
         data['end_date'] = this.formatDateForSaving(data['end_date']);
-        return StaffRecord.save(data)
+        return StaffRecord.save(data);
     };
 
     function setInstitutionId(id) {

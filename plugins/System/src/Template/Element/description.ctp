@@ -29,7 +29,7 @@
 <p>
 You can review these changes in the latest version of OpenEMIS Core:
 <br>
-<a href="https://demo.openemis.org/core/changelog" target="_blank">https://demo.openemis.org/core/changelog</a>
+<a href="https://demo.openemis.org/core/CHANGELOG.md" target="_blank">https://demo.openemis.org/core/CHANGELOG.md</a>
 </p>
 <p>
 Please click the upgrade button to approve for the OpenEMIS lab to upgrade your instance of OpenEMIS Core to the latest version.

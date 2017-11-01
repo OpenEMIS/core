@@ -1,9 +1,11 @@
 <?php
 namespace App\Test;
+
 use Cake\TestSuite\IntegrationTestCase;
 use Cake\Utility\Hash;
 use Cake\Utility\Security;
-use App\Test\FixturesTrait;
+
+use ControllerAction\Model\Traits\SecurityTrait;
 
 // attempt to create extending classes and traits fail maybe because of link below
 // https://getcomposer.org/doc/04-schema.md#autoload-dev
@@ -14,7 +16,7 @@ use App\Test\FixturesTrait;
 
 class AppTestCase extends IntegrationTestCase
 {
-    use FixturesTrait; // consists of fixtures for the entire database
+    use SecurityTrait;
 
     private $urlPrefix = '';
     // public $dropTables = false;
@@ -142,19 +144,13 @@ class AppTestCase extends IntegrationTestCase
         $this->delete($url);
     }
 
-    public function urlsafeB64Encode($input)
+    public function setUrlParams($action, $params = [])
     {
-        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
-    }
+        $hash = sha1(time());
+        $sessionKey = 'Url.params.' . implode('.', $action) . '.' . $hash;
+        $sessionData = Hash::expand([$sessionKey => $params]);
 
-    public function paramsEncode($params = [])
-    {
-        $sessionId = Security::hash('session_id', 'sha256');
-        $params[$sessionId] = session_id();
-        $jsonParam = json_encode($params);
-        $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256', true);
-        $base64Signature = $this->urlsafeB64Encode($signature);
-        return "$base64Param.$base64Signature";
+        $this->session($sessionData);
+        return $hash;
     }
 }

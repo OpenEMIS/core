@@ -10,6 +10,7 @@ class InstitutionGendersFixture extends TestFixture
         [
             'id' => '1',
             'name' => 'Mixed',
+            'code' => 'X',
             'order' => '1',
             'visible' => '1',
             'editable' => '1',
@@ -23,6 +24,7 @@ class InstitutionGendersFixture extends TestFixture
         ], [
             'id' => '2',
             'name' => 'Male',
+            'code' => 'M',
             'order' => '2',
             'visible' => '1',
             'editable' => '1',
@@ -36,6 +38,7 @@ class InstitutionGendersFixture extends TestFixture
         ], [
             'id' => '3',
             'name' => 'Female',
+            'code' => 'F',
             'order' => '3',
             'visible' => '1',
             'editable' => '1',

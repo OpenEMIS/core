@@ -51,6 +51,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('AcademicPeriod.Period');
         // to handle field type (autocomplete)
@@ -671,7 +672,11 @@ class StaffTable extends ControllerActionTable
             }
         } else { // add operation
             $this->addStaffRole($entity);
-            $this->updateStaffStatus($entity, $this->assigned);
+            if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
+                $this->updateStaffStatus($entity, $this->assigned);
+            } else {
+                $this->updateStaffStatus($entity, $this->endOfAssignment);
+            }
         }
 
         $listeners = [
@@ -1478,7 +1483,16 @@ class StaffTable extends ControllerActionTable
         $todayDate = Time::now();
 
         return $query
-                ->find('withBelongsTo')
+                ->select([
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
+                ])
+                ->contain(['Users'])
                 ->matching('Positions', function ($q) {
                     return $q->where(['Positions.is_homeroom' => 1]);
                 })
@@ -1494,8 +1508,8 @@ class StaffTable extends ControllerActionTable
                 ->formatResults(function ($results) {
                     $returnArr = [];
                     foreach ($results as $result) {
-                        if ($result->has('user')) {
-                            $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
+                        if ($result->has('Users')) {
+                            $returnArr[] = ['id' => $result->Users->id, 'name' => $result->Users->name_with_id];
                         }
                     }
                     return $returnArr;

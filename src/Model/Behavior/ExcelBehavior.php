@@ -32,8 +32,9 @@ class ExcelBehavior extends Behavior
         'folder' => 'export',
         'default_excludes' => ['modified_user_id', 'modified', 'created', 'created_user_id', 'password'],
         'excludes' => [],
-        'limit' => 300,
+        'limit' => 100,
         'pages' => [],
+        'autoFields' => true,
         'orientation' => 'landscape', // or portrait
         'sheet_limit' =>  1000000 // 1 mil rows and header row
     ];
@@ -210,11 +211,15 @@ class ExcelBehavior extends Behavior
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
             }
-
+            
             $this->contain($query, $fields, $table);
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
-            $query->autoFields(true);
+            $autoFields = $this->config('autoFields');
+            
+            if (!isset($autoFields) || $autoFields == true){
+                $query->autoFields(true);
+            }
 
             $count = $query->count();
             $rowCount = 0;
