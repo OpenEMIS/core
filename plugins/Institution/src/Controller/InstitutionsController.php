@@ -168,7 +168,7 @@ class InstitutionsController extends AppController
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudents'            => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
-            'ImportTextbooks'           => ['className' => 'Institution.ImportTextbooks', 'actions' => ['add']]
+            'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -701,6 +701,7 @@ class InstitutionsController extends AppController
                 $institutionId = $session->read('Institution.Institutions.id');
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
+
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -710,6 +711,13 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             $this->set('externalDataSource', $externalDataSource);
+
+            $admissionExecutePermission = true;
+            if (!$this->AccessControl->isAdmin()) {
+                $admissionExecutePermission = $session->read('Permissions.Institutions.StudentAdmission.execute');
+            }
+            $this->set('admissionExecutePermission', $admissionExecutePermission);
+
             $this->render('studentAdd');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
@@ -1065,6 +1073,9 @@ class InstitutionsController extends AppController
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
+                } else if ($model->table() == 'staff_appraisals'  && !$isDownload) {
+                    $ids = array_key_exists('user_id', $requestQuery) ? $requestQuery['user_id']: $session->read('Staff.Staff.id');
+                    $persona = $model->Users->get($ids);
                 }
             } elseif (isset($requestQuery['user_id'][1])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
@@ -1321,12 +1332,12 @@ class InstitutionsController extends AppController
                 'urlModel' => 'Nationalities'
             ],
             'Contacts' => ['text' => __('Contacts')],
-            'Guardians' => ['text' => __('Guardians')],
             'Languages' => ['text' => __('Languages')],
             'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')],
+            'Guardians' => ['text' => __('Guardians')],
             'StudentSurveys' => ['text' => __('Surveys')]
         ];
 
@@ -1364,6 +1375,18 @@ class InstitutionsController extends AppController
                             array_merge($studentUrl, $tempParam),
                             ['security_user_id' => $securityUserId]
                         );
+
+                if ($key == 'Comments') {
+                    $institutionId = $this->request->session()->read('Institution.Institutions.id');
+
+                    $url = [
+                        'plugin' => 'Institution',
+                        'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                        'controller' => $userRole.'Comments',
+                        'action' => 'index'
+                    ];
+                    $url = $this->ControllerAction->setQueryString($url, ['security_user_id' => $securityUserId]);
+                }
 
                 $tabElements[$key]['url'] = $url;
             }

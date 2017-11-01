@@ -1,9 +1,10 @@
-//Multi Select v.1.0.0
+//Multi Select v.1.0.1
 
 angular.module('kd-angular-tree-dropdown', [])
-.directive('kdTreeDropdownNg', kdTreeDropdown);
+    .directive('kdTreeDropdownNg', kdTreeDropdown);
 
 function kdTreeDropdown() {
+    var separator = "--";
     var directive = {
         restrict: 'E',
         replace: true,
@@ -14,7 +15,7 @@ function kdTreeDropdown() {
                         multi-select='isMultiple' \
                         data-output-model='outputModel' \
                         data-callback='selectionCallback(item, selectedItems)'\
-                        data-expand-click='expandClicked()'\
+                        data-expand-click = 'onItemExpand(item)'\
                         tree-id='{{elementId}}'\
                         ></multi-select-tree>\
                 </div>\
@@ -25,7 +26,10 @@ function kdTreeDropdown() {
             inputModel: '=',
             outputModel: '=?',
             textConfig: '=?',
-            modelType: '@?'
+            modelType: '@?',
+            onItemExpand: '&',
+            expandChild: '&',
+            getChildData: '&'
         }
     };
     return directive;
@@ -37,23 +41,30 @@ function kdTreeDropdown() {
         $scope.isMultiple = (angular.isDefined($scope.modelType) && $scope.modelType == "single") ? false : true;
 
         $scope.selectionText = updateSelectionTextConfig($scope);
+
+        // $scope.$on("clickEvent", function() {
+        //    $scope.$emit("clickEvent");
+        // });
     }
 
     function kdTreeDropdownLink(_scope, _element, _attrs) {
         _scope.elementId = getElementId(_element);
 
+        _element.on('click', _scope.emit);
+
         angular.element(document).ready(function() {
             addInputText(_scope);
             angular.element(document.querySelector("#" + _scope.elementId + " .tree-input")).addClass("input-select-wrapper");
+
         });
 
         _scope.selectionCallback = function(_item, _selectedItem) {
-            if(typeof _item == "undefined") return false;
+            if (typeof _item == "undefined") return false;
             //updateSelectionText(_selectedItem, _item, _scope.elementId);
             return true;
         }
 
-        _scope.$watch('outputModel', function(_newSelectedList){
+        _scope.$watch('outputModel', function(_newSelectedList) {
             if (angular.isUndefined(_scope.selectionText)) return;
 
             updateSelectionText(generateSelectionText(_newSelectedList, _scope.selectionText, _scope.treePlaceholder), _scope.elementId);
@@ -62,9 +73,121 @@ function kdTreeDropdown() {
         _scope.$watch('textConfig', function(_newTextConfig) {
             _scope.selectionText = updateSelectionTextConfig(_scope);
             updateSelectionText(generateSelectionText(_scope.outputModel, _scope.selectionText, _scope.treePlaceholder), _scope.elementId);
-            console.log("scope lalalala", _scope);
         }, true);
+
+
+    /************ Automatically Expand the default selection ****************/
+
+        loadExpand(_scope.isMultiple, _scope.inputModel);
+
+        _scope.emit = function() {
+            console.log("huat here?")
+        }
+
+        _scope.onItemExpand = function(_item) {
+            //pass in parent data to front end so developer will get the parent to pull child data
+            _scope.expandChild({ parentData: _item, getChildData: _scope.getChildData });
+        }
+
+        _scope.getChildData = function(_parentData, _childData) {
+            //check if the child has been selected. if selected, add into outputModel and update selection text.
+            for (i = 0; i < _childData.length; i++) {
+                if (typeof _childData[i].selected !== "undefined" && _childData[i].selected && $.inArray(_childData[i], _scope.outputModel) == -1) {
+                    _scope.outputModel.push(_childData[i]);
+                    updateSelectionText(generateSelectionText(_scope.outputModel, _scope.selectionText, _scope.treePlaceholder), _scope.elementId);
+                }
+            }
+            _parentData.children = _childData;
+            loadExpand(_scope.isMultiple, _childData);
+
+            _scope.$apply();
+        }
+
     }
+
+    function loadExpand(_isMultiple, _pData) {
+
+        var isExpandNeeded = true;
+
+        if (_isMultiple) {
+            for (i = 0; len = _pData.length, i < len; i++) {
+                //if children = number > do expand to load
+                if (typeof _pData[i].children == "number") {
+                    if (_pData[i].children > 0) {
+                        _pData[i].children = [{ name: "", id: 0, loading: true }];
+                    }
+                    isExpandNeeded = false;
+                }
+            }
+        }
+
+        // children is not number, auto expand so the user can see the default selection
+        if (isExpandNeeded) {
+            processExpandChild(_pData);
+
+        }
+    }
+
+    function processExpandChild(_parentData) {
+
+        var output = getFlattenData(_parentData, "");
+
+        for (i = 0; i < output.length; i++) {
+
+            var data = output[i].split(separator);
+            var parent = null;
+
+            for (x = 0; x < data.length; x++) {
+                if (data[x] !== "") {
+                    if (parent == null) {
+                        parent = _parentData[data[x]];
+                    } else {
+                        parent = parent[data[x]];
+                    }
+                    parent.isExpanded = true;
+                }
+            }
+
+        }
+    }
+
+    function getFlattenData(_obj, _propString) {
+
+        var result = {};
+        var output = [];
+
+        processFlatten(_obj, _propString);
+
+        function processFlatten(_rObj, _rPropString) {
+            if (Object(_rObj) !== _rObj) { //number or string
+                result[_rPropString] = _rObj; // --0--id : 41
+            } else if (Array.isArray(_rObj)) { // true for child data: [{name:child1, id:41}]
+                for (var i = 0, len = _rObj.length; i < len; i++) {
+                    processFlatten(_rObj[i], _rPropString + separator + i); // {id:41, name:parent3, children:[{...}]}, '' + -- + 0
+                }
+                if (len == 0) { //end of the array
+                    result[_rPropString] = [];
+                }
+            } else { //pass in parent data {id:41, name:parent3, children:[{...}]}
+                var isEmpty = true;
+                for (var key in _rObj) {
+                    isEmpty = false;
+
+                    if (key == "selected" && _rObj[key]) {
+                        output.push(_rPropString); // --0
+                    }
+                    processFlatten(_rObj[key], _rPropString ? _rPropString + separator + key : key); // id, '' + -- + 0
+                }
+                if (isEmpty) //end of the _rObj
+                    result[_rPropString] = {};
+            }
+        }
+
+        return output;
+    }
+
+
+    /*************** End of Expanding *****************/
 
     function generateSelectionText(_selectedList, _selectionText, _placeholder) {
         var selectionText = _selectionText.noSelection;
@@ -100,7 +223,7 @@ function kdTreeDropdown() {
 
     function getElementId(_element) {
         if (angular.isDefined(_element[0].id) && _element[0].id != "") return _element[0].id;
-        return "tree-dropdown";
+        return "";
     }
 
     // selectionText = {
@@ -118,4 +241,5 @@ function kdTreeDropdown() {
         }
         return selectionText;
     }
+
 }

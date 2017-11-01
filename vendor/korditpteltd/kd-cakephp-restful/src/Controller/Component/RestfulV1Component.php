@@ -136,7 +136,8 @@ class RestfulV1Component extends Component implements RestfulInterface
         }
 
         $table = $this->model;
-        $query = $table->find();
+        $user = $this->controller->getAuthorizedUser();
+        $query = $table->find('all', ['user' => $user]);
         $requestQueries = $this->request->query;
         $extra = new ArrayObject(['table' => $table, 'fields' => []]);
         Log::write('debug', $requestQueries);

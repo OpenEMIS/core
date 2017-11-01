@@ -2007,6 +2007,7 @@ class ValidationBehavior extends Behavior
             ->where([
                 $StaffTable->aliasField('staff_id') => $staffId,
                 $StaffTable->aliasField('institution_id') => $data['institution_id'],
+                $StaffTable->aliasField('start_date'). ' < ' => $startDate,
                 'OR' => [
                     [$StaffTable->aliasField('end_date').' >= ' => $startDate],
                     [$StaffTable->aliasField('end_date').' IS NULL']
@@ -2026,6 +2027,7 @@ class ValidationBehavior extends Behavior
             ->where([
                 $StaffTable->aliasField('staff_id') => $staffId,
                 $StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
+                $StaffTable->aliasField('start_date'). ' < ' => $startDate,
                 'OR' => [
                     [$StaffTable->aliasField('end_date').' >= ' => $startDate],
                     [$StaffTable->aliasField('end_date').' IS NULL']
@@ -2036,40 +2038,6 @@ class ValidationBehavior extends Behavior
 
         if ($staffRecord) {
             return false;
-        }
-
-        return true;
-    }
-
-    public static function checkEndOfAssignmentWithStartDate($field, array $globalData)
-    {
-        // will get the max end_date of the staff and compare it with the inputted start_date
-        // start_date cant be earlier than max End of assignment date.
-        $model = $globalData['providers']['table'];
-        $registryAlias = $model->registryAlias();
-        $data = $globalData['data'];
-        $staffId = $data['staff_id'];
-        $startDate = new Date($data['start_date']);
-        $todayDate = Date::now();
-
-        // EOA will get the max end date
-        $StaffTable = TableRegistry::get('Institution.Staff');
-        $endOfAssigmentStaffRecords = $StaffTable
-            ->find()
-            ->select(['max_end_date' => $StaffTable->find()->func()->max('end_date')])
-            ->where([
-                $StaffTable->aliasField('staff_id') => $staffId,
-                $StaffTable->aliasField('end_date').' IS NOT NULL'
-            ])
-            ->first();
-
-        if (!empty($endOfAssigmentStaffRecords) && !empty($endOfAssigmentStaffRecords->max_end_date)) {
-            if ($startDate <= new Date($endOfAssigmentStaffRecords->max_end_date)) {
-                $maxEndDate = new Date($endOfAssigmentStaffRecords->max_end_date);
-                $validationErrorMsg = "$registryAlias.start_date.checkEndOfAssignmentWithStartDate";
-
-                return $model->getMessage($validationErrorMsg, ['sprintf' => [$maxEndDate->format('d-m-Y')]]);
-            }
         }
 
         return true;
@@ -2127,6 +2095,44 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function validateAreaAdministrativeMainCountry($field, array $globalData)
+    {
+        //check at least one main country is set
+        if (array_key_exists('is_main_country', $globalData['data'])) {
+            if ($field == 0) { //if set as not main country
+                $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+                
+                $query = $AreaAdministratives->find()
+                        ->select([$AreaAdministratives->aliasField('id')])
+                        ->where([$AreaAdministratives->aliasField('parent_id').' IS NULL'])
+                        ->first();
+                $worldId = $query->id;
+
+                $conditions = [
+                    $AreaAdministratives->aliasField('parent_id') => $worldId,
+                    $AreaAdministratives->aliasField('is_main_country') => 1
+                ];
+                
+                if (!$globalData['newRecord']) { //for edit
+                    $conditions[$AreaAdministratives->aliasField('id <> ')] = $globalData['data']['id'];
+                }
+
+                $query = $AreaAdministratives
+                        ->find()
+                        ->where($conditions)
+                        ->count();
+                
+                if ($query > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+    }
+
     public static function checkStudentInEducationProgrammes($field, array $globalData)
     {
         $endDate = new DateTime($field);
@@ -2162,19 +2168,20 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $registryAlias = $model->registryAlias();
         $data = $globalData['data'];
+        $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
 
         if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                     ->find()
                     ->where([
                         $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
-                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                        $InstitutionGrades->aliasField('institution_id') => $previousInstitutionId
                     ])
                     ->first();
 
-            $programmeEndDate = $query->end_date;
+            if (!empty($query->end_date)) {
+                $programmeEndDate = $query->end_date;
 
-            if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $today = new DateTime('now');
                 $validationErrorMsg = '';
@@ -2194,18 +2201,18 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
 
-        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+        if (array_key_exists('new_education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                     ->find()
                     ->where([
-                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $InstitutionGrades->aliasField('education_grade_id') => $data['new_education_grade_id'],
                         $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
                     ])
                     ->first();
 
-            $programmeEndDate = $query->end_date;
+            if (!empty($query->end_date)) {
+                $programmeEndDate = $query->end_date;
 
-            if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $studentStartDate = new DateTime($data['start_date']);
 
@@ -2214,6 +2221,7 @@ class ValidationBehavior extends Behavior
                 }
             }
         }
+
         return true;
     }
 
@@ -2313,6 +2321,44 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    public static function checkAssessmentMarks($field, array $globalData)
+    {
+        if (strlen($field) > 0) {
+            $model = $globalData['providers']['table'];
+
+            if (array_key_exists('education_subject_id', $globalData['data']) && !empty($globalData['data']['education_subject_id']) && array_key_exists('assessment_id', $globalData['data']) && !empty($globalData['data']['assessment_id']) && array_key_exists('assessment_period_id', $globalData['data']) && !empty($globalData['data']['assessment_period_id'])) {
+
+                $educationSubjectId = $globalData['data']['education_subject_id'];
+                $assessmentId = $globalData['data']['assessment_id'];
+                $assessmentPeriodId = $globalData['data']['assessment_period_id'];
+
+                $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+                $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
+                    ->find()
+                    ->contain('AssessmentGradingTypes')
+                    ->where([
+                        $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                        $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
+                        $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
+                    ])
+                    ->first();
+
+                if ($assessmentItemsGradingTypeEntity) {
+                    $minMark = 0;
+                    $maxMark = $assessmentItemsGradingTypeEntity->assessment_grading_type->max;
+
+                    if ($field < $minMark || $field > $maxMark) {
+                        return $model->getMessage('Institution.InstitutionAssessments.marks.markHint', ['sprintf' => [$minMark, $maxMark]]);
+                    }
+                } else {
+                    return $model->getMessage('Institution.InstitutionAssessments.grading_type.notFound');
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
     {
         if ($homeRoomTeacher != 0 && $globalData['data'][$secondaryHomeRoomTeacher] != 0) {
@@ -2320,6 +2366,36 @@ class ValidationBehavior extends Behavior
                 return false;
             }
         }
+        return true;
+    }
+
+    //check whether position assigned to class(es)
+    public static function checkHomeRoomTeacherAssignments($field, array $globalData)
+    {
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
+        $query = $InstitutionClasses->find()
+                ->matching('Staff.InstitutionStaff.Positions')
+                ->where([
+                    'Positions.id' => $globalData['data']['id']
+                ])
+                ->count();
+
+        if ($query > 0) {
+            return false;
+        }
+
+        $query = $InstitutionClasses->find()
+                ->matching('SecondaryStaff.InstitutionStaff.Positions')
+                ->where([
+                    'Positions.id' => $globalData['data']['id']
+                ])
+                ->count();
+
+        if ($query > 0) {
+            return false;
+        }
+
         return true;
     }
 }
