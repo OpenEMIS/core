@@ -221,11 +221,7 @@ class StaffUserTable extends ControllerActionTable
 
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $StaffTransferOut = TableRegistry::get('Institution.StaffTransferOut');
-            $Statuses = $StaffTransferOut->Statuses;
-
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-            $doneStatus = $StaffTransferOut::DONE;
 
             $institutionStaffId = $extra['institution_staff_id'];
             $staffEntity = $StaffTable->get($institutionStaffId);
@@ -234,30 +230,20 @@ class StaffUserTable extends ControllerActionTable
             $staffStatusId = $staffEntity->staff_status_id;
 
             if ($staffStatusId == $assignedStatus) {
-                $url = ['controller' => $this->controller->name, 'action' => 'StaffTransferOut', 'add'];
+                $url = [
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'action' => 'StaffTransferOut',
+                    'add'
+                ];
 
                 $transferButton = $toolbarButtons['back'];
                 $transferButton['type'] = 'button';
                 $transferButton['label'] = '<i class="fa kd-transfer"></i>';
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
-                $transferButton['url'] = $this->setQueryString($url, ['institution_staff_id' => $institutionStaffId, 'user_id' => $entity->id]);
-
-                // check if there is an existing outgoing transfer request
-                $staffTransferRequest = $StaffTransferOut->find()
-                    ->matching($Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
-                        return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
-                    })
-                    ->where([
-                        $StaffTransferOut->aliasField('previous_institution_id') => $institutionId,
-                        $StaffTransferOut->aliasField('staff_id') => $staffId
-                    ])
-                    ->first();
-
-                if (!empty($staffTransferRequest)) {
-                    $transferButton['url'][0] = 'view';
-                    $transferButton['url'][1] = $this->paramsEncode(['id' => $staffTransferRequest->id]);
-                }
+                $transferButton['url'] = $this->setQueryString($url, ['institution_staff_id' => $institutionStaffId, 'user_id' => $staffId]);
 
                 $toolbarButtons['transfer'] = $transferButton;
             }

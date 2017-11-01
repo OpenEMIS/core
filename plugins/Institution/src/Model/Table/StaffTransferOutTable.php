@@ -146,17 +146,61 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
         $institutionStaffId = $this->getQueryString('institution_staff_id');
+        $userId = $this->getQueryString('user_id');
 
-        if (!empty($institutionStaffId)) {
-            $StaffTable = TableRegistry::get('Institution.Staff');
-            $institutionStaffEntity = $StaffTable->get($institutionStaffId, ['contain' => ['Users', 'Institutions', 'Positions', 'StaffTypes']]);
-            $this->setupFields($institutionStaffEntity);
-
-        } else {
+        if (empty($institutionStaffId) || empty($userId)) {
             $event->stopPropagation();
             return $this->controller->redirect($this->url('index'));
         }
+
+        // check pending transfers
+        $pendingTransfer = $this->find()
+            ->contain('Statuses.WorkflowStepsParams')
+            ->where([
+                $this->aliasField('staff_id') => $userId,
+                $this->Statuses->aliasField('category <> ') => self::DONE
+            ])
+            ->first();
+
+        if (!empty($pendingTransfer)) {
+            // check if the outgoing institution can view the transfer record
+            $visible = 0;
+            if ($pendingTransfer->previous_institution_id == $institutionId) {
+                $params = $pendingTransfer->status->workflow_steps_params;
+                foreach ($params as $param) {
+                    if ($param['name'] == 'institution_visible' && $param['value'] == self::OUTGOING) {
+                        $visible = 1;
+                        break;
+                    }
+                }
+            }
+
+            if ($visible) {
+                $url = $this->url('view');
+                $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+
+            } else {
+                $url = $this->url('view');
+                $url['action'] = 'StaffUser';
+                $url[1] = $this->paramsEncode(['id' => $userId]);
+                $url = $this->setQueryString($url, ['institution_staff_id' => $institutionStaffId]);
+
+                $this->Alert->warning($this->aliasField('existingStaffTransfer'), ['reset' => true]);
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+        }
+
+        // if no pending transfers
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $institutionStaffEntity = $StaffTable->get($institutionStaffId, ['contain' => ['Users', 'Institutions', 'Positions', 'StaffTypes']]);
+        $this->setupFields($institutionStaffEntity);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
