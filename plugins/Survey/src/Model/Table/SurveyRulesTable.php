@@ -31,6 +31,20 @@ class SurveyRulesTable extends ControllerActionTable
         ]);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'survey_form_id';
+        $searchableFields[] = 'survey_question_id';
+        $searchableFields[] = 'dependent_question_id';
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $entity->id = Text::uuid();
@@ -163,9 +177,11 @@ class SurveyRulesTable extends ControllerActionTable
         if (!empty($search)) {
             $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
 
-            $extra['OR'] = [[$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'],
+            $extra['OR'] = [
+                [$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'],
                 [$this->SurveyQuestions->aliasField('name').' LIKE' => '%' . $search . '%'],
-                [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']];
+                [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']
+            ];
         }
     }
 
