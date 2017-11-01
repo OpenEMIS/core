@@ -535,7 +535,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
 
         // Filter by active status
-        // $activeStatusId = $StaffTable->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
         $positionConditions = [];
         $positionConditions[$this->aliasField('institution_id')] = $institutionId;
         if (!empty($activeStatusId)) {

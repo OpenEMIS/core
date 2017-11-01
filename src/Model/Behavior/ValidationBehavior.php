@@ -2265,9 +2265,7 @@ class ValidationBehavior extends Behavior
             $models = [
                 'Institution.TransferApprovals',
                 'Institution.StudentAdmission',
-                'Institution.StudentWithdraw',
-                'Institution.StaffTransferApprovals',
-                'Institution.StaffTransferRequests'
+                'Institution.StudentWithdraw'
             ];
 
             foreach ($models as $model) {
