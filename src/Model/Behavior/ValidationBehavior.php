@@ -2043,25 +2043,54 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-    public static function checkPendingStaffTransferIn($field, array $globalData)
+    public static function checkPendingStaffTransfer($field, array $globalData)
     {
         $data = $globalData['data'];
         $staffId = $data['staff_id'];
         $institutionId = $data['institution_id'];
-        $StaffTransferInTable = TableRegistry::get('Institution.StaffTransferIn');
+        $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
 
-        $transferRecord = $StaffTransferInTable
-            ->find()
-            ->matching('Statuses')
+        $transferRecord = $InstitutionStaffTransfers->find()
+            ->contain('Statuses.WorkflowStepsParams')
             ->where([
-                $StaffTransferInTable->aliasField('institution_id') => $institutionId,
-                $StaffTransferInTable->aliasField('staff_id') => $staffId,
-                'Statuses.category <> ' => $StaffTransferInTable::DONE
+                $InstitutionStaffTransfers->aliasField('staff_id') => $staffId,
+                'Statuses.category <> ' => $InstitutionStaffTransfers::DONE
             ])
             ->first();
 
         if ($transferRecord) {
-            $url = Router::url(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferIn', 'view', $StaffTransferInTable->paramsEncode(['id' => $transferRecord->id])], true);
+            // check if the incoming institution can view the transfer record
+            $visible = 0;
+            if ($transferRecord->new_institution_id == $institutionId) {
+                $params = $transferRecord->status->workflow_steps_params;
+                foreach ($params as $param) {
+                    if ($param['name'] == 'institution_visible' && $param['value'] == $InstitutionStaffTransfers::INCOMING) {
+                        $visible = 1;
+                        break;
+                    }
+                }
+            }
+
+            if ($visible) {
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'institutionId' => $InstitutionStaffTransfers->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffTransferIn',
+                    'view',
+                    $InstitutionStaffTransfers->paramsEncode(['id' => $transferRecord->id])
+                ], true);
+
+            } else {
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'institutionId' => $InstitutionStaffTransfers->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'Staff',
+                    'add',
+                    'transfer_exists' => 'true'
+                ], true);
+            }
             return $url;
         }
 
