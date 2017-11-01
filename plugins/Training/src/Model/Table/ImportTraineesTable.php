@@ -118,13 +118,17 @@ class ImportTraineesTable extends AppTable
                                 ->toArray();
 
             if (!empty($targetPopulationIds)) {
+
+                $positionCondition = [];
+                if (current($targetPopulationIds) != -1) {
+                    $positionCondition['Positions.staff_position_title_id IN'] = $targetPopulationIds;
+                }
+
                 $query = $Staff->find()
-                        ->matching('Positions', function ($q) use ($Positions, $targetPopulationIds) {
+                        ->matching('Positions', function ($q) use ($Positions, $targetPopulationIds, $positionCondition) {
                             return $q
                                 ->find('all')
-                                ->where([
-                                    'Positions.staff_position_title_id IN' => $targetPopulationIds
-                                ]);
+                                ->where($positionCondition);
                         })
                         ->where([
                             $Staff->aliasField('staff_id') => $tempRow['trainee_id']

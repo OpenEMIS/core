@@ -295,7 +295,7 @@ class StaffUserTable extends ControllerActionTable
             $conditions['openemis_no LIKE'] = $openemisNo . '%';
         }
         if (!empty($dateOfBirth)) {
-            $conditions['date_of_birth'] = $dateOfBirth;
+            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');;
         }
 
         $identityConditions = [];
@@ -339,6 +339,7 @@ class StaffUserTable extends ControllerActionTable
             'InstitutionStaff' => function ($q) use ($institutionId, $startDate) {
                 return $q->where([
                     'InstitutionStaff.institution_id <>' => $institutionId,
+                    'InstitutionStaff.start_date < ' => $startDate,
                     'OR' => [
                         ['InstitutionStaff.end_date >= ' => $startDate],
                         ['InstitutionStaff.end_date IS NULL']

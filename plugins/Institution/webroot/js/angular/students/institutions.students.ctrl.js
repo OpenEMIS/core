@@ -204,7 +204,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             $scope.initGrid();
             UtilsSvc.isAppendLoader(false);
             if ($location.search().student_added) {
-                AlertSvc.success($scope, 'The student is added to the Pending Admission list successfully.');
+                AlertSvc.success($scope, 'The student is added successfully.');
             }
         });
 
@@ -573,6 +573,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
             studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key]['date_of_birth']);
             studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
+            
+            if (studentRecords[key]['main_nationality'] != null) {
+                studentRecords[key]['nationality_name'] = studentRecords[key]['main_nationality']['name'];
+                studentRecords[key]['identity_type_name'] = studentRecords[key]['main_identity_type']['name'];
+            }
 
             if (!studentRecords[key].hasOwnProperty('name')) {
                 studentRecords[key]['name'] = '';
@@ -615,7 +620,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
             if (postResponse.data.error.length === 0) {
-                AlertSvc.success($scope, 'The student is added to the Pending Admission list successfully.');
+                AlertSvc.success($scope, 'The student is added successfully.');
                 $window.location.href = 'add?student_added=true';
             } else {
                 if (userRecord.hasOwnProperty('institution_students')) {
