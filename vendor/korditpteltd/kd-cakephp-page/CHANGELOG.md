@@ -1,3 +1,8 @@
+### [1.3.5] - 2017-10-25
+- Fixed an issue where the file is always overwritten when there is no file upload
+- Fixed an issue where select option is not displaying if the value is 0
+- Fixed an issue where multi select value doesn't retain when validation fails
+
 ### [1.3.4] - 2017-10-23
 - Fixed an issue where visible foreign key display fields are not part of the search in Index page
 
