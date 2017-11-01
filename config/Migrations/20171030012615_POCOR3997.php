@@ -109,6 +109,12 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => '1 -> Incoming Institution, 2 -> Outgoing Institution'
             ])
+            ->addColumn('transfer_type', 'integer', [
+                'default' => '0',
+                'limit' => 1,
+                'null' => false,
+                'comment' => '1 -> Full Transfer, 2 -> Partial Transfer, 3 -> No Change'
+            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -786,6 +792,135 @@ class POCOR3997 extends AbstractMigration
             ]
         ];
         $this->insert('workflow_steps_params', $validateApprove);
+
+        // labels
+        $this->execute("CREATE TABLE `z_3997_labels` LIKE `labels`");
+        $this->execute("INSERT INTO `z_3997_labels` SELECT * FROM `labels` WHERE `module` LIKE 'StaffTransfer%'");
+        $this->execute("DELETE FROM `labels` WHERE `module` LIKE 'StaffTransfer%'");
+
+        $labels = [
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'previous_institution_id',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'Current Institution',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'previous_end_date',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'Current End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'previous_FTE',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'New FTE',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'previous_staff_type_id',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'New Staff Type',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'new_start_date',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'Requested Start Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'previous_institution_id',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'Current Institution',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'new_FTE',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'Requested FTE',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'new_institution_position_id',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'Requested Institution Position',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'new_staff_type_id',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'Requested Staff Type',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'new_start_date',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'Requested Start Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'new_end_date',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'Requested End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'previous_end_date',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+        ];
+        $this->insert('labels', $labels);
     }
 
     // rollback
@@ -846,5 +981,11 @@ class POCOR3997 extends AbstractMigration
         // delete workflow_transitions
         $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId);
         $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId);
+
+        // labels
+        $this->execute("DELETE FROM `labels` WHERE `module` = 'StaffTransferOut'");
+        $this->execute("DELETE FROM `labels` WHERE `module` = 'StaffTransferIn'");
+        $this->execute("INSERT INTO `labels` SELECT * FROM `z_3997_labels`");
+        $this->dropTable('z_3997_labels');
     }
 }
