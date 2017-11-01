@@ -29,10 +29,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
-            ->add('staff_id', 'ruleTransferRequestExists', [
-                'rule' => ['checkPendingStaffTransfer'],
-                'on' => 'create'
-            ])
             ->add('new_start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'new_end_date', false],
                 'on' => function ($context) {
