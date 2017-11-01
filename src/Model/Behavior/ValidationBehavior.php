@@ -1997,7 +1997,7 @@ class ValidationBehavior extends Behavior
     {
         $data = $globalData['data'];
         $staffId = $data['staff_id'];
-        $startDate = (new Date($data['start_date']))->format('d-m-Y');
+        $startDate = new Date($data['start_date']);
 
         // check if staff is already assigned
         $StaffTable = TableRegistry::get('Institution.Staff');
