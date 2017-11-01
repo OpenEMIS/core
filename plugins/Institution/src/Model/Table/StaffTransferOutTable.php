@@ -13,11 +13,6 @@ use Institution\Model\Table\InstitutionStaffTransfersTable;
 
 class StaffTransferOutTable extends InstitutionStaffTransfersTable
 {
-    // Transfer Type
-    const FULL_TRANSFER = 1;
-    const PARTIAL_TRANSFER = 2;
-    const NO_CHANGE = 3;
-
     private $transferTypeOptions = [];
 
     public function initialize(array $config)
@@ -44,7 +39,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 'on' => 'create'
             ])
             ->add('previous_end_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'new_start_date', true],
+                'rule' => ['compareDate', 'new_start_date', false],
                 'on' => function ($context) {
                     return array_key_exists('new_start_date', $context['data']) && !empty($context['data']['new_start_date']);
                 }
@@ -129,15 +124,15 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
         // show fields according to transfer type
         if ($entity->transfer_type == self::FULL_TRANSFER) {
-            $this->field('previous_staff_type_id', ['type' => 'hidden']);
             $this->field('previous_FTE', ['type' => 'hidden']);
+            $this->field('previous_staff_type_id', ['type' => 'hidden']);
         } else if ($entity->transfer_type == 0 || $entity->transfer_type == self::NO_CHANGE) {
             $this->field('previous_end_date', ['type' => 'hidden']);
-            $this->field('previous_staff_type_id', ['type' => 'hidden']);
             $this->field('previous_FTE', ['type' => 'hidden']);
+            $this->field('previous_staff_type_id', ['type' => 'hidden']);
         }
 
-        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'new_institution_id', 'transfer_type', 'previous_staff_type_id', 'previous_FTE', 'previous_end_date', 'comment', 'initiated_by']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'new_institution_id', 'transfer_type', 'previous_end_date', 'previous_FTE', 'previous_staff_type_id', 'comment', 'initiated_by']);
     }
 
     public function onGetTransferType(Event $event, Entity $entity)
@@ -206,9 +201,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('current_start_date', ['type' => 'readonly', 'attr' => ['value' => $startDate]]);
 
         $this->field('transfer_type');
+        $this->field('previous_end_date');
         $this->field('previous_FTE');
         $this->field('previous_staff_type_id');
-        $this->field('previous_end_date');
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
         $this->field('new_institution_id', ['entity' => $entity]);

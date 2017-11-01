@@ -34,13 +34,13 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                 'on' => 'create'
             ])
             ->add('new_start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'new_end_date', true],
+                'rule' => ['compareDate', 'new_end_date', false],
                 'on' => function ($context) {
                     return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
             ])
             ->add('new_start_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'previous_end_date', true],
+                'rule' => ['compareDateReverse', 'previous_end_date', false],
                 'on' => function ($context) {
                     return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
                 }
