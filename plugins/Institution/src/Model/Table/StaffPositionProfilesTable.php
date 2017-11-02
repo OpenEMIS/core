@@ -12,8 +12,7 @@ use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 use Cake\I18n\Date;
-
-use Institution\Model\Table\StaffTransfer; // to be able to used the constant set
+use Cake\I18n\Time;
 
 class StaffPositionProfilesTable extends ControllerActionTable
 {
@@ -146,7 +145,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $data = $this->get($id)->toArray();
         $newEntity = $this->patchStaffProfile($data);
 
-        // reject all pending transfer
+        // reject all pending transfers
         $this->rejectPendingTransfer($data);
 
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -155,24 +154,59 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     private function rejectPendingTransfer(array $data)
     {
-        // reject all pending transfer, update the status to 3 (Rejected)
+        // reject all pending transfers
         $staffId = $data['staff_id'];
-        $prevInstitutionId = $data['institution_id'];
 
-        $StaffTransferRequests = TableRegistry::get('Institution.StaffTransferRequests');
-        $transferRequestRecords = $StaffTransferRequests->find()
-            ->where([
-                $StaffTransferRequests->aliasField('previous_institution_id') => $prevInstitutionId,
-                $StaffTransferRequests->aliasField('staff_id') => $staffId,
-                $StaffTransferRequests->aliasField('status') => StaffTransfer::PENDING, // 0
-                $StaffTransferRequests->aliasField('type') => StaffTransfer::TRANSFER // 2
-            ])
+        $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $doneStatus = $InstitutionStaffTransfers::DONE;
+
+        $transferRecords = $InstitutionStaffTransfers->find()
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
+            ->where([$InstitutionStaffTransfers->aliasField('staff_id') => $staffId])
             ->all();
 
-        if (!$transferRequestRecords->isEmpty()) {
-            foreach ($transferRequestRecords as $key => $entity) {
-                $entity->status = StaffTransfer::REJECTED; // 2
-                $StaffTransferRequests->save($entity);
+        if (!empty($transferRecords)) {
+            foreach ($transferRecords as $key => $entity) {
+                $workflowId = $entity->_matchingData['Statuses']->workflow_id;
+
+                // get closed step based on done category and system defined
+                $closedStepEntity = $this->Statuses->find()
+                    ->matching('Workflows')
+                    ->where([
+                        $this->Statuses->aliasField('workflow_id') => $workflowId,
+                        $this->Statuses->aliasField('category') => self::DONE,
+                        $this->Statuses->aliasField('is_system_defined') => 1
+                    ])
+                    ->first();
+
+                if (!empty($closedStepEntity)) {
+                    $prevStep = $entity->status_id;
+
+                    // update status_id and assignee_id
+                    $entity->status_id = $closedStepEntity->id;
+                    $InstitutionStaffTransfers->autoAssignAssignee($entity);
+
+                    if($InstitutionStaffTransfers->save($entity)) {
+                        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                        $prevStepEntity = $this->Statuses->get($prevStep);
+
+                        $transition = [
+                            'comment' => __('On approve Staff Change In Assignment'),
+                            'prev_workflow_step_name' => $prevStepEntity->name,
+                            'workflow_step_name' => $closedStepEntity->name,
+                            'workflow_action_name' => __('Administration - Close Record'),
+                            'workflow_model_id' => $closedStepEntity->_matchingData['Workflows']->workflow_model_id,
+                            'model_reference' => $entity->id,
+                            'created_user_id' => 1,
+                            'created' => new Time('NOW')
+                        ];
+                        $entity = $WorkflowTransitions->newEntity($transition);
+                        $WorkflowTransitions->save($entity);
+                    }
+
+                }
             }
         }
     }

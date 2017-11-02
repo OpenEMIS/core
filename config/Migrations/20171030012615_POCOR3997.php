@@ -271,17 +271,17 @@ class POCOR3997 extends AbstractMigration
                 'category' => '3',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '1',
+                'is_system_defined' => '0',
                 'workflow_id' => $byIncomingWorkflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Rejected',
+                'name' => 'Closed',
                 'category' => '3',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '0',
+                'is_system_defined' => '1',
                 'workflow_id' => $byIncomingWorkflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -295,7 +295,7 @@ class POCOR3997 extends AbstractMigration
         $pendingApprovalOutgoingStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Approval From Outgoing Institution'")['id'];
         $pendingAsssignmentStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Staff Assignment'")['id'];
         $assignedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Assigned'")['id'];
-        $rejectedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Rejected'")['id'];
+        $closedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Closed'")['id'];
 
         // workflow_actions
         $workflowActionData = [
@@ -334,7 +334,7 @@ class POCOR3997 extends AbstractMigration
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
                 'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $rejectedStatusId,
+                'next_workflow_step_id' => $closedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -360,7 +360,7 @@ class POCOR3997 extends AbstractMigration
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
                 'workflow_step_id' => $pendingApprovalOutgoingStatusId,
-                'next_workflow_step_id' => $rejectedStatusId,
+                'next_workflow_step_id' => $closedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -386,7 +386,7 @@ class POCOR3997 extends AbstractMigration
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
                 'workflow_step_id' => $pendingAsssignmentStatusId,
-                'next_workflow_step_id' => $rejectedStatusId,
+                'next_workflow_step_id' => $closedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -426,7 +426,7 @@ class POCOR3997 extends AbstractMigration
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $rejectedStatusId,
+                'workflow_step_id' => $closedStatusId,
                 'name' => 'institution_owner',
                 'value' => '1'
             ]
@@ -484,13 +484,13 @@ class POCOR3997 extends AbstractMigration
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $rejectedStatusId,
+                'workflow_step_id' => $closedStatusId,
                 'name' => 'institution_visible',
                 'value' => '1'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $rejectedStatusId,
+                'workflow_step_id' => $closedStatusId,
                 'name' => 'institution_visible',
                 'value' => '2'
             ]
@@ -557,17 +557,17 @@ class POCOR3997 extends AbstractMigration
                 'category' => '3',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '1',
+                'is_system_defined' => '0',
                 'workflow_id' => $byOutgoingWorkflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Rejected',
+                'name' => 'Closed',
                 'category' => '3',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '0',
+                'is_system_defined' => '1',
                 'workflow_id' => $byOutgoingWorkflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -581,7 +581,7 @@ class POCOR3997 extends AbstractMigration
         $pendingApprovalIncomingStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Approval From Incoming Institution'")['id'];
         $pendingTransferStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Staff Transfer'")['id'];
         $transferredStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Transferred'")['id'];
-        $rejectedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Rejected'")['id'];
+        $closedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Closed'")['id'];
 
         // workflow_actions
         $workflowActionData = [
@@ -620,7 +620,7 @@ class POCOR3997 extends AbstractMigration
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
                 'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $rejectedStatusId,
+                'next_workflow_step_id' => $closedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -646,7 +646,7 @@ class POCOR3997 extends AbstractMigration
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
                 'workflow_step_id' => $pendingApprovalIncomingStatusId,
-                'next_workflow_step_id' => $rejectedStatusId,
+                'next_workflow_step_id' => $closedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -672,7 +672,7 @@ class POCOR3997 extends AbstractMigration
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
                 'workflow_step_id' => $pendingTransferStatusId,
-                'next_workflow_step_id' => $rejectedStatusId,
+                'next_workflow_step_id' => $closedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -712,7 +712,7 @@ class POCOR3997 extends AbstractMigration
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $rejectedStatusId,
+                'workflow_step_id' => $closedStatusId,
                 'name' => 'institution_owner',
                 'value' => '2'
             ]
@@ -770,13 +770,13 @@ class POCOR3997 extends AbstractMigration
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $rejectedStatusId,
+                'workflow_step_id' => $closedStatusId,
                 'name' => 'institution_visible',
                 'value' => '1'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $rejectedStatusId,
+                'workflow_step_id' => $closedStatusId,
                 'name' => 'institution_visible',
                 'value' => '2'
             ]
