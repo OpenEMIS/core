@@ -71,6 +71,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         $events['Workflow.checkIfCanAddButtons'] = 'checkIfCanAddButtons';
         $events['Workflow.onSetCustomAssigneeParams'] = 'onSetCustomAssigneeParams';
+        $events['UpdateAssignee.onSetCustomAssigneeParams'] = 'onSetCustomAssigneeParams';
         $events['Workflow.setAutoAssignAssigneeFlag'] = 'setAutoAssignAssigneeFlag';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
 

@@ -44,6 +44,20 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date']);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';
+        return $events;
+    }
+
+    public function onSetSchoolBasedConditions(Event $event, Entity $entity, $where)
+    {
+        $where[$this->aliasField('new_institution_id')] = $entity->id;
+        unset($where[$this->aliasField('institution_id')]);
+        return $where;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
