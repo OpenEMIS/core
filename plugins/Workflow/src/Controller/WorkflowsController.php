@@ -144,10 +144,12 @@ class WorkflowsController extends AppController
         Log::write('debug', 'Assignee:');
         Log::write('debug', $assigneeOptions);
 
-        $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
-        $options = $assigneeOptions;
+        if (!$autoAssignAssignee) {
+            $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
+            $options = $assigneeOptions;
 
-        if ($autoAssignAssignee) {
+        } else {
+            $defaultKey = '-- '.__('Select').' --';
             $options = ['-1' => __('Auto Assign')];
         }
 
