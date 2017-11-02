@@ -65,6 +65,11 @@ class UpdateAssigneeShell extends Shell
 				if ($institutionEntity) {
 					$this->out($workflowModelEntity->name.' : Affected Institution Id: '.$institutionEntity->id);
 					$where[$model->aliasField('institution_id')] = $institutionEntity->id;
+
+					$event = $model->dispatchEvent('UpdateAssignee.onSetSchoolBasedConditions', [$institutionEntity, $where], $this);
+			        if ($event->result) {
+			            $where = $event->result;
+			        }
 				}
 			}
 
@@ -94,6 +99,11 @@ class UpdateAssigneeShell extends Shell
 				if ($unassignedEntity->has('institution_id')) {
 					$params['institution_id'] = $unassignedEntity->institution_id;
 				}
+
+				$event = $model->dispatchEvent('UpdateAssignee.onSetCustomAssigneeParams', [$unassignedEntity, $params], $this);
+		        if ($event->result) {
+		            $params = $event->result;
+		        }
 
 				$assigneeId = $this->SecurityGroupUsers->getFirstAssignee($params);
 
