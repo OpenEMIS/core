@@ -216,7 +216,7 @@ class StaffUserTable extends ControllerActionTable
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
-        // if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->name, 'StaffTransferOut', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StaffTable = TableRegistry::get('Institution.Staff');
@@ -247,7 +247,7 @@ class StaffUserTable extends ControllerActionTable
 
                 $toolbarButtons['transfer'] = $transferButton;
             }
-        // }
+        }
     }
 
     public function editAfterAction(Event $event, Entity $entity)
