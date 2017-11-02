@@ -297,6 +297,47 @@ class POCOR3997 extends AbstractMigration
         $assignedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Assigned'")['id'];
         $closedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Closed'")['id'];
 
+        // migrate data from z_3997_institution_staff_assignments to institution_staff_transfers
+        $this->execute("INSERT INTO `institution_staff_transfers` (
+                            `staff_id`,
+                            `new_institution_id`,
+                            `previous_institution_id`,
+                            `status_id`,
+                            `new_institution_position_id`,
+                            `new_staff_type_id`,
+                            `new_FTE`,
+                            `new_start_date`,
+                            `new_end_date`,
+                            `comment`,
+                            `initiated_by`,
+                            `modified_user_id`,
+                            `modified`,
+                            `created_user_id`,
+                            `created`
+                        )
+                        SELECT
+                            `staff_id`,
+                            `institution_id`,
+                            `previous_institution_id`,
+                            CASE
+                                WHEN `status` = 0 THEN " . $openStatusId . "
+                                WHEN `status` = 1 THEN " . $assignedStatusId . "
+                                WHEN `status` = 2 THEN " . $closedStatusId . "
+                                WHEN `status` = 3 THEN " . $closedStatusId . "
+                            END,
+                            `institution_position_id`,
+                            `staff_type_id`,
+                            `FTE`,
+                            `start_date`,
+                            `end_date`,
+                            `comment`,
+                            '1',
+                            `modified_user_id`,
+                            `modified`,
+                            `created_user_id`,
+                            `created`
+                        FROM `z_3997_institution_staff_assignments`");
+
         // workflow_actions
         $workflowActionData = [
             [
