@@ -505,26 +505,20 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         if (isset($data['submit']) && $data['submit'] == 'save') {
             $transferType = $data->offsetGet('transfer_type');
 
+            if ($data->offsetExists('current_staff_positions')) {
+                $institutionStaffId = $data->offsetGet('current_staff_positions');
+                $data->offsetSet('previous_institution_staff_id', $institutionStaffId);
+            }
+
             if ($transferType == self::FULL_TRANSFER) {
                 $options['validate'] = 'fullTransfer';
                 $data->offsetSet('previous_FTE', NULL);
                 $data->offsetSet('previous_staff_type_id', NULL);
 
-                if ($data->offsetExists('current_staff_positions')) {
-                    $institutionStaffId = $data->offsetGet('current_staff_positions');
-                    $data->offsetSet('previous_institution_staff_id', $institutionStaffId);
-                }
-
             } else if ($transferType == self::PARTIAL_TRANSFER) {
                 $options['validate'] = 'partialTransfer';
 
-                if ($data->offsetExists('current_staff_positions')) {
-                    $institutionStaffId = $data->offsetGet('current_staff_positions');
-                    $data->offsetSet('previous_institution_staff_id', $institutionStaffId);
-                }
-
             } else {
-                $data->offsetSet('previous_institution_staff_id', NULL);
                 $data->offsetSet('previous_end_date', NULL);
                 $data->offsetSet('previous_FTE', NULL);
                 $data->offsetSet('previous_staff_type_id', NULL);
