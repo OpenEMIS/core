@@ -921,6 +921,28 @@ class POCOR3997 extends AbstractMigration
             ],
         ];
         $this->insert('labels', $labels);
+
+        // security_functions
+        $staffTransferInSql = "UPDATE security_functions
+                                SET `name` = 'Staff Transfer In',
+                                `_view` = 'StaffTransferIn.index|StaffTransferIn.view',
+                                `_edit` = 'StaffTransferIn.edit',
+                                `_add` = null,
+                                `_delete` = 'StaffTransferIn.remove',
+                                `_execute` = null
+                                WHERE `id` = 1039";
+
+        $staffTransferOutSql = "UPDATE security_functions
+                                SET `name` = 'Staff Transfer Out',
+                                `_view` = 'StaffTransferOut.index|StaffTransferOut.view',
+                                `_edit` = 'StaffTransferOut.edit',
+                                `_add` = 'StaffTransferOut.add',
+                                `_delete` = 'StaffTransferOut.remove',
+                                `_execute` = null
+                                WHERE `id` = 1040";
+
+        $this->execute($staffTransferInSql);
+        $this->execute($staffTransferOutSql);
     }
 
     // rollback
@@ -987,5 +1009,27 @@ class POCOR3997 extends AbstractMigration
         $this->execute("DELETE FROM `labels` WHERE `module` = 'StaffTransferIn'");
         $this->execute("INSERT INTO `labels` SELECT * FROM `z_3997_labels`");
         $this->dropTable('z_3997_labels');
+
+        // security_functions
+        $staffTransferInSql = "UPDATE security_functions
+                                SET `name` = 'Transfer Requests',
+                                `_view` = 'StaffTransferRequests.index|StaffTransferRequests.view',
+                                `_edit` = null,
+                                `_add` = null,
+                                `_delete` = 'StaffTransferRequests.remove',
+                                `_execute` = 'StaffTransferRequests.edit|StaffTransferRequests.add'
+                                WHERE `id` = 1039";
+
+        $staffTransferOutSql = "UPDATE security_functions
+                                SET `name` = 'Transfer Approvals',
+                                `_view` = 'StaffTransferApprovals.index|StaffTransferApprovals.view',
+                                `_edit` = null,
+                                `_add` = null,
+                                `_delete` = null,
+                                `_execute` = 'StaffTransferApprovals.edit|StaffTransferApprovals.view'
+                                WHERE `id` = 1040";
+
+        $this->execute($staffTransferInSql);
+        $this->execute($staffTransferOutSql);
     }
 }
