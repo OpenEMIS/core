@@ -47,7 +47,7 @@ $description = __d('open_emis', $_productName);
 			<div class="title">
 				<span class="title-wrapper">
 					<i class="kd-openemis"></i>
-					<h1>OpenEMIS Core</h1>
+					<h1><?= $_productName ?></h1>
 				</span>
 			</div>
 			<?php
