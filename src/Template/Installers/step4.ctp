@@ -1,7 +1,3 @@
-<?php
-$url = '/school/api/installers/';
-?>
-
 <div class="starter-template">
 	<h1>Account setup</h1>
 	<p>In order to access OpenEMIS School application, you will need to create an user account.</p>
