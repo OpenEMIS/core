@@ -1397,7 +1397,14 @@ class WorkflowBehavior extends Behavior {
 
     public function deleteWorkflowTransitions(Entity $entity) {
         $model = $this->_table;
-        $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
+
+        $workflowStep = $this->getWorkflowStep($entity);
+        if (!is_null($workflowStep)) {
+            // used to get correct workflow model for StaffTransferIn and StaffTransferOut
+            $workflowModel = $workflowStep->_matchingData['WorkflowModels'];
+        } else {
+            $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
+        }
 
         $this->WorkflowTransitions->deleteAll([
             $this->WorkflowTransitions->aliasField('workflow_model_id') => $workflowModel->id,
