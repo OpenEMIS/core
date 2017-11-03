@@ -138,9 +138,6 @@ class StaffUserTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        // this value comes from the list page from StaffTable->onUpdateActionButtons
-        $extra['institution_staff_id'] = $this->getQueryString('institution_staff_id');
-
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
@@ -217,19 +214,24 @@ class StaffUserTable extends ControllerActionTable
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->name, 'StaffTransferOut', 'add'])) {
+            $session = $this->request->session();
             $toolbarButtons = $extra['toolbarButtons'];
-
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+            $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+            $userId = $entity->id;
 
-            $institutionStaffId = $extra['institution_staff_id'];
-            $staffEntity = $StaffTable->get($institutionStaffId);
-            $institutionId = $staffEntity->institution_id;
-            $staffId = $staffEntity->staff_id;
-            $staffStatusId = $staffEntity->staff_status_id;
+            $assignedStaffRecords = $StaffTable->find()
+                ->where([
+                    $StaffTable->aliasField('staff_id') => $userId,
+                    $StaffTable->aliasField('institution_id') => $institutionId,
+                    $StaffTable->aliasField('staff_status_id') => $assignedStatus
+                ])
+                ->count();
 
-            if ($staffStatusId == $assignedStatus) {
+            if ($assignedStaffRecords > 0) {
                 $url = [
                     'plugin' => $this->controller->plugin,
                     'controller' => $this->controller->name,
@@ -243,7 +245,7 @@ class StaffUserTable extends ControllerActionTable
                 $transferButton['label'] = '<i class="fa kd-transfer"></i>';
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
-                $transferButton['url'] = $this->setQueryString($url, ['institution_staff_id' => $institutionStaffId, 'user_id' => $staffId]);
+                $transferButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
 
                 $toolbarButtons['transfer'] = $transferButton;
             }
