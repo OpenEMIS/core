@@ -158,10 +158,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     {
         $session = $this->request->session();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
-        $institutionStaffId = $this->getQueryString('institution_staff_id');
         $userId = $this->getQueryString('user_id');
 
-        if (empty($institutionStaffId) || empty($userId)) {
+        if (empty($userId)) {
             $event->stopPropagation();
             return $this->controller->redirect($this->url('index'));
         }
@@ -199,7 +198,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 $url = $this->url('view');
                 $url['action'] = 'StaffUser';
                 $url[1] = $this->paramsEncode(['id' => $userId]);
-                $url = $this->setQueryString($url, ['institution_staff_id' => $institutionStaffId]);
 
                 $this->Alert->warning($this->aliasField('existingStaffTransfer'), ['reset' => true]);
                 $event->stopPropagation();
@@ -209,7 +207,17 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
         // if no pending transfers
         $StaffTable = TableRegistry::get('Institution.Staff');
-        $institutionStaffEntity = $StaffTable->get($institutionStaffId, ['contain' => ['Users', 'Institutions', 'Positions', 'StaffTypes']]);
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+
+        $institutionStaffEntity = $StaffTable->find()
+            ->contain(['Users', 'Institutions'])
+            ->where([
+                $StaffTable->aliasField('staff_id') => $userId,
+                $StaffTable->aliasField('institution_id') => $institutionId,
+                $StaffTable->aliasField('staff_status_id') => $assignedStatus,
+            ])
+            ->first();
         $this->setupFields($institutionStaffEntity);
     }
 
