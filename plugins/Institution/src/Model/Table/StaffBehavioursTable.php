@@ -39,7 +39,28 @@ class StaffBehavioursTable extends ControllerActionTable
         $events = parent::implementedEvents();
 		$events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
 		$events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
+        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
+    }
+
+    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
+    {
+        $staffId = $params['staff_id'];
+        $institutionId = $params['institution_id'];
+        $institutionPositionId = $params['institution_position_id'];
+        $originalStartDate = $params['original_start_date'];
+        $newStartDate = $params['new_start_date'];
+
+        $data = $this->find()
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('date_of_behaviour >=') => $originalStartDate,
+                $this->aliasField('date_of_behaviour <=') => $newStartDate,
+            ])
+            ->all();
+
+        return count($data);
     }
 
     public function validationDefault(Validator $validator)
