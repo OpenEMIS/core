@@ -188,7 +188,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $entity->status_id = $closedStepEntity->id;
                     $InstitutionStaffTransfers->autoAssignAssignee($entity);
 
-                    if($InstitutionStaffTransfers->save($entity)) {
+                    if ($InstitutionStaffTransfers->save($entity)) {
                         $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
                         $prevStepEntity = $this->Statuses->get($prevStep);
 

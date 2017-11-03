@@ -74,9 +74,9 @@ class UpdateAssigneeShell extends Shell
 					$where[$model->aliasField('institution_id')] = $institutionEntity->id;
 
 					$event = $model->dispatchEvent('UpdateAssignee.onSetSchoolBasedConditions', [$institutionEntity, $where], $this);
-			        if ($event->result) {
-			            $where = $event->result;
-			        }
+					if ($event->result) {
+						$where = $event->result;
+					}
 				}
 			}
 
@@ -108,9 +108,9 @@ class UpdateAssigneeShell extends Shell
 				}
 
 				$event = $model->dispatchEvent('UpdateAssignee.onSetCustomAssigneeParams', [$unassignedEntity, $params], $this);
-		        if ($event->result) {
-		            $params = $event->result;
-		        }
+				if ($event->result) {
+					$params = $event->result;
+				}
 
 				$assigneeId = $this->SecurityGroupUsers->getFirstAssignee($params);
 
