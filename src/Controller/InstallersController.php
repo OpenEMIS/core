@@ -20,6 +20,7 @@ class InstallersController extends AppController
     {
         parent::initialize();
         $this->Auth->allow(['step1', 'step2', 'step3', 'step4', 'step5']);
+
     }
 
     public function step1()
