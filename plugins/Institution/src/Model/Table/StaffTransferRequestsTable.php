@@ -40,6 +40,34 @@ class StaffTransferRequestsTable extends StaffTransfer
             ->requirePresence('institution_position_id');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
+        return $events;
+    }
+
+    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
+    {
+        $staffId = $params['staff_id'];
+        $institutionId = $params['institution_id'];
+        $institutionPositionId = $params['institution_position_id'];
+        $originalStartDate = $params['original_start_date'];
+        $newStartDate = $params['new_start_date'];
+
+        $data = $this->find()
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('status') => 0,
+                $this->aliasField('previous_institution_id') => $institutionId,
+                $this->aliasField('start_date >=') => $originalStartDate,
+                $this->aliasField('start_date <=') => $newStartDate
+            ])
+            ->all();
+
+        return count($data);
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         parent::beforeAction($event, $extra);

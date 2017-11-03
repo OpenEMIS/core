@@ -32,6 +32,32 @@ class StaffSubjectsTable extends ControllerActionTable {
 		$this->toggle('remove', false);
 	}
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
+        return $events;
+    }
+
+    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
+    {
+        $staffId = $params['staff_id'];
+        $institutionId = $params['institution_id'];
+        $institutionPositionId = $params['institution_position_id'];
+        $originalStartDate = $params['original_start_date'];
+        $newStartDate = $params['new_start_date'];
+
+        $data = $this->find()
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('start_date >=') => $originalStartDate,
+                $this->aliasField('start_date <=') => $newStartDate,
+            ])
+            ->all();
+
+        return count($data);
+    }
+
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->field('academic_period', []);
 		$this->field('institution_class', []);
