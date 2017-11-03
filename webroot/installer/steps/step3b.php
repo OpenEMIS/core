@@ -40,10 +40,10 @@ if (!empty($_POST) && isset($_POST['createDatabase'])) {
             $template = str_replace('{user}', "'$dbUser'", $template);
             $template = str_replace('{pass}', "'$dbPassword'", $template);
             $template = str_replace('{database}', "'$db'", $template);
-            $dbFileHandle = fopen(CONFIG_FILE, 'w');
-            if ($dbFileHandle !== false) {
+            // $dbFileHandle = fopen(CONFIG_FILE, 'w');
+            // if ($dbFileHandle !== false) {
                 // fwrite($dbFileHandle, $template);
-                fclose($dbFileHandle);
+                // fclose($dbFileHandle);
                 // createDb($pdo, $db);
                 // createDbUser($pdo, $host, $dbUser, $dbPassword, $db);
                 // createDbStructure($host, $port, $db, $dbUser, $dbPassword);
@@ -51,10 +51,10 @@ if (!empty($_POST) && isset($_POST['createDatabase'])) {
                 $_SESSION['db_pass'] = $dbPassword;
                 $_SESSION['db_name'] = $db;
                 header('Location: ' . $url . '?step=4');
-            } else {
-                $_SESSION['error'] = 'Unable to create configuration file. Please check your folder permissions. <br />' . CONFIG_DIR;
-                header('Location: ' . $url . '?step=3');
-            }
+            // } else {
+            //     $_SESSION['error'] = 'Unable to create configuration file. Please check your folder permissions. <br />' . CONFIG_DIR;
+            //     header('Location: ' . $url . '?step=3');
+            // }
         } catch (PDOException $ex) {
             $_SESSION['error'] = $ex->getMessage();
             header('Location: ' . $url . '?step=3');
