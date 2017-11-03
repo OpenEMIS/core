@@ -217,7 +217,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     {
         $this->request->data[$this->alias()]['transfer_type'] = $entity->transfer_type;
 
-        if (!empty($entity->previous_institution_staff_id) && in_array($entity->transfer_type, [self::FULL_TRANSFER, self::PARTIAL_TRANSFER])) {
+        if (!empty($entity->previous_institution_staff_id)) {
             $this->request->data[$this->alias()]['current_staff_positions'] = $entity->previous_institution_staff_id;
         }
     }

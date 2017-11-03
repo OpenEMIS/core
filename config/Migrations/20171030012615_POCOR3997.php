@@ -146,8 +146,6 @@ class POCOR3997 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-        // NOTE data migration here
-
         // workflow_steps_params
         $WorkflowStepsParams = $this->table('workflow_steps_params', [
             'id' => false,
