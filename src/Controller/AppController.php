@@ -62,6 +62,12 @@ class AppController extends Controller
     {
         parent::initialize();
 
+        $theme = 'core';
+        if (Configure::read('schoolMode')) {
+            $theme = 'school';
+            $this->productName = 'OpenEMIS School';
+        }
+
         // don't load ControllerAction component if it is not a PageController
         if ($this instanceof \Page\Controller\PageController == false) {
             // ControllerActionComponent must be loaded before AuthComponent for it to work
@@ -112,7 +118,7 @@ class AppController extends Controller
                 ]
             ],
             'productName' => $this->productName,
-            'theme' => 'core'
+            'theme' => $theme
         ]);
 
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
