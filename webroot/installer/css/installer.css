@@ -1,0 +1,151 @@
+/*-----------------------------------*/
+/* Fonts */
+/*-----------------------------------*/
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,300,400,600,700,800);
+
+/*-----------------------------------*/
+/* General Styles */
+/*-----------------------------------*/
+body {
+    font-family: 'Open Sans', sans-serif;
+	font-weight: 400;
+    color:#8e8071;
+	font-size:13px;
+	position:relative;
+    background-size: 100% 100%;
+}
+
+/*-----------------------------------*/
+/* Typography */
+/*-----------------------------------*/
+
+h1, h2, h3, h4, h5, h6 {
+	color: #5c5146;
+    font-weight: 400;
+    letter-spacing: -1px;
+	line-height:1.2em;
+	margin-bottom:.8em;
+}
+h4, h5, h6{color: #e86741;}
+
+h1{font-size:27px}
+h2{font-size:24px}
+h3{font-size:21px}
+h4{font-size:19px}
+h5{font-size:17px}
+h6{font-size:15px}
+
+em{font-style: italic;}
+strong{font-weight: 700;}
+small{font-size: 85%;}
+
+i{
+	position: relative;
+	top: 0;
+	left: 0;
+	display: inline-block;
+	overflow: hidden;
+	text-decoration: none;
+	font-style: normal;
+	background-repeat: no-repeat;
+	margin-right: 15px;
+}
+p{
+    line-height: 19px;
+	margin-bottom: 16px;
+}
+
+/*-----------------------------------*/
+/* Button */
+/*-----------------------------------*/
+a.btn {
+}
+
+
+/*-----------------------------------*/
+/* Custom */
+/*-----------------------------------*/
+.starter-template {
+  padding: 40px 15px;
+  margin-bottom:100px;
+  text-align: center;
+}
+
+span.help-block {
+  font-size: 13px;
+}
+form{
+	text-align:left;
+}
+.form-control.error {
+	border: 1px solid #ff0000;
+}
+
+.form-horizontal .form-group {
+	display: block;
+	height: 60px;
+}
+
+.formCreateDatabase label.error, .formCreateDbUser label.error {
+	font-weight: normal;
+	margin: 0;
+	font-size: 13px;
+	color: #ff0000;
+}
+
+.installer{
+	width:94%;
+	max-width:880px;
+	margin:40px auto;
+}
+
+.installer-line{
+	height:8px;
+	width:100%;
+	background-color:#eeeeee;
+}
+.installer-steps{
+	display:table;
+	width:100%;
+	margin-top:-22px;
+	margin-left:-10px;
+}
+.installer-steps p{
+	display:table-cell;
+	font-size:18px;
+	line-height:20px;
+}
+.installer-steps p:last-child{
+	text-align:right;
+	width:20px;
+}
+.installer-steps p span{
+	position:absolute;
+	display:block;
+	background-color:#ffffff;
+	color:#666666;
+	border-radius:50px;
+	border:5px solid #eeeeee;
+	width:40px;
+	height:37px;
+	padding:4px;
+	text-align:center;
+}
+.installer-steps .pass{
+}
+.installer-steps .pass span{
+	background-color:#559138;
+	color:#ffffff;
+}
+.installer-steps .on span{
+	background-color:#305F19;
+	box-shadow:0 1px 2px #666666;
+	border-color:#305F19;
+	color:#ffffff;
+	font-size:22px;
+	font-weight:bold;
+}
+
+.installer-content{
+	padding:50px 0 0 0;
+}
