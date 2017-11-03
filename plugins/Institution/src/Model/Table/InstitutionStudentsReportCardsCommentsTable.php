@@ -32,4 +32,32 @@ class InstitutionStudentsReportCardsCommentsTable extends ControllerActionTable
             'ReportCardComments' => ['index', 'add']
         ]);
     }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
+        return $events;
+    }
+
+    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
+    {
+        $staffId = $params['staff_id'];
+        $institutionId = $params['institution_id'];
+        $institutionPositionId = $params['institution_position_id'];
+        $originalStartDate = $params['original_start_date'];
+        $newStartDate = $params['new_start_date'];
+
+        $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($originalStartDate);
+
+        $data = $this->find()
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id >=') => $academicPeriodId
+            ])
+            ->all();
+
+        return count($data);
+    }
 }
