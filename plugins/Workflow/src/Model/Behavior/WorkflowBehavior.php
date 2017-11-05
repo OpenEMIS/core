@@ -1248,6 +1248,11 @@ class WorkflowBehavior extends Behavior {
 
                 if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
                     unset($toolbarButtons['edit']);
+                } else if ($toolbarButtons->offsetExists('edit')) {
+                    // unset validate_approve queryString for edit button
+                    if (isset($toolbarButtons['edit']['url']['queryString'])) {
+                        unset($toolbarButtons['edit']['url']['queryString']);
+                    }
                 }
 
                 if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('remove') && !$isDeletable) {
