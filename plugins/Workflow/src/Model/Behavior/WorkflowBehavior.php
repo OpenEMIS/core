@@ -100,6 +100,7 @@ class WorkflowBehavior extends Behavior {
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
         $events['ControllerAction.Model.edit.afterAction']      = ['callable' => 'editAfterAction', 'priority' => 1];
+        $events['ControllerAction.Model.edit.beforePatch']      = ['callable' => 'editBeforePatch', 'priority' => 1];
         $events['Model.custom.onUpdateToolbarButtons']          = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
         $events['Model.custom.onUpdateActionButtons']           = ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
         $events['Workflow.afterTransition'] = 'workflowAfterTransition';
@@ -559,7 +560,6 @@ class WorkflowBehavior extends Behavior {
         ]);
         $model->field('workflow_assignee_id', [
             'type' => 'select',
-            'fieldName' => $alias.'.assignee_id',
             'entity' => $actionAttr
         ]);
         $model->field('comments', [
@@ -598,6 +598,17 @@ class WorkflowBehavior extends Behavior {
             'value' => 1
         ]);
     }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $model = $this->_table;
+        if (isset($data[$model->alias()]['validate_approve']) && array_key_exists('WorkflowTransitions', $data)) {
+            if (isset($data[$model->alias()]['workflow_assignee_id']) && !empty($data[$model->alias()]['workflow_assignee_id'])) {
+                $data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
+            }
+        }
+    }
+
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);

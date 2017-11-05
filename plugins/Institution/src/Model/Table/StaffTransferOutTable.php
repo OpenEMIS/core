@@ -40,8 +40,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     return array_key_exists('new_start_date', $context['data']) && !empty($context['data']['new_start_date']);
                 }
             ])
-            ->notEmpty('transfer_type')
-            ->notEmpty('new_institution_id');
+            ->notEmpty(['transfer_type', 'new_institution_id', 'workflow_assignee_id']);
     }
 
     public function validationFullTransfer(Validator $validator)

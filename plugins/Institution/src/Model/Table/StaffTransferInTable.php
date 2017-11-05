@@ -41,7 +41,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                     return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
                 }
             ])
-            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date']);
+            ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id']);
     }
 
     public function implementedEvents()
