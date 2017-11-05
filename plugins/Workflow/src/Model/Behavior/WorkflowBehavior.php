@@ -1225,6 +1225,7 @@ class WorkflowBehavior extends Behavior {
                                         $approveButton['url'] = '#';
                                         $approveButton['attr'] = $buttonAttr;
                                     } else {
+                                        // user needs edit permission to see the approve button for validate approve
                                         $approveButton['url'] = $this->_table->setQueryString($this->_table->url('edit'), ['validate_approve' => 1, 'action_attr' => $json]);
                                         $approveButton['attr'] = $attr;
                                     }
@@ -1249,7 +1250,7 @@ class WorkflowBehavior extends Behavior {
                 if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
                     unset($toolbarButtons['edit']);
                 } else if ($toolbarButtons->offsetExists('edit')) {
-                    // unset validate_approve queryString for edit button
+                    // unset validate approve queryString for edit button
                     if (isset($toolbarButtons['edit']['url']['queryString'])) {
                         unset($toolbarButtons['edit']['url']['queryString']);
                     }
