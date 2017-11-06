@@ -1,6 +1,7 @@
 <?php
 
 use Cake\Utility\Text;
+use Cake\ORM\TableRegistry;
 use Phinx\Migration\AbstractMigration;
 
 class POCOR3997 extends AbstractMigration
@@ -11,6 +12,9 @@ class POCOR3997 extends AbstractMigration
     // commit
     public function up()
     {
+        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+
         // rename institution_staff_assignments
         $InstitutionStaffAssignments = $this->table('institution_staff_assignments');
         $InstitutionStaffAssignments->rename('z_3997_institution_staff_assignments');
@@ -220,7 +224,10 @@ class POCOR3997 extends AbstractMigration
         $this->insert('workflows', $workflowData);
 
         // STAFF-TRANSFER-1001 (by incoming)
-        $byIncomingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId)['id'];
+        $byIncomingWorkflowId = $WorkflowsTable->find()
+            ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->incomingWorkflowModelId])
+            ->extract('id')
+            ->first();
 
         // workflow_steps
         $workflowStepData = [
@@ -287,13 +294,53 @@ class POCOR3997 extends AbstractMigration
         ];
         $this->insert('workflow_steps', $workflowStepData);
 
-        $template = "SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = " . $byIncomingWorkflowId;
-        $openStatusId = $this->fetchRow($template . " AND `category` = 1")['id'];
-        $pendingApprovalStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Approval'")['id'];
-        $pendingApprovalOutgoingStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Approval From Outgoing Institution'")['id'];
-        $pendingAsssignmentStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Staff Assignment'")['id'];
-        $assignedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Assigned'")['id'];
-        $closedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Closed'")['id'];
+        $openStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byIncomingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 1
+            ])
+            ->extract('id')
+            ->first();
+        $pendingApprovalStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byIncomingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval'
+            ])
+            ->extract('id')
+            ->first();
+        $pendingApprovalOutgoingStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byIncomingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval From Outgoing Institution'
+            ])
+            ->extract('id')
+            ->first();
+        $pendingAsssignmentStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byIncomingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Staff Assignment'
+            ])
+            ->extract('id')
+            ->first();
+        $assignedStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byIncomingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Assigned'
+            ])
+            ->extract('id')
+            ->first();
+        $closedStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byIncomingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Closed'
+            ])
+            ->extract('id')
+            ->first();
 
         // migrate data from z_3997_institution_staff_assignments to institution_staff_transfers
         $this->execute("INSERT INTO `institution_staff_transfers` (
@@ -547,7 +594,10 @@ class POCOR3997 extends AbstractMigration
         $this->insert('workflow_steps_params', $validateApprove);
 
         // STAFF-TRANSFER-2001 (by outgoing)
-        $byOutgoingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId)['id'];
+        $byOutgoingWorkflowId = $WorkflowsTable->find()
+            ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->outgoingWorkflowModelId])
+            ->extract('id')
+            ->first();
 
         // workflow_steps
         $workflowStepData = [
@@ -614,13 +664,53 @@ class POCOR3997 extends AbstractMigration
         ];
         $this->insert('workflow_steps', $workflowStepData);
 
-        $template = "SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = " . $byOutgoingWorkflowId;
-        $openStatusId = $this->fetchRow($template . " AND `category` = 1")['id'];
-        $pendingApprovalStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Approval'")['id'];
-        $pendingApprovalIncomingStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Approval From Incoming Institution'")['id'];
-        $pendingTransferStatusId = $this->fetchRow($template . " AND `category` = 2 AND `name` = 'Pending Staff Transfer'")['id'];
-        $transferredStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Transferred'")['id'];
-        $closedStatusId = $this->fetchRow($template . " AND `category` = 3 AND `name` = 'Closed'")['id'];
+        $openStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byOutgoingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 1
+            ])
+            ->extract('id')
+            ->first();
+        $pendingApprovalStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byOutgoingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval'
+            ])
+            ->extract('id')
+            ->first();
+        $pendingApprovalIncomingStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byOutgoingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval From Incoming Institution'
+            ])
+            ->extract('id')
+            ->first();
+        $pendingTransferStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byOutgoingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Staff Transfer'
+            ])
+            ->extract('id')
+            ->first();
+        $transferredStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byOutgoingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Transferred'
+            ])
+            ->extract('id')
+            ->first();
+        $closedStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $byOutgoingWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Closed'
+            ])
+            ->extract('id')
+            ->first();
 
         // workflow_actions
         $workflowActionData = [
@@ -987,6 +1077,8 @@ class POCOR3997 extends AbstractMigration
     // rollback
     public function down()
     {
+        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+
         // rename z_3997_institution_staff_assignments
         $InstitutionStaffAssignments = $this->table('z_3997_institution_staff_assignments');
         $InstitutionStaffAssignments->rename('institution_staff_assignments');
@@ -1002,8 +1094,14 @@ class POCOR3997 extends AbstractMigration
         $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $this->outgoingWorkflowModelId);
 
         // delete workflows
-        $byIncomingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId)['id'];
-        $byOutgoingWorkflowId = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId)['id'];
+        $byIncomingWorkflowId = $WorkflowsTable->find()
+            ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->incomingWorkflowModelId])
+            ->extract('id')
+            ->first();
+        $byOutgoingWorkflowId = $WorkflowsTable->find()
+            ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->outgoingWorkflowModelId])
+            ->extract('id')
+            ->first();
         $this->execute("DELETE FROM `workflows` WHERE `id` = " . $byIncomingWorkflowId);
         $this->execute("DELETE FROM `workflows` WHERE `id` = " . $byOutgoingWorkflowId);
 
@@ -1043,13 +1141,13 @@ class POCOR3997 extends AbstractMigration
         $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->incomingWorkflowModelId);
         $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->outgoingWorkflowModelId);
 
-        // labels
+        // revert labels
         $this->execute("DELETE FROM `labels` WHERE `module` = 'StaffTransferOut'");
         $this->execute("DELETE FROM `labels` WHERE `module` = 'StaffTransferIn'");
         $this->execute("INSERT INTO `labels` SELECT * FROM `z_3997_labels`");
         $this->dropTable('z_3997_labels');
 
-        // security_functions
+        // revert security_functions
         $staffTransferInSql = "UPDATE security_functions
                                 SET `name` = 'Transfer Requests',
                                 `_view` = 'StaffTransferRequests.index|StaffTransferRequests.view',
