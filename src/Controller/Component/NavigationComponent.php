@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips', 'UserHistories'];
 
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
