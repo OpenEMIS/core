@@ -676,6 +676,7 @@ class WorkflowBehavior extends Behavior {
 
             if ($actionAttr['auto_assign_assignee']) {
                 $assigneeOptions = ['-1' => __('Auto Assign')];
+                $attr['select'] = false;
             } else {
                 $model = $this->_table;
                 $session = $model->request->session();

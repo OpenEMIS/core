@@ -127,7 +127,9 @@ var Workflow = {
             		// show No options if assignees is empty
             		$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
             	} else {
-            		$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
+                    if (defaultKey.length != 0) {
+                        $('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
+                    }
 					$.each(assignees, function(i, value) {
 						$('.workflowtransition-assignee-id').append($('<option>').text(value).attr('value', i));
 					});

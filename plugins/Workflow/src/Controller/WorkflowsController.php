@@ -149,7 +149,7 @@ class WorkflowsController extends AppController
             $options = $assigneeOptions;
 
         } else {
-            $defaultKey = '-- '.__('Select').' --';
+            $defaultKey = '';
             $options = ['-1' => __('Auto Assign')];
         }
 
