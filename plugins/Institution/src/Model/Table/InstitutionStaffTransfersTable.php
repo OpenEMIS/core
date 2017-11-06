@@ -125,15 +125,15 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
                     // end previous institution staff record
-                    $oldRecord->end_date = $entity->previous_end_date;
+                    $newEndDate = (new Date($entity->previous_end_date))->modify('-1 day');
+                    $oldRecord->end_date = $newEndDate->format('Y-m-d');
                     $StaffTable->save($oldRecord);
 
                     // add new institution staff record in previous institution
-                    $newStartDate = (new Date($entity->previous_end_date))->modify('+1 day');
                     $newRecord = [
                         'FTE' => $entity->previous_FTE,
-                        'start_date' => $newStartDate->format('Y-m-d'),
-                        'start_year' => $newStartDate->year,
+                        'start_date' => $entity->previous_end_date,
+                        'start_year' => $entity->previous_end_date->year,
                         'staff_id' => $entity->staff_id,
                         'staff_type_id' => $entity->previous_staff_type_id,
                         'staff_status_id' => $StaffStatusesTable->getIdByCode('ASSIGNED'),
