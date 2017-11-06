@@ -81,15 +81,6 @@ class InstitutionPositionsTable extends ControllerActionTable
  //    	return $events;
  //    }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'is_homeroom') {
-            return __('Is Homeroom');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -216,7 +207,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     if ($types[$positionType] == 'Teaching') {
                         $visibility = true;
                         $attr['options'] = $this->getSelectOptions('general.yesno');
-                        $attr['default'] = $positionType;
+                        $attr['default'] = '';
                     }
                 }
 
