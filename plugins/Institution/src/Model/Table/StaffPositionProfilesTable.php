@@ -232,7 +232,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $staffChangeTypes = $this->staffChangeTypesList;
 
         $associatedData = [];
-        if ($requestData[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
+        if ((array_key_exists($this->alias(), $requestData)) && $requestData[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
             $staffId = $entity->staff_id;
             $institutionId = $entity->institution_id;
             $institutionPositionId = $entity->institution_position_id;
