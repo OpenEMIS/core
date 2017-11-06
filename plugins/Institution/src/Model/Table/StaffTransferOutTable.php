@@ -14,6 +14,7 @@ use Institution\Model\Table\InstitutionStaffTransfersTable;
 class StaffTransferOutTable extends InstitutionStaffTransfersTable
 {
     private $transferTypeOptions = [];
+    private $transferType = 0;
 
     public function initialize(array $config)
     {
@@ -128,7 +129,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('new_end_date', ['type' => 'hidden']);
+        $this->transferType = $entity->transfer_type;
 
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
@@ -137,6 +138,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('FTE');
         $this->field('staff_type_id');
         $this->field('position_start_date');
+        $this->field('new_end_date', ['type' => 'hidden']);
 
         // show fields according to transfer type
         if ($entity->transfer_type == self::FULL_TRANSFER) {
@@ -153,7 +155,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'transfer_type', 'previous_end_date', 'previous_FTE', 'previous_staff_type_id',
             'new_information_header', 'new_institution_id', 'new_start_date',
             'transfer_reasons_header', 'comment'
-
         ]);
     }
 
@@ -204,6 +205,25 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             $value = $this->transferTypeOptions["$entity->transfer_type"];
         }
         return $value;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'previous_end_date') {
+            $label = parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+
+            if (!empty($this->transferType)) {
+                if ($this->transferType == self::FULL_TRANSFER) {
+                    $label = 'Position End Date';
+                } else if ($this->transferType == self::PARTIAL_TRANSFER) {
+                    $label = 'Effective Date';
+                }
+            }
+            return __($label);
+
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -487,8 +507,15 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             if (isset($this->request->data[$this->alias()]['transfer_type'])) {
                 $transferType = $request->data[$this->alias()]['transfer_type'];
+
                 if (in_array($transferType, [self::FULL_TRANSFER, self::PARTIAL_TRANSFER])) {
+                    if ($transferType == self::FULL_TRANSFER) {
+                        $label = 'Position End Date';
+                    } else {
+                        $label = 'Effective Date';
+                    }
                     $type = 'date';
+                    $attr['attr']['label']['text'] = __($label);
                 }
             }
             $attr['type'] = $type;
