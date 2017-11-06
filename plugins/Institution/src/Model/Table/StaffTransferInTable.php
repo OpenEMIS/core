@@ -74,7 +74,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_institution_id', ['type' => 'hidden']);
         $this->field('previous_end_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
-        $this->field('initiated_by', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('previous_institution_id', ['sort' => ['field' => 'PreviousInstitutions.code']]);
@@ -127,8 +126,6 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('initiated_by', ['type' => 'hidden']);
-
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('staff_id', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('previous_institution_id', ['type' => 'readonly', 'entity' => $entity]);

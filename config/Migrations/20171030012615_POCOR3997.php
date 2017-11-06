@@ -107,12 +107,6 @@ class POCOR3997 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('initiated_by', 'integer', [
-                'default' => null,
-                'limit' => 1,
-                'null' => false,
-                'comment' => '1 -> Incoming Institution, 2 -> Outgoing Institution'
-            ])
             ->addColumn('transfer_type', 'integer', [
                 'default' => '0',
                 'limit' => 1,
@@ -354,7 +348,6 @@ class POCOR3997 extends AbstractMigration
                             `new_start_date`,
                             `new_end_date`,
                             `comment`,
-                            `initiated_by`,
                             `modified_user_id`,
                             `modified`,
                             `created_user_id`,
@@ -376,7 +369,6 @@ class POCOR3997 extends AbstractMigration
                             `start_date`,
                             `end_date`,
                             `comment`,
-                            '1',
                             `modified_user_id`,
                             `modified`,
                             `created_user_id`,
