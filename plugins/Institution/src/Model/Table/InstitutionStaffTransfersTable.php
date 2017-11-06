@@ -235,18 +235,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetInitiatedBy(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->initiated_by == self::INCOMING && $entity->has('new_institution')) {
-            $value = $entity->new_institution->code_name;
-
-        } else if ($entity->initiated_by == self::OUTGOING && $entity->has('previous_institution')) {
-            $value = $entity->previous_institution->code_name;
-        }
-        return $value;
-    }
-
     public function onGetPreviousInstitutionId(Event $event, Entity $entity)
     {
         $value = '';
