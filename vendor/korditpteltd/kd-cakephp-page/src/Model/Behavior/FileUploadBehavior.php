@@ -52,11 +52,16 @@ class FileUploadBehavior extends Behavior
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         foreach ($this->config('fieldMap') as $fileName => $fileContent) {
-            if (isset($data[$fileContent]['tmp_name']) && isset($data[$fileContent]['error']) && $data[$fileContent]['error'] == 0) {
+            if (isset($data[$fileContent]['tmp_name']) && isset($data[$fileContent]['error']) && $data[$fileContent]['error'] == UPLOAD_ERR_OK) {
                 $data[$fileName] = $data[$fileContent]['name'];
                 $data[$fileContent.'_file_size'] = $data[$fileContent]['size'];
                 $data[$fileContent] = file_get_contents($data[$fileContent]['tmp_name']);
                 $data[$fileContent.'_content'] = base64_encode($data[$fileContent]);
+            } elseif (isset($data[$fileContent]['error']) && $data[$fileContent]['error'] == UPLOAD_ERR_NO_FILE) {
+                $data->offsetUnset($fileContent);
+                if ($data->offsetExists($fileName)) {
+                    $data->offsetUnset($fileName);
+                }
             } elseif (isset($data[$fileContent.'_remove']) && $data[$fileContent.'_remove'] == 1) {
                 $data[$fileName] = null;
                 $data[$fileContent] = null;
