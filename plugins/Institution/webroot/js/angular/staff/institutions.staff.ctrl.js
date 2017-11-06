@@ -858,8 +858,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             status_id: 0,
             new_institution_id: StaffController.institutionId,
             previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
-            comment: StaffController.comment,
-            initiated_by: 1
+            comment: StaffController.comment
         };
 
         InstitutionsStaffSvc.addStaffTransferRequest(data)
