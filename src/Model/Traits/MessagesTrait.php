@@ -778,7 +778,6 @@ trait MessagesTrait
             'dateNotWithinPeriod' => 'Date should be within %s and %s'
         ],
         'StaffTransferOut' => [
-            'noStaffPositionSelected' => 'Please select a Staff Position to transfer',
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
         ],
 
