@@ -25,8 +25,8 @@ class StaffTransferBehavior extends Behavior
                 ->toArray();
 
         $this->institutionTypeOptions = [
-            InstitutionStaffTransfers::INCOMING => 'Incoming',
-            InstitutionStaffTransfers::OUTGOING => 'Outgoing'
+            InstitutionStaffTransfers::INCOMING => 'Receiving Institution',
+            InstitutionStaffTransfers::OUTGOING => 'Sending Institution'
         ];
     }
 
@@ -38,7 +38,6 @@ class StaffTransferBehavior extends Behavior
         $events['ControllerAction.Model.edit.onInitialize'] = 'editOnInitialize';
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
-        $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 100];
         return $events;
     }
 
@@ -133,49 +132,6 @@ class StaffTransferBehavior extends Behavior
         return $value;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        $action = $this->_table->action;
-        if (in_array($action, ['index', 'view'])) {
-            if ($field == 'institution_owner') {
-                $message = $this->_table->getMessage('WorkflowStepsParams.institutionOwner');
-                return __('Institution Owner') . $this->tooltipMessage($action, $message);
-
-            } else if ($field == 'visible') {
-                $message = $this->_table->getMessage('WorkflowStepsParams.institutionVisible');
-                return __('Visible') . $this->tooltipMessage($action, $message);
-            }
-        }
-    }
-
-    public function onUpdateFieldInstitutionOwner(Event $event, array $attr, $action, Request $request)
-    {
-        if (in_array($action, ['add', 'edit'])) {
-            $message = $this->_table->getMessage('WorkflowStepsParams.institutionOwner');
-
-            $attr['attr']['required'] = true;
-            $attr['attr']['label']['escape'] = false;
-            $attr['attr']['label']['class'] = 'tooltip-desc';
-            $attr['attr']['label']['text'] = __('Institution Owner') . $this->tooltipMessage($action, $message);
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request)
-    {
-        if (in_array($action, ['add', 'edit'])) {
-            $message = $this->_table->getMessage('WorkflowStepsParams.institutionVisible');
-
-            $attr['attr']['required'] = true;
-            $attr['attr']['label']['escape'] = false;
-            $attr['attr']['label']['class'] = 'tooltip-desc';
-            $attr['attr']['label']['text'] = __('Visible') . $this->tooltipMessage($action, $message);
-            $attr['fieldName'] = $this->_table->alias().'.visible';
-            return $attr;
-        }
-    }
-
-
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
@@ -201,16 +157,5 @@ class StaffTransferBehavior extends Behavior
                 }
             }
         }
-    }
-
-    protected function tooltipMessage($action, $message)
-    {
-        if (in_array($action, ['index', 'view'])) {
-            $tooltipMessage = '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="' . $message . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
-
-        } else if (in_array($action, ['add', 'edit'])) {
-            $tooltipMessage = '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
-        }
-        return $tooltipMessage;
     }
 }
