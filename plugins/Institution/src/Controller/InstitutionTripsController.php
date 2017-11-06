@@ -245,6 +245,10 @@ class InstitutionTripsController extends PageController
                 ->find()
                 ->select([
                     $this->Students->aliasField('id'),
+                    $this->Students->aliasField('student_id'),
+                    $this->Students->aliasField('education_grade_id'),
+                    $this->Students->aliasField('academic_period_id'),
+                    $this->Students->aliasField('institution_id'),
                     $this->Students->Users->aliasField('openemis_no'),
                     $this->Students->Users->aliasField('first_name'),
                     $this->Students->Users->aliasField('middle_name'),
@@ -261,12 +265,23 @@ class InstitutionTripsController extends PageController
                 ->group([
                     $this->Students->aliasField('student_id')
                 ])
+                ->order([
+                    $this->Students->Users->aliasField('first_name'),
+                    $this->Students->Users->aliasField('last_name')
+                ])
                 ->formatResults(function (ResultSetInterface $results) {
                     $returnResult = [];
 
                     foreach ($results as $result) {
+                        $encodedKeys = $this->paramsEncode([
+                            'student_id' => $result->student_id,
+                            'education_grade_id' => $result->education_grade_id,
+                            'academic_period_id' => $result->academic_period_id,
+                            'institution_id' => $result->institution_id
+                        ]);
+
                         $returnResult[] = [
-                            'value' => $result->id,
+                            'value' => $encodedKeys,
                             'text' => $result->user->name_with_id
                         ];
                     }
@@ -342,22 +357,16 @@ class InstitutionTripsController extends PageController
 
             if ($entity->has('institution_trip_passengers')) {
                 foreach ($entity->institution_trip_passengers as $obj) {
-                    $institutionStudentEntity = $this->Students
-                        ->find()
-                        ->select([
-                            $this->Students->aliasField('id')
-                        ])
-                        ->where([
-                            'student_id' => $obj->student_id,
-                            'education_grade_id' => $obj->education_grade_id,
-                            'academic_period_id' => $obj->academic_period_id,
-                            'institution_id' => $obj->institution_id
-                        ])
-                        ->first();
+                    $encodedKeys = $this->paramsEncode([
+                        'student_id' => $obj->student_id,
+                        'education_grade_id' => $obj->education_grade_id,
+                        'academic_period_id' => $obj->academic_period_id,
+                        'institution_id' => $obj->institution_id
+                    ]);
 
-                    if (!empty($institutionStudentEntity)) {
-                        $assignedStudents[] = $institutionStudentEntity;
-                    }
+                    $obj->id = $encodedKeys;
+
+                    $assignedStudents[] = $obj;
                 }
             }
 
