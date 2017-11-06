@@ -93,7 +93,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
-        $this->field('initiated_by', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('new_institution_id', ['type' => 'integer', 'sort' => ['field' => 'NewInstitutions.code']]);
@@ -141,7 +140,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             $this->field('previous_staff_type_id', ['type' => 'hidden']);
         }
 
-        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'new_institution_id', 'transfer_type', 'previous_end_date', 'previous_FTE', 'previous_staff_type_id', 'comment', 'initiated_by']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'staff_id', 'new_institution_id', 'transfer_type', 'previous_end_date', 'previous_FTE', 'previous_staff_type_id', 'comment']);
     }
 
     public function onGetTransferType(Event $event, Entity $entity)
@@ -273,7 +272,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
         $this->field('comment');
 
-        $this->field('initiated_by', ['type' => 'hidden']);
         $this->field('new_end_date', ['type' => 'hidden', 'entity' => $entity]);
     }
 
@@ -495,14 +493,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             if (!empty($entity->new_end_date)) {
                 $attr['value'] = $entity->new_end_date->format('Y-m-d');
             }
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldInitiatedBy(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $attr['value'] = self::OUTGOING;
             return $attr;
         }
     }
