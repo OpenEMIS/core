@@ -28,9 +28,9 @@ class SalariesTable extends ControllerActionTable {
         $this->addBehavior('Institution.StaffProfile');
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
-        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
     }
 

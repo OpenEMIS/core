@@ -35,9 +35,9 @@ class StaffSubjectsTable extends ControllerActionTable {
 		$this->toggle('remove', false);
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
-        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
     }
 

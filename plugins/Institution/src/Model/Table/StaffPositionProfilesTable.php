@@ -190,7 +190,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
-        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
     }
 
