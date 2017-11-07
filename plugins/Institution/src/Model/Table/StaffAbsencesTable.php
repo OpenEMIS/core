@@ -48,6 +48,9 @@ class StaffAbsencesTable extends ControllerActionTable {
 			'pages' => ['index']
 		]);
 
+		// POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
+
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
@@ -120,7 +123,8 @@ class StaffAbsencesTable extends ControllerActionTable {
 		return $validator;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+	{
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 		return $events;
