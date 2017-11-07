@@ -200,7 +200,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             $requestData = $request->data;
 
             if ($action == 'add') {
-                if (isset($requestData[$this->alias()]) && array_key_exists('staff_position_title_id', $requestData[$this->alias()])) {
+                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
                     $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
                     $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
 
