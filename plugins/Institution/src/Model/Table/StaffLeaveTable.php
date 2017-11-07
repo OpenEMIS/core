@@ -77,7 +77,6 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStaff.afterDelete'] = 'institutionStaffAfterDelete';
-        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
     }
 

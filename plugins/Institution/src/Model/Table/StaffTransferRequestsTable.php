@@ -46,7 +46,6 @@ class StaffTransferRequestsTable extends StaffTransfer
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
     }
 
