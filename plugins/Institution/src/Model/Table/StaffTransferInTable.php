@@ -106,8 +106,16 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('new_institution_id', ['type' => 'hidden']);
-        $this->field('previous_end_date', ['type' => 'hidden']);
+        $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
+        $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+
+        $this->setFieldOrder([
+            'status_id', 'assignee_id',
+            'previous_information_header', 'staff_id', 'previous_institution_id', 'previous_end_date',
+            'new_information_header', 'new_institution_id', 'new_institution_position_id', 'new_staff_type_id', 'new_FTE', 'new_start_date', 'new_end_date',
+            'transfer_reasons_header', 'comment'
+        ]);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)

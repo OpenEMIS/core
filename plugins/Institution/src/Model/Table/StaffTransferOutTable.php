@@ -388,7 +388,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             if ($this->action == 'add') {
                 // using institution_staff entity
                 $institutionId = $entity->institution_id;
-            } else if ($this->action == 'edit') {
+            } else {
                 // using institution_staff_transfer entity
                 $institutionId = $entity->previous_institution_id;
             }
@@ -443,8 +443,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 }
             }
 
+            // need to specify select option for approve action
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $options;
             $attr['type'] = 'select';
-            $attr['options'] = $options;
             $attr['onChangeReload'] = true;
             return $attr;
         }
