@@ -145,7 +145,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'edit') {
+        if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
             $attr['value'] = $entity->staff_id;
             $attr['attr']['value'] = $entity->user->name_with_id;
@@ -155,7 +155,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'edit') {
+        if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
             $attr['value'] = $entity->previous_institution_id;
             $attr['attr']['value'] = $entity->previous_institution->code_name;
@@ -165,7 +165,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'edit') {
+        if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
 
             if (!empty($entity->previous_end_date)) {
@@ -181,7 +181,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'edit') {
+        if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
             $attr['value'] = $entity->new_institution_id;
             $attr['attr']['value'] = $entity->new_institution->code_name;
@@ -191,7 +191,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function onUpdateFieldNewInstitutionPositionId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'edit') {
+        if (in_array($action, ['edit', 'approve'])) {
             $options = [];
             if (!empty($request->data[$this->alias()]['new_institution_id']) && !empty($request->data[$this->alias()]['new_FTE']) && !empty($request->data[$this->alias()]['new_start_date'])) {
                 $PositionsTable = TableRegistry::get('Institution.InstitutionPositions');
