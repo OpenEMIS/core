@@ -198,13 +198,13 @@ class InstitutionPositionsTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $visibility = false;
             $requestData = $request->data;
-            $types = $this->getSelectOptions('Staff.position_types');
+
             if ($action == 'add') {
                 if (isset($requestData[$this->alias()]) && array_key_exists('staff_position_title_id', $requestData[$this->alias()])) {
                     $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
-                    $positionType = $this->StaffPositionTitles->get($positionTitleId)->type;
+                    $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
 
-                    if ($types[$positionType] == 'Teaching') {
+                    if ($positionTypeId == 1) { // teaching
                         $visibility = true;
                         $attr['options'] = $this->getSelectOptions('general.yesno');
                         $attr['default'] = '';
@@ -215,9 +215,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $entity = $attr['entity'];
                 $isHomeroom = $entity->is_homeroom;
                 $positionTitleId = $entity->staff_position_title_id;
-                $positionType = $this->StaffPositionTitles->get($positionTitleId)->type;
+                $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
 
-                if ($types[$positionType] == 'Teaching') {
+                if ($positionTypeId == 1) { // Teaching
                    $visibility = true;
                 }
 
