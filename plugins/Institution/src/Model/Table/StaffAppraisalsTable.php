@@ -53,6 +53,9 @@ class StaffAppraisalsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
+
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
     }
 
     public function validationDefault(Validator $validator)
@@ -67,6 +70,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             ])
             ->allowEmpty('file_content')
         ;
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        return $events;
     }
 
     private function setupTabElements()
