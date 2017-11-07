@@ -1437,9 +1437,9 @@ class ValidationBehavior extends Behavior
             // current position has no end date
             $dateCondition['OR'][] = 'end_date IS NULL';
             $dateCondition['OR'][] = [
-                'end_date IS NOT NULL',
-                'end_date >= ' => $startDate,
-                'end_date >= ' => $todayDate //to exclude staff which assignment has been ended.
+                "end_date IS NOT NULL",
+                "end_date >= '" . $startDate . "'",
+                "end_date >= '" . $todayDate . "'" //to exclude staff which assignment has been ended.
             ];
         } else {
             // current position HAS end date
