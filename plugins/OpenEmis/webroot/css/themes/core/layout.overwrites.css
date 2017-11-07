@@ -187,21 +187,26 @@ a,
 }
 
 
-/* Ag-Grid Overwrites */
+/* Ag-Grid Overwrites  - Removing all after this task */
+.rtl .sg-theme .ag-body-viewport {
+    direction: rtl !important;
+}
 
-.ag-fresh {
+/* Adding the aboved css for kd-angular-ag-grid to work for the latest  - Also to removed together */ 
+
+/*.ag-fresh {
     overflow: hidden;
 }
 
 .ag-fresh .ag-root {
     min-height: 200px;
-}
+}*/
 
 .ag-height-fixed {
     height: 650px;
     min-height: 200px;
 }
-
+/*
 .rtl .ag-fresh div.ag-header,
 .rtl .ag-body-viewport {
     direction: ltr !important;
@@ -274,13 +279,13 @@ a,
     border: 0;
     padding: 5px;
     width: 97%;
-}
+}*/
 
 .ag-header-icon {
     display: inline;
 }
 
-.ag-fresh .ag-header-cell-menu-button {
+/*.ag-fresh .ag-header-cell-menu-button {
     line-height: 14px !important;
     z-index: 1;
     background-color: #F6F6F6;
@@ -294,13 +299,13 @@ a,
 
 .ag-fresh .ag-header-cell-menu-button:hover {
     background-color: #EEE;
-}
+}*/
 
 .ag-header-cell-menu-button svg,
 .ag-sort-none-icon svg {
     display: none;
 }
-
+/*
 .ag-sort-descending-icon:after,
 .ag-sort-none-icon:after,
 .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
@@ -333,13 +338,13 @@ a,
 
 .ag-fresh .oe-cell-editable select {
     background-color: #FFF9CA;
-}
+}*/
 
 /*.ag-sort-none-icon:after {
     content: "\f0dc";
 }
 */
-.ag-fresh .ag-header-row div.ag-header-cell {
+/*.ag-fresh .ag-header-row div.ag-header-cell {
     border-color: #DDD;
     border-style: solid;
 }
@@ -350,22 +355,22 @@ a,
     border-bottom: 1px solid #DDD;
     border-radius: 0;
 }
-
+*/
 .ag-filter select {
     -webkit-appearance: auto !important;
     -moz-appearance: auto !important;
     appearance: auto !important;
 }
 
-.ag-fresh .ag-cell:last-child {
+/*.ag-fresh .ag-cell:last-child {
     border-right: 1px dotted #DDD !important;
 }
 
 .ag-fresh .ag-header-cell:last-child {
     border-right: 1px solid #DDD !important;
 }
-
-.rtl .ag-fresh .ag-cell,
+*/
+/*.rtl .ag-fresh .ag-cell,
 .rtl .ag-fresh .ag-header-cell-text {
     font-size: 14px;
 }
@@ -412,7 +417,7 @@ a,
 
 .rtl .ag-fresh .ag-header-cell-menu-button {
     float: left;
-}
+}*/
 
 /* Error message on the fileinput */
 
@@ -603,11 +608,11 @@ a,
 
 /* For Checkbox iCheck - To be depreciate */
 
-.icheck-input[type="checkbox"],
+/*.icheck-input[type="checkbox"],
 .icheck-input[type="radio"] {
     z-index: -1 !important;
 }
-
+*/
 /* End of iCheck */
 
 
@@ -921,7 +926,7 @@ a,
 
 /* Temp fix by KK POCOR-3880 */
 
-.ag-fresh .ag-pinned-left-header,
+/*.ag-fresh .ag-pinned-left-header,
 .ag-fresh .ag-pinned-right-header {
     background: none !important;
     background-color: rgba(204, 204, 204, 0.2) !important;
@@ -937,13 +942,13 @@ a,
 
 .ag-fresh .ag-header-icon#agMenu {
     display: block !important;
-}
+}*/
 
 .ag-menu input.ag-filter-filter {
     width: 89% !important;
 }
 
-.ag-fresh .ag-menu {
+/*.ag-fresh .ag-menu {
     border: none !important;
-}
+}*/
 /* End of fix for POCOR-3880 */

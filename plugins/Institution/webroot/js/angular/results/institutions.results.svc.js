@@ -243,15 +243,19 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
         },
 
         getColumnDefs: function(action, subject, periods, gradingTypes, _results, enrolledStatus) {
+            var menuTabs = [ "filterMenuTab" ];
             var filterParams = {
                 cellHeight: 30
             };
             var columnDefs = [];
 
             var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
+            var isRtl = document.querySelector("html").classList.contains("rtl");
             if (isMobile) {
                 var direction = '';
-            } else {
+            } else if (isRtl) {
+                var direction = 'right';
+            }else {
                 var direction = 'left';
             }
 
@@ -259,27 +263,34 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 headerName: "OpenEMIS ID",
                 field: "openemis_id",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
             columnDefs.push({
                 headerName: "Name",
                 field: "name",
                 sort: 'asc',
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
             columnDefs.push({
                 headerName: "student id",
                 field: "student_id",
                 hide: true,
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs
             });
             columnDefs.push({
                 headerName: "Status",
                 field: "student_status_name",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
 
             var ResultsSvc = this;
@@ -319,7 +330,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 var columnDef = {
                     headerName: headerName,
                     field: periodField,
-                    filterParams: filterParams
+                    filterParams: filterParams,
+                    menuTabs: menuTabs
                 };
 
                 var extra = {};
@@ -388,6 +400,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             columnDefs.push({
                 headerName: "Total Mark",
                 field: "total_mark",
+                menuTabs: menuTabs,
                 filter: "number",
                 valueGetter: function(params) {
                     var value = ResultsSvc.calculateTotal(params.data);
