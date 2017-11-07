@@ -48,6 +48,9 @@ class StaffAbsencesTable extends ControllerActionTable {
 			'pages' => ['index']
 		]);
 
+		// POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
+
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
@@ -126,26 +129,6 @@ class StaffAbsencesTable extends ControllerActionTable {
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
 		return $events;
 	}
-
-	public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
-    {
-        $staffId = $params['staff_id'];
-        $institutionId = $params['institution_id'];
-        $institutionPositionId = $params['institution_position_id'];
-        $originalStartDate = $params['original_start_date'];
-        $newStartDate = $params['new_start_date'];
-
-        $data = $this->find()
-            ->where([
-                $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('start_date >=') => $originalStartDate,
-                $this->aliasField('start_date <=') => $newStartDate,
-            ])
-            ->all();
-
-        return count($data);
-    }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');

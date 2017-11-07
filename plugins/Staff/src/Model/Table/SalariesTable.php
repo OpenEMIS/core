@@ -23,31 +23,15 @@ class SalariesTable extends ControllerActionTable {
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);
+
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
 	}
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
-    }
-
-    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
-    {
-        $staffId = $params['staff_id'];
-        $institutionId = $params['institution_id'];
-        $institutionPositionId = $params['institution_position_id'];
-        $originalStartDate = $params['original_start_date'];
-        $newStartDate = $params['new_start_date'];
-
-        $data = $this->find()
-            ->where([
-                $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('salary_date >=') => $originalStartDate,
-                $this->aliasField('salary_date <=') => $newStartDate,
-            ])
-            ->all();
-
-        return count($data);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
