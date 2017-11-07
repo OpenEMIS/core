@@ -15,6 +15,12 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 include_once "../config.php";
+require DIR_ROOT . 'vendor/autoload.php';
+include DIR_ROOT . 'config/bootstrap.php';
+
+use Cake\ORM\TableRegistry;
+use Cake\I18n\Date;
+
 session_start();
 $url = getRoot() . '/installer/';
 
@@ -31,24 +37,16 @@ if (isset($_SESSION['db_host']) && isset($_SESSION['db_user']) && isset($_SESSIO
         $acctUser = $_POST['username'];
         $acctPass1 = $_POST['password1'];
         $acctPass2 = $_POST['password2'];
-        $schoolName = $_POST['school_name'];
-        $schoolCode = $_POST['school_code'];
 
         if (!empty($acctPass1) && $acctPass1 === $acctPass2) {
-            if (!empty($schoolName)) {
-                try {
-                    // $pdo = new PDO($connectionString, $user, $pass);
-                    // createUser($pdo, $acctUser, $acctPass1);
-                    // createSchool($pdo, $schoolName, $schoolCode);
-                    $_SESSION['username'] = $acctUser;
-                    $_SESSION['password'] = $acctPass1;
-                    header('Location: ' . $url . '?step=5');
-                } catch (PDOException $ex) {
-                    $_SESSION['error'] = $ex->getMessage();
-                    header('Location: ' . $url . '?step=4');
-                }
-            } else {
-                $_SESSION['error'] = 'Please enter your school name.';
+            try {
+                $pdo = new PDO($connectionString, $user, $pass);
+                createUser($acctUser, $acctPass1);
+                $_SESSION['username'] = $acctUser;
+                $_SESSION['password'] = $acctPass1;
+                header('Location: ' . $url . '?step=5');
+            } catch (PDOException $ex) {
+                $_SESSION['error'] = $ex->getMessage();
                 header('Location: ' . $url . '?step=4');
             }
         } else {
@@ -63,46 +61,42 @@ if (isset($_SESSION['db_host']) && isset($_SESSION['db_user']) && isset($_SESSIO
     header('Location: ' . $url . '?step=4');
 }
 
-function createUser($pdo, $username, $password)
+function createUser($username, $password)
 {
-    $truncate = "TRUNCATE TABLE `security_users`; TRUNCATE TABLE `security_user_types`;";
-    $insertSQL = "INSERT INTO `security_users` (id, identification_no, country_id, username, password, first_name, middle_name, last_name, gender, super_admin, status, created_user_id, created) VALUES (%s)";
+    $UserTable = TableRegistry::get('User.Users');
+    $data = [
+        'id' => 1,
+        'username' => $username,
+        'password' => $password,
+        'openemis_no' => 'sysadmin',
+        'first_name' => 'System',
+        'middle_name' => null,
+        'third_name' => null,
+        'last_name' => 'Administrator',
+        'preferred_name' => null,
+        'email' => null,
+        'address' => null,
+        'postal_code' => null,
+        'address_area_id' => null,
+        'birthplace_area_id' => null,
+        'gender_id' => 1,
+        'date_of_birth' => new Date(),
+        'date_of_death' => null,
+        'nationality_id' => null,
+        'identity_type_id' => null,
+        'identity_number' => null,
+        'external_reference' => null,
+        'super_admin' => 1,
+        'status' => 1,
+        'last_login' => null,
+        'photo_name' => null,
+        'photo_content' => null,
+        'preferred_language' => 'en',
+        'is_student' => 0,
+        'is_staff' => 0,
+        'is_guardian' => 0,
+    ];
 
-    $values = array(
-        1, // id,
-        "'" . 'S123' . "'", // identification_no
-        1, // country_id
-        "'" . $username . "'",
-        "'" . password($password) . "'",
-        "'System'",         // first_name
-        "''",               // middle_name
-        "'Administrator'",  // last_name
-        "'M'",              // gender -> default to M
-        1,                  // 1 = super admin
-        1,                  // 1 = active
-        1,                  // created by
-        'NOW()'
-    );
-    $insertTypeSQL = "INSERT INTO `security_user_types` (id, security_user_id, type) VALUES (1, 1, 1);";
-    $pdo->exec($truncate);
-    $pdo->exec(sprintf($insertSQL, implode(', ', $values)));
-    $pdo->exec($insertTypeSQL);
-}
-
-function createSchool($pdo, $schoolName, $schoolCode)
-{
-    $truncate = "TRUNCATE TABLE `institution_sites`;";
-    $insertSQL = "INSERT INTO `institution_sites` (id, name, code, address, postal_code, date_opened, created_user_id, created) VALUES (%s)";
-    $values = array(
-        1, // id
-        "'" . $schoolName . "'",
-        "'" . $schoolCode . "'",
-        "''",                       // address
-        "''",                       // postal_code
-        "'" . date('Y-m-d') . "'",  // date_opened
-        1,                          // created by
-        'NOW()'
-    );
-    $pdo->exec($truncate);
-    $pdo->exec(sprintf($insertSQL, implode(', ', $values)));
+    $entity = $UserTable->newEntity($data);
+    $UserTable->save($entity);
 }

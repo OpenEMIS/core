@@ -18,8 +18,9 @@ if (!defined('DS')) {
     define('DS', DIRECTORY_SEPARATOR);
 }
 
-define('ROOT', rtrim(dirname(__DIR__), 'webroot'));
-define('CONFIG', ROOT . 'config' . DS);
+define('DIR_ROOT', rtrim(dirname(__DIR__), 'webroot'));
+define('CONFIG_DIR', DIR_ROOT . 'config' . DS);
+
 // setting up the web root and server root
 $thisFile = str_replace('\\', '/', __FILE__);
 $docRoot = $_SERVER['DOCUMENT_ROOT'];
@@ -44,17 +45,14 @@ return [
             'quoteIdentifiers' => true,
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
         ],
-    ]
+    ],
+    'schoolMode' => true
 ];
-?>
 ";
 define('WEBROOT', 'http://'.$_SERVER['HTTP_HOST'].$webRoot);
-define('CONFIG_DIR', CONFIG);
-define('CONFIG_FILE', CONFIG . 'datasource.php');
-// var_dump(CONFIG_FILE);die;
-define('INSTALL_FILE', CONFIG . 'install');
+define('CONFIG_FILE', CONFIG_DIR . 'datasource.php');
+define('INSTALL_FILE', CONFIG_DIR . 'install');
 define('CONFIG_TEMPLATE', $configTemplate);
-// define('INSTALL_SQL', $docRoot . $app . '/app/Sql/install.sql');
 define('ABSPATH', $srvRoot);
 
 function pr($a)
