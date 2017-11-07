@@ -143,7 +143,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_institution_id', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('new_start_date', ['type' => 'date', 'onChangeReload' => true]);
         $this->field('new_end_date', ['type' => 'date', 'onChangeReload' => true, 'default_date' => false]);
-        $this->field('new_FTE', ['type' => 'select', 'options' => $this->fteOptions, 'onChangeReload' => true]);
+        $this->field('new_FTE', ['type' => 'select']);
         $this->field('new_institution_position_id', ['type' => 'select']);
         $this->field('new_staff_type_id', ['type' => 'select']);
 
@@ -215,7 +215,30 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
                 $options = $PositionsTable->getInstitutionPositions($userId, $isAdmin, $activeStatusId, $institutionId, $fte, $startDate, $endDate);
             }
-            $attr['options'] = $options;
+
+            // need to specify select option for approve action
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $options;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldNewFTE(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['edit', 'approve'])) {
+            // need to specify select option for approve action
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $this->fteOptions;
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldNewStaffTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['edit', 'approve'])) {
+            $options = $this->NewStaffTypes->find('list')->toArray();
+
+            // need to specify select option for approve action
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $options;
             return $attr;
         }
     }
