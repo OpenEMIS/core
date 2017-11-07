@@ -42,7 +42,6 @@ class StaffBehavioursTable extends ControllerActionTable
         $events = parent::implementedEvents();
 		$events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
 		$events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
-        $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
     }
 
