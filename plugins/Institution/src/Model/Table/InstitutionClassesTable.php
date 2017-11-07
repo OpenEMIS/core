@@ -75,8 +75,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'ClassStudents' => ['view', 'edit'],
             'StudentCompetencies' => ['view'],
             'StudentCompetencyComments' => ['view'],
-            'OpenEMIS_Classroom' => ['index', 'view'],
-            'ReportCardComments' => ['index']
+            'OpenEMIS_Classroom' => ['index', 'view']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -1331,32 +1330,5 @@ class InstitutionClassesTable extends ControllerActionTable
                 return $q->where(['InstitutionSubjects.education_subject_id' => $subjectId]);
             })
             ->toArray();
-    }
-
-    // used for student report cards
-    public function findTeacherEditPermissions(Query $query, array $options)
-    {
-        $reportCardId = $options['report_card_id'];
-        $institutionId = $options['institution_id'];
-        $classId = $options['institution_class_id'];
-        $staffId = $options['staff_id'];
-
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $ReportCardSubjects = TableRegistry::get('ReportCards.ReportCardSubjects');
-
-        return $query
-            ->find('list', [
-                'keyField' => 'education_subject_id',
-                'valueField' => 'education_subject_id'
-            ])
-            ->select(['education_subject_id' => 'InstitutionSubjects.education_subject_id'])
-            ->leftJoinWith('InstitutionSubjects.SubjectStaff')
-            ->leftJoinWith('InstitutionSubjects.EducationSubjects.ReportCardSubjects')
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('id') => $classId,
-                'ReportCardSubjects.report_card_id' => $reportCardId
-            ]);
     }
 }
