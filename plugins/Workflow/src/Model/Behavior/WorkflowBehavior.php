@@ -99,7 +99,6 @@ class WorkflowBehavior extends Behavior {
         $events['ControllerAction.Model.view.afterAction']      = ['callable' => 'viewAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
-        $events['ControllerAction.Model.edit.afterAction']      = ['callable' => 'editAfterAction', 'priority' => 1];
         $events['ControllerAction.Model.edit.beforePatch']      = ['callable' => 'editBeforePatch', 'priority' => 1];
         $events['Model.custom.onUpdateToolbarButtons']          = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
         $events['Model.custom.onUpdateActionButtons']           = ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
@@ -110,7 +109,18 @@ class WorkflowBehavior extends Behavior {
         }
         $events['Model.WorkflowSteps.afterSave'] = 'workflowStepAfterSave';
         $events['Model.Validation.getPendingRecords'] = 'getPendingRecords';
+        $events['ControllerAction.Model.approve'] = 'approve';
+        $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
         return $events;
+    }
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        switch ($this->_table->action) {
+            case 'approve':
+                $buttons[1]['url'] = $this->_table->url('view');
+                break;
+        }
     }
 
     public function onDeleteRecord(Event $event, $id, Entity $workflowTransitionEntity) {
@@ -280,6 +290,7 @@ class WorkflowBehavior extends Behavior {
 
     public function afterSaveCommit(Event $event, EntityInterface $entity, ArrayObject $options)
     {
+        // for approve action
         if (!$entity->isNew() && $entity->has('validate_approve')) {
             $this->processWorkflow();
         }
@@ -507,20 +518,66 @@ class WorkflowBehavior extends Behavior {
         $this->setFilterNotEditable($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
-    {
-        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $validateApprove = $model->getQueryString('validate_approve');
+    public function approve(Event $event) {
+        if ($this->isCAv4()) {
+            $extra = func_get_arg(1);
+            $model = $this->_table;
+            $jsonActionAttr = $model->getQueryString('action_attr');
 
-        if ($validateApprove) {
-            $actionAttr = json_decode($model->getQueryString('action_attr'), true);
-            $this->setupValidateApproveFields($entity, $actionAttr);
+            if ($jsonActionAttr) {
+                $model->ControllerAction->renderView('/ControllerAction/edit');
+                $model->field('status_id', ['type' => 'hidden']);
+
+                // edit fields
+                $entity = null;
+                $event = $model->dispatchEvent('ControllerAction.Model.edit', [$extra], $this);
+                if ($event->isStopped()) { return $event->result; }
+                if ($event->result instanceof Entity) {
+                    $entity = $event->result;
+                }
+
+                // workflow fields
+                $actionAttr = json_decode($jsonActionAttr, true);
+                $this->setupWorkflowTransitionFields($entity, $actionAttr);
+
+                // reorder fields
+                $order = 0;
+                $fieldOrder = [];
+                $fields = $model->fields;
+                uasort($fields, function ($a, $b) {
+                    return $a['order']-$b['order'];
+                });
+
+                foreach ($fields as $fieldName => $fieldAttr) {
+                    if (!in_array($fieldName, ['workflow_information_header', 'current_step', 'action', 'description', 'next_step', 'workflow_assignee_id', 'comments'])) {
+                        $order = $fieldAttr['order'] > $order ? $fieldAttr['order'] : $order;
+                        if (array_key_exists($order, $fieldOrder)) {
+                            $order++;
+                        }
+                        $fieldOrder[$order] = $fieldName;
+                    }
+                }
+
+                ksort($fieldOrder);
+                array_unshift($fieldOrder, 'comments');
+                array_unshift($fieldOrder, 'workflow_assignee_id');
+                array_unshift($fieldOrder, 'next_step');
+                array_unshift($fieldOrder, 'description');
+                array_unshift($fieldOrder, 'action');
+                array_unshift($fieldOrder, 'current_step');
+                array_unshift($fieldOrder, 'workflow_information_header');
+                $this->_table->setFieldOrder($fieldOrder);
+
+                return $entity;
+            } else {
+                return $model->controller->redirect($model->url('view'));
+            }
         }
     }
 
-    public function setupValidateApproveFields(Entity $entity, array $actionAttr)
+    public function setupWorkflowTransitionFields(Entity $entity, array $actionAttr)
     {
-        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $model = $this->_table;
         $alias = $this->WorkflowTransitions->alias();
 
         // show postEvent description
@@ -601,14 +658,15 @@ class WorkflowBehavior extends Behavior {
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $model = $this->_table;
-        if (isset($data[$model->alias()]['validate_approve']) && array_key_exists('WorkflowTransitions', $data)) {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+
+        // for approve action
+        if (isset($data[$model->alias()]['validate_approve'])) {
             if (isset($data[$model->alias()]['workflow_assignee_id']) && !empty($data[$model->alias()]['workflow_assignee_id'])) {
                 $data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
             }
         }
     }
-
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);
@@ -671,7 +729,7 @@ class WorkflowBehavior extends Behavior {
 
     public function onUpdateFieldWorkflowAssigneeId(Event $event, array $attr, $action, $request)
     {
-        if ($action == 'edit') {
+        if ($action == 'approve') {
             $actionAttr = $attr['entity'];
 
             if ($actionAttr['auto_assign_assignee']) {
@@ -1226,8 +1284,8 @@ class WorkflowBehavior extends Behavior {
                                         $approveButton['url'] = '#';
                                         $approveButton['attr'] = $buttonAttr;
                                     } else {
-                                        // user needs edit permission to see the approve button for validate approve
-                                        $approveButton['url'] = $this->_table->setQueryString($this->_table->url('edit'), ['validate_approve' => 1, 'action_attr' => $json]);
+                                        // approve function
+                                        $approveButton['url'] = $this->_table->setQueryString($this->_table->url('approve'), ['action_attr' => $json]);
                                         $approveButton['attr'] = $attr;
                                     }
 
@@ -1250,11 +1308,6 @@ class WorkflowBehavior extends Behavior {
 
                 if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('edit') && !$isEditable) {
                     unset($toolbarButtons['edit']);
-                } else if ($toolbarButtons->offsetExists('edit')) {
-                    // unset validate approve queryString for edit button
-                    if (isset($toolbarButtons['edit']['url']['queryString'])) {
-                        unset($toolbarButtons['edit']['url']['queryString']);
-                    }
                 }
 
                 if (!$this->_table->AccessControl->isAdmin() && $toolbarButtons->offsetExists('remove') && !$isDeletable) {
