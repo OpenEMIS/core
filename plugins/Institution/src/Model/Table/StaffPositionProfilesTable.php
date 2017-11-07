@@ -176,6 +176,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
     }
 
     public function implementedEvents()
@@ -189,26 +192,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
-    }
-
-    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
-    {
-        $staffId = $params['staff_id'];
-        $institutionId = $params['institution_id'];
-        $institutionPositionId = $params['institution_position_id'];
-        $originalStartDate = $params['original_start_date'];
-        $newStartDate = $params['new_start_date'];
-
-        $data = $this->find()
-            ->where([
-                $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('start_date >=') => $originalStartDate,
-                $this->aliasField('start_date <=') => $newStartDate,
-            ])
-            ->all();
-
-        return count($data);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -230,6 +213,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $requestData = $this->request->data;
         $staffChangeTypes = $this->staffChangeTypesList;
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
         $associatedData = [];
         if ((array_key_exists($this->alias(), $requestData)) && $requestData[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
@@ -244,10 +228,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
             if ($newStartDate > $originalStartDate) { // if new_start_date is later than original_start_date
                 foreach ($this->associatedModelList as $model => $value) {
+                    $academicPeriodsId = $AcademicPeriods->getAcademicPeriodIdByDate($originalStartDate);
                     $params = new ArrayObject([
                         'staff_id' => $staffId,
                         'institution_id' => $institutionId,
                         'institution_position_id' => $institutionPositionId,
+                        'academic_period_id' => $academicPeriodsId,
                         'original_start_date' => $originalStartDate,
                         'new_start_date' => $newStartDate
                     ]);
