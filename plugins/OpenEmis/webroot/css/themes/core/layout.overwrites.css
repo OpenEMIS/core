@@ -1,5 +1,5 @@
 /*
-Core Overwrites: v.1.0.12
+Core Overwrites: v.1.0.13
 */
 
 
@@ -335,10 +335,10 @@ a,
     background-color: #FFF9CA;
 }
 
-.ag-sort-none-icon:after {
+/*.ag-sort-none-icon:after {
     content: "\f0dc";
 }
-
+*/
 .ag-fresh .ag-header-row div.ag-header-cell {
     border-color: #DDD;
     border-style: solid;
@@ -919,14 +919,6 @@ a,
 
 /* End of fix for POCOR-3658 */
 
-/* Security Permission font-size fix for POCOR-3877 */
-
-.security-permission-checkbox label{
-    font-size: 13px !important;
-}
-
-/* End of security permission font-size fix */
-
 /* Temp fix by KK POCOR-3880 */
 
 .ag-fresh .ag-pinned-left-header,
@@ -955,47 +947,3 @@ a,
     border: none !important;
 }
 /* End of fix for POCOR-3880 */
-
-/* Temp overwrite of last child of ag grid pinned POCOR-3961 */
-
-.ag-fresh .ag-pinned-left-cols-container .ag-cell.ag-cell-last-left-pinned {
-    border-right: 1px dotted #DDD !important;
-}
-
-/* End of temp fix for POCOR-3961 */
-
-/* Fix for normal table sorting issue in POCOR-2547 */
-
-.rtl .table-sortable th > a.asc:after {
-    content: "\f0dd";
-}
-
-.rtl .table-sortable th > a.desc:after {
-    content: "\f0de";
-}
-
-/* End of fix for normal table sorting */
-
-/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
-
-.ag-fresh .ag-cell-no-focus.oe-cell-error,
-.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error {
-    border: 2px solid #CC5C5C !important;
-    border-radius: 0px !important;
-}
-
-/* End of fix for adding error border */
-
-/* Temp fix for core error border for POCOR-3783 */
-
-.table .error input, 
-.table .error .input-select-wrapper,
-.table .error textarea {
-    border-color: #CC5C5C !important;
-}
-
-.table div.input > label {
-    display: none !important;
-}
-
-/* End of temp fix for error border */
