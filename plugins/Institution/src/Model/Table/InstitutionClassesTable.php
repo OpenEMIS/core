@@ -79,6 +79,9 @@ class InstitutionClassesTable extends ControllerActionTable
             'ReportCardComments' => ['index']
         ]);
 
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
+
         $this->setDeleteStrategy('restrict');
     }
 
@@ -134,26 +137,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $events['ControllerAction.Model.delete.afterAction'] = ['callable' => 'deleteAfterAction', 'priority' => 10];
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
-    }
-
-    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
-    {
-        $staffId = $params['staff_id'];
-        $institutionId = $params['institution_id'];
-        $institutionPositionId = $params['institution_position_id'];
-        $originalStartDate = $params['original_start_date'];
-
-        $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($originalStartDate);
-
-        $data = $this->find()
-            ->where([
-                $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id >=') => $academicPeriodId
-            ])
-            ->all();
-
-        return count($data);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

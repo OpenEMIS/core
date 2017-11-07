@@ -53,6 +53,9 @@ class StaffAppraisalsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
+
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
     }
 
     public function validationDefault(Validator $validator)
@@ -74,26 +77,6 @@ class StaffAppraisalsTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
-    }
-
-    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
-    {
-        $staffId = $params['staff_id'];
-        $institutionId = $params['institution_id'];
-        $institutionPositionId = $params['institution_position_id'];
-        $originalStartDate = $params['original_start_date'];
-        $newStartDate = $params['new_start_date'];
-
-        $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($originalStartDate);
-
-        $data = $this->find()
-            ->where([
-                $this->aliasField('created_user_id') => $staffId,
-                $this->aliasField('academic_period_id >=') => $academicPeriodId
-            ])
-            ->all();
-
-        return count($data);
     }
 
     private function setupTabElements()

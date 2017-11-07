@@ -23,6 +23,9 @@ class StaffSubjectsTable extends ControllerActionTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
+
         /*
             note that in DirectoriesController
             if ($model instanceof \Staff\Model\Table\StaffSubjectsTable) {
@@ -36,26 +39,6 @@ class StaffSubjectsTable extends ControllerActionTable {
         $events = parent::implementedEvents();
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';
         return $events;
-    }
-
-    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
-    {
-        $staffId = $params['staff_id'];
-        $institutionId = $params['institution_id'];
-        $institutionPositionId = $params['institution_position_id'];
-        $originalStartDate = $params['original_start_date'];
-        $newStartDate = $params['new_start_date'];
-
-        $data = $this->find()
-            ->where([
-                $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('start_date >=') => $originalStartDate,
-                $this->aliasField('start_date <=') => $newStartDate,
-            ])
-            ->all();
-
-        return count($data);
     }
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
