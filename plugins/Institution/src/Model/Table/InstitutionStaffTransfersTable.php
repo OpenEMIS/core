@@ -61,7 +61,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             'value' => 'Workflow.onTransferStaff',
             'text' => 'Transfer Staff',
             'description' => 'Performing this action will transfer the staff to the selected institution.',
-            'method' => 'onTransferStaff'
+            'method' => 'onTransferStaff',
+            'unique' => true
         ]
     ];
 
