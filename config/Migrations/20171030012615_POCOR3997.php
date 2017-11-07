@@ -933,16 +933,6 @@ class POCOR3997 extends AbstractMigration
             [
                 'id' => Text::uuid(),
                 'module' => 'StaffTransferOut',
-                'field' => 'previous_end_date',
-                'module_name' => 'Institution -> Staff Transfer Out',
-                'field_name' => 'Current End Date',
-                'visible' => '1',
-                'created_user_id' => '1',
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => Text::uuid(),
-                'module' => 'StaffTransferOut',
                 'field' => 'previous_FTE',
                 'module_name' => 'Institution -> Staff Transfer Out',
                 'field_name' => 'New FTE',
@@ -965,7 +955,7 @@ class POCOR3997 extends AbstractMigration
                 'module' => 'StaffTransferOut',
                 'field' => 'new_start_date',
                 'module_name' => 'Institution -> Staff Transfer Out',
-                'field_name' => 'Requested Start Date',
+                'field_name' => 'Start Date',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -985,7 +975,7 @@ class POCOR3997 extends AbstractMigration
                 'module' => 'StaffTransferIn',
                 'field' => 'new_FTE',
                 'module_name' => 'Institution -> Staff Transfer In',
-                'field_name' => 'Requested FTE',
+                'field_name' => 'FTE',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -995,7 +985,7 @@ class POCOR3997 extends AbstractMigration
                 'module' => 'StaffTransferIn',
                 'field' => 'new_institution_position_id',
                 'module_name' => 'Institution -> Staff Transfer In',
-                'field_name' => 'Requested Institution Position',
+                'field_name' => 'Institution Position',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -1005,7 +995,7 @@ class POCOR3997 extends AbstractMigration
                 'module' => 'StaffTransferIn',
                 'field' => 'new_staff_type_id',
                 'module_name' => 'Institution -> Staff Transfer In',
-                'field_name' => 'Requested Staff Type',
+                'field_name' => 'Staff Type',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -1015,7 +1005,7 @@ class POCOR3997 extends AbstractMigration
                 'module' => 'StaffTransferIn',
                 'field' => 'new_start_date',
                 'module_name' => 'Institution -> Staff Transfer In',
-                'field_name' => 'Requested Start Date',
+                'field_name' => 'Start Date',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -1025,7 +1015,7 @@ class POCOR3997 extends AbstractMigration
                 'module' => 'StaffTransferIn',
                 'field' => 'new_end_date',
                 'module_name' => 'Institution -> Staff Transfer In',
-                'field_name' => 'Requested End Date',
+                'field_name' => 'End Date',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -1040,13 +1030,23 @@ class POCOR3997 extends AbstractMigration
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'WorkflowSteps',
+                'field' => 'institution_owner',
+                'module_name' => 'Workflow -> Steps',
+                'field_name' => 'To Be Executed By',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
         ];
         $this->insert('labels', $labels);
 
         // security_functions
         $staffTransferInSql = "UPDATE security_functions
                                 SET `name` = 'Staff Transfer In',
-                                `_view` = 'StaffTransferIn.index|StaffTransferIn.view',
+                                `_view` = 'StaffTransferIn.index|StaffTransferIn.view|StaffTransferIn.approve',
                                 `_edit` = 'StaffTransferIn.edit',
                                 `_add` = null,
                                 `_delete` = 'StaffTransferIn.remove',
@@ -1055,7 +1055,7 @@ class POCOR3997 extends AbstractMigration
 
         $staffTransferOutSql = "UPDATE security_functions
                                 SET `name` = 'Staff Transfer Out',
-                                `_view` = 'StaffTransferOut.index|StaffTransferOut.view',
+                                `_view` = 'StaffTransferOut.index|StaffTransferOut.view|StaffTransferOut.approve',
                                 `_edit` = 'StaffTransferOut.edit',
                                 `_add` = 'StaffTransferOut.add',
                                 `_delete` = 'StaffTransferOut.remove',
