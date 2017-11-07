@@ -40,21 +40,20 @@ if (!empty($_POST) && isset($_POST['createDatabase'])) {
             $template = str_replace('{user}', "'$dbUser'", $template);
             $template = str_replace('{pass}', "'$dbPassword'", $template);
             $template = str_replace('{database}', "'$db'", $template);
-            // $dbFileHandle = fopen(CONFIG_FILE, 'w');
-            // if ($dbFileHandle !== false) {
-                // fwrite($dbFileHandle, $template);
-                // fclose($dbFileHandle);
-                // createDb($pdo, $db);
-                // createDbUser($pdo, $host, $dbUser, $dbPassword, $db);
-                // createDbStructure($host, $port, $db, $dbUser, $dbPassword);
+            $dbFileHandle = fopen(CONFIG_FILE, 'w');
+            if ($dbFileHandle !== false) {
+                fwrite($dbFileHandle, $template);
+                fclose($dbFileHandle);
+                createDb($pdo, $db);
+                createDbUser($pdo, $host, $dbUser, $dbPassword, $db);
                 $_SESSION['db_user'] = $dbUser;
                 $_SESSION['db_pass'] = $dbPassword;
                 $_SESSION['db_name'] = $db;
                 header('Location: ' . $url . '?step=4');
-            // } else {
-            //     $_SESSION['error'] = 'Unable to create configuration file. Please check your folder permissions. <br />' . CONFIG_DIR;
-            //     header('Location: ' . $url . '?step=3');
-            // }
+            } else {
+                $_SESSION['error'] = 'Unable to create configuration file. Please check your folder permissions. <br />' . CONFIG_DIR;
+                header('Location: ' . $url . '?step=3');
+            }
         } catch (PDOException $ex) {
             $_SESSION['error'] = $ex->getMessage();
             header('Location: ' . $url . '?step=3');
@@ -69,37 +68,32 @@ if (!empty($_POST) && isset($_POST['createDatabase'])) {
 
 function createDb($pdo, $db)
 {
-    $dropDbSQL = sprintf("DROP DATABASE IF EXISTS %s", $db);
-    $createDbSQL = sprintf("CREATE DATABASE %s", $db);
-    $pdo->exec($dropDbSQL);
-    $pdo->exec($createDbSQL);
+    $dbSql = "SELECT 1 FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?;";
+    $dbExists = $pdo->prepare($dbSql);
+    $dbExists->execute([$db]);
+    $result = $dbExists->fetchAll();
+    if (!$result) {
+        $createDbSQL = sprintf("CREATE DATABASE %s CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", $db);
+        $pdo->exec($createDbSQL);
+    } else {
+        throw new PDOException('Please choose another database name as this database exist.');
+    }
 }
 
 function createDbUser($pdo, $host, $user, $password, $db)
 {
-    $createUserSQL = sprintf("CREATE USER '%s'@'%s'", $user, $host);
-    $dropUserSQL = sprintf("DROP USER '%s'@'%s'", $user, $host);
-    $passwordSQL = sprintf("UPDATE mysql.user SET Password=PASSWORD('%s') WHERE User='%s' AND Host='%s'; FLUSH PRIVILEGES;", $password, $user, $host);
-    $grantSQL = sprintf("GRANT ALL ON %s.* TO '%s'@'%s' WITH GRANT OPTION", $db, $user, $host);
-    $resultSet = $pdo->query(sprintf("SELECT COUNT(1) AS COUNT FROM mysql.user WHERE User='%s' AND Host='%s'", $user, $host));
-    $count = 0;
-    foreach ($resultSet as $row) {
-        if (isset($row['COUNT'])) {
-            $count = $row['COUNT'];
-            break;
-        }
+    $userSql = "SELECT 1 FROM mysql.user WHERE User = ? AND Host = ?";
+    $userExists = $pdo->prepare($userSql);
+    $userExists->execute([$user, $host]);
+    $result = $userExists->fetchAll();
+    if (!$result) {
+        $createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
+        $flushPriviledges = "FLUSH PRIVILEGES";
+        $grantSQL = sprintf("GRANT ALL ON %s.* TO '%s'@'%s'", $db, $user, $host);
+        $pdo->exec($createUserSQL);
+        $pdo->exec($grantSQL);
+        $pdo->exec($flushPriviledges);
+    } else {
+        throw new PDOException('Please choose another Username as this user already exist.');
     }
-    if ($count > 0) {
-        $pdo->exec($dropUserSQL);
-    }
-    $pdo->exec($createUserSQL);
-    $pdo->exec($passwordSQL);
-    $pdo->exec($grantSQL);
-}
-
-function createDbStructure($host, $port, $db, $user, $password)
-{
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db", $user, $password, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-    $sql = file_get_contents(INSTALL_SQL);
-    $pdo->exec($sql);
 }

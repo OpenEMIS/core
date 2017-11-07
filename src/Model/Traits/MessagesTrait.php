@@ -198,6 +198,7 @@ trait MessagesTrait
             'infrastructure_level_id' => 'Level Name'
         ],
         'Institutions' => [
+            'noInstitution' => 'Please populate the following information to create your institution.',
             'noClassRecords' => 'There are no available Classes',
             'date_opened' => 'Date Opened',
             'date_closed' => 'Date Closed',

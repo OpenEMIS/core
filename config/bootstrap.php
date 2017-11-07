@@ -65,6 +65,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Error\AppError;
 use Cake\Core\Exception\Exception;
+use Cake\Routing\Router;
 
 /**
  * Read configuration file and inject configuration into various
@@ -78,7 +79,6 @@ try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
     Configure::load('app_extra', 'default');
-    Configure::load('datasource', 'default');
 
     if (!Configure::read('Application.private.key') || !Configure::read('Application.public.key')) {
         throw new Exception('Could not load application key, please contact administrator to have the key set up for your application.');
@@ -87,7 +87,10 @@ try {
     exit($e->getMessage() . "\n");
 }
 
-
+try {
+    Configure::load('datasource', 'default');
+} catch (\Exception $e) {
+}
 
 
 
@@ -100,17 +103,15 @@ try {
 // for a very very long time, as we don't want
 // to refresh the cache while users are doing requests.
 if (Configure::read('debug')) {
-    Configure::write('Cache._cake_model_.duration', '+2 minutes');
-    Configure::write('Cache._cake_core_.duration', '+2 minutes');
-} else {
-
     // For unit testing
     try {
         Configure::load('test_datasource', 'default');
     } catch (\Exception $e) {
         // do nothing if test_datasource.php is not found
     }
-
+} else {
+    Configure::write('Cache._cake_model_.duration', '+1 year');
+    Configure::write('Cache._cake_core_.duration', '+1 year');
 }
 
 /**
@@ -146,7 +147,6 @@ $isCli = PHP_SAPI === 'cli';
 if ($isCli) {
     (new ConsoleErrorHandler($defaultErrorConfig))->register();
 } else {
-
     if (Configure::read('debug')) {
         (new ErrorHandler($defaultErrorConfig))->register();
     } else {
@@ -154,7 +154,6 @@ if ($isCli) {
         $errorHandler = new AppError(Configure::read('Error'));
         $errorHandler->register();
     }
-
 }
 
 // Include the CLI bootstrap overrides.
