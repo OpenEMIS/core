@@ -27,6 +27,9 @@ class StaffTransferRequestsTable extends StaffTransfer
             'Dashboard' => ['index'],
             'Staff' => ['index', 'add']
         ]);
+
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
     }
 
     public function validationDefault(Validator $validator)
@@ -38,6 +41,12 @@ class StaffTransferRequestsTable extends StaffTransfer
                 'on' => 'create'
             ])
             ->requirePresence('institution_position_id');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        return $events;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

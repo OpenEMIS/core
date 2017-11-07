@@ -79,6 +79,9 @@ class InstitutionClassesTable extends ControllerActionTable
             'ReportCardComments' => ['index']
         ]);
 
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
+
         $this->setDeleteStrategy('restrict');
     }
 

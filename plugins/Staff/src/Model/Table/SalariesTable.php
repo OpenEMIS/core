@@ -23,9 +23,13 @@ class SalariesTable extends ControllerActionTable {
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);
+
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         return $events;
     }

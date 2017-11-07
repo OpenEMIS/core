@@ -98,7 +98,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkHomeRoomTeacherAssignments',
                 'on' => function ($context) {
                     //trigger validation only when homeroom teacher set to no and edit operation
-                    return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']); 
+                    return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
                 }
             ]);
 
@@ -195,15 +195,38 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
-            $attr['options'] = $this->getSelectOptions('general.yesno');
-        } else if ($action == 'edit') {
-            $entity = $attr['entity'];
-            $isHomeroom = $entity->is_homeroom;
+        if ($action == 'add' || $action == 'edit') {
+            $visibility = false;
+            $requestData = $request->data;
 
-            $attr['type'] = 'select';
-            $attr['options'] = $this->getSelectOptions('general.yesno');
-            $attr['default'] = $isHomeroom;
+            if ($action == 'add') {
+                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
+                    $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
+                    $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
+
+                    if ($positionTypeId == 1) { // teaching
+                        $visibility = true;
+                        $attr['options'] = $this->getSelectOptions('general.yesno');
+                        $attr['default'] = '';
+                    }
+                }
+
+            } else if ($action == 'edit') {
+                $entity = $attr['entity'];
+                $isHomeroom = $entity->is_homeroom;
+                $positionTitleId = $entity->staff_position_title_id;
+                $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
+
+                if ($positionTypeId == 1) { // Teaching
+                   $visibility = true;
+                }
+
+                $attr['type'] = 'select';
+                $attr['options'] = $this->getSelectOptions('general.yesno');
+                $attr['default'] = $isHomeroom;
+            }
+
+            $attr['visible'] = $visibility;
         }
 
         return $attr;
@@ -304,6 +327,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 ->toArray(); // Also a collections library method
         }
         $attr['options'] = $titles;
+        $attr['onChangeReload'] = true;
         return $attr;
     }
 
@@ -677,12 +701,12 @@ class InstitutionPositionsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity) 
+    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
     {
         return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
 
-    public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity) 
+    public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity)
     {
         if ($entity->has('staff_position_title') && !empty($entity->staff_position_title)) {
             $isTeaching = ($entity->staff_position_title->type) ? __('Teaching') : __('Non-Teaching');
@@ -690,7 +714,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelGetStaffId(Event $event, Entity $entity) 
+    public function onExcelGetStaffId(Event $event, Entity $entity)
     {
         $UsersTable = TableRegistry::get('Security.Users');
 
@@ -699,5 +723,5 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    
+
 }
