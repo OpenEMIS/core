@@ -727,7 +727,6 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-
         if (empty($search)) {
             // redirect to school dashboard if it is only one record and no add access
             $addAccess = $this->AccessControl->check(['Institutions', 'add']);
@@ -735,6 +734,11 @@ class InstitutionsTable extends ControllerActionTable
                 $entity = $data->first();
                 $event->stopPropagation();
                 $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                return $this->controller->redirect($action);
+            } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
+                $event->stopPropagation();
+                $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
+                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Institutions', 'add'];
                 return $this->controller->redirect($action);
             }
         }
