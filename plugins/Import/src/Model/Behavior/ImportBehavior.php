@@ -391,7 +391,7 @@ class ImportBehavior extends Behavior
             }
 
             ($this->isCustomText()) ? $startCheck = 3 : $startCheck = 2;
-            
+
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
                 if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
                     if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
@@ -639,7 +639,7 @@ class ImportBehavior extends Behavior
         $activeSheet->getRowDimension(1)->setRowHeight(75);
         $activeSheet->getRowDimension(2)->setRowHeight(25);
 
-        ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : ''; 
+        ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : '';
 
         $headerLastAlpha = $this->getExcelColumnAlpha('last');
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
@@ -656,7 +656,7 @@ class ImportBehavior extends Behavior
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
-            ($this->isCustomText()) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];            
+            ($this->isCustomText()) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];
         }
 
         if (empty($applyCellBorder)) {
@@ -700,14 +700,14 @@ class ImportBehavior extends Behavior
             } else if (empty($type) || $type != 'failed') {
                 $activeSheet->mergeCells('A2:C2');
             }
-            
+
             $activeSheet->setCellValue("A2", $this->customText);
         }
 
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $lastRowToAlign, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
-        
+
         foreach ($header as $key => $value) {
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . $lastRowToAlign, $value);
@@ -1279,6 +1279,7 @@ class ImportBehavior extends Behavior
                     $originalRow[$col] = $val;
 
                     if (!empty($val) && preg_match($datePattern, $val)) {
+                        $val = trim($val); // POCOR-4251 trim the whitespace on the date
                         $split = explode('/', $val);
                         $dateObject = new Date();
                         $dateObject->setDate($split[2], $split[1], $split[0]);
