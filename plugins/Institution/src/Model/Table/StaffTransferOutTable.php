@@ -481,8 +481,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     }
                 }
 
+                // need to specify select option for approve action
+                $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $options;
                 $attr['type'] = 'select';
-                $attr['options'] = $options;
             } else {
                 $attr['type'] = 'hidden';
             }
@@ -494,6 +495,10 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             if (isset($this->request->data[$this->alias()]['transfer_type']) && $this->request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
+                $options = $this->PreviousStaffTypes->find('list')->toArray();
+
+                // need to specify select option for approve action
+                $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $options;
                 $attr['type'] = 'select';
             } else {
                 $attr['type'] = 'hidden';
