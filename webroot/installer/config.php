@@ -46,7 +46,8 @@ return [
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
         ],
     ],
-    'schoolMode' => true
+    'schoolMode' => true,
+    'debug' => true
 ];
 ";
 define('WEBROOT', 'http://'.$_SERVER['HTTP_HOST'].$webRoot);

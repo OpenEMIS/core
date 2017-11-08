@@ -61,6 +61,20 @@ function createDbStructure()
                 </div>
 
                 <div class="form-group">
+                    <label for="country" class="col-sm-5 control-label">Country</label>
+                    <div class="col-sm-5">
+                        <input type="text" class="form-control" name="country" id="country" autocomplete="off" maxlength="20" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="code" class="col-sm-5 control-label">Country Code</label>
+                    <div class="col-sm-5">
+                        <input type="text" class="form-control" name="code" id="code" autocomplete="off" maxlength="20" />
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <div class="col-sm-offset-5 col-sm-10">
                         <input type="button" class="btn btn-info" value="Back" onclick="window.location.href='<?php echo $url . '?step=3'; ?>'" />
                         <input type="submit" class="btn btn-success" name="createUser" value="Next" />

@@ -65,7 +65,6 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Error\AppError;
 use Cake\Core\Exception\Exception;
-use Cake\Routing\Router;
 
 /**
  * Read configuration file and inject configuration into various

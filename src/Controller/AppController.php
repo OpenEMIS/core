@@ -18,7 +18,6 @@ use Cake\Controller\Controller;
 use Cake\Event\Event;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
-use Cake\Routing\Router;
 
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\SecurityTrait;
@@ -62,12 +61,6 @@ class AppController extends Controller
     public function initialize()
     {
         parent::initialize();
-        if (!file_exists(CONFIG . 'datasource.php')) {
-            $baseUrl = Router::url(false, true);
-            $installerUrl = $baseUrl.'webroot/installer/';
-            header('Location: '. $installerUrl);
-            die;
-        }
         $theme = 'core';
         if (Configure::read('schoolMode')) {
             $theme = 'school';
