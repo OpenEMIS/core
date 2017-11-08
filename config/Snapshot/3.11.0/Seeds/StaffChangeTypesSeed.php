@@ -34,6 +34,11 @@ class StaffChangeTypesSeed extends AbstractSeed
                 'code' => 'CHANGE_IN_STAFF_TYPE',
                 'name' => 'Change in Staff Type',
             ],
+            [
+                'id' => '4',
+                'code' => 'CHANGE_OF_START_DATE',
+                'name' => 'Change of Start Date',
+            ],
         ];
 
         $table = $this->table('staff_change_types');
