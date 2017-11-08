@@ -248,6 +248,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             return $this->controller->redirect($this->url('index'));
         }
 
+        // url to redirect to staffUser page
+        $staffUserUrl = $this->url('view');
+        $staffUserUrl['action'] = 'StaffUser';
+        $staffUserUrl[1] = $this->paramsEncode(['id' => $userId]);
+
         // check pending transfers
         $pendingTransfer = $this->find()
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -272,18 +277,13 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             if ($visible) {
                 $url = $this->url('view');
                 $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
-
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
 
             } else {
-                $url = $this->url('view');
-                $url['action'] = 'StaffUser';
-                $url[1] = $this->paramsEncode(['id' => $userId]);
-
                 $this->Alert->warning($this->aliasField('existingStaffTransfer'), ['reset' => true]);
                 $event->stopPropagation();
-                return $this->controller->redirect($url);
+                return $this->controller->redirect($staffUserUrl);
             }
         }
 
@@ -301,6 +301,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             ])
             ->first();
         $this->setupFields($institutionStaffEntity);
+
+        $extra['toolbarButtons']['back']['url'] = $staffUserUrl;
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
