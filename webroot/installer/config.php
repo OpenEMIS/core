@@ -52,7 +52,6 @@ return [
 ";
 define('WEBROOT', 'http://'.$_SERVER['HTTP_HOST'].$webRoot);
 define('CONFIG_FILE', CONFIG_DIR . 'datasource.php');
-define('INSTALL_FILE', CONFIG_DIR . 'install');
 define('CONFIG_TEMPLATE', $configTemplate);
 define('ABSPATH', $srvRoot);
 
