@@ -73,6 +73,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ]);
 
         // this behavior restricts current user to see All Subjects or My Subjects
+        $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Security.InstitutionSubject');
 
         /**
@@ -83,7 +84,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'SubjectStudents' => ['view', 'edit']
+            'SubjectStudents' => ['view', 'edit'],
+            'ReportCardComments' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -354,6 +356,33 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 ]
             ])
             ;
+    }
+
+    // used for student report cards
+    public function findTeacherEditPermissions(Query $query, array $options)
+    {
+        $reportCardId = $options['report_card_id'];
+        $institutionId = $options['institution_id'];
+        $classId = $options['institution_class_id'];
+        $staffId = $options['staff_id'];
+
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $ReportCardSubjects = TableRegistry::get('ReportCards.ReportCardSubjects');
+
+        return $query
+            ->find('list', [
+                'keyField' => 'education_subject_id',
+                'valueField' => 'education_subject_id'
+            ])
+            ->select(['education_subject_id' => $this->aliasField('education_subject_id')])
+            ->leftJoinWith('EducationSubjects.ReportCardSubjects')
+            ->innerJoinWith('ClassSubjects')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                'ClassSubjects.institution_class_id' => $classId,
+                'ReportCardSubjects.report_card_id' => $reportCardId
+            ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
