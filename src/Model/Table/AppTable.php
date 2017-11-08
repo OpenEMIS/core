@@ -15,7 +15,6 @@ use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\UtilityTrait;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Page\Traits\OptionListTrait;
-use Cake\Routing\Router;
 
 class AppTable extends Table
 {
@@ -26,13 +25,6 @@ class AppTable extends Table
 
     public function initialize(array $config)
     {
-        if (!file_exists(CONFIG . 'datasource.php')) {
-            $baseUrl = Router::url(['_ext' => false], true);
-            $installerUrl = $baseUrl.'/webroot/installer/';
-            header('Location: '. $installerUrl);
-            die;
-        }
-
         Time::$defaultLocale = 'en_US';
         Date::$defaultLocale = 'en_US';
 
