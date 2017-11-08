@@ -433,7 +433,7 @@ class ConfigItemsSeed extends AbstractSeed
                 'code' => 'change_password',
                 'type' => 'System',
                 'label' => 'Change Administrator password',
-                'value' => '0',
+                'value' => '1',
                 'default_value' => '1',
                 'editable' => '0',
                 'visible' => '0',
