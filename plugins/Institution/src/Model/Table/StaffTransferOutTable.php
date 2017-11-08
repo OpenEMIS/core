@@ -146,7 +146,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
-        $this->field('new_institution_id', ['type' => 'integer']);
         $this->field('institution_position_id');
         $this->field('FTE');
         $this->field('staff_type_id');
@@ -172,10 +171,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
 
         $this->setFieldOrder([
-            'status_id', 'assignee_id',
             'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'transfer_type', 'previous_end_date', 'previous_effective_date', 'previous_FTE', 'previous_staff_type_id',
             'new_information_header', 'new_institution_id', 'new_start_date',
-            'transfer_reasons_header', 'comment'
+            'transfer_reasons_header', 'comment',
+            // hidden fields
+            'all_visible', 'new_end_date', 'previous_institution_staff_id', 'new_FTE', 'new_staff_type_id', 'new_institution_position_id'
         ]);
     }
 
