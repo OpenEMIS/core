@@ -455,33 +455,28 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function onUpdateFieldPreviousFTE(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
-            $type = 'hidden';
+            if (isset($this->request->data[$this->alias()]['transfer_type']) && $request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
+                $options = $this->fteOptions;
 
-            if (isset($this->request->data[$this->alias()]['transfer_type'])) {
-                $transferType = $request->data[$this->alias()]['transfer_type'];
-                if (in_array($transferType, [self::PARTIAL_TRANSFER])) {
-                    $options = $this->fteOptions;
+                if (isset($this->request->data[$this->alias()]['positions_held']) && !empty($this->request->data[$this->alias()]['positions_held'])) {
+                    $institutionStaffId = $this->request->data[$this->alias()]['positions_held'];
+                    $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId);
 
-                    if (isset($this->request->data[$this->alias()]['positions_held']) && !empty($this->request->data[$this->alias()]['positions_held'])) {
-                        $institutionStaffId = $this->request->data[$this->alias()]['positions_held'];
-                        $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId);
-
-                        if (!empty($staffEntity)) {
-                            // only show fte options less than the current fte
-                            foreach($options as $key => $option) {
-                                if ($key >= $staffEntity->FTE) {
-                                    unset($options[$key]);
-                                }
+                    if (!empty($staffEntity)) {
+                        // only show fte options less than the current fte
+                        foreach($options as $key => $option) {
+                            if ($key >= $staffEntity->FTE) {
+                                unset($options[$key]);
                             }
                         }
                     }
-
-                    $type = 'select';
-                    $attr['options'] = $options;
                 }
-            }
 
-            $attr['type'] = $type;
+                $attr['type'] = 'select';
+                $attr['options'] = $options;
+            } else {
+                $attr['type'] = 'hidden';
+            }
             return $attr;
         }
     }
@@ -489,15 +484,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function onUpdateFieldPreviousStaffTypeId(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
-            $type = 'hidden';
-
-            if (isset($this->request->data[$this->alias()]['transfer_type'])) {
-                $transferType = $request->data[$this->alias()]['transfer_type'];
-                if (in_array($transferType, [self::PARTIAL_TRANSFER])) {
-                    $type = 'select';
-                }
+            if (isset($this->request->data[$this->alias()]['transfer_type']) && $this->request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
+                $attr['type'] = 'select';
+            } else {
+                $attr['type'] = 'hidden';
             }
-            $attr['type'] = $type;
             return $attr;
         }
     }
@@ -505,22 +496,23 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
-            $type = 'hidden';
-
-            if (isset($this->request->data[$this->alias()]['transfer_type'])) {
-                $transferType = $request->data[$this->alias()]['transfer_type'];
-
-                if (in_array($transferType, [self::FULL_TRANSFER, self::PARTIAL_TRANSFER])) {
-                    if ($transferType == self::FULL_TRANSFER) {
-                        $label = 'Position End Date';
-                    } else {
-                        $label = 'Effective Date';
-                    }
-                    $type = 'date';
-                    $attr['attr']['label']['text'] = __($label);
-                }
+            if (isset($this->request->data[$this->alias()]['transfer_type']) && $this->request->data[$this->alias()]['transfer_type'] == self::FULL_TRANSFER) {
+                $attr['type'] = 'date';
+            } else {
+                $attr['type'] = 'hidden';
             }
-            $attr['type'] = $type;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldPreviousEffectiveDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['add', 'edit', 'approve'])) {
+            if (isset($this->request->data[$this->alias()]['transfer_type'])  && $this->request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
+                $attr['type'] = 'date';
+            } else {
+                $attr['type'] = 'hidden';
+            }
             return $attr;
         }
     }
@@ -558,14 +550,14 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
-            $type = 'hidden';
 
             if (in_array($action, ['edit', 'approve']) && !empty($entity->new_start_date)) {
-                $type = 'readonly';
+                $attr['type'] = 'readonly';
                 $attr['value'] = $entity->new_start_date->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($entity->new_start_date);
+            } else {
+                $attr['type'] = 'hidden';
             }
-            $attr['type'] = $type;
             return $attr;
         }
     }
