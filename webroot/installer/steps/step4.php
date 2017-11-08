@@ -3,7 +3,7 @@
 include_once "../config.php";
 require DIR_ROOT . 'vendor/autoload.php';
 include DIR_ROOT . 'config/bootstrap.php';
-
+require CONFIG_DIR . 'snapshot_config.php';
 use Migrations\Migrations;
 
 $url = getRoot() . '/installer/';
@@ -16,12 +16,11 @@ if (!isset($_SESSION['db_name']) || !isset($_SESSION['db_user']) || !isset($_SES
 function createDbStructure()
 {
     $migrations = new Migrations();
-    $source = DS . 'Snapshot' . DS . '3.11.0';
-    $version = 20171027060236;
+    $source = DS . 'Snapshot' . DS . VERSION;
     $migrations->migrate(['source' => $source]);
     $migrations->seed(['source' => $source . DS . 'Seeds']);
-    $migrations->status(['source' => DS . 'Migrations']);
-    $migrations->markMigrated(null, ['target' => (string)($version - 1), 'source' => DS . 'Migrations']);
+    // Applying miss out migrations
+    $migrations->migrate(['source' => DS . 'Migrations']);
 }
 ?>
 
@@ -38,11 +37,11 @@ function createDbStructure()
     <div class="row">
         <div class="col-md-12">
             <form class="form-horizontal formCreateDbUser" method="post" action="steps/step4b.php">
-                <input type="hidden" class="form-control" name="username" value="administrator" />
+                <input type="hidden" class="form-control" name="username" value="admin" />
                 <div class="form-group">
                     <label for="username" class="col-sm-5 control-label">OpenEMIS School Login</label>
                     <div class="col-sm-5">
-                        <input type="text" class="form-control" id="username" value="administrator" disabled="disabled" />
+                        <input type="text" class="form-control" id="username" value="admin" disabled="disabled" />
                     </div>
                 </div>
 
