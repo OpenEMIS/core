@@ -119,10 +119,11 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
 
         $this->setFieldOrder([
-            'status_id', 'assignee_id',
             'previous_information_header', 'staff_id', 'previous_institution_id', 'previous_end_date',
             'new_information_header', 'new_institution_id', 'new_institution_position_id', 'new_staff_type_id', 'new_FTE', 'new_start_date', 'new_end_date',
-            'transfer_reasons_header', 'comment'
+            'transfer_reasons_header', 'comment',
+            // hidden fields
+            'all_visible', 'previous_effective_date', 'previous_institution_staff_id', 'previous_staff_type_id', 'previous_FTE', 'transfer_type'
         ]);
     }
 
