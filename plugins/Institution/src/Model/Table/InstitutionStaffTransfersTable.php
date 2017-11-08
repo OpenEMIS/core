@@ -181,6 +181,11 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('all_visible', ['type' => 'hidden']);
+    }
+
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'staff_id';
@@ -254,6 +259,20 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->dirty('status_id')) {
+            if (!$entity->all_visible) {
+                $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
+                $previousInstitutionOwner = $this->getWorkflowStepsParamValue($entity->getOriginal('status_id'), 'institution_owner');
+
+                if ($currentInstitutionOwner != $previousInstitutionOwner) {
+                    $this->updateAll(['all_visible' => 1], ['id' => $entity->id]);
+                }
+            }
+        }
+    }
+
     public function findInstitutionStaffTransferIn(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -261,13 +280,16 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
 
         $query
-            ->matching('Statuses.WorkflowStepsParams', function ($q) use ($incomingInstitution) {
-                return $q->where([
-                    'WorkflowStepsParams.name' => 'institution_visible',
-                    'WorkflowStepsParams.value' => $incomingInstitution
-                ]);
+            ->matching('Statuses.WorkflowStepsParams', function ($q) {
+                return $q->where(['WorkflowStepsParams.name' => 'institution_owner']);
             })
-            ->where([$this->aliasField('new_institution_id') => $institutionId]);
+            ->where([
+                $this->aliasField('new_institution_id') => $institutionId,
+                'OR' => [
+                    'WorkflowStepsParams.value' => self::INCOMING, // institution_owner for the step can always see the record
+                    $this->aliasField('all_visible') => 1
+                ]
+            ]);
 
         if ($pending) {
             $query->where(['Statuses.category <> ' => self::DONE]);
@@ -282,13 +304,16 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
 
         $query
-            ->matching('Statuses.WorkflowStepsParams', function ($q) use ($outgoingInstitution) {
-                return $q->where([
-                    'WorkflowStepsParams.name' => 'institution_visible',
-                    'WorkflowStepsParams.value' => $outgoingInstitution
-                ]);
+            ->matching('Statuses.WorkflowStepsParams', function ($q) {
+                return $q->where(['WorkflowStepsParams.name' => 'institution_owner']);
             })
-            ->where([$this->aliasField('previous_institution_id') => $institutionId]);
+            ->where([
+                $this->aliasField('previous_institution_id') => $institutionId,
+                'OR' => [
+                    'WorkflowStepsParams.value' => self::OUTGOING, // institution_owner for the step can always see the record
+                    $this->aliasField('all_visible') => 1
+                ]
+            ]);
 
         if ($pending) {
             $query->where(['Statuses.category <> ' => self::DONE]);
