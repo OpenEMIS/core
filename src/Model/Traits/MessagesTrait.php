@@ -1211,6 +1211,9 @@ trait MessagesTrait
             'StaffTransferOut' => [
                 'previous_end_date' => [
                     'ruleCompareDateReverse' => 'Position End Date should not be earlier than Position Start Date'
+                ],
+                'previous_effective_date' => [
+                    'ruleCompareDateReverse' => 'Effective Date should not be earlier than Position Start Date'
                 ]
             ]
         ],

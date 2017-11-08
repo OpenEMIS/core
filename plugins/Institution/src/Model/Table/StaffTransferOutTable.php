@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Date;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
@@ -34,17 +35,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        return $validator
-            ->add('previous_end_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'new_start_date', false],
-                'on' => function ($context) {
-                    return array_key_exists('new_start_date', $context['data']) && !empty($context['data']['new_start_date']);
-                }
-            ])
-            ->add('previous_end_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'position_start_date', false]
-            ])
-            ->notEmpty(['transfer_type', 'new_institution_id', 'workflow_assignee_id']);
+        return $validator->notEmpty(['transfer_type', 'new_institution_id', 'workflow_assignee_id']);
     }
 
     public function validationFullTransfer(Validator $validator)
@@ -52,7 +43,16 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $validator = $this->validationDefault($validator);
         return $validator
             ->requirePresence('positions_held')
-            ->notEmpty(['positions_held', 'previous_end_date']);
+            ->notEmpty(['positions_held', 'previous_end_date'])
+            ->add('previous_end_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'position_start_date', false]
+            ])
+            ->add('previous_end_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'new_start_date', false],
+                'on' => function ($context) {
+                    return array_key_exists('new_start_date', $context['data']) && !empty($context['data']['new_start_date']);
+                }
+            ]);
     }
 
     public function validationPartialTransfer(Validator $validator)
@@ -60,7 +60,16 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $validator = $this->validationDefault($validator);
         return $validator
             ->requirePresence('positions_held')
-            ->notEmpty(['positions_held', 'previous_end_date', 'previous_FTE', 'previous_staff_type_id']);
+            ->notEmpty(['positions_held', 'previous_effective_date', 'previous_FTE', 'previous_staff_type_id'])
+            ->add('previous_effective_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'position_start_date', false]
+            ])
+            ->add('previous_effective_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'new_start_date', true],
+                'on' => function ($context) {
+                    return array_key_exists('new_start_date', $context['data']) && !empty($context['data']['new_start_date']);
+                }
+            ]);
     }
 
     public function implementedEvents()
@@ -98,6 +107,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('previous_institution_id', ['type' => 'hidden']);
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
+        $this->field('previous_effective_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
@@ -136,6 +146,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+        $this->field('new_institution_id', ['type' => 'integer']);
         $this->field('institution_position_id');
         $this->field('FTE');
         $this->field('staff_type_id');
@@ -144,20 +155,37 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
         // show fields according to transfer type
         if ($entity->transfer_type == self::FULL_TRANSFER) {
+            $this->field('previous_effective_date', ['type' => 'hidden']);
             $this->field('previous_FTE', ['type' => 'hidden']);
             $this->field('previous_staff_type_id', ['type' => 'hidden']);
+        } else if ($entity->transfer_type == self::PARTIAL_TRANSFER) {
+            $this->field('previous_end_date', ['type' => 'hidden']);
         } else if ($entity->transfer_type == 0 || $entity->transfer_type == self::NO_CHANGE) {
             $this->field('previous_end_date', ['type' => 'hidden']);
+            $this->field('previous_effective_date', ['type' => 'hidden']);
             $this->field('previous_FTE', ['type' => 'hidden']);
             $this->field('previous_staff_type_id', ['type' => 'hidden']);
         }
 
+        if (empty($entity->new_start_date)) {
+            $this->field('new_start_date', ['type' => 'hidden']);
+        }
+
         $this->setFieldOrder([
             'status_id', 'assignee_id',
-            'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'transfer_type', 'previous_end_date', 'previous_FTE', 'previous_staff_type_id',
+            'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'transfer_type', 'previous_end_date', 'previous_effective_date', 'previous_FTE', 'previous_staff_type_id',
             'new_information_header', 'new_institution_id', 'new_start_date',
             'transfer_reasons_header', 'comment'
         ]);
+    }
+
+    public function onGetStaffId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name_with_id;
+        }
+        return $value;
     }
 
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
@@ -207,25 +235,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             $value = $this->transferTypeOptions["$entity->transfer_type"];
         }
         return $value;
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'previous_end_date') {
-            $label = parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-
-            if (!empty($this->transferType)) {
-                if ($this->transferType == self::FULL_TRANSFER) {
-                    $label = 'Position End Date';
-                } else if ($this->transferType == self::PARTIAL_TRANSFER) {
-                    $label = 'Effective Date';
-                }
-            }
-            return __($label);
-
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -337,18 +346,18 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('position_start_date', ['type' => 'readonly', 'value' => $startDate, 'attr' => ['value' => $startDateFormatted]]);
 
         $this->field('transfer_type');
-        $this->field('previous_end_date');
+        $this->field('previous_end_date', ['entity' => $entity]);
+        $this->field('previous_effective_date');
         $this->field('previous_FTE');
         $this->field('previous_staff_type_id');
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
         $this->field('new_institution_id', ['entity' => $entity]);
         $this->field('new_start_date', ['entity' => $entity]);
+        $this->field('new_end_date', ['type' => 'hidden', 'entity' => $entity]);
 
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
         $this->field('comment');
-
-        $this->field('new_end_date', ['type' => 'hidden', 'entity' => $entity]);
     }
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
@@ -496,6 +505,12 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
+            $entity = $attr['entity'];
+
+            if (!empty($entity->previous_end_date)) {
+                $attr['value'] = $entity->previous_end_date->format('Y-m-d');
+            }
+
             if (isset($this->request->data[$this->alias()]['transfer_type']) && $this->request->data[$this->alias()]['transfer_type'] == self::FULL_TRANSFER) {
                 $attr['type'] = 'date';
             } else {
@@ -585,14 +600,21 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             if ($transferType == self::FULL_TRANSFER) {
                 $options['validate'] = 'fullTransfer';
+                $data->offsetSet('previous_effective_date', NULL);
                 $data->offsetSet('previous_FTE', NULL);
                 $data->offsetSet('previous_staff_type_id', NULL);
 
             } else if ($transferType == self::PARTIAL_TRANSFER) {
                 $options['validate'] = 'partialTransfer';
+                if ($data->offsetExists('previous_effective_date')) {
+                    $effectiveDate = new Date($data->offsetGet('previous_effective_date'));
+                    $previousEndDate = $effectiveDate->modify('-1 day');
+                    $data->offsetSet('previous_end_date', $previousEndDate->format('Y-m-d'));
+                }
 
             } else {
                 $data->offsetSet('previous_end_date', NULL);
+                $data->offsetSet('previous_effective_date', NULL);
                 $data->offsetSet('previous_FTE', NULL);
                 $data->offsetSet('previous_staff_type_id', NULL);
             }
