@@ -37,16 +37,22 @@ if (isset($_SESSION['db_host']) && isset($_SESSION['db_user']) && isset($_SESSIO
         $acctUser = $_POST['username'];
         $acctPass1 = $_POST['password1'];
         $acctPass2 = $_POST['password2'];
+        $areaName = $_POST['country'];
+        $areaCode = $_POST['code'];
 
         if (!empty($acctPass1) && $acctPass1 === $acctPass2) {
-            try {
-                $pdo = new PDO($connectionString, $user, $pass);
-                createUser($acctUser, $acctPass1);
-                $_SESSION['username'] = $acctUser;
-                $_SESSION['password'] = $acctPass1;
-                header('Location: ' . $url . '?step=5');
-            } catch (PDOException $ex) {
-                $_SESSION['error'] = $ex->getMessage();
+            if (!empty($areaName) && !empty($areaCode)) {
+                try {
+                    $pdo = new PDO($connectionString, $user, $pass);
+                    createUser($acctUser, $acctPass1);
+                    createArea($areaName, $areaCode);
+                    header('Location: ' . $url . '?step=5');
+                } catch (PDOException $ex) {
+                    $_SESSION['error'] = $ex->getMessage();
+                    header('Location: ' . $url . '?step=4');
+                }
+            } else {
+                $_SESSION['error'] = 'Please enter your country information.';
                 header('Location: ' . $url . '?step=4');
             }
         } else {
@@ -94,9 +100,27 @@ function createUser($username, $password)
         'preferred_language' => 'en',
         'is_student' => 0,
         'is_staff' => 0,
-        'is_guardian' => 0,
+        'is_guardian' => 0
     ];
 
     $entity = $UserTable->newEntity($data);
     $UserTable->save($entity);
+}
+
+function createArea($name, $code)
+{
+    $AreasTable = TableRegistry::get('Area.Areas');
+    $data = [
+        'id' => 1,
+        'code' => $code,
+        'name' => $name,
+        'parent_id' => null,
+        'lft' => 1,
+        'rght' => 2,
+        'area_level_id' => 1,
+        'order' => 1,
+        'visible' => 1
+    ];
+    $entity = $AreasTable->newEntity($data);
+    $AreasTable->save($entity);
 }
