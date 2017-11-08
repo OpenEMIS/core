@@ -44,9 +44,7 @@ class StaffTransferBehavior extends Behavior
     public function validationStaffTransferWorkflow(Validator $validator)
     {
         $validator = $this->_table->validationDefault($validator);
-        return $validator
-            ->notEmpty('institution_owner')
-            ->notEmpty('visible');
+        return $validator->notEmpty('institution_owner');
     }
 
     public function indexAfterAction(Event $event, $data)
@@ -71,15 +69,12 @@ class StaffTransferBehavior extends Behavior
         // populate params data
         if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
             foreach ($entity->workflow_steps_params as $param) {
-                if ($param->name == 'institution_visible') {
-                    $visibleArr[] = $param->value;
-                } else if ($param->name == 'institution_owner') {
+                if ($param->name == 'institution_owner') {
                     $institutionOwner = $param->value;
                 } else if ($param->name == 'validate_approve') {
                     $validateApprove = $param->value;
                 }
             }
-            $entity->visible = isset($visibleArr) ? $visibleArr : [];
             $entity->institution_owner = isset($institutionOwner) ? $institutionOwner : '';
             $entity->validate_approve = isset($validateApprove) ? $validateApprove : '';
         }
@@ -101,9 +96,8 @@ class StaffTransferBehavior extends Behavior
     {
         if (in_array($workflowId, $this->transferWorkflowIds)) {
             $this->_table->ControllerAction->field('institution_owner', ['type' => 'select', 'options' => $this->institutionTypeOptions]);
-            $this->_table->ControllerAction->field('visible', ['type' => 'chosenSelect', 'options' => $this->institutionTypeOptions]);
             $this->_table->ControllerAction->field('validate_approve', ['type' => 'hidden']);
-            $this->_table->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable', 'institution_owner', 'visible']);
+            $this->_table->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'institution_owner', 'security_roles', 'category', 'is_editable', 'is_removable']);
         }
     }
 
@@ -118,20 +112,6 @@ class StaffTransferBehavior extends Behavior
         return $value;
     }
 
-    public function onGetVisible(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
-            foreach ($entity->workflow_steps_params as $param) {
-                if ($param->name == 'institution_visible') {
-                    $arr[] = $this->institutionTypeOptions[$param->value];
-                }
-            }
-            $value = isset($arr) ? implode(', ', $arr) : '';
-        }
-        return $value;
-    }
-
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
@@ -142,11 +122,6 @@ class StaffTransferBehavior extends Behavior
                 $params = [];
                 if (isset($data['institution_owner']) && !empty($data['institution_owner'])) {
                     $params[] = ['name' => 'institution_owner', 'value' => $data['institution_owner']];
-                }
-                if (isset($data['visible']) && !empty($data['visible'])) {
-                    foreach ($data['visible'] as $value) {
-                        $params[] = ['name' => 'institution_visible', 'value' => $value];
-                    }
                 }
                 if (isset($data['validate_approve']) && !empty($data['validate_approve'])) {
                     $params[] = ['name' => 'validate_approve', 'value' => $data['validate_approve']];

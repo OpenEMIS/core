@@ -60,6 +60,8 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        parent::beforeAction($event, $extra);
+
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);

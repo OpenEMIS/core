@@ -2050,24 +2050,23 @@ class ValidationBehavior extends Behavior
         $institutionId = $data['institution_id'];
         $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
 
-        $transferRecord = $InstitutionStaffTransfers->find()
-            ->contain('Statuses.WorkflowStepsParams')
+        $pendingTransfer = $InstitutionStaffTransfers->find()
+            ->matching('Statuses.WorkflowStepsParams', function ($q) {
+                return $q->where(['WorkflowStepsParams.name' => 'institution_owner']);
+            })
             ->where([
                 $InstitutionStaffTransfers->aliasField('staff_id') => $staffId,
                 'Statuses.category <> ' => $InstitutionStaffTransfers::DONE
             ])
             ->first();
 
-        if ($transferRecord) {
+        if (!empty($pendingTransfer)) {
             // check if the incoming institution can view the transfer record
             $visible = 0;
-            if ($transferRecord->new_institution_id == $institutionId) {
-                $params = $transferRecord->status->workflow_steps_params;
-                foreach ($params as $param) {
-                    if ($param['name'] == 'institution_visible' && $param['value'] == $InstitutionStaffTransfers::INCOMING) {
-                        $visible = 1;
-                        break;
-                    }
+            if ($pendingTransfer->new_institution_id == $institutionId) {
+                $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
+                if ($institutionOwner == $InstitutionStaffTransfers::INCOMING || $pendingTransfer->all_visible) {
+                    $visible = 1;
                 }
             }
 
@@ -2078,7 +2077,7 @@ class ValidationBehavior extends Behavior
                     'controller' => 'Institutions',
                     'action' => 'StaffTransferIn',
                     'view',
-                    $InstitutionStaffTransfers->paramsEncode(['id' => $transferRecord->id])
+                    $InstitutionStaffTransfers->paramsEncode(['id' => $pendingTransfer->id])
                 ], true);
 
             } else {
