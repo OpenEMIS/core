@@ -28,7 +28,6 @@ if(!empty($_POST) && isset($_POST['database'])) {
 		$_SESSION['db_port'] = $port;
 		$_SESSION['db_root'] = $user;
 		$_SESSION['db_root_pass'] = $pass;
-		// touch(INSTALL_FILE);
 		$this->response->header('Location: step3');
 
 	} catch (PDOException $ex) {

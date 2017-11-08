@@ -1,8 +1,6 @@
 <?php
 $url = getRoot() . '/installer/?step=4';
 $action = getRoot();
-
-unlink(INSTALL_FILE);
 ?>
 
 <div class="starter-template">

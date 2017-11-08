@@ -1007,8 +1007,13 @@ class InstitutionsTable extends ControllerActionTable
     public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['select'] = false;
-            $attr['options'] = $this->classificationOptions;
+            if (!Configure::read('schoolMode')) {
+                $attr['select'] = false;
+                $attr['options'] = $this->classificationOptions;
+            } else {
+                $attr['type'] = 'hidden';
+                $attr['value'] = self::ACADEMIC;
+            }
         } elseif ($action == 'edit') {
             $attr['type'] = 'disabled';
             $attr['attr']['value'] = __($this->classificationOptions[$attr['entity']->classification]);
