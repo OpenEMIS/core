@@ -34,7 +34,6 @@ if (isset($_SESSION['db_host']) && isset($_SESSION['db_user']) && isset($_SESSIO
     $connectionString = sprintf('mysql:host=%s;port=%d;dbname=%s', $host, $port, $db);
 
     if (!empty($_POST) && isset($_POST['createUser'])) {
-        $acctUser = $_POST['username'];
         $acctPass1 = $_POST['password1'];
         $acctPass2 = $_POST['password2'];
         $areaName = $_POST['country'];
@@ -44,7 +43,7 @@ if (isset($_SESSION['db_host']) && isset($_SESSION['db_user']) && isset($_SESSIO
             if (!empty($areaName) && !empty($areaCode)) {
                 try {
                     $pdo = new PDO($connectionString, $user, $pass);
-                    createUser($acctUser, $acctPass1);
+                    createUser($acctPass1);
                     createArea($areaName, $areaCode);
                     header('Location: ' . $url . '?step=5');
                 } catch (PDOException $ex) {
@@ -67,12 +66,12 @@ if (isset($_SESSION['db_host']) && isset($_SESSION['db_user']) && isset($_SESSIO
     header('Location: ' . $url . '?step=4');
 }
 
-function createUser($username, $password)
+function createUser($password)
 {
     $UserTable = TableRegistry::get('User.Users');
     $data = [
         'id' => 1,
-        'username' => $username,
+        'username' => 'admin',
         'password' => $password,
         'openemis_no' => 'sysadmin',
         'first_name' => 'System',
@@ -94,7 +93,7 @@ function createUser($username, $password)
         'external_reference' => null,
         'super_admin' => 1,
         'status' => 1,
-        'last_login' => null,
+        'last_login' => new Date(),
         'photo_name' => null,
         'photo_content' => null,
         'preferred_language' => 'en',
@@ -103,7 +102,7 @@ function createUser($username, $password)
         'is_guardian' => 0
     ];
 
-    $entity = $UserTable->newEntity($data);
+    $entity = $UserTable->newEntity($data, ['validate' => false]);
     $UserTable->save($entity);
 }
 
