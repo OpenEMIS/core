@@ -103,6 +103,10 @@ class POCOR3997 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
+            ->addColumn('previous_effective_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
             ->addColumn('comment', 'text', [
                 'default' => null,
                 'null' => true
@@ -803,6 +807,26 @@ class POCOR3997 extends AbstractMigration
                 'field' => 'previous_institution_id',
                 'module_name' => 'Institution -> Staff Transfer Out',
                 'field_name' => 'Current Institution',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'previous_end_date',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'Position End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'previous_effective_date',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'Effective Date',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')

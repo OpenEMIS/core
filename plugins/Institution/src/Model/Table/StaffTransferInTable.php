@@ -75,6 +75,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_staff_type_id', ['type' => 'hidden']);
         $this->field('new_institution_id', ['type' => 'hidden']);
         $this->field('previous_end_date', ['type' => 'hidden']);
+        $this->field('previous_effective_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
@@ -111,6 +112,11 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+        $this->field('previous_effective_date', ['type' => 'hidden']);
+
+        if (empty($entity->previous_end_date)) {
+            $this->field('previous_end_date', ['type' => 'hidden']);
+        }
 
         $this->setFieldOrder([
             'status_id', 'assignee_id',
@@ -118,6 +124,15 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             'new_information_header', 'new_institution_id', 'new_institution_position_id', 'new_staff_type_id', 'new_FTE', 'new_start_date', 'new_end_date',
             'transfer_reasons_header', 'comment'
         ]);
+    }
+
+    public function onGetStaffId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name_with_id;
+        }
+        return $value;
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -140,6 +155,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('staff_id', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('previous_institution_id', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('previous_end_date', ['entity' => $entity]);
+        $this->field('previous_effective_date', ['type' => 'hidden', 'entity' => $entity]);
 
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
         $this->field('new_institution_id', ['type' => 'readonly', 'entity' => $entity]);
@@ -184,6 +200,17 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                 $attr['attr']['value'] = $this->formatDate($entity->previous_end_date);
             } else {
                 $attr['type'] = 'hidden';
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldPreviousEffectiveDate(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['edit', 'approve'])) {
+            $entity = $attr['entity'];
+            if (!empty($entity->previous_effective_date)) {
+                $attr['value'] = $entity->previous_effective_date->format('Y-m-d');
             }
             return $attr;
         }
