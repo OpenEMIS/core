@@ -79,6 +79,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        parent::beforeAction($event, $extra);
+
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
         $this->field('new_FTE', ['type' => 'hidden']);
         $this->field('new_staff_type_id', ['type' => 'hidden']);
@@ -239,7 +241,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
         // check pending transfers
         $pendingTransfer = $this->find()
-            ->contain('Statuses.WorkflowStepsParams')
+            ->matching('Statuses.WorkflowStepsParams', function ($q) {
+                return $q->where(['WorkflowStepsParams.name' => 'institution_owner']);
+            })
             ->where([
                 $this->aliasField('staff_id') => $userId,
                 $this->Statuses->aliasField('category <> ') => self::DONE
@@ -250,12 +254,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             // check if the outgoing institution can view the transfer record
             $visible = 0;
             if ($pendingTransfer->previous_institution_id == $institutionId) {
-                $params = $pendingTransfer->status->workflow_steps_params;
-                foreach ($params as $param) {
-                    if ($param['name'] == 'institution_visible' && $param['value'] == self::OUTGOING) {
-                        $visible = 1;
-                        break;
-                    }
+                $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
+                if ($institutionOwner == self::OUTGOING || $pendingTransfer->all_visible) {
+                    $visible = 1;
                 }
             }
 

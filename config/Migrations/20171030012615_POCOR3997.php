@@ -113,6 +113,11 @@ class POCOR3997 extends AbstractMigration
                 'null' => false,
                 'comment' => '1 -> Full Transfer, 2 -> Partial Transfer, 3 -> No Change'
             ])
+            ->addColumn('all_visible', 'integer', [
+                'default' => '0',
+                'limit' => 1,
+                'null' => false
+            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -511,70 +516,6 @@ class POCOR3997 extends AbstractMigration
         ];
         $this->insert('workflow_steps_params', $institutionOwner);
 
-        $institutionVisible = [
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $openStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingAsssignmentStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingAsssignmentStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $assignedStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $assignedStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $closedStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $closedStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ]
-        ];
-        $this->insert('workflow_steps_params', $institutionVisible);
-
         $validateApprove = [
             [
                 'id' => Text::uuid(),
@@ -839,70 +780,6 @@ class POCOR3997 extends AbstractMigration
             ]
         ];
         $this->insert('workflow_steps_params', $institutionOwner);
-
-        $institutionVisible = [
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $openStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalIncomingStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalIncomingStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingTransferStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $pendingTransferStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $transferredStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $transferredStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $closedStatusId,
-                'name' => 'institution_visible',
-                'value' => '1'
-            ],
-            [
-                'id' => Text::uuid(),
-                'workflow_step_id' => $closedStatusId,
-                'name' => 'institution_visible',
-                'value' => '2'
-            ]
-        ];
-        $this->insert('workflow_steps_params', $institutionVisible);
 
         $validateApprove = [
             [

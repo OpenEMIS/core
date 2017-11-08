@@ -1456,10 +1456,9 @@ class WorkflowBehavior extends Behavior {
                 if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->alias()])) {
                     $statusId = $requestData[$this->WorkflowTransitions->alias()]['workflow_step_id'];
                     if ($entity->has('status_id')) {
-                        $model->updateAll(
-                            ['status_id' => $statusId],
-                            ['id' => $entity->id]
-                        );
+                        // change to save instead of update all to trigger after save function.
+                        $entity->status_id = $statusId;
+                        $model->save($entity);
                     }
                 }
             }
