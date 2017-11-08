@@ -6,7 +6,6 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
 
 // This file serves as an abstract class for StaffTransferIn and StaffTransferOut
@@ -126,15 +125,14 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
                     // end previous institution staff record
-                    $newEndDate = (new Date($entity->previous_end_date))->modify('-1 day');
-                    $oldRecord->end_date = $newEndDate;
+                    $oldRecord->end_date = $entity->previous_end_date;
                     $StaffTable->save($oldRecord);
 
                     // add new institution staff record in previous institution
                     $newRecord = [
                         'FTE' => $entity->previous_FTE,
-                        'start_date' => $entity->previous_end_date,
-                        'start_year' => $entity->previous_end_date->year,
+                        'start_date' => $entity->previous_effective_date,
+                        'start_year' => $entity->previous_effective_date->year,
                         'staff_id' => $entity->staff_id,
                         'staff_type_id' => $entity->previous_staff_type_id,
                         'staff_status_id' => $StaffStatusesTable->getIdByCode('ASSIGNED'),
