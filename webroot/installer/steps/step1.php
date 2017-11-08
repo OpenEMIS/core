@@ -15,6 +15,7 @@
     <p>By clicking Next, you agree to the terms stated in the <strong>OpenEmis School License Agreement</strong> above.</p>
     <?php
     $url = getRoot() . '/installer/?step=2';
+    $_SESSION['error'] = '';
     ?>
     <a href="<?php echo $url; ?>" class="btn btn-info">Next</a>
 </div>
