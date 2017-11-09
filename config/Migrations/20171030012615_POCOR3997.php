@@ -865,6 +865,16 @@ class POCOR3997 extends AbstractMigration
             ],
             [
                 'id' => Text::uuid(),
+                'module' => 'StaffTransferOut',
+                'field' => 'comment',
+                'module_name' => 'Institution -> Staff Transfer Out',
+                'field_name' => 'Transfer Comments',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
                 'module' => 'StaffTransferIn',
                 'field' => 'previous_institution_id',
                 'module_name' => 'Institution -> Staff Transfer In',
@@ -929,6 +939,16 @@ class POCOR3997 extends AbstractMigration
                 'field' => 'previous_end_date',
                 'module_name' => 'Institution -> Staff Transfer In',
                 'field_name' => 'End Date',
+                'visible' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => Text::uuid(),
+                'module' => 'StaffTransferIn',
+                'field' => 'comment',
+                'module_name' => 'Institution -> Staff Transfer In',
+                'field_name' => 'Transfer Comments',
                 'visible' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')

@@ -549,7 +549,7 @@ class WorkflowBehavior extends Behavior {
                 });
 
                 foreach ($fields as $fieldName => $fieldAttr) {
-                    if (!in_array($fieldName, ['workflow_information_header', 'current_step', 'action', 'description', 'next_step', 'workflow_assignee_id', 'comments'])) {
+                    if (!in_array($fieldName, ['workflow_information_header', 'current_step', 'action', 'description', 'next_step', 'workflow_assignee_id', 'workflow_comments'])) {
                         $order = $fieldAttr['order'] > $order ? $fieldAttr['order'] : $order;
                         if (array_key_exists($order, $fieldOrder)) {
                             $order++;
@@ -559,7 +559,7 @@ class WorkflowBehavior extends Behavior {
                 }
 
                 ksort($fieldOrder);
-                array_unshift($fieldOrder, 'comments');
+                array_unshift($fieldOrder, 'workflow_comments');
                 array_unshift($fieldOrder, 'workflow_assignee_id');
                 array_unshift($fieldOrder, 'next_step');
                 array_unshift($fieldOrder, 'description');
@@ -619,7 +619,8 @@ class WorkflowBehavior extends Behavior {
             'type' => 'select',
             'entity' => $actionAttr
         ]);
-        $model->field('comments', [
+        $model->field('workflow_comments', [
+            'type' => 'text',
             'fieldName' => $alias.'.comment'
         ]);
 
