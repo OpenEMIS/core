@@ -59,7 +59,7 @@ class CommentsController extends PageController
     {
         $page = $this->Page;
         $page->get('security_user_id')->setControlType('hidden');
-        $page->get('comment_type_id')->setControlType('dropdown');
+        $page->get('comment_type_id')->setControlType('select');
 
         parent::add();
     }
@@ -68,7 +68,7 @@ class CommentsController extends PageController
     {
         $page = $this->Page;
         $page->get('security_user_id')->setControlType('hidden');
-        $page->get('comment_type_id')->setControlType('dropdown');
+        $page->get('comment_type_id')->setControlType('select');
 
         parent::edit($id);
     }
