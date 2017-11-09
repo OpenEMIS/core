@@ -77,17 +77,17 @@ use Cake\Core\Exception\Exception;
 try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
-    Configure::load('app_extra', 'default');
-
-    if (!Configure::read('Application.private.key') || !Configure::read('Application.public.key')) {
-        throw new Exception('Could not load application key, please contact administrator to have the key set up for your application.');
-    }
 } catch (\Exception $e) {
     exit($e->getMessage() . "\n");
 }
 
 try {
     Configure::load('datasource', 'default');
+    Configure::load('app_extra', 'default');
+
+    // if (!Configure::read('Application.private.key') || !Configure::read('Application.public.key')) {
+    //     throw new Exception('Could not load application key, please contact administrator to have the key set up for your application.');
+    // }
 } catch (\Exception $e) {
 }
 
