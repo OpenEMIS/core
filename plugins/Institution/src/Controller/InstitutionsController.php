@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use Cake\I18n\Date;
 use Cake\Controller\Exception\SecurityException;
-
+use Cake\Core\Configure;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
@@ -1431,6 +1431,8 @@ class InstitutionsController extends AppController
             'Textbooks' => ['text' => __('Textbooks')],
             'StudentIndexes' => ['text' => __('Indexes')]
         ];
+
+        $studentTabElements = array_diff_key($studentTabElements, Configure::read('School.excludedPlugins'));
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
