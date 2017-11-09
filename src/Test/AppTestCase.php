@@ -143,4 +143,14 @@ class AppTestCase extends IntegrationTestCase
         $this->enableSecurityToken();
         $this->delete($url);
     }
+
+    public function setUrlParams($action, $params = [])
+    {
+        $hash = sha1(time());
+        $sessionKey = 'Url.params.' . implode('.', $action) . '.' . $hash;
+        $sessionData = Hash::expand([$sessionKey => $params]);
+
+        $this->session($sessionData);
+        return $hash;
+    }
 }

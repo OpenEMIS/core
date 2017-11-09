@@ -501,7 +501,8 @@ trait MessagesTrait
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
             'hasWithdrawApplication' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
-            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.'
+            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.',
+            'unableToTransfer' => 'Unable to do student transfer due to associated records.'
         ],
         'TransferApprovals' => [
             'existsInNewSchool' => 'Student is already exists in the new school',
@@ -2064,6 +2065,13 @@ trait MessagesTrait
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ]
+            ],
+        ],
+        'Area' => [
+            'AreaAdministratives' => [
+                'is_main_country' => [
+                    'ruleValidateAreaAdministrativeMainCountry' => 'There must be at least one Main Country'
                 ]
             ],
         ],
