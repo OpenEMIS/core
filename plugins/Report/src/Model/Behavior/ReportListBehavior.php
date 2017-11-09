@@ -240,12 +240,6 @@ class ReportListBehavior extends Behavior {
 		$entity = $this->ReportProgress->get($id);
 		$path = $entity->file_path;
 		if (!empty($path)) {
-			$response = $this->_table->controller->response;
-			$response->body(function() use ($path) {
-				$content = file_get_contents($path);
-				return $content;
-			});
-
 			$pathInfo = pathinfo($path);
 			$ext = $pathInfo['extension'];
 
@@ -253,10 +247,11 @@ class ReportListBehavior extends Behavior {
 	        $filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
 
 	        // Syntax will change in v3.4.x
-			$response->type($ext);
-			$response->charset('UTF-8');
-			$response->download($filename);
-
+	        $response = $this->_table->controller->response;
+			$response->file($path, [
+				'name' => $filename,
+				'download' => true
+			]);
 			return $response;
 		}
 	}
