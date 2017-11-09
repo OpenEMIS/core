@@ -305,6 +305,13 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        // redirect to view page of record after save
+        $extra['redirect'][0] = 'view';
+        $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->id]);
+    }
+
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->data[$this->alias()]['transfer_type'] = $entity->transfer_type;
