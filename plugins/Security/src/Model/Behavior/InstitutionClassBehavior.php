@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\I18n\Date;
 
 class InstitutionClassBehavior extends Behavior
 {
@@ -29,6 +30,7 @@ class InstitutionClassBehavior extends Behavior
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
+                $today = Date::now();
 
                 $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
                     'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
@@ -77,7 +79,11 @@ class InstitutionClassBehavior extends Behavior
                                         "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
                                     ]
                                 ],
-                                'InstitutionSubjectStaff.staff_id' => $userId
+                                'InstitutionSubjectStaff.staff_id' => $userId,
+                                'OR' => [
+                                    'InstitutionSubjectStaff.end_date IS NULL',
+                                    'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
+                                ]
                             ]
                         ]
                     ]
