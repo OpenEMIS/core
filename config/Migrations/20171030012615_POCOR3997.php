@@ -188,7 +188,7 @@ class POCOR3997 extends AbstractMigration
         $workflowModelData = [
             [
                 'id' => $this->incomingWorkflowModelId,
-                'name' => 'Institutions > Staff > Incoming Transfer',
+                'name' => 'Institutions > Staff Transfer > Receiving',
                 'model' => 'Institution.StaffTransferIn',
                 'filter' => NULL,
                 'is_school_based' => '1',
@@ -197,7 +197,7 @@ class POCOR3997 extends AbstractMigration
             ],
             [
                 'id' => $this->outgoingWorkflowModelId,
-                'name' => 'Institutions > Staff > Outgoing Transfer',
+                'name' => 'Institutions > Staff Transfer > Sending',
                 'model' => 'Institution.StaffTransferOut',
                 'filter' => NULL,
                 'is_school_based' => '1',
@@ -211,14 +211,14 @@ class POCOR3997 extends AbstractMigration
         $workflowData = [
             [
                 'code' => 'STAFF-TRANSFER-1001',
-                'name' => 'Staff Transfer - Initiated By Incoming Institution',
+                'name' => 'Staff Transfer - Receiving',
                 'workflow_model_id' => $this->incomingWorkflowModelId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
             [
                 'code' => 'STAFF-TRANSFER-2001',
-                'name' => 'Staff Transfer - Initiated By Outgoing Institution',
+                'name' => 'Staff Transfer - Sending',
                 'workflow_model_id' => $this->outgoingWorkflowModelId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
