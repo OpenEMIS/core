@@ -520,12 +520,11 @@ class WorkflowBehavior extends Behavior {
 
     public function approve(Event $event) {
         if ($this->isCAv4()) {
-            $extra = func_get_arg(1);
             $model = $this->_table;
             $jsonActionAttr = $model->getQueryString('action_attr');
 
             if ($jsonActionAttr) {
-                $model->ControllerAction->renderView('/ControllerAction/edit');
+                $extra = func_get_arg(1);
                 $model->field('status_id', ['type' => 'hidden']);
 
                 // edit fields
@@ -568,6 +567,20 @@ class WorkflowBehavior extends Behavior {
                 array_unshift($fieldOrder, 'workflow_information_header');
                 $this->_table->setFieldOrder($fieldOrder);
 
+                // back button
+                $backBtn['type'] = 'button';
+                $backBtn['label'] = '<i class="fa kd-back"></i>';
+                $backBtn['attr'] = [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'title' => 'Back'
+                ];
+                $backBtn['url'] = $model->url('view');
+                $extra['toolbarButtons']['back'] = $backBtn;
+
+                $model->ControllerAction->renderView('/ControllerAction/edit');
                 return $entity;
             } else {
                 return $model->controller->redirect($model->url('view'));
