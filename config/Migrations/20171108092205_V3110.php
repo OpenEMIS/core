@@ -2,7 +2,7 @@
 
 use Phinx\Migration\AbstractMigration;
 
-class Patch extends AbstractMigration
+class V3110 extends AbstractMigration
 {
     public function up()
     {
