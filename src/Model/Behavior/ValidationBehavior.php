@@ -303,7 +303,19 @@ class ValidationBehavior extends Behavior
             if (!is_bool($result)) {
                 return $result;
             } else {
-                return (!$result) ? __(Inflector::humanize($globalData['field'])).' should be earlier than '.__(Inflector::humanize($compareField)) : true;
+                // use labels instead of field names if they are available
+                $model = $globalData['providers']['table'];
+                $session = $model->request->session();
+                $language = $session->read('System.language');
+
+                $Labels = TableRegistry::get('Labels');
+                $fieldLabel = $Labels->getLabel($model->alias(), $globalData['field'], $language);
+                $compareFieldLabel = $Labels->getLabel($model->alias(), $compareField, $language);
+
+                $fieldName = !empty($fieldLabel) ? $fieldLabel : __(Inflector::humanize($globalData['field']));
+                $compareFieldName = !empty($compareFieldLabel) ? $compareFieldLabel : __(Inflector::humanize($compareField));
+
+                return (!$result) ? $fieldName . ' should be earlier than ' . $compareFieldName : true;
             }
         } else {
             return true;
