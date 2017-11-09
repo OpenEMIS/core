@@ -338,11 +338,5 @@ return [
      */
     'Session' => [
         'defaults' => 'php',
-    ],
-
-    'domain' => '',
-
-    'Application' => [
-        'key' => ''
-    ],
+    ]
 ];
