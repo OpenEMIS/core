@@ -29,16 +29,16 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
-            ->add('new_start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'new_end_date', false],
-                'on' => function ($context) {
-                    return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
-                }
-            ])
             ->add('new_start_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'previous_end_date', false],
                 'on' => function ($context) {
                     return array_key_exists('previous_end_date', $context['data']) && !empty($context['data']['previous_end_date']);
+                }
+            ])
+            ->add('new_end_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'new_start_date', false],
+                'on' => function ($context) {
+                    return array_key_exists('new_end_date', $context['data']) && !empty($context['data']['new_end_date']);
                 }
             ])
             ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id']);
