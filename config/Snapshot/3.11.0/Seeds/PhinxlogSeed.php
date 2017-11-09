@@ -265,26 +265,12 @@ class PhinxlogSeed extends AbstractSeed
                 'breakpoint' => '0',
             ],
             [
-                'version' => '20171027060236',
-                'migration_name' => 'V3110',
-                'start_time' => '2017-11-08 20:10:29',
-                'end_time' => '2017-11-08 20:11:39',
-                'breakpoint' => '0',
-            ],
-            [
                 'version' => '20171101071850',
                 'migration_name' => 'POCOR2829',
                 'start_time' => '2017-11-06 22:56:31',
                 'end_time' => '2017-11-06 22:56:31',
                 'breakpoint' => '0',
-            ],
-            [
-                'version' => '20171108071953',
-                'migration_name' => 'V3110',
-                'start_time' => '2017-11-08 20:19:57',
-                'end_time' => '2017-11-08 20:19:57',
-                'breakpoint' => '0',
-            ],
+            ]
         ];
 
         $table = $this->table('phinxlog');

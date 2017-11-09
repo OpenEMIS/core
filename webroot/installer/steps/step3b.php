@@ -41,9 +41,22 @@ if (!empty($_POST) && isset($_POST['createDatabase'])) {
             $template = str_replace('{pass}', "'$dbPassword'", $template);
             $template = str_replace('{database}', "'$db'", $template);
             $dbFileHandle = fopen(CONFIG_FILE, 'w');
-            if ($dbFileHandle !== false) {
+            $privateKeyHandle = fopen(CONFIG_DIR . 'private.key', 'w');
+            $publicKeyHandle = fopen(CONFIG_DIR . 'public.key', 'w');
+            $appExtraHandle = fopen(CONFIG_DIR . 'app_extra.php', 'w');
+
+            $pubKey = $pubKey["key"];
+            if ($dbFileHandle && $privateKeyHandle && $publicKeyHandle) {
+                $res = openssl_pkey_new(['private_key_bits' => 1024]);
+                openssl_pkey_export($res, $privKey);
+                fwrite($privateKeyHandle, $privKey);
+                fclose($privateKeyHandle);
+                $pubKey = openssl_pkey_get_details($res);
+                fwrite($publicKeyHandle, $pubKey['key']);
+                fclose($publicKeyHandle);
                 fwrite($dbFileHandle, $template);
                 fclose($dbFileHandle);
+                fwrite($appExtraHandle, APP_EXTRA_TEMPLATE);
                 createDb($pdo, $db);
                 createDbUser($pdo, $host, $dbUser, $dbPassword, $db);
                 $_SESSION['db_user'] = $dbUser;

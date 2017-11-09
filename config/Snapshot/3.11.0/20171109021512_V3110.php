@@ -5084,13 +5084,13 @@ class V3110 extends AbstractMigration
             ])
             ->addColumn('telephone', 'string', [
                 'default' => null,
-                'limit' => 20,
-                'null' => true,
+                'limit' => 30,
+                'null' => false,
             ])
             ->addColumn('fax', 'string', [
                 'default' => null,
-                'limit' => 20,
-                'null' => true,
+                'limit' => 30,
+                'null' => false,
             ])
             ->addColumn('email', 'string', [
                 'default' => null,
