@@ -305,9 +305,20 @@ Plugin::load('Examination', ['routes' => true, 'autoload' => true]);
 Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomExcel', ['routes' => true, 'autoload' => true]);
 Plugin::load('Competency', ['routes' => true, 'autoload' => true]);
-Plugin::load('ReportCard', ['routes' => true, 'autoload' => true]);
 Plugin::load('Profile', ['routes' => true, 'autoload' => true]);
 Plugin::load('Transport', ['routes' => true, 'autoload' => true]);
+
+$premiumPlugins = [
+    'ReportCards' => ['name' => 'Report Cards', 'routes' => true, 'autoload' => true]
+];
+
+foreach ($premiumPlugins as $pluginKey => $content) {
+    if (Configure::read('schoolMode') && !array_key_exists($pluginKey, (array)Configure::read('School.excludedPlugins'))) {
+        $contentsToLoad = $content + ['name' => '', 'routes' => false, 'autoload' => false];
+        unset($contentsToLoad['name']);
+        Plugin::load($pluginKey, $contentsToLoad);
+    }
+}
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system

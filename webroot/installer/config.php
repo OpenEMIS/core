@@ -46,7 +46,6 @@ return [
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
         ],
     ],
-    'schoolMode' => true
 ];
 ";
 
@@ -112,6 +111,14 @@ return [
             //'charset' => 'utf-8',
             //'headerCharset' => 'utf-8',
         ],
+    ],
+
+    'schoolMode' => true,
+
+    'School' => [
+        'excludedPlugins' => [
+            'ReportCards' => 'Report Cards'
+        ]
     ]
 ];
 ";
