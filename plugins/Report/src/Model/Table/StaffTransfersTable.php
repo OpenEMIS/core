@@ -29,7 +29,7 @@ class StaffTransfersTable extends AppTable {
         $this->belongsTo('PreviousStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'previous_staff_type_id']);
 
         $this->addBehavior('Excel', [
-            'excludes' => ['new_staff_type_id', 'new_FTE', 'new_end_date', 'previous_institution_staff_id', 'previous_staff_type_id', 'previous_FTE', 'previous_end_date', 'transfer_type'],
+            'excludes' => ['new_staff_type_id', 'new_FTE', 'new_end_date', 'previous_institution_staff_id', 'previous_staff_type_id', 'previous_FTE', 'previous_end_date', 'previous_effective_date', 'transfer_type', 'all_visible'],
             'pages' => false
         ]);
         $this->addBehavior('Report.ReportList');
