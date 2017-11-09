@@ -1205,7 +1205,10 @@ trait MessagesTrait
             ],
             'StaffTransferIn' => [
                 'new_start_date' => [
-                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than Current Institution End Date'
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Current Institution End Date'
+                ],
+                'new_end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
             ],
             'StaffTransferOut' => [
