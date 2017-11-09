@@ -27,6 +27,7 @@ class StaffProfileBehavior extends Behavior
         $newStartDate = $params['new_start_date'];
 
         $conditions = [];
+        $workflowPendingRecords = false;
         switch ($alias) {
             case 'InstitutionClasses':
                 $conditions = [
@@ -87,14 +88,15 @@ class StaffProfileBehavior extends Behavior
                 ];
                 break;
 
-            case 'StaffTransferRequests':
+            case 'StaffTransferOut':
                 $conditions = [
                     $model->aliasField('staff_id') => $staffId,
-                    $model->aliasField('status') => 0,
                     $model->aliasField('previous_institution_id') => $institutionId,
-                    $model->aliasField('start_date >=') => $originalStartDate,
-                    $model->aliasField('start_date <=') => $newStartDate
+                    $model->aliasField('previous_end_date') . ' IS NOT NULL',
+                    $model->aliasField('previous_end_date >=') => $originalStartDate,
+                    $model->aliasField('previous_end_date <=') => $newStartDate
                 ];
+                $workflowPendingRecords = true;
                 break;
 
             case 'Salaries':
@@ -116,9 +118,15 @@ class StaffProfileBehavior extends Behavior
         }
 
         $dataCount = $model->find()
-            ->where($conditions)
-            ->count();
+            ->where($conditions);
 
-        return $dataCount;
+        if ($workflowPendingRecords) {
+            $doneStatus = $model::DONE;
+            $dataCount->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where(['category <> ' => $doneStatus]);
+                });
+        }
+
+        return $dataCount->count();
     }
 }

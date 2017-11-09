@@ -24,6 +24,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
 
         $this->transferTypeOptions = [
             self::FULL_TRANSFER => __('Full Transfer'),
