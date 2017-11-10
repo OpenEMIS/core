@@ -4,6 +4,7 @@ namespace App\Controller;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use App\Controller\AppController;
 
@@ -17,12 +18,18 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->ControllerAction->models = [
-            'TransferApprovals'     => ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']],
             'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']],
             'StudentWithdraw'   => ['className' => 'Institution.StudentWithdraw', 'actions' => ['edit']],
         ];
         $this->attachAngularModules();
     }
+
+    // CAv4
+    public function TransferApprovals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferApprovals']);
+    }
+    // end of CAv4
 
     public function implementedEvents()
     {
@@ -56,7 +63,31 @@ class DashboardController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
+        // set header
         $header = $model->getHeader($model->alias);
+
+        // breadcrumb
+        $alias = $model->alias;
+        $models = [
+            'TransferApprovals' => __('Transfer Approvals')
+        ];
+
+
+        if (array_key_exists($alias, $models)) {
+            if ($model->action == 'associated') {
+                $this->Navigation->addCrumb($models[$model->alias], [
+                    'plugin' => false,
+                    'controller' => 'Dashboard',
+                    'action' => 'TransferApprovals',
+                    'edit',
+                    $model->paramsPass(0)
+                ]);
+                $this->Navigation->addCrumb(Inflector::humanize($model->action));
+            }
+
+            $header = $model->getHeader() . ' - ' . Inflector::humanize($model->action);
+        }
+
         $this->set('contentHeader', $header);
     }
 
