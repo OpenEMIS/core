@@ -82,7 +82,7 @@ class UserHistoriesController extends PageController
         $userName = array_key_exists('user_name', $options) ? $options['user_name'] : '';
         $encodedUserId = $this->paramsEncode(['id' => $userId]);
 
-        if ($plugin == 'User') { // for student and staff
+        if ($plugin == 'Institution') { // for student and staff
             $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
             $institutionName = array_key_exists('institution_name', $options) ? $options['institution_name'] : '';
             $userType = array_key_exists('user_type', $options) ? $options['user_type'] : '';
@@ -130,7 +130,7 @@ class UserHistoriesController extends PageController
                 'view',
                 $encodedUserId
             ]);
-            $page->addCrumb('Comments');
+            $page->addCrumb(__('History'));
         }
     }
 }
