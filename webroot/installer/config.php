@@ -113,13 +113,7 @@ return [
         ],
     ],
 
-    'schoolMode' => true,
-
-    'School' => [
-        'excludedPlugins' => [
-            'ReportCards' => 'Report Cards'
-        ]
-    ]
+    'schoolMode' => true
 ];
 ";
 

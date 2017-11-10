@@ -255,7 +255,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 'text' => __('Absence')
             ]
         ];
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Attendance');
 
@@ -309,11 +309,11 @@ class StaffAttendancesTable extends ControllerActionTable
         }
 
         $StaffAttendancesQuery = clone $query;
-        
+
         $staffAbsenceArray = $StaffAttendancesQuery
             ->select([
-                'absence_id' => 'StaffAbsences.id', 
-                'staff_id' => $this->aliasField('staff_id'), 
+                'absence_id' => 'StaffAbsences.id',
+                'staff_id' => $this->aliasField('staff_id'),
                 'absence_type' => 'StaffAbsences.absence_type_id',
                 'full_day' => 'StaffAbsences.full_day'
             ])
@@ -333,7 +333,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $staffAbsenceArray = $tempArr;
 
         $data = [];
-        
+
         foreach ($staffAbsenceArray as $key => $value) {
             if (empty($value['absence_id'])) {
                 if (isset($data['Present'])) {
@@ -343,7 +343,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 }
             } else {
                 $typeCode = $this->absenceCodeList[$value['absence_type']];
-                
+
                 if ($typeCode == 'LATE') {
                     if (isset($data['Late'])) {
                         $data['Late'] = ++$data['Late'];
@@ -356,7 +356,7 @@ class StaffAttendancesTable extends ControllerActionTable
                         $data['Present'] = 1;
                     }
                 } else {
-                    
+
                     if ($value['full_day'] == 0) {
                         if (isset($data['Present'])) {
                             $data['Present'] = ++$data['Present'];
@@ -505,7 +505,7 @@ class StaffAttendancesTable extends ControllerActionTable
                     }
                 }
             }
-            
+
             $html .= $type . $fullDay;
         }
 
