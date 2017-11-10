@@ -134,11 +134,24 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
                 localeText: localeText,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
+                onModelUpdated: function(e) {
                     this.api.sizeColumnsToFit();
                 }
             };
@@ -153,10 +166,22 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
+                onModelUpdated: function(e) {
                     this.api.sizeColumnsToFit();
                 }
             };
@@ -196,6 +221,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         var dataSource = {
             pageSize: limit,
             getRows: function (params) {
+                console.log("datasource params", params);
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'dashboard-workbench-table');
