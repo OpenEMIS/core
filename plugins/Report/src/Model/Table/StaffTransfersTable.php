@@ -15,38 +15,59 @@ class StaffTransfersTable extends AppTable {
 
     public function initialize(array $config)
     {
-        $this->table('institution_staff_assignments');
+        $this->table('institution_staff_transfers');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+        $this->belongsTo('NewInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'new_institution_id']);
         $this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_id']);
-        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
+        $this->belongsTo('NewPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'new_institution_position_id']);
+        $this->belongsTo('NewStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'new_staff_type_id']);
+        $this->belongsTo('PreviousInstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'previous_institution_staff_id']);
+        $this->belongsTo('PreviousStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'previous_staff_type_id']);
 
-        $this->addBehavior('Excel', ['excludes' => ['end_date', 'status', 'staff_type_id', 'FTE', 'type', 'update']]);
+        $this->addBehavior('Excel', [
+            'excludes' => ['new_staff_type_id', 'new_FTE', 'new_end_date', 'previous_institution_staff_id', 'previous_staff_type_id', 'previous_FTE', 'previous_end_date', 'previous_effective_date', 'transfer_type', 'all_visible'],
+            'pages' => false
+        ]);
         $this->addBehavior('Report.ReportList');
-        $this->addBehavior('AcademicPeriod.Period');
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $query
-            ->select(['openemis_no' => 'Users.openemis_no',
-                    'identity_type' => 'IdentityTypes.name',
-                    'identity_number' => 'Users.identity_number',
-                    'prev_institution_code' => 'PreviousInstitutions.code',
-                    'next_institution_code' => 'Institutions.code',
-                    'next_position_no' => 'Positions.position_no',
-                    'next_position_title' => 'StaffPositionTitles.name',
-                    'authorized_date' => $this->aliasField('created')
+            ->select([
+                'openemis_no' => 'Users.openemis_no',
+                'identity_type' => 'IdentityTypes.name',
+                'identity_number' => 'Users.identity_number',
+                'prev_institution_code' => 'PreviousInstitutions.code',
+                'next_institution_code' => 'NewInstitutions.code',
+                'next_position_no' => 'NewPositions.position_no',
+                'next_position_title' => 'StaffPositionTitles.name',
+                'authorized_date' => $this->aliasField('created')
             ])
-            ->contain(['Users.IdentityTypes','Positions.StaffPositionTitles','Institutions','PreviousInstitutions','CreatedUser']);
+            ->contain(['Users.IdentityTypes','NewPositions.StaffPositionTitles','NewInstitutions','PreviousInstitutions','CreatedUser']);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
+
+        $newFields[] = [
+            'key' => 'StaffTransfers.status_id',
+            'field' => 'status_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'StaffTransfers.assignee_id',
+            'field' => 'assignee_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
 
         $newFields[] = [
             'key' => 'Users.openemis_no',
@@ -105,21 +126,21 @@ class StaffTransfersTable extends AppTable {
         ];
 
         $newFields[] = [
-            'key' => 'Institutions.code',
+            'key' => 'NewInstitutions.code',
             'field' => 'next_institution_code',
             'type' => 'string',
             'label' => __('Institution code Transferred To')
         ];
 
         $newFields[] = [
-            'key' => 'StaffTransfers.institution_id',
-            'field' => 'institution_id',
+            'key' => 'StaffTransfers.new_institution_id',
+            'field' => 'new_institution_id',
             'type' => 'integer',
             'label' => __('Institution Transferred To')
         ];
 
         $newFields[] = [
-            'key' => 'Positions.position_no',
+            'key' => 'NewPositions.position_no',
             'field' => 'next_position_no',
             'type' => 'string',
             'label' => __('Position No Transferred To')
@@ -133,24 +154,24 @@ class StaffTransfersTable extends AppTable {
         ];
 
         $newFields[] = [
-            'key' => 'StaffTransfers.start_date',
-            'field' => 'start_date',
+            'key' => 'StaffTransfers.new_start_date',
+            'field' => 'new_start_date',
             'type' => 'date',
-            'label' => __('Transferred On')
+            'label' => __('Transfer Start Date')
         ];
 
         $newFields[] = [
             'key' => 'StaffTransfers.created',
             'field' => 'authorized_date',
             'type' => 'date',
-            'label' => __('Authorized Date')
+            'label' => __('Created Date')
         ];
 
         $newFields[] = [
             'key' => 'StaffTransfers.created_user_id',
             'field' => 'authorized_by',
             'type' => 'string',
-            'label' => __('Authorized By')
+            'label' => __('Created By')
         ];
 
         $newFields[] = [
@@ -164,30 +185,36 @@ class StaffTransfersTable extends AppTable {
     }
 
     public function onExcelGetPreviousPositionNo(Event $event, Entity $entity)
-    {   
-        $prevPositionNo = '';
+    {
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        if ($entity->has('previous_institution_id') && !empty($entity->previous_institution_id)) {
-            if ($entity->has('staff_id') && !empty($entity->staff_id)) {
-                $prevInstitutionPosition = $InstitutionStaff
-                                            ->find()
-                                            ->contain('Positions.StaffPositionTitles')
-                                            ->where([
-                                                $InstitutionStaff->aliasField('institution_id') => $entity->previous_institution_id,
-                                                $InstitutionStaff->aliasField('staff_id') => $entity->staff_id,
-                                            ])
-                                            ->order([
-                                                $InstitutionStaff->aliasField('created DESC')
-                                            ])
-                                            ->first();
+        $prevInstitutionStaff = [];
+        $prevPositionNo = '';
 
-                if (!empty($prevInstitutionPosition)) {
-                    if (!empty($prevInstitutionPosition->position)) {
-                        $prevPositionNo = $prevInstitutionPosition->position->position_no;
-                        if (!empty($prevInstitutionPosition->position->staff_position_title)) {
-                            $this->prevPositionTitle = $prevInstitutionPosition->position->staff_position_title->name;
-                        }
-                    }
+        if ($entity->has('previous_institution_staff_id') && !empty($entity->previous_institution_staff_id)) {
+            $prevInstitutionStaff = $InstitutionStaff->find()
+                ->contain('Positions.StaffPositionTitles')
+                ->where([$InstitutionStaff->aliasField('id') => $entity->previous_institution_staff_id])
+                ->first();
+
+        } else if ($entity->has('previous_institution_id') && !empty($entity->previous_institution_id)) {
+            if ($entity->has('staff_id') && !empty($entity->staff_id)) {
+                $prevInstitutionStaff = $InstitutionStaff->find()
+                    ->contain('Positions.StaffPositionTitles')
+                    ->where([
+                        $InstitutionStaff->aliasField('institution_id') => $entity->previous_institution_id,
+                        $InstitutionStaff->aliasField('staff_id') => $entity->staff_id,
+                    ])
+                    ->order([$InstitutionStaff->aliasField('created DESC')])
+                    ->first();
+            }
+        }
+
+        if (!empty($prevInstitutionStaff)) {
+            if (!empty($prevInstitutionStaff->position)) {
+                $prevPositionNo = $prevInstitutionStaff->position->position_no;
+
+                if (!empty($prevInstitutionStaff->position->staff_position_title)) {
+                    $this->prevPositionTitle = $prevInstitutionStaff->position->staff_position_title->name;
                 }
             }
         }
