@@ -102,7 +102,7 @@ class WorkflowsController extends AppController
         } else if (!$hasWorkflowsAccess) {
             $selectedAction = 'Steps';
         }
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
     }
