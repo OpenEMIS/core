@@ -28,6 +28,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('WorkflowStepsParams', ['className' => 'Workflow.WorkflowStepsParams', 'foreignKey' => 'workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
 
 		$this->hasMany('StaffLeave', ['className' => 'Institution.StaffLeave', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -37,6 +38,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',
@@ -53,12 +55,15 @@ class WorkflowStepsTable extends AppTable {
 			'through' => 'Workflow.WorkflowStepsRoles',
 			'dependent' => true
 		]);
+
+		$this->addBehavior('Workflow.StaffTransfer');
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
+			->requirePresence('name', 'create')
 			->requirePresence('category')
 			->requirePresence('is_editable')
 			->requirePresence('is_removable')
@@ -138,11 +143,6 @@ class WorkflowStepsTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('is_system_defined', ['visible' => false]);
-		$this->ControllerAction->setFieldOrder(['workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
-	}
-
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		list($modelOptions, $selectedModel) = array_values($this->getModelOptions());
 		list($workflowOptions, $selectedWorkflow) = array_values($this->getWorkflowOptions($selectedModel));
@@ -154,13 +154,14 @@ class WorkflowStepsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 
 		$query
-			->contain(['SecurityRoles'])
+			->contain(['SecurityRoles', 'WorkflowStepsParams'])
 			->where([$this->aliasField('workflow_id') => $selectedWorkflow]);
 	}
 
 	public function indexAfterAction(Event $event, $data) {
-		$session = $this->request->session();
+		$this->setupFields();
 
+		$session = $this->request->session();
 		$sessionKey = $this->registryAlias() . '.warning';
 		if ($session->check($sessionKey)) {
 			$warningKey = $session->read($sessionKey);
@@ -171,7 +172,7 @@ class WorkflowStepsTable extends AppTable {
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$query->matching('Workflows')
-			->contain(['SecurityRoles']);
+			->contain(['SecurityRoles', 'WorkflowStepsParams']);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -209,7 +210,7 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'view' || $action == 'edit') {
+		if ($action == 'view' || $action == 'edit' || $action == 'index') {
 			$attr['visible'] = false;
 		} else if ($action == 'add') {
 			list($modelOptions) = array_values($this->getModelOptions());
@@ -228,6 +229,7 @@ class WorkflowStepsTable extends AppTable {
 			list($workflowOptions) = array_values($this->getWorkflowOptions($selectedModel));
 
 			$attr['options'] = $workflowOptions;
+			$attr['onChangeReload'] = true;
 		} else if ($action == 'edit') {
 			$entity = $attr['attr']['entity'];
 			$workflow = $entity->_matchingData['Workflows'];
@@ -331,17 +333,16 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
-	private function setupFields(Entity $entity) {
+	private function setupFields(Entity $entity = null) {
+		$attr = [];
+		if (!is_null($entity)) {
+			$attr['attr'] = ['entity' => $entity];
+		}
+
 		$this->ControllerAction->field('workflow_model_id');
-		$this->ControllerAction->field('workflow_id', [
-			'attr' => ['entity' => $entity]
-		]);
-		$this->ControllerAction->field('name', [
-			'attr' => ['entity' => $entity]
-		]);
-		$this->ControllerAction->field('category', [
-			'attr' => ['entity' => $entity]
-		]);
+		$this->ControllerAction->field('workflow_id', $attr);
+		$this->ControllerAction->field('name', $attr);
+		$this->ControllerAction->field('category', $attr);
 		$this->ControllerAction->field('is_editable');
 		$this->ControllerAction->field('is_removable');
 		$this->ControllerAction->field('is_system_defined', ['type' => 'hidden']);
@@ -397,6 +398,8 @@ class WorkflowStepsTable extends AppTable {
 			$this->TrainingNeeds->registryAlias() => $this->TrainingNeeds->alias(),
 			$this->InstitutionPositions->registryAlias() => $this->InstitutionPositions->alias(),
 			$this->StaffPositionProfiles->registryAlias() => $this->StaffPositionProfiles->alias(),
+			$this->InstitutionStaffTransfers->registryAlias() => $this->InstitutionStaffTransfers->alias(),
+			$this->WorkflowStepsParams->registryAlias() => $this->WorkflowStepsParams->alias()
 		];
 
 		$statusId = $entity->id;
