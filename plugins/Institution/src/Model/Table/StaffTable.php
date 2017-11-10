@@ -1483,7 +1483,16 @@ class StaffTable extends ControllerActionTable
         $todayDate = Time::now();
 
         return $query
-                ->find('withBelongsTo')
+                ->select([
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
+                ])
+                ->contain(['Users'])
                 ->matching('Positions', function ($q) {
                     return $q->where(['Positions.is_homeroom' => 1]);
                 })
@@ -1499,8 +1508,8 @@ class StaffTable extends ControllerActionTable
                 ->formatResults(function ($results) {
                     $returnArr = [];
                     foreach ($results as $result) {
-                        if ($result->has('user')) {
-                            $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
+                        if ($result->has('Users')) {
+                            $returnArr[] = ['id' => $result->Users->id, 'name' => $result->Users->name_with_id];
                         }
                     }
                     return $returnArr;
