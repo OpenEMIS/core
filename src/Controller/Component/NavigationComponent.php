@@ -360,7 +360,7 @@ class NavigationComponent extends Component
                 'title' => 'Directory',
                 'icon' => '<span><i class="fa kd-guardian"></i></span>',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
+                'selected' => ['Directories.Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results', 'DirectoryHistories.index']
             ],
 
             'Reports' => [
