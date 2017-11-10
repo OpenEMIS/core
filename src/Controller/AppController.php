@@ -164,6 +164,7 @@ class AppController extends Controller
         if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
+        $this->loadComponent('TabPermission');
     }
 
     /**
