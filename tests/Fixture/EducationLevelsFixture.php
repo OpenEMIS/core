@@ -10,7 +10,7 @@ class EducationLevelsFixture extends TestFixture
         [
             'id' => 1,
             'name' => 'Primary',
-            'order' => 1,
+            'order' => 2,
             'visible' => 1,
             'education_system_id' => 1,
             'education_level_isced_id' => 2,
@@ -21,7 +21,7 @@ class EducationLevelsFixture extends TestFixture
         ], [
             'id' => 2,
             'name' => 'Secondary',
-            'order' => 2,
+            'order' => 3,
             'visible' => 1,
             'education_system_id' => 1,
             'education_level_isced_id' => 3,
@@ -29,6 +29,17 @@ class EducationLevelsFixture extends TestFixture
             'modified' => NULL,
             'created_user_id' => 1,
             'created' => '2015-01-01 00:00:00'
+        ], [
+            'id' => 4,
+            'name' => 'Pre-School Education',
+            'order' => 1,
+            'visible' => 1,
+            'education_system_id' => 2,
+            'education_level_isced_id' => 1,
+            'modified_user_id' => NULL,
+            'modified' => NULL,
+            'created_user_id' => 1,
+            'created' => '2015-09-01 00:00:00'
         ]
     ];
 }
