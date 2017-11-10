@@ -30,14 +30,6 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StudentWithdraw'
         },
-        StaffTransferApprovalTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.StaffTransferApprovals'
-        },
-        StaffTransferRequestTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.StaffTransferRequests'
-        },
         // SCHOOL_BASED Workflow
         StaffLeaveTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
@@ -66,6 +58,14 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         StaffTrainingApplicationsTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Training.TrainingApplications'
+        },
+        StaffTransferIn: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffTransferIn'
+        },
+        StaffTransferOut: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffTransferOut'
         },
         // NON_SCHOOL_BASED Workflow
         TrainingCoursesTable: {
