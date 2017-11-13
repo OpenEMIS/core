@@ -31,7 +31,6 @@ echo $this->Html->script('OpenEmis.jquery/jq.header');
 //External Plugins
 echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
 echo $this->Html->script('OpenEmis.../plugins/fuelux/js/fuelux');
-// echo $this->Html->script('OpenEmis.../plugins/icheck/icheck');
 echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.mousewheel');
 echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.scrolltabs');
 echo $this->Html->script('OpenEmis.../plugins/slider/js/bootstrap-slider');
