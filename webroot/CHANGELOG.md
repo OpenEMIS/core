@@ -2,6 +2,7 @@
 - Implemented customisable workflow for Staff Transfer.
 - Staff Transfer can now be triggered by both receiving and sending Schools.
 - System now allows editing on Staff start dates. 
+- Bug fixes (Student Report Card, Competency, Health - Body Mass)
 
 ### [3.10.15] - 2017-10-27
 - User can now generate report of students from all programmes in Reports > Institution > Students
