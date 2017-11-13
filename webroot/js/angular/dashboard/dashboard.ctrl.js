@@ -39,7 +39,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.collapse = "true";
 
         vm.workbenchTitle = '';
-        vm.gridOptions[vm.target].api.setRowData([]);
+        // vm.gridOptions[vm.target].api.setRowData([]);
     }
 
     function initNotices() {
@@ -152,6 +152,9 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                     this.api.sizeColumnsToFit();
                 },
                 onModelUpdated: function(e) {
+                   this.api.sizeColumnsToFit();
+                },
+                onRowDataChanged: function(e) {
                     this.api.sizeColumnsToFit();
                 }
             };
@@ -183,6 +186,9 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 },
                 onModelUpdated: function(e) {
                     this.api.sizeColumnsToFit();
+                },
+                onRowDataChanged: function(e) {
+                    this.api.sizeColumnsToFit();
                 }
             };
         });
@@ -194,7 +200,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
         // reset to empty
         vm.gridOptions[vm.target].api.setColumnDefs([]);
-        vm.gridOptions[vm.target].api.setRowData([]);
+        // vm.gridOptions[vm.target].api.setRowData([]);
 
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
         var textToTranslate = [];
@@ -221,7 +227,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         var dataSource = {
             pageSize: limit,
             getRows: function (params) {
-                console.log("datasource params", params);
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'dashboard-workbench-table');
