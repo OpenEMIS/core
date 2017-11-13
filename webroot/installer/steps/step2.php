@@ -24,7 +24,7 @@ $user = isset($_SESSION['db_root']) ? $_SESSION['db_root'] : 'root';
                         <span class="help-block">MySQL database server (usually localhost or 127.0.0.1)</span>
                     </div>
                 </div>
-    
+
                 <div class="form-group">
                     <label for="port" class="col-sm-5 control-label">Database Server Port</label>
                     <div class="col-sm-5">
@@ -32,7 +32,7 @@ $user = isset($_SESSION['db_root']) ? $_SESSION['db_root'] : 'root';
                         <span class="help-block">Port to connect to you MySQL server (usually 3306)</span>
                     </div>
                 </div>
-        
+
                 <div class="form-group">
                     <label for="username" class="col-sm-5 control-label">Admin Username</label>
                     <div class="col-sm-5">
@@ -40,7 +40,7 @@ $user = isset($_SESSION['db_root']) ? $_SESSION['db_root'] : 'root';
                         <span id="usernameInfo" class="help-block">Database Privileged Username.</span>
                     </div>
                 </div>
-    
+
                 <div class="form-group">
                     <label for="password" class="col-sm-5 control-label">Admin Password</label>
                     <div class="col-sm-5">
@@ -48,7 +48,7 @@ $user = isset($_SESSION['db_root']) ? $_SESSION['db_root'] : 'root';
                         <span id="passwordInfo" class="help-block">Database Privileged Password.</span>
                     </div>
                 </div>
-        
+
                 <div class="form-group">
                 	<div class="col-sm-5 control-label"></div>
                     <div class="col-sm-5">

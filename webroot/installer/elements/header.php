@@ -11,16 +11,26 @@
     <script src="js/jquery-1.9.1.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>
     <script src="js/css_browser_selector.js"></script>
+    <link href="css/master.min.css" rel="stylesheet" media="screen">
+    <link href="css/layout.min.css" rel="stylesheet" media="screen">
     <link href="css/installer.css" rel="stylesheet" media="screen">
     <link href="css/main.css" rel="stylesheet" media="screen">
-
 <body>
-	<div class="header index-header">
-    	<div class="school-title">
-        	<a href="#">
-            	<img src="../app/webroot/img/logo.png" alt="OpenEMIS School" /><span class="visible-desktop">OpenEMIS School</span>
-            </a>
-        </div>
-    </div>
-	
-				
+    <header>
+        <nav class="navbar navbar-fixed-top">
+            <div class="navbar-left">
+                <div class="menu-handler">
+                    <button class="menu-toggle" type="button">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                </div>
+                <a href="#">
+                    <div class="brand-logo">
+                        <i class="kd-openemis"></i>
+                        <h1><?php echo 'OpenEMIS School' ?></h1>
+                    </div>
+                </a>
+            </div>
+        </nav>
+    </header>
+
