@@ -150,12 +150,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 ensureDomOrder: true,
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
-                },
-                onModelUpdated: function(e) {
-                   this.api.sizeColumnsToFit();
-                },
-                onRowDataChanged: function(e) {
-                    this.api.sizeColumnsToFit();
                 }
             };
         }, function(error){
@@ -182,12 +176,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 stopEditingWhenGridLosesFocus: true,
                 ensureDomOrder: true,
                 onGridSizeChanged: function(e) {
-                    this.api.sizeColumnsToFit();
-                },
-                onModelUpdated: function(e) {
-                    this.api.sizeColumnsToFit();
-                },
-                onRowDataChanged: function(e) {
                     this.api.sizeColumnsToFit();
                 }
             };
@@ -219,6 +207,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 }
             });
             vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
+            vm.gridOptions[vm.target].api.sizeColumnsToFit();
         }, function(error){
             console.log(error);
         });
