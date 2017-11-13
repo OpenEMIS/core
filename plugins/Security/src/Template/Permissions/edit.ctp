@@ -29,14 +29,14 @@ $this->start('panelBody');
 	$template = $this->ControllerAction->getFormTemplate();
 	$template['inputContainer'] = '{{content}}';
 	$this->Form->templates($template);
-	
+
 	echo $this->Form->create(null, $formOptions);
 	$i = 0;
 
 	foreach ($data as $section => $list) {
 		// add the sections
 		echo '<div class="section-header">';
-		echo '<input type="checkbox" class="icheck-input" checkbox-toggle-target="' . $section . '" />' . $section;
+		echo '<input type="checkbox" checkbox-toggle-target="' . $section . '" /><label></label>' . $section;
 		echo '</div>';
 
 		// add the table under each section
@@ -54,7 +54,7 @@ $this->start('panelBody');
 
 			// function operations
 			foreach ($operations as $op) {
-				$checkboxOptions = ['type' => 'checkbox', 'id' => $op, 'class' => 'icheck-input', 'label' => false, 'div' => false];
+				$checkboxOptions = ['id' => $op];
 				echo '<td class="center">';
 				$permission = $obj->Permissions[$op];
 				if ($permission == -1) {
@@ -62,7 +62,8 @@ $this->start('panelBody');
 				} else if ($permission == 1) {
 					$checkboxOptions[] = 'checked';
 				}
-				echo $this->Form->input("$alias.$i.$op", $checkboxOptions);
+				echo $this->Form->checkbox("$alias.$i.$op", $checkboxOptions);
+				echo $this->Form->label("$alias.$i.$op", false, ['for' => null]);
 				echo '</td>';
 
 			}

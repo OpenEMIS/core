@@ -3,13 +3,13 @@
 <?php if (in_array($action, ['add', 'reconfirm'])) : ?>
 	<div class="input clearfix required">
 		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
-		<div class="table-wrapper"> 
+		<div class="table-wrapper">
 			<div class="table-in-view">
 				<table class="table table-checkable">
 					<thead>
 						<tr>
 							<?php if ($action != 'reconfirm') { ?>
-							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+							<th class="checkbox-column"><input type="checkbox" /><label></label></th>
 							<?php } ?>
 							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
@@ -17,7 +17,7 @@
 							<th><?= __('Class') ?></th>
 						</tr>
 					</thead>
-					<?php if (isset($attr['data'])) : 
+					<?php if (isset($attr['data'])) :
 							$selectedStudents = array_key_exists('selectedStudents', $attr)? $attr['selectedStudents']: [];
 							$onlySelectedStudents = [];
 							foreach ($selectedStudents as $sskey => $ssvalue) {
@@ -27,9 +27,9 @@
 							}
 					?>
 						<tbody>
-							<?php 
+							<?php
 							$studentCount = 0;
-							foreach ($attr['data'] as $i => $obj) : 
+							foreach ($attr['data'] as $i => $obj) :
 								if ($action == 'reconfirm') {
 									if (!in_array($obj->student_id, $onlySelectedStudents)) continue;
 								}
@@ -44,9 +44,8 @@
 											} else {
 												$alias = $ControllerAction['table']->alias();
 												$fieldPrefix = "$alias.students.$i";
-
-												$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
-												echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
+												echo $this->Form->checkbox("$fieldPrefix.selected");
+												echo $this->Form->label("$fieldPrefix.selected", false, ['for' => null]);
 												echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
 											}
 										?>
@@ -59,11 +58,11 @@
 								</tr>
 							<?php $studentCount++;
 							endforeach ?>
-							<?php 
+							<?php
 							if ($studentCount <= 0) {
 								?>
 								<tr><td><?= $this->Label->get($ControllerAction['table']->alias().'.noStudentSelected'); ?></td></tr>
-								<?php 
+								<?php
 							}
 							 ?>
 						</tbody>

@@ -45,7 +45,7 @@
 				<table class="table table-checkable">
 					<thead>
 						<tr>
-							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+							<th class="checkbox-column"><input type="checkbox" /><label></label></th>
 							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
@@ -64,8 +64,9 @@
 												$alias = $ControllerAction['table']->alias();
 												$fieldPrefix = "$alias.students.$i";
 
-												$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false, 'value' => $obj->student_id];
-												echo $this->Form->input("$fieldPrefix.id", $checkboxOptions);
+												$checkboxOptions = ['value' => $obj->student_id];
+												echo $this->Form->checkbox("$fieldPrefix.id", $checkboxOptions);
+												echo $this->Form->checkbox("$fieldPrefix.id", false, ['for' => null]);
 											}
 										?>
 									</td>
