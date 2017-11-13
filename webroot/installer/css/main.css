@@ -1,11 +1,7 @@
 @charset "UTF-8";
 /* CSS Document */
 
-body{
-	font-family:'Open Sans','trebuchet ms',arial,sans-serif/*"Lucida Sans Unicode", "Lucida Grande", sans-serif*/;
-	color:#333333;
-	word-wrap: break-word;
-}
+
 html, body{
 	height:100%;
 }
@@ -168,14 +164,7 @@ h5 span{
 	max-width:none;
 }
 /*footer */
-footer{
-	margin:0;
-	padding:0;
-	
-	position:absolute;
-	width:100%;
-	bottom:0;
-}
+
 .footer{
 	margin-left:200px;
 	background-color:#222222;

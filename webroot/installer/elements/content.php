@@ -1,6 +1,6 @@
 <?php
 include_once "config.php";
-session_start();
+// session_start();
 
 $totalSteps = 5;
 $currentStep = 1;
@@ -28,7 +28,7 @@ if(!empty($_GET) || isset($_GET['step'])) {
 					?>
 				</div>
 			</div><!-- end installer-bar-->
-			
+
 			<div class="installer-content">
 			<?php
 			$page = 'step'.$currentStep.'.php';
