@@ -1,5 +1,3 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
@@ -11,7 +9,7 @@
 			<table class="table table-checkable table-input">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+						<th class="checkbox-column"><input type="checkbox" /><label></label></th>
 						<th><?= $this->Label->get($attr['model'] .'.education_subject') ?></th>
 						<th><?= $this->Label->get('general.name') ?></th>
 						<th><?= $this->Label->get($attr['model'] .'.teacherOrTeachers') ?></th>
@@ -76,15 +74,13 @@
 						?>
 
 						<td <?php if(!$disabled){ ?> class="checkbox-column" <?php } ?>>
-							<?= $this->Form->input(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
-									'type' => 'checkbox',
-									'label' => false,
-									'class' => 'icheck-input',
+							<?= $this->Form->checkbox(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
 									'value' => $n,
 									'checked' => ($selected || $selectedInForm),
 									'disabled' => $disabled
 								]);
 							?>
+							<?= $this->Form->label(sprintf('MultiSubjects[%d][education_subject_id]', $i), false, ['for' => null]) ?>
 							<?= $this->Form->input(sprintf('MultiSubjects[%d][education_grade_id]', $i), [
 									'type' => 'hidden',
 									'label' => false,
@@ -156,15 +152,13 @@
 				    			];
 							?>
 							<td>
-								<?= $this->Form->input(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
-										'type' => 'checkbox',
-										'label' => false,
-										'class' => 'icheck-input',
+								<?= $this->Form->checkbox(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
 										'value' => $n,
 										'checked' => 'checked',
 										'disabled' => 'disabled'
 									]);
 								?>
+								<?= $this->Form->label(sprintf('MultiSubjects[%d][education_subject_id]', $i), false, ['for' => null]) ?>
 							</td>
 							<td><?= $obj['subject_name'] ?></td>
 

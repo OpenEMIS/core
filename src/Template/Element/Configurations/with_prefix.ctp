@@ -11,7 +11,7 @@ if ($enable) {
 ?>
 <div class="input clearfix <?= $required ?>">
 	<label for="<?= $attr['id'] ?>"><?= __('Value') ?></label>
-	
+
 	<div class="table-wrapper">
 		<div class="table-in-view">
 			<table class="table table-checkable table-input">
@@ -24,16 +24,16 @@ if ($enable) {
 
 				<tbody>
 					<tr>
-						
+
 						<td class="checkbox-column">
 							<?= $this->Form->checkbox($attr['model'].'.value.enable', [
 									'value' => 1,
-									'class' => 'icheck-input',
 									'checked' => $enable
 								]);
 							?>
+							<?= $this->Form->label($attr['model'].'.value.enable', false, ['for' => null]) ?>
 						</td>
-						
+
 						<td>
 							<?=	$this->Form->input($attr['model'].'.value.prefix', [
 									'value' => $prefix,

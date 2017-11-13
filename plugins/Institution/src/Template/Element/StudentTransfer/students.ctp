@@ -8,7 +8,7 @@
 				<table class="table table-checkable">
 					<thead>
 						<tr>
-							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+							<th class="checkbox-column"><input type="checkbox" /><label></label></th>
 							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Status') ?></th>
@@ -18,11 +18,11 @@
 					</thead>
 					<?php if (isset($attr['data'])) : ?>
 						<tbody>
-							<?php 
+							<?php
                             if (isset($attr['nextInstitutionGenderCode'])) {
-                                    $nextInstitutionGenderCode = $attr['nextInstitutionGenderCode'];    
+                                    $nextInstitutionGenderCode = $attr['nextInstitutionGenderCode'];
                                 }
-                                foreach ($attr['data'] as $i => $obj) : 
+                                foreach ($attr['data'] as $i => $obj) :
                                     $studentGender = $obj->_matchingData['Genders']->code;
 							?>
 								<tr>
@@ -30,7 +30,7 @@
 										$alias = $ControllerAction['table']->alias();
 										$fieldPrefix = "$alias.students.$i";
 
-										$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
+										$checkboxOptions = [];
 
                                         if (isset($nextInstitutionGenderCode) && $nextInstitutionGenderCode != 'X' && $nextInstitutionGenderCode != $studentGender) {
                                             $checkboxOptions['disabled'] = true;
@@ -44,7 +44,8 @@
                                     ?>
                                     <td class=<?=$tdClass;?>>
                                     <?php
-                                            echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
+                                            echo $this->Form->checkbox("$fieldPrefix.selected", $checkboxOptions);
+                                            echo $this->Form->label("$fieldPrefix.selected", false, ['for' => null]);
                                             echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
                                             echo $this->Form->hidden("$fieldPrefix.status", ['value' => $attr['attr']['status']]);
                                             echo $this->Form->hidden("$fieldPrefix.type", ['value' => $attr['attr']['type']]);

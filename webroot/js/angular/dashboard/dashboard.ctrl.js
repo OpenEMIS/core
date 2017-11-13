@@ -39,7 +39,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.collapse = "true";
 
         vm.workbenchTitle = '';
-        // vm.gridOptions[vm.target].api.setRowData([]);
     }
 
     function initNotices() {
@@ -188,7 +187,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
         // reset to empty
         vm.gridOptions[vm.target].api.setColumnDefs([]);
-        // vm.gridOptions[vm.target].api.setRowData([]);
 
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
         var textToTranslate = [];
