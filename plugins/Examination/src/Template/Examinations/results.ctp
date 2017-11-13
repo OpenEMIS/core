@@ -53,7 +53,7 @@ $this->start('panelBody');
             </scrollable-tabset>
 
             <div id="examination-result-table" class="table-wrapper">
-                <div ng-if="ExaminationsResultsController.gridOptions" ag-grid="ExaminationsResultsController.gridOptions" class="ag-fresh"></div>
+                <div ng-if="ExaminationsResultsController.gridOptions" kd-ag-grid="ExaminationsResultsController.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
             </div>
         </div>
     </div>

@@ -177,14 +177,6 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function getColumnDefs(assessmentPeriods) {
-        var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
-        var isRtl = document.querySelector("html").classList.contains("rtl");
-        var direction = 'left';
-        if (isMobile) {
-            direction = '';
-        } else if (isRtl) {
-            direction = 'right';
-        }
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
