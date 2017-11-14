@@ -20,7 +20,8 @@ class InstitutionTripsController extends PageController
         $this->loadModel('Institution.Students');
         $this->loadModel('Student.StudentStatuses');
 
-        $this->Page->loadElementsFromTable($this->InstitutionTrips);
+        // to disable actions if institution is not active
+        $this->loadComponent('Institution.InstitutionInactive');
     }
 
     public function implementedEvents()
