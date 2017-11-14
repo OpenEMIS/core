@@ -7,8 +7,8 @@ use Cake\ORM\Query;
 
 class Staff extends Entity
 {
-	protected $_virtual = ['name', 'openemis_id', 'default_identity_type'];
-	
+	protected $_virtual = ['name', 'staff_name'];
+
 	protected function _getName() {
 		$name = '';
 
