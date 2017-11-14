@@ -226,12 +226,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
             if ($newStartDate > $originalStartDate) { // if new_start_date is later than original_start_date
                 foreach ($this->associatedModelList as $model => $value) {
-                    $academicPeriodsId = $AcademicPeriods->getAcademicPeriodIdByDate($originalStartDate);
                     $params = new ArrayObject([
                         'staff_id' => $staffId,
                         'institution_id' => $institutionId,
                         'institution_position_id' => $institutionPositionId,
-                        'academic_period_id' => $academicPeriodsId,
                         'original_start_date' => $originalStartDate,
                         'new_start_date' => $newStartDate
                     ]);
