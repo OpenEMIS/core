@@ -14,7 +14,8 @@ class InfrastructureUtilityTelephonesController extends PageController
         parent::initialize();
 
         $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->Page->loadElementsFromTable($this->InfrastructureUtilityTelephones);
+        // to disable actions if institution is not active
+        $this->loadComponent('Institution.InstitutionInactive');
 
         $this->Page->disable(['search']); // to disable the search function
     }
