@@ -65,7 +65,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         <button
             ng-if="InstitutionStudentController.rowsThisPage.length > 0 && (InstitutionStudentController.step=='internal_search' || InstitutionStudentController.step=='external_search')"
             ng-click="InstitutionStudentController.onAddStudentClick()"
-            ng-disabled="!selectedStudent"
+            ng-disabled="!InstitutionStudentController.selectedStudent"
             type="button" class="btn btn-default"><?= __('Add Student') ?>
         </button>
         <button type="button" class="btn btn-default btn-next"
