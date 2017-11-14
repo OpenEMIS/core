@@ -27,6 +27,7 @@ class StaffProfileBehavior extends Behavior
         $newStartDate = $params['new_start_date'];
 
         $conditions = [];
+        $workflowPendingRecords = false;
         switch ($alias) {
             case 'InstitutionClasses':
                 $query->contain(['AcademicPeriods'])
@@ -93,14 +94,26 @@ class StaffProfileBehavior extends Behavior
                 ]);
                 break;
 
+<<<<<<< HEAD
             case 'StaffTransferRequests':
                 $query->where([
+=======
+            case 'StaffTransferOut':
+                $conditions = [
+>>>>>>> d4e6897c0af7b3ced56a2bb12523cff5048c64dd
                     $model->aliasField('staff_id') => $staffId,
-                    $model->aliasField('status') => 0,
                     $model->aliasField('previous_institution_id') => $institutionId,
+<<<<<<< HEAD
                     $model->aliasField('start_date >=') => $originalStartDate,
                     $model->aliasField('start_date <=') => $newStartDate
                 ]);
+=======
+                    $model->aliasField('previous_end_date') . ' IS NOT NULL',
+                    $model->aliasField('previous_end_date >=') => $originalStartDate,
+                    $model->aliasField('previous_end_date <=') => $newStartDate
+                ];
+                $workflowPendingRecords = true;
+>>>>>>> d4e6897c0af7b3ced56a2bb12523cff5048c64dd
                 break;
 
             case 'Salaries':
@@ -121,8 +134,20 @@ class StaffProfileBehavior extends Behavior
                 break;
         }
 
+<<<<<<< HEAD
         $dataCount = $query->count();
+=======
+        $dataCount = $model->find()
+            ->where($conditions);
 
-        return $dataCount;
+        if ($workflowPendingRecords) {
+            $doneStatus = $model::DONE;
+            $dataCount->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where(['category <> ' => $doneStatus]);
+                });
+        }
+>>>>>>> d4e6897c0af7b3ced56a2bb12523cff5048c64dd
+
+        return $dataCount->count();
     }
 }
