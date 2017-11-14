@@ -102,6 +102,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         } else {
             direction = 'right';
         }
+        var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
@@ -111,27 +112,34 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
             headerName: "OpenEMIS ID",
             field: "openemis_id",
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: 'text'
         });
         columnDefs.push({
             headerName: "Student Name",
             field: "name",
             sort: 'asc',
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: 'text'
         });
         columnDefs.push({
             headerName: "student id",
             field: "student_id",
             hide: true,
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
         });
         columnDefs.push({
             headerName: "Student Status",
             field: "student_status_name",
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: 'text'
         });
 
         var ResultsSvc = this;
@@ -143,7 +151,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 headerName: "Comments",
                 field: "comments",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                filter: 'text',
+                menuTabs: menuTabs
             };
             columnDef = ResultsSvc.renderText(columnDef, extra);
             columnDefs.push(columnDef);
@@ -166,7 +176,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 var columnDef = {
                     headerName: headerLabel,
                     field: field,
-                    filterParams: filterParams
+                    filterParams: filterParams,
+                    filter: 'text',
+                    menuTabs: menuTabs
                 };
 
                 var extra = {};

@@ -255,7 +255,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 var direction = '';
             } else if (isRtl) {
                 var direction = 'right';
-            }else {
+            } else {
                 var direction = 'left';
             }
 
