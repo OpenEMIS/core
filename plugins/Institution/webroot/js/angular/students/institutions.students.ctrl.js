@@ -295,8 +295,28 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    console.log("scope", $scope);
+                    console.log("this", this);
+                    console.log("StudentController", StudentController);
+                    console.log("InstitutionStudentController", InstitutionStudentController);
+                    StudentController.selectStudent(_e.node.data.id)
+                    InstitutionStudentController.selectedStudent = _e.node.data.id;
+                    StudentController.selectedStudent = _e.node.data.id;
+                }
             };
 
             StudentController.externalGridOptions = {
@@ -329,7 +349,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
                 angularCompileRows: true
             };
         }, function(error){
@@ -573,7 +604,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
             studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key]['date_of_birth']);
             studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
-            
+
             if (studentRecords[key]['main_nationality'] != null) {
                 studentRecords[key]['nationality_name'] = studentRecords[key]['main_nationality']['name'];
                 studentRecords[key]['identity_type_name'] = studentRecords[key]['main_identity_type']['name'];
