@@ -62,6 +62,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             type="button" class="btn btn-default" ng-click="InstitutionStudentController.onExternalSearchClick()"
             ng-if="(!InstitutionStudentController.initialLoad && InstitutionStudentController.hasExternalDataSource && InstitutionStudentController.showExternalSearchButton && InstitutionStudentController.step=='internal_search')" ng-disabled="InstitutionStudentController.selectedStudent"><?= __('External Search') ?>
         </button>
+        <p>hahaha{{InstitutionStudentController.getSelectedStudent()}}</p>
         <button
             ng-if="InstitutionStudentController.rowsThisPage.length > 0 && (InstitutionStudentController.step=='internal_search' || InstitutionStudentController.step=='external_search')"
             ng-model="InstitutionStudentController.selectedStudent"
@@ -118,7 +119,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div>
                     <div class="scrolltabs">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStudentController.internalGridOptions" ag-grid="InstitutionStudentController.internalGridOptions" class="sg-theme"></div>
+                            <div ng-if="InstitutionStudentController.internalGridOptions" kd-ag-grid="InstitutionStudentController.internalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
@@ -152,7 +153,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div>
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStudentController.externalGridOptions" ag-grid="InstitutionStudentController.externalGridOptions" class="sg-theme"></div>
+                            <div ng-if="InstitutionStudentController.externalGridOptions" kd-ag-grid="InstitutionStudentController.externalGridOptions" class="ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
