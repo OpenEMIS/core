@@ -96,6 +96,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.defaultIdentityTypeId;
     StudentController.postResponse;
 
+    $scope.selectedStudent;
+
     angular.element(document).ready(function () {
         InstitutionsStudentsSvc.init(angular.baseUrl);
         InstitutionsStudentsSvc.setInstitutionId(StudentController.institutionId);
@@ -266,18 +268,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         .then(function(localeText){
             StudentController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StudentController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -307,32 +297,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 paginationPageSize: 10,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
-                angularCompileRows: true,
+                // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    console.log("scope", $scope);
-                    console.log("this", this);
-                    console.log("StudentController", StudentController);
-                    console.log("InstitutionStudentController", InstitutionStudentController);
                     StudentController.selectStudent(_e.node.data.id)
-                    InstitutionStudentController.selectedStudent = _e.node.data.id;
-                    StudentController.selectedStudent = _e.node.data.id;
                 }
             };
 
             StudentController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StudentController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -366,18 +338,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }, function(error){
             StudentController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StudentController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -394,24 +354,23 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
                 angularCompileRows: true
             };
 
             StudentController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StudentController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StudentController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -427,7 +386,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
                 angularCompileRows: true
             };
         });
