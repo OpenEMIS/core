@@ -8,6 +8,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
@@ -39,7 +40,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffAttendances', ['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StaffTransferRequests', ['className' => 'Institution.StaffTransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Workflow.Workflow');
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
@@ -98,7 +99,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkHomeRoomTeacherAssignments',
                 'on' => function ($context) {
                     //trigger validation only when homeroom teacher set to no and edit operation
-                    return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']); 
+                    return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
                 }
             ]);
 
@@ -195,15 +196,38 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
-            $attr['options'] = $this->getSelectOptions('general.yesno');
-        } else if ($action == 'edit') {
-            $entity = $attr['entity'];
-            $isHomeroom = $entity->is_homeroom;
+        if ($action == 'add' || $action == 'edit') {
+            $visibility = false;
+            $requestData = $request->data;
 
-            $attr['type'] = 'select';
-            $attr['options'] = $this->getSelectOptions('general.yesno');
-            $attr['default'] = $isHomeroom;
+            if ($action == 'add') {
+                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
+                    $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
+                    $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
+
+                    if ($positionTypeId == 1) { // teaching
+                        $visibility = true;
+                        $attr['options'] = $this->getSelectOptions('general.yesno');
+                        $attr['default'] = '';
+                    }
+                }
+
+            } else if ($action == 'edit') {
+                $entity = $attr['entity'];
+                $isHomeroom = $entity->is_homeroom;
+                $positionTitleId = $entity->staff_position_title_id;
+                $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
+
+                if ($positionTypeId == 1) { // Teaching
+                   $visibility = true;
+                }
+
+                $attr['type'] = 'select';
+                $attr['options'] = $this->getSelectOptions('general.yesno');
+                $attr['default'] = $isHomeroom;
+            }
+
+            $attr['visible'] = $visibility;
         }
 
         return $attr;
@@ -304,6 +328,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 ->toArray(); // Also a collections library method
         }
         $attr['options'] = $titles;
+        $attr['onChangeReload'] = true;
         return $attr;
     }
 
@@ -494,62 +519,89 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
     }
 
-    public function getInstitutionPositions($institutionId, $userId)
+    public function getInstitutionPositions($userId, $isAdmin, $activeStatusId = [], $institutionId, $fte, $startDate, $endDate = '')
     {
+        $selectedFTE = empty($fte) ? 0 : $fte;
+        $startDate = new Date($startDate);
 
-            // // excluding positions where 'InstitutionStaff.end_date is NULL'
-            $excludePositions = $this->find('list');
-            $excludePositions->matching('InstitutionStaff', function ($q) {
-                    return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
-            });
-            $excludePositions->where([$this->aliasField('institution_id') => $institutionId])
-                ->toArray()
-                ;
-            $excludeArray = [];
-        foreach ($excludePositions as $key => $value) {
-            $excludeArray[] = $value;
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $excludePositions = $StaffTable->find()
+            ->select(['position_id' => $StaffTable->aliasField('institution_position_id')])
+            ->where([$StaffTable->aliasField('institution_id') => $institutionId])
+            ->group($StaffTable->aliasField('institution_position_id'))
+            ->having([
+                'OR' => [
+                    'SUM('.$StaffTable->aliasField('FTE') .') >= ' => 1,
+                    'SUM('.$StaffTable->aliasField('FTE') .') > ' => (1-$selectedFTE)
+                ]
+            ])
+            ->hydrate(false);
+
+        if (!empty($endDate)) {
+            $endDate = new Date($endDate);
+            $excludePositions = $excludePositions->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+        } else {
+            $orCondition = [
+                $StaffTable->aliasField('end_date') . ' >= ' => $startDate,
+                $StaffTable->aliasField('end_date') . ' IS NULL'
+            ];
+            $excludePositions = $excludePositions->where([
+                'OR' => $orCondition
+            ]);
         }
+        $excludeArray = $excludePositions->extract('position_id')->toArray();
 
-        if ($this->AccessControl->isAdmin()) {
+        if ($isAdmin) {
             $userId = null;
             $roles = [];
         } else {
             $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         }
 
-            // Filter by active status
-            $activeStatusId = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'ACTIVE');
-            $positionConditions = [];
-            $positionConditions[$this->aliasField('institution_id')] = $institutionId;
+        // Filter by active status
+        $positionConditions = [];
+        $positionConditions[$this->aliasField('institution_id')] = $institutionId;
         if (!empty($activeStatusId)) {
             $positionConditions[$this->aliasField('status_id').' IN '] = $activeStatusId;
         }
         if (!empty($excludeArray)) {
             $positionConditions[$this->aliasField('id').' NOT IN '] = $excludeArray;
         }
-            $staffPositionsOptions = $this
-                    ->find()
-                    ->innerJoinWith('StaffPositionTitles.SecurityRoles')
-                    ->where($positionConditions)
-                    ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
-                    ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
-                    ->autoFields(true)
-                    ->toArray();
 
-            // Filter by role previlege
-            $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
-            $roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
-            $roleOptions = array_keys($roleOptions);
-            $staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
-            $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
-
-            // Adding the opt group
-            $types = $this->getSelectOptions('Staff.position_types');
-            $options = [];
-        foreach ($staffPositionsOptions as $position) {
-            $type = __($types[$position->type]);
-            $options[$type][$position->id] = $position->name;
+        if ($selectedFTE > 0) {
+            $staffPositionsOptions = $this->find()
+                ->select([
+                    'security_role_id' => 'SecurityRoles.id',
+                    'type' => 'StaffPositionTitles.type',
+                    'grade_name' => 'StaffPositionGrades.name'
+                ])
+                ->innerJoinWith('StaffPositionTitles.SecurityRoles')
+                ->innerJoinWith('StaffPositionGrades')
+                ->where($positionConditions)
+                ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+                ->autoFields(true)
+                ->toArray();
+        } else {
+            $staffPositionsOptions = [];
         }
+
+        // Filter by role previlege
+        $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+        $roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+        $roleOptions = array_keys($roleOptions);
+        $staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+        $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+        // Adding the opt group
+        $types = $this->getSelectOptions('Staff.position_types');
+        $options = [];
+        foreach ($staffPositionsOptions as $position) {
+            $name = $position->name . ' - ' . $position->grade_name;
+            $type = __($types[$position->type]);
+            $options[$type][$position->id] = $name;
+        }
+
+        return $options;
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -677,12 +729,12 @@ class InstitutionPositionsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity) 
+    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
     {
         return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
 
-    public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity) 
+    public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity)
     {
         if ($entity->has('staff_position_title') && !empty($entity->staff_position_title)) {
             $isTeaching = ($entity->staff_position_title->type) ? __('Teaching') : __('Non-Teaching');
@@ -690,7 +742,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelGetStaffId(Event $event, Entity $entity) 
+    public function onExcelGetStaffId(Event $event, Entity $entity)
     {
         $UsersTable = TableRegistry::get('Security.Users');
 
@@ -699,5 +751,5 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    
+
 }
