@@ -150,7 +150,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div>
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStudentController.externalGridOptions" kd-ag-grid="InstitutionStudentController.internalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
+                            <div ng-if="InstitutionStudentController.externalGridOptions" kd-ag-grid="InstitutionStudentController.externalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
