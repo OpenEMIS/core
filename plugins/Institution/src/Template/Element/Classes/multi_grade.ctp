@@ -17,7 +17,10 @@
 								if (isset($attr['selected']) && ($classGradeArray == $attr['selected'])) {
 									echo " checked";
 								};
-							?> /><label></label>
+							?> 
+							class='no-selection-label'
+							kd-checkbox-radio
+							/>
 						</th>
 						<th><?= $this->Label->get($attr['model'].'.education_programme') ?></th>
 						<th><?= $this->Label->get($attr['model'].'.education_grade') ?></th>
@@ -33,8 +36,7 @@
 						<td class="checkbox-column">
 						<?php
 							$alias = $attr['model'] . ".education_grades._ids.%d";
-							echo $this->Form->checkbox(sprintf($alias, $i), ['value' => $obj->education_grade_id, 'checked' => $selected]);
-							echo $this->Form->label(sprintf($alias, $i), false, ['for' => null]);
+							echo $this->Form->checkbox(sprintf($alias, $i), ['value' => $obj->education_grade_id, 'checked' => $selected, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
 						?>
 						</td>
 						<td><?= $obj->education_grade->programme_name ?></td>
