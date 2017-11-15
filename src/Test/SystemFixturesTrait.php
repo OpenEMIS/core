@@ -9,6 +9,8 @@ trait SystemFixturesTrait {
         'app.security_users',
         'app.user_identities',
         'app.identity_types',
+        'app.workflows',
+        'app.workflows_filters',
         'app.workflow_models',
         'app.workflow_steps',
         'app.workflow_statuses',

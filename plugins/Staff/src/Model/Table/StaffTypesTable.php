@@ -13,8 +13,7 @@ class StaffTypesTable extends ControllerActionTable
         $this->hasMany('StaffAttendances', ['className' => 'Institution.StaffAttendances']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles']);
         $this->hasMany('Staff', ['className' => 'Institution.Staff']);
-        //institution_staff_assignments, being used on the staffTransfer(base class), which being used by staffTransferApprovalsTAble.php
-        $this->hasMany('StaffTransfer', ['className' => 'Institution.StaffTransferApprovals']);
+        $this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers']);
         $this->hasMany('InstitutionStaff', ['className' => 'Report.InstitutionStaff']);
         $this->hasMany('Positions', ['className' => 'Staff.Positions']);
 

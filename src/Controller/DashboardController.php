@@ -53,7 +53,7 @@ class DashboardController extends AppController
                 $this->Alert->warning('security.login.changePassword');
                 $lastLogin = $userInfo->last_login;
                 $this->request->session()->write('Auth.User.last_login', $lastLogin);
-                $this->redirect(['controller' => 'Profiles', 'action' => 'Accounts', 'edit', $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
+                $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts', 'edit', $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
             }
 
         }
