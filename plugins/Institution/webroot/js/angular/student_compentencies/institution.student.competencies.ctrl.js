@@ -250,7 +250,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 context: {
                     institution_id: Controller.institutionId,
                     academic_period_id: Controller.academicPeriodId,
-                    competency_template_id: Controller.competencyTemplateId
+                    competency_template_id: Controller.competencyTemplateId,
+                    _controller: Controller
                 },
                 columnDefs: [],
                 rowData: [],
