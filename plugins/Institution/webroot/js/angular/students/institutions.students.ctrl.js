@@ -2,13 +2,14 @@ angular
     .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc'])
     .controller('InstitutionsStudentsCtrl', InstitutionStudentController);
 
-InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc'];
+InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope'];
 
-function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc) {
+function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc, $rootScope) {
     // ag-grid vars
 
 
     var StudentController = this;
+    var test = $scope;
 
     var pageSize = 10;
 
@@ -96,14 +97,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.defaultIdentityTypeId;
     StudentController.postResponse;
 
-    $scope.selectedStudent;
-
     angular.element(document).ready(function () {
         InstitutionsStudentsSvc.init(angular.baseUrl);
         InstitutionsStudentsSvc.setInstitutionId(StudentController.institutionId);
 
         UtilsSvc.isAppendLoader(true);
-
+        console.log(StudentController.newVar);
+        console.log(StudentController.selectedStudentData.first_name);
         InstitutionsStudentsSvc.getAcademicPeriods()
         .then(function(periods) {
             var promises = [];
@@ -298,8 +298,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudent(_e.node.data.id)
+                onRowSelected: (_e) => {
+                    StudentController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
                 }
             };
 
@@ -435,7 +436,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
-                delete StudentController.selectedStudent;
+                // delete StudentController.selectedStudent;
                 if (withData) {
                    InstitutionsStudentsSvc.getStudentRecords(
                     {
@@ -481,7 +482,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
-                delete StudentController.selectedStudent;
+                // delete StudentController.selectedStudent;
                 if (withData) {
                     InstitutionsStudentsSvc.getExternalStudentRecords(
                         {
