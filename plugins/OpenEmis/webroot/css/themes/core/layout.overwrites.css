@@ -979,7 +979,11 @@ a,
 /* Temp fix for adding error border in ag Grid for task POCOR-4010 */
 
 .ag-fresh .ag-cell-no-focus.oe-cell-error,
-.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error {
+.ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned {
     border: 2px solid #CC5C5C !important;
     border-radius: 0px !important;
 }
