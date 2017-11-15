@@ -959,4 +959,94 @@ a,
     border: 2px solid #CC5C5C !important;
     border-radius: 0px !important;
 }
+
 /* End of fix for error border POCOR-3233 */
+
+/* Fix for required label:before in table affecting input checkbox label:before POCOR-3233 
+    - Proper fix in styleguide - required > label:before instead of required label:before
+*/
+[type="checkbox"]:not(:checked) + label:before, 
+[type="checkbox"]:checked + label:before, 
+[type="checkbox"]:not(:checked) + .ag-cell-value:before, 
+[type="checkbox"]:checked + .ag-cell-value:before, 
+[type="checkbox"]:not(:checked) + .ag-filter-value:before, 
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:not(:checked) + label:before, 
+[type="radio"]:checked + label:before, 
+[type="radio"]:not(:checked) + .ag-cell-value:before, 
+[type="radio"]:checked + .ag-cell-value:before, 
+[type="radio"]:not(:checked) + .ag-filter-value:before, 
+[type="radio"]:checked + .ag-filter-value:before,
+.rtl [type="checkbox"]:not(:checked) + label:before, 
+.rtl [type="checkbox"]:checked + label:before, 
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value:before, 
+.rtl [type="checkbox"]:checked + .ag-cell-value:before, 
+.rtl [type="checkbox"]:not(:checked) + .ag-filter-value:before, 
+.rtl [type="checkbox"]:checked + .ag-filter-value:before, 
+.rtl [type="radio"]:not(:checked) + label:before, 
+.rtl [type="radio"]:checked + label:before, 
+.rtl [type="radio"]:not(:checked) + .ag-cell-value:before, 
+.rtl [type="radio"]:checked + .ag-cell-value:before, 
+.rtl [type="radio"]:not(:checked) + .ag-filter-value:before, 
+.rtl [type="radio"]:checked + .ag-filter-value:before {
+    margin: 0 !important;
+    color: transparent;
+    float: none;
+}
+
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:before, 
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:before, 
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:after, 
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:after, 
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:before, 
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:before, 
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:after, 
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
+    margin: 0 !important;
+}
+
+/* End of fix for required label:before fix POCOR-3233 */
+
+/* Fix for #south styling in styleguide requires to update to [ref="south"] due to styleguide update POCOR-3233 */
+
+.sg-theme div[ref="south"] {
+    background-color: #F9F9F9;
+    border-top: 1px solid #DDD;
+    padding: 5px;
+    height: 42px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btFirst"] {
+    margin: 0 0 0 5px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btFirst"]:before {
+    content: "\f101";
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btPrevious"] {
+    margin: 0 0 0 10px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btPrevious"]:before {
+    content: "\f105"; 
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btNext"] {
+    margin: 0 10px 0 0;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btNext"]:before {
+    content: "\f104"; 
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btLast"]:before {
+    margin: 0 5px 0 0;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btLast"]:before {
+    content: "\f100";
+}
+
+/* End of fix for #south styling */
+
