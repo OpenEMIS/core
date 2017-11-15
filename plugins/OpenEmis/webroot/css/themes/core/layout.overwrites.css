@@ -192,7 +192,7 @@ a,
     direction: rtl !important;
 }
 
-/* Adding the aboved css for kd-angular-ag-grid to work for the latest  - Also to removed together */ 
+/* Adding the aboved css for kd-angular-ag-grid to work for the latest  - Also to removed together */
 
 /*.ag-fresh {
     overflow: hidden;
@@ -952,3 +952,11 @@ a,
     border: none !important;
 }*/
 /* End of fix for POCOR-3880 */
+
+/* Fix for error border POCOR-3233 */
+.sg-theme .oe-cell-error,
+.rtl .sg-theme .oe-cell-error {
+    border: 2px solid #CC5C5C !important;
+    border-radius: 0px !important;
+}
+/* End of fix for error border POCOR-3233 */
