@@ -191,7 +191,7 @@ class RemoveBehavior extends Behavior
                     }
                 }
             } else {
-                $modalPrimaryKeys = $model->paramsDecode($request->data['primaryKey']);
+                $modalPrimaryKeys = array_key_exists('primaryKey', $request->data) ? $model->paramsDecode($request->data['primaryKey']) : [];
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
                         if (!empty($modalPrimaryKeys[$key])) {
@@ -205,7 +205,7 @@ class RemoveBehavior extends Behavior
                     if (!empty($modalPrimaryKeys[$primaryKey])) {
                         $ids[$model->aliasField($primaryKey)] = $modalPrimaryKeys[$primaryKey];
                     } else {
-                        $ids = [];
+                        $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
                     }
                 }
             }

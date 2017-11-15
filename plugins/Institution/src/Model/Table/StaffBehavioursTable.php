@@ -31,6 +31,9 @@ class StaffBehavioursTable extends ControllerActionTable
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Institution.Case');
 
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
+
 		$this->setDeleteStrategy('restrict');
 	}
 
