@@ -25,6 +25,15 @@ class InstitutionCompetencyItemCommentsTable extends ControllerActionTable
         ]);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // do not save new record if comment is empty
+        $comments = $entity->comments;
+        if ($entity->isNew() && empty($comments)) {
+            return false;
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes comment
