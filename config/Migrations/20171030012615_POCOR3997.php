@@ -255,7 +255,7 @@ class POCOR3997 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Pending Approval From Outgoing Institution',
+                'name' => 'Pending Approval From Sending Institution',
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
@@ -316,7 +316,7 @@ class POCOR3997 extends AbstractMigration
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $byIncomingWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
-                $WorkflowStepsTable->aliasField('name') => 'Pending Approval From Outgoing Institution'
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval From Sending Institution'
             ])
             ->extract('id')
             ->first();
@@ -561,7 +561,7 @@ class POCOR3997 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Pending Approval From Incoming Institution',
+                'name' => 'Pending Approval From Receiving Institution',
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
@@ -622,7 +622,7 @@ class POCOR3997 extends AbstractMigration
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $byOutgoingWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
-                $WorkflowStepsTable->aliasField('name') => 'Pending Approval From Incoming Institution'
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval From Receiving Institution'
             ])
             ->extract('id')
             ->first();
