@@ -136,10 +136,14 @@ function InstitutionStudentCompetencyCommentsSvc($http, $q, $filter, KdDataSvc) 
         var periodEditable = extra.period.editable;
 
         cols = angular.merge(cols, {
-            cellClass: function(params) {
-                var studentStatusCode = params.node.data.student_status_code;
-                var highlightClass = 'oe-cell-highlight';
-                return (studentStatusCode == 'CURRENT' && periodEditable) ? highlightClass : false;
+            cellClassRules: {
+                'oe-cell-highlight': function(params) {
+                    var studentStatusCode = params.node.data.student_status_code;
+                    return (studentStatusCode == 'CURRENT' && periodEditable);
+                },
+                'oe-cell-error': function(params) {
+                    return params.data.save_error[params.colDef.field];
+                }
             },
             editable: function(params) {
                 // only enrolled student is editable
@@ -169,7 +173,8 @@ function InstitutionStudentCompetencyCommentsSvc($http, $q, $filter, KdDataSvc) 
                     student_id: student.student_id,
                     name: student.user.name,
                     student_status_name: student.student_status.name,
-                    student_status_code: student.student_status.code
+                    student_status_code: student.student_status.code,
+                    save_error: {}
                 };
 
                 angular.forEach(periods, function(period, key) {
@@ -178,6 +183,7 @@ function InstitutionStudentCompetencyCommentsSvc($http, $q, $filter, KdDataSvc) 
                         value = commentResults[student.student_id][period.id];
                     }
                     row['period_' + parseInt(period.id)] = value;
+                    row['save_error']['period_' + parseInt(period.id)] = false;
                 });
 
                 this.push(row);
