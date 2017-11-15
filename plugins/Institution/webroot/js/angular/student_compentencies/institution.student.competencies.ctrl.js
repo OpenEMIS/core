@@ -267,6 +267,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 localeText: localeText,
+                ensureDomOrder: true,
                 onCellValueChanged: function(params) {
                     if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
