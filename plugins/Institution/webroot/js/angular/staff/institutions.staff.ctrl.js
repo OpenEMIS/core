@@ -346,7 +346,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id)
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
                 }
             };
 
