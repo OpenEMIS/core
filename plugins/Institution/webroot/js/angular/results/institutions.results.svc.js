@@ -530,7 +530,6 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                                     vm.saveSingleRecordData(params, extra)
                                     .then(function(response) {
                                         params.data.save_error[params.colDef.field] = false;
-                                        AlertSvc.reset(scope);
                                         AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
                                         params.api.refreshCells([params.node], [params.colDef.field]);
 
@@ -753,7 +752,6 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 vm.saveSingleRecordData(params, extra)
                 .then(function(response) {
                     params.data.save_error[params.colDef.field] = false;
-                    AlertSvc.reset(scope);
                     AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
                     params.api.refreshCells([params.node], [params.colDef.field]);
                 }, function(error) {
