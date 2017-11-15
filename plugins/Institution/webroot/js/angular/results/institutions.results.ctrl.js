@@ -136,27 +136,31 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
 
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
+                            console.log('no error');
                             params.data.save_error[params.colDef.field] = false;
                             AlertSvc.reset($scope);
                             AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
                             // refreshCells function updated parameters
                             params.api.refreshCells({
                                 rowNodes: [params.node],
-                                columns: [params.colDef.field]
+                                columns: [params.colDef.field],
+                                force: true
                             });
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
                             AlertSvc.error($scope, 'There was an error when saving the result');
                             params.api.refreshCells({
                                 rowNodes: [params.node],
-                                columns: [params.colDef.field]
+                                columns: [params.colDef.field],
+                                force: true
                             });
                         });
 
                         // Important: to refresh the grid after data is modified
                         params.api.refreshCells({
                             rowNodes: [params.node],
-                            columns: ['total_mark']
+                            columns: ['total_mark'],
+                            force: true
                         });
                     }
                 },
@@ -189,7 +193,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
 
                 // Removed options
                 // suppressCellSelection: false,
-                
+
                 // Added options
                 suppressContextMenu: true,
                 stopEditingWhenGridLosesFocus: true,
