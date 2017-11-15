@@ -1,5 +1,5 @@
 /*
-Core Overwrites: v.1.0.12
+Core Overwrites: v.1.0.13
 */
 
 
@@ -977,9 +977,14 @@ a,
 /* End of fix for normal table sorting */
 
 /* Temp fix for adding error border in ag Grid for task POCOR-4010 */
+/* Temp fix for adding error border in ag Grid (last child for pinned and not pinned) for task POCOR-4260 */
 
 .ag-fresh .ag-cell-no-focus.oe-cell-error,
-.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error {
+.ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned {
     border: 2px solid #CC5C5C !important;
     border-radius: 0px !important;
 }
