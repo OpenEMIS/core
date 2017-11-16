@@ -629,6 +629,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
             if (staffRecords[key]['main_nationality'] != null) {
                 staffRecords[key]['nationality_name'] = staffRecords[key]['main_nationality']['name'];
+            }
+            if (staffRecords[key]['main_identity_type'] != null) {
                 staffRecords[key]['identity_type_name'] = staffRecords[key]['main_identity_type']['name'];
             }
 
