@@ -3,28 +3,28 @@
 
         <div class="steps-container">
             <ul class="steps" style="margin-left: 0">
-                <li data-step="1" class="active">
+                <li class="<?=$action == '1' ? 'active' : '' ?>">
                     <div class="step-wrapper">
                         <span><i class="fa fa-lg fa-hand-o-up"></i></span>
                         Step 1: License
                         <span class="chevron"></span>
                     </div>
                 </li>
-                <li data-step="2" class="">
+                <li class="<?=$action == '2' ? 'active' : '' ?>">
                     <div class="step-wrapper">
                         <span><i class="fa fa-lg fa-arrows-h"></i></span>
                         Step 2: Connect Database
                         <span class="chevron"></span>
                     </div>
                 </li>
-                <li data-step="3" class="">
+                <li class="<?=$action == '3' ? 'active' : '' ?>">
                     <div class="step-wrapper">
                         <span><i class="fa fa-lg fa-cube"></i></span>
                         Step 3: Create Account
                         <span class="chevron"></span>
                     </div>
                 </li>
-                <li data-step="4" class="">
+                <li class="<?=$action == '4' ? 'active' : '' ?>">
                     <div class="step-wrapper">
                         <span><i class="fa fa-lg fa-map-marker"></i></span>
                         Step 4: Launch Application
@@ -34,13 +34,9 @@
             </ul>
         </div>
 
-        <div class="actions top">
-            <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
-            <button type="button" class="btn btn-default btn-next" data-last="Complete">Next</button>
-        </div>
-
         <div class="step-content">
-            <div class="step-pane sample-pane active" data-step="1">
+            <?= $this->element('OpenEmis.alert') ?>
+            <div class="step-pane sample-pane <?=$action == '1' ? 'active' : '' ?>" data-restrict="1" data-step="1">
                 <div style="text-align: center; padding: 0 150px">
                     <h1>Welcome to OpenEMIS School</h1>
                     <h2 style="margin-top: 20px">OPENEMIS SCHOOL LICENSE LAST UPDATED ON 2014-01-30</h2>
@@ -52,72 +48,87 @@
 
                     By clicking Next, you agree to the terms stated in the OpenEmis School License Agreement above.
                     </p>
+                    <div class="form-group">
+                        <a href=<?=$this->Url->build(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step2']); ?> type="submit" class="btn btn-default" style="text-">Start</a>
+                    </div>
                 </div>
             </div>
-
-            <div class="step-pane sample-pane" data-step="2">
+            <?php
+                if ($action == '2'):
+            ?>
+            <div class="step-pane sample-pane <?=$action == '2' ? 'active' : '' ?>" data-restrict="2" data-step="2">
                 <div style="text-align: center; padding: 0 150px">
                     <h1>Setting Environment</h1>
                     <p>All fields are required and case sensitive.</p>
-                    <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                        <div class="input string">
-                            <label>Database Server Host</label>
-                            <input type="text" value="localhost">
-                        </div>
-                        <div class="input string">
-                            <label>Database Server Port</label>
-                            <input type="text" value="3306">
-                        </div>
-                        <div class="input string">
-                            <label>Admin Username</label>
-                            <input type="text" value="root">
-                        </div>
-                        <div class="input string">
-                            <label>Admin Password</label>
-                            <input type="text">
-                        </div>
-                    </form>
+
+                    <?php
+                        echo $this->Form->create($databaseConnection, ['class' => 'form-horizontal']);
+                        echo $this->Form->input('database_server_host', ['class' => 'form-control', 'value' => 'localhost']);
+                        echo $this->Form->input('database_server_port', ['class' => 'form-control', 'value' => '3306']);
+                        echo $this->Form->input('admin_user', ['class' => 'form-control', 'value' => 'root']);
+                        echo $this->Form->input('admin_password', ['class' => 'form-control', 'type' => 'password']);
+                    ?>
+                    <div class="form-group">
+                        <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default'])?>
+                    </div>
+                    <?php
+                        echo $this->Form->end();
+                    ?>
                 </div>
             </div>
+            <?php
+                elseif ($action == '3'):
+            ?>
 
-            <div class="step-pane sample-pane" data-step="3">
+            <div class="step-pane sample-pane <?=$action == '3' ? 'active' : '' ?>" data-restrict="3" data-step="3">
                 <div style="text-align: center; padding: 0 150px">
                     <h1>Account setup</h1>
                     <p>In order to access OpenEMIS School application, you will need to create an user account.</p>
 
-                    <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                        <div class="input string">
-                            <label>Account Username</label>
-                            <input type="text" value="admin" disabled="disabled">
-                        </div>
-                        <div class="input string">
-                            <label>Account Password</label>
-                            <input type="password">
-                        </div>
-                        <div class="input string">
-                            <label>Retype Password</label>
-                            <input type="password">
-                        </div>
-                    </form>
+                    <?php
+                        echo $this->Form->create($superAdminCreation, ['class' => 'form-horizontal']);
+                    ?>
+                    <div class="section-header">Administrator Account</div>
+                    <div class="clearfix">&nbsp;</div>
+                    <?php
+                        echo $this->Form->input('account_username', ['class' => 'form-control', 'value' => 'admin', 'disabled' => true, 'required' => true]);
+                        echo $this->Form->input('account_password', ['class' => 'form-control', 'type' => 'password']);
+                        echo $this->Form->input('retype_password', ['class' => 'form-control', 'type' => 'password']);
+                    ?>
+                    <div class="section-header">Country / Area Information</div>
+                    <div class="clearfix">&nbsp;</div>
+                    <?php
+                        echo $this->Form->input('area_code', ['class' => 'form-control', 'type' => 'text', 'maxlength' => '60', 'label' => 'Country Code']);
+                        echo $this->Form->input('area_name', ['class' => 'form-control', 'type' => 'text', 'maxlength' => '100', 'label' => 'Country Name']);
+                    ?>
+                    <div class="form-group">
+                        <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default'])?>
+                    </div>
+                    <?php
+                        echo $this->Form->end();
+                    ?>
                 </div>
             </div>
-
-            <div class="step-pane sample-pane" data-step="4">
+            <?php
+                elseif ($action == '4'):
+            ?>
+            <div class="step-pane sample-pane <?=$action == '4' ? 'active' : '' ?>" data-restrict="4" data-step="4">
                 <div style="text-align: center; padding: 0 150px">
                     <h1>Installation Completed</h1>
                     <p>You have successfully installed OpenEMIS School. Please click Start to launch OpenEMIS School.</p>
                     <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                        <div class="form-buttons">
-                            <a href="" type="submit" class="btn btn-default" style="text-">Start</a>
+                        <div class="form-group">
+                            <a href=<?=$this->Url->build(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']); ?> type="submit" class="btn btn-default" style="text-">Complete</a>
                         </div>
                     </form>
                 </div>
             </div>
+            <?php
+                endif;
+            ?>
         </div>
 
         <div class="actions bottom">
-            <button type="button" class="btn btn-default btn-prev" disabled="disabled">Previous</button>
-            <button type="button" class="btn btn-default btn-next">Next</button>
         </div>
     </div>
 </div>
