@@ -1062,4 +1062,9 @@ a,
     border-radius: 0px !important;
 }
 
+td.checkbox-column,
+th.checkbox-column {
+    width: 50px;
+}
+
 /* End of fix for adding error border in ag Grid */
