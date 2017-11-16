@@ -60,12 +60,11 @@ class AppController extends Controller
      */
     public function initialize()
     {
-        // if (!file_exists(CONFIG . 'datasource.php')) {
-        //     $baseUrl = Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true);
-        //     $installerUrl = $baseUrl.'/webroot/installer/';
-        //     header('Location: '. $installerUrl);
-        //     die;
-        // }
+        if (!file_exists(CONFIG . 'datasource.php')) {
+            $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
+            header('Location: '. $url);
+            die;
+        }
 
         parent::initialize();
         $theme = 'core';
