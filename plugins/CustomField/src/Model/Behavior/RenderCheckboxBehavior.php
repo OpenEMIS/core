@@ -59,7 +59,7 @@ class RenderCheckboxBehavior extends RenderBehavior
 
             foreach ($checkboxOptions as $key => $value) {
                 $html .= '<div class="input">';
-                    $option = ['label' => false];
+                $option = ['kd-checkbox-radio' => ''];
                 if (!empty($checkedValues)) {
                     if (in_array($key, $checkedValues)) {
                         $option['checked'] = true;
