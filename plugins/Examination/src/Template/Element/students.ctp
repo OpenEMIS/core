@@ -2,7 +2,7 @@
 
 <?php
 $alias = $ControllerAction['table']->alias();
-$checkboxOptions = ['type' => 'checkbox'];
+$checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 ?>
 <?php if ($action == 'add') :?>
     <div class="input clearfix required">
@@ -12,7 +12,7 @@ $checkboxOptions = ['type' => 'checkbox'];
                 <table class="table table-checkable">
                     <thead>
                         <tr>
-                            <th class="checkbox-column"><input type="checkbox"/><label></label></th>
+                            <th class="checkbox-column"><input type="checkbox" class="no-selection-label", kd-checkbox-radio=""/></th>
                             <th><?= __('Registration Number') ?></th>
                             <th></th>
                             <th><?= __('OpenEMIS ID') ?></th>
@@ -37,7 +37,6 @@ $checkboxOptions = ['type' => 'checkbox'];
                                         $fieldPrefix = "$alias.examination_students.$i";
 
                                         echo $this->Form->checkbox("$fieldPrefix.selected", $checkboxOptions);
-                                        echo $this->Form->label("$fieldPrefix.selected", false, ['for' => null]);
                                         echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
 
                                     ?>

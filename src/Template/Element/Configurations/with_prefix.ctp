@@ -28,10 +28,11 @@ if ($enable) {
 						<td class="checkbox-column">
 							<?= $this->Form->checkbox($attr['model'].'.value.enable', [
 									'value' => 1,
-									'checked' => $enable
+									'checked' => $enable,
+									'class' => 'no-selection-label',
+									'kd-checkbox-radio' => ''
 								]);
 							?>
-							<?= $this->Form->label($attr['model'].'.value.enable', false, ['for' => null]) ?>
 						</td>
 
 						<td>

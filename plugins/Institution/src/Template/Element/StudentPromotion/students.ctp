@@ -9,7 +9,7 @@
 					<thead>
 						<tr>
 							<?php if ($action != 'reconfirm') { ?>
-							<th class="checkbox-column"><input type="checkbox" /><label></label></th>
+							<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 							<?php } ?>
 							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
@@ -44,8 +44,7 @@
 											} else {
 												$alias = $ControllerAction['table']->alias();
 												$fieldPrefix = "$alias.students.$i";
-												echo $this->Form->checkbox("$fieldPrefix.selected");
-												echo $this->Form->label("$fieldPrefix.selected", false, ['for' => null]);
+												echo $this->Form->checkbox("$fieldPrefix.selected", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
 												echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
 											}
 										?>

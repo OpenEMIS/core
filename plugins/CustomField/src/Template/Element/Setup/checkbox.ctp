@@ -61,8 +61,7 @@
 									<tr>
 										<?php if ($ControllerAction['action'] == 'edit') : ?>
 											<td class="checkbox-column">
-												<?= $this->Form->checkbox("$alias.custom_field_options.$key.visible", ['checked' => $obj->visible]) ?>
-												<?= $this->Form->label("$alias.custom_field_options.$key.visible", false, ['for' => null]) ?>
+												<?= $this->Form->checkbox("$alias.custom_field_options.$key.visible", ['checked' => $obj->visible, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']) ?>
 											</td>
 										<?php endif ?>
 										<td>

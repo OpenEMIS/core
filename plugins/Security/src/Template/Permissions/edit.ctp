@@ -36,7 +36,7 @@ $this->start('panelBody');
 	foreach ($data as $section => $list) {
 		// add the sections
 		echo '<div class="section-header">';
-		echo '<input type="checkbox" checkbox-toggle-target="' . $section . '" /><label></label>' . $section;
+		echo '<input type="checkbox" checkbox-toggle-target="' . $section . '" class="no-selection-label" kd-checkbox-radio/>' . $section;
 		echo '</div>';
 
 		// add the table under each section
@@ -54,7 +54,7 @@ $this->start('panelBody');
 
 			// function operations
 			foreach ($operations as $op) {
-				$checkboxOptions = ['id' => $op];
+				$checkboxOptions = ['id' => $op, 'class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 				echo '<td class="center">';
 				$permission = $obj->Permissions[$op];
 				if ($permission == -1) {
@@ -63,7 +63,6 @@ $this->start('panelBody');
 					$checkboxOptions[] = 'checked';
 				}
 				echo $this->Form->checkbox("$alias.$i.$op", $checkboxOptions);
-				echo $this->Form->label("$alias.$i.$op", false, ['for' => null]);
 				echo '</td>';
 
 			}

@@ -52,8 +52,7 @@
 					</td>
 					<td class="table_cell">
 						<?php
-							echo $this->Form->checkbox('UserContact.' . $key . '.preferred');
-							echo $this->Form->label('UserContact.' . $key . '.preferred', false, ['for' => null]);
+							echo $this->Form->checkbox('UserContact.' . $key . '.preferred', ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
 						?>
 					</td>
 					<td>
