@@ -16,7 +16,8 @@ class InstitutionBusesController extends PageController
         $this->loadModel('Transport.TransportStatuses');
         $this->loadModel('Transport.TransportFeatures');
 
-        $this->Page->loadElementsFromTable($this->InstitutionBuses);
+        // to disable actions if institution is not active
+        $this->loadComponent('Institution.InstitutionInactive');
     }
 
 	public function beforeFilter(Event $event)
