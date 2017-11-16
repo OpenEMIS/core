@@ -12,6 +12,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 class RemoveBehavior extends Behavior
 {
     private $recordHasAssociatedRecords = false;
+    private $forceDelete = false;
 
     public function implementedEvents()
     {
@@ -95,6 +96,21 @@ class RemoveBehavior extends Behavior
                 'headers' => [__('Feature'), __('No of Records')],
                 'cells' => $cells
             ]);
+
+            // force delete fields for super admin
+            if ($this->recordHasAssociatedRecords && $model->AccessControl->isAdmin()) {
+                $model->field('force_delete', [
+                    'type' => 'select',
+                    'options' => [1 => __('Yes'), 0 => __('No')],
+                    'default' => 0,  // default selected is no
+                    'onChangeReload' => true
+                ]);
+
+                $passwordType = $this->forceDelete ? 'password' : 'hidden';
+                $model->field('password', ['type' => $passwordType]);
+
+                $model->setFieldOrder(['to_be_deleted', 'associated_records', 'force_delete', 'password']);
+            }
         }
     }
 
