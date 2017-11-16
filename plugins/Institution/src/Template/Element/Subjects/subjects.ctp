@@ -9,7 +9,7 @@
 			<table class="table table-checkable table-input">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" /><label></label></th>
+						<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 						<th><?= $this->Label->get($attr['model'] .'.education_subject') ?></th>
 						<th><?= $this->Label->get('general.name') ?></th>
 						<th><?= $this->Label->get($attr['model'] .'.teacherOrTeachers') ?></th>
@@ -77,10 +77,11 @@
 							<?= $this->Form->checkbox(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
 									'value' => $n,
 									'checked' => ($selected || $selectedInForm),
-									'disabled' => $disabled
+									'disabled' => $disabled,
+									'class' => 'no-selection-label',
+									'kd-checkbox-radio' => ''
 								]);
 							?>
-							<?= $this->Form->label(sprintf('MultiSubjects[%d][education_subject_id]', $i), false, ['for' => null]) ?>
 							<?= $this->Form->input(sprintf('MultiSubjects[%d][education_grade_id]', $i), [
 									'type' => 'hidden',
 									'label' => false,
@@ -155,10 +156,11 @@
 								<?= $this->Form->checkbox(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
 										'value' => $n,
 										'checked' => 'checked',
-										'disabled' => 'disabled'
+										'disabled' => 'disabled',
+										'class' => 'no-selection-label',
+										'kd-checkbox-radio' => ''
 									]);
 								?>
-								<?= $this->Form->label(sprintf('MultiSubjects[%d][education_subject_id]', $i), false, ['for' => null]) ?>
 							</td>
 							<td><?= $obj['subject_name'] ?></td>
 

@@ -45,7 +45,7 @@
 				<table class="table table-checkable">
 					<thead>
 						<tr>
-							<th class="checkbox-column"><input type="checkbox" /><label></label></th>
+							<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Current Grade') ?></th>
@@ -63,10 +63,8 @@
 											} else {
 												$alias = $ControllerAction['table']->alias();
 												$fieldPrefix = "$alias.students.$i";
-
-												$checkboxOptions = ['value' => $obj->student_id];
+												$checkboxOptions = ['value' => $obj->student_id, 'class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 												echo $this->Form->checkbox("$fieldPrefix.id", $checkboxOptions);
-												echo $this->Form->checkbox("$fieldPrefix.id", false, ['for' => null]);
 											}
 										?>
 									</td>

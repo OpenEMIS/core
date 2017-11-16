@@ -8,7 +8,7 @@
             <table class="table table-checkable table-input">
                 <thead>
                     <tr>
-                        <th class="checkbox-column"><input type="checkbox"/><label></label></th>
+                        <th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio=""/></th>
                         <th><?= $this->Label->get('InstitutionClasses.class') ?></th>
                         <th><?= $this->Label->get('InstitutionClasses.staff_id') ?></th>
                     </tr>
@@ -44,8 +44,7 @@
                             <tr>
                                 <td <?php if(!$disabled){ ?>class="checkbox-column"<?php } ?>>
                                     <?php
-                                    echo $this->Form->checkbox('Classes.' . $key . '.class_id', ['checked' => $selected, 'disabled' => $disabled, 'value' => $n]);
-                                    echo $this->Form->label('Classes.' . $key . '.class_id', false);
+                                    echo $this->Form->checkbox('Classes.' . $key . '.class_id', ['checked' => $selected, 'disabled' => $disabled, 'value' => $n, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                                     ?>
                                 </td>
 
