@@ -8,7 +8,7 @@
             <table class="table table-checkable table-input">
                 <thead>
                     <tr>
-                        <th class="checkbox-column"><input type="checkbox" /><label></label></th>
+                        <th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
                         <th><?= $this->Label->get('InstitutionSubjects.subjects') ?></th>
                         <th><?= $this->Label->get('InstitutionSubjects.teachers') ?></th>
                     </tr>
@@ -37,8 +37,7 @@
                                         $selected = ($value->has('teachers') && !empty($value->teachers) && in_array($staffId, array_keys($value->teachers)))? 'checked': '';
                                     }
                                 }
-                                echo $this->Form->checkbox('Subjects.' . $key . '.subject_id', ['checked' => $selected, 'value' => $n]);
-                                echo $this->Form->label('Subjects.' . $key . '.subject_id', false, ['for' => null]);
+                                echo $this->Form->checkbox('Subjects.' . $key . '.subject_id', ['checked' => $selected, 'value' => $n, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                                 ?>
                             </td>
 

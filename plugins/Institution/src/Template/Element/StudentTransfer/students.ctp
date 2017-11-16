@@ -8,7 +8,7 @@
 				<table class="table table-checkable">
 					<thead>
 						<tr>
-							<th class="checkbox-column"><input type="checkbox" /><label></label></th>
+							<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 							<th><?= __('OpenEMIS ID') ?></th>
 							<th><?= __('Student') ?></th>
 							<th><?= __('Status') ?></th>
@@ -30,7 +30,7 @@
 										$alias = $ControllerAction['table']->alias();
 										$fieldPrefix = "$alias.students.$i";
 
-										$checkboxOptions = [];
+										$checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 
                                         if (isset($nextInstitutionGenderCode) && $nextInstitutionGenderCode != 'X' && $nextInstitutionGenderCode != $studentGender) {
                                             $checkboxOptions['disabled'] = true;
@@ -45,7 +45,6 @@
                                     <td class=<?=$tdClass;?>>
                                     <?php
                                             echo $this->Form->checkbox("$fieldPrefix.selected", $checkboxOptions);
-                                            echo $this->Form->label("$fieldPrefix.selected", false, ['for' => null]);
                                             echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
                                             echo $this->Form->hidden("$fieldPrefix.status", ['value' => $attr['attr']['status']]);
                                             echo $this->Form->hidden("$fieldPrefix.type", ['value' => $attr['attr']['type']]);
