@@ -305,8 +305,7 @@ class ValidationBehavior extends Behavior
             } else {
                 // use labels instead of field names if they are available
                 $model = $globalData['providers']['table'];
-                $session = $model->request->session();
-                $language = $session->read('System.language');
+                $language = isset($_SESSION['System']['language']) ? $_SESSION['System']['language'] : 'en';
 
                 $Labels = TableRegistry::get('Labels');
                 $fieldLabel = $Labels->getLabel($model->alias(), $globalData['field'], $language);
@@ -2139,7 +2138,7 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('is_main_country', $globalData['data'])) {
             if ($field == 0) { //if set as not main country
                 $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
-                
+
                 $query = $AreaAdministratives->find()
                         ->select([$AreaAdministratives->aliasField('id')])
                         ->where([$AreaAdministratives->aliasField('parent_id').' IS NULL'])
@@ -2150,7 +2149,7 @@ class ValidationBehavior extends Behavior
                     $AreaAdministratives->aliasField('parent_id') => $worldId,
                     $AreaAdministratives->aliasField('is_main_country') => 1
                 ];
-                
+
                 if (!$globalData['newRecord']) { //for edit
                     $conditions[$AreaAdministratives->aliasField('id <> ')] = $globalData['data']['id'];
                 }
@@ -2159,7 +2158,7 @@ class ValidationBehavior extends Behavior
                         ->find()
                         ->where($conditions)
                         ->count();
-                
+
                 if ($query > 0) {
                     return true;
                 } else {
@@ -2267,7 +2266,6 @@ class ValidationBehavior extends Behavior
     {
         $data = $globalData['data'];
         if (isset($data['id'])) {
-
             $institutionId = $data['id'];
             $dateClosed = new Date($field);
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -2300,14 +2298,15 @@ class ValidationBehavior extends Behavior
                     $WorkflowModels->aliasField('is_school_based') => 1
                 ])
                 ->all();
-
             foreach ($schoolBasedModels as $workflowModelEntity) {
                 $subject = TableRegistry::get($workflowModelEntity->model);
                 $method = 'getPendingRecords';
                 $params = ['institution_id' => $institutionId];
 
                 $event = $subject->dispatchEvent('Model.Validation.getPendingRecords', [$params], $subject);
-                if ($event->isStopped()) { return $event->result; }
+                if ($event->isStopped()) {
+                    return $event->result;
+                }
                 $count = $event->result;
 
                 if ($count > 0) {
