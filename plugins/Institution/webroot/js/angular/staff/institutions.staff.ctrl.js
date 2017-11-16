@@ -317,18 +317,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(localeText){
             StaffController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -346,24 +334,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
 
             StaffController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -380,24 +371,26 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                 rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
         }, function(error){
             StaffController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -414,24 +407,26 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
 
             StaffController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -447,8 +442,22 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
         });
     };

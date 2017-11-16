@@ -1,4 +1,4 @@
-/* NAVIGATION v.1.2.11 */
+/* NAVIGATION v.1.2.12 */
 
 nav {
     border-radius: 0 !important;
@@ -299,7 +299,7 @@ nav {
     padding: 10px 12px;
     outline: 0 !important;
     line-height: 1.4em;
-    color: #333;
+    color: #333 !important;
     border-top: 1px solid #DDD;
 }
 
@@ -319,7 +319,7 @@ nav {
 
 .left-menu .nav > li > a:hover {
     background-color: #6B6B6B !important;
-    color: #FFF;
+    color: #FFF !important;
 }
 
 .left-menu {
@@ -466,7 +466,6 @@ nav {
 
 .rtl .left-menu li a {
     font-size: 14px;
-    line-height: 14px !important;
 }
 
 .rtl .left-pane {
@@ -477,6 +476,7 @@ nav {
 
 .rtl .left-menu .nav-level-1 i {
     margin-right: 0;
+    margin-left: 5px;
 }
 
 .rtl .right-pane {
@@ -515,7 +515,7 @@ nav {
 }
 
 .rtl .left-menu li a b {
-    margin-right: 10px;
+    margin-right: 0;
     margin-left: 0;
 }
 
@@ -530,6 +530,16 @@ nav {
 .rtl .panel-heading.accordion-toggle:after {
     padding-left: 0 !important;
     padding-right: 10px !important;
+}
+
+.rtl .left-menu .nav-level-1 i {
+    margin-left: 5px;
+    /*float: right;*/
+}
+
+.rtl .left-menu li a b {
+    margin-left: 0;
+    margin-right: 0 !important;
 }
 
 
@@ -630,7 +640,7 @@ nav {
         transition: all 0.4s ease;
     }
     .split-panes.horizontal {
-        top: 78px;
+        top: 80px;
     }
     .right-pane,
     .mobile .right-pane {
