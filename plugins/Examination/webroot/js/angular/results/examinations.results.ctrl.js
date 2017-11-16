@@ -93,10 +93,20 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
                 localeText: localeText,
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
@@ -141,10 +151,20 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
                 },

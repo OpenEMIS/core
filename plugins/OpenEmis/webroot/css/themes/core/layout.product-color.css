@@ -1,5 +1,5 @@
 /* 
-Core Theme: v.1.0.8
+Core Theme: v.1.0.9
 Product Color: #6699CC
 Darker Shade Color: #476B8F
 */
@@ -31,7 +31,8 @@ a:focus,
 .panel-breadcrumb i,
 .loader-text i,
 .btn-outline,
-.btn-circle {
+.btn-circle,
+.files .files-wrapper span.btn i {
     color: #6699CC;
 }
 
@@ -57,7 +58,9 @@ a:focus,
 
 .toggle-btn i,
 .input-group-addon,
-.selected {
+.selected,
+.image-holder .prev-arrow,
+.image-holder .next-arrow {
     background-color: #6699CC;
     color: #FFF;
     border: 1px solid #6699CC;
@@ -143,7 +146,8 @@ a:hover,
 [type="radio"]:not(:checked) + .ag-cell-value:after,
 [type="radio"]:checked + .ag-cell-value:after,
 [type="radio"]:not(:checked) + .ag-filter-value:after,
-[type="radio"]:checked + .ag-filter-value:after {
+[type="radio"]:checked + .ag-filter-value:after,
+.files .files-wrapper span.btn:hover i {
     color: #476B8F;
 }
 
@@ -239,7 +243,9 @@ a:hover,
 .customize-tab .tab-icon .nav-pills > li.active > a:hover,
 .btn-toggled,
 .sg-theme .ag-menu-option-active,
-.sg-theme .ag-paging-button:hover {
+.sg-theme .ag-paging-button:hover,
+.image-holder .prev-arrow:hover,
+.image-holder .next-arrow:hover {
     background-color: #476B8F !important;
     color: #FFF !important;
     background-image: none !important;
@@ -248,7 +254,9 @@ a:hover,
 .horizontal-tabs span a:hover,
 .btn-dropdown:hover,
 .customize-tab .tab-icon .nav-pills > li.active > a:hover,
-.switch-candy a {
+.switch-candy a,
+.image-holder .prev-arrow:hover,
+.image-holder .next-arrow:hover {
     border-color: #476B8F;
 }
 

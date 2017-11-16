@@ -1,9 +1,15 @@
-// ag-grid-enterprise v4.1.4
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+// ag-grid-enterprise v13.2.0
+"use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13,22 +19,30 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 var main_1 = require("ag-grid/main");
 var richSelectRow_1 = require("./richSelectRow");
 var virtualList_1 = require("../virtualList");
 var RichSelectCellEditor = (function (_super) {
     __extends(RichSelectCellEditor, _super);
     function RichSelectCellEditor() {
-        _super.call(this, RichSelectCellEditor.TEMPLATE);
+        var _this = _super.call(this, RichSelectCellEditor.TEMPLATE) || this;
+        _this.selectionConfirmed = false;
+        return _this;
     }
     RichSelectCellEditor.prototype.init = function (params) {
         this.params = params;
         this.selectedValue = params.value;
-        this.cellRenderer = this.params.cellRenderer;
+        this.originalSelectedValue = params.value;
+        this.cellRenderer = params.cellRenderer;
+        this.focusAfterAttached = params.cellStartedEdit;
         this.virtualList = new virtualList_1.VirtualList();
         this.context.wireBean(this.virtualList);
         this.virtualList.setComponentCreator(this.createRowComponent.bind(this));
-        this.getGui().querySelector('.ag-rich-select-list').appendChild(this.virtualList.getGui());
+        this.getHtmlElement().querySelector('.ag-rich-select-list').appendChild(this.virtualList.getHtmlElement());
+        if (main_1.Utils.exists(this.params.cellHeight)) {
+            this.virtualList.setRowHeight(this.params.cellHeight);
+        }
         this.renderSelectedValue();
         if (main_1.Utils.missing(params.values)) {
             console.log('ag-Grid: richSelectCellEditor requires values for it to work');
@@ -40,8 +54,8 @@ var RichSelectCellEditor = (function (_super) {
             getRow: function (index) { return values[index]; }
         });
         this.addGuiEventListener('keydown', this.onKeyDown.bind(this));
-        this.addDestroyableEventListener(this.virtualList.getGui(), 'click', this.onClick.bind(this));
-        this.addDestroyableEventListener(this.virtualList.getGui(), 'mousemove', this.onMouseMove.bind(this));
+        this.addDestroyableEventListener(this.virtualList.getHtmlElement(), 'click', this.onClick.bind(this));
+        this.addDestroyableEventListener(this.virtualList.getHtmlElement(), 'mousemove', this.onMouseMove.bind(this));
     };
     RichSelectCellEditor.prototype.onKeyDown = function (event) {
         var key = event.which || event.keyCode;
@@ -56,6 +70,7 @@ var RichSelectCellEditor = (function (_super) {
         }
     };
     RichSelectCellEditor.prototype.onEnterKeyDown = function () {
+        this.selectionConfirmed = true;
         this.params.stopEditing();
     };
     RichSelectCellEditor.prototype.onNavigationKeyPressed = function (event, key) {
@@ -69,16 +84,17 @@ var RichSelectCellEditor = (function (_super) {
         }
     };
     RichSelectCellEditor.prototype.renderSelectedValue = function () {
-        var eValue = this.getGui().querySelector('.ag-rich-select-value');
+        var eValue = this.getHtmlElement().querySelector('.ag-rich-select-value');
+        var valueFormatted = this.params.formatValue(this.selectedValue);
         if (this.cellRenderer) {
-            var result = this.cellRendererService.useCellRenderer(this.cellRenderer, eValue, { value: this.selectedValue });
-            if (result && result.destroy) {
-                this.addDestroyFunc(function () { return result.destroy(); });
+            var result_1 = this.cellRendererService.useCellRenderer(this.params.column.getColDef(), eValue, { value: this.selectedValue, valueFormatted: valueFormatted });
+            if (result_1 && result_1.destroy) {
+                this.addDestroyFunc(function () { return result_1.destroy(); });
             }
         }
         else {
             if (main_1.Utils.exists(this.selectedValue)) {
-                eValue.innerHTML = this.selectedValue.toString();
+                eValue.innerHTML = valueFormatted;
             }
             else {
                 eValue.innerHTML = '';
@@ -97,22 +113,25 @@ var RichSelectCellEditor = (function (_super) {
         }
     };
     RichSelectCellEditor.prototype.createRowComponent = function (value) {
-        var row = new richSelectRow_1.RichSelectRow(this.cellRenderer);
+        var valueFormatted = this.params.formatValue(value);
+        var row = new richSelectRow_1.RichSelectRow(this.params.column.getColDef());
         this.context.wireBean(row);
-        row.setState(value, value === this.selectedValue);
+        row.setState(value, valueFormatted, value === this.selectedValue);
         return row;
     };
     RichSelectCellEditor.prototype.onMouseMove = function (mouseEvent) {
-        var rect = this.virtualList.getGui().getBoundingClientRect();
+        var rect = this.virtualList.getHtmlElement().getBoundingClientRect();
         var scrollTop = this.virtualList.getScrollTop();
         var mouseY = mouseEvent.clientY - rect.top + scrollTop;
         var row = Math.floor(mouseY / this.virtualList.getRowHeight());
         var value = this.params.values[row];
-        if (main_1.Utils.exists(value)) {
+        // not using utils.exist() as want empty string test to pass
+        if (value !== null && value !== undefined) {
             this.setSelectedValue(value);
         }
     };
     RichSelectCellEditor.prototype.onClick = function () {
+        this.selectionConfirmed = true;
         this.params.stopEditing();
     };
     // we need to have the gui attached before we can draw the virtual rows, as the
@@ -127,10 +146,17 @@ var RichSelectCellEditor = (function (_super) {
         }
         // we call refresh again, as the list could of moved, and we need to render the new rows
         this.virtualList.refresh();
-        this.getGui().focus();
+        if (this.focusAfterAttached) {
+            this.getHtmlElement().focus();
+        }
     };
     RichSelectCellEditor.prototype.getValue = function () {
-        return this.selectedValue;
+        if (this.selectionConfirmed) {
+            return this.selectedValue;
+        }
+        else {
+            return this.originalSelectedValue;
+        }
     };
     RichSelectCellEditor.prototype.isPopup = function () {
         return true;
@@ -142,13 +168,13 @@ var RichSelectCellEditor = (function (_super) {
         '<div class="ag-rich-select-list"></div>' +
         '</div>';
     __decorate([
-        main_1.Autowired('context'), 
-        __metadata('design:type', main_1.Context)
+        main_1.Autowired('context'),
+        __metadata("design:type", main_1.Context)
     ], RichSelectCellEditor.prototype, "context", void 0);
     __decorate([
-        main_1.Autowired('cellRendererService'), 
-        __metadata('design:type', main_1.CellRendererService)
+        main_1.Autowired('cellRendererService'),
+        __metadata("design:type", main_1.CellRendererService)
     ], RichSelectCellEditor.prototype, "cellRendererService", void 0);
     return RichSelectCellEditor;
-})(main_1.Component);
+}(main_1.Component));
 exports.RichSelectCellEditor = RichSelectCellEditor;
