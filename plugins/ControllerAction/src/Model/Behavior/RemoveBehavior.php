@@ -15,7 +15,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 class RemoveBehavior extends Behavior
 {
     private $recordHasAssociatedRecords = false;
-    private $forceDelete = false;
+    private $forceDeleteFlag = false;
 
     public function implementedEvents()
     {
@@ -121,7 +121,7 @@ class RemoveBehavior extends Behavior
                     'onChangeReload' => true
                 ]);
 
-                $passwordType = $this->forceDelete ? 'password' : 'hidden';
+                $passwordType = $this->forceDeleteFlag ? 'password' : 'hidden';
                 $model->field('password', ['type' => $passwordType]);
 
                 $model->setFieldOrder(['to_be_deleted', 'associated_records', 'force_delete', 'password']);
@@ -143,11 +143,27 @@ class RemoveBehavior extends Behavior
             return $event->result;
         }
 
+        $passwordErrors = [];
+        $forceDeleteRecord = false;
+        if (isset($request->data['submit']) && isset($request->data[$model->alias()]['force_delete'])) {
+            $this->forceDeleteFlag = $request->data[$model->alias()]['force_delete'];
+
+            if ($request->data['submit'] == 'save' && $this->forceDeleteFlag) {
+                $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
+
+                if (!empty($tempEntity->errors('password'))) {
+                    $passwordErrors = $tempEntity->errors('password');
+                } else {
+                    $forceDeleteRecord = true;
+                }
+            }
+        }
+
         $primaryKey = $model->primaryKey();
         $result = true;
         $entity = null;
 
-        if ($request->is('get') && $model->actions('remove') == 'restrict') {
+        if (!$request->is(['delete']) && !$forceDeleteRecord && $model->actions('remove') == 'restrict' ) {
             // Logic for restrict delete
             $entity = $model->newEntity();
             $controller = $model->controller;
@@ -189,8 +205,16 @@ class RemoveBehavior extends Behavior
                     $totalCount += $row['count'];
                 }
                 if ($totalCount > 0) {
-                    $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
                     $this->recordHasAssociatedRecords = true;
+
+                    if ($this->forceDeleteFlag) {
+                        $model->Alert->warning('general.delete.cascadeDelete');
+                        if (!empty($passwordErrors)) {
+                            $entity->errors('password', $passwordErrors); // show password errors
+                        }
+                    } else {
+                        $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+                    }
                 } else {
                     // Change the method to delete if the record can be deleted
                     $extra['config']['form'] = ['type' => 'DELETE'];
@@ -201,7 +225,7 @@ class RemoveBehavior extends Behavior
                 $controller->set('data', $entity);
             }
             return $entity;
-        } else if ($request->is('delete')) {
+        } else if ($request->is('delete') || $forceDeleteRecord) {
             $ids = [];
 
             if ($model->actions('remove') == 'restrict') {
@@ -266,7 +290,7 @@ class RemoveBehavior extends Behavior
     {
         $model = $this->_table;
         if ($model->action == 'remove' && $model->actions('remove') == 'restrict') {
-            if ($this->recordHasAssociatedRecords) {
+            if ($this->recordHasAssociatedRecords && !$this->forceDeleteFlag) {
                 unset($buttons[0]);
                 unset($buttons[1]);
             }
