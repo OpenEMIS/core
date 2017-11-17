@@ -114,17 +114,20 @@ class RemoveBehavior extends Behavior
 
             // force delete fields for super admin
             if ($this->recordHasAssociatedRecords && $model->AccessControl->isAdmin()) {
-                $model->field('force_delete', [
-                    'type' => 'select',
-                    'options' => [1 => __('Yes'), 0 => __('No')],
-                    'default' => 0,  // default selected is no
-                    'onChangeReload' => true
-                ]);
+                 // do not show if associated records are manually set (to avoid orphan records)
+                if (!$extra->offsetExists('associatedRecords')) {
+                    $model->field('force_delete', [
+                        'type' => 'select',
+                        'options' => [1 => __('Yes'), 0 => __('No')],
+                        'default' => 0,  // default selected is no
+                        'onChangeReload' => true
+                    ]);
 
-                $passwordType = $this->forceDeleteFlag ? 'password' : 'hidden';
-                $model->field('password', ['type' => $passwordType]);
+                    $passwordType = $this->forceDeleteFlag ? 'password' : 'hidden';
+                    $model->field('password', ['type' => $passwordType]);
 
-                $model->setFieldOrder(['to_be_deleted', 'associated_records', 'force_delete', 'password']);
+                    $model->setFieldOrder(['to_be_deleted', 'associated_records', 'force_delete', 'password']);
+                }
             }
         }
     }
