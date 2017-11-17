@@ -305,11 +305,10 @@ class ValidationBehavior extends Behavior
             } else {
                 // use labels instead of field names if they are available
                 $model = $globalData['providers']['table'];
-                $language = isset($_SESSION['System']['language']) ? $_SESSION['System']['language'] : 'en';
 
                 $Labels = TableRegistry::get('Labels');
-                $fieldLabel = $Labels->getLabel($model->alias(), $globalData['field'], $language);
-                $compareFieldLabel = $Labels->getLabel($model->alias(), $compareField, $language);
+                $fieldLabel = $Labels->getLabel($model->alias(), $globalData['field'], 'en');
+                $compareFieldLabel = $Labels->getLabel($model->alias(), $compareField, 'en');
 
                 $fieldName = !empty($fieldLabel) ? $fieldLabel : __(Inflector::humanize($globalData['field']));
                 $compareFieldName = !empty($compareFieldLabel) ? $compareFieldLabel : __(Inflector::humanize($compareField));
