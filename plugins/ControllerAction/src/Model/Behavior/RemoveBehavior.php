@@ -32,9 +32,10 @@ class RemoveBehavior extends Behavior
     {
         $validator = $this->_table->validationDefault($validator);
         return $validator
+            ->requirePresence('password')
             ->notEmpty('password')
-            ->add('password', 'ruleCheckAdminPassword', [
-                'rule' => 'checkAdminPassword',
+            ->add('password', 'ruleCheckPassword', [
+                'rule' => 'checkPassword',
                 'provider' => 'table',
                 'message' => __('Incorrect password.')
             ]);
@@ -151,12 +152,13 @@ class RemoveBehavior extends Behavior
         if (isset($request->data['submit']) && isset($request->data[$model->alias()]['force_delete'])) {
             $this->forceDeleteFlag = $request->data[$model->alias()]['force_delete'];
 
-            if ($request->data['submit'] == 'save' && $this->forceDeleteFlag) {
+            if ($this->forceDeleteFlag && $request->data['submit'] == 'save') {
+                // check password errors
                 $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
-
-                if (!empty($tempEntity->errors('password'))) {
+                if (array_key_exists('password', $tempEntity->errors())) {
                     $passwordErrors = $tempEntity->errors('password');
                 } else {
+                    // allow delete if password is correct
                     $forceDeleteRecord = true;
                 }
             }
@@ -213,7 +215,7 @@ class RemoveBehavior extends Behavior
                     if ($this->forceDeleteFlag) {
                         $model->Alert->warning('general.delete.cascadeDelete');
                         if (!empty($passwordErrors)) {
-                            $entity->errors('password', $passwordErrors); // show password errors
+                            $entity->errors('password', $passwordErrors); // set password errors
                         }
                     } else {
                         $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
@@ -624,7 +626,7 @@ class RemoveBehavior extends Behavior
         }
     }
 
-    public static function checkAdminPassword($field, array $globalData)
+    public static function checkPassword($field, array $globalData)
     {
         $Users = TableRegistry::get('User.Users');
         $model = $globalData['providers']['table'];
