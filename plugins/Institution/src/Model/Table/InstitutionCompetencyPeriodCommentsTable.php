@@ -24,6 +24,24 @@ class InstitutionCompetencyPeriodCommentsTable extends ControllerActionTable
         ]);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // do not save new record if comment is empty
+        $comments = $entity->comments;
+        if ($entity->isNew() && empty($comments)) {
+            return false;
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // delete record if user removes comment
+        $comments = $entity->comments;
+        if (empty($comments)) {
+            $this->delete($entity);
+        }
+    }
+
     public function findStudentComments(Query $query, array $options)
     {
         $competencyTemplateId = $options['competency_template_id'];

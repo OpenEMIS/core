@@ -16,6 +16,7 @@ use Cake\Log\Log;
 use Page\Model\Entity\PageStatus;
 use Page\Model\Entity\PageElement;
 use App\Controller\AppController;
+use App\Model\Table\AppTable;
 
 class PageController extends AppController
 {
@@ -32,7 +33,7 @@ class PageController extends AppController
 
         $this->Auth->allow(['onchange']);
 
-        if ($this->{$this->name} instanceof Table) {
+        if ($this->{$this->name} instanceof AppTable) {
             $this->Page->loadElementsFromTable($this->{$this->name});
         }
     }
