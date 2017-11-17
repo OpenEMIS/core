@@ -2,11 +2,14 @@
 namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
+use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
 class RemoveBehavior extends Behavior
@@ -23,6 +26,18 @@ class RemoveBehavior extends Behavior
         $events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
         return $events;
+    }
+
+    public function validationForceDelete(Validator $validator)
+    {
+        $validator = $this->_table->validationDefault($validator);
+        return $validator
+            ->notEmpty('password')
+            ->add('password', 'ruleCheckAdminPassword', [
+                'rule' => 'checkAdminPassword',
+                'provider' => 'table',
+                'message' => __('Incorrect password.')
+            ]);
     }
 
     public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -580,5 +595,12 @@ class RemoveBehavior extends Behavior
                 $fromConditions
             );
         }
+    }
+
+    public static function checkAdminPassword($field, array $globalData)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $model = $globalData['providers']['table'];
+        return ((new DefaultPasswordHasher)->check($field, $Users->get($model->Auth->user('id'))->password));
     }
 }
