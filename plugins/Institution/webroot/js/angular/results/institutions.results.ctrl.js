@@ -129,17 +129,15 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.reset($scope);
                             AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
-                            params.api.refreshCells([params.node], [params.colDef.field]);
+                            params.api.refreshCells([params.node], [params.colDef.field, 'total_mark']);
+
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
+                            console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
                             params.api.refreshCells([params.node], [params.colDef.field]);
                         });
-
-                        // Important: to refresh the grid after data is modified
-                        params.api.refreshCells([params.node], ['total_mark']);
                     }
                 },
                 onGridReady: function() {
@@ -193,18 +191,19 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
                             subject: subject,
                             gradingTypes: gradingTypes
                         };
+
                         InstitutionsResultsSvc.saveSingleRecordData(params, extra)
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.reset($scope);
+                            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+                            params.api.refreshCells([params.node], [params.colDef.field, 'total_mark']);
+
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
                             console.log(error);
                             AlertSvc.error($scope, 'There was an error when saving the result');
+                            params.api.refreshCells([params.node], [params.colDef.field]);
                         });
-
-                        // Important: to refresh the grid after data is modified
-                        $scope.gridOptions.api.refreshView();
                     }
                 },
                 onGridReady: function() {
@@ -250,6 +249,10 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
 
     $scope.onChangeSubject = function(subject = undefined) {
         AlertSvc.reset($scope);
+        if ($scope.action == 'edit') {
+            AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
+        }
+
         if (typeof subject !== "undefined") {
             $scope.subject = subject;
         }

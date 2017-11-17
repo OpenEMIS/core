@@ -274,7 +274,7 @@ class WorkflowActionsTable extends AppTable {
 
 			$eventOptions = $this->getEvents($selectedWorkflow, true);
 			$attr['attr']['eventOptions'] = $eventOptions;
-			$eventSelectOptions = $this->getEvents($selectedWorkflow, true);
+			$eventSelectOptions = $this->getEvents($selectedWorkflow, true, true);
 
 			$selectedEventKeys = [];
 			if ($request->is(['get'])) {
@@ -450,7 +450,7 @@ class WorkflowActionsTable extends AppTable {
 		}
 	}
 
-	public function getEvents($selectedWorkflow=null, $listOnly=true) {
+	public function getEvents($selectedWorkflow=null, $listOnly=true, $filterUniqueEvents=false) {
 		$emptyOptions = [
 			0 => [
 				'value' => '',
@@ -488,7 +488,13 @@ class WorkflowActionsTable extends AppTable {
 						0 => __('-- Select Event --')
 					];
 					foreach ($events as $event) {
-						$eventOptions[$event['value']] = $event['text'];
+						if ($filterUniqueEvents && array_key_exists('unique', $event) && $event['unique']) {
+							if ($this->checkEventNotAddedBefore($selectedWorkflow, $event)) {
+								$eventOptions[$event['value']] = $event['text'];
+							}
+						} else {
+							$eventOptions[$event['value']] = $event['text'];
+						}
 					}
 				} else {
 					$eventOptions = [
@@ -498,7 +504,13 @@ class WorkflowActionsTable extends AppTable {
 						]
 					];
 					foreach ($events as $event) {
-						$eventOptions[] = $event;
+						if ($filterUniqueEvents && array_key_exists('unique', $event) && $event['unique']) {
+							if ($this->checkEventNotAddedBefore($selectedWorkflow, $event)) {
+								$eventOptions[] = $event;
+							}
+						} else {
+							$eventOptions[] = $event;
+						}
 					}
 				}
 
@@ -530,5 +542,19 @@ class WorkflowActionsTable extends AppTable {
 		}
 
 		return $events;
+	}
+
+	private function checkEventNotAddedBefore($selectedWorkflow, $event) {
+		$eventName = $event['value'];
+
+		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+		$existingEventCount = $WorkflowSteps->find()
+			->matching('WorkflowActions', function ($q) use ($eventName) {
+                return $q->where(['event_key LIKE ' => '%' . $eventName . '%']);
+            })
+			->where([$WorkflowSteps->aliasField('workflow_id') => $selectedWorkflow])
+			->count();
+
+		return ($existingEventCount == 0);
 	}
 }

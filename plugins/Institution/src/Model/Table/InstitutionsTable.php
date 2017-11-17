@@ -81,6 +81,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStaffAbsences', ['className' => 'Institution.StaffAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
