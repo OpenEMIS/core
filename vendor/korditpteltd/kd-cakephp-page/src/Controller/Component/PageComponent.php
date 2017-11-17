@@ -489,10 +489,15 @@ class PageComponent extends Component
             foreach ($table->associations() as $assoc) {
                 if ($assoc->type() == 'manyToOne') { // belongsTo associations
                     $columns = $assoc->schema()->columns();
-                    $contain[$assoc->name()] = ['fields' => [
-                        $assoc->aliasField('id'),
-                        $assoc->aliasField($assoc->displayField())
-                    ]];
+
+                    if (in_array('name', $columns)) {
+                        $contain[$assoc->name()] = ['fields' => [
+                            $assoc->aliasField('id'),
+                            $assoc->aliasField('name')
+                        ]];
+                    } else {
+                        $contain[] = $assoc->name();
+                    }
                 }
             }
             $this->queryOptions->offsetSet('contain', $contain);
@@ -791,7 +796,13 @@ class PageComponent extends Component
                     $belongsTo = $table->{$foreignKey['name']};
                     $entity = $belongsTo->newEntity();
 
-                    $element->setDisplayFrom($foreignKey['property'].'.'.$belongsTo->displayField());
+                    $columns = array_merge($entity->visibleProperties(), $belongsTo->schema()->columns());
+
+                    if (in_array('name', $columns)) {
+                        $element->setDisplayFrom($foreignKey['property'].'.name');
+                    } else {
+                        $element->setDisplayFrom($foreignKey['property'].'.'.$belongsTo->displayField());
+                    }
                 }
 
                 $this->add($element);

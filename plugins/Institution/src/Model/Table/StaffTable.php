@@ -320,6 +320,9 @@ class StaffTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $settings)
     {
+        $session = $this->Session;
+        $institutionId = $session->read('Institution.Institutions.id');
+
         $this->fields['staff_id']['order'] = 5;
         $this->fields['institution_position_id']['type'] = 'integer';
         $this->fields['staff_id']['type'] = 'integer';
@@ -337,11 +340,21 @@ class StaffTable extends ControllerActionTable
                 break;
             case self::PENDING_TRANSFERIN:
                 $event->stopPropagation();
-                return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferRequests']);
+                return $this->controller->redirect([
+                    'plugin'=>'Institution',
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffTransferIn'
+                ]);
                 break;
             case self::PENDING_TRANSFEROUT:
                 $event->stopPropagation();
-                return $this->controller->redirect(['plugin'=>'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferApprovals']);
+                return $this->controller->redirect([
+                    'plugin'=>'Institution',
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffTransferOut'
+                ]);
                 break;
         }
     }
@@ -440,19 +453,13 @@ class StaffTable extends ControllerActionTable
             ])
             ->count();
 
-        $StaffTransferTable = TableRegistry::get('Institution.StaffTransferRequests');
-        $staffTransferInRecord = $StaffTransferTable->find()
-            ->where([
-                $StaffTransferTable->aliasField('institution_id') => $institutionId,
-                $StaffTransferTable->aliasField('status'). ' IN ' => [self::PENDING, self::APPROVED]
-            ])
+        $InstitutionStaffTransfersTable = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $staffTransferInRecord = $InstitutionStaffTransfersTable
+            ->find('InstitutionStaffTransferIn', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
 
-        $staffTransferOutRecord = $StaffTransferTable->find()
-            ->where([
-                $StaffTransferTable->aliasField('previous_institution_id') => $institutionId,
-                $StaffTransferTable->aliasField('status'). ' IN ' => [self::PENDING]
-            ])
+        $staffTransferOutRecord = $InstitutionStaffTransfersTable
+            ->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId, 'pending_records' => true])
             ->count();
 
         $statusOptions[self::PENDING_PROFILE] = __('Pending Change in Assignment'). ' - '. $staffPositionProfilesRecordCount;
@@ -906,21 +913,17 @@ class StaffTable extends ControllerActionTable
 
         $extra['excludedModels'] = [$this->StaffPositionProfiles->alias()];
 
-        // staff transfer in
-        $StaffTransferRequests = TableRegistry::get('Institution.StaffTransferRequests');
-        $transferInRecordsCount = $StaffTransferRequests->find()
-            ->where([
-                $StaffTransferRequests->aliasField('staff_id') => $entity->staff_id,
-                $StaffTransferRequests->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->count();
-        $extra['associatedRecords'][] = ['model' => 'StaffTransferIn', 'count' => $transferInRecordsCount];
-
         // staff transfer out
-        $transferOutRecordsCount = $StaffTransferRequests->find()
+        $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $doneStatus = $InstitutionStaffTransfers::DONE;
+
+        $transferOutRecordsCount = $InstitutionStaffTransfers->find()
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
             ->where([
-                $StaffTransferRequests->aliasField('staff_id') => $entity->staff_id,
-                $StaffTransferRequests->aliasField('previous_institution_id') => $entity->institution_id
+                $InstitutionStaffTransfers->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionStaffTransfers->aliasField('previous_institution_id') => $entity->institution_id
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];

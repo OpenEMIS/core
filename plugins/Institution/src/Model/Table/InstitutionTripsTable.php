@@ -61,15 +61,23 @@ class InstitutionTripsTable extends AppTable
                         $data = array_key_exists('data', $context) ? $context['data'] : [];
                         if (array_key_exists('institution_bus_id', $data) && !empty($data['institution_bus_id'])) {
                             $busId = $data['institution_bus_id'];
+
                             try {
                                 $InstitutionBuses = TableRegistry::get('Institution.InstitutionBuses');
-                                $busCapacity = $InstitutionBuses->get($busId)->capacity;
+                                $busEntity = $InstitutionBuses->get($busId);
 
-                                if ($passengerCount > $busCapacity) {
-                                    return $model->getMessage('Institution.InstitutionTrips.assigned_students.checkMaxLimit', ['sprintf' => $busCapacity]);
+                                if ($busEntity->has('capacity')) {
+                                    $busCapacity = $busEntity->capacity;
+
+                                    if ($passengerCount > $busCapacity) {
+                                        return $model->getMessage('Institution.InstitutionTrips.assigned_students.checkMaxLimit', ['sprintf' => $busCapacity]);
+                                    }
+                                } else {
+                                    return $model->getMessage('Institution.InstitutionTrips.assigned_students.busCapacityNotSet');
                                 }
                             } catch (RecordNotFoundException $e) {
                                 Log::write('debug', $e->getMessage());
+                                return $model->getMessage('Institution.InstitutionTrips.assigned_students.busNotFound');
                             }
                         }
                     }
@@ -94,21 +102,20 @@ class InstitutionTripsTable extends AppTable
 
         $tripPassengers = [];
         if (array_key_exists('assigned_students', $data) && array_key_exists('_ids', $data['assigned_students']) && !empty($data['assigned_students']['_ids'])) {
-            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            foreach ($data['assigned_students']['_ids'] as $value) {
+                $decodedKeys = $this->paramsDecode($value);
 
-            foreach ($data['assigned_students']['_ids'] as $institutionStudentId) {
-                try {
-                    $institutionStudentEntity = $InstitutionStudents->get($institutionStudentId, ['fields' => ['student_id', 'education_grade_id', 'academic_period_id', 'institution_id']]);
+                $studentId = $decodedKeys['student_id'];
+                $educationGradeId = $decodedKeys['education_grade_id'];
+                $academicPeriodId = $decodedKeys['academic_period_id'];
+                $institutionId = $decodedKeys['institution_id'];
 
-                    $tripPassengers[] = [
-                        'student_id' => $institutionStudentEntity->student_id,
-                        'education_grade_id' =>$institutionStudentEntity->education_grade_id,
-                        'academic_period_id' =>$institutionStudentEntity->academic_period_id,
-                        'institution_id' => $institutionStudentEntity->institution_id
-                    ];
-                } catch (RecordNotFoundException $e) {
-                    Log::write('debug', $e->getMessage());
-                }
+                $tripPassengers[] = [
+                    'student_id' => $studentId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId,
+                    'institution_id' => $institutionId
+                ];
             }
         }
 
@@ -126,7 +133,13 @@ class InstitutionTripsTable extends AppTable
     {
         $query->contain([
             'InstitutionTripDays',
-            'InstitutionTripPassengers'
+            'InstitutionTripPassengers' => [
+                'Students',
+                'sort' => [
+                    'Students.first_name' => 'ASC',
+                    'Students.last_name' => 'ASC'
+                ]
+            ]
         ]);
 
         return $query;
