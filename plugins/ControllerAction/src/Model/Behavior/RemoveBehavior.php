@@ -221,6 +221,7 @@ class RemoveBehavior extends Behavior
                 $extra['cells'] = $cells;
 
                 // check if force delete fields should be displayed
+                // cannot force delete records where association is manually set in $extra['associatedRecords'] or where there are too many associated records
                 if ($model->AccessControl->isAdmin() && !$extra->offsetExists('associatedRecords') && $this->recordHasAssociatedRecords && !$exceedAssociatedRecordLimit) {
                     $this->showForceDeleteFields = true;
                     $model->Alert->warning('general.delete.cascadeDelete', ['reset' => true]);
