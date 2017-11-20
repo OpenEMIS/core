@@ -17,6 +17,10 @@ var ReportList = {
 					if ($.inArray(rowId, ids) == -1) {
 						ids.push(rowId);
 					}
+
+					if (ids.length > 0) {
+						ReportList.getProgress(ids);
+					}
 				} else {
 					$(e).closest('.progress').fadeOut(1000, function() {
 						$(e).closest('td').find('a.download').removeClass('none');
