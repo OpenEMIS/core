@@ -1,4 +1,6 @@
 <?php
+use Cake\Filesystem\File;
+
 echo $this->Html->css('OpenEmis.../plugins/progressbar/css/bootstrap-progressbar-3.3.0.min', ['block' => true]);
 echo $this->Html->script('OpenEmis.../plugins/progressbar/bootstrap-progressbar.min', ['block' => true]);
 echo $this->Html->script('Report.report.list', ['block' => true]);
@@ -50,6 +52,8 @@ $this->start('panelBody');
 						$downloadClass = 'download';
 						$errorClass = 'none';
 						$status = $obj->status;
+						$file = new File($obj->file_path, false, 0644);
+
 						if ($status == 1 && empty($obj->file_path)) {
 							$downloadClass = 'download none';
 							$progress = 0;
@@ -66,7 +70,7 @@ $this->start('panelBody');
 								echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '"></div>';
 								echo '</div>';
 							}
-						} else if ($status == -1) {
+						} else if ($status == -1 || !$file->exists()) {
 							$downloadClass = 'none';
 							$errorClass = '';
 						}
