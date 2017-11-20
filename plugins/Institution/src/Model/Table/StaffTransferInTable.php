@@ -23,6 +23,11 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         ]);
 
         $this->toggle('add', false);
+        if ($this->behaviors()->has('Workflow')) {
+            $this->behaviors()->get('Workflow')->config([
+                'institution_key' => 'new_institution_id'
+            ]);
+        }
     }
 
     public function validationDefault(Validator $validator)
