@@ -573,9 +573,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
             studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key]['date_of_birth']);
             studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
-            
+
             if (studentRecords[key]['main_nationality'] != null) {
                 studentRecords[key]['nationality_name'] = studentRecords[key]['main_nationality']['name'];
+            }
+            if (studentRecords[key]['main_identity_type'] != null) {
                 studentRecords[key]['identity_type_name'] = studentRecords[key]['main_identity_type']['name'];
             }
 

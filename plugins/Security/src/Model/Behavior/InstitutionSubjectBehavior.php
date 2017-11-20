@@ -244,7 +244,8 @@ class InstitutionSubjectBehavior extends Behavior
 							FROM institution_subject_staff
 							WHERE institution_subject_staff.institution_subject_id = ' . $this->_table->aliasField('id') . '
 							AND institution_subject_staff.staff_id = ' . $userId .
-                        ')',
+                        '   LIMIT 1
+                        )',
 
                         // second condition if the current user is the homeroom teacher of the subject class
                         'EXISTS (
@@ -254,7 +255,8 @@ class InstitutionSubjectBehavior extends Behavior
 							ON institution_classes.id = institution_class_subjects.institution_class_id
 							AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
 							WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') .
-                        ')'
+                        '   LIMIT 1
+                        )'
                     ]
                 ]);
             }
