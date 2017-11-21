@@ -334,7 +334,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 paginationPageSize: 10,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
-                angularCompileRows: true
+                // angularCompileRows: true,
+                onRowSelected: (_e) => {
+                    StudentController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
         }, function(error){
             StudentController.internalGridOptions = {
@@ -367,7 +371,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 paginationPageSize: 10,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
-                angularCompileRows: true
+                // angularCompileRows: true,
+                onRowSelected: (_e) => {
+                    StudentController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
 
             StudentController.externalGridOptions = {
@@ -399,7 +407,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 paginationPageSize: 10,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
-                angularCompileRows: true
+                // angularCompileRows: true,
+                onRowSelected: (_e) => {
+                    StudentController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
         });
     };
