@@ -189,7 +189,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
     };
 
     function getWorkbenchColumnDefs(cols) {
-        var menuTabs = [ "filterMenuTab" ];
+        var menuTabs = [];
         var columnDefs = [];
 
         if (cols.indexOf('status') !== -1) {
