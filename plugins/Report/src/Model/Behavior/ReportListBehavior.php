@@ -241,7 +241,7 @@ class ReportListBehavior extends Behavior {
 		$entity = $this->ReportProgress->get($id);
 		$path = $entity->file_path;
 
-		$file = new File($path, false, '0644');
+		$file = new File($path, false);
 		if (!empty($path) && $file->exists()) {
 			$pathInfo = pathinfo($path);
 			$ext = $pathInfo['extension'];
@@ -257,15 +257,7 @@ class ReportListBehavior extends Behavior {
 			]);
 			return $response;
 		} else {
-			$ReportProgress = TableRegistry::get('Report.ReportProgress');
-			$query = $ReportProgress->find();
-			$query->where([$ReportProgress->aliasField('id') => $id]);
-			$resultSet = $query->toArray();
-		
-			foreach ($resultSet as $entity) {
-				$ReportProgress->delete($entity);
-			}
-			
+			$ReportProgress->delete($entity);
 			$controller = $this->_table->controller->name;
 			$table = $this->_table->alias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
