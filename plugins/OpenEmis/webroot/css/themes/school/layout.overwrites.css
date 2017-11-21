@@ -13,6 +13,10 @@ School Overwrites: v.1.0.2
 
 /* Start up wizard overwrites for POCOR-4249 */
 
+body.installer .menu-handler {
+	display: none;
+}
+
 .wizard-wrapper {
 	width: 75%;
 	margin: 20px auto;

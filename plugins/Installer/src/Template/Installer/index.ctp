@@ -109,18 +109,29 @@
                     <div class="section-header">Administrator Account</div>
                     <div class="clearfix">&nbsp;</div>
                     <?php
-                        echo $this->Form->input('account_username', ['class' => 'form-control', 'value' => 'admin', 'disabled' => true, 'required' => true]);
-                        echo $this->Form->input('account_password', ['class' => 'form-control', 'type' => 'password']);
-                        echo $this->Form->input('retype_password', ['class' => 'form-control', 'type' => 'password']);
+                        echo $this->Form->input('account_username', ['class' => 'form-control username', 'value' => 'admin', 'disabled' => true, 'required' => true]);
+                        echo $this->Form->input('account_password', ['class' => 'form-control password', 'type' => 'password']);
+                        echo $this->Form->input('retype_password', ['class' => 'form-control retype', 'type' => 'password']);
                     ?>
                     <div class="section-header">Country / Area Information</div>
                     <div class="clearfix">&nbsp;</div>
                     <?php
-                        echo $this->Form->input('area_code', ['class' => 'form-control', 'type' => 'text', 'maxlength' => '60', 'label' => 'Country Code']);
-                        echo $this->Form->input('area_name', ['class' => 'form-control', 'type' => 'text', 'maxlength' => '100', 'label' => 'Country Name']);
+                        echo $this->Form->input('area_code', ['class' => 'form-control area-code', 'type' => 'text', 'maxlength' => '60', 'label' => 'Country Code']);
+                        echo $this->Form->input('area_name', ['class' => 'form-control area-name', 'type' => 'text', 'maxlength' => '100', 'label' => 'Country Name']);
                     ?>
                     <div class="form-group">
-                        <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default'])?>
+                        <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default', 'onclick' => "(function(){
+                            if (document.querySelector('.username').value === '' || 
+                                document.querySelector('.password').value === '' || 
+                                document.querySelector('.retype').value === '' || 
+                                document.querySelector('.area-code').value === '' || 
+                                document.querySelector('.area-name').value === '') {
+                                    document.querySelector('.spinner-wrapper').style.display='none';
+                            }
+                            else {
+                                document.querySelector('.spinner-wrapper').style.display='block';
+                            }
+                        })();"])?>
                     </div>
                     <?php
                         echo $this->Form->end();
