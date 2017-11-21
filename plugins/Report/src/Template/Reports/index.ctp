@@ -50,6 +50,7 @@ $this->start('panelBody');
 						$downloadClass = 'download';
 						$errorClass = 'none';
 						$status = $obj->status;
+
 						if ($status == 1 && empty($obj->file_path)) {
 							$downloadClass = 'download none';
 							$progress = 0;
@@ -70,7 +71,7 @@ $this->start('panelBody');
 							$downloadClass = 'none';
 							$errorClass = '';
 						}
-						echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), 'download', $obj->id], ['class' => $downloadClass, 'target' => '_blank'], []);
+						echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), 'download', $obj->id], ['class' => $downloadClass, 'target' => '_self'], []);
 						?>
 						<a href="#" data-toggle="tooltip" title="<?= __('Please contact the administrator for assistance.') ?>" class="<?php echo $errorClass ?>"><?php echo __('Error') ?></a>
 					</td>
