@@ -35,7 +35,7 @@ $panelHeader = $this->fetch('panelHeader');
 			<div class="split-content-area">
 				<div class="html-box">
 					<div id="dashboard-workbench-table" class="table-wrapper">
-						<div ng-if="DashboardController.gridOptions['workbench']" ag-grid="DashboardController.gridOptions['workbench']" class="sg-theme"></div>
+						<div ng-if="DashboardController.gridOptions['workbench']" kd-ag-grid="DashboardController.gridOptions['workbench']" class="ag-height-fixed"></div>
 					</div>
 				</div>
 			</div>

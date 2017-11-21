@@ -1,14 +1,28 @@
-// ag-grid-enterprise v4.1.4
+// ag-grid-enterprise v13.2.0
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var main_1 = require("ag-grid/main");
+var main_2 = require("ag-grid/main");
+// we cannot have 'null' as a key in a JavaScript map,
+// it needs to be a string. so we use this string for
+// storing null values.
+var NULL_VALUE = '___NULL___';
 var SetFilterModel = (function () {
-    function SetFilterModel(colDef, rowModel, valueGetter, doesRowPassOtherFilters) {
+    function SetFilterModel(colDef, rowModel, valueGetter, doesRowPassOtherFilters, suppressSorting) {
+        this.suppressSorting = suppressSorting;
         this.colDef = colDef;
         this.rowModel = rowModel;
         this.valueGetter = valueGetter;
         this.doesRowPassOtherFilters = doesRowPassOtherFilters;
-        this.filterParams = this.colDef.filterParams;
-        this.usingProvidedSet = this.filterParams && this.filterParams.values;
-        this.showingAvailableOnly = this.filterParams && !this.filterParams.suppressRemoveEntries;
+        this.filterParams = this.colDef.filterParams ? this.colDef.filterParams : {};
+        if (main_1.Utils.exists(this.filterParams)) {
+            this.usingProvidedSet = main_1.Utils.exists(this.filterParams.values);
+            this.showingAvailableOnly = this.filterParams.suppressRemoveEntries !== true;
+        }
+        else {
+            this.usingProvidedSet = false;
+            this.showingAvailableOnly = true;
+        }
         this.createAllUniqueValues();
         this.createAvailableUniqueValues();
         // by default, no filter, so we display everything
@@ -19,12 +33,23 @@ var SetFilterModel = (function () {
         // the length of the array is thousands of records long
         this.selectedValuesMap = {};
         this.selectEverything();
+        this.formatter = this.filterParams.textFormatter ? this.filterParams.textFormatter : main_2.TextFilter.DEFAULT_FORMATTER;
     }
     // if keepSelection not set will always select all filters
     // if keepSelection set will keep current state of selected filters
     //    unless selectAll chosen in which case will select all
     SetFilterModel.prototype.refreshAfterNewRowsLoaded = function (keepSelection, isSelectAll) {
         this.createAllUniqueValues();
+        this.refreshSelection(keepSelection, isSelectAll);
+    };
+    // if keepSelection not set will always select all filters
+    // if keepSelection set will keep current state of selected filters
+    //    unless selectAll chosen in which case will select all
+    SetFilterModel.prototype.refreshValues = function (valuesToUse, keepSelection, isSelectAll) {
+        this.setValues(valuesToUse);
+        this.refreshSelection(keepSelection, isSelectAll);
+    };
+    SetFilterModel.prototype.refreshSelection = function (keepSelection, isSelectAll) {
         this.createAvailableUniqueValues();
         var oldModel = Object.keys(this.selectedValuesMap);
         this.selectedValuesMap = {};
@@ -43,14 +68,28 @@ var SetFilterModel = (function () {
         }
     };
     SetFilterModel.prototype.createAllUniqueValues = function () {
+        var valuesToUse = this.extractValuesToUse();
+        this.setValues(valuesToUse);
+    };
+    SetFilterModel.prototype.setUsingProvidedSet = function (value) {
+        this.usingProvidedSet = value;
+    };
+    SetFilterModel.prototype.setValues = function (valuesToUse) {
+        this.allUniqueValues = valuesToUse;
+        if (!this.suppressSorting) {
+            this.sortValues(this.allUniqueValues);
+        }
+    };
+    SetFilterModel.prototype.extractValuesToUse = function () {
+        var valuesToUse;
         if (this.usingProvidedSet) {
-            this.allUniqueValues = main_1.Utils.toStrings(this.filterParams.values);
+            valuesToUse = main_1.Utils.toStrings(this.filterParams.values);
         }
         else {
             var uniqueValuesAsAnyObjects = this.getUniqueValues(false);
-            this.allUniqueValues = main_1.Utils.toStrings(uniqueValuesAsAnyObjects);
+            valuesToUse = main_1.Utils.toStrings(uniqueValuesAsAnyObjects);
         }
-        this.sortValues(this.allUniqueValues);
+        return valuesToUse;
     };
     SetFilterModel.prototype.createAvailableUniqueValues = function () {
         var dontCheckAvailableValues = !this.showingAvailableOnly || this.usingProvidedSet;
@@ -77,9 +116,16 @@ var SetFilterModel = (function () {
         var _this = this;
         var uniqueCheck = {};
         var result = [];
-        this.rowModel.forEachNode(function (node) {
+        if (!this.rowModel.forEachLeafNode) {
+            console.error('ag-Grid: Set Filter cannot initialise because you are using a row model that does not contain all rows in the browser. Either use a different filter type, or configure Set Filter such that you provide it with values');
+            return [];
+        }
+        this.rowModel.forEachLeafNode(function (node) {
             if (!node.group) {
                 var value = _this.valueGetter(node);
+                if (_this.colDef.keyCreator) {
+                    value = _this.colDef.keyCreator({ value: value });
+                }
                 if (value === "" || value === undefined) {
                     value = null;
                 }
@@ -128,11 +174,14 @@ var SetFilterModel = (function () {
         }
         // if filter present, we filter down the list
         this.displayedValues = [];
-        var miniFilterUpperCase = this.miniFilter.toUpperCase();
+        var miniFilterFormatted = this.formatter(this.miniFilter);
         for (var i = 0, l = this.availableUniqueValues.length; i < l; i++) {
             var filteredValue = this.availableUniqueValues[i];
-            if (filteredValue !== null && filteredValue.toString().toUpperCase().indexOf(miniFilterUpperCase) >= 0) {
-                this.displayedValues.push(filteredValue);
+            if (filteredValue) {
+                var filteredValueFormatted = this.formatter(filteredValue.toString());
+                if (filteredValueFormatted !== null && filteredValueFormatted.indexOf(miniFilterFormatted) >= 0) {
+                    this.displayedValues.push(filteredValue);
+                }
             }
         }
     };
@@ -143,19 +192,50 @@ var SetFilterModel = (function () {
         return this.displayedValues[index];
     };
     SetFilterModel.prototype.selectEverything = function () {
-        var count = this.allUniqueValues.length;
+        if (!this.filterParams.selectAllOnMiniFilter || !this.miniFilter) {
+            this.selectOn(this.allUniqueValues);
+        }
+        else {
+            this.selectOn(this.displayedValues);
+        }
+    };
+    SetFilterModel.prototype.selectOn = function (toSelectOn) {
+        var count = toSelectOn.length;
         for (var i = 0; i < count; i++) {
-            var value = this.allUniqueValues[i];
-            this.selectedValuesMap[value] = null;
+            var key = toSelectOn[i];
+            var safeKey = this.valueToKey(key);
+            this.selectedValuesMap[safeKey] = null;
         }
         this.selectedValuesCount = count;
+    };
+    SetFilterModel.prototype.valueToKey = function (key) {
+        if (key === null) {
+            return NULL_VALUE;
+        }
+        else {
+            return key;
+        }
+    };
+    SetFilterModel.prototype.keyToValue = function (value) {
+        if (value === NULL_VALUE) {
+            return null;
+        }
+        else {
+            return value;
+        }
     };
     SetFilterModel.prototype.isFilterActive = function () {
         return this.allUniqueValues.length !== this.selectedValuesCount;
     };
     SetFilterModel.prototype.selectNothing = function () {
-        this.selectedValuesMap = {};
-        this.selectedValuesCount = 0;
+        var _this = this;
+        if (!this.filterParams.selectAllOnMiniFilter || !this.miniFilter) {
+            this.selectedValuesMap = {};
+            this.selectedValuesCount = 0;
+        }
+        else {
+            this.displayedValues.forEach(function (it) { return _this.unselectValue(it); });
+        }
     };
     SetFilterModel.prototype.getUniqueValueCount = function () {
         return this.allUniqueValues.length;
@@ -164,33 +244,50 @@ var SetFilterModel = (function () {
         return this.allUniqueValues[index];
     };
     SetFilterModel.prototype.unselectValue = function (value) {
-        if (this.selectedValuesMap[value] !== undefined) {
-            delete this.selectedValuesMap[value];
+        var safeKey = this.valueToKey(value);
+        if (this.selectedValuesMap[safeKey] !== undefined) {
+            delete this.selectedValuesMap[safeKey];
             this.selectedValuesCount--;
         }
     };
     SetFilterModel.prototype.selectValue = function (value) {
-        if (this.selectedValuesMap[value] === undefined) {
-            this.selectedValuesMap[value] = null;
+        var safeKey = this.valueToKey(value);
+        if (this.selectedValuesMap[safeKey] === undefined) {
+            this.selectedValuesMap[safeKey] = null;
             this.selectedValuesCount++;
         }
     };
     SetFilterModel.prototype.isValueSelected = function (value) {
-        return this.selectedValuesMap[value] !== undefined;
+        var safeKey = this.valueToKey(value);
+        return this.selectedValuesMap[safeKey] !== undefined;
     };
     SetFilterModel.prototype.isEverythingSelected = function () {
-        return this.allUniqueValues.length === this.selectedValuesCount;
+        var _this = this;
+        if (!this.filterParams.selectAllOnMiniFilter || !this.miniFilter) {
+            return this.allUniqueValues.length === this.selectedValuesCount;
+        }
+        else {
+            return this.displayedValues.filter(function (it) { return _this.isValueSelected(it); }).length === this.displayedValues.length;
+        }
     };
     SetFilterModel.prototype.isNothingSelected = function () {
-        return this.allUniqueValues.length === 0;
+        var _this = this;
+        if (!this.filterParams.selectAllOnMiniFilter || !this.miniFilter) {
+            return this.selectedValuesCount === 0;
+        }
+        else {
+            return this.displayedValues.filter(function (it) { return _this.isValueSelected(it); }).length === 0;
+        }
     };
     SetFilterModel.prototype.getModel = function () {
+        var _this = this;
         if (!this.isFilterActive()) {
             return null;
         }
         var selectedValues = [];
         main_1.Utils.iterateObject(this.selectedValuesMap, function (key) {
-            selectedValues.push(key);
+            var value = _this.keyToValue(key);
+            selectedValues.push(value);
         });
         return selectedValues;
     };
@@ -199,12 +296,10 @@ var SetFilterModel = (function () {
         if (model && !isSelectAll) {
             this.selectNothing();
             for (var i = 0; i < model.length; i++) {
-                var newValue = model[i];
-                if (this.allUniqueValues.indexOf(newValue) >= 0) {
-                    this.selectValue(model[i]);
-                }
-                else {
-                    console.warn('Value ' + newValue + ' is not a valid value for filter');
+                var rawValue = model[i];
+                var value = this.keyToValue(rawValue);
+                if (this.allUniqueValues.indexOf(value) >= 0) {
+                    this.selectValue(value);
                 }
             }
         }
@@ -213,5 +308,5 @@ var SetFilterModel = (function () {
         }
     };
     return SetFilterModel;
-})();
+}());
 exports.SetFilterModel = SetFilterModel;

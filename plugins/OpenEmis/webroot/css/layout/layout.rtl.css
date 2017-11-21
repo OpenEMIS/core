@@ -1,4 +1,4 @@
-/* RTL v1.0.9 */
+/* RTL v1.0.10 */
 
 .rtl html,
 .rtl body {
@@ -17,15 +17,19 @@
 
 /* LOGO */
 
-.rtl .title-wrapper,
-.rtl .brand-logo {
+.rtl .title-wrapper {
     display: block;
     margin: 0 auto;
     direction: ltr;
 }
 
 .rtl .brand-logo {
+    display: flex !important;
     text-align: right;
+    -webkit-align-items: center;
+    align-items: center;
+    margin: 0 auto;
+    direction: ltr;
 }
 
 /* MAIN LAYOUT*/
@@ -89,10 +93,6 @@
 
 .rtl .display-limit {
     float: left;
-}
-
-.rtl .navbar-left h1 {
-    padding: 0;
 }
 
 .rtl .list-unstyled i {

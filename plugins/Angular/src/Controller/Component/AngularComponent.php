@@ -21,31 +21,31 @@ use Cake\Event\Event;
 
 class AngularComponent extends Component
 {
-	private $controller;
-	public $resetConfig = true;
-	protected $_defaultConfig = [
-		'app' => 'Angular-App',
-		'modules' => []
-	];
+    private $controller;
+    public $resetConfig = true;
+    protected $_defaultConfig = [
+        'app' => 'Angular-App',
+        'modules' => []
+    ];
 
-	// Is called before the controller's beforeFilter method.
-	public function initialize(array $config)
-	{
-		$this->controller = $this->_registry->getController();
-	}
+    // Is called before the controller's beforeFilter method.
+    public function initialize(array $config)
+    {
+        $this->controller = $this->_registry->getController();
+    }
 
-	// Is called after the controller’s beforeFilter method but before the controller executes the current action handler.
-	public function startup(Event $event)
-	{
-		$app = $this->config('app');
-		$modules = $this->config('modules');
+    // Is called after the controller’s beforeFilter method but before the controller executes the current action handler.
+    public function startup(Event $event)
+    {
+        $app = $this->config('app');
+        $modules = $this->config('modules');
 
-		$this->controller->set('ng_app', $app);
-		$this->controller->set('ng_modules', json_encode($modules));
-	}
+        $this->controller->set('ng_app', $app);
+        $this->controller->set('ng_modules', json_encode($modules));
+    }
 
-	public function addModules($newModules = [])
-	{
-		$this->config('modules', $newModules);
-	}
+    public function addModules($newModules = [])
+    {
+        $this->config('modules', $newModules);
+    }
 }

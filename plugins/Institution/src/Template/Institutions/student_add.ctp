@@ -53,7 +53,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-if="((!InstitutionStudentController.initialLoad && !InstitutionStudentController.hasExternalDataSource)
             || (!InstitutionStudentController.initialLoad && InstitutionStudentController.step == 'external_search')
             ) && (InstitutionStudentController.step == 'external_search' || InstitutionStudentController.step == 'internal_search')"
-            ng-disabled="InstitutionStudentController.selectedStudent"
+            ng-disabled="!InstitutionStudentController.selectedStudent"
             ng-click="InstitutionStudentController.onAddNewStudentClick()"
             type="button" class="btn btn-default"><?= __('Create New Student') ?>
         </button>
@@ -64,13 +64,11 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </button>
         <button
             ng-if="InstitutionStudentController.rowsThisPage.length > 0 && (InstitutionStudentController.step=='internal_search' || InstitutionStudentController.step=='external_search')"
-            ng-model="InstitutionStudentController.selectedStudent"
             ng-click="InstitutionStudentController.onAddStudentClick()"
             ng-disabled="!InstitutionStudentController.selectedStudent"
             type="button" class="btn btn-default"><?= __('Add Student') ?>
         </button>
         <button type="button" class="btn btn-default btn-next"
-            ng-model="InstitutionStudentController.selectedStudent"
             ng-disabled="InstitutionStudentController.completeDisabled"
             ng-show="(InstitutionStudentController.step=='add_student' || InstitutionStudentController.step=='create_user')"
             data-last="<?= __('Complete') ?>">
@@ -118,7 +116,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div>
                     <div class="scrolltabs">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStudentController.internalGridOptions" ag-grid="InstitutionStudentController.internalGridOptions" class="sg-theme"></div>
+                            <div ng-if="InstitutionStudentController.internalGridOptions" kd-ag-grid="InstitutionStudentController.internalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
@@ -152,7 +150,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div>
                     <div class="scrolltabs sticky-content">
                         <div id="institution-student-table" class="table-wrapper">
-                            <div ng-if="InstitutionStudentController.externalGridOptions" ag-grid="InstitutionStudentController.externalGridOptions" class="sg-theme"></div>
+                            <div ng-if="InstitutionStudentController.externalGridOptions" kd-ag-grid="InstitutionStudentController.externalGridOptions" ag-selection-type="radio" class="ag-height-fixed"></div>
                         </div>
                     </div>
                 </div>
