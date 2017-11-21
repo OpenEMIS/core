@@ -211,11 +211,7 @@ class RemoveBehavior extends Behavior
                     $totalCount += $row['count'];
                 }
                 if ($totalCount > 0) {
-                    if ($this->allowForceDelete) {
-                        $model->Alert->warning('general.delete.cascadeDelete');
-                    } else {
-                        $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
-                    }
+                    $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
                     $this->recordHasAssociatedRecords = true;
                 } else {
                     // Change the method to delete if the record can be deleted
@@ -229,8 +225,11 @@ class RemoveBehavior extends Behavior
                 if ($model->AccessControl->isAdmin() && !$extra->offsetExists('associatedRecords') && $this->recordHasAssociatedRecords && !$exceedAssociatedRecordLimit) {
                     $this->showForceDeleteFields = true;
 
-                    if (!empty($passwordErrors)) {
-                        $entity->errors('password', $passwordErrors); // set password errors
+                    if ($this->allowForceDelete) {
+                        $model->Alert->warning('general.delete.cascadeDelete', ['reset' => true]);
+                        if (!empty($passwordErrors)) {
+                            $entity->errors('password', $passwordErrors); // set password errors
+                        }
                     }
                 }
 
