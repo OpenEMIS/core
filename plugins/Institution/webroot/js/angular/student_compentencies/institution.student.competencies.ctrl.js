@@ -274,6 +274,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 ensureDomOrder: true,
                 localeText: localeText,
                 ensureDomOrder: true,
+                domLayout: 'autoHeight',
                 onCellValueChanged: function(params) {
                     if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
@@ -320,6 +321,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 ensureDomOrder: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                domLayout: 'autoHeight',
                 onCellValueChanged: function(params) {
                     if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
