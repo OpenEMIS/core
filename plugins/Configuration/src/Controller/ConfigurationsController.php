@@ -80,7 +80,7 @@ class ConfigurationsController extends AppController
         $scope = $attributes['scope'];
         $tokenUri = $attributes['token_uri'];
         $privateKey = $attributes['private_key'];
-        
+
         $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
 
         $data = [
