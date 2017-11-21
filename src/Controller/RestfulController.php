@@ -50,6 +50,7 @@ class RestfulController extends BaseController
                 'productName' => 'OpenEMIS Core'
             ]);
         }
+        $this->Auth->allow();
     }
 
     public function beforeFilter(Event $event)
