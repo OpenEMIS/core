@@ -101,6 +101,12 @@ class ControllerActionHelper extends Helper
             'url' => !is_null($backBtn) ? $backBtn['url'] : []
         ];
 
+        // reload button
+        $buttons[] = [
+            'name' => 'reload',
+            'attr' => ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']
+        ];
+
         $config = $this->_View->get('ControllerAction');
         $table = $config['table'];
 
@@ -109,8 +115,9 @@ class ControllerActionHelper extends Helper
         $event = $this->dispatchEvent($table, $eventKey, null, [$buttons]);
         // end attach event
 
-        $html = '<div class="form-buttons"><div class="button-label"></div>';
+        $html = '';
         if ($buttons->count() > 0) {
+            $html = '<div class="form-buttons"><div class="button-label"></div>';
             foreach ($buttons as $btn) {
                 if (!array_key_exists('url', $btn)) {
                     $html .= $this->Form->button($btn['name'], $btn['attr']);
@@ -118,9 +125,8 @@ class ControllerActionHelper extends Helper
                     $html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
                 }
             }
+            $html .= '</div>';
         }
-        $html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
-        $html .= '</div>';
         return $html;
     }
 
