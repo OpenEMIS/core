@@ -138,10 +138,12 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function findSubjectRoomOptions(Query $query, array $options)
     {
-        $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
+        $institutionSubjectId = $options['institution_subject_id'];
+        $classSubjectsTable = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $institution = $classSubjectsTable->find()->contain('InstitutionClasses.InstitutionShifts')->where([$classSubjectsTable->aliasField('institution_subject_id') => $institutionSubjectId])->first();
         return $query
-            ->find('inUse', ['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId])
+            ->find('inUse', ['institution_id' => $institution->institution_class->institution_shift->institution_id, 'academic_period_id' => $academicPeriodId])
             ->contain(['RoomTypes'])
             ->where(['RoomTypes.classification' => 1]) // classification 1 is equal to Classroom, 0 is Non_Classroom
             ->order(['RoomTypes.order', $this->aliasField('code'), $this->aliasField('name')])
