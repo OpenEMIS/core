@@ -15,7 +15,7 @@ angular.module('multi-select-tree').run(['$templateCache', function($templateCac
     "    </span>\n" +
     "        <!-- <input type=\"text\" class=\"blend-in\" /> -->\n" +
     "    </div>\n" +
-    "    <div class=\"tree-view\" ng-show=\"showTree\">\n" +
+    "    <div class=\"tree-view\" ng-show=\"showTree && inputModel\">\n" +
     "        <ul class=\"tree-container\">\n" +
     "            <tree-item class=\"top-level\" ng-repeat=\"item in inputModel\" item=\"item\" ng-show=\"!item.isFiltered\"\n" +
     "                       use-callback=\"useCallback\" can-select-item=\"canSelectItem\"\n" +
@@ -34,7 +34,7 @@ angular.module('multi-select-tree').run(['$templateCache', function($templateCac
     "        <div ng-if=\"showExpand(item)\" class=\"expand fa fa-fw\" ng-class=\"{'expand-opened': item.isExpanded, 'tdLoadingIco': item.isExpanded && item.children[0].loading, 'fa-caret-down': item.isExpanded && !item.children[0].loading, 'fa-caret-right': !item.isExpanded}\"\n" +
     "              ng-click=\"onExpandClicked(item, $event)\"></div>\n" +
     "\n" +
-    "        <div class=\"item-details\"> " +
+    "        <div class=\"item-details\" ng-show=\"!item.loading\"> " +
     "           <input class=\"tree-checkbox\" ng-disabled=\"item.disabled\" type=\"checkbox\" ng-if=\"showCheckbox() && !item.loading\"\n ng-checked=\"item.selected\"/> " +
     "           <input class=\"tree-checkbox\" ng-disabled=\"item.disabled\" type=\"radio\" name=\"{{treeId}}\" ng-if=\"!showCheckbox()\"\n ng-checked=\"item.selected\"/> " +
     "           <label ng-if=\"!item.loading\">{{item.name}}\n</label> " +

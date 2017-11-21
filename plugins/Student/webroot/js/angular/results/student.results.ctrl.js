@@ -96,9 +96,18 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 localeText: localeText,
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
                 onGridReady: function() {
                     vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
                 }
@@ -115,8 +124,17 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                onGridSizeChanged: function() {
+                    this.api.sizeColumnsToFit();
+                },
                 onGridReady: function() {
                     vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
                 }
@@ -140,6 +158,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         // getRowData
         .then(function(rows) {
             vm.gridOptions[sectionId].api.setRowData(rows);
+            vm.gridOptions[sectionId].api.sizeColumnsToFit();
         }, function(error) {
             // No Results
             console.log(error);
@@ -168,6 +187,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 });
                 if (vm.gridOptions[sectionId] != null) {
                 vm.gridOptions[sectionId].api.setColumnDefs(columnDefs);
+                vm.gridOptions[sectionId].api.sizeColumnsToFit();
             }
             }, function(error){
                 console.log(error);

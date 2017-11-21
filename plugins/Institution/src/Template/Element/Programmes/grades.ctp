@@ -9,7 +9,7 @@
 			<table class="table table-checkable">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+						<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 						<th><?= __('Code') ?></th>
 						<th><?= __('Name') ?></th>
 					</tr>
@@ -22,13 +22,14 @@
 					<tr>
 						<td class="checkbox-column">
 							<?php
-							$checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
+							$checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 							$checkboxOptions['value'] = $obj->id;
 							if (in_array($obj->id, $attr['exists'])) {
 								$checkboxOptions['disabled'] = 'disabled';
 								$checkboxOptions['checked'] = 'checked';
 							}
-							echo $this->Form->input("grades.$i.education_grade_id", $checkboxOptions);
+							echo $this->Form->checkbox("grades.$i.education_grade_id", $checkboxOptions);
+
 							?>
 						</td>
 						<td><?= $obj->code ?></td>
@@ -36,7 +37,7 @@
 					</tr>
 					<?php endforeach ?>
 				</tbody>
-				
+
 				<?php endif ?>
 
 			</table>
