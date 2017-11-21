@@ -18,7 +18,7 @@
     ?>
 </head>
 
-<body class='fuelux' ng-app="OE_Core" ng-controller="AppCtrl">
+<body class='fuelux installer' ng-app="OE_Core" ng-controller="AppCtrl">
     <header>
         <nav class="navbar navbar-fixed-top">
             <div class="navbar-left">
