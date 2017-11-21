@@ -436,7 +436,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
-                // delete StudentController.selectedStudent;
+                delete StudentController.selectedStudent;
                 if (withData) {
                    InstitutionsStudentsSvc.getStudentRecords(
                     {
