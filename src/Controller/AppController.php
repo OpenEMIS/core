@@ -66,6 +66,10 @@ class AppController extends Controller
             die;
         }
 
+        if (Configure::read('schoolMode')) {
+            $this->productName = 'OpenEMIS School';
+        }
+
         parent::initialize();
         $theme = 'core';
         if (Configure::read('schoolMode')) {
