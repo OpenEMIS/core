@@ -1,5 +1,11 @@
-<div style="width: 50%; margin: 20px auto">
-    <div class="wizard" data-initialize="wizard" id="wizard">
+<div class="wizard-wrapper">
+    <div id="spinner" class="spinner-wrapper" style="display: none;">
+        <div class="spinner-text">
+            <div class="spinner lt-ie9"></div>
+            <p>Loading...</p>
+        </div>  
+    </div>
+    <div class="wizard startup-wizard" data-initialize="wizard" id="wizard">
 
         <div class="steps-container">
             <ul class="steps" style="margin-left: 0">
@@ -37,7 +43,7 @@
         <div class="step-content">
             <?= $this->element('OpenEmis.alert') ?>
             <div class="step-pane sample-pane <?=$action == '1' ? 'active' : '' ?>" data-restrict="1" data-step="1">
-                <div style="text-align: center; padding: 0 150px">
+                <div class="step-pane-wrapper">
                     <h1>Welcome to OpenEMIS School</h1>
                     <h2 style="margin-top: 20px">OPENEMIS SCHOOL LICENSE LAST UPDATED ON 2014-01-30</h2>
                     <h3 style="margin-top: 20px">OpenEMIS SCHOOL</h3>
@@ -49,27 +55,39 @@
                     By clicking Next, you agree to the terms stated in the OpenEmis School License Agreement above.
                     </p>
                     <div class="form-group">
-                        <a href=<?=$this->Url->build(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step2']); ?> type="submit" class="btn btn-default" style="text-">Start</a>
+                        <a href=<?=$this->Url->build(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step2']); ?> type="submit" class="btn btn-default" onClick="(function(){document.querySelector('.spinner-wrapper').style.display='block';})();">Start</a>                        
                     </div>
                 </div>
             </div>
             <?php
                 if ($action == '2'):
             ?>
+
+
             <div class="step-pane sample-pane <?=$action == '2' ? 'active' : '' ?>" data-restrict="2" data-step="2">
-                <div style="text-align: center; padding: 0 150px">
+                <div class="step-pane-wrapper">
                     <h1>Setting Environment</h1>
                     <p>All fields are required and case sensitive.</p>
 
                     <?php
                         echo $this->Form->create($databaseConnection, ['class' => 'form-horizontal']);
-                        echo $this->Form->input('database_server_host', ['class' => 'form-control', 'value' => 'localhost']);
-                        echo $this->Form->input('database_server_port', ['class' => 'form-control', 'value' => '3306']);
-                        echo $this->Form->input('admin_user', ['class' => 'form-control', 'value' => 'root']);
-                        echo $this->Form->input('admin_password', ['class' => 'form-control', 'type' => 'password']);
+                        echo $this->Form->input('database_server_host', ['class' => 'form-control db-host', 'value' => 'localhost']);
+                        echo $this->Form->input('database_server_port', ['class' => 'form-control db-port', 'value' => '3306']);
+                        echo $this->Form->input('admin_user', ['class' => 'form-control admin-user', 'value' => 'root']);
+                        echo $this->Form->input('admin_password', ['class' => 'form-control admin-password', 'type' => 'password']);
                     ?>
                     <div class="form-group">
-                        <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default'])?>
+                        <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default', 'onclick' => "(function(){
+                            if (document.querySelector('.db-host').value === '' || 
+                                document.querySelector('.db-port').value === '' || 
+                                document.querySelector('.admin-user').value === '' || 
+                                document.querySelector('.admin-password').value === '') {
+                                    document.querySelector('.spinner-wrapper').style.display='none';
+                            }
+                            else {
+                                document.querySelector('.spinner-wrapper').style.display='block';
+                            }
+                        })();"])?>
                     </div>
                     <?php
                         echo $this->Form->end();
@@ -81,7 +99,7 @@
             ?>
 
             <div class="step-pane sample-pane <?=$action == '3' ? 'active' : '' ?>" data-restrict="3" data-step="3">
-                <div style="text-align: center; padding: 0 150px">
+                <div class="step-pane-wrapper">
                     <h1>Account setup</h1>
                     <p>In order to access OpenEMIS School application, you will need to create an user account.</p>
 
@@ -113,7 +131,7 @@
                 elseif ($action == '4'):
             ?>
             <div class="step-pane sample-pane <?=$action == '4' ? 'active' : '' ?>" data-restrict="4" data-step="4">
-                <div style="text-align: center; padding: 0 150px">
+                <div class="step-pane-wrapper">
                     <h1>Installation Completed</h1>
                     <p>You have successfully installed OpenEMIS School. Please click Start to launch OpenEMIS School.</p>
                     <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">

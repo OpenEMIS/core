@@ -1,5 +1,5 @@
 /* 
-School Overwrites: v.1.0.1
+School Overwrites: v.1.0.2
 */
 
 
@@ -8,3 +8,61 @@ School Overwrites: v.1.0.1
 .body-wrapper {
     background-image: url('../../../img/school-login-bg.jpg') !important;
 }
+
+
+
+/* Start up wizard overwrites for POCOR-4249 */
+
+.wizard-wrapper {
+	width: 75%;
+	margin: 20px auto;
+	position: relative;
+}
+
+.startup-wizard .form-horizontal label {
+	width: 25% !important;
+}
+
+.startup-wizard .form-group {
+	margin: 15px;
+}
+
+.startup-wizard .step-pane > .step-pane-wrapper {
+	text-align: center;
+	padding: 0 150px;
+}
+
+.startup-wizard .form-horizontal input, 
+.startup-wizard .form-horizontal textarea, 
+.startup-wizard .form-horizontal .chosen-choices {
+	width: 70% !important;
+}
+
+.startup-wizard .actions.bottom {
+	padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid #DDD !important;
+}
+
+@media only screen and (max-width: 1024px) {
+    .startup-wizard .step-pane > .step-pane-wrapper {
+    	padding: 20px !important;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+	.startup-wizard .form-horizontal label,
+	.startup-wizard .form-horizontal input, 
+	.startup-wizard .form-horizontal textarea {
+		width: 100% !important;
+	}
+
+	.wizard-wrapper {
+		width: 100%;
+	}
+}
+
+/* End of fix for wizard overwrites POCOR-4249 */
+
+admin-password

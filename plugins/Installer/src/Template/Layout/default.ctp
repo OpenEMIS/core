@@ -44,8 +44,8 @@
     </div>
 
     <?= $this->element('OpenEmis.footer') ?>
-    <?= $this->fetch('scriptBottom'); ?>
-    <?= $this->element('OpenEmis.scriptBottom') ?>
+    <!-- <?= $this->fetch('scriptBottom'); ?> -->
+    <!-- <?= $this->element('OpenEmis.scriptBottom') ?> -->
 
 </body>
 </html>
