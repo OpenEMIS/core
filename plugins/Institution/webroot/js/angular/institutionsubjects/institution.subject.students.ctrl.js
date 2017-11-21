@@ -145,7 +145,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 var promises = [];
                 promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(response.id, Controller.academicPeriodId, Controller.educationGradeId, Controller.institutionClassIds);
                 promises[1] = InstitutionSubjectStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
-                promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.institution_id, response.academic_period_id);
+                promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.academic_period_id, Controller.institutionSubjectId);
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
