@@ -1,5 +1,3 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
@@ -11,7 +9,7 @@
 			<table class="table table-checkable">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" class="icheck-input"
+						<th class="checkbox-column"><input type="checkbox"
 							<?php //logic to tick checkbox on the header if all checkboxes selected, this is used after validation process.
 								foreach ($attr['data'] as $i=>$obj) {
 									$classGradeArray[$i] = $attr['data'][$i]['education_grade_id'];
@@ -19,7 +17,10 @@
 								if (isset($attr['selected']) && ($classGradeArray == $attr['selected'])) {
 									echo " checked";
 								};
-							?> />
+							?> 
+							class='no-selection-label'
+							kd-checkbox-radio
+							/>
 						</th>
 						<th><?= $this->Label->get($attr['model'].'.education_programme') ?></th>
 						<th><?= $this->Label->get($attr['model'].'.education_grade') ?></th>
@@ -35,14 +36,7 @@
 						<td class="checkbox-column">
 						<?php
 							$alias = $attr['model'] . ".education_grades._ids.%d";
-						?>
-						<?= $this->Form->input(sprintf($alias, $i), [
-								'type' => 'checkbox',
-								'class' => 'icheck-input',
-								'value' => $obj->education_grade_id,
-								'label' => false,
-								'checked' => $selected
-							]);
+							echo $this->Form->checkbox(sprintf($alias, $i), ['value' => $obj->education_grade_id, 'checked' => $selected, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
 						?>
 						</td>
 						<td><?= $obj->education_grade->programme_name ?></td>
