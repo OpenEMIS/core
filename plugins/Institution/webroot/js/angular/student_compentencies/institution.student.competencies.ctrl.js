@@ -263,9 +263,15 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 localeText: localeText,
                 ensureDomOrder: true,
                 onCellValueChanged: function(params) {
@@ -305,7 +311,13 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 onCellValueChanged: function(params) {
