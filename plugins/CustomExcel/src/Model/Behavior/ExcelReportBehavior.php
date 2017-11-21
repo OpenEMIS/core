@@ -311,18 +311,18 @@ class ExcelReportBehavior extends Behavior
         $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
         
         if ($imageResource) {
-            switch ($attr['img_ext']) {
-                case 'png':
+            switch ($attr['mime_type']) {
+                case 'image/png':
                     $imageResource = imagecreatefrompng($imageResource);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_PNG);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG);
                     break;
-                case 'jpg': case 'jpeg':
+                case 'image/jpeg':
                     $imageResource = imagecreatefromjpeg($imageResource);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_JPEG);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
                     break;
-                case 'gif':
+                case 'image/gif':
                     $imageResource = imagecreatefromgif($imageResource);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_GIF);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_GIF);
@@ -1155,12 +1155,11 @@ class ExcelReportBehavior extends Behavior
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
 
-                $logoName = Hash::extract($extra['vars'], 'Institutions.logo_name');
-                $logoName = explode('.', current($logoName));
-                $logoExt = end($logoName);
-                $logoExt = $logoName[key($logoName)];
+                $mimeType = mime_content_type($blob);
+                $exp = explode('/', $mimeType);
+                $logoExt = end($exp);
 
-                $attr['img_ext'] = $logoExt;
+                $attr['mime_type'] = $mimeType;
 
                 $imageResource = TMP . "temp_logo_$institutionId.$logoExt";
 
@@ -1170,7 +1169,7 @@ class ExcelReportBehavior extends Behavior
                 }
             } else {
                 $imageResource = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
-                $attr['img_ext'] = 'png';
+                $attr['mime_type'] = 'image/png';
             }
         }
         
