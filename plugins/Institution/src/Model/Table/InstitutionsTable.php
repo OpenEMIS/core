@@ -846,7 +846,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
         $this->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 
-         $this->setFieldOrder([
+        $this->setFieldOrder([
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
