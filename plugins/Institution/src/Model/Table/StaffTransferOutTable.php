@@ -32,6 +32,12 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             self::PARTIAL_TRANSFER => __('Partial Transfer'),
             self::NO_CHANGE => __('No Change')
         ];
+
+        if ($this->behaviors()->has('Workflow')) {
+            $this->behaviors()->get('Workflow')->config([
+                'institution_key' => 'previous_institution_id'
+            ]);
+        }
     }
 
     public function validationDefault(Validator $validator)
@@ -280,7 +286,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
-
                 } else {
                     $this->Alert->warning($this->aliasField('existingStaffTransfer'), ['reset' => true]);
                     $event->stopPropagation();
@@ -430,7 +435,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 ->toArray();
 
             $options = [];
-            foreach($staffEntity as $staff) {
+            foreach ($staffEntity as $staff) {
                 $options[$staff->id] = $staff->_matchingData['Positions']->name;
             }
 
@@ -484,7 +489,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
                     if (!empty($staffEntity)) {
                         // only show fte options less than the current fte
-                        foreach($options as $key => $option) {
+                        foreach ($options as $key => $option) {
                             if ($key >= $staffEntity->FTE) {
                                 unset($options[$key]);
                             }
@@ -616,10 +621,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             if ($transferType == self::FULL_TRANSFER) {
                 $options['validate'] = 'fullTransfer';
-                $data->offsetSet('previous_effective_date', NULL);
-                $data->offsetSet('previous_FTE', NULL);
-                $data->offsetSet('previous_staff_type_id', NULL);
-
+                $data->offsetSet('previous_effective_date', null);
+                $data->offsetSet('previous_FTE', null);
+                $data->offsetSet('previous_staff_type_id', null);
             } else if ($transferType == self::PARTIAL_TRANSFER) {
                 $options['validate'] = 'partialTransfer';
                 if ($data->offsetExists('previous_effective_date')) {
@@ -627,12 +631,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     $previousEndDate = $effectiveDate->modify('-1 day');
                     $data->offsetSet('previous_end_date', $previousEndDate->format('Y-m-d'));
                 }
-
             } else {
-                $data->offsetSet('previous_end_date', NULL);
-                $data->offsetSet('previous_effective_date', NULL);
-                $data->offsetSet('previous_FTE', NULL);
-                $data->offsetSet('previous_staff_type_id', NULL);
+                $data->offsetSet('previous_end_date', null);
+                $data->offsetSet('previous_effective_date', null);
+                $data->offsetSet('previous_FTE', null);
+                $data->offsetSet('previous_staff_type_id', null);
             }
         }
     }
