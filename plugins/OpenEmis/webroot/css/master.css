@@ -56,5 +56,8 @@
 @import url('component/component.tooltipdescription.css');
 @import url('component/component.visualization.css');
 @import url('component/component.wizard.css');
-
+@import url('component/component.workbench.css');
+@import url('component/component.notices.css');
 @import url('component/component.treedropdown.css');
+@import url('component/component.multipleimageupload.css');
+@import url('component/component.gallery.css');

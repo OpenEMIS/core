@@ -209,6 +209,7 @@ accordion .panel-default {
 }
 
 .panel-toolbar .selection-wrapper {
+    position: relative;
     margin: 6px 0 2px !important;
 }
 
@@ -353,6 +354,10 @@ accordion .panel-default {
     padding: 0 !important;
 }
 
+.panel-toolbar .format-item .active {
+    opacity: 1;
+}
+
 .format-lists .col-md-12 {
     margin-bottom: 0 !important;
 }
@@ -425,6 +430,7 @@ accordion .panel-default {
     -webkit-border-top-right-radius: 0;
     border-top-right-radius: 0;
     padding: 0;
+    height: 250px;
     max-height: 250px;
     overflow-y: auto;
 }
@@ -464,6 +470,25 @@ accordion .panel-default {
 .search-img {
     width: 270px;    
     height: 150px;
+    border: 1px solid #DDD;
+    position: relative;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -ms-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.search-img img {
+    width: 260px;
+    height: 140px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}
+
+.search-img .image-placeholder {
+    border: 0;
 }
 
 .chart-lists {
@@ -729,6 +754,10 @@ accordion .format-item .input-selection {
 
 .rtl .panel-toolbar .format-item .input-selection .selection-label {
     margin: 0 !important;
+}
+
+.rtl .format-item .selection-wrapper label {
+    display: block !important;
 }
 
 .rtl .visualization-search {

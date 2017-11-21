@@ -123,7 +123,7 @@ class AppController extends Controller
         $this->loadComponent('Angular.Angular', [
             'app' => 'OE_Core',
             'modules' => [
-                'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio','multi-select-tree', 'kd-angular-tree-dropdown', 'sg.tree.ctrl', 'sg.tree.svc'
+                'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio','multi-select-tree', 'kd-angular-tree-dropdown', 'kd-angular-ag-grid', 'sg.tree.ctrl', 'sg.tree.svc'
             ]
         ]);
 

@@ -205,7 +205,7 @@
     right: 1px;
     top: 1px;
     vertical-align: middle;
-    z-index: 1000;
+    z-index: 500;
 }
 
 .fuelux .wizard form {
@@ -234,7 +234,6 @@
 .fuelux .wizard .btn-next:before {
     font-family: "FontAwesome";
     content: "\f0da";
-    color: #FFF;
     margin-right: 5px;
     float: left;
     right: 4px;
