@@ -16,7 +16,19 @@ class InstallerController extends AppController
     ];
 
     public function initialize()
-    {
+    {   
+        $this->loadComponent('Angular.Angular', [
+            'app' => 'OE_Core',
+            'modules' => [
+                'app.ctrl'
+            ]
+        ]);
+
+        $this->loadComponent('OpenEmis.OpenEmis', [
+            'productName' => 'OpenEMIS School',
+            'theme' => 'school'
+        ]);
+
         $this->set('SystemVersion', '1.0.0');
         $this->loadComponent('ControllerAction.Alert');
         $this->viewBuilder()->layout('Installer.default');
