@@ -278,10 +278,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 ],
                 localeText: localeText,
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
@@ -315,10 +315,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 ],
                 localeText: localeText,
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
@@ -334,7 +334,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 paginationPageSize: 10,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
-                angularCompileRows: true
+                // angularCompileRows: true,
+                onRowSelected: (_e) => {
+                    StudentController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
         }, function(error){
             StudentController.internalGridOptions = {
@@ -348,10 +352,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
@@ -367,7 +371,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 paginationPageSize: 10,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
-                angularCompileRows: true
+                // angularCompileRows: true,
+                onRowSelected: (_e) => {
+                    StudentController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
 
             StudentController.externalGridOptions = {
@@ -380,10 +388,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     {headerName: StudentController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
@@ -399,7 +407,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 paginationPageSize: 10,
                 maxBlocksInCache: 1,
                 cacheBlockSize: 10,
-                angularCompileRows: true
+                // angularCompileRows: true,
+                onRowSelected: (_e) => {
+                    StudentController.selectStudent(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
         });
     };
@@ -436,7 +448,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
-                // delete StudentController.selectedStudent;
+                delete StudentController.selectedStudent;
                 if (withData) {
                    InstitutionsStudentsSvc.getStudentRecords(
                     {
