@@ -302,28 +302,28 @@ class ExcelReportBehavior extends Behavior
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
     }
 
-    public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra)
+    public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
     {
         $imageWidth = $attr['imageWidth'];
         $imageMarginLeft = $attr['imageMarginLeft'];
         $imageMarginTop = $attr['imageMarginTop'];
 
         $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
-        
-        if ($imageResource) {
+
+        if ($imagePath) {
             switch ($attr['mime_type']) {
                 case 'image/png':
-                    $imageResource = imagecreatefrompng($imageResource);
+                    $imageResource = imagecreatefrompng($imagePath);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_PNG);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG);
                     break;
                 case 'image/jpeg':
-                    $imageResource = imagecreatefromjpeg($imageResource);
+                    $imageResource = imagecreatefromjpeg($imagePath);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_JPEG);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
                     break;
                 case 'image/gif':
-                    $imageResource = imagecreatefromgif($imageResource);
+                    $imageResource = imagecreatefromgif($imagePath);
                     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_GIF);
                     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_GIF);
                     break;
@@ -1147,33 +1147,33 @@ class ExcelReportBehavior extends Behavior
         $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $attr) ? $attr['imageMarginTop'] : 0;
 
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
-        $blob = current($data);
+        $imageContent = current($data);
 
         //for institution logo
         if ($attr['displayValue'] == 'Institutions.logo_content' ) {
-            if (is_resource($blob)) {
+            if (is_resource($imageContent)) {
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
 
-                $mimeType = mime_content_type($blob);
+                $mimeType = mime_content_type($imageContent);
                 $exp = explode('/', $mimeType);
                 $logoExt = end($exp);
 
                 $attr['mime_type'] = $mimeType;
 
-                $imageResource = TMP . "temp_logo_$institutionId.$logoExt";
+                $tempImagePath = TMP . "temp_logo_$institutionId.$logoExt";
 
-                if (!file_exists($imageResource)) {
-                    file_put_contents($imageResource, stream_get_contents($blob));
-                    $extra['temp_logo'] = $imageResource;
+                if (!file_exists($tempImagePath)) {
+                    file_put_contents($tempImagePath, stream_get_contents($imageContent));
+                    $extra['temp_logo'] = $tempImagePath;
                 }
             } else {
-                $imageResource = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
+                $tempImagePath = ROOT . DS . 'plugins' . DS . 'ReportCard' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.png';
                 $attr['mime_type'] = 'image/png';
             }
         }
-        
-        $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
+
+        $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $tempImagePath, $attr, $extra);
 
         // set to empty to remove the placeholder
         $objWorksheet->setCellValue($cellCoordinate, '');
