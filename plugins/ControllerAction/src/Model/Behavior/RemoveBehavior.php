@@ -286,6 +286,7 @@ class RemoveBehavior extends Behavior
             }
         }
         $extra['result'] = $result;
+        $extra['forceDeleteRecord'] = $forceDeleteRecord;
 
         $event = $model->dispatchEvent('ControllerAction.Model.delete.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
