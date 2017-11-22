@@ -35,7 +35,7 @@ var Workflow = {
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
         var assigneeUrl = $('.workflowtransition-assignee-id').attr('assignee-url');
 
-		Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id);
+		Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id, jsonObj.auto_assign_assignee);
 		Workflow.resetError();
 		Workflow.toggleAssignee(jsonObj.assignee_required);
 		Workflow.toggleComment(jsonObj.comment_required);
@@ -102,7 +102,7 @@ var Workflow = {
 		}
 	},
 
-	getAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId) {
+	getAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
 		var url = assigneeUrl;
 
 		$.ajax({
@@ -110,7 +110,8 @@ var Workflow = {
             dataType: "json",
             data: {
             	is_school_based: isSchoolBased,
-                next_step_id: nextStepId
+                next_step_id: nextStepId,
+                auto_assign_assignee: autoAssignAssignee
             },
 			beforeSend: function(xhr) {
 				// always show loading when user click on submit button
@@ -126,7 +127,9 @@ var Workflow = {
             		// show No options if assignees is empty
             		$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
             	} else {
-            		$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
+                    if (defaultKey.length != 0) {
+                        $('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
+                    }
 					$.each(assignees, function(i, value) {
 						$('.workflowtransition-assignee-id').append($('<option>').text(value).attr('value', i));
 					});

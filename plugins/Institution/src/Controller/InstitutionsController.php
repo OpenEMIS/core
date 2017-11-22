@@ -51,8 +51,6 @@ class InstitutionsController extends AppController
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
-        // 'StaffTransferRequests',
-        // 'StaffTransferApprovals',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -220,14 +218,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentFees']);
     }
-    public function StaffTransferRequests()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']);
-    }
-    public function StaffTransferApprovals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']);
-    }
     public function StaffPositionProfiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']);
@@ -371,6 +361,14 @@ class InstitutionsController extends AppController
     public function InstitutionStudentsReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
+    }
+    public function StaffTransferIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferIn']);
+    }
+    public function StaffTransferOut()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferOut']);
     }
     // End
 
@@ -1112,10 +1110,9 @@ class InstitutionsController extends AppController
                         $params[$primaryKey] = $modelIds[$primaryKey];
                     }
 
-
                     $exists = false;
 
-                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
+                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferOut'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
@@ -1173,7 +1170,7 @@ class InstitutionsController extends AppController
                     $this->Alert->error('general.notExists');
                     // should redirect
                 } else {
-                    if ($model->alias() != 'Programmes') {
+                    if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut'])) {
                         $institutionId = $this->request->param('institutionId');
                         try {
                             $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];

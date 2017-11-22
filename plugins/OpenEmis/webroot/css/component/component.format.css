@@ -1,4 +1,4 @@
-/* FORMAT TAB v.1.0.10 */
+/* FORMAT TAB v.1.0.11 */
 
 .toolbar-icon .panel-body {
     overflow: hidden !important;
@@ -70,6 +70,7 @@ accordion .form-group {
 }
 
 .format-item label {
+    font-weight: normal;
     margin: 4px 0 4px;
 }
 
@@ -469,7 +470,7 @@ input[type="checkbox"] {
 }
 
 .rtl .format-item label {
-    display: inline;
+    display: inline-block;
     line-height: normal;
 }
 

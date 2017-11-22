@@ -42,7 +42,7 @@ class TrainingApplicationsTable extends ControllerActionTable
     private $workflowEvents = [
         [
             'value' => 'Workflow.onAssignTrainingSession',
-            'text' => 'Assign Trainess to Training Sessions',
+            'text' => 'Assign Trainees to Training Sessions',
             'description' => 'Performing this action will assign the trainee to the training sessions.',
             'method' => 'onAssignTrainingSession'
         ],
