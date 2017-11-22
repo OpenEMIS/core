@@ -18,107 +18,118 @@ class StaffProfileBehavior extends Behavior
     {
         $model = $this->_table;
         $alias = $model->alias();
+        $query = $model->find();
 
         $staffId = $params['staff_id'];
         $institutionId = $params['institution_id'];
         $institutionPositionId = $params['institution_position_id'];
-        $academicPeriodId = $params['academic_period_id'];
         $originalStartDate = $params['original_start_date'];
         $newStartDate = $params['new_start_date'];
 
         $conditions = [];
+        $workflowPendingRecords = false;
         switch ($alias) {
             case 'InstitutionClasses':
-                $conditions = [
-                    $model->aliasField('staff_id') => $staffId,
-                    $model->aliasField('institution_id') => $institutionId,
-                    $model->aliasField('academic_period_id >=') => $academicPeriodId
-                ];
+                $query->contain(['AcademicPeriods'])
+                    ->where([
+                        $model->aliasField('staff_id') => $staffId,
+                        $model->aliasField('institution_id') => $institutionId,
+                        'AcademicPeriods.start_date <= ' => $newStartDate
+                    ])
+                ;
                 break;
 
             case 'StaffAbsences':
-                $conditions = [
+                $query->where([
                     $model->aliasField('staff_id') => $staffId,
                     $model->aliasField('institution_id') => $institutionId,
                     $model->aliasField('start_date >=') => $originalStartDate,
                     $model->aliasField('start_date <=') => $newStartDate
-                ];
+                ]);
                 break;
 
             case 'StaffPositionProfiles':
-                $conditions = [
+                $query->where([
                     $model->aliasField('staff_id') => $staffId,
                     $model->aliasField('institution_id') => $institutionId,
                     $model->aliasField('start_date >=') => $originalStartDate,
                     $model->aliasField('start_date <=') => $newStartDate
-                ];
+                ]);
                 break;
 
             case 'StaffLeave':
-                $conditions = [
+                $query->where([
                     $model->aliasField('staff_id') => $staffId,
                     $model->aliasField('institution_id') => $institutionId,
                     $model->aliasField('date_from >=') => $originalStartDate,
                     $model->aliasField('date_from <=') => $newStartDate
-                ];
+                ]);
                 break;
 
             case 'InstitutionStudentsReportCardsComments':
-                $conditions = [
-                    $model->aliasField('staff_id') => $staffId,
-                    $model->aliasField('institution_id') => $institutionId,
-                    $model->aliasField('academic_period_id >=') => $academicPeriodId
-                ];
+                $query->contain(['AcademicPeriods'])
+                    ->where([
+                        $model->aliasField('staff_id') => $staffId,
+                        $model->aliasField('institution_id') => $institutionId,
+                        'AcademicPeriods.start_date <= ' => $newStartDate
+                    ])
+                ;
                 break;
 
             case 'StaffAppraisals':
-                $conditions = [
-                    $model->aliasField('created_user_id') => $staffId,
-                    $model->aliasField('academic_period_id >=') => $academicPeriodId
-                ];
+                $query->contain(['AcademicPeriods'])
+                    ->where([
+                        $model->aliasField('created_user_id') => $staffId,
+                        'AcademicPeriods.start_date <= ' => $newStartDate
+                    ])
+                ;
                 break;
 
             case 'StaffBehaviours':
-                $conditions = [
+                $query->where([
                     $model->aliasField('staff_id') => $staffId,
                     $model->aliasField('institution_id') => $institutionId,
                     $model->aliasField('date_of_behaviour >=') => $originalStartDate,
                     $model->aliasField('date_of_behaviour <=') => $newStartDate
-                ];
+                ]);
                 break;
 
-            case 'StaffTransferRequests':
-                $conditions = [
+            case 'StaffTransferOut':
+                $query->where([
                     $model->aliasField('staff_id') => $staffId,
-                    $model->aliasField('status') => 0,
                     $model->aliasField('previous_institution_id') => $institutionId,
-                    $model->aliasField('start_date >=') => $originalStartDate,
-                    $model->aliasField('start_date <=') => $newStartDate
-                ];
+                    $model->aliasField('previous_end_date') . ' IS NOT NULL',
+                    $model->aliasField('previous_end_date >=') => $originalStartDate,
+                    $model->aliasField('previous_end_date <=') => $newStartDate
+                ]);
+                $workflowPendingRecords = true;
                 break;
 
             case 'Salaries':
-                $conditions = [
+                $query->where([
                     $model->aliasField('staff_id') => $staffId,
                     $model->aliasField('salary_date >=') => $originalStartDate,
                     $model->aliasField('salary_date <=') => $newStartDate
-                ];
+                ]);
                 break;
 
             case 'StaffSubjects':
-                $conditions = [
+                $query->where([
                     $model->aliasField('staff_id') => $staffId,
                     $model->aliasField('institution_id') => $institutionId,
                     $model->aliasField('start_date >=') => $originalStartDate,
                     $model->aliasField('start_date <=') => $newStartDate
-                ];
+                ]);
                 break;
         }
 
-        $dataCount = $model->find()
-            ->where($conditions)
-            ->count();
+        if ($workflowPendingRecords) {
+            $doneStatus = $model::DONE;
+            $query->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where(['category <> ' => $doneStatus]);
+                });
+        }
 
-        return $dataCount;
+        return $query->count();
     }
 }

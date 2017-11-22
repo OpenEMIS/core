@@ -175,6 +175,14 @@ class GuardiansTable extends ControllerActionTable
             }
             $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
 
+            $requestData = $this->request->data;
+            if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
+                $guardianId = $requestData[$this->alias()]['guardian_id'];
+                $guardianName = $this->Users->get($guardianId)->name_with_id;
+
+                $attr['attr']['value'] = $guardianName;
+            }
+
             $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";

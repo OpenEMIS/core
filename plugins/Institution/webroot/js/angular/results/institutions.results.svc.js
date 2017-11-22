@@ -243,14 +243,18 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
         },
 
         getColumnDefs: function(action, subject, periods, gradingTypes, _results, enrolledStatus) {
+            var menuTabs = [ "filterMenuTab" ];
             var filterParams = {
                 cellHeight: 30
             };
             var columnDefs = [];
 
             var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
+            var isRtl = document.querySelector("html").classList.contains("rtl");
             if (isMobile) {
                 var direction = '';
+            } else if (isRtl) {
+                var direction = 'right';
             } else {
                 var direction = 'left';
             }
@@ -259,27 +263,34 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 headerName: "OpenEMIS ID",
                 field: "openemis_id",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
             columnDefs.push({
                 headerName: "Name",
                 field: "name",
                 sort: 'asc',
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
             columnDefs.push({
                 headerName: "student id",
                 field: "student_id",
                 hide: true,
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs
             });
             columnDefs.push({
                 headerName: "Status",
                 field: "student_status_name",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
 
             var ResultsSvc = this;
@@ -319,7 +330,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 var columnDef = {
                     headerName: headerName,
                     field: periodField,
-                    filterParams: filterParams
+                    filterParams: filterParams,
+                    menuTabs: menuTabs
                 };
 
                 var extra = {};
@@ -388,6 +400,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             columnDefs.push({
                 headerName: "Total Mark",
                 field: "total_mark",
+                menuTabs: menuTabs,
                 filter: "number",
                 valueGetter: function(params) {
                     var value = ResultsSvc.calculateTotal(params.data);
@@ -439,13 +452,14 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    cellClass: function(params) {
-                        studentStatusId = params.data.student_status_id;
-                        var highlightClass = 'oe-cell-highlight';
-                        if (params.data.save_error[params.colDef.field]) {
-                            highlightClass += ' oe-cell-error';
+                    cellClassRules: {
+                        'oe-cell-highlight': function(params) {
+                            var studentStatusId = params.data.student_status_id;
+                            return (studentStatusId == enrolledStatus);
+                        },
+                        'oe-cell-error': function(params) {
+                            return params.data.save_error[params.colDef.field];
                         }
-                        return (studentStatusId == enrolledStatus) ? highlightClass : false;
                     },
                     editable: function(params) {
                         // only enrolled student is editable
@@ -475,9 +489,10 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    cellClass: function(params) {
-                        var errorClass = 'oe-cell-error';
-                        return (params.data.save_error[params.colDef.field]) ? errorClass : false;
+                    cellClassRules: {
+                        'oe-cell-error': function(params) {
+                            return params.data.save_error[params.colDef.field];
+                        }
                     },
                     cellRenderer: function(params) {
                         studentStatusId = params.data.student_status_id;
@@ -528,15 +543,21 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                                     vm.saveSingleRecordData(params, extra)
                                     .then(function(response) {
                                         params.data.save_error[params.colDef.field] = false;
-                                        AlertSvc.reset(scope);
                                         AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
-                                        params.api.refreshCells([params.node], [params.colDef.field]);
-
+                                        params.api.refreshCells({
+                                            rowNodes: [params.node],
+                                            columns: [params.colDef.field],
+                                            force: true
+                                        });
                                     }, function(error) {
                                         params.data.save_error[params.colDef.field] = true;
                                         console.log(error);
                                         AlertSvc.error(scope, 'There was an error when saving the result');
-                                        params.api.refreshCells([params.node], [params.colDef.field]);
+                                        params.api.refreshCells({
+                                            rowNodes: [params.node],
+                                            columns: [params.colDef.field],
+                                            force: true
+                                        });
                                     });
                                 }
                             });
@@ -622,13 +643,14 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    cellClass: function(params) {
-                        studentStatusId = params.data.student_status_id;
-                        var highlightClass = 'oe-cell-highlight';
-                        if (params.data.save_error[params.colDef.field]) {
-                            highlightClass += ' oe-cell-error';
+                    cellClassRules: {
+                        'oe-cell-highlight': function(params) {
+                            var studentStatusId = params.data.student_status_id;
+                            return (studentStatusId == enrolledStatus);
+                        },
+                        'oe-cell-error': function(params) {
+                            return params.data.save_error[params.colDef.field];
                         }
-                        return (studentStatusId == enrolledStatus) ? highlightClass : false;
                     },
                     cellRenderer: function(params) {
                         var oldValue = params.data[params.colDef.field];
@@ -750,14 +772,21 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 vm.saveSingleRecordData(params, extra)
                 .then(function(response) {
                     params.data.save_error[params.colDef.field] = false;
-                    AlertSvc.reset(scope);
                     AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
-                    params.api.refreshCells([params.node], [params.colDef.field]);
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field],
+                        force: true
+                    });
                 }, function(error) {
                     params.data.save_error[params.colDef.field] = true;
                     console.log(error);
                     AlertSvc.error(scope, 'There was an error when saving the result');
-                    params.api.refreshCells([params.node], [params.colDef.field]);
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field],
+                        force: true
+                    });
                 });
             }
         },

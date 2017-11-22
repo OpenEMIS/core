@@ -48,9 +48,24 @@ class AlertLogsTable extends ControllerActionTable
     public function alertAssigneeAfterSave(Event $mainEvent, Entity $recordEntity)
     {
         $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
         $Users = TableRegistry::get('User.Users');
-        $model = TableRegistry::get($recordEntity->source());
+
+        if ($recordEntity->has('status_id') && $recordEntity->status_id > 0) {
+            // used to get correct workflow model for StaffTransferIn and StaffTransferOut
+            $stepEntity = $WorkflowSteps->find()
+                ->matching('Workflows.WorkflowModels')
+                ->where([$WorkflowSteps->aliasField('id') => $recordEntity->status_id])
+                ->first();
+
+            if (!empty($stepEntity)) {
+                $modelName = $stepEntity->_matchingData['WorkflowModels']->model;
+            }
+        }
+
+        $workflowModel = isset($modelName) ? $modelName : $recordEntity->source();
+        $model = TableRegistry::get($workflowModel);
         $modelAlias = $model->alias();
         $modelRegistryAlias = $model->registryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
@@ -84,44 +99,46 @@ class AlertLogsTable extends ControllerActionTable
                 $query->contain($contain);
             }
 
-            $lastExecutorId = !empty($records->modified_user_id) ? $records->modified_user_id : $records->created_user_id;
-            $lastExecutorName = $Users->get($lastExecutorId)->name;
+            if ($records) {
+                $lastExecutorId = $records->created_user_id;
+                $lastExecutorName = $Users->get($lastExecutorId)->name;
 
-            $vars = $query->hydrate(false)->first();
-            $vars['feature'] = $feature;
-            $vars['last_executor_id'] = $lastExecutorId;
-            $vars['last_executor_name'] = $lastExecutorName;
-            $vars['workflow_comment'] = $records->comment;
+                $vars = $query->hydrate(false)->first();
+                $vars['feature'] = $feature;
+                $vars['last_executor_id'] = $lastExecutorId;
+                $vars['last_executor_name'] = $lastExecutorName;
+                $vars['workflow_comment'] = $records->comment;
 
-            if (!empty($vars['assignee']['email'])) { // if no email will not insert to alertlog.
-                $assigneeName = $Users->get($vars['assignee']['id'])->name;
-                $assigneeEmail = $vars['assignee']['email'];
-                $recipient = $assigneeName . ' <' . $assigneeEmail . '>';
+                if (!empty($vars['assignee']['email'])) { // if no email will not insert to alertlog.
+                    $assigneeName = $Users->get($vars['assignee']['id'])->name;
+                    $assigneeEmail = $vars['assignee']['email'];
+                    $recipient = $assigneeName . ' <' . $assigneeEmail . '>';
 
-                $defaultSubject = __('[${feature}] (${status.name}) ${created_user.first_name} ${created_user.last_name}');
-                $subject = $this->replaceMessage($modelAlias, $defaultSubject, $vars);
+                    $defaultSubject = __('[${feature}] (${status.name}) ${created_user.first_name} ${created_user.last_name}');
+                    $subject = $this->replaceMessage($modelAlias, $defaultSubject, $vars);
 
-                $defaultMessage = __('Your action is required for [${feature} Workflow].');
-                $defaultMessage .= "\n"; // line break
-                $defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . '${status.name}' ;
-                $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${last_executor_name}' ;
-                $defaultMessage .= "\n" . __('Comments')    . ': ' . "\t"    . '${workflow_comment}' ;
+                    $defaultMessage = __('Your action is required for [${feature} Workflow].');
+                    $defaultMessage .= "\n"; // line break
+                    $defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . '${status.name}' ;
+                    $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${last_executor_name}' ;
+                    $defaultMessage .= "\n" . __('Comments')    . ': ' . "\t"    . '${workflow_comment}' ;
 
-                $message = $this->getWorkflowEmailMessage($recordEntity);
+                    $message = $this->getWorkflowEmailMessage($recordEntity);
 
-                if (is_null($message)) {
-                    $message = $this->replaceMessage($modelAlias, $defaultMessage, $vars);
-                } else {
-                    $message = $this->replaceMessage($modelAlias, $message, $vars);
-                }
+                    if (is_null($message)) {
+                        $message = $this->replaceMessage($modelAlias, $defaultMessage, $vars);
+                    } else {
+                        $message = $this->replaceMessage($modelAlias, $message, $vars);
+                    }
 
-                // insert to the alertLog and send the email
-                $this->insertAlertLog($method, $modelAlias, $recipient, $subject, $message);
-            }// end no assignee email in the $vars
+                    // insert to the alertLog and send the email
+                    $this->insertAlertLog($method, $modelAlias, $recipient, $subject, $message);
+                }// end no assignee email in the $vars
+            }
         }// end if have assignee id in the recordEntity
     }
 
-    public function insertAlertLog($method, $feature, $email, $subject=null, $message=null)
+    public function insertAlertLog($method, $feature, $email, $subject = null, $message = null)
     {
         $today = Time::now();
         $todayDate = Date::now();
@@ -263,7 +280,7 @@ class AlertLogsTable extends ControllerActionTable
         $workflowFeatures = $WorkflowModels->getFeatureOptions();
         ksort($workflowFeatures); // sort alphabetical
 
-        $features = array_merge($alertFeatures,$workflowFeatures); // combine the alert and workflow feature
+        $features = array_merge($alertFeatures, $workflowFeatures); // combine the alert and workflow feature
 
         $featureOptions['AllFeatures'] = __('All Features'); // to show all the records
         foreach ($features as $key => $value) {
@@ -300,7 +317,7 @@ class AlertLogsTable extends ControllerActionTable
         return $message;
     }
 
-    public function triggerSendingAlertShell($shellName, $feature=null, $alertLogId=0)
+    public function triggerSendingAlertShell($shellName, $feature = null, $alertLogId = 0)
     {
         $args = '';
         $args .= !is_null($feature) ? ' '.$feature : '';
