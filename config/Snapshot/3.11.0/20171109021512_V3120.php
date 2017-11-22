@@ -1,7 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 
-class V3110 extends AbstractMigration
+class V3120 extends AbstractMigration
 {
 
     public $autoId = false;
