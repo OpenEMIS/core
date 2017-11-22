@@ -53,6 +53,10 @@ body.installer .menu-handler {
     .startup-wizard .step-pane > .step-pane-wrapper {
     	padding: 20px !important;
     }
+
+    body.installer .navbar {
+        height: auto;
+    }
 }
 
 @media only screen and (max-width: 800px) {
