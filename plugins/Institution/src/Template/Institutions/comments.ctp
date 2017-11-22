@@ -53,7 +53,7 @@ $institutionId = $paramsQuery['institution_id'];
             </scrollable-tabset>
 
             <div id="institution-comment-table" class="table-wrapper">
-                <div ng-if="InstitutionCommentsController.gridOptions" ag-grid="InstitutionCommentsController.gridOptions" class="sg-theme"></div>
+                <div ng-if="InstitutionCommentsController.gridOptions" kd-ag-grid="InstitutionCommentsController.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
             </div>
         </div>
     </div>

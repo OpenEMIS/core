@@ -101,6 +101,12 @@ class ControllerActionHelper extends Helper
             'url' => !is_null($backBtn) ? $backBtn['url'] : []
         ];
 
+        // reload button
+        $buttons[] = [
+            'name' => 'reload',
+            'attr' => ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']
+        ];
+
         $config = $this->_View->get('ControllerAction');
         $table = $config['table'];
 
@@ -119,7 +125,6 @@ class ControllerActionHelper extends Helper
                     $html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
                 }
             }
-            $html .= $this->Form->button('reload', ['id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden']);
             $html .= '</div>';
         }
         return $html;

@@ -57,6 +57,7 @@ trait MessagesTrait
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
             'noRecords' => 'No Record',
+            'noFile' => 'File does not exist.',
             'failConnectToExternalSource' => 'There is an issue establishing connection to the External Datasource. Please contact the administrator for assistance.',
             'select' => [
                 'noOptions' => 'No options'
@@ -75,6 +76,7 @@ trait MessagesTrait
             'delete' => [
                 'restrictDelete' => 'The record cannot be deleted.',
                 'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
+                'cascadeDelete' => 'All associated information related to this record will also be removed.',
                 'success' => 'The record has been deleted successfully.',
                 'failed' => 'The record is not deleted due to errors encountered.',
                 'label' => 'Delete',
@@ -466,6 +468,10 @@ trait MessagesTrait
             'systemDefined' => 'This is a system defined record',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
+        'WorkflowStepsParams' => [
+            'institutionOwner' => 'The selected institution can execute workflow actions on this step',
+            'institutionVisible' => 'The selected institutions can view this step'
+        ],
         'WorkflowActions' => [
             'add_event' => 'Add Event',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
@@ -558,18 +564,6 @@ trait MessagesTrait
             'request' => 'Request for Change in Assignment has been submitted successfully.',
             'notExists' => 'Staff record no longer exists in the system.',
             'errorApproval' => 'Record cannot be approved due to errors encountered.',
-        ],
-        'StaffTransferRequests' => [
-            'alreadyAssigned' => '%s is currently assigned to %s',
-            'confirmRequest' => 'By clicking save, a transfer request will be sent to the institution for approval',
-            'errorApproval' => 'Record cannot be assigned due to errors encountered',
-        ],
-        'StaffTransferApprovals' => [
-            'transferType' => 'Please select the transfer type.',
-            'effectiveDate' => 'Please enter an effective date for the partial transfer.',
-            'effectiveDateCompare' => 'Effective date should be later than Current Start Date.',
-            'newFTE' => 'Please select a new FTE for the partial transfer.',
-            'staffEndOfAssignment' => 'The assignment of this staff has ended.'
         ],
         'UndoStudentStatus' => [
             'noGrades' => 'No Available Grades',
@@ -785,6 +779,9 @@ trait MessagesTrait
         ],
         'UserBodyMasses' => [
             'dateNotWithinPeriod' => 'Date should be within %s and %s'
+        ],
+        'StaffTransferOut' => [
+            'existingStaffTransfer' => 'There is an existing transfer record for this staff'
         ],
 
         // Validation Messages
@@ -1211,6 +1208,22 @@ trait MessagesTrait
                     'busCapacityNotSet' => 'There is no capacity configured for the selected bus'
                 ]
             ],
+            'StaffTransferIn' => [
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Current Institution End Date'
+                ],
+                'new_end_date' => [
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ]
+            ],
+            'StaffTransferOut' => [
+                'previous_end_date' => [
+                    'ruleCompareDateReverse' => 'Position End Date should not be earlier than Position Start Date'
+                ],
+                'previous_effective_date' => [
+                    'ruleCompareDateReverse' => 'Effective Date should not be earlier than Position Start Date'
+                ]
+            ]
         ],
         'User' => [
             'Users' => [

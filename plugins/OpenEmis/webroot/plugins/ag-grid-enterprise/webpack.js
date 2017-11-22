@@ -5,5 +5,7 @@ var populateClientExports = require('./dist/lib/clientExports').populateClientEx
 populateClientExports(exports);
 
 // also add in in exports for ag-Grid-Standard, as it's webpack, we want both packed up
-var populateStandardExports = require('ag-grid/dist/lib/clientExports').populateClientExports;
-populateStandardExports(exports);
+var agGrid = require('ag-grid/main');
+Object.keys(agGrid).forEach(function(key) {
+    exports[key] = agGrid[key];
+});

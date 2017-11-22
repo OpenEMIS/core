@@ -11,7 +11,8 @@ class InstitutionTransportProvidersController extends PageController
     {
         parent::initialize();
 
-        $this->Page->loadElementsFromTable($this->InstitutionTransportProviders);
+        // to disable actions if institution is not active
+        $this->loadComponent('Institution.InstitutionInactive');
     }
 
 	public function beforeFilter(Event $event)

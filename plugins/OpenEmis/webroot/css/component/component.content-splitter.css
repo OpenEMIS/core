@@ -1,4 +1,4 @@
-/* CONTENT SPLITTER v.1.0.0 */
+/* CONTENT SPLITTER v.1.0.1 */
 
 
 /* === Split Containers === */
@@ -25,7 +25,7 @@
 .content-splitter .split-content {
     padding: 5px;
     margin: 0 0 0 10px;
-    z-index: 2;
+    z-index: 99;
 }
 
 /* === End of Split Containers === */
@@ -69,8 +69,8 @@
 
 .content-splitter.split-panes.horizontal > .split-handler {
     border-left: 1px solid #DDD;
-    top: -10px !important;
-    bottom: -10px !important;
+    top: 0 !important;
+    bottom: 0 !important;
     -webkit-box-shadow: inset 2px -2px 4px rgba(0, 0, 0, 0.04);
     box-shadow: inset 2px -2px 4px rgba(0, 0, 0, 0.04);
     background-color: #FEFEFE;
@@ -116,7 +116,7 @@
 }*/
 
 .split-content-header {
-    padding: 0 0 0 10px;
+    padding: 0;
 }
 
 
@@ -140,7 +140,7 @@
 }
 
 .split-content-area {
-    padding: 5px 0 40px 10px;
+    padding: 0;
 }
 
 
@@ -269,6 +269,8 @@
 /* === RTL Handler === */
 
 .rtl .content-splitter.split-panes.horizontal > .split-handler {
+    top: 0;
+    bottom: 0;
     border-left: 0;
     border-right: 1px solid #DDD;
     -webkit-box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.04);
@@ -291,8 +293,8 @@
 }
 
 .rtl .content-splitter.split-panes.horizontal > .split-handler {
-    top: -15px !important;
-    bottom: -20px !important;
+    top: 0 !important;
+    bottom: 0 !important;
 }
 
 .rtl .split-content-header .split-content-btn button:first-child {

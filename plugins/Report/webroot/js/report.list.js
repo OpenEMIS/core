@@ -17,6 +17,10 @@ var ReportList = {
 					if ($.inArray(rowId, ids) == -1) {
 						ids.push(rowId);
 					}
+
+					if (ids.length > 0) {
+						ReportList.getProgress(ids);
+					}
 				} else {
 					$(e).closest('.progress').fadeOut(1000, function() {
 						$(e).closest('td').find('a.download').removeClass('none');
@@ -26,10 +30,6 @@ var ReportList = {
 				}
 			}
 		});
-
-		if (ids.length > 0) {
-			ReportList.getProgress(ids);
-		}
 	},
 
 	getProgress: function(ids) {
@@ -41,7 +41,6 @@ var ReportList = {
 			data: {'ids': ids},
 			url: url,
 			success: function(response, textStatus) {
-				console.log(response);
 				$.each(response, function(id, data) {
 					var selector = '[row-id="' + id + '"]';
 
@@ -52,6 +51,7 @@ var ReportList = {
 						if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
 							$(selector).find('.modified').html(data['modified']);
 							$(selector).find('.expiryDate').html(data['expiry_date']);
+							ReportList.init();
 						} else if (data['status'] == -1) {
 							progressbar.closest('.progress').fadeOut(1000, function() {
 								$('[data-toggle="tooltip"]').removeClass('none').tooltip();
@@ -61,10 +61,10 @@ var ReportList = {
 					}
 				});
 
-				// delay 1s before send another ajax request again
+				// delay 5s before send another ajax request again
 				setTimeout(function() {
 					ReportList.init();
-				}, 1000);
+				}, 5000);
 			}
 		});
 	}

@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
+use Cake\I18n\Date;
 
 class InstitutionSubjectBehavior extends Behavior
 {
@@ -19,6 +20,62 @@ class InstitutionSubjectBehavior extends Behavior
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         return $events;
+    }
+
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
+        // This logic will only be triggered when the table is accessed by RestfulController
+
+        if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
+            $user = $options['user'];
+            if ($user['super_admin'] == 0) { // if he is not super admin
+                $userId = $user['id'];
+                $today = Date::now();
+
+                $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
+                    'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
+                    'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
+                ])
+                ->innerJoin(['SecurityFunctions' => 'security_functions'], [
+                    'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
+                ])
+                ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                    'InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id'
+                ])
+                ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                    'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                ])
+                ->where([
+                    // basically if AllSubjects permission is granted, the user should see all subjects of that classes
+                    // if MySubjects permission is granted, the user must be a teacher of that subject
+                    'OR' => [
+                        [
+                            'OR' => [ // AllSubjects permissions
+                                "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
+                                "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
+                            ]
+                        ], [
+                            'AND' => [
+                                [
+                                    'OR' => [ // MySubjects permissions
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
+                                    ]
+                                ],
+                                'InstitutionSubjectStaff.staff_id' => $userId,
+                                'OR' => [
+                                    'InstitutionSubjectStaff.end_date IS NULL',
+                                    'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
+                                ]
+                            ]
+                        ]
+                    ]
+                ])
+                ->group([$this->_table->aliasField('id')]); // so it doesn't show duplicate subjects
+            }
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -187,7 +244,8 @@ class InstitutionSubjectBehavior extends Behavior
 							FROM institution_subject_staff
 							WHERE institution_subject_staff.institution_subject_id = ' . $this->_table->aliasField('id') . '
 							AND institution_subject_staff.staff_id = ' . $userId .
-                        ')',
+                        '   LIMIT 1
+                        )',
 
                         // second condition if the current user is the homeroom teacher of the subject class
                         'EXISTS (
@@ -197,7 +255,8 @@ class InstitutionSubjectBehavior extends Behavior
 							ON institution_classes.id = institution_class_subjects.institution_class_id
 							AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
 							WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') .
-                        ')'
+                        '   LIMIT 1
+                        )'
                     ]
                 ]);
             }
