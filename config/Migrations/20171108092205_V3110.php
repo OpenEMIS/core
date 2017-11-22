@@ -1,7 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 
-class POCOR4249 extends AbstractMigration
+class V3110 extends AbstractMigration
 {
     public function up()
     {
