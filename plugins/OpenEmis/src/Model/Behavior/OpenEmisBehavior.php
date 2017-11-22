@@ -240,7 +240,7 @@ class OpenEmisBehavior extends Behavior
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
-        if ($model->request->is('delete')) {
+        if ($model->request->is('delete') || $extra['forceDeleteRecord']) {
             if ($extra['result']) {
                 if (isset($extra['Alert']['message'])) {
                     $model->Alert->success($extra['Alert']['message']);
