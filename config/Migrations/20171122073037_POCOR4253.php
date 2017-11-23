@@ -120,6 +120,13 @@ class POCOR4253 extends AbstractMigration
             FROM  `z_4253_institutions`
         ');
         // end of insert data
+
+        // import_mapping
+        $this->execute('
+            DELETE FROM `import_mapping` WHERE `column_name` = "institution_network_connectivity_id"
+        ');
+        // end import_mapping
+
     }
 
     // rollback
@@ -139,5 +146,12 @@ class POCOR4253 extends AbstractMigration
         // dropping table
         $this->execute('DROP TABLE `utility_internet_bandwidths`');
         // end dropping table
+
+        // import_mapping
+        $this->execute('
+            INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`)
+            VALUES (23, "Institution.Institutions", "institution_network_connectivity_id", "Code", 23, 0, 2, "Institution", "NetworkConnectivities", "id")
+        ');
+        // end import_mapping
     }
 }
