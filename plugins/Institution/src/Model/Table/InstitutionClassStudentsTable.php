@@ -586,6 +586,7 @@ class InstitutionClassStudentsTable extends AppTable
                         'openemis_no' => $result->_matchingData['Users']->openemis_no,
                         'name' => $result->_matchingData['Users']->name,
                         'gender' => __($result->_matchingData['Genders']->name),
+                        'gender_id' => $result->_matchingData['Genders']->id,
                         'student_status' => __($result->_matchingData['StudentStatuses']->name),
                         'student_id' => $result->student_id,
                         'institution_class_id' => $result->institution_class_id,
