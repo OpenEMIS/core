@@ -257,7 +257,7 @@ class ReportListBehavior extends Behavior {
 			]);
 			return $response;
 		} else {
-			$ReportProgress->delete($entity);
+			$this->ReportProgress->delete($entity);
 			$controller = $this->_table->controller->name;
 			$table = $this->_table->alias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
