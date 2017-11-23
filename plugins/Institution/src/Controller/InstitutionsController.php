@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use Cake\I18n\Date;
 use Cake\Controller\Exception\SecurityException;
-
+use Cake\Core\Configure;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
@@ -1402,6 +1402,8 @@ class InstitutionsController extends AppController
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
         }
 
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+
         $session = $this->request->session();
         $session->write('Institution.'.$type.'.tabElements', $tabElements);
 
@@ -1444,7 +1446,7 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
             }
         }
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getCareerTabElements($options = [])
@@ -1480,13 +1482,14 @@ class InstitutionsController extends AppController
             }
         }
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getProfessionalDevelopmentTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+        $tabs = TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+        return $this->TabPermission->checkTabPermission($tab);
     }
 
     public function getCompetencyTabElements($options = [])
@@ -1502,7 +1505,7 @@ class InstitutionsController extends AppController
                 'text' => __('Periods')
             ]
         ];
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate = '')
