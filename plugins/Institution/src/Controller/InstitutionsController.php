@@ -1583,10 +1583,37 @@ class InstitutionsController extends AppController
         $staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
         $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
 
+        // POCOR-4269 same staff cant add to same position regardsless the FTE
+        $openemisNo = $this->request->params['pass'][3];
+        $positionHeldByStaff = $StaffTable->find()
+            ->select([
+                'position_id' => $StaffTable->aliasField('institution_position_id'),
+            ])
+            ->contain(['Users'])
+            ->where([
+                $StaffTable->aliasField('institution_id') => $institutionId,
+                'Users.openemis_no' => $openemisNo
+            ])
+            ->hydrate(false)
+            ->toArray();
+        // end POCOR-4269
+
         // Adding the opt group
         $types = $this->getSelectOptions('Staff.position_types');
         $options = [];
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
+
+        // POCOR-4269 if staff already held some position that position is unavailable anymore.
+        if (!empty($positionHeldByStaff)) {
+            foreach ($positionHeldByStaff as $value) {
+                $positionId = $value['position_id'];
+                if (!in_array($positionId, $excludePositions)) {
+                    $excludePositions[] = $positionId;
+                }
+            }
+        }
+        // end POCOR-4269
+
         foreach ($staffPositionsOptions as $position) {
             $name = $position->name . ' - ' . $position->grade_name;
 
