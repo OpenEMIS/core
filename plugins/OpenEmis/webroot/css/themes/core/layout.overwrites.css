@@ -1050,6 +1050,42 @@ a,
 
 /* End of fix for #south styling */
 
+/* Temp fix for radio in ag-Grid not style for task POCOR-3233 */
+
+.ag-radio-wrapper input.ag-grid-radio {
+    top: 10px;
+    left: 10px;
+}
+
+.ag-radio-wrapper label.ag-cell-label {
+    top: -6px !important;
+    left: 2px !important;
+}
+
+.rtl .ag-radio-wrapper label.ag-cell-label {
+    right: 5px !important;
+    top: -10px !important;
+}
+
+.ag-header-cell-label > span[ref='eText'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: auto;
+}
+
+.ag-header-cell-resize:hover {
+    width: 8px;
+    right: -5px;
+    border: none;
+}
+
+.ag-rtl .ag-header-cell-resize {
+    position: relative;
+}
+
+/* End of fix for radio */ 
+
 /* Temp fix for adding error border in ag Grid for task POCOR-4010 */
 /* Temp fix for adding error border in ag Grid (last child for pinned and not pinned) for task POCOR-4260 */
 .ag-fresh .ag-cell-no-focus.oe-cell-error,
