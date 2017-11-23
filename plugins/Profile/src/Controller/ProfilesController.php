@@ -396,7 +396,7 @@ class ProfilesController extends AppController
             }
         }
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getAcademicTabElements($options = [])
@@ -424,7 +424,7 @@ class ProfilesController extends AppController
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
         }
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getFinanceTabElements($options = [])
@@ -449,7 +449,7 @@ class ProfilesController extends AppController
             $studentTabElements[$key]['url'] = array_merge($studentTabElements[$key]['url'], ['type' => $type]);
         }
 
-        return $studentTabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     // For staff
@@ -475,7 +475,7 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => 'staff']);
         }
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getProfessionalDevelopmentTabElements($options = [])
@@ -496,7 +496,7 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index']);
         }
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getStaffFinanceTabElements($options = [])
@@ -515,7 +515,7 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
         }
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getTrainingTabElements($options = [])
@@ -534,6 +534,6 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
         }
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
