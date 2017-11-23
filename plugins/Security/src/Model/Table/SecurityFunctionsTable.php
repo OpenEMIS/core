@@ -64,7 +64,7 @@ class SecurityFunctionsTable extends AppTable
             $query->formatResults(function ($result) {
                 $result = $result->toArray();
                 foreach ($result as $key => $value) {
-                    $excludedPlugins = Configure::read('School.excludedPlugins');
+                    $excludedPlugins = (array) Configure::read('School.excludedPlugins');
                     if (in_array($value->category, $excludedPlugins) || in_array($value->name, $excludedPlugins)) {
                         unset($result[$key]);
                     } else {
