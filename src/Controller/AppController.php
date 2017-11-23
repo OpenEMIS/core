@@ -18,7 +18,7 @@ use Cake\Controller\Controller;
 use Cake\Event\Event;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
-
+use Cake\Routing\Router;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\SecurityTrait;
 
@@ -60,7 +60,22 @@ class AppController extends Controller
      */
     public function initialize()
     {
+        if (!file_exists(CONFIG . 'datasource.php')) {
+            $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
+            header('Location: '. $url);
+            die;
+        }
+
+        if (Configure::read('schoolMode')) {
+            $this->productName = 'OpenEMIS School';
+        }
+
         parent::initialize();
+        $theme = 'core';
+        if (Configure::read('schoolMode')) {
+            $theme = 'school';
+            $this->productName = 'OpenEMIS School';
+        }
 
         // don't load ControllerAction component if it is not a PageController
         if ($this instanceof \Page\Controller\PageController == false) {
@@ -112,7 +127,7 @@ class AppController extends Controller
                 ]
             ],
             'productName' => $this->productName,
-            'theme' => 'core'
+            'theme' => $theme
         ]);
 
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
@@ -152,6 +167,7 @@ class AppController extends Controller
         if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
+        $this->loadComponent('TabPermission');
     }
 
     /**
