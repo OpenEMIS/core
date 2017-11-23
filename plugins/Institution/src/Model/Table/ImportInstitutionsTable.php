@@ -30,7 +30,7 @@ class ImportInstitutionsTable extends AppTable
             'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
             'Model.import.onImportPopulateAreasData' => 'onImportPopulateAreasData',
             'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
-            'Model.import.onImportPopulateNetworkConnectivitiesData' => 'onImportPopulateNetworkConnectivitiesData',
+            // 'Model.import.onImportPopulateNetworkConnectivitiesData' => 'onImportPopulateNetworkConnectivitiesData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
         ];
@@ -119,31 +119,31 @@ class ImportInstitutionsTable extends AppTable
         }
     }
 
-    public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        // die('onImportPopulateNetworkConnectivitiesData');
-        $order = [$lookupModel.'.order'];
+    // public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    // {
+    //     // die('onImportPopulateNetworkConnectivitiesData');
+    //     $order = [$lookupModel.'.order'];
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
-        $modelData = $lookedUpTable->find('all')
-                                ->select($selectFields)
-                                ->order($order)
-                                ;
+    //     $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    //     $selectFields = ['name', $lookupColumn];
+    //     $modelData = $lookedUpTable->find('all')
+    //                             ->select($selectFields)
+    //                             ->order($order)
+    //                             ;
 
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $translatedCol = $this->getExcelLabel('Import', 'institution_network_connectivity_id');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-        if (!empty($modelData)) {
-            foreach ($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->{$lookupColumn}
-                ];
-            }
-        }
-    }
+    //     $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+    //     $translatedCol = $this->getExcelLabel('Import', 'institution_network_connectivity_id');
+    //     $data[$columnOrder]['lookupColumn'] = 2;
+    //     $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+    //     if (!empty($modelData)) {
+    //         foreach ($modelData->toArray() as $row) {
+    //             $data[$columnOrder]['data'][] = [
+    //                 $row->name,
+    //                 $row->{$lookupColumn}
+    //             ];
+    //         }
+    //     }
+    // }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
