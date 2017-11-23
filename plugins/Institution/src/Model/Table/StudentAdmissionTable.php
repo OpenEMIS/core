@@ -354,6 +354,9 @@ class StudentAdmissionTable extends AppTable {
     public function onGetStudentId(Event $event, Entity $entity){
         $urlParams = $this->ControllerAction->url('index');
         $action = $urlParams['action'];
+        if ($entity->type == self::TRANSFER) {
+            $action = 'TransferApprovals';
+        }
         if ($entity->status == self::NEW_REQUEST) {
             if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
                 return $event->subject()->Html->link($entity->user->name, [
