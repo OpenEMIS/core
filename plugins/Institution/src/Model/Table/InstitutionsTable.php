@@ -537,9 +537,9 @@ class InstitutionsTable extends ControllerActionTable
             $cloneClass = clone $this->dashboardQuery;
 
             $models = [
-                ['Types', 'institution_type_id', 'Type', 'query' => $this->dashboardQuery],
+                ['Types', $this->aliasField('institution_type_id'), 'Type', 'query' => $this->dashboardQuery],
                 ['Sectors', $this->aliasField('institution_sector_id'), 'Sector', 'query' => $this->dashboardQuery],
-                ['Localities', 'institution_locality_id', 'Locality', 'query' => $this->dashboardQuery],
+                ['Localities', $this->aliasField('institution_locality_id'), 'Locality', 'query' => $this->dashboardQuery],
             ];
 
             foreach ($models as $key => $model) {
@@ -594,7 +594,7 @@ class InstitutionsTable extends ControllerActionTable
             $dataSet = [];
             foreach ($institutionTypesCount->toArray() as $key => $value) {
                 // Compile the dataset
-                $dataSet[] = [__($value['name']), $value['count']];
+                $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
             $params['dataSet'] = $dataSet;
         }
