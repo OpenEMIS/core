@@ -666,6 +666,7 @@ class RecordBehavior extends Behavior
 
             if (!empty($tabElements)) {
                 $selectedAction = !is_null($model->request->query('tab_section')) ? $model->request->query('tab_section') : $selectedAction;
+                // $model->controller->TabPermission->checkTabPermission($tabElements);
                 $model->controller->set('tabElements', $tabElements);
                 $model->controller->set('selectedAction', $selectedAction);
 

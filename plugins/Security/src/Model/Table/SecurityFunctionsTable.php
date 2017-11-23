@@ -3,6 +3,7 @@ namespace Security\Model\Table;
 
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
+use Cake\Core\Configure;
 
 class SecurityFunctionsTable extends AppTable
 {
@@ -61,9 +62,15 @@ class SecurityFunctionsTable extends AppTable
 
         if ($translate) {
             $query->formatResults(function ($result) {
-                foreach ($result as $value) {
-                    $value->name = __($value->name);
-                    $value->description = __($value->description);
+                $result = $result->toArray();
+                foreach ($result as $key => $value) {
+                    $excludedPlugins = Configure::read('School.excludedPlugins');
+                    if (in_array($value->category, $excludedPlugins) || in_array($value->name, $excludedPlugins)) {
+                        unset($result[$key]);
+                    } else {
+                        $value->name = __($value->name);
+                        $value->description = __($value->description);
+                    }
                 }
                 return $result;
             });
