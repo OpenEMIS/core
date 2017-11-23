@@ -32,7 +32,7 @@ class TabPermissionComponent extends Component
                 }
             }
 
-            $excludedPlugins = Configure::read('School.excludedPlugins');
+            $excludedPlugins = (array) Configure::read('School.excludedPlugins');
             if (isset($tabArray[$key]) && (array_key_exists($key, $excludedPlugins) || array_key_exists(Inflector::singularize($key), $excludedPlugins))) {
                 unset($tabArray[$key]);
             }
