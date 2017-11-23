@@ -96,7 +96,7 @@ class InfrastructuresController extends AppController
             default:
                 $selectedAction = $this->request->action;
         }
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $selectedAction);
     }

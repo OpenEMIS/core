@@ -206,6 +206,7 @@ class PermissionsTable extends ControllerActionTable
                 'text' => __($module)
             ];
         }
+        $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
     }
 

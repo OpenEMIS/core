@@ -1,5 +1,6 @@
 <?php
 $description = __d('open_emis', $_productName);
+$icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 ?>
 
 <!DOCTYPE html>
@@ -9,7 +10,7 @@ $description = __d('open_emis', $_productName);
 	<title><?= $description ?></title>
 	<?php
 		echo $this->Html->meta(['name' => 'viewport', 'content' => 'width=320, initial-scale=1']);
-		echo $this->Html->meta('favicon', 'favicon.ico', ['type' => 'icon']);
+		echo $this->Html->meta('favicon', 'favicon'.$icon.'.ico', ['type' => 'icon']);
 		echo $this->fetch('meta');
 
 		echo $this->Html->css('OpenEmis.../plugins/bootstrap/css/bootstrap.min', ['media' => 'screen']);
@@ -47,7 +48,7 @@ $description = __d('open_emis', $_productName);
 			<div class="title">
 				<span class="title-wrapper">
 					<i class="kd-openemis"></i>
-					<h1>OpenEMIS Core</h1>
+					<h1><?= $_productName ?></h1>
 				</span>
 			</div>
 			<?php
