@@ -962,6 +962,7 @@ class StudentsTable extends ControllerActionTable
     {
         $options['type'] = 'student';
         $tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Programmes');
     }
