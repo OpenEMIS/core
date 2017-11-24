@@ -1,5 +1,3 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
@@ -11,7 +9,7 @@
 			<table class="table table-checkable table-input">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+						<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
 						<th><?= $this->Label->get($attr['model'] .'.education_subject') ?></th>
 						<th><?= $this->Label->get('general.name') ?></th>
 						<th><?= $this->Label->get($attr['model'] .'.teacherOrTeachers') ?></th>
@@ -76,13 +74,12 @@
 						?>
 
 						<td <?php if(!$disabled){ ?> class="checkbox-column" <?php } ?>>
-							<?= $this->Form->input(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
-									'type' => 'checkbox',
-									'label' => false,
-									'class' => 'icheck-input',
+							<?= $this->Form->checkbox(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
 									'value' => $n,
 									'checked' => ($selected || $selectedInForm),
-									'disabled' => $disabled
+									'disabled' => $disabled,
+									'class' => 'no-selection-label',
+									'kd-checkbox-radio' => ''
 								]);
 							?>
 							<?= $this->Form->input(sprintf('MultiSubjects[%d][education_grade_id]', $i), [
@@ -156,13 +153,12 @@
 				    			];
 							?>
 							<td>
-								<?= $this->Form->input(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
-										'type' => 'checkbox',
-										'label' => false,
-										'class' => 'icheck-input',
+								<?= $this->Form->checkbox(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
 										'value' => $n,
 										'checked' => 'checked',
-										'disabled' => 'disabled'
+										'disabled' => 'disabled',
+										'class' => 'no-selection-label',
+										'kd-checkbox-radio' => ''
 									]);
 								?>
 							</td>
