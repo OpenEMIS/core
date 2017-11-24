@@ -49,7 +49,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         },
         VisitRequestsTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
-            model: 'Institution.VisitRequests'
+            model: 'Quality.VisitRequests'
         },
         CasesTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
