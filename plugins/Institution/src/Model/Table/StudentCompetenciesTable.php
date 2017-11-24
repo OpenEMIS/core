@@ -208,7 +208,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['AcademicPeriods'])
@@ -222,111 +222,6 @@ class StudentCompetenciesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-    }
-
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->setupFields($entity);
-    }
-
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
-    {
-        return $this->processSave($entity, $data);
-    }
-
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
-    {
-        return $this->processSave($entity, $data);
-    }
-
-    private function processSave(Entity $entity, ArrayObject $data)
-    {
-        $model = $this;
-        $process = function($model, $entity) use ($data) {
-            if (!empty($entity->competency_period) && !empty($entity->competency_item)) {
-                $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
-
-                $competencyTemplateId = $data[$model->alias()]['competency_template'];
-                $competencyPeriodId = $data[$model->alias()]['competency_period'];
-                $competencyItemId = $data[$model->alias()]['competency_item'];
-                $institutionId = $data[$model->alias()]['institution_id'];
-                $academicPeriodId = $data[$model->alias()]['academic_period_id'];
-
-                if (array_key_exists('institution_competency_results', $data[$model->alias()]) && !empty($data[$model->alias()]['institution_competency_results'])) {
-                    foreach ($data[$model->alias()]['institution_competency_results'] as $studentId => $criteriaResults) {
-                        foreach ($criteriaResults as $criteriaKey => $criteriaValue) {
-                            $studentData = [
-                                'student_id' => $studentId,
-                                'competency_template_id' => $competencyTemplateId,
-                                'competency_period_id' => $competencyPeriodId,
-                                'competency_item_id' => $competencyItemId,
-                                'competency_criteria_id' => $criteriaKey,
-                                'institution_id' => $institutionId,
-                                'academic_period_id' => $academicPeriodId
-                            ];
-
-                            if (!empty($criteriaValue)) {
-                                // new or update
-                                $studentData['competency_grading_option_id'] = $criteriaValue;
-                                $studentEntity = $StudentCompetencyResults->newEntity($studentData);
-                                $StudentCompetencyResults->save($studentEntity);
-                            } else {
-                                // delete
-                                $studentResults = $StudentCompetencyResults
-                                    ->find()
-                                    ->where($studentData)
-                                    ->all();
-
-                                if (!$studentResults->isEmpty()) {
-                                    $studentEntity = $studentResults->first();
-                                    $StudentCompetencyResults->delete($studentEntity);
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // no action
-                }
-
-                return true;
-            } else {
-                return false;
-            }
-        };
-
-        return $process;
-    }
-
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'edit') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->academic_period_id;
-            $attr['attr']['value'] = $entity->academic_period->name;
-        }
-
-        return $attr;
-    }
-
-    public function onUpdateFieldCompetencyTemplate(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'edit') {
-            $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
-            $competencyEntity = $CompetencyTemplates->find()
-                ->where([
-                    $CompetencyTemplates->aliasField('id') => $this->competencyTemplateId,
-                    $CompetencyTemplates->aliasField('academic_period_id') => $this->academicPeriodId
-                ])
-                ->first();
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $competencyEntity->id;
-            $attr['attr']['value'] = $competencyEntity->code_name;
-        }
-
-        return $attr;
     }
 
     public function onGetCustomCompetencyPeriodElement(Event $event, $action, $entity, $attr, $options=[])
@@ -717,14 +612,6 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         return $buttons;
-    }
-
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {
-        if ($this->action == 'edit' && $this->competencyCriteriaCount == 0) {
-            // hide save and cancel buttons
-            $buttons->exchangeArray([]);
-        }
     }
 
     private function getCompetencyGradingTypes() {
