@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace Quality\Model\Table;
 
 use ArrayObject;
 
@@ -43,7 +43,7 @@ class VisitRequestsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-        $this->addBehavior('Institution.Visit');
+        $this->addBehavior('Quality.Visit');
         $this->addBehavior('Workflow.Workflow');
         // setting this up to be overridden in viewAfterAction(), this code is required
         $this->behaviors()->get('ControllerAction')->config(
