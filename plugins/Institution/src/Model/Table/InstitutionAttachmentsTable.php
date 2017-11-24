@@ -80,7 +80,7 @@ class InstitutionAttachmentsTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function editBeforeAction(Event $event) {
-		$this->fields['date_on_file']['visible'] = false;
+		$this->fields['date_on_file']['visible'] = true;
     }
 
 
