@@ -936,7 +936,7 @@ class StaffTable extends ControllerActionTable
             'Institution.InstitutionClasses' =>'InstitutionClasses',
             'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects',
             'Institution.InstitutionRubrics' => 'InstitutionRubrics',
-            'Institution.InstitutionQualityVisits' => 'InstitutionVisits'
+            'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
         ];
 
         foreach ($associationArray as $tableName => $model) {

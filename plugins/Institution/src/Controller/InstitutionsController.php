@@ -292,11 +292,11 @@ class InstitutionsController extends AppController
     }
     public function VisitRequests()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.VisitRequests']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.VisitRequests']);
     }
     public function Visits()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionQualityVisits']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.InstitutionQualityVisits']);
     }
     public function StaffAppraisals()
     {
