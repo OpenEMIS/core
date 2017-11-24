@@ -75,7 +75,7 @@
 	</div>
 
 	<div class="table-wrapper">
-		<div class="table-in-view table-scroll-y">
+		<div class="table-in-view">
 			<table class="table">
 				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
