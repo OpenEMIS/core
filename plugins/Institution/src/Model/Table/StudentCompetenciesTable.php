@@ -303,6 +303,10 @@ class StudentCompetenciesTable extends ControllerActionTable
         if (!is_null($this->classId)) {
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
+            $StudentStatuses = $ClassStudents->StudentStatuses;
+            $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+            // only enrolled students will be shown
             $results = $ClassStudents->find()
                 ->select([
                     $ClassStudents->aliasField('student_id'),
@@ -314,7 +318,10 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $Users->aliasField('preferred_name')
                 ])
                 ->matching('Users')
-                ->where([$ClassStudents->aliasField('institution_class_id') => $this->classId])
+                ->where([
+                    $ClassStudents->aliasField('institution_class_id') => $this->classId,
+                    $ClassStudents->aliasField('student_status_id') => $enrolledStatus
+                ])
                 ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
                 ->toArray();
 
@@ -468,7 +475,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             'entity' => $entity
         ]);
         $this->field('competency_template');
-        $this->field('students', [
+        $this->field('student', [
             'type' => 'custom_criterias'
         ]);
     }
