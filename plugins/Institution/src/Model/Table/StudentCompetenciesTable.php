@@ -454,9 +454,8 @@ class StudentCompetenciesTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['tableFooters'] = $tableFooters;
 
-        $value = $event->subject()->renderElement('Institution.StudentCompetencies/students', ['attr' => $attr]);
         $event->stopPropagation();
-        return $value;
+        return $event->subject()->renderElement('Institution.StudentCompetencies/competency_criterias', ['attr' => $attr]);
     }
 
     private function setupFields(Entity $entity)
