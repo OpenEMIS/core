@@ -1,5 +1,5 @@
 /* 
-Monitoring Theme: v.1.0.7
+Monitoring Theme: v.1.0.9
 Product Color: #663399
 Darker Shade Color: #47246B
 */
@@ -31,7 +31,8 @@ a:focus,
 .panel-breadcrumb i,
 .loader-text i.
 .btn-outline,
-.btn-circle {
+.btn-circle,
+.files .files-wrapper span.btn i {
     color: #663399;
 }
 
@@ -54,7 +55,9 @@ a:focus,
 
 .toggle-btn i,
 .input-group-addon,
-.selected {
+.selected,
+.image-holder .prev-arrow,
+.image-holder .next-arrow {
     background-color: #663399;
     color: #FFF;
     border: 1px solid #663399;
@@ -80,7 +83,16 @@ a:focus,
 .input-left-btn button,
 .tabs-action-btn,
 .customize-tab .tab-icon a,
-.sg-theme .ag-filter-header-container label {
+.sg-theme .ag-filter-header-container label,
+.panel-breadcrumb li a,
+.panel-breadcrumb i,
+#news .notice-attachments ul li a,
+#news .notice-attachments ul li:before,
+.notice-attachments .list-group-item:hover,
+#workbench .list-group-item:hover,
+#workbench .list-group-item.selected-item,
+#workbench .list-group-item:hover .list-icon i,
+#workbench .list-group-item.selected-item .list-icon i {
     color: #663399 !important;
 }
 
@@ -140,7 +152,8 @@ a:hover,
 [type="radio"]:not(:checked) + .ag-cell-value:after,
 [type="radio"]:checked + .ag-cell-value:after,
 [type="radio"]:not(:checked) + .ag-filter-value:after,
-[type="radio"]:checked + .ag-filter-value:after {
+[type="radio"]:checked + .ag-filter-value:after,
+.files .files-wrapper span.btn:hover i {
     color: #47246B;
 }
 
@@ -236,7 +249,9 @@ a:hover,
 .customize-tab .tab-icon .nav-pills > li.active > a:hover,
 .btn-toggled,
 .sg-theme .ag-menu-option-active,
-.sg-theme .ag-paging-button:hover {
+.sg-theme .ag-paging-button:hover,
+.image-holder .prev-arrow:hover,
+.image-holder .next-arrow:hover {
     background-color: #47246B !important;
     color: #FFF !important;
     background-image: none !important;
@@ -245,7 +260,9 @@ a:hover,
 .horizontal-tabs span a:hover,
 .btn-dropdown:hover,
 .customize-tab .tab-icon .nav-pills > li.active > a:hover,
-.switch-candy a {
+.switch-candy a,
+.image-holder .prev-arrow:hover,
+.image-holder .next-arrow:hover {
     border-color: #47246B;
 }
 

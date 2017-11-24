@@ -98,8 +98,14 @@ function StudentExaminationResultsController($scope, $location, $filter, $q, Uti
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 localeText: localeText,
                 onGridReady: function() {
                     vm.setGrid(sectionId, academicPeriodId, examinationId, examinationResults);
@@ -117,8 +123,14 @@ function StudentExaminationResultsController($scope, $location, $filter, $q, Uti
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 onGridReady: function() {
                     vm.setGrid(sectionId, academicPeriodId, examinationId, examinationResults);
                 }
@@ -165,6 +177,7 @@ function StudentExaminationResultsController($scope, $location, $filter, $q, Uti
                 });
                 if (vm.gridOptions[sectionId] != null) {
                     vm.gridOptions[sectionId].api.setColumnDefs(columnDefs);
+                    vm.gridOptions[sectionId].api.sizeColumnsToFit();
                 }
             }, function(error){
                 console.log(error);

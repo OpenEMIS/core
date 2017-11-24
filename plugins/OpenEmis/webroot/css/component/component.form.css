@@ -1,4 +1,4 @@
-/* FORM v.1.2.4 */
+/* FORM v.1.2.6 */
 
 .form-horizontal {
     margin: 20px 0;
@@ -38,8 +38,16 @@ input:focus {
 .form-horizontal .input-group,
 .form-horizontal .input-select-wrapper,
 .form-horizontal .chosen-container,
+.form-horizontal .tree-form,
 .fileinput-preview {
     width: 25%;
+    font-size: 12px;
+}
+
+.form-horizontal .tree-form {
+    display: inline-block;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
     font-size: 12px;
 }
 
@@ -77,7 +85,8 @@ input:focus {
     content: ":";
     position: absolute;
     right: 0;
-    top: 4px;
+    top: 50%;
+    transform: translateY(-50%);
     color: #BBB;
     font-weight: 300;
 }
@@ -161,12 +170,15 @@ input:focus {
     display: inline-block !important;
 }
 
-.fileinput {
+.fileinput,
+.multifileinput {
     position: relative;
     margin-bottom: 15px !important;
+    width: 30%;
 }
 
-.fileinput .form-control {
+.fileinput .form-control,
+.multifileinput .form-control {
     -webkit-border-radius: 3px !important;
     border-radius: 3px !important;
     width: 100%;
@@ -273,6 +285,7 @@ input[type="file"] {
     background: #FFF;
     font-weight: normal;
     height: 30px;
+    border-color: #CCC !important;
 }
 
 .form-control:focus {
@@ -462,6 +475,7 @@ option {
     .form-horizontal input,
     .form-horizontal textarea,
     .form-horizontal .input-select-wrapper,
+    .form-horizontal .tree-form,
     .form-horizontal .chosen-container {
         width: 30% !important;
     }
@@ -471,8 +485,7 @@ option {
     .form-horizontal .chosen-container input,
     .form-horizontal .chosen-container .search-field,
     .form-horizontal .input-group input,
-    .input-inline-btn input,
-    .fileinput-preview {
+    .input-inline-btn input {
         width: 100% !important;
     }
     .input-form-wrapper,
@@ -533,6 +546,7 @@ option {
     .form-label,
     .form-input,
     .form-horizontal .input-inline-wrapper,
+    .form-horizontal .tree-form,
     .fileinput-preview {
         width: 100% !important;
     }
@@ -540,7 +554,8 @@ option {
         margin: 0 0 15px 0 !important;
         padding: 0;
     }
-    .form-horizontal .input-inline-prefix {
+    .form-horizontal .input-inline-prefix,
+    .multifileinput {
         width: 75% !important;
     }
     .form-horizontal .input-inline-btn {
@@ -559,7 +574,8 @@ option {
 
 @media only screen and (max-width: 480px) {
     .form-horizontal .input-inline,
-    .form-horizontal .input-inline-btn {
+    .form-horizontal .input-inline-btn,
+    .multifileinput {
         width: 100% !important;
         margin-left: 0 !important;
     }
@@ -577,6 +593,7 @@ option {
 .rtl .form-horizontal input,
 .rtl .form-horizontal textarea,
 .rtl .form-horizontal .chosen-choices,
+.rtl .form-horizontal .tree-form,
 .rtl .form-horizontal label,
 .rtl .form-label,
 .rtl .form-input {

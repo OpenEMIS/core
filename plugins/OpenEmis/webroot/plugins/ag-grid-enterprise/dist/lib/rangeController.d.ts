@@ -1,8 +1,5 @@
-// ag-grid-enterprise v4.1.4
-import { IRangeController } from "ag-grid/main";
-import { RangeSelection } from "ag-grid/main";
-import { GridCell } from "ag-grid/main";
-import { AddRangeSelectionParams } from "ag-grid/main";
+// ag-grid-enterprise v13.2.0
+import { IRangeController, RangeSelection, GridCell, AddRangeSelectionParams } from "ag-grid/main";
 export declare class RangeController implements IRangeController {
     private loggerFactory;
     private gridPanel;
@@ -12,6 +9,9 @@ export declare class RangeController implements IRangeController {
     private rowRenderer;
     private focusedCellController;
     private mouseEventService;
+    private gridOptionsWrapper;
+    private columnApi;
+    private gridApi;
     private logger;
     private cellRanges;
     private activeRange;

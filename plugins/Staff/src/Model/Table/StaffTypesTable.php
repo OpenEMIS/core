@@ -14,6 +14,8 @@ class StaffTypesTable extends ControllerActionTable
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles']);
         $this->hasMany('Staff', ['className' => 'Institution.Staff']);
         $this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers']);
+        $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_staff_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_staff_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStaff', ['className' => 'Report.InstitutionStaff']);
         $this->hasMany('Positions', ['className' => 'Staff.Positions']);
 
