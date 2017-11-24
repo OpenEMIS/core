@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Behavior;
+namespace Quality\Model\Behavior;
 
 use ArrayObject;
 
