@@ -348,7 +348,7 @@ class InstitutionsController extends AppController
     }
     public function Cases()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCases']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Cases.InstitutionCases']);
     }
     public function ReportCardComments()
     {
