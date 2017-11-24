@@ -309,6 +309,7 @@ Plugin::load('ReportCard', ['routes' => true, 'autoload' => true]);
 Plugin::load('Profile', ['routes' => true, 'autoload' => true]);
 Plugin::load('Transport', ['routes' => true, 'autoload' => true]);
 Plugin::load('Installer', ['routes' => true, 'autoload' => true]);
+Plugin::load('Quality', ['autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {
