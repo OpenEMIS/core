@@ -61,6 +61,7 @@ class SurveysController extends AppController
         $this->Navigation->addCrumb(__($name), ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
         $this->Navigation->addCrumb($actionName);
         $this->set('contentHeader', $header);
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
     }

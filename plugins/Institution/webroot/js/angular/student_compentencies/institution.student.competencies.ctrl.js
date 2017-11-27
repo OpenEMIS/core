@@ -265,11 +265,18 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 localeText: localeText,
                 ensureDomOrder: true,
+                domLayout: 'autoHeight',
                 onCellValueChanged: function(params) {
                     if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
@@ -307,9 +314,16 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                domLayout: 'autoHeight',
                 onCellValueChanged: function(params) {
                     if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)

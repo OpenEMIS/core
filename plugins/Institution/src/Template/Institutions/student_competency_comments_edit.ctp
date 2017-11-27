@@ -35,7 +35,7 @@ $this->start('panelBody');
     <hr>
     <h3><?= __('Students') ?></h3>
     <div id="institution-student-competency-comments-table" class="table-wrapper">
-        <div ng-if="InstitutionStudentCompetencyCommentsController.dataReady" ag-grid="InstitutionStudentCompetencyCommentsController.gridOptions" class="ag-fresh ag-height-fixed"></div>
+        <div ng-if="InstitutionStudentCompetencyCommentsController.dataReady" kd-ag-grid="InstitutionStudentCompetencyCommentsController.gridOptions" class="ag-height-fixed"></div>
     </div>
 </form>
 <?php

@@ -36,7 +36,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
         $this->hasMany('SubjectStaff', ['className' => 'Institution.InstitutionSubjectStaff', 'saveStrategy' => 'replace']);
         $this->hasMany('QualityRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('QualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('QualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('Classes', [
             'className' => 'Institution.InstitutionClasses',
