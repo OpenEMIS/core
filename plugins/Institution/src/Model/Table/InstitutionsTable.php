@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Core\Configure;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -16,6 +17,7 @@ use Cake\ORM\ResultSet;
 use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
+
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -81,7 +83,8 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStaffAbsences', ['className' => 'Institution.StaffAbsences', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -101,7 +104,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
         $this->hasMany('AssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionQualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionQualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -534,9 +537,9 @@ class InstitutionsTable extends ControllerActionTable
             $cloneClass = clone $this->dashboardQuery;
 
             $models = [
-                ['Types', 'institution_type_id', 'Type', 'query' => $this->dashboardQuery],
+                ['Types', $this->aliasField('institution_type_id'), 'Type', 'query' => $this->dashboardQuery],
                 ['Sectors', $this->aliasField('institution_sector_id'), 'Sector', 'query' => $this->dashboardQuery],
-                ['Localities', 'institution_locality_id', 'Locality', 'query' => $this->dashboardQuery],
+                ['Localities', $this->aliasField('institution_locality_id'), 'Locality', 'query' => $this->dashboardQuery],
             ];
 
             foreach ($models as $key => $model) {
@@ -591,7 +594,7 @@ class InstitutionsTable extends ControllerActionTable
             $dataSet = [];
             foreach ($institutionTypesCount->toArray() as $key => $value) {
                 // Compile the dataset
-                $dataSet[] = [__($value['name']), $value['count']];
+                $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
             $params['dataSet'] = $dataSet;
         }
@@ -726,14 +729,18 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-
         if (empty($search)) {
             // redirect to school dashboard if it is only one record and no add access
             $addAccess = $this->AccessControl->check(['Institutions', 'add']);
-            if ($data->count() == 1 && !$addAccess) {
+            if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();
                 $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                return $this->controller->redirect($action);
+            } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
+                $event->stopPropagation();
+                $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
+                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Institutions', 'add'];
                 return $this->controller->redirect($action);
             }
         }
@@ -1002,8 +1009,13 @@ class InstitutionsTable extends ControllerActionTable
     public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['select'] = false;
-            $attr['options'] = $this->classificationOptions;
+            if (!Configure::read('schoolMode')) {
+                $attr['select'] = false;
+                $attr['options'] = $this->classificationOptions;
+            } else {
+                $attr['type'] = 'hidden';
+                $attr['value'] = self::ACADEMIC;
+            }
         } elseif ($action == 'edit') {
             $attr['type'] = 'disabled';
             $attr['attr']['value'] = __($this->classificationOptions[$attr['entity']->classification]);

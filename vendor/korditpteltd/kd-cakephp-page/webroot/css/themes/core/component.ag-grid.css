@@ -74,7 +74,7 @@
     border-right: 0 !important;
 }
 
-.ag-fresh .ag-cell-no-focus {
+.ag-fresh .ag-cell {
     border-top: 0 !important;
     /*border-right: 0 !important; */
     border-right: 1px dotted #DDD !important;

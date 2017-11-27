@@ -39,7 +39,7 @@ class StudentCustomFieldsController extends AppController
                 'text' => __('Pages')
             ]
         ];
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
     }
