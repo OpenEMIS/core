@@ -1,9 +1,9 @@
 angular.module('institution.student.competencies.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.student.competencies.svc'])
     .controller('InstitutionStudentCompetenciesCtrl', InstitutionStudentCompetenciesController);
 
-InstitutionStudentCompetenciesController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionStudentCompetenciesSvc'];
+InstitutionStudentCompetenciesController.$inject = ['$scope', '$q', '$filter', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionStudentCompetenciesSvc'];
 
-function InstitutionStudentCompetenciesController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionStudentCompetenciesSvc) {
+function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionStudentCompetenciesSvc) {
 
     var Controller = this;
 
@@ -53,8 +53,10 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
-                Controller.studentList = response.class_students;
-                var promises = [];
+                if (response.class_students.length > 0) {
+                    Controller.studentOptions = $filter('orderBy')(response.class_students, ['user.first_name', 'user.last_name']);
+                    Controller.selectedStudent = Controller.studentOptions[0].student_id;
+                }
                 return InstitutionStudentCompetenciesSvc.getCompetencyTemplate(Controller.academicPeriodId, Controller.competencyTemplateId);
             }, function(error) {
                 console.log(error);
