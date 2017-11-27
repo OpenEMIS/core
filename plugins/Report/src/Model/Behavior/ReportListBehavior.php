@@ -13,6 +13,7 @@ use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Network\Session;
 use Cake\I18n\Time;
+use Cake\FileSystem\File;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -239,7 +240,9 @@ class ReportListBehavior extends Behavior {
 
 		$entity = $this->ReportProgress->get($id);
 		$path = $entity->file_path;
-		if (!empty($path)) {
+
+		$file = new File($path, false);
+		if (!empty($path) && $file->exists()) {
 			$pathInfo = pathinfo($path);
 			$ext = $pathInfo['extension'];
 
@@ -253,6 +256,13 @@ class ReportListBehavior extends Behavior {
 				'download' => true
 			]);
 			return $response;
+		} else {
+			$this->ReportProgress->delete($entity);
+			$controller = $this->_table->controller->name;
+			$table = $this->_table->alias();
+			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
+			$url = ['controller' => $controller, 'action' => $table, 'index'];
+            return $this->_table->controller->redirect($url);
 		}
 	}
 }

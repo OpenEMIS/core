@@ -2,16 +2,21 @@
 namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
+use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
 class RemoveBehavior extends Behavior
 {
     private $recordHasAssociatedRecords = false;
+    private $showForceDeleteFields = false;
+    private $allowForceDelete = false;
 
     public function implementedEvents()
     {
@@ -22,6 +27,19 @@ class RemoveBehavior extends Behavior
         $events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
         return $events;
+    }
+
+    public function validationForceDelete(Validator $validator)
+    {
+        $validator = $this->_table->validationDefault($validator);
+        return $validator
+            ->requirePresence('password')
+            ->notEmpty('password')
+            ->add('password', 'ruleCheckPassword', [
+                'rule' => 'checkPassword',
+                'provider' => 'table',
+                'message' => __('Incorrect password.')
+            ]);
     }
 
     public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -95,6 +113,21 @@ class RemoveBehavior extends Behavior
                 'headers' => [__('Feature'), __('No of Records')],
                 'cells' => $cells
             ]);
+
+            // force delete fields for super admin
+            if ($this->showForceDeleteFields) {
+                $model->field('force_delete', [
+                    'type' => 'select',
+                    'options' => [1 => __('Yes'), 0 => __('No')],
+                    'default' => 0,  // default selected is no
+                    'onChangeReload' => true
+                ]);
+
+                $passwordType = $this->allowForceDelete ? 'password' : 'hidden';
+                $model->field('password', ['type' => $passwordType]);
+
+                $model->setFieldOrder(['to_be_deleted', 'associated_records', 'force_delete', 'password']);
+            }
         }
     }
 
@@ -112,11 +145,26 @@ class RemoveBehavior extends Behavior
             return $event->result;
         }
 
+        $passwordErrors = [];
+        $forceDeleteRecord = false;
+        if (isset($request->data['submit']) && isset($request->data[$model->alias()]['force_delete'])) {
+            $this->allowForceDelete = $request->data[$model->alias()]['force_delete'];
+
+            if ($this->allowForceDelete && $request->data['submit'] == 'save') {
+                $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
+                if (array_key_exists('password', $tempEntity->errors())) {
+                    $passwordErrors = $tempEntity->errors('password');
+                } else {
+                    $forceDeleteRecord = true; // allow delete if password is correct
+                }
+            }
+        }
+
         $primaryKey = $model->primaryKey();
         $result = true;
         $entity = null;
 
-        if ($request->is('get') && $model->actions('remove') == 'restrict') {
+        if (!$request->is(['delete']) && !$forceDeleteRecord && $model->actions('remove') == 'restrict' ) {
             // Logic for restrict delete
             $entity = $model->newEntity();
             $controller = $model->controller;
@@ -151,10 +199,15 @@ class RemoveBehavior extends Behavior
                 }
                 $cells = [];
                 $totalCount = 0;
+                $associatedRecordLimit = 100;
+                $exceedAssociatedRecordLimit = false;
 
                 foreach ($associations as $row) {
                     $modelName = Inflector::humanize(Inflector::underscore($row['model']));
                     $cells[] = [__($modelName), $row['count']];
+                    if ($row['count'] > $associatedRecordLimit) {
+                        $exceedAssociatedRecordLimit = true;
+                    }
                     $totalCount += $row['count'];
                 }
                 if ($totalCount > 0) {
@@ -167,10 +220,23 @@ class RemoveBehavior extends Behavior
                 }
                 $extra['cells'] = $cells;
 
+                // check if force delete fields should be displayed
+                // cannot force delete records where association is manually set in $extra['associatedRecords'] or where there are too many associated records
+                if ($model->AccessControl->isAdmin() && !$extra->offsetExists('associatedRecords') && $this->recordHasAssociatedRecords && !$exceedAssociatedRecordLimit) {
+                    $this->showForceDeleteFields = true;
+
+                    if ($this->allowForceDelete) {
+                        $model->Alert->warning('general.delete.cascadeDelete', ['reset' => true]);
+                        if (!empty($passwordErrors)) {
+                            $entity->errors('password', $passwordErrors); // set password errors
+                        }
+                    }
+                }
+
                 $controller->set('data', $entity);
             }
             return $entity;
-        } else if ($request->is('delete')) {
+        } else if ($request->is('delete') || $forceDeleteRecord) {
             $ids = [];
 
             if ($model->actions('remove') == 'restrict') {
@@ -220,6 +286,7 @@ class RemoveBehavior extends Behavior
             }
         }
         $extra['result'] = $result;
+        $extra['forceDeleteRecord'] = $forceDeleteRecord;
 
         $event = $model->dispatchEvent('ControllerAction.Model.delete.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
@@ -235,7 +302,7 @@ class RemoveBehavior extends Behavior
     {
         $model = $this->_table;
         if ($model->action == 'remove' && $model->actions('remove') == 'restrict') {
-            if ($this->recordHasAssociatedRecords) {
+            if ($this->recordHasAssociatedRecords && !$this->allowForceDelete) {
                 unset($buttons[0]);
                 unset($buttons[1]);
             }
@@ -564,5 +631,12 @@ class RemoveBehavior extends Behavior
                 $fromConditions
             );
         }
+    }
+
+    public static function checkPassword($field, array $globalData)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $model = $globalData['providers']['table'];
+        return ((new DefaultPasswordHasher)->check($field, $Users->get($model->Auth->user('id'))->password));
     }
 }

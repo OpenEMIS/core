@@ -241,12 +241,28 @@
 
 /* END OF SEARCH */
 
+/* SELECT CHECKBOX */
+
+/* END OF SELECT CHECKBOX */
+
 
 /* SELECT ALL CHECKBOX */
 
 .ag-row-count {
     font-weight: bold;
     font-style: italic;
+}
+
+.table-wrapper .ag-floating-top .ag-pinned-left-floating-top,
+.rtl .table-wrapper .ag-floating-top .ag-pinned-right-floating-top {
+    width: 100% !important;
+    display: inline-block;
+}
+
+
+.rtl .table-wrapper .ag-floating-top .ag-pinned-left-floating-top,
+.table-wrapper .ag-floating-top .ag-pinned-right-floating-top {
+    display: none;
 }
 
 
@@ -288,7 +304,7 @@
     }
     100% {
         background-color: #FFFFFF;
-    }
+    }x
 }
 
 @keyframes fadeOut {
@@ -306,7 +322,19 @@
 
 /* RTL CHECKBOX */
 
-.rtl .sg-theme .ag-pinned-left-floating-top .ag-row:first-child,
+.ag-cell-wrapper .ag-cell-value:before {
+    left: -1px !important;
+    top: -1px !important;
+}
+
+.ag-cell-wrapper .ag-cell-value:after {
+    left: 0px !important;
+    top: 0px !important;
+}
+
+
+
+/*.rtl .sg-theme .ag-pinned-left-floating-top .ag-row:first-child,
 .rtl .sg-theme .ag-pinned-left-floating-top .ag-row:first-child .ag-cell {
     padding-right: 10px;
 }
@@ -314,13 +342,13 @@
 .rtl .ag-pinned-left-floating-top,
 .rtl .ag-floating-top-container {
     direction: ltr !important;
-}
-
+}*/
+/*
 .rtl .sg-theme .ag-pinned-left-floating-top .ag-row:first-child,
 .rtl .sg-theme .ag-pinned-left-floating-top .ag-row:first-child .ag-cell {
     text-align: left;
-}
-
+}*/
+/*
 .rtl [type="checkbox"]:not(:checked) + .ag-cell-value:before,
 .rtl [type="checkbox"]:checked + .ag-cell-value:before,
 .rtl [type="checkbox"]:not(:checked) + .ag-filter-value:before,
@@ -337,9 +365,9 @@
 
 .rtl .ag-pinned-left-floating-top [type="checkbox"] + .ag-cell-value {
     float: left;
-}
+} */
 
-.rtl .ag-pinned-left-floating-top [type="checkbox"]:not(:checked) + label:before,
+/*.rtl .ag-pinned-left-floating-top [type="checkbox"]:not(:checked) + label:before,
 .rtl .ag-pinned-left-floating-top [type="checkbox"]:checked + label:before,
 .rtl .ag-pinned-left-floating-top [type="checkbox"]:not(:checked) + .ag-cell-value:before,
 .rtl .ag-pinned-left-floating-top [type="checkbox"]:checked + .ag-cell-value:before,
@@ -357,17 +385,15 @@
 .rtl .ag-pinned-left-floating-top [type="checkbox"]:checked + .ag-filter-value:after {
     left: 7px !important;
     right: auto !important;
-}
+} 
 
 .rtl .sg-theme .ag-pinned-left-floating-top .ag-row .ag-cell-wrapper {
     float: left;
 }
 
 .rtl .sg-theme .checkbox-text {
-    margin-left: 40px;
     margin-right: 0;
-}
-
+}*/
 
 /* END OF RTL CHECKBOX */
 
@@ -375,18 +401,28 @@
 /* RTL SEARCH */
 
 
-.rtl .table-wrapper .fa-search {
+/*.rtl .table-wrapper .fa-search {
     left: 0;
+} */
+
+.rtl .table-wrapper .close-icon {
+    right: auto;
+    left: 0;
+}
+
+.rtl .table-wrapper .table-top .search-table-top, .rtl .table-wrapper .table-bottom .search-table-bottom {
+    right: auto;
+    left: 1px;
 }
 
 .rtl .table-wrapper .table-top .search-table-top input,
 .rtl .table-wrapper .table-bottom .search-table-bottom input {
     padding-right: 20px;
     padding-left: 10px;
-    text-align: left;
+    text-align: right;
     font-size: 13px !important;
 }
-
+/*
 .rtl .sg-theme .ag-floating-top,
 .rtl .sg-theme .ag-floating-top .ag-floating-top-viewport,
 .rtl .sg-theme .ag-floating-top .ag-floating-top-viewport .ag-cell {
@@ -414,7 +450,7 @@
     width: 200px !important;
     border-right: 0 !important;
     z-index: 0;
-}
+}*/
 
 
 /* END OF RTL SEARCH */
@@ -437,10 +473,13 @@
     .rtl .table-wrapper .table-bottom .search-table-bottom input {
         padding-left: 20px;
         padding-right: 50px;
-        text-align: left;
+        /*text-align: left;*/
+        text-align: right;
     }
     .rtl .table-wrapper .expand-search .fa-search {
-        left: 0;
+        /*left: 0;*/
+        left: auto;
+        right: 0;
     }
     .rtl .table-wrapper .collapse-search .fa-search {
         left: 50%;
@@ -460,4 +499,9 @@
     .rtl .sg-theme .ag-floating-top .checkbox-text {
         direction: rtl;
     }
+}
+
+/**/
+.rtl .ag-floating-top .ag-cell-wrapper {
+    margin: 0 5px;
 }
