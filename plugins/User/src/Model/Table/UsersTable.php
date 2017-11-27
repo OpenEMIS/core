@@ -340,7 +340,7 @@ class UsersTable extends AppTable
                 'text' => __('Details')
             ];
         }
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('selectedAction', $this->alias);
         $this->controller->set('tabElements', $tabElements);
     }

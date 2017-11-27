@@ -243,14 +243,18 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
         },
 
         getColumnDefs: function(action, subject, periods, gradingTypes, _results, enrolledStatus) {
+            var menuTabs = [ "filterMenuTab" ];
             var filterParams = {
                 cellHeight: 30
             };
             var columnDefs = [];
 
             var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
+            var isRtl = document.querySelector("html").classList.contains("rtl");
             if (isMobile) {
                 var direction = '';
+            } else if (isRtl) {
+                var direction = 'right';
             } else {
                 var direction = 'left';
             }
@@ -259,27 +263,34 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 headerName: "OpenEMIS ID",
                 field: "openemis_id",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
             columnDefs.push({
                 headerName: "Name",
                 field: "name",
                 sort: 'asc',
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
             columnDefs.push({
                 headerName: "student id",
                 field: "student_id",
                 hide: true,
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs
             });
             columnDefs.push({
                 headerName: "Status",
                 field: "student_status_name",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                menuTabs: menuTabs,
+                filter: "text"
             });
 
             var ResultsSvc = this;
@@ -319,7 +330,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 var columnDef = {
                     headerName: headerName,
                     field: periodField,
-                    filterParams: filterParams
+                    filterParams: filterParams,
+                    menuTabs: menuTabs
                 };
 
                 var extra = {};
@@ -388,6 +400,7 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             columnDefs.push({
                 headerName: "Total Mark",
                 field: "total_mark",
+                menuTabs: menuTabs,
                 filter: "number",
                 valueGetter: function(params) {
                     var value = ResultsSvc.calculateTotal(params.data);
@@ -531,13 +544,20 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                                     .then(function(response) {
                                         params.data.save_error[params.colDef.field] = false;
                                         AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
-                                        params.api.refreshCells([params.node], [params.colDef.field]);
-
+                                        params.api.refreshCells({
+                                            rowNodes: [params.node],
+                                            columns: [params.colDef.field],
+                                            force: true
+                                        });
                                     }, function(error) {
                                         params.data.save_error[params.colDef.field] = true;
                                         console.log(error);
                                         AlertSvc.error(scope, 'There was an error when saving the result');
-                                        params.api.refreshCells([params.node], [params.colDef.field]);
+                                        params.api.refreshCells({
+                                            rowNodes: [params.node],
+                                            columns: [params.colDef.field],
+                                            force: true
+                                        });
                                     });
                                 }
                             });
@@ -753,12 +773,20 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                 .then(function(response) {
                     params.data.save_error[params.colDef.field] = false;
                     AlertSvc.info(scope, 'Student result will be save after the result has been entered.');
-                    params.api.refreshCells([params.node], [params.colDef.field]);
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field],
+                        force: true
+                    });
                 }, function(error) {
                     params.data.save_error[params.colDef.field] = true;
                     console.log(error);
                     AlertSvc.error(scope, 'There was an error when saving the result');
-                    params.api.refreshCells([params.node], [params.colDef.field]);
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field],
+                        force: true
+                    });
                 });
             }
         },

@@ -5,6 +5,7 @@ use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Controller\Exception\SecurityException;
+use Cake\Core\Configure;
 
 class NavigationComponent extends Component
 {
@@ -319,6 +320,9 @@ class NavigationComponent extends Component
     private function appendNavigation($key, $originalNavigation, $navigationToAppend)
     {
         $count = 0;
+        $columns = $this->array_column($navigationToAppend, 'title');
+        $excluded = array_intersect($columns, (array) Configure::read('School.excludedPlugins'));
+        $navigationToAppend = array_diff_key($navigationToAppend, $excluded);
         foreach ($originalNavigation as $navigationKey => $navigationValue) {
             $count++;
             if ($navigationKey == $key) {

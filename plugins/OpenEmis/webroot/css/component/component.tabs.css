@@ -1,4 +1,4 @@
-/* TABS v.1.0.9 */
+/* TABS v.1.0.10 */
 
 .tab-content {
     margin-top: -1px;
@@ -385,7 +385,7 @@
     .rtl .horizontal-tabs span.tab-active a,
     .rtl .horizontal-tabs span.tab-active a:hover,
     .rtl .horizontal-tabs span.tab-active a:focus {
-        height: 32px;
+        height: 37px;
     }
     .rtl .horizontal-tabs span a,
     .rtl .horizontal-tabs span a:focus,
@@ -394,6 +394,6 @@
     .rtl .horizontal-tabs span.tab-active a:hover,
     .rtl .horizontal-tabs span.tab-active a:focus,
     .rtl .horizontal-tabs, .scroll_tabs_container div.scroll_tab_inner span {
-        line-height: 20px;
+        line-height: 24px;
     }
 }
