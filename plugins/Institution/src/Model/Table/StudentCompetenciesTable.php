@@ -252,7 +252,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             // no options
             $params['competency_period_id'] = -1;
             $competencyPeriodOptions[-1] = [
-                'name' => '-- ' . __('No Options') . ' --',
+                'name' => __('No Options'),
                 'url' => $this->setQueryString($baseUrl, $params)
             ];
         } else {
@@ -297,7 +297,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             // no options
             $params['competency_item_id'] = -1;
             $competencyItemOptions[-1] = [
-                'name' => '-- ' . __('No Options') . ' --',
+                'name' => __('No Options'),
                 'url' => $this->setQueryString($baseUrl, $params)
             ];
         } else {
@@ -356,7 +356,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             // no options
             $params['student_id'] = -1;
             $studentOptions[-1] = [
-                'name' => '-- ' . __('No Options') . ' --',
+                'name' => __('No Options'),
                 'url' => $this->setQueryString($baseUrl, $params)
             ];
         } else {
