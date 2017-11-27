@@ -153,10 +153,10 @@
      * @param $event the click event.
      */
       $scope.onControlClicked = function ($event) {
+        if (!$scope.inputModel && $scope.expandParent) {
+          $scope.expandParent();
+        }
         $event.stopPropagation();
-
-        $scope.$emit("clickEvent");
-
         $scope.showTree = !$scope.showTree;
         //collapse other tree-view element
         var thisEl = this;
@@ -283,7 +283,8 @@
         defaultLabel: '@',
         isRadio: '=?',
         treeId: '@',
-        expandClick: '&'
+        expandClick: '&',
+        expandParent: '&'
       },
       link: function (scope, element, attrs) {
         if (attrs.callback) {
@@ -370,7 +371,7 @@
     '$scope',
     function ($scope) {
       //$scope.item.isExpanded = false; //nova
-
+      
       /**
      * Shows the expand option.
      *

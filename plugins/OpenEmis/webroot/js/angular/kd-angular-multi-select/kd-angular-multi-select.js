@@ -13,22 +13,22 @@ function kdMultiSelect() {
                         <div class='table-top'>\
                             <div class='search-table-top'>\
                                 <i class='fa fa-search'></i>\
-                                <input placeholder='Search Unassign Students' name='focus' type='text' ng-model='gridOptionsTop.quickFilterText'>\
+                                <input placeholder='{{textConfig.topSearchPlaceholder}}' name='focus' type='text' ng-model='gridOptionsTop.quickFilterText'>\
                                 <button type='button' class='close-icon' ng-click='resetTopRow()' ng-hide='!gridOptionsTop.quickFilterText.length'></button>\
                             </div>\
                             <div ag-grid='gridOptionsTop' class='sg-theme' kd-elem-sizes kd-height='260px'></div>\
                         </div>\
                         <div class='table-action-btn'>\
                             <button class='btn btn-default' id='assignBtn' ng-disabled='tableActionBtns.assign' ng-click='onAssign()'>\
-                            <i class='fa fa-angle-double-down fa-lg'></i> Assign\
+                            <i class='fa fa-angle-double-down fa-lg'></i> {{textConfig.topToBottomButton}}\
                             </button><button class='btn btn-default' id='unassignBtn' ng-disabled='tableActionBtns.unassign' ng-click='onUnassign()'>\
-                            <i class='fa fa-angle-double-up fa-lg'></i> Unassign\
+                            <i class='fa fa-angle-double-up fa-lg'></i> {{textConfig.bottomToTopButton}}\
                             </button>\
                         </div>\
                         <div class='table-bottom'>\
                             <div class='search-table-bottom'>\
                                 <i class='fa fa-search'></i>\
-                                <input placeholder='Search Assign Students' name='focus' type='text' ng-model='gridOptionsBottom.quickFilterText'>\
+                                <input placeholder='{{textConfig.bottomSearchPlaceholder}}' name='focus' type='text' ng-model='gridOptionsBottom.quickFilterText'>\
                                 <button type='button' class='close-icon' ng-click='resetBottomRow()' ng-hide='!gridOptionsBottom.quickFilterText.length'></button>\
                             </div>\
                             <div ag-grid='gridOptionsBottom' class='sg-theme' kd-elem-sizes kd-height='240px'></div>\
@@ -36,7 +36,8 @@ function kdMultiSelect() {
                     </div>",
         scope: {
             gridOptionsTop: "=",
-            gridOptionsBottom: "="
+            gridOptionsBottom: "=",
+            config: "="
         },
         controller: kdMultiSelectCtrl,
         link: kdMultiSelectLink
@@ -45,22 +46,42 @@ function kdMultiSelect() {
 
 
     function kdMultiSelectCtrl($scope) {
+        //Setting up the text config for the placeholder, checkbox label and buttons
+        var textConfig = getDefaultTextConfig();
+        $scope.textConfig = angular.extend({}, textConfig, $scope.config);
+
         var defaultGridOptions = getDefaultGridOpt();
         //Setting up the top ag-grid options/config
         $scope.gridOptionsTop = angular.extend({}, defaultGridOptions, $scope.gridOptionsTop);
-        $scope.gridOptionsTop['gridPosition'] = 'top';
-        $scope.gridOptionsTop.floatingTopRowData = getHeaderCheckbox($scope.gridOptionsTop);
+        $scope.gridOptionsTop.gridPosition = 'top';
+
+        /*
+        $scope.gridOptionsTop.floatingTopRowData = getHeaderCheckbox($scope.gridOptionsTop, $scope.textConfig);
+        */
+        $scope.gridOptionsTop.pinnedTopRowData = getHeaderCheckbox($scope.gridOptionsTop, $scope.textConfig);
 
         //Setting up the top ag-grid options/config
         $scope.gridOptionsBottom = angular.extend({}, defaultGridOptions, $scope.gridOptionsBottom);
-        $scope.gridOptionsBottom['gridPosition'] = 'bottom';
+        $scope.gridOptionsBottom.gridPosition = 'bottom';
         $scope.gridOptionsBottom.headerHeight = 0;
-        $scope.gridOptionsBottom.floatingTopRowData = getHeaderCheckbox($scope.gridOptionsBottom);
+
+        /*
+        $scope.gridOptionsBottom.floatingTopRowData = getHeaderCheckbox($scope.gridOptionsBottom, $scope.textConfig);
+        */
+        $scope.gridOptionsBottom.pinnedTopRowData = getHeaderCheckbox($scope.gridOptionsBottom, $scope.textConfig);
 
         //setting up the master and slave relationship
+        /* v13 deprecated
+
         $scope.gridOptionsTop.slaveGrids.push($scope.gridOptionsBottom);
         $scope.gridOptionsBottom.slaveGrids.push($scope.gridOptionsTop);
+        */
+        $scope.gridOptionsTop.alignedGrids.push($scope.gridOptionsBottom);
+        $scope.gridOptionsBottom.alignedGrids.push($scope.gridOptionsTop);
 
+        //update checkbox pin (base on direction) & add cell renderer for all coldef
+        updateColDef($scope.gridOptionsTop.columnDefs, $scope, true);
+        updateColDef($scope.gridOptionsBottom.columnDefs, $scope, false);
 
         function getDefaultGridOpt() {
             return {
@@ -77,7 +98,8 @@ function kdMultiSelect() {
                 suppressCellSelection: true,
                 suppressMovableColumns: true,
                 suppressContextMenu: true,
-                slaveGrids: [],
+                // slaveGrids: [],
+                alignedGrids: [],
                 onModelUpdated: onModelUpdated,
                 onGridReady: onGridReady,
                 onSelectionChanged: onSelectionChanged,
@@ -90,6 +112,11 @@ function kdMultiSelect() {
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
                 },
+                onSortChanged: function(e) {
+                    var modelCount = this.api.getModel().getRowCount();
+                    var selectedCount = this.api.getSelectedNodes().length;
+                    angular.element(".ag-select-all-" + this.gridPosition)[0].checked = modelCount == selectedCount;
+                },
                 icons: {
                     // use font awesome for menu icons
                     menu: '<i class="fa fa-bars"/>',
@@ -100,14 +127,28 @@ function kdMultiSelect() {
                     groupExpanded: '<i class="fa fa-minus-circle"/>',
                     groupContracted: '<i class="fa fa-plus-circle"/>'
                 },
-                overlayNoRowsTemplate: '<span class="ag-custom-overlay"><i class="fa fa-info-circle fa-lg margin-right-10"></i>No student record found</span>'
+                overlayNoRowsTemplate: '<span class="ag-custom-overlay"><i class="fa fa-info-circle fa-lg margin-right-10"></i>No student record found</span>',
+                enableRtl: getComputedStyle(document.body).direction == "rtl"
             }
         }
 
-        function getHeaderCheckbox(_scopeObj) {
-            var studentType = (_scopeObj.gridPosition == 'top') ? "Unassigned" : "Assigned";
+        function getDefaultTextConfig() {
+            return {
+                topCheckboxLabel: "Unassign Students",
+                topSearchPlaceholder: "Search Unassign Students",
+                topToBottomButton: "Assign",
+                bottomToTopButton: "Unassign",
+                bottomCheckboxLabel: "Assign Students",
+                bottomSearchPlaceholder: "Search Assign Students"
+            };
+        }
 
-            return [{ checkbox: '<span class="ag-cell-wrapper"><input type="checkbox" name="name" class="ag-select-all-' + _scopeObj.gridPosition + '"><span class="ag-cell-value"></span></span> <span class="checkbox-text">Select All - <span class="ag-row-count"></span> ' + studentType + ' Students</span>' }];
+        function getHeaderCheckbox(_scopeObj, _textConfig) {
+            var checkboxLabel = (_scopeObj.gridPosition == 'top') ? _textConfig.topCheckboxLabel : _textConfig.bottomCheckboxLabel;
+
+            return [{
+                checkbox: '<span class="ag-cell-wrapper"><input type="checkbox" name="name" class="ag-select-all-' + _scopeObj.gridPosition + '"><span class="ag-cell-value"></span></span> <span class="checkbox-text">Select All - <span class="ag-row-count"></span> ' + checkboxLabel + '</span>'
+            }];
         }
 
         function onModelUpdated() {
@@ -135,6 +176,31 @@ function kdMultiSelect() {
             $scope.$apply(function() {
                 $scope.tableActionBtns = btnsState;
             });
+        }
+
+    }
+
+    function updateColDef(_colDef, _scope, _isTopElem) {
+        for (var i = 0; i < _colDef.length; i++) {
+            if (_colDef[i]["checkboxSelection"] !== undefined && _colDef[i]["checkboxSelection"]) {
+                _colDef[i]["cellRenderer"] = function(params) {
+                    //if (params.node !== undefined && params.node.floating !== undefined && params.node.floating === "top") {
+                    if (params.node !== undefined && params.node.rowPinned !== undefined && params.node.rowPinned === "top") {
+                        return params.value;
+                    }
+                    return initCheckbox(params, _scope, _isTopElem);
+                }
+            } /*else {
+                _colDef[i]["cellRenderer"] = function(params) {
+                    if (params.value === undefined) return "";
+                    return params.value;
+                }
+            }*/
+
+            // AG-Grid version 9.0.3 issue - RTL pinned right and ensure index visible causing alignment issue when finishing assign/unassign - Remove pinned as workaround
+            if (_colDef[i]["field"] === "checkbox") {
+                _colDef[i]["pinned"] = getComputedStyle(document.body).direction == "rtl" ? "right" : "left";
+            }
         }
     }
 
@@ -205,6 +271,11 @@ function kdMultiSelect() {
 
             /*** ======== End of (Assign & Unassign Buttons) ======== ***/
 
+            /*
+            updateAgGridRowCount(_scope.gridOptionsTop);
+            updateAgGridRowCount(_scope.gridOptionsBottom);
+            */
+
         });
 
 
@@ -243,8 +314,16 @@ function kdMultiSelect() {
                 }
             });
 
+            var scrollViewport = angular.element(".table-" + _obj2.gridPosition + " .ag-body-viewport");
+            var bodyContainer = angular.element(".table-" + _obj2.gridPosition + " .ag-body-container");
+            scrollViewport[0].scrollTop = 0;
+            setTimeout(function() {
+                scrollViewport[0].scrollTop = bodyContainer[0].getBoundingClientRect().height ;
+            });
+
+
             //scroll to the bottom
-            if (newRows != null) _obj2.api.ensureIndexVisible(newRows);
+            // if (newRows != null) _obj2.api.ensureIndexVisible(newRows);
 
             _scope.tableActionBtns = {
                 assign: true,
@@ -314,12 +393,13 @@ function kdMultiSelect() {
     }
 
     function updateAgGridRowCount(_agGridOptions) {
-        angular.element(document).ready(function() {
+        //angular.element(document).ready(function() {
+            //console.log("ready",_agGridOptions.api.getModel().getRowCount());
             var elem = angular.element(document.querySelector('.table-' + _agGridOptions.gridPosition + ' .ag-row-count'));
             var rowCount = _agGridOptions.api.getModel().getRowCount();
 
             elem.html(rowCount);
-        });
+        //});
     }
 
     /*** ======== Checkbox ======== ***/
@@ -329,7 +409,7 @@ function kdMultiSelect() {
         var isTopElem = (_gridClass.indexOf('top') > -1) ? true : false;
 
         initSelectAllCheckbox(_scope, elementSelectAllCheckbox, isTopElem);
-        initInnerCheckbox(_scope, elementSelectAllCheckbox, isTopElem);
+        // initInnerCheckbox(_scope, elementSelectAllCheckbox, isTopElem);
     }
 
     function initSelectAllCheckbox(_scope, _elementSelectAllCheckbox, _isTopElem) {
@@ -349,27 +429,63 @@ function kdMultiSelect() {
                 gridOptions.api.deselectAll();
             }
 
-            updateOptionsStatus(_scope, _isTopElem);
-
-        });
-    }
-
-    function initInnerCheckbox(_scope, _elementSelectAllCheckbox, _isTopElem) {
-        var elementInnerCheckbox = angular.element((_isTopElem) ? '.table-top .ag-selection-checkbox' : '.table-bottom .ag-selection-checkbox');
-
-        elementInnerCheckbox.bind('click', function(e) {
-            var totalSelectedCheckbox = 0;
-            for (var i in elementInnerCheckbox) {
-                if (elementInnerCheckbox[i].checked) {
-                    totalSelectedCheckbox++;
-                }
+            var elementCheckbox = angular.element(_isTopElem ? '.table-top .ag-grid-checkbox' : '.table-bottom .ag-grid-checkbox');
+            for (var i = 0; i < elementCheckbox.length; i++) {
+                elementCheckbox[i].checked = _elementSelectAllCheckbox[0].checked;
             }
 
-            _elementSelectAllCheckbox[0].checked = (elementInnerCheckbox.length == totalSelectedCheckbox) ? true : false;
 
             updateOptionsStatus(_scope, _isTopElem);
         });
     }
+
+    function initCheckbox(_params, _scope, _isTopElem) {
+        var divWrapper = document.createElement("div");
+        divWrapper.className = "ag-checkbox-wrapper"
+
+        var inputCheckbox = document.createElement("input");
+        inputCheckbox.type = "checkbox";
+        inputCheckbox.name = "name";
+        inputCheckbox.className = "ag-grid-checkbox";
+        inputCheckbox.checked = (_params.node.isSelected());
+
+        inputCheckbox.addEventListener('click', function(event) { 
+            var elementSelectAllCheckbox = angular.element(_isTopElem ? '.ag-select-all-top' : '.ag-select-all-bottom');
+
+            _params.node.selectThisNode(inputCheckbox.checked);
+
+            var modelCount = _isTopElem ? _scope.gridOptionsTop.api.getModel().getRowCount() : _scope.gridOptionsBottom.api.getModel().getRowCount();
+            var selectedCount = _isTopElem ? _scope.gridOptionsTop.api.getSelectedNodes().length  : _scope.gridOptionsBottom.api.getSelectedNodes().length;
+
+            elementSelectAllCheckbox[0].checked = (modelCount == selectedCount) ? true : false;
+
+            updateOptionsStatus(_scope, _isTopElem);
+        });
+
+        var labelTag = document.createElement("label");
+        labelTag.className = "ag-cell-label";
+
+        divWrapper.appendChild(inputCheckbox);
+        divWrapper.appendChild(labelTag);
+
+        return divWrapper;
+    }
+
+    // function initInnerCheckbox(_scope, _elementSelectAllCheckbox, _isTopElem) {
+    //     var elementInnerCheckbox = angular.element((_isTopElem) ? '.table-top .ag-selection-checkbox' : '.table-bottom .ag-selection-checkbox');
+
+    //     elementInnerCheckbox.bind('click', function(e) {
+    //         var totalSelectedCheckbox = 0;
+    //         for (var i in elementInnerCheckbox) {
+    //             if (elementInnerCheckbox[i].checked) {
+    //                 totalSelectedCheckbox++;
+    //             }
+    //         }
+    //         _elementSelectAllCheckbox[0].checked = (elementInnerCheckbox.length == totalSelectedCheckbox) ? true : false;
+
+    //         updateOptionsStatus(_scope, _isTopElem);
+    //     });
+    // }
 
     /*** ======== End of (Checkbox) ======== ***/
 
@@ -383,6 +499,11 @@ function kdMultiSelect() {
             if (bottomRows.length > 0) {
                 _scope.gridOptionsBottom.api.deselectAll();
 
+                var element = angular.element(".table-bottom .ag-grid-checkbox");
+                for (var i = 0; i < element.length; i++) {
+                    element[i].checked = false;
+                }
+
                 var _elementSelectAllBottomCheckbox = angular.element('.ag-select-all-bottom');
                 _elementSelectAllBottomCheckbox[0].checked = false;
             }
@@ -395,6 +516,11 @@ function kdMultiSelect() {
         } else {
             if (topRows.length > 0) {
                 _scope.gridOptionsTop.api.deselectAll();
+
+                var element = angular.element(".table-top .ag-grid-checkbox");
+                for (var i = 0; i < element.length; i++) {
+                    element[i].checked = false;
+                }
 
                 var _elementSelectAllTopCheckbox = angular.element('.ag-select-all-top');
                 _elementSelectAllTopCheckbox[0].checked = false;

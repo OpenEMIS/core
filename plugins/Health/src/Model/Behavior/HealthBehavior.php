@@ -4,24 +4,28 @@ namespace Health\Model\Behavior;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 
-class HealthBehavior extends Behavior {
-	public function initialize(array $config) {
-		parent::initialize($config);
-	}
+class HealthBehavior extends Behavior
+{
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+    }
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 100];
-		return $events;
-	}
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction']          = ['callable' => 'beforeAction', 'priority' => 100];
+        return $events;
+    }
 
-	public function beforeAction(Event $event) {
-		$controller = $this->_table->controller;
-		$model = $this->_table;
-		$plugin = $controller->plugin;
-		$name = $controller->name;
+    public function beforeAction(Event $event)
+    {
+        $controller = $this->_table->controller;
+        $model = $this->_table;
+        $plugin = $controller->plugin;
+        $name = $controller->name;
 
-		$tabElements = [];
+        $tabElements = [];
         if ($controller->AccessControl->check([$name, 'Healths', 'index'])) {
             $tabElements['Healths'] = [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Healths'],
@@ -89,8 +93,8 @@ class HealthBehavior extends Behavior {
                 'text' => __('Body Mass')
             ];
         }
-
-		$controller->set('tabElements', $tabElements);
-		$controller->set('selectedAction', $model->alias());
-	}
+        $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
+        $controller->set('tabElements', $tabElements);
+        $controller->set('selectedAction', $model->alias());
+    }
 }
