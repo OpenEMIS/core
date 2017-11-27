@@ -115,14 +115,24 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             headerHeight: 38,
             rowHeight: 38,
             enableColResize: false,
-            enableSorting: true,
+            enableSorting: false,
             unSortIcon: true,
-            enableFilter: true,
+            enableFilter: false,
             suppressMenuHide: true,
-            suppressCellSelection: true,
             suppressMovableColumns: true,
             singleClickEdit: true,
-            rowModelType: 'pagination',
+            rowModelType: 'infinite',
+            // Removed options - Issues in ag-Grid AG-828
+            // suppressCellSelection: true,
+
+            // Added options
+            suppressContextMenu: true,
+            stopEditingWhenGridLosesFocus: true,
+            ensureDomOrder: true,
+            pagination: true,
+            paginationPageSize: 10,
+            maxBlocksInCache: 1,
+            cacheBlockSize: 10,
             onGridSizeChanged: function(e) {
                 this.api.sizeColumnsToFit();
             },

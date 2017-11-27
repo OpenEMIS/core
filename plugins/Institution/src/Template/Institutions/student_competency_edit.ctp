@@ -64,7 +64,7 @@ $this->start('panelBody');
         </div>
     </div>
     <div id="institution-student-competency-table" class="table-wrapper">
-        <div ng-if="InstitutionStudentCompetenciesController.dataReady" ag-grid="InstitutionStudentCompetenciesController.gridOptions" class="ag-fresh ag-height-fixed"></div>
+        <div ng-if="InstitutionStudentCompetenciesController.dataReady" kd-ag-grid="InstitutionStudentCompetenciesController.gridOptions"></div>
     </div>
 </form>
 <?php

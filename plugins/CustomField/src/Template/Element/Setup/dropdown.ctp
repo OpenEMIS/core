@@ -71,7 +71,7 @@
 									<tr>
 										<?php if ($action == 'edit') : ?>
 											<td class="checkbox-column">
-												<?= $this->Form->checkbox("$alias.custom_field_options.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
+												<?= $this->Form->checkbox("$alias.custom_field_options.$key.visible", ['checked' => $obj->visible, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']); ?>
 											</td>
 										<?php endif ?>
 										<td>
@@ -89,13 +89,13 @@
 													'label' => false,
 													'legend' => false,
 													'hiddenField' => false,
-													'class' => 'icheck-input icheckbox_minimal-grey'
 												];
 												if(isset($data->custom_field_options[$key]->is_default) && $data->custom_field_options[$key]->is_default == 1) {
 													$attributes['value'] = $key;
 												}
 											?>
-											<?= $this->Form->radio("$alias.is_default", [$key => false], $attributes); ?>
+											<?= $this->Form->radio("$alias.is_default", [$key => false], $attributes) ?>
+											<?= $this->Form->label("$alias.is_default", false, ['for' => null]) ?>
 										</td>
 										<td>
 											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">

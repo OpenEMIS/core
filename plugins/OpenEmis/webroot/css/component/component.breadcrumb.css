@@ -1,4 +1,4 @@
-/* BREADCRUMB v.1.0.9 */
+/* BREADCRUMB v.1.0.10 */
 
 .breadcrumb {
     clear: both;
@@ -104,6 +104,10 @@
 
 .rtl .treemap-breadcrumb > li + li::after {
     float: none !important;
+}
+
+.rtl .treemap-breadcrumb li:not(:first-child) {
+    direction: ltr;
 }
 
 .rtl .panel-breadcrumb {
