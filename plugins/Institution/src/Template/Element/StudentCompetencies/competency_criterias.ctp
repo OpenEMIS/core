@@ -18,7 +18,7 @@
             $selectedPeriod = $attr['selected_period'];
         ?>
         <div class="select">
-            <label><?=__('Competency Period');?>:</label>
+            <label><?= __('Competency Period') ?>:</label>
             <div class="input-select-wrapper">
                 <select onchange="window.location.href = this.value">
                     <?php foreach ($periodOptions as $key => $value) { ?>
@@ -38,7 +38,7 @@
             $selectedItem = $attr['selected_item'];
         ?>
         <div class="select">
-            <label><?=__('Competency Item');?>:</label>
+            <label><?= __('Competency Item') ?>:</label>
             <div class="input-select-wrapper">
                 <select onchange="window.location.href = this.value">
                     <?php foreach ($itemOptions as $key => $value) { ?>
@@ -58,7 +58,7 @@
             $selectedStudent = $attr['selected_student'];
         ?>
         <div class="select">
-            <label><?=__('Student');?>:</label>
+            <label><?= __('Student') ?>:</label>
             <div class="input-select-wrapper">
                 <select onchange="window.location.href = this.value">
                     <?php foreach ($studentOptions as $key => $value) { ?>
