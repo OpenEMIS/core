@@ -55,7 +55,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .ajax({success: success, defer:true});
     }
 
-    function getStudentCompetencyResults(templateId, periodId, itemId, institutionId, academicPeriodId) {
+    function getStudentCompetencyResults(templateId, periodId, itemId, studentId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -64,13 +64,14 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 competency_template_id: templateId,
                 competency_period_id: periodId,
                 competency_item_id: itemId,
+                student_id: studentId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             })
             .ajax({success: success, defer:true});
     }
 
-    function getStudentCompetencyComments(templateId, periodId, itemId, institutionId, academicPeriodId) {
+    function getStudentCompetencyComments(templateId, periodId, itemId, studentId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -79,6 +80,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 competency_template_id: templateId,
                 competency_period_id: periodId,
                 competency_item_id: itemId,
+                student_id: studentId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             })

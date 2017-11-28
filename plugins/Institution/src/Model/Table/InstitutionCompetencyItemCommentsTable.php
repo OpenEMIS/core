@@ -50,13 +50,15 @@ class InstitutionCompetencyItemCommentsTable extends ControllerActionTable
         $competencyItemId = $options['competency_item_id'];
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
+        $studentId = $options['student_id'];
         return $query
             ->where([
                 $this->aliasField('competency_template_id') => $competencyTemplateId,
                 $this->aliasField('competency_period_id') => $competencyPeriodId,
                 $this->aliasField('competency_item_id') => $competencyItemId,
                 $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $academicPeriodId
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('student_id') => $studentId
             ]);
     }
 }
