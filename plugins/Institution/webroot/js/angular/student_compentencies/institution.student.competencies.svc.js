@@ -138,7 +138,6 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
     }
 
     function renderInput(cols, extra) {
-        var gradingOptions = extra.gradingOptions;
         var vm = this;
 
         cols = angular.merge(cols, {
@@ -148,14 +147,23 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 }
             },
             cellRenderer: function(params) {
-                var studentStatusCode = params.data.student_status_code;
                 var periodEditable = params.data.period_editable;
 
-                if (studentStatusCode == 'CURRENT' && periodEditable) {
+                if (periodEditable) {
+                    var gradingOptions = {
+                        0 : {
+                            id: 0,
+                            code: '',
+                            name: '-- Select --'
+                        }
+                    };
+                    if (angular.isDefined(params.data.grading_options)) {
+                        angular.forEach(params.data.grading_options, function(obj, key) {
+                            gradingOptions[obj.id] = obj;
+                        });
+                    }
 
                     var oldValue = params.value;
-                    var studentId = params.data.student_id;
-                    // var periodId = period.id;
 
                     var eCell = document.createElement('div');
                     eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
