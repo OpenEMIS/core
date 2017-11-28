@@ -30,7 +30,8 @@ class EducationSubjectsTable extends ControllerActionTable
             'foreignKey' => 'education_subject_id',
             'targetForeignKey' => 'education_grade_id',
             'through' => 'Education.EducationGradesSubjects',
-            'dependent' => true
+            'dependent' => true,
+            'cascadeCallbacks' => true
         ]);
         $this->belongsToMany('FieldOfStudies', [
             'className' => 'Education.EducationFieldOfStudies',

@@ -48,6 +48,10 @@
     box-shadow: inset 8px 0 8px -10px #ccc;
 }
 
+.series-sort-wrapper .sort-wrapper ul {
+    outline: 0;
+}
+
 .series-sort-wrapper .sort-wrapper ul li span {
     display: table-cell;
 }
@@ -116,6 +120,14 @@
 
 .sort-icon i {
     margin-right: 0!important;
+}
+
+.seriesDrag li {
+    cursor: move;
+}
+
+.seriesSort li {
+    cursor: row-resize;
 }
 
 .seriesDrag li,

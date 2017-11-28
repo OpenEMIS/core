@@ -39,7 +39,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.collapse = "true";
 
         vm.workbenchTitle = '';
-        vm.gridOptions[vm.target].api.setRowData([]);
     }
 
     function initNotices() {
@@ -130,14 +129,24 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 headerHeight: 38,
                 rowHeight: 38,
                 enableColResize: true,
-                enableSorting: true,
+                enableSorting: false,
                 unSortIcon: true,
-                enableFilter: true,
+                enableFilter: false,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
                 localeText: localeText,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
                 }
@@ -149,13 +158,22 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 headerHeight: 38,
                 rowHeight: 38,
                 enableColResize: true,
-                enableSorting: true,
+                enableSorting: false,
                 unSortIcon: true,
-                enableFilter: true,
+                enableFilter: false,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
-                rowModelType: 'pagination',
+                rowModelType: 'infinite',
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
                 }
@@ -169,7 +187,6 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
         // reset to empty
         vm.gridOptions[vm.target].api.setColumnDefs([]);
-        vm.gridOptions[vm.target].api.setRowData([]);
 
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
         var textToTranslate = [];
@@ -188,6 +205,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 }
             });
             vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
+            vm.gridOptions[vm.target].api.sizeColumnsToFit();
         }, function(error){
             console.log(error);
         });
