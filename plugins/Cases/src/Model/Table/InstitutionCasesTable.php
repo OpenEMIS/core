@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace Cases\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\TableRegistry;
@@ -21,14 +21,14 @@ class InstitutionCasesTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-		$this->belongsTo('Assignees', ['className' => 'User.Users']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->hasMany('LinkedRecords', ['className' => 'Institution.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->hasMany('LinkedRecords', ['className' => 'Cases.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -36,7 +36,7 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', false);
-	}
+    }
 
     public function implementedEvents()
     {
@@ -107,7 +107,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->field('title', ['type' => 'readonly']);
     }
 
-    public function onGetCustomLinkedRecordsElement(Event $mainEvent, $action, $entity, $attr, $options=[])
+    public function onGetCustomLinkedRecordsElement(Event $mainEvent, $action, $entity, $attr, $options = [])
     {
         if ($action == 'index') {
             if ($entity->has('linked_records')) {
@@ -132,7 +132,9 @@ class InstitutionCasesTable extends ControllerActionTable
                     $recordModel = TableRegistry::get($className);
                     $summary = $recordId;
                     $event = $recordModel->dispatchEvent('InstitutionCase.onSetCustomCaseSummary', [$recordId], $recordModel);
-                    if ($event->isStopped()) { return $event->result; }
+                    if ($event->isStopped()) {
+                        return $event->result;
+                    }
                     if (!empty($event->result)) {
                         $summary = $event->result;
                     }
@@ -171,7 +173,9 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $title = $feature;
         $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetCustomCaseTitle', [$linkedRecordEntity], $linkedRecordModel);
-        if ($event->isStopped()) { return $event->result; }
+        if ($event->isStopped()) {
+            return $event->result;
+        }
         if (!empty($event->result)) {
             $title = $event->result;
         }
@@ -236,7 +240,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    private function getAutoGenerateCaseNumber($institutionId=0)
+    private function getAutoGenerateCaseNumber($institutionId = 0)
     {
         $autoGenerateCaseNumber = '';
         $institutionEntity = $this->Institutions
