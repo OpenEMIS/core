@@ -1,4 +1,5 @@
-// ag-grid-enterprise v4.1.4
+// ag-grid-enterprise v13.2.0
+"use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -8,26 +9,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 var main_1 = require("ag-grid/main");
-var main_2 = require("ag-grid/main");
-var main_3 = require("ag-grid/main");
-var main_4 = require("ag-grid/main");
-var main_5 = require("ag-grid/main");
 var rangeController_1 = require("./rangeController");
-var main_6 = require("ag-grid/main");
-var main_7 = require("ag-grid/main");
-var main_8 = require("ag-grid/main");
-var main_9 = require("ag-grid/main");
-var main_10 = require("ag-grid/main");
-var main_11 = require("ag-grid/main");
-var main_12 = require("ag-grid/main");
-var main_13 = require("ag-grid/main");
-var main_14 = require("ag-grid/main");
-var main_15 = require("ag-grid/main");
-var main_16 = require("ag-grid/main");
-var main_17 = require("ag-grid/main");
-var main_18 = require("ag-grid/main");
-var main_19 = require("ag-grid/main");
 var ClipboardService = (function () {
     function ClipboardService() {
     }
@@ -53,7 +37,7 @@ var ClipboardService = (function () {
         var firstRowValues = null;
         var updatedRowNodes = [];
         var updatedColumnIds = [];
-        this.forEachRangeRow(function (currentRow, rowNode, columns) {
+        var rowCallback = function (currentRow, rowNode, columns) {
             // take reference of first row, this is the one we will be using to copy from
             if (!firstRowValues) {
                 firstRowValues = [];
@@ -61,6 +45,8 @@ var ClipboardService = (function () {
                 columns.forEach(function (column) {
                     // reason 1 - to get the initial values to copy down
                     var value = _this.valueService.getValue(column, rowNode);
+                    var processCellForClipboardFunc = _this.gridOptionsWrapper.getProcessCellForClipboardFunc();
+                    value = _this.userProcessCell(rowNode, column, value, processCellForClipboardFunc, main_1.Constants.EXPORT_TYPE_DRAG_COPY);
                     firstRowValues.push(value);
                     // reason 2 - to record the columnId for refreshing
                     updatedColumnIds.push(column.getId());
@@ -74,20 +60,22 @@ var ClipboardService = (function () {
                         return;
                     }
                     var firstRowValue = firstRowValues[index];
+                    var processCellFromClipboardFunc = _this.gridOptionsWrapper.getProcessCellFromClipboardFunc();
+                    firstRowValue = _this.userProcessCell(rowNode, column, firstRowValue, processCellFromClipboardFunc, main_1.Constants.EXPORT_TYPE_DRAG_COPY);
                     _this.valueService.setValue(rowNode, column, firstRowValue);
-                    var cellId = new main_17.GridCell(currentRow.rowIndex, currentRow.floating, column).createId();
+                    var gridCellDef = { rowIndex: currentRow.rowIndex, floating: currentRow.floating, column: column };
+                    var cellId = new main_1.GridCell(gridCellDef).createId();
                     cellsToFlash[cellId] = true;
                 });
             }
-        });
+        };
+        this.iterateActiveRanges(true, rowCallback);
         // this is very heavy, should possibly just refresh the specific cells?
-        this.rowRenderer.refreshView();
-        this.rowRenderer.refreshCells(updatedRowNodes, updatedColumnIds);
-        this.eventService.dispatchEvent(main_18.Events.EVENT_FLASH_CELLS, { cells: cellsToFlash });
+        this.rowRenderer.refreshCells({ rowNodes: updatedRowNodes, columns: updatedColumnIds });
+        this.dispatchFlashCells(cellsToFlash);
     };
     ClipboardService.prototype.finishPasteFromClipboard = function (data) {
-        var _this = this;
-        if (main_16.Utils.missingOrEmpty(data)) {
+        if (main_1.Utils.missingOrEmpty(data)) {
             return;
         }
         var focusedCell = this.focusedCellController.getFocusedCell();
@@ -101,115 +89,233 @@ var ClipboardService = (function () {
         // remove last row if empty, excel puts empty last row in
         var lastLine = parsedData[parsedData.length - 1];
         if (lastLine.length === 1 && lastLine[0] === '') {
-            main_16.Utils.removeFromArray(parsedData, lastLine);
+            main_1.Utils.removeFromArray(parsedData, lastLine);
         }
-        var currentRow = new main_15.GridRow(focusedCell.rowIndex, focusedCell.floating);
+        var currentRow = new main_1.GridRow(focusedCell.rowIndex, focusedCell.floating);
         var cellsToFlash = {};
         var updatedRowNodes = [];
         var updatedColumnIds = [];
-        parsedData.forEach(function (values, index) {
+        var columnsToPasteInto = this.columnController.getDisplayedColumnsStartingAt(focusedCell.column);
+        var onlyOneCellInRange = parsedData.length === 1 && parsedData[0].length === 1;
+        if (onlyOneCellInRange) {
+            this.singleCellRange(parsedData, updatedRowNodes, currentRow, cellsToFlash, updatedColumnIds);
+        }
+        else {
+            this.multipleCellRange(parsedData, currentRow, updatedRowNodes, columnsToPasteInto, cellsToFlash, updatedColumnIds, main_1.Constants.EXPORT_TYPE_CLIPBOARD);
+        }
+        // this is very heavy, should possibly just refresh the specific cells?
+        this.rowRenderer.refreshCells({ rowNodes: updatedRowNodes, columns: updatedColumnIds });
+        this.dispatchFlashCells(cellsToFlash);
+        this.focusedCellController.setFocusedCell(focusedCell.rowIndex, focusedCell.column, focusedCell.floating, true);
+    };
+    ClipboardService.prototype.multipleCellRange = function (clipboardGridData, currentRow, updatedRowNodes, columnsToPasteInto, cellsToFlash, updatedColumnIds, type) {
+        var _this = this;
+        clipboardGridData.forEach(function (clipboardRowData) {
             // if we have come to end of rows in grid, then skip
             if (!currentRow) {
                 return;
             }
             var rowNode = _this.getRowNode(currentRow);
             updatedRowNodes.push(rowNode);
-            var column = focusedCell.column;
-            values.forEach(function (value) {
-                if (main_16.Utils.missing(column)) {
+            clipboardRowData.forEach(function (value, index) {
+                var column = columnsToPasteInto[index];
+                if (main_1.Utils.missing(column)) {
                     return;
                 }
                 if (!column.isCellEditable(rowNode)) {
                     return;
                 }
-                _this.valueService.setValue(rowNode, column, value);
-                var cellId = new main_17.GridCell(currentRow.rowIndex, currentRow.floating, column).createId();
-                cellsToFlash[cellId] = true;
-                if (index === 0) {
-                    updatedColumnIds.push(column.getId());
-                }
-                column = _this.columnController.getDisplayedColAfter(column);
+                _this.updateCellValue(rowNode, column, value, currentRow, cellsToFlash, updatedColumnIds, type);
             });
             // move to next row down for next set of values
             currentRow = _this.cellNavigationService.getRowBelow(currentRow);
         });
-        // this is very heavy, should possibly just refresh the specific cells?
-        this.rowRenderer.refreshCells(updatedRowNodes, updatedColumnIds);
-        this.eventService.dispatchEvent(main_18.Events.EVENT_FLASH_CELLS, { cells: cellsToFlash });
-        this.focusedCellController.setFocusedCell(focusedCell.rowIndex, focusedCell.column, focusedCell.floating, true);
+        return currentRow;
     };
-    ClipboardService.prototype.copyToClipboard = function () {
-        this.logger.log('copyToClipboard');
+    ClipboardService.prototype.singleCellRange = function (parsedData, updatedRowNodes, currentRow, cellsToFlash, updatedColumnIds) {
+        var _this = this;
+        var value = parsedData[0][0];
+        var rowCallback = function (gridRow, rowNode, columns) {
+            updatedRowNodes.push(rowNode);
+            columns.forEach(function (column) {
+                _this.updateCellValue(rowNode, column, value, currentRow, cellsToFlash, updatedColumnIds, main_1.Constants.EXPORT_TYPE_CLIPBOARD);
+            });
+        };
+        this.iterateActiveRanges(false, rowCallback);
+    };
+    ClipboardService.prototype.updateCellValue = function (rowNode, column, value, currentRow, cellsToFlash, updatedColumnIds, type) {
+        if (column.isSuppressPaste(rowNode)) {
+            return;
+        }
+        var processedValue = this.userProcessCell(rowNode, column, value, this.gridOptionsWrapper.getProcessCellFromClipboardFunc(), type);
+        this.valueService.setValue(rowNode, column, processedValue);
+        var gridCellDef = {
+            rowIndex: currentRow.rowIndex,
+            floating: currentRow.floating,
+            column: column
+        };
+        var cellId = new main_1.GridCell(gridCellDef).createId();
+        cellsToFlash[cellId] = true;
+        if (updatedColumnIds.indexOf(column.getId()) < 0) {
+            updatedColumnIds.push(column.getId());
+        }
+    };
+    ClipboardService.prototype.copyToClipboard = function (includeHeaders) {
+        if (includeHeaders === void 0) { includeHeaders = false; }
+        this.logger.log("copyToClipboard: includeHeaders = " + includeHeaders);
+        var selectedRowsToCopy = !this.selectionController.isEmpty()
+            && !this.gridOptionsWrapper.isSuppressCopyRowsToClipboard();
         // default is copy range if exists, otherwise rows
         if (this.rangeController.isMoreThanOneCell()) {
-            this.copySelectedRangeToClipboard();
+            this.copySelectedRangeToClipboard(includeHeaders);
         }
-        else if (!this.selectionController.isEmpty()) {
-            this.copySelectedRowsToClipboard();
+        else if (selectedRowsToCopy) {
+            // otherwise copy selected rows if they exist
+            this.copySelectedRowsToClipboard(includeHeaders);
         }
-        else if (!this.rangeController.isEmpty()) {
-            this.copySelectedRangeToClipboard();
+        else if (this.focusedCellController.isAnyCellFocused()) {
+            // if there is a focused cell, copy this
+            this.copyFocusedCellToClipboard(includeHeaders);
+        }
+        else {
+            // lastly if no focused cell, try range again. this can happen
+            // if use has cellSelection turned off (so no focused cell)
+            // but has a cell clicked, so there exists a cell range
+            // of exactly one cell (hence the first 'if' above didn't
+            // get executed).
+            this.copySelectedRangeToClipboard(includeHeaders);
         }
     };
-    ClipboardService.prototype.forEachRangeRow = function (callback) {
+    ClipboardService.prototype.iterateActiveRanges = function (onlyFirst, rowCallback, columnCallback) {
+        var _this = this;
         if (this.rangeController.isEmpty()) {
             return;
         }
         var rangeSelections = this.rangeController.getCellRanges();
-        // if more than one range selected, we take the first one only, we ignore the others,
-        // in Excel, it doesn't allow multiple blocks to be copied to clipboard at same time
-        var range = rangeSelections[0];
+        if (onlyFirst) {
+            var range = rangeSelections[0];
+            this.iterateActiveRange(range, rowCallback, columnCallback);
+        }
+        else {
+            rangeSelections.forEach(function (range) { return _this.iterateActiveRange(range, rowCallback, columnCallback); });
+        }
+    };
+    ClipboardService.prototype.iterateActiveRange = function (range, rowCallback, columnCallback) {
         // get starting and ending row, remember rowEnd could be before rowStart
         var startRow = range.start.getGridRow();
         var endRow = range.end.getGridRow();
         var startRowIsFirst = startRow.before(endRow);
         var currentRow = startRowIsFirst ? startRow : endRow;
         var lastRow = startRowIsFirst ? endRow : startRow;
+        if (main_1.Utils.exists(columnCallback)) {
+            columnCallback(range.columns);
+        }
         while (true) {
             var rowNode = this.getRowNode(currentRow);
-            callback(currentRow, rowNode, range.columns);
+            rowCallback(currentRow, rowNode, range.columns);
             if (currentRow.equals(lastRow)) {
                 break;
             }
             currentRow = this.cellNavigationService.getRowBelow(currentRow);
         }
     };
-    ClipboardService.prototype.copySelectedRangeToClipboard = function () {
+    ClipboardService.prototype.copySelectedRangeToClipboard = function (includeHeaders) {
         var _this = this;
+        if (includeHeaders === void 0) { includeHeaders = false; }
         if (this.rangeController.isEmpty()) {
             return;
         }
+        var deliminator = this.gridOptionsWrapper.getClipboardDeliminator();
         var data = '';
         var cellsToFlash = {};
-        this.forEachRangeRow(function (currentRow, rowNode, columns) {
+        // adds columns to the data
+        var columnCallback = function (columns) {
+            if (!includeHeaders) {
+                return;
+            }
             columns.forEach(function (column, index) {
-                var value = _this.valueService.getValue(column, rowNode);
-                value = _this.processRangeCell(rowNode, column, value);
+                var value = _this.columnController.getDisplayNameForColumn(column, 'clipboard', true);
                 if (index != 0) {
-                    data += '\t';
+                    data += deliminator;
                 }
-                if (main_16.Utils.exists(value)) {
+                if (main_1.Utils.exists(value)) {
                     data += value;
                 }
-                var cellId = new main_17.GridCell(currentRow.rowIndex, currentRow.floating, column).createId();
+            });
+            data += '\r\n';
+        };
+        // adds cell values to the data
+        var rowCallback = function (currentRow, rowNode, columns) {
+            columns.forEach(function (column, index) {
+                var value = _this.valueService.getValue(column, rowNode);
+                var processedValue = _this.userProcessCell(rowNode, column, value, _this.gridOptionsWrapper.getProcessCellForClipboardFunc(), main_1.Constants.EXPORT_TYPE_CLIPBOARD);
+                if (index != 0) {
+                    data += deliminator;
+                }
+                if (main_1.Utils.exists(processedValue)) {
+                    data += processedValue;
+                }
+                var gridCellDef = { rowIndex: currentRow.rowIndex, floating: currentRow.floating, column: column };
+                var cellId = new main_1.GridCell(gridCellDef).createId();
                 cellsToFlash[cellId] = true;
             });
             data += '\r\n';
-        });
+        };
+        this.iterateActiveRanges(false, rowCallback, columnCallback);
         this.copyDataToClipboard(data);
-        this.eventService.dispatchEvent(main_18.Events.EVENT_FLASH_CELLS, { cells: cellsToFlash });
+        this.dispatchFlashCells(cellsToFlash);
     };
-    ClipboardService.prototype.processRangeCell = function (rowNode, column, value) {
-        var func = this.gridOptionsWrapper.getProcessCellForClipboardFunc();
+    ClipboardService.prototype.copyFocusedCellToClipboard = function (includeHeaders) {
+        if (includeHeaders === void 0) { includeHeaders = false; }
+        var focusedCell = this.focusedCellController.getFocusedCell();
+        if (main_1.Utils.missing(focusedCell)) {
+            return;
+        }
+        var currentRow = focusedCell.getGridRow();
+        var rowNode = this.getRowNode(currentRow);
+        var column = focusedCell.column;
+        var value = this.valueService.getValue(column, rowNode);
+        var processedValue = this.userProcessCell(rowNode, column, value, this.gridOptionsWrapper.getProcessCellForClipboardFunc(), main_1.Constants.EXPORT_TYPE_CLIPBOARD);
+        if (main_1.Utils.exists(processedValue)) {
+            var data = '';
+            if (includeHeaders) {
+                data = this.columnController.getDisplayNameForColumn(column, 'clipboard', true) + '\r\n';
+            }
+            data += processedValue.toString();
+            this.copyDataToClipboard(data);
+        }
+        else {
+            this.copyDataToClipboard('');
+        }
+        var cellId = focusedCell.createId();
+        var cellsToFlash = {};
+        cellsToFlash[cellId] = true;
+        this.dispatchFlashCells(cellsToFlash);
+    };
+    ClipboardService.prototype.dispatchFlashCells = function (cellsToFlash) {
+        var _this = this;
+        setTimeout(function () {
+            var event = {
+                type: main_1.Events.EVENT_FLASH_CELLS,
+                cells: cellsToFlash,
+                api: _this.gridApi,
+                columnApi: _this.columnApi
+            };
+            _this.eventService.dispatchEvent(event);
+        }, 0);
+    };
+    ClipboardService.prototype.userProcessCell = function (rowNode, column, value, func, type) {
         if (func) {
-            return func({
+            var params = {
                 column: column,
                 node: rowNode,
                 value: value,
                 api: this.gridOptionsWrapper.getApi(),
                 columnApi: this.gridOptionsWrapper.getColumnApi(),
-                context: this.gridOptionsWrapper.getContext()
-            });
+                context: this.gridOptionsWrapper.getContext(),
+                type: type
+            };
+            return func(params);
         }
         else {
             return value;
@@ -217,31 +323,44 @@ var ClipboardService = (function () {
     };
     ClipboardService.prototype.getRowNode = function (gridRow) {
         switch (gridRow.floating) {
-            case main_19.Constants.FLOATING_TOP:
-                return this.floatingRowModel.getFloatingTopRowData()[gridRow.rowIndex];
-            case main_19.Constants.FLOATING_BOTTOM:
-                return this.floatingRowModel.getFloatingBottomRowData()[gridRow.rowIndex];
+            case main_1.Constants.PINNED_TOP:
+                return this.pinnedRowModel.getPinnedTopRowData()[gridRow.rowIndex];
+            case main_1.Constants.PINNED_BOTTOM:
+                return this.pinnedRowModel.getPinnedBottomRowData()[gridRow.rowIndex];
             default:
                 return this.rowModel.getRow(gridRow.rowIndex);
         }
     };
-    ClipboardService.prototype.copySelectedRowsToClipboard = function () {
-        var data = this.csvCreator.getDataAsCsv({
-            skipHeader: true,
+    ClipboardService.prototype.copySelectedRowsToClipboard = function (includeHeaders, columnKeys) {
+        if (includeHeaders === void 0) { includeHeaders = false; }
+        var skipHeader = !includeHeaders;
+        var deliminator = this.gridOptionsWrapper.getClipboardDeliminator();
+        var params = {
+            columnKeys: columnKeys,
+            skipHeader: skipHeader,
             skipFooters: true,
-            columnSeparator: '\t',
+            suppressQuotes: true,
+            columnSeparator: deliminator,
             onlySelected: true,
             processCellCallback: this.gridOptionsWrapper.getProcessCellForClipboardFunc()
-        });
+        };
+        var data = this.csvCreator.getDataAsCsv(params);
         this.copyDataToClipboard(data);
     };
     ClipboardService.prototype.copyDataToClipboard = function (data) {
-        this.executeOnTempElement(function (element) {
-            element.value = data;
-            element.select();
-            element.focus();
-            return document.execCommand('copy');
-        });
+        var userProvidedFunc = this.gridOptionsWrapper.getSendToClipboardFunc();
+        if (main_1.Utils.exists(userProvidedFunc)) {
+            var params = { data: data };
+            userProvidedFunc(params);
+        }
+        else {
+            this.executeOnTempElement(function (element) {
+                element.value = data;
+                element.select();
+                element.focus();
+                return document.execCommand('copy');
+            });
+        }
     };
     ClipboardService.prototype.executeOnTempElement = function (callbackNow, callbackAfter) {
         var eTempInput = document.createElement('textarea');
@@ -251,7 +370,8 @@ var ClipboardService = (function () {
         eTempInput.style.left = '0px';
         eTempInput.style.position = 'absolute';
         eTempInput.style.opacity = '0.0';
-        document.body.appendChild(eTempInput);
+        var guiRoot = this.gridCore.getRootGui();
+        guiRoot.appendChild(eTempInput);
         try {
             var result = callbackNow(eTempInput);
             this.logger.log('Clipboard operation result: ' + result);
@@ -259,14 +379,15 @@ var ClipboardService = (function () {
         catch (err) {
             this.logger.log('Browser doesn\t support document.execComment(\'copy\') for clipboard operations');
         }
+        //It needs 100 otherwise OS X seemed to not always be able to paste... Go figure...
         if (callbackAfter) {
             setTimeout(function () {
                 callbackAfter(eTempInput);
-                document.body.removeChild(eTempInput);
-            }, 0);
+                guiRoot.removeChild(eTempInput);
+            }, 100);
         }
         else {
-            document.body.removeChild(eTempInput);
+            guiRoot.removeChild(eTempInput);
         }
     };
     // From http://stackoverflow.com/questions/1293147/javascript-code-to-parse-csv-data
@@ -274,15 +395,15 @@ var ClipboardService = (function () {
     // arrays. The default delimiter is the comma, but this
     // can be overriden in the second argument.
     ClipboardService.prototype.dataToArray = function (strData) {
-        var strDelimiter = '\t';
+        var delimiter = this.gridOptionsWrapper.getClipboardDeliminator();
         // Create a regular expression to parse the CSV values.
         var objPattern = new RegExp((
         // Delimiters.
-        "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+        "(\\" + delimiter + "|\\r?\\n|\\r|^)" +
             // Quoted fields.
             "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
             // Standard fields.
-            "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+            "([^\"\\" + delimiter + "\\r\\n]*))"), "gi");
         // Create an array to hold our data. Give the array
         // a default empty first row.
         var arrData = [[]];
@@ -299,12 +420,12 @@ var ClipboardService = (function () {
             // field delimiter. If id does not, then we know
             // that this delimiter is a row delimiter.
             if (strMatchedDelimiter.length &&
-                strMatchedDelimiter !== strDelimiter) {
+                strMatchedDelimiter !== delimiter) {
                 // Since we have reached a new row of data,
                 // add an empty row to our data array.
                 arrData.push([]);
             }
-            var strMatchedValue;
+            var strMatchedValue = void 0;
             // Now that we have our delimiter out of the way,
             // let's check to see which kind of value we
             // captured (quoted or unquoted).
@@ -325,67 +446,78 @@ var ClipboardService = (function () {
         return arrData;
     };
     __decorate([
-        main_2.Autowired('csvCreator'), 
-        __metadata('design:type', main_3.CsvCreator)
+        main_1.Autowired('csvCreator'),
+        __metadata("design:type", main_1.CsvCreator)
     ], ClipboardService.prototype, "csvCreator", void 0);
     __decorate([
-        main_2.Autowired('loggerFactory'), 
-        __metadata('design:type', main_4.LoggerFactory)
+        main_1.Autowired('loggerFactory'),
+        __metadata("design:type", main_1.LoggerFactory)
     ], ClipboardService.prototype, "loggerFactory", void 0);
     __decorate([
-        main_2.Autowired('selectionController'), 
-        __metadata('design:type', main_5.SelectionController)
+        main_1.Autowired('selectionController'),
+        __metadata("design:type", main_1.SelectionController)
     ], ClipboardService.prototype, "selectionController", void 0);
     __decorate([
-        main_2.Autowired('rangeController'), 
-        __metadata('design:type', rangeController_1.RangeController)
+        main_1.Autowired('rangeController'),
+        __metadata("design:type", rangeController_1.RangeController)
     ], ClipboardService.prototype, "rangeController", void 0);
     __decorate([
-        main_2.Autowired('rowModel'), 
-        __metadata('design:type', Object)
+        main_1.Autowired('rowModel'),
+        __metadata("design:type", Object)
     ], ClipboardService.prototype, "rowModel", void 0);
     __decorate([
-        main_2.Autowired('floatingRowModel'), 
-        __metadata('design:type', main_6.FloatingRowModel)
-    ], ClipboardService.prototype, "floatingRowModel", void 0);
+        main_1.Autowired('pinnedRowModel'),
+        __metadata("design:type", main_1.PinnedRowModel)
+    ], ClipboardService.prototype, "pinnedRowModel", void 0);
     __decorate([
-        main_2.Autowired('valueService'), 
-        __metadata('design:type', main_7.ValueService)
+        main_1.Autowired('valueService'),
+        __metadata("design:type", main_1.ValueService)
     ], ClipboardService.prototype, "valueService", void 0);
     __decorate([
-        main_2.Autowired('focusedCellController'), 
-        __metadata('design:type', main_8.FocusedCellController)
+        main_1.Autowired('focusedCellController'),
+        __metadata("design:type", main_1.FocusedCellController)
     ], ClipboardService.prototype, "focusedCellController", void 0);
     __decorate([
-        main_2.Autowired('rowRenderer'), 
-        __metadata('design:type', main_9.RowRenderer)
+        main_1.Autowired('rowRenderer'),
+        __metadata("design:type", main_1.RowRenderer)
     ], ClipboardService.prototype, "rowRenderer", void 0);
     __decorate([
-        main_2.Autowired('columnController'), 
-        __metadata('design:type', main_10.ColumnController)
+        main_1.Autowired('columnController'),
+        __metadata("design:type", main_1.ColumnController)
     ], ClipboardService.prototype, "columnController", void 0);
     __decorate([
-        main_2.Autowired('eventService'), 
-        __metadata('design:type', main_11.EventService)
+        main_1.Autowired('eventService'),
+        __metadata("design:type", main_1.EventService)
     ], ClipboardService.prototype, "eventService", void 0);
     __decorate([
-        main_2.Autowired('cellNavigationService'), 
-        __metadata('design:type', main_12.CellNavigationService)
+        main_1.Autowired('cellNavigationService'),
+        __metadata("design:type", main_1.CellNavigationService)
     ], ClipboardService.prototype, "cellNavigationService", void 0);
     __decorate([
-        main_2.Autowired('gridOptionsWrapper'), 
-        __metadata('design:type', main_13.GridOptionsWrapper)
+        main_1.Autowired('gridOptionsWrapper'),
+        __metadata("design:type", main_1.GridOptionsWrapper)
     ], ClipboardService.prototype, "gridOptionsWrapper", void 0);
     __decorate([
-        main_14.PostConstruct, 
-        __metadata('design:type', Function), 
-        __metadata('design:paramtypes', []), 
-        __metadata('design:returntype', void 0)
+        main_1.Autowired('gridCore'),
+        __metadata("design:type", main_1.GridCore)
+    ], ClipboardService.prototype, "gridCore", void 0);
+    __decorate([
+        main_1.Autowired('columnApi'),
+        __metadata("design:type", main_1.ColumnApi)
+    ], ClipboardService.prototype, "columnApi", void 0);
+    __decorate([
+        main_1.Autowired('gridApi'),
+        __metadata("design:type", main_1.GridApi)
+    ], ClipboardService.prototype, "gridApi", void 0);
+    __decorate([
+        main_1.PostConstruct,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", []),
+        __metadata("design:returntype", void 0)
     ], ClipboardService.prototype, "init", null);
     ClipboardService = __decorate([
-        main_1.Bean('clipboardService'), 
-        __metadata('design:paramtypes', [])
+        main_1.Bean('clipboardService')
     ], ClipboardService);
     return ClipboardService;
-})();
+}());
 exports.ClipboardService = ClipboardService;

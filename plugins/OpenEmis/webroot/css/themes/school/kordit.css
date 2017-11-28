@@ -1,0 +1,90 @@
+.kd-analyzer {
+    background: #CC3300;
+}
+
+.kd-community {
+    background: #00CCFF;
+}
+
+.kd-connect {
+    background: #666699;
+}
+
+.kd-construction {
+    background: #003366;
+}
+
+.kd-core {
+    background: #6699CC;
+}
+
+.kd-datamanager {
+    background: #993366;
+}
+
+.kd-dashboard {
+    background: #990000;
+}
+
+.kd-identity {
+    background: #6666FF;
+}
+
+.kd-insight {
+    background: #9966CC;
+}
+
+.kd-integrator {
+    background: #CC6699 !important;
+}
+
+.kd-learning {
+    background: #0099FF;
+}
+
+.kd-logistics {
+    background: #003399;
+}
+
+.kd-modelling {
+    background: #FF3366;
+}
+
+.kd-monitoring {
+    background: #663399;
+}
+
+.kd-school {
+    background: #3366CC !important;
+}
+
+.kd-visualizer {
+    background: #CC9933;
+}
+
+.kd-styleguide {
+    background: #000000;
+}
+
+.kd-analyzer,
+.kd-community,
+.kd-connect,
+.kd-construction,
+.kd-core,
+.kd-datamanager,
+.kd-dashboard,
+.kd-identity,
+.kd-insight,
+.kd-integrator,
+.kd-learning,
+.kd-logistics,
+.kd-modelling,
+.kd-monitoring,
+.kd-school,
+.kd-visualizer,
+.kd-styleguide {
+    color: $textWhite !important;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    padding: 5px;
+}

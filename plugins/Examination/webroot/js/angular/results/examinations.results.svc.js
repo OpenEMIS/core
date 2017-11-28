@@ -88,6 +88,15 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
     };
 
     function getColumnDefs(action, subject, _results) {
+        var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
+        var isRtl = document.querySelector("html").classList.contains("rtl");
+        var direction = 'left';
+        if (isMobile) {
+            direction = '';
+        } else if (isRtl) {
+            direction = 'right';
+        }
+        var menuTabs = [ "filterMenuTab" ];
         var deferred = $q.defer();
 
         if (subject.examination_grading_type.grading_options.length == 0) {
@@ -104,18 +113,24 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             columnDefs.push({
                 headerName: "Registration Number",
                 field: "registration_no",
-                filterParams: filterParams
+                filterParams: filterParams,
+                filter: "text",
+                menuTabs: menuTabs,
             });
             columnDefs.push({
                 headerName: "OpenEMIS ID",
                 field: "openemis_id",
-                filterParams: filterParams
+                filterParams: filterParams,
+                filter: "text",
+                menuTabs: menuTabs,
             });
             columnDefs.push({
                 headerName: "Name",
                 field: "name",
                 sort: 'asc',
-                filterParams: filterParams
+                filterParams: filterParams,
+                filter: "text",
+                menuTabs: menuTabs,
             });
             columnDefs.push({
                 headerName: "student id",
@@ -142,7 +157,9 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             var columnDef = {
                 headerName: headerName,
                 field: 'mark',
-                filterParams: filterParams
+                filterParams: filterParams,
+                filter: "number",
+                menuTabs: menuTabs,
             };
 
             var extra = {};
@@ -201,7 +218,8 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                         return '';
                     }
                 },
-                filterParams: filterParams
+                filterParams: filterParams,
+                menuTabs: menuTabs,
             });
 
             var bodyDir = getComputedStyle(document.body).direction;
@@ -222,6 +240,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
 
         cols = angular.merge(cols, {
             filter: 'number',
+            menuTabs: [ "filterMenuTab" ],
             cellStyle: function(params) {
                 if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
                     return {color: '#CC5C5C'};
@@ -322,6 +341,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             });
         } else {
             cols = angular.merge(cols, {
+                menuTabs: [ "filterMenuTab" ],
                 cellRenderer: function(params) {
                     var cellValue = '';
                     if (params.value.length != 0 && params.value != 0) {
