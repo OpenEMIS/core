@@ -26,7 +26,6 @@ class FieldOptionComponent extends Component
     private $controller;
     private $fieldOptions = [
     // Institution
-        'NetworkConnectivities' => ['className' => 'Institution.NetworkConnectivities', 'parent' => 'Institution'],
         'Localities' => ['className' => 'Institution.Localities', 'parent' => 'Institution'],
         'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],
         'Sectors' => ['className' => 'Institution.Sectors', 'parent' => 'Institution'],
@@ -122,6 +121,7 @@ class FieldOptionComponent extends Component
         'UtilityElectricityConditions' => ['className' => 'Institution.UtilityElectricityConditions', 'parent' => 'Infrastructure'],
         'UtilityInternetTypes' => ['className' => 'Institution.UtilityInternetTypes', 'parent' => 'Infrastructure'],
         'UtilityInternetConditions' => ['className' => 'Institution.UtilityInternetConditions', 'parent' => 'Infrastructure'],
+        'UtilityInternetBandwidths' => ['className' => 'Institution.UtilityInternetBandwidths', 'parent' => 'Infrastructure'],
         'UtilityTelephoneTypes' => ['className' => 'Institution.UtilityTelephoneTypes', 'parent' => 'Infrastructure'],
         'UtilityTelephoneConditions' => ['className' => 'Institution.UtilityTelephoneConditions', 'parent' => 'Infrastructure'],
 
