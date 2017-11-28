@@ -37,10 +37,6 @@ class InstitutionsTable extends AppTable
 		$this->belongsTo('Genders',				['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
 		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-        $this->belongsTo('NetworkConnectivities', [
-            'className' => 'Institution.NetworkConnectivities',
-            'foreignKey' => 'institution_network_connectivity_id'
-        ]);
 
 		$this->addBehavior('Excel', ['excludes' => ['security_group_id', 'logo_name'], 'pages' => false]);
 		$this->addBehavior('Report.ReportList');
