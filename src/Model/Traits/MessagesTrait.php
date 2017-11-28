@@ -57,6 +57,7 @@ trait MessagesTrait
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
             'noRecords' => 'No Record',
+            'noFile' => 'File does not exist.',
             'failConnectToExternalSource' => 'There is an issue establishing connection to the External Datasource. Please contact the administrator for assistance.',
             'select' => [
                 'noOptions' => 'No options'
@@ -75,6 +76,7 @@ trait MessagesTrait
             'delete' => [
                 'restrictDelete' => 'The record cannot be deleted.',
                 'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
+                'cascadeDelete' => 'All associated information related to this record will also be removed.',
                 'success' => 'The record has been deleted successfully.',
                 'failed' => 'The record is not deleted due to errors encountered.',
                 'label' => 'Delete',
@@ -198,6 +200,7 @@ trait MessagesTrait
             'infrastructure_level_id' => 'Level Name'
         ],
         'Institutions' => [
+            'noInstitution' => 'Please populate the following information to create your institution.',
             'noClassRecords' => 'There are no available Classes',
             'date_opened' => 'Date Opened',
             'date_closed' => 'Date Closed',

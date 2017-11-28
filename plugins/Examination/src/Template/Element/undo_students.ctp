@@ -8,7 +8,7 @@
                 <table class="table table-checkable">
                     <thead>
                         <tr>
-                            <th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+                            <th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
                             <th><?= __('Registration Number') ?></th>
                             <th><?= __('OpenEMIS ID') ?></th>
                             <th><?= __('Student') ?></th>
@@ -27,9 +27,7 @@
                                         <?php
                                             $alias = $ControllerAction['table']->alias();
                                             $fieldPrefix = "$alias.examination_students.$i";
-
-                                            $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
-                                            echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
+                                            echo $this->Form->checkbox("$fieldPrefix.selected", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                                             echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
                                         ?>
                                     </td>
@@ -93,8 +91,6 @@
                                     <?php
                                             $alias = $ControllerAction['table']->alias();
                                             $fieldPrefix = "$alias.examination_students.$i";
-
-                                            $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false];
                                             echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
                                             echo $this->Form->hidden("$fieldPrefix.examination_centre_id", ['value' => $obj->examination_centre_id]);
                                         ?>
