@@ -98,7 +98,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(criterias, item, direction) {
+    function getColumnDefs(direction) {
         if (direction == 'ltr') {
             direction = 'left';
         } else {
@@ -111,99 +111,28 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         var columnDefs = [];
 
         columnDefs.push({
-            headerName: "OpenEMIS ID",
-            field: "openemis_id",
+            headerName: "Competency Criterias",
+            field: "competency_criteria_name",
             filterParams: filterParams,
-            pinned: direction,
             menuTabs: menuTabs,
             filter: 'text'
         });
         columnDefs.push({
-            headerName: "Student Name",
-            field: "name",
-            sort: 'asc',
+            headerName: "competency criteria id",
+            field: "competency_criteria_id",
+            hide: true
+        });
+
+        var columnDef = {
+            headerName: "Result",
+            field: "competency_grading_option_id",
             filterParams: filterParams,
-            pinned: direction,
             menuTabs: menuTabs,
             filter: 'text'
-        });
-        columnDefs.push({
-            headerName: "student id",
-            field: "student_id",
-            hide: true,
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-        });
-        columnDefs.push({
-            headerName: "Student Status",
-            field: "student_status_name",
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-            filter: 'text'
-        });
-
-        var ResultsSvc = this;
-
-        // comments column
-        if (angular.isDefined(item)) {
-            var extra = {};
-            var columnDef = {
-                headerName: "Comments",
-                field: "comments",
-                filterParams: filterParams,
-                pinned: direction,
-                filter: 'text',
-                menuTabs: menuTabs
-            };
-            columnDef = ResultsSvc.renderText(columnDef, extra);
-            columnDefs.push(columnDef);
-        }
-
-        angular.forEach(criterias, function(criteria, key) {
-            if (criteria.competency_item_id == item) {
-                var isMarksType = true; // default is MARKS type
-                var isGradesType = false;
-                if (criteria.grading_type.grading_options.length == 0) {
-                    // return error if No Grading Options
-                    return {error: 'You need to configure Grading Options first'};
-                }
-                var headerLabel = criteria.name;
-                if (criteria.code != null && criteria.code.length > 0) {
-                    headerLabel = criteria.code + " <span class='divider'></span> " + criteria.name;
-                }
-
-                var field = 'competency_criteria_id_' + criteria.id;
-                var columnDef = {
-                    headerName: headerLabel,
-                    field: field,
-                    filterParams: filterParams,
-                    filter: 'text',
-                    menuTabs: menuTabs
-                };
-
-                var extra = {};
-                var gradingOptions = {
-                    0 : {
-                        id: 0,
-                        code: '',
-                        name: '-- Select --'
-                    }
-                };
-
-                angular.forEach(criteria.grading_type.grading_options, function(obj, key) {
-                    gradingOptions[obj.id] = obj;
-                });
-
-                extra = {
-                    gradingOptions: gradingOptions,
-                    criteria: criteria
-                };
-                columnDef = ResultsSvc.renderInput(columnDef, extra);
-                this.push(columnDef);
-            }
-        }, columnDefs);
+        };
+        var extra = {};
+        columnDef = this.renderInput(columnDef, extra);
+        columnDefs.push(columnDef);
 
         return {data: columnDefs};
     }

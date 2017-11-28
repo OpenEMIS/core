@@ -38,8 +38,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
 
     // Function mapping
     Controller.initGrid = initGrid;
-    Controller.changeCriteria = changeCriteria;
-    Controller.changeComments = changeComments;
+    Controller.formatResults = formatResults;
+    Controller.formatComments = formatComments;
     Controller.resetColumnDefs = resetColumnDefs;
     Controller.changeCompetencyOptions = changeCompetencyOptions;
 
@@ -92,13 +92,13 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                 console.log(error);
             })
             .then(function (competencyResults) {
-                Controller.changeCriteria(competencyResults);
+                Controller.formatResults(competencyResults);
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
                     Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
             })
             .then(function (competencyItemComments) {
-                Controller.changeComments(competencyItemComments);
+                Controller.formatComments(competencyItemComments);
                 return Controller.initGrid();
             }, function (error) {
             })
@@ -110,8 +110,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
 
     });
 
-    function resetColumnDefs(criteria, period, selectedPeriodStatus, item) {
-        var response = InstitutionStudentCompetenciesSvc.getColumnDefs(criteria, item, Controller.bodyDir);
+    function resetColumnDefs(criteriaGradeOptions, period, selectedPeriodStatus, item, student) {
+        var response = InstitutionStudentCompetenciesSvc.getColumnDefs(Controller.bodyDir);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -197,25 +197,22 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
         }
     }
 
-    function changeCriteria(competencyResults) {
+    function formatResults(competencyResults) {
         var studentResults = {};
         angular.forEach(competencyResults, function (value, key) {
-            // Format for the student criteria result will be student_id.criteria_id.grading_option_id
-            if (studentResults[value.student_id] == undefined) {
-                studentResults[value.student_id] = {}
+            // Format for the student criteria result will be criteria_id.grading_option_id
+            if (studentResults[value.competency_criteria_id] == undefined) {
+                studentResults[value.competency_criteria_id] = {};
             }
-            studentResults[value.student_id][value.competency_criteria_id] = value.competency_grading_option_id;
+            studentResults[value.competency_criteria_id] = value.competency_grading_option_id;
         });
         Controller.studentResults = studentResults;
     }
 
-    function changeComments(competencyItemComments) {
+    function formatComments(competencyItemComments) {
         var studentComments = {};
         angular.forEach(competencyItemComments, function (value, key) {
-            if (studentComments[value.student_id] == undefined) {
-                studentComments[value.student_id] = {}
-            }
-            studentComments[value.student_id]['comments'] = value.comments;
+            studentComments['comments'] = value.comments;
         });
         Controller.studentComments = studentComments;
     }
@@ -233,14 +230,14 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
         InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
             Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId)
         .then(function (results) {
-            Controller.changeCriteria(results);
+            Controller.formatResults(results);
             return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
                 Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
         .then(function (comments) {
-            Controller.changeComments(comments);
-            Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
+            Controller.formatComments(comments);
+            Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
         }, function (error) {
         });
     }
@@ -294,7 +291,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
+                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
                 }
             };
         }, function(error){
@@ -341,7 +338,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
+                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
                 }
             };
         });
