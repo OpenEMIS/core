@@ -51,11 +51,24 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
             .then(function(response) {
                 Controller.className = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
-                Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
-                if (response.class_students.length > 0) {
-                    Controller.studentOptions = $filter('orderBy')(response.class_students, ['user.first_name', 'user.last_name']);
+                Controller.institutionId = response.institution_id;
+                return InstitutionStudentCompetenciesSvc.getStudentStatusId("CURRENT");
+            }, function(error) {
+                console.log(error);
+            })
+            .then(function (response) {
+                var enrolledStatusId = response[0].id;
+                return InstitutionStudentCompetenciesSvc.getClassStudents(Controller.classId, enrolledStatusId);
+            }, function(error) {
+                console.log(error);
+            })
+            .then(function (classStudents) {
+                Controller.studentOptions = classStudents;
+                if (Controller.studentOptions.length > 0) {
                     Controller.selectedStudent = Controller.studentOptions[0].student_id;
+                } else {
+                    AlertSvc.warning(Controller, "Please setup students for this class");
                 }
                 return InstitutionStudentCompetenciesSvc.getCompetencyTemplate(Controller.academicPeriodId, Controller.competencyTemplateId);
             }, function(error) {
