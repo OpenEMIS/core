@@ -308,42 +308,9 @@ class InstitutionsTable extends AppTable
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
 		if (isset($request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
-<<<<<<< HEAD
-			if (in_array($feature, ['Report.InstitutionStudents'])) {
-				$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-				$academicPeriodOptions = [];
-				$academicPeriodData = $InstitutionStudentsTable->find()
-					->matching('AcademicPeriods')
-					->select(['id' => $InstitutionStudentsTable->aliasField('academic_period_id'), 'name' => 'AcademicPeriods.name'])
-					->group('id')
-					->toArray()
-					;
-
-				foreach ($academicPeriodData as $key => $value) {
-					$academicPeriodOptions[$value->id] = $value->name;
-				}
-
-				// $attr['onChangeReload'] = true;
-				$attr['options'] = $academicPeriodOptions;
-				$attr['type'] = 'select';
-				$attr['select'] = false;
-
-				if (empty($request->data[$this->alias()]['academic_period_id'])) {
-					reset($academicPeriodOptions);
-					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
-				}
-				return $attr;
-			} else if (in_array($feature, ['Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases'])
-				|| (in_array($feature, ['Report.Institutions'])
-					&& !empty($request->data[$this->alias()]['institution_filter'])
-					&& $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT)
-				) {
-				$academicPeriodOptions = [];
-=======
-			if ((in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionStudentTeacherRatio', 'Report.InstitutionStudentClassroomRatio', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases'])) 
+			if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases']))
 				||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT)))
 			{
->>>>>>> ffd29725367b209ea25b5fa35d0e693c49f02b3e
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 				$academicPeriodOptions = $AcademicPeriodTable->getYearList();
 				$currentPeriod = $AcademicPeriodTable->getCurrent();
