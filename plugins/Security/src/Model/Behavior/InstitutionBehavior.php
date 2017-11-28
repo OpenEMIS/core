@@ -2,6 +2,8 @@
 namespace Security\Model\Behavior;
 
 use ArrayObject;
+
+use Cake\Core\Configure;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -17,6 +19,13 @@ class InstitutionBehavior extends Behavior
 		// priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
 		$events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
 		return $events;
+	}
+
+	public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+	{
+		if (Configure::read('schoolMode')) {
+			$query->limit(1);
+		}
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
