@@ -87,14 +87,14 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                     AlertSvc.warning(Controller, "Please setup competency periods for the selected template");
                 }
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
-                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
                 console.log(error);
             })
             .then(function (competencyResults) {
                 Controller.changeCriteria(competencyResults);
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
-                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
             })
             .then(function (competencyItemComments) {
@@ -231,11 +231,11 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
             });
         }
         InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
-                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId)
+            Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId)
         .then(function (results) {
             Controller.changeCriteria(results);
             return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
-                Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+                Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
         .then(function (comments) {
