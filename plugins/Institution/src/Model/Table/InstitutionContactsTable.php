@@ -24,7 +24,6 @@ class InstitutionContactsTable extends ControllerActionTable {
         $this->belongsTo('Sectors', ['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Genders', ['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
-        $this->belongsTo('NetworkConnectivities', ['className' => 'Institution.NetworkConnectivities', 'foreignKey' => 'institution_network_connectivity_id']);
         /**
          * end fieldOption tables
          */
@@ -33,7 +32,7 @@ class InstitutionContactsTable extends ControllerActionTable {
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.SystemGroups']);
 
-        $this->excludeDefaultValidations(['area_id', 'institution_provider_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_gender_id', 'institution_network_connectivity_id']);
+        $this->excludeDefaultValidations(['area_id', 'institution_provider_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_gender_id']);
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
