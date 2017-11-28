@@ -63,7 +63,7 @@ class PermissionsTable extends ControllerActionTable
         $this->field('security_role_id', ['visible' => false]);
         $this->field('security_function_id', ['visible' => false]);
 
-        $checkboxOptions = ['tableColumnClass' => 'checkbox-column'];
+        $checkboxOptions = ['tableColumnClass' => 'permission-column'];
         $this->field('_view', $checkboxOptions);
         $this->field('_edit', $checkboxOptions);
         $this->field('_add', $checkboxOptions);
@@ -206,6 +206,7 @@ class PermissionsTable extends ControllerActionTable
                 'text' => __($module)
             ];
         }
+        $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
     }
 

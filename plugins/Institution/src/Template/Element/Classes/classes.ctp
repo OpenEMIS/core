@@ -1,5 +1,3 @@
-<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
-<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php $label = isset($attr['label']) ? $attr['label'] : $attr['field']; ?>
@@ -10,7 +8,7 @@
             <table class="table table-checkable table-input">
                 <thead>
                     <tr>
-                        <th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+                        <th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio=""/></th>
                         <th><?= $this->Label->get('InstitutionClasses.class') ?></th>
                         <th><?= $this->Label->get('InstitutionClasses.staff_id') ?></th>
                     </tr>
@@ -46,15 +44,7 @@
                             <tr>
                                 <td <?php if(!$disabled){ ?>class="checkbox-column"<?php } ?>>
                                     <?php
-                                    
-                                    echo $this->Form->input('Classes.' . $key . '.class_id', [
-                                        'type'      => 'checkbox',
-                                        'class'     => 'icheck-input',
-                                        'value'     => $n,
-                                        'checked'   => $selected,
-                                        'label'     => false,
-                                        'disabled'  => $disabled
-                                    ]);
+                                    echo $this->Form->checkbox('Classes.' . $key . '.class_id', ['checked' => $selected, 'disabled' => $disabled, 'value' => $n, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                                     ?>
                                 </td>
 

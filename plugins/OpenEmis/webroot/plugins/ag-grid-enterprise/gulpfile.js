@@ -1,5 +1,5 @@
-var gulp = require('gulp');
 var gulpTypescript = require('gulp-typescript');
+var gulp = require('gulp');
 var typescript = require('typescript');
 var header = require('gulp-header');
 var merge = require('merge2');
@@ -8,31 +8,25 @@ var clean = require('gulp-clean');
 var webpack = require('webpack');
 var webpackStream = require('webpack-stream');
 var path = require('path');
+const rename = require("gulp-rename");
 
 var headerTemplate = '// <%= pkg.name %> v<%= pkg.version %>\n';
 
 var bundleTemplate = '// <%= pkg.name %> v<%= pkg.version %>\n';
 
-gulp.task('default', ['watch']);
+gulp.task('default', ['webpack-all']);
 gulp.task('release', ['webpack-all']);
 
-gulp.task('webpack-all', ['webpack','webpack-minify','webpack-noStyle','webpack-minify-noStyle'], tscTask);
+gulp.task('webpack-all', ['webpack', 'webpack-minify', 'webpack-noStyle', 'webpack-minify-noStyle'], tscTask);
 
 gulp.task('webpack-minify-noStyle', ['tsc'], webpackTask.bind(null, true, false));
 gulp.task('webpack-noStyle', ['tsc'], webpackTask.bind(null, false, false));
 gulp.task('webpack-minify', ['tsc'], webpackTask.bind(null, true, true));
 gulp.task('webpack', ['tsc'], webpackTask.bind(null, false, true));
-gulp.task('webpack-dev', ['tsc-dev'], webpackTask.bind(null, false, true));
 
 gulp.task('tsc', ['cleanDist'], tscTask);
 
-gulp.task('tsc-dev', ['copy-from-ag-grid'], tscTask);
-
 gulp.task('cleanDist', cleanDist);
-
-gulp.task('watch', ['webpack-dev'], watchTask);
-
-gulp.task('copy-from-ag-grid', copyFromAgGrid);
 
 function cleanDist() {
     return gulp
@@ -41,24 +35,19 @@ function cleanDist() {
 }
 
 function tscTask() {
+    var project = gulpTypescript.createProject('./tsconfig.json', {typescript: typescript});
+
     var tsResult = gulp
         .src('src/**/*.ts')
-        .pipe(gulpTypescript({
-            typescript: typescript,
-            module: 'commonjs',
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-            declarationFiles: true,
-            target: 'es5',
-            noImplicitAny: true
-        }));
+        //.pipe(sourcemaps.init())
+        .pipe(gulpTypescript(project));
 
     return merge([
         tsResult.dts
-            .pipe(header(headerTemplate, { pkg : pkg }))
+            .pipe(header(headerTemplate, {pkg: pkg}))
             .pipe(gulp.dest('dist/lib')),
         tsResult.js
-            .pipe(header(headerTemplate, { pkg : pkg }))
+            .pipe(header(headerTemplate, {pkg: pkg}))
             .pipe(gulp.dest('dist/lib'))
     ])
 }
@@ -67,7 +56,21 @@ function webpackTask(minify, styles) {
 
     var plugins = [];
     if (minify) {
-        plugins.push(new webpack.optimize.UglifyJsPlugin({compress: {warnings: false}}));
+        plugins.push(
+            new webpack.optimize.UglifyJsPlugin(
+                {
+                    output: {
+                        comments: false
+                    },
+                    compress: {
+                        warnings: false
+                    },
+                    mangle: {
+                        except:['csvCreator','CsvCreator']
+                    }
+                }
+            )
+        );
     }
     var mainFile = styles ? './webpack-with-styles.js' : './webpack.js';
 
@@ -90,26 +93,18 @@ function webpackTask(minify, styles) {
             //devtool: 'inline-source-map',
             module: {
                 loaders: [
-                    { test: /\.css$/, loader: "style-loader!css-loader" }
+                    {test: /\.css$/, loader: "style-loader!css-loader"}
                 ]
             },
             plugins: plugins
         }))
-        .pipe(header(bundleTemplate, { pkg : pkg }))
+        .pipe(header(bundleTemplate, {pkg: pkg}))
         .pipe(gulp.dest('./dist/'));
 }
 
-function copyFromAgGrid() {
-    return gulp.src(['../ag-grid/*', '../ag-grid/dist/**/*'], {base: '../ag-grid'})
-        .pipe(gulp.dest('./node_modules/ag-grid'));
-}
+gulp.task('publishForCI', () => {
+    return gulp.src("./ag-grid-enterprise*.tgz")
+        .pipe(rename("ag-grid-enterprise.tgz"))
+        .pipe(gulp.dest("c:/ci/ag-grid-enterprise/"));
 
-// 1. copy files -> webpack
-// 2. webpack <- copy files
-
-function watchTask() {
-    gulp.watch([
-        '../ag-grid/dist/ag-grid.js',
-        './src/**/*'
-    ], ['webpack-dev']);
-}
+});

@@ -9,7 +9,8 @@ use Cake\Event\Event;
 
 class TrainingsController extends AppController
 {
-    public function initialize() {
+    public function initialize()
+    {
         parent::initialize();
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -26,7 +27,8 @@ class TrainingsController extends AppController
     public function Results() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Training.TrainingSessionResults']); }
     // End
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
         $header = __('Training');
 
         $header .= ' - ' . $model->getHeader($model->alias);
@@ -36,7 +38,8 @@ class TrainingsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function getSessionTabElements($options = []) {
+    public function getSessionTabElements($options = [])
+    {
         $tabElements = [];
         $sessionUrl = ['plugin' => 'Training', 'controller' => 'Trainings'];
         $sessionTabElements = [
@@ -49,6 +52,6 @@ class TrainingsController extends AppController
         foreach ($sessionTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($sessionUrl, ['action' => $key, 'index']);
         }
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
