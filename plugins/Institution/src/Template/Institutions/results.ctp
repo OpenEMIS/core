@@ -92,7 +92,7 @@ $roles = '[' . implode(",", $_roles) . ']';
             </scrollable-tabset>
 
             <div id="institution-result-table" class="table-wrapper">
-                <div ng-if="gridOptions" ag-grid="gridOptions" class="ag-fresh ag-height-fixed"></div>
+                <div ng-if="gridOptions" kd-ag-grid="gridOptions" has-tabs="true" class="ag-height-fixed"></div>
             </div>
         </div>
     </div>
