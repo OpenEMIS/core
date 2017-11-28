@@ -9,6 +9,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
     var service = {
         init: init,
         getClassDetails: getClassDetails,
+        getStudentStatusId: getStudentStatusId,
+        getClassStudents: getClassStudents,
         getCompetencyTemplate: getCompetencyTemplate,
         translate: translate,
         saveCompetencyResults: saveCompetencyResults,
@@ -22,6 +24,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
 
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
+        StudentStatuses: 'Student.StudentStatuses',
+        InstitutionClassStudents: 'Institution.InstitutionClassStudents',
         CompetencyTemplates: 'Competency.CompetencyTemplates',
         InstitutionCompetencyResults: 'Institution.InstitutionCompetencyResults',
         CompetencyItemComments: 'Institution.InstitutionCompetencyItemComments'
@@ -52,6 +56,28 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .get(classId)
             .find('translateItem')
             .contain(['AcademicPeriods', 'ClassStudents.Users', 'ClassStudents.StudentStatuses'])
+            .ajax({success: success, defer:true});
+    }
+
+    function getStudentStatusId(statusCode) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return StudentStatuses
+            .select(['id'])
+            .where({code: statusCode})
+            .ajax({success: success, defer:true});
+    }
+
+    function getClassStudents(classId, enrolledStatusId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return InstitutionClassStudents
+            .select()
+            .contain(['Users'])
+            .where({institution_class_id: classId, student_status_id: enrolledStatusId})
+            .order(['Users.first_name', 'Users.last_name'])
             .ajax({success: success, defer:true});
     }
 
