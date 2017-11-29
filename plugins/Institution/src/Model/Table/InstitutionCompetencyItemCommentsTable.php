@@ -29,7 +29,7 @@ class InstitutionCompetencyItemCommentsTable extends ControllerActionTable
     {
         // do not save new record if comment is empty
         $comments = $entity->comments;
-        if ($entity->isNew() && empty($comments)) {
+        if ($entity->isNew() && $comments === '') {
             return false;
         }
     }
@@ -38,7 +38,7 @@ class InstitutionCompetencyItemCommentsTable extends ControllerActionTable
     {
         // delete record if user removes comment
         $comments = $entity->comments;
-        if (empty($comments)) {
+        if ($comments === '') {
             $this->delete($entity);
         }
     }
