@@ -217,13 +217,21 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                             .then(function(response) {
                                 params.data.save_error[params.colDef.field] = false;
                                 AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
-                                params.api.refreshCells([params.node], [params.colDef.field]);
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
 
                             }, function(error) {
                                 params.data.save_error[params.colDef.field] = true;
                                 console.log(error);
                                 AlertSvc.error(controller, "There was an error when saving the results");
-                                params.api.refreshCells([params.node], [params.colDef.field]);
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
                             });
                         }
                     });
@@ -271,13 +279,21 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                             .then(function(response) {
                                 params.data.save_error[params.colDef.field] = false;
                                 AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
-                                params.api.refreshCells([params.node], [params.colDef.field]);
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
 
                             }, function(error) {
                                 params.data.save_error[params.colDef.field] = true;
                                 console.log(error);
                                 AlertSvc.error(controller, "There was an error when saving the comments");
-                                params.api.refreshCells([params.node], [params.colDef.field]);
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
                             });
                         }
                     });
