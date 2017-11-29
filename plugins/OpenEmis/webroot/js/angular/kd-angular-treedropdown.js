@@ -115,7 +115,8 @@ function kdTreeDropdown() {
 
             _scope.inputModel = _parentData;
             loadExpand(_scope.inputModel);
-            _scope.$apply();
+            // to remove in v1.0.1
+            // _scope.$apply();
         }
 
     }
