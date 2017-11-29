@@ -284,6 +284,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 localeText: localeText,
                 ensureDomOrder: true,
                 domLayout: 'autoHeight',
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
                 getRowStyle: function(params) {
                     if (params.node.rowPinned) {
                         return {'font-weight': 'bold'}
@@ -320,6 +323,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 domLayout: 'autoHeight',
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
                 getRowStyle: function(params) {
                     if (params.node.rowPinned) {
                         return {'font-weight': 'bold'}
