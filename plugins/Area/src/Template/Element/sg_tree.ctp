@@ -18,7 +18,7 @@
 	echo $this->Form->unlockField($fieldName);
 	?>
 	<div class="tree-form <?= isset($attr['class']) ? $attr['class'] : '' ?> <?php echo $divErrorCSS; ?>" id="<?= $attr['id'] ?>" style="<?= $inputWrapperStyle; ?>" ng-controller="SgTreeCtrl as SgTree" ng-init="SgTree.model='<?= $attr['source_model'] ?>'; <?= !empty($attr['value'])? 'SgTree.outputValue='.$attr['value'] : 'SgTree.outputValue=null'?>; SgTree.userId=<?= $this->request->session()->read('Auth.User.id') ?>; SgTree.displayCountry=<?= isset($attr['displayCountry']) && !$attr['displayCountry'] ? 0 : 1 ?>;">
-		<kd-tree-dropdown-ng id="<?=$attr['field'] ?>-tree" input-model="SgTree.inputModelText" output-model="outputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
+		<kd-tree-dropdown-ng id="<?=$attr['field'] ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="outputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
 		<?php
 			echo $this->Form->hidden($fieldName, [
 				'ng-value' => 'SgTree.outputValue'
