@@ -57,7 +57,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     var models = {
         Genders: 'User.Genders',
-        StaffAssignment: 'Institution.StaffTransferRequests',
+        StaffTransferIn: 'Institution.StaffTransferIn',
         StaffUser: 'Institution.StaffUser',
         StaffRecord: 'Institution.Staff',
         StaffTypes: 'Staff.StaffTypes',
@@ -436,7 +436,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function addStaffTransferRequest(data)
     {
-        return StaffAssignment.save(data);
+        return StaffTransferIn.save(data);
     };
 
     function getUserRecord(externalRef)
@@ -684,11 +684,11 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         });
     };
 
-    function getPositionList(fte, startDate, endDate) {
+    function getPositionList(fte, startDate, endDate, openemisNo) {
         var vm = this;
         var institutionId = vm.getInstitutionId();
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate;
+        var url = angular.baseUrl + '/Institution/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate + '/' + openemisNo;
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data);

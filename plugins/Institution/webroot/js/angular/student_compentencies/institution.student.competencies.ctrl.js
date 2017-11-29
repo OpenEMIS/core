@@ -158,7 +158,10 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                             period_editable: selectedPeriodStatus,
                             student_status_name: student.student_status.name,
                             student_status_code: student.student_status.code,
-                            comments: ''
+                            comments: '',
+                            save_error: {
+                                comments: false
+                            }
                         };
                         var studentComments = Controller.studentComments;
                         if (angular.isDefined(studentComments[student.student_id]) && studentComments[student.student_id]['comments'] != null) {
@@ -167,6 +170,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
 
                         angular.forEach(copyCriteriaIds, function(value, key) {
                             row[value.name] = value.value;
+                            row['save_error'][value.name] = false;
                         });
                         rowData.push(row);
                     });
@@ -246,7 +250,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 context: {
                     institution_id: Controller.institutionId,
                     academic_period_id: Controller.academicPeriodId,
-                    competency_template_id: Controller.competencyTemplateId
+                    competency_template_id: Controller.competencyTemplateId,
+                    _controller: Controller
                 },
                 columnDefs: [],
                 rowData: [],
@@ -258,16 +263,31 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 localeText: localeText,
+                ensureDomOrder: true,
+                domLayout: 'autoHeight',
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue) {
+                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
                         .then(function(response) {
+                            params.data.save_error[params.colDef.field] = false;
+                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+                            params.api.refreshCells([params.node], [params.colDef.field]);
+
                         }, function(error) {
+                            params.data.save_error[params.colDef.field] = true;
                             console.log(error);
+                            AlertSvc.error(Controller, "There was an error when saving the comments");
+                            params.api.refreshCells([params.node], [params.colDef.field]);
                         });
                     }
                 },
@@ -292,15 +312,29 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                domLayout: 'autoHeight',
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue) {
+                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
                         .then(function(response) {
+                            params.data.save_error[params.colDef.field] = false;
+                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+                            params.api.refreshCells([params.node], [params.colDef.field]);
+
                         }, function(error) {
+                            params.data.save_error[params.colDef.field] = true;
                             console.log(error);
+                            AlertSvc.error(Controller, "There was an error when saving the comments");
+                            params.api.refreshCells([params.node], [params.colDef.field]);
                         });
                     }
                 },

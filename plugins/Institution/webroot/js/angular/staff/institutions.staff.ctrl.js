@@ -225,6 +225,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.success($scope, 'The staff is added successfully.');
             } else if ($location.search().staff_transfer_added) {
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
+            } else if ($location.search().transfer_exists) {
+                AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
             }
         });
     });
@@ -286,10 +288,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (fte == '') {
             fte = 0;
         }
+
+        // POCOR-4269 used the openemis_no (unique) so same staff cant add to same position
+        var openemisNo = 0;
+        if (StaffController.hasOwnProperty('selectedStaffData')) {
+            openemisNo = StaffController.selectedStaffData.openemis_no;
+        }
+
         StaffController.displayedFTE = (fte*100) + '%';
         var startDate = StaffController.startDate;
         var endDate = StaffController.endDate;
-        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate)
+        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate, openemisNo)
         .then(function(response) {
             StaffController.institutionPositionOptions.availableOptions = response;
         }, function(errors) {
@@ -315,18 +324,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(localeText){
             StaffController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -337,31 +334,34 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 ],
                 localeText: localeText,
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
 
             StaffController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -371,31 +371,33 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 ],
                 localeText: localeText,
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                 rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
         }, function(error){
             StaffController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -405,31 +407,33 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
 
             StaffController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -438,15 +442,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
         });
     };
@@ -627,6 +645,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
             if (staffRecords[key]['main_nationality'] != null) {
                 staffRecords[key]['nationality_name'] = staffRecords[key]['main_nationality']['name'];
+            }
+            if (staffRecords[key]['main_identity_type'] != null) {
                 staffRecords[key]['identity_type_name'] = staffRecords[key]['main_identity_type']['name'];
             }
 
@@ -686,7 +706,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 deferred.resolve(StaffController.postResponse);
             }
             else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
-                AlertSvc.warning($scope, 'There is an existing transfer in request.');
+                AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
                 $window.location.href = postResponse.data.error.staff_assignment.ruleTransferRequestExists;
                 deferred.resolve(StaffController.postResponse);
             } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
@@ -848,17 +868,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var staffTypeId = (StaffController.staffTypeId != null && StaffController.staffTypeId.hasOwnProperty('id')) ? StaffController.staffTypeId.id : '';
         var data = {
             staff_id: StaffController.selectedStaff,
-            start_date: startDate,
-            end_date: StaffController.endDate,
-            staff_type_id: staffTypeId,
-            FTE: fte,
-            institution_position_id: institutionPositionId,
-            status: 0,
-            institution_id: StaffController.institutionId,
+            new_start_date: startDate,
+            new_end_date: StaffController.endDate,
+            new_staff_type_id: staffTypeId,
+            new_FTE: fte,
+            new_institution_position_id: institutionPositionId,
+            status_id: 0,
+            new_institution_id: StaffController.institutionId,
             previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
-            type: 2,
-            comment: StaffController.comment,
-            update: 0
+            comment: StaffController.comment
         };
 
         InstitutionsStaffSvc.addStaffTransferRequest(data)
@@ -867,9 +885,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (data.error.length == 0) {
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
                 $window.location.href = 'add?staff_transfer_added=true';
-            } else if (data.error.hasOwnProperty('update') && data.error.update.hasOwnProperty('ruleTransferRequestExists')) {
-                AlertSvc.warning($scope, 'There is an existing transfer in request.');
-                $window.location.href = data.error.update.ruleTransferRequestExists;
+            } else if (data.error.hasOwnProperty('staff_id') && data.error.staff_id.hasOwnProperty('ruleTransferRequestExists')) {
+                AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
+                $window.location.href = data.error.staff_id.ruleTransferRequestExists;
             } else {
                 console.log(response);
                 AlertSvc.error($scope, 'There is an error in adding staff transfer request.');

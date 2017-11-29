@@ -12,16 +12,18 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
-class GuardiansTable extends ControllerActionTable {
+class GuardiansTable extends ControllerActionTable
+{
     private $editButtonAction = 'GuardianUser';
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('student_guardians');
         parent::initialize($config);
 
-        $this->belongsTo('StudentUser',            ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
-        $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
-        $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
+        $this->belongsTo('StudentUser', ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
+        $this->belongsTo('GuardianRelations', ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
         // to handle field type (autocomplete)
         $this->addBehavior('OpenEmis.Autocomplete');
@@ -31,8 +33,9 @@ class GuardiansTable extends ControllerActionTable {
         $this->addBehavior('ControllerAction.Image');
     }
 
-    public function validationDefault(Validator $validator) {
-	$validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
 
         return $validator
             ->add('guardian_id', 'ruleStudentGuardianId', [
@@ -49,7 +52,8 @@ class GuardiansTable extends ControllerActionTable {
         return $events;
     }
 
-    private function setupTabElements($entity=null) {
+    private function setupTabElements($entity = null)
+    {
         if ($this->action != 'view') {
             if ($this->controller->name == 'Directories') {
                 $options['type'] = 'student';
@@ -74,13 +78,14 @@ class GuardiansTable extends ControllerActionTable {
             }
             $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
             $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
-
+            $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->alias());
         }
     }
 
-    public function afterAction(Event $event, $data) {
+    public function afterAction(Event $event, $data)
+    {
         if ($this->action != 'view') {
             $this->setupTabElements();
         }
@@ -90,13 +95,15 @@ class GuardiansTable extends ControllerActionTable {
         ]);
     }
 
-    public function onGetGuardianId(Event $event, Entity $entity) {
+    public function onGetGuardianId(Event $event, Entity $entity)
+    {
         if ($entity->has('_matchingData')) {
             return $entity->_matchingData['Users']->name;
         }
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(Event $event)
+    {
         if ($this->controller->name == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
         } else {
@@ -116,7 +123,8 @@ class GuardiansTable extends ControllerActionTable {
         }
     }
 
-    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $errors = $entity->errors();
         if (!empty($errors)) {
             $entity->unsetProperty('guardian_id');
@@ -124,24 +132,29 @@ class GuardiansTable extends ControllerActionTable {
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity) {
+    public function addAfterAction(Event $event, Entity $entity)
+    {
         $this->field('id', ['value' => Text::uuid()]);
     }
 
-    public function viewBeforeAction(Event $event) {
+    public function viewBeforeAction(Event $event)
+    {
         $this->field('photo_content', ['type' => 'image', 'order' => 0]);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(Event $event, Entity $entity)
+    {
         $this->setupTabElements($entity);
     }
 
-    public function editBeforeQuery(Event $event, Query $query) {
+    public function editBeforeQuery(Event $event, Query $query)
+    {
         $query->contain(['StudentUser', 'Users']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity) {
+    public function editAfterAction(Event $event, Entity $entity)
+    {
         $this->field('guardian_id', [
             'type' => 'readonly',
             'order' => 10,
@@ -149,7 +162,8 @@ class GuardiansTable extends ControllerActionTable {
         ]);
     }
 
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
+    {
         if ($action == 'add') {
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
@@ -161,6 +175,14 @@ class GuardiansTable extends ControllerActionTable {
             }
             $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
 
+            $requestData = $this->request->data;
+            if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
+                $guardianId = $requestData[$this->alias()]['guardian_id'];
+                $guardianName = $this->Users->get($guardianId)->name_with_id;
+
+                $attr['attr']['value'] = $guardianName;
+            }
+
             $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
@@ -171,11 +193,13 @@ class GuardiansTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addOnInitialize(Event $event, Entity $entity) {
+    public function addOnInitialize(Event $event, Entity $entity)
+    {
         $this->Session->delete('Student.Guardians.new');
     }
 
-    public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $options['validate']=true;
         $patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
         $errorCount = count($patch->errors());
@@ -194,7 +218,8 @@ class GuardiansTable extends ControllerActionTable {
         }
     }
 
-    public function ajaxUserAutocomplete() {
+    public function ajaxUserAutocomplete()
+    {
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
 
@@ -221,7 +246,7 @@ class GuardiansTable extends ControllerActionTable {
             $list = $query->all();
 
             $data = [];
-            foreach($list as $obj) {
+            foreach ($list as $obj) {
                 $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
                 $data[] = ['label' => $label, 'value' => $obj->id];
             }

@@ -1,5 +1,5 @@
 /*
-Core Overwrites: v.1.0.12
+Core Overwrites: v.1.0.14
 */
 
 
@@ -187,21 +187,26 @@ a,
 }
 
 
-/* Ag-Grid Overwrites */
+/* Ag-Grid Overwrites  - Removing all after this task */
+.rtl .sg-theme .ag-body-viewport {
+    direction: rtl !important;
+}
 
-.ag-fresh {
+/* Adding the aboved css for kd-angular-ag-grid to work for the latest  - Also to removed together */
+
+/*.ag-fresh {
     overflow: hidden;
 }
 
 .ag-fresh .ag-root {
     min-height: 200px;
-}
+}*/
 
 .ag-height-fixed {
-    height: 100%;
+    height: 650px;
     min-height: 200px;
 }
-
+/*
 .rtl .ag-fresh div.ag-header,
 .rtl .ag-body-viewport {
     direction: ltr !important;
@@ -274,13 +279,13 @@ a,
     border: 0;
     padding: 5px;
     width: 97%;
-}
+}*/
 
 .ag-header-icon {
     display: inline;
 }
 
-.ag-fresh .ag-header-cell-menu-button {
+/*.ag-fresh .ag-header-cell-menu-button {
     line-height: 14px !important;
     z-index: 1;
     background-color: #F6F6F6;
@@ -294,13 +299,13 @@ a,
 
 .ag-fresh .ag-header-cell-menu-button:hover {
     background-color: #EEE;
-}
+}*/
 
 .ag-header-cell-menu-button svg,
 .ag-sort-none-icon svg {
     display: none;
 }
-
+/*
 .ag-sort-descending-icon:after,
 .ag-sort-none-icon:after,
 .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
@@ -333,13 +338,13 @@ a,
 
 .ag-fresh .oe-cell-editable select {
     background-color: #FFF9CA;
-}
+}*/
 
-.ag-sort-none-icon:after {
+/*.ag-sort-none-icon:after {
     content: "\f0dc";
 }
-
-.ag-fresh .ag-header-row div.ag-header-cell {
+*/
+/*.ag-fresh .ag-header-row div.ag-header-cell {
     border-color: #DDD;
     border-style: solid;
 }
@@ -350,22 +355,22 @@ a,
     border-bottom: 1px solid #DDD;
     border-radius: 0;
 }
-
+*/
 .ag-filter select {
     -webkit-appearance: auto !important;
     -moz-appearance: auto !important;
     appearance: auto !important;
 }
 
-.ag-fresh .ag-cell:last-child {
+/*.ag-fresh .ag-cell:last-child {
     border-right: 1px dotted #DDD !important;
 }
 
 .ag-fresh .ag-header-cell:last-child {
     border-right: 1px solid #DDD !important;
 }
-
-.rtl .ag-fresh .ag-cell,
+*/
+/*.rtl .ag-fresh .ag-cell,
 .rtl .ag-fresh .ag-header-cell-text {
     font-size: 14px;
 }
@@ -412,7 +417,7 @@ a,
 
 .rtl .ag-fresh .ag-header-cell-menu-button {
     float: left;
-}
+}*/
 
 /* Error message on the fileinput */
 
@@ -603,11 +608,11 @@ a,
 
 /* For Checkbox iCheck - To be depreciate */
 
-.icheck-input[type="checkbox"],
+/*.icheck-input[type="checkbox"],
 .icheck-input[type="radio"] {
     z-index: -1 !important;
 }
-
+*/
 /* End of iCheck */
 
 
@@ -919,17 +924,9 @@ a,
 
 /* End of fix for POCOR-3658 */
 
-/* Security Permission font-size fix for POCOR-3877 */
-
-.security-permission-checkbox label{
-    font-size: 13px !important;
-}
-
-/* End of security permission font-size fix */
-
 /* Temp fix by KK POCOR-3880 */
 
-.ag-fresh .ag-pinned-left-header,
+/*.ag-fresh .ag-pinned-left-header,
 .ag-fresh .ag-pinned-right-header {
     background: none !important;
     background-color: rgba(204, 204, 204, 0.2) !important;
@@ -945,57 +942,176 @@ a,
 
 .ag-fresh .ag-header-icon#agMenu {
     display: block !important;
-}
+}*/
 
 .ag-menu input.ag-filter-filter {
     width: 89% !important;
 }
 
-.ag-fresh .ag-menu {
+/*.ag-fresh .ag-menu {
     border: none !important;
-}
+}*/
 /* End of fix for POCOR-3880 */
 
-/* Temp overwrite of last child of ag grid pinned POCOR-3961 */
-
-.ag-fresh .ag-pinned-left-cols-container .ag-cell.ag-cell-last-left-pinned {
-    border-right: 1px dotted #DDD !important;
-}
-
-/* End of temp fix for POCOR-3961 */
-
-/* Fix for normal table sorting issue in POCOR-2547 */
-
-.rtl .table-sortable th > a.asc:after {
-    content: "\f0dd";
-}
-
-.rtl .table-sortable th > a.desc:after {
-    content: "\f0de";
-}
-
-/* End of fix for normal table sorting */
-
-/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
-
-.ag-fresh .ag-cell-no-focus.oe-cell-error,
-.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error {
+/* Fix for error border POCOR-3233 */
+.sg-theme .oe-cell-error,
+.rtl .sg-theme .oe-cell-error {
     border: 2px solid #CC5C5C !important;
     border-radius: 0px !important;
 }
 
-/* End of fix for adding error border */
+/* End of fix for error border POCOR-3233 */
 
-/* Temp fix for core error border for POCOR-3783 */
-
-.table .error input, 
-.table .error .input-select-wrapper,
-.table .error textarea {
-    border-color: #CC5C5C !important;
+/* Fix for required label:before in table affecting input checkbox label:before POCOR-3233
+    - Proper fix in styleguide - required > label:before instead of required label:before
+*/
+[type="checkbox"]:not(:checked) + label:before,
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:not(:checked) + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:not(:checked) + .ag-filter-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:not(:checked) + label:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:not(:checked) + .ag-cell-value:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:not(:checked) + .ag-filter-value:before,
+[type="radio"]:checked + .ag-filter-value:before,
+.rtl [type="checkbox"]:not(:checked) + label:before,
+.rtl [type="checkbox"]:checked + label:before,
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="checkbox"]:checked + .ag-cell-value:before,
+.rtl [type="checkbox"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="checkbox"]:checked + .ag-filter-value:before,
+.rtl [type="radio"]:not(:checked) + label:before,
+.rtl [type="radio"]:checked + label:before,
+.rtl [type="radio"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="radio"]:checked + .ag-cell-value:before,
+.rtl [type="radio"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="radio"]:checked + .ag-filter-value:before {
+    margin: 0 !important;
+    color: transparent;
+    float: none;
 }
 
-.table div.input > label {
-    display: none !important;
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
+    margin: 0 !important;
 }
 
-/* End of temp fix for error border */
+/* End of fix for required label:before fix POCOR-3233 */
+
+/* Fix for #south styling in styleguide requires to update to [ref="south"] due to styleguide update POCOR-3233 */
+
+.sg-theme div[ref="south"] {
+    background-color: #F9F9F9;
+    border-top: 1px solid #DDD;
+    padding: 5px;
+    height: 42px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btFirst"] {
+    margin: 0 0 0 5px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btFirst"]:before {
+    content: "\f101";
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btPrevious"] {
+    margin: 0 0 0 10px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btPrevious"]:before {
+    content: "\f105";
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btNext"] {
+    margin: 0 10px 0 0;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btNext"]:before {
+    content: "\f104";
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btLast"]:before {
+    margin: 0 5px 0 0;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btLast"]:before {
+    content: "\f100";
+}
+
+/* End of fix for #south styling */
+
+/* Temp fix for radio in ag-Grid not style for task POCOR-3233 */
+
+.ag-radio-wrapper input.ag-grid-radio {
+    top: 10px;
+    left: 10px;
+}
+
+.ag-radio-wrapper label.ag-cell-label {
+    top: -6px !important;
+    left: 2px !important;
+}
+
+.rtl .ag-radio-wrapper label.ag-cell-label {
+    right: 5px !important;
+    top: -10px !important;
+}
+
+.ag-header-cell-label > span[ref='eText'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: auto;
+}
+
+.ag-header-cell-resize:hover {
+    width: 8px;
+    right: -5px;
+    border: none;
+}
+
+.ag-rtl .ag-header-cell-resize {
+    position: relative;
+}
+
+/* End of fix for radio */ 
+
+/* Temp fix for dropdown editing cell for task POCOR-3233 */
+
+.rtl .sg-theme .oe-cell-editable.oe-select-wrapper:after {
+    right: auto;
+    left: 0;
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+/* End of fix for dropdown editing cell */
+
+/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
+/* Temp fix for adding error border in ag Grid (last child for pinned and not pinned) for task POCOR-4260 */
+.ag-fresh .ag-cell-no-focus.oe-cell-error,
+.ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned {
+    border: 2px solid #CC5C5C !important;
+    border-radius: 0px !important;
+}
+
+td.checkbox-column,
+th.checkbox-column {
+    width: 50px;
+}
+
+/* End of fix for adding error border in ag Grid */

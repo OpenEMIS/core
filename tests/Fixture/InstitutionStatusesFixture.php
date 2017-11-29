@@ -8,14 +8,13 @@ class InstitutionStatusesFixture extends TestFixture
     public $import = ['table' => 'institution_statuses'];
     public $records = [
         [
-            'id' => 1,
+            'id' => '1',
             'code' => 'ACTIVE',
             'name' => 'Active'
-        ],
-        [
-            'id' => 2,
+        ], [
+            'id' => '2',
             'code' => 'INACTIVE',
-            'name' => 'Inactive'
+            'name' => 'inactive'
         ]
     ];
 }
