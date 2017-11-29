@@ -21,7 +21,7 @@ class StaffController extends AppController
         'Comments',
 
         // academic
-        'Employments',
+        'EmploymentStatuses',
         'StaffClasses',
         'StaffSubjects',
         'Awards',
@@ -29,6 +29,7 @@ class StaffController extends AppController
         'Licenses',
 
         // qualification
+        'Employments',
         'Qualifications',
         'Extracurriculars',
 
@@ -80,6 +81,10 @@ class StaffController extends AppController
     }
 
     // CAv4
+    public function Employments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
+    }
     public function Qualifications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
@@ -96,9 +101,9 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']);
     }
-    public function Employments()
+    public function EmploymentStatuses()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.EmploymentStatuses']);
     }
     public function Nationalities()
     {
@@ -156,7 +161,7 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
     }
-
+ 
     // health
     public function Healths()
     {

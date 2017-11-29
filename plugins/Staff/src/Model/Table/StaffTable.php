@@ -285,14 +285,14 @@ class StaffTable extends AppTable {
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
 		$studentTabElements = [
-			'Employments' => ['text' => __('Employments')],
+			'EmploymentStatuses' => ['text' => __('Statuses')],
 			'Positions' => ['text' => __('Positions')],
 			'Classes' => ['text' => __('Classes')],
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'StaffLeave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			'Awards' => ['text' => __('Awards')],
+			'StaffAppraisals' => ['text' => __('Appraisals')],
 		];
 
 		// unset classes and subjects if institution is non-academic
@@ -309,7 +309,7 @@ class StaffTable extends AppTable {
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			if ($key == 'StaffLeave') {
+			if ($key == 'StaffLeave' || $key == 'StaffAppraisals') {
 				$studentUrl = array_key_exists('url', $options) ? $options['url'] : $studentUrl;
 				$userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
 
@@ -326,11 +326,12 @@ class StaffTable extends AppTable {
 		$tabElements = [];
 		$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
 		$staffTabElements = [
+			'Employments' => ['text' => __('Employments')],
 			'Qualifications' => ['text' => __('Qualifications')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
-			'StaffAppraisals' => ['text' => __('Appraisals')],
+			'Awards' => ['text' => __('Awards')],
 		];
 
 		$tabElements = array_merge($tabElements, $staffTabElements);

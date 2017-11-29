@@ -55,6 +55,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
     }
+    public function StaffEmployments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
+    }
     public function StaffQualifications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
@@ -71,9 +75,9 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']);
     }
-    public function StaffEmployments()
+    public function StaffEmploymentStatuses()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.EmploymentStatuses']);
     }
     public function StaffLeave()
     {
@@ -606,14 +610,14 @@ class DirectoriesController extends AppController
         $tabElements = [];
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $studentTabElements = [
-            'Employments' => ['text' => __('Employments')],
+            'EmploymentStatuses' => ['text' => __('Statuses')],
             'Positions' => ['text' => __('Positions')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
             'Absences' => ['text' => __('Absences')],
             'Leave' => ['text' => __('Leave')],
             'Behaviours' => ['text' => __('Behaviours')],
-            'Awards' => ['text' => __('Awards')],
+            'Appraisals' => ['text' => __('Appraisals')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -629,11 +633,12 @@ class DirectoriesController extends AppController
         $tabElements = [];
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $studentTabElements = [
+            'Employments' => ['text' => __('Employments')],
             'Qualifications' => ['text' => __('Qualifications')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Memberships' => ['text' => __('Memberships')],
             'Licenses' => ['text' => __('Licenses')],
-            'Appraisals' => ['text' => __('Appraisals')],
+            'Awards' => ['text' => __('Awards')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);

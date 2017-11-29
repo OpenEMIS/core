@@ -822,18 +822,18 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
                     'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'StaffComments.index', 'StaffComments.view', 'StaffComments.add', 'StaffComments.edit', 'StaffComments.delete', 'Staff.History']
             ],
-            'Staff.Employments' => [
+            'Staff.EmploymentStatuses' => [
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
+                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals'],
             ],
-            'Staff.Qualifications' => [
-                'title' => 'Professional Development',
+            'Staff.Employments' => [
+                'title' => 'Professional',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Institutions.StaffAppraisals'],
+                'selected' => ['Staff.Employments', 'Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Awards'],
             ],
             'Staff.BankAccounts' => [
                 'title' => 'Finance',
@@ -979,17 +979,17 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Directories.index',
                 'link' => false,
             ],
-                'Directories.StaffEmployments' => [
+                'Directories.StaffEmploymentStatuses' => [
                     'title' => 'Career',
                     'parent' => 'Directories.Staff',
                     'params' => ['plugin' => 'Directory'],
-                    'selected' => ['Directories.StaffEmployments', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffAbsences', 'Directories.StaffLeave', 'Directories.StaffBehaviours', 'Directories.StaffAwards']
+                    'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffAbsences', 'Directories.StaffLeave', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals']
                 ],
-                'Directories.StaffQualifications' => [
-                    'title' => 'Professional Development',
+                'Directories.StaffEmployments' => [
+                    'title' => 'Professional',
                     'parent' => 'Directories.Staff',
                     'params' => ['plugin' => 'Directory'],
-                    'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAppraisals']
+                    'selected' => ['Directories.StaffEmployments', 'Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAwards']
                 ],
                 'Directories.StaffBankAccounts' => [
                     'title' => 'Finance',
