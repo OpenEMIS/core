@@ -18,7 +18,8 @@ class InfrastructureUtilityInternetsController extends PageController
         parent::initialize();
 
         $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->Page->loadElementsFromTable($this->InfrastructureUtilityInternets);
+        // to disable actions if institution is not active
+        $this->loadComponent('Institution.InstitutionInactive');
 
         $this->Page->disable(['search']); // to disable the search function
     }

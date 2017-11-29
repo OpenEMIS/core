@@ -1,38 +1,57 @@
-// ag-grid-enterprise v4.1.4
-import { Component } from "ag-grid/main";
-import { Filter } from "ag-grid/main";
-export declare class SetFilter extends Component implements Filter {
-    private static TEMPLATE;
-    private gridOptionsWrapper;
-    private context;
-    private filterParams;
+// ag-grid-enterprise v13.2.0
+import { BaseFilter, IDoesFilterPassParams, ISetFilterParams } from "ag-grid/main";
+export declare class SetFilter extends BaseFilter<string, ISetFilterParams, string[]> {
     private model;
-    private filterChangedCallback;
-    private filterModifiedCallback;
-    private valueGetter;
-    private colDef;
+    private suppressSorting;
     private eSelectAll;
+    private eSelectAllContainer;
     private eMiniFilter;
-    private api;
-    private applyActive;
-    private eApplyButton;
     private virtualList;
+    private debounceFilterChanged;
+    private eCheckedIcon;
+    private eUncheckedIcon;
+    private eIndeterminateCheckedIcon;
+    private selected;
     constructor();
-    private postConstruct();
-    init(params: any): void;
+    customInit(): void;
+    private updateCheckboxIcon();
+    initialiseFilterBodyUi(): void;
+    modelFromFloatingFilter(from: string): string[];
+    refreshFilterBodyUi(): void;
     private createSetListItem(value);
     afterGuiAttached(params: any): void;
-    getApi(): any;
     isFilterActive(): boolean;
-    doesFilterPass(node: any): boolean;
+    doesFilterPass(params: IDoesFilterPassParams): boolean;
     onNewRowsLoaded(): void;
+    /**
+     * Public method provided so the user can change the value of the filter once
+     * the filter has been already started
+     * @param options The options to use.
+     */
+    setFilterValues(options: string[]): void;
+    /**
+     * Public method provided so the user can reset the values of the filter once that it has started
+     * @param options The options to use.
+     */
+    resetFilterValues(): void;
     onAnyFilterChanged(): void;
-    private createTemplate();
-    private createGui();
-    private setupApply();
-    private filterChanged();
+    bodyTemplate(): string;
+    private updateSelectAll();
     private onMiniFilterChanged();
     private onSelectAll();
     private onItemSelected(value, selected);
-    private createApi();
+    setMiniFilter(newMiniFilter: any): void;
+    getMiniFilter(): any;
+    selectEverything(): void;
+    selectNothing(): void;
+    unselectValue(value: any): void;
+    selectValue(value: any): void;
+    isValueSelected(value: any): boolean;
+    isEverythingSelected(): boolean;
+    isNothingSelected(): boolean;
+    getUniqueValueCount(): number;
+    getUniqueValue(index: any): any;
+    serialize(): string[];
+    parse(dataModel: string[]): void;
+    resetState(): void;
 }
