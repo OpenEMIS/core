@@ -123,18 +123,13 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(direction) {
-        if (direction == 'ltr') {
-            direction = 'left';
-        } else {
-            direction = 'right';
-        }
+    function getColumnDefs() {
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
-        var columnDefs = [];
 
+        var columnDefs = [];
         columnDefs.push({
             headerName: "Competency Criteria",
             field: "competency_criteria_name",

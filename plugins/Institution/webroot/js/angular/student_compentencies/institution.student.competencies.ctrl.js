@@ -13,28 +13,25 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
     Controller.dataReady = false;
 
     // Variables
-    Controller.bodyDir = getComputedStyle(document.body).direction;
-    Controller.colDef = [
-        {headerName: 'OpenEMIS ID', field: 'openemis_no'},
-        {headerName: 'Student Name', field: 'name'},
-        {headerName: 'Student Status', field: 'student_status_name'}
-    ];
-    Controller.alertUrl = '';
-    Controller.redirectUrl = '';
+    Controller.gridOptions = {};
     Controller.classId = null;
     Controller.className = '';
     Controller.competencyTemplateId = null;
+    Controller.competencyTemplateName = '';
     Controller.academicPeriodId = null;
     Controller.academicPeriodName = '';
-    Controller.postError = [];
-    // format of competency result will be competencyperiodId.competencyItemId.studentId.criteriaId
-    Controller.competencyItemResults = {};
-    Controller.competencyTemplateName = '';
-    Controller.criteriaOptions = [];
-    Controller.gridOptions = {};
+    Controller.institutionId = null;
     Controller.criteriaGradeOptions = {};
     Controller.studentResults = {};
     Controller.studentComments = {};
+    // filters
+    Controller.periodOptions = {};
+    Controller.selectedPeriod = null;
+    Controller.selectedPeriodStatus = null;
+    Controller.itemOptions = {};
+    Controller.selectedItem = null;
+    Controller.studentOptions = {};
+    Controller.selectedStudent = null;
 
     // Function mapping
     Controller.initGrid = initGrid;
@@ -77,8 +74,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
             .then(function (competencyTemplate) {
                 Controller.competencyTemplateId = competencyTemplate.id;
                 Controller.competencyTemplateName = competencyTemplate.code_name;
-                Controller.criterias = competencyTemplate.criterias;
-                angular.forEach(Controller.criterias, function(value, key) {
+                var criterias = competencyTemplate.criterias;
+                angular.forEach(criterias, function(value, key) {
                     Controller.criteriaGradeOptions[value.id] = {};
                     Controller.criteriaGradeOptions[value.id]['name'] = value.name;
                     Controller.criteriaGradeOptions[value.id]['code'] = value.code;
@@ -88,9 +85,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                 });
                 Controller.periodOptions = competencyTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
-                    Controller.itemOptions = Controller.periodOptions[0].competency_items;
                     Controller.selectedPeriod = Controller.periodOptions[0].id;
                     Controller.selectedPeriodStatus = Controller.periodOptions[0].editable;
+                    Controller.itemOptions = Controller.periodOptions[0].competency_items;
                     if (Controller.itemOptions.length > 0) {
                         Controller.selectedItem = Controller.periodOptions[0].competency_items[0].id;
                     } else {
@@ -124,7 +121,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
     });
 
     function resetColumnDefs(criteriaGradeOptions, period, selectedPeriodStatus, item, student) {
-        var response = InstitutionStudentCompetenciesSvc.getColumnDefs(Controller.bodyDir);
+        var response = InstitutionStudentCompetenciesSvc.getColumnDefs();
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -143,7 +140,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                     });
                     Controller.gridOptions.api.setColumnDefs(response.data);
 
-                    if (angular.isDefined(item)) {
+                    if (item != null) {
                         // competency criterias
                         var rowData = [];
                         angular.forEach(criteriaGradeOptions, function (value, key) {
