@@ -70,11 +70,11 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
         return InstitutionStaff.find('subjectStaffOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
     }
 
-    function getRoomsOptions(institutionId, academicPeriodId) {
+    function getRoomsOptions(academicPeriodId, institutionSubjectId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return Rooms.find('subjectRoomOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
+        return Rooms.find('subjectRoomOptions', {academic_period_id: academicPeriodId, institution_subject_id: institutionSubjectId}).ajax({success: success, defer: true});
     }
 
     function saveInstitutionSubject(data) {

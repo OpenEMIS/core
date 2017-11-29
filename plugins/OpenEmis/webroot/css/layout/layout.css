@@ -1,4 +1,4 @@
-/* GENERAL STYLE v.1.0.11 */
+/* GENERAL STYLE v.1.0.12 */
 
 html, body {
     overflow: hidden !important;
@@ -71,14 +71,20 @@ select,
 .wrapper {
     display: block;
     clear: both;
-    padding: 10px 0;
+    padding: 0;
     position: relative;
-    height: calc(100% - 80px);
+    height: calc(100% - 76px);
+}
+
+.wrapper.no-breadcrumb {
+    height: calc(100% - 39px);
+    padding: 0 !important;
 }
 
 .wrapper-child {
     position: relative;
     height: 100%;
+    padding: 10px 0;
 }
 
 .has-header,

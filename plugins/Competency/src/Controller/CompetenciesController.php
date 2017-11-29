@@ -43,7 +43,7 @@ class CompetenciesController extends AppController
         foreach ($tabElements as $key => $value) {
             $tabElements[$key]['url'] = array_merge($value['url'], $params);
         }
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
     }

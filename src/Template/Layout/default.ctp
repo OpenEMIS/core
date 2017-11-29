@@ -22,7 +22,8 @@
 	<title><?= $_productName ?></title>
 
 	<?php
-	echo $this->Html->meta('icon');
+	$icon = strpos($_productName, 'School') != -1 ? '_school' : '';
+	echo $this->Html->meta('icon', 'favicon'.$icon.'.ico');
 	echo $this->fetch('meta');
 
 	echo $this->element('styles');
