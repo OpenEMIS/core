@@ -1489,7 +1489,7 @@ class InstitutionsController extends AppController
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $tabs = TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
-        return $this->TabPermission->checkTabPermission($tab);
+        return $this->TabPermission->checkTabPermission($tabs);
     }
 
     public function getCompetencyTabElements($options = [])
