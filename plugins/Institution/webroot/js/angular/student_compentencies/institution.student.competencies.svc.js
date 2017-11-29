@@ -123,15 +123,29 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs() {
+    function getColumnDefs(item, student, itemOptions, studentOptions) {
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
 
+        // dynamic table headers
+        var criteriaHeader = 'Competency Criteria';
+        var resultHeader = 'Result';
+        if (itemOptions.length > 0 && item != null && studentOptions.length > 0 && student != null) {
+            var itemObj = $filter('filter')(itemOptions, {'id':item});
+            if (itemObj.length > 0) {
+                criteriaHeader = itemObj[0].name + ' Criteria';
+            }
+            var studentObj = $filter('filter')(studentOptions, {'student_id':student});
+            if (studentObj.length > 0) {
+                resultHeader = studentObj[0].user.name_with_id;
+            }
+        }
+
         var columnDefs = [];
         columnDefs.push({
-            headerName: "Competency Criteria",
+            headerName: criteriaHeader,
             field: "competency_criteria_name",
             filterParams: filterParams,
             menuTabs: menuTabs,
@@ -144,7 +158,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         });
 
         var columnDef = {
-            headerName: "Result",
+            headerName: resultHeader,
             field: "result",
             filterParams: filterParams,
             menuTabs: menuTabs,

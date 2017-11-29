@@ -1,9 +1,9 @@
 angular.module('institution.student.competencies.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.student.competencies.svc'])
     .controller('InstitutionStudentCompetenciesCtrl', InstitutionStudentCompetenciesController);
 
-InstitutionStudentCompetenciesController.$inject = ['$scope', '$q', '$filter', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionStudentCompetenciesSvc'];
+InstitutionStudentCompetenciesController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionStudentCompetenciesSvc'];
 
-function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionStudentCompetenciesSvc) {
+function InstitutionStudentCompetenciesController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionStudentCompetenciesSvc) {
 
     var Controller = this;
 
@@ -121,7 +121,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
     });
 
     function resetColumnDefs(criteriaGradeOptions, period, selectedPeriodStatus, item, student) {
-        var response = InstitutionStudentCompetenciesSvc.getColumnDefs();
+        var response = InstitutionStudentCompetenciesSvc.getColumnDefs(item, student, Controller.itemOptions, Controller.studentOptions);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
