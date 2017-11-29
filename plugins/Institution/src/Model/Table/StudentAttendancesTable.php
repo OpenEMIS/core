@@ -241,7 +241,7 @@ class StudentAttendancesTable extends AppTable
                 'text' => __('Absence')
             ]
         ];
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Attendance');
 
@@ -300,15 +300,15 @@ class StudentAttendancesTable extends AppTable
 
         $studentAbsenceArray = $StudentAttendancesQuery
             ->select([
-                'absence_id' => 'StudentAbsences.id', 
-                'student_id' => $this->aliasField('student_id'), 
+                'absence_id' => 'StudentAbsences.id',
+                'student_id' => $this->aliasField('student_id'),
                 'absence_type' => 'StudentAbsences.absence_type_id',
                 'full_day' => 'StudentAbsences.full_day'
             ])
             ->group(['student_id', 'absence_type'])
             ->where($dateRangeCondition)
             ->toArray();
-        
+
         $tempArr = [];
         foreach ($studentAbsenceArray as $key => $value) {
             $tempArr[] = [
@@ -319,9 +319,9 @@ class StudentAttendancesTable extends AppTable
             ];
         }
         $studentAbsenceArray = $tempArr;
-        
+
         $data = [];
-        
+
         foreach ($studentAbsenceArray as $key => $value) {
             if (empty($value['absence_id'])) {
                 if (isset($data['Present'])) {
@@ -331,7 +331,7 @@ class StudentAttendancesTable extends AppTable
                 }
             } else {
                 $typeCode = $this->absenceCodeList[$value['absence_type']];
-                
+
                 if ($typeCode == 'LATE') {
                     if (isset($data['Late'])) {
                         $data['Late'] = ++$data['Late'];
@@ -344,7 +344,7 @@ class StudentAttendancesTable extends AppTable
                         $data['Present'] = 1;
                     }
                 } else {
-                    
+
                     if ($value['full_day'] == 0) {
                         if (isset($data['Present'])) {
                             $data['Present'] = ++$data['Present'];

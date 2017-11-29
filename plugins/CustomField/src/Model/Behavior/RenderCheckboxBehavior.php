@@ -6,12 +6,15 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
-class RenderCheckboxBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+class RenderCheckboxBehavior extends RenderBehavior
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
     }
 
-	public function onGetCustomCheckboxElement(Event $event, $action, $entity, $attr, $options=[]) {
+    public function onGetCustomCheckboxElement(Event $event, $action, $entity, $attr, $options = [])
+    {
         $value = '';
 
         $fieldType = strtolower($this->fieldTypeCode);
@@ -47,7 +50,7 @@ class RenderCheckboxBehavior extends RenderBehavior {
                 }
                 $value = implode(', ', $answers);
             }
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $form = $event->subject()->Form;
             $unlockFields = [];
 
@@ -56,12 +59,12 @@ class RenderCheckboxBehavior extends RenderBehavior {
 
             foreach ($checkboxOptions as $key => $value) {
                 $html .= '<div class="input">';
-                    $option = ['label' => false, 'class' => 'icheck-input'];
-                    if (!empty($checkedValues)) {
-                        if (in_array($key, $checkedValues)) {
-                            $option['checked'] = true;
-                        }
+                $option = ['kd-checkbox-radio' => ''];
+                if (!empty($checkedValues)) {
+                    if (in_array($key, $checkedValues)) {
+                        $option['checked'] = true;
                     }
+                }
                     $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
                     $unlockFields[] = "$fieldPrefix.number_value.$key";
                     $html .= '<label class="selection-label">'. $value .'</label>';
@@ -79,7 +82,8 @@ class RenderCheckboxBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function processCheckboxValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processCheckboxValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
         $settings['valueKey'] = 'number_value';
 
         $fieldKey = $settings['fieldKey'];

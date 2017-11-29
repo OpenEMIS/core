@@ -43,7 +43,7 @@ class CustomFieldsController extends AppController
 				'text' => __('Records')
 			]
 		];
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
