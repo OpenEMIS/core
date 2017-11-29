@@ -477,11 +477,7 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-<<<<<<< HEAD
-                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferRequests', 'StaffHistories.index']
-=======
-                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut']
->>>>>>> ffd29725367b209ea25b5fa35d0e693c49f02b3e
+                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut', 'StaffHistories.index']
             ],
 
             'Institution.Attendance' => [
