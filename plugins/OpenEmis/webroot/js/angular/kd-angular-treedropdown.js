@@ -16,6 +16,7 @@ function kdTreeDropdown() {
                         data-output-model='outputModel' \
                         data-callback='selectionCallback(item, selectedItems)'\
                         data-expand-click = 'onItemExpand(item)'\
+                        data-expand-parent = 'onClick()'\
                         tree-id='{{elementId}}'\
                         ></multi-select-tree>\
                 </div>\
@@ -23,13 +24,14 @@ function kdTreeDropdown() {
         controller: kdTreeDropdownCtrl,
         link: kdTreeDropdownLink,
         scope: {
-            inputModel: '=',
+            inputModel: '=?',
             outputModel: '=?',
             textConfig: '=?',
             modelType: '@?',
             onItemExpand: '&',
             expandChild: '&',
-            getChildData: '&'
+            getChildData: '&',
+            expandParent: '&'
         }
     };
     return directive;
@@ -42,15 +44,12 @@ function kdTreeDropdown() {
 
         $scope.selectionText = updateSelectionTextConfig($scope);
 
-        // $scope.$on("clickEvent", function() {
-        //    $scope.$emit("clickEvent");
-        // });
     }
 
     function kdTreeDropdownLink(_scope, _element, _attrs) {
-        _scope.elementId = getElementId(_element);
 
-        _element.on('click', _scope.emit);
+
+        _scope.elementId = getElementId(_element);
 
         angular.element(document).ready(function() {
             addInputText(_scope);
@@ -76,17 +75,19 @@ function kdTreeDropdown() {
         }, true);
 
 
-    /************ Automatically Expand the default selection ****************/
+        /************ Automatically Expand the default selection ****************/
 
-        loadExpand(_scope.isMultiple, _scope.inputModel);
-
-        _scope.emit = function() {
-            console.log("huat here?")
+        if (typeof _scope.inputModel !== "undefined") {
+            loadExpand(_scope.inputModel);
         }
 
         _scope.onItemExpand = function(_item) {
-            //pass in parent data to front end so developer will get the parent to pull child data
-            _scope.expandChild({ parentData: _item, getChildData: _scope.getChildData });
+            if (_scope.expandChild) {
+                //pass in parent data to front end so developer will get the parent to pull child data
+                _scope.expandChild({ parentData: _item, getChildData: _scope.getChildData });
+            } else {
+                console.log("expand-child is not declared");
+            }
         }
 
         _scope.getChildData = function(_parentData, _childData) {
@@ -98,33 +99,44 @@ function kdTreeDropdown() {
                 }
             }
             _parentData.children = _childData;
-            loadExpand(_scope.isMultiple, _childData);
+            loadExpand(_childData);
 
+            _scope.$apply();
+        }
+
+        _scope.onClick = function() {
+            angular.element(document.querySelector("#" + _scope.elementId + " .tree-selection-text")).addClass("slctLoadingIco");
+
+            _scope.expandParent({ refreshList: _scope.refreshList });
+        }
+
+        _scope.refreshList = function(_parentData) {
+            angular.element(document.querySelector("#" + _scope.elementId + " .tree-selection-text")).removeClass("slctLoadingIco");
+
+            _scope.inputModel = _parentData;
+            loadExpand(_scope.inputModel);
             _scope.$apply();
         }
 
     }
 
-    function loadExpand(_isMultiple, _pData) {
+    function loadExpand(_pData) {
 
         var isExpandNeeded = true;
 
-        if (_isMultiple) {
-            for (i = 0; len = _pData.length, i < len; i++) {
-                //if children = number > do expand to load
-                if (typeof _pData[i].children == "number") {
-                    if (_pData[i].children > 0) {
-                        _pData[i].children = [{ name: "", id: 0, loading: true }];
-                    }
-                    isExpandNeeded = false;
+        for (i = 0; i < _pData.length; i++) {
+            //if children = number > do expand to load
+            if (typeof _pData[i].children == "number") {
+                if (_pData[i].children > 0) {
+                    _pData[i].children = [{ name: "", id: 0, loading: true }];
                 }
+                isExpandNeeded = false;
             }
         }
 
         // children is not number, auto expand so the user can see the default selection
         if (isExpandNeeded) {
             processExpandChild(_pData);
-
         }
     }
 
