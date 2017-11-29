@@ -144,6 +144,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                     Controller.gridOptions.api.setColumnDefs(response.data);
 
                     if (angular.isDefined(item)) {
+                        // competency criterias
                         var rowData = [];
                         angular.forEach(criteriaGradeOptions, function (value, key) {
                             if (value.competency_item_id == item) {
@@ -159,19 +160,14 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                                     competency_criteria_name: criteriaName,
                                     competency_criteria_id: value.id,
                                     grading_options: value.grading_type.grading_options,
-                                    competency_grading_option_id: '',
-                                    comments: '',
+                                    result: '',
                                     save_error: {
-                                        competency_grading_option_id: false,
-                                        comments: false
+                                        result: false
                                     }
                                 };
 
                                 if (angular.isDefined(Controller.studentResults[value.id])) {
-                                    row['competency_grading_option_id'] = Controller.studentResults[value.id];
-                                }
-                                if (angular.isDefined(Controller.studentComments['comments']) && Controller.studentComments['comments'] != null) {
-                                    row['comments'] = Controller.studentComments['comments'];
+                                    row['result'] = Controller.studentResults[value.id];
                                 }
                                 this.push(row);
                             }
@@ -183,6 +179,24 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                         } else {
                             AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
                         }
+
+                        // item comments (pinned row at bottom)
+                        var comments = '';
+                        if (angular.isDefined(Controller.studentComments['comments'])) {
+                            comments = Controller.studentComments['comments'];
+                        }
+                        var pinnedRowData = [{
+                            student_id: student,
+                            period_editable: selectedPeriodStatus,
+                            competency_period_id: period,
+                            competency_item_id: item,
+                            competency_criteria_name: 'Comments',
+                            result: comments,
+                            save_error: {
+                                result: false
+                            }
+                        }];
+                        Controller.gridOptions.api.setPinnedBottomRowData(pinnedRowData);
                     }
 
                     Controller.gridOptions.api.sizeColumnsToFit();
@@ -273,20 +287,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                 localeText: localeText,
                 ensureDomOrder: true,
                 domLayout: 'autoHeight',
-                onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
-                        InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
-                        .then(function(response) {
-                            params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
-
-                        }, function(error) {
-                            params.data.save_error[params.colDef.field] = true;
-                            console.log(error);
-                            AlertSvc.error(Controller, "There was an error when saving the comments");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
-                        });
+                getRowStyle: function(params) {
+                    if (params.node.rowPinned) {
+                        return {'font-weight': 'bold'}
                     }
                 },
                 onGridReady: function() {
@@ -320,20 +323,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $filter, $window, 
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 domLayout: 'autoHeight',
-                onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
-                        InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
-                        .then(function(response) {
-                            params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
-
-                        }, function(error) {
-                            params.data.save_error[params.colDef.field] = true;
-                            console.log(error);
-                            AlertSvc.error(Controller, "There was an error when saving the comments");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
-                        });
+                getRowStyle: function(params) {
+                    if (params.node.rowPinned) {
+                        return {'font-weight': 'bold'}
                     }
                 },
                 onGridReady: function() {
