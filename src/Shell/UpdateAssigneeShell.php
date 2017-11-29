@@ -23,19 +23,26 @@ class UpdateAssigneeShell extends Shell
 
  	public function main()
  	{
- 		if (empty($this->args[0])) {
- 			$workflowModelResults = $this->WorkflowModels->find()->all();
+		$id = !empty($this->args[1]) ? $this->args[1] : 0;
+		$statusId = !empty($this->args[2]) ? $this->args[2] : 0;
+		$groupId = !empty($this->args[3]) ? $this->args[3] : 0;
+		$userId = !empty($this->args[4]) ? $this->args[4] : 0;
+		$roleId = !empty($this->args[5]) ? $this->args[5] : 0;
 
- 			$id = !empty($this->args[1]) ? $this->args[1] : 0;
- 			$statusId = !empty($this->args[2]) ? $this->args[2] : 0;
-	 		$groupId = !empty($this->args[3]) ? $this->args[3] : 0;
-	 		$userId = !empty($this->args[4]) ? $this->args[4] : 0;
-	 		$roleId = !empty($this->args[5]) ? $this->args[5] : 0;
+		if (empty($this->args[0])) {
+			// triggered from SecurityGroupUsers afterSave and afterDelete
+			$workflowModelResults = $this->WorkflowModels->find()->all();
 
- 			foreach ($workflowModelResults as $workflowModelEntity) {
- 				$this->autoAssignAssignee($workflowModelEntity, $id, $statusId, $groupId, $userId, $roleId);
- 			}
- 		}
+			foreach ($workflowModelResults as $workflowModelEntity) {
+				$this->autoAssignAssignee($workflowModelEntity, $id, $statusId, $groupId, $userId, $roleId);
+			}
+		} else {
+			// triggered from WorkflowBehavior workflowStepAfterSave
+			$triggeredModel = $this->args[0];
+
+			$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $triggeredModel])->first();
+			$this->autoAssignAssignee($workflowModelEntity, $id, $statusId, $groupId, $userId, $roleId);
+		}
 	}
 
 	public function autoAssignAssignee(Entity $workflowModelEntity, $id=0, $statusId=0, $groupId=0, $userId=0, $roleId=0)
@@ -65,6 +72,11 @@ class UpdateAssigneeShell extends Shell
 				if ($institutionEntity) {
 					$this->out($workflowModelEntity->name.' : Affected Institution Id: '.$institutionEntity->id);
 					$where[$model->aliasField('institution_id')] = $institutionEntity->id;
+
+					$event = $model->dispatchEvent('UpdateAssignee.onSetSchoolBasedConditions', [$institutionEntity, $where], $this);
+					if ($event->result) {
+						$where = $event->result;
+					}
 				}
 			}
 
@@ -93,6 +105,11 @@ class UpdateAssigneeShell extends Shell
 
 				if ($unassignedEntity->has('institution_id')) {
 					$params['institution_id'] = $unassignedEntity->institution_id;
+				}
+
+				$event = $model->dispatchEvent('UpdateAssignee.onSetCustomAssigneeParams', [$unassignedEntity, $params], $this);
+				if ($event->result) {
+					$params = $event->result;
 				}
 
 				$assigneeId = $this->SecurityGroupUsers->getFirstAssignee($params);

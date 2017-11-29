@@ -18,7 +18,8 @@ class InfrastructureNeedsController extends PageController
         parent::initialize();
 
         $this->loadModel('Institution.InfrastructureProjectsNeeds');
-        $this->Page->loadElementsFromTable($this->InfrastructureNeeds);
+        // to disable actions if institution is not active
+        $this->loadComponent('Institution.InstitutionInactive');
 
         $this->Page->enable(['download']);
     }

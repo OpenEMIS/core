@@ -5,6 +5,7 @@ use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Controller\Exception\SecurityException;
+use Cake\Core\Configure;
 
 class NavigationComponent extends Component
 {
@@ -320,6 +321,9 @@ class NavigationComponent extends Component
     private function appendNavigation($key, $originalNavigation, $navigationToAppend)
     {
         $count = 0;
+        $columns = $this->array_column($navigationToAppend, 'title');
+        $excluded = array_intersect($columns, (array) Configure::read('School.excludedPlugins'));
+        $navigationToAppend = array_diff_key($navigationToAppend, $excluded);
         foreach ($originalNavigation as $navigationKey => $navigationValue) {
             $count++;
             if ($navigationKey == $key) {
@@ -473,7 +477,11 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
+<<<<<<< HEAD
                 'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferRequests', 'StaffHistories.index']
+=======
+                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut']
+>>>>>>> ffd29725367b209ea25b5fa35d0e693c49f02b3e
             ],
 
             'Institution.Attendance' => [

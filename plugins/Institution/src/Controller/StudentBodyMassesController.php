@@ -213,7 +213,7 @@ class StudentBodyMassesController extends PageController
 
         $page->get('academic_period_id')
             ->setLabel('Academic Period')
-            ->setControlType('dropdown')
+            ->setControlType('select')
             ->setId('academic_period_id')
             ->setOptions($periodOptions);
         // end Academic Period Field

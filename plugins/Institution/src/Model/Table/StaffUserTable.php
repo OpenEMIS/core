@@ -207,6 +207,49 @@ class StaffUserTable extends ControllerActionTable
         $this->Session->write('Staff.Staff.id', $entity->id);
         $this->Session->write('Staff.Staff.name', $entity->name);
         $this->setupTabElements($entity);
+
+        $this->addTransferButton($entity, $extra);
+    }
+
+    private function addTransferButton(Entity $entity, ArrayObject $extra)
+    {
+        if ($this->AccessControl->check([$this->controller->name, 'StaffTransferOut', 'add'])) {
+            $session = $this->request->session();
+            $toolbarButtons = $extra['toolbarButtons'];
+            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+
+            $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+            $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+            $userId = $entity->id;
+
+            $assignedStaffRecords = $StaffTable->find()
+                ->where([
+                    $StaffTable->aliasField('staff_id') => $userId,
+                    $StaffTable->aliasField('institution_id') => $institutionId,
+                    $StaffTable->aliasField('staff_status_id') => $assignedStatus
+                ])
+                ->count();
+
+            if ($assignedStaffRecords > 0) {
+                $url = [
+                    'plugin' => $this->controller->plugin,
+                    'controller' => $this->controller->name,
+                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'action' => 'StaffTransferOut',
+                    'add'
+                ];
+
+                $transferButton = $toolbarButtons['back'];
+                $transferButton['type'] = 'button';
+                $transferButton['label'] = '<i class="fa kd-transfer"></i>';
+                $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+                $transferButton['attr']['title'] = __('Transfer');
+                $transferButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
+
+                $toolbarButtons['transfer'] = $transferButton;
+            }
+        }
     }
 
     public function editAfterAction(Event $event, Entity $entity)

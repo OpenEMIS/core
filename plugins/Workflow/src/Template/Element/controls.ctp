@@ -1,4 +1,4 @@
-<?php if (!empty($filterOptions) || !empty($statusOptions)) : ?>
+<?php if (!empty($filterOptions) || !empty($categoryOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -22,19 +22,19 @@
 					$dataNamedGroup[] = 'filter';
 				}
 
-				if (!empty($statusOptions)) {
+				if (!empty($categoryOptions)) {
 					$inputOptions = [
 						'class' => 'form-control',
 						'label' => false,
-						'options' => $statusOptions,
+						'options' => $categoryOptions,
 						'url' => $baseUrl,
-						'data-named-key' => 'status'
+						'data-named-key' => 'category'
 					];
 					if (!empty($dataNamedGroup)) {
 						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-						$dataNamedGroup[] = 'status';
+						$dataNamedGroup[] = 'category';
 					}
-					echo $this->Form->input('status', $inputOptions);
+					echo $this->Form->input('category', $inputOptions);
 				}
 			?>
 		</div>

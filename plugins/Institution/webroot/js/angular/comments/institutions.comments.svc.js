@@ -11,7 +11,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         ReportCardTable: 'ReportCard.ReportCards',
         ReportCardSubjectsTable: 'ReportCard.ReportCardSubjects',
         ReportCardCommentCodesTable: 'ReportCard.ReportCardCommentCodes',
-        InstitutionClassesTable: 'Institution.InstitutionClasses',
+        InstitutionSubjectsTable: 'Institution.InstitutionSubjects',
         InstitutionStudentsReportCardsTable: 'Institution.InstitutionStudentsReportCards',
         InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments',
         InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents',
@@ -69,7 +69,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 staff_id: currentUserId
             });
 
-        var teacherPermission = InstitutionClassesTable
+        var teacherPermission = InstitutionSubjectsTable
             .select()
             .find('teacherEditPermissions', {
                 report_card_id: reportCardId,
@@ -209,6 +209,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions) {
         var deferred = $q.defer();
 
+        var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
@@ -218,18 +219,24 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         columnDefs.push({
             headerName: "OpenEMIS ID",
             field: "openemis_id",
-            filterParams: filterParams
+            filterParams: filterParams,
+            filter: 'text',
+            menuTabs: menuTabs,
         });
         columnDefs.push({
             headerName: "Name",
             field: "name",
             sort: 'asc',
-            filterParams: filterParams
+            filterParams: filterParams,
+            filter: 'text',
+            menuTabs: menuTabs,
         });
         columnDefs.push({
             headerName: "Status",
             field: "student_status",
-            filterParams: filterParams
+            filterParams: filterParams,
+            filter: 'text',
+            menuTabs: menuTabs,
         });
         columnDefs.push({
             headerName: "student id",
@@ -265,7 +272,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             var columnDef = {
                 headerName: "Comment Code" + headerIcons,
                 field: "comment_code",
-                filterParams: filterParams
+                filterParams: filterParams,
+                filter: 'text',
+                menuTabs: menuTabs,
             };
             columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
             columnDefs.push(columnDef);
@@ -276,7 +285,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var columnDef = {
             headerName: "Comments" + headerIcons,
             field: "comments",
-            filterParams: filterParams
+            filterParams: filterParams,
+            filter: 'text',
+            menuTabs: menuTabs,
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
@@ -286,7 +297,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             columnDefs.push({
                 headerName: "Modified By",
                 field: "modified_by",
-                filterParams: filterParams
+                filterParams: filterParams,
+                filter: 'text',
+                menuTabs: menuTabs,
             });
         }
 

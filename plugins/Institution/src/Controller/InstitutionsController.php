@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use Cake\I18n\Date;
 use Cake\Controller\Exception\SecurityException;
-
+use Cake\Core\Configure;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
@@ -51,8 +51,6 @@ class InstitutionsController extends AppController
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
-        // 'StaffTransferRequests',
-        // 'StaffTransferApprovals',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -219,14 +217,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentFees']);
     }
-    public function StaffTransferRequests()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']);
-    }
-    public function StaffTransferApprovals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']);
-    }
     public function StaffPositionProfiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']);
@@ -301,11 +291,11 @@ class InstitutionsController extends AppController
     }
     public function VisitRequests()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.VisitRequests']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.VisitRequests']);
     }
     public function Visits()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionQualityVisits']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.InstitutionQualityVisits']);
     }
     public function StaffAppraisals()
     {
@@ -370,6 +360,14 @@ class InstitutionsController extends AppController
     public function InstitutionStudentsReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
+    }
+    public function StaffTransferIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferIn']);
+    }
+    public function StaffTransferOut()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferOut']);
     }
     // End
 
@@ -1111,10 +1109,9 @@ class InstitutionsController extends AppController
                         $params[$primaryKey] = $modelIds[$primaryKey];
                     }
 
-
                     $exists = false;
 
-                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
+                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferOut'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
@@ -1172,7 +1169,7 @@ class InstitutionsController extends AppController
                     $this->Alert->error('general.notExists');
                     // should redirect
                 } else {
-                    if ($model->alias() != 'Programmes') {
+                    if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut'])) {
                         $institutionId = $this->request->param('institutionId');
                         try {
                             $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];
@@ -1403,6 +1400,8 @@ class InstitutionsController extends AppController
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
         }
 
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+
         $session = $this->request->session();
         $session->write('Institution.'.$type.'.tabElements', $tabElements);
 
@@ -1445,7 +1444,7 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
             }
         }
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getCareerTabElements($options = [])
@@ -1481,13 +1480,14 @@ class InstitutionsController extends AppController
             }
         }
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getProfessionalDevelopmentTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+        $tabs = TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+        return $this->TabPermission->checkTabPermission($tab);
     }
 
     public function getCompetencyTabElements($options = [])
@@ -1503,7 +1503,7 @@ class InstitutionsController extends AppController
                 'text' => __('Periods')
             ]
         ];
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate = '')
@@ -1584,10 +1584,37 @@ class InstitutionsController extends AppController
         $staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
         $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
 
+        // POCOR-4269 same staff cant add to same position regardsless the FTE
+        $openemisNo = $this->request->params['pass'][3];
+        $positionHeldByStaff = $StaffTable->find()
+            ->select([
+                'position_id' => $StaffTable->aliasField('institution_position_id'),
+            ])
+            ->contain(['Users'])
+            ->where([
+                $StaffTable->aliasField('institution_id') => $institutionId,
+                'Users.openemis_no' => $openemisNo
+            ])
+            ->hydrate(false)
+            ->toArray();
+        // end POCOR-4269
+
         // Adding the opt group
         $types = $this->getSelectOptions('Staff.position_types');
         $options = [];
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
+
+        // POCOR-4269 if staff already held some position that position is unavailable anymore.
+        if (!empty($positionHeldByStaff)) {
+            foreach ($positionHeldByStaff as $value) {
+                $positionId = $value['position_id'];
+                if (!in_array($positionId, $excludePositions)) {
+                    $excludePositions[] = $positionId;
+                }
+            }
+        }
+        // end POCOR-4269
+
         foreach ($staffPositionsOptions as $position) {
             $name = $position->name . ' - ' . $position->grade_name;
 

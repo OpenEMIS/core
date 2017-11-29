@@ -1,10 +1,10 @@
 angular
-    .module('institution.student.competencies.svc', ['kd.data.svc'])
+    .module('institution.student.competencies.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStudentCompetenciesSvc', InstitutionStudentCompetenciesSvc);
 
-InstitutionStudentCompetenciesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc'];
+InstitutionStudentCompetenciesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc'];
 
-function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
+function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertSvc) {
 
     var service = {
         init: init,
@@ -102,6 +102,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         } else {
             direction = 'right';
         }
+        var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
@@ -111,27 +112,34 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
             headerName: "OpenEMIS ID",
             field: "openemis_id",
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: 'text'
         });
         columnDefs.push({
             headerName: "Student Name",
             field: "name",
             sort: 'asc',
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: 'text'
         });
         columnDefs.push({
             headerName: "student id",
             field: "student_id",
             hide: true,
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
         });
         columnDefs.push({
             headerName: "Student Status",
             field: "student_status_name",
             filterParams: filterParams,
-            pinned: direction
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: 'text'
         });
 
         var ResultsSvc = this;
@@ -143,7 +151,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 headerName: "Comments",
                 field: "comments",
                 filterParams: filterParams,
-                pinned: direction
+                pinned: direction,
+                filter: 'text',
+                menuTabs: menuTabs
             };
             columnDef = ResultsSvc.renderText(columnDef, extra);
             columnDefs.push(columnDef);
@@ -166,7 +176,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 var columnDef = {
                     headerName: headerLabel,
                     field: field,
-                    filterParams: filterParams
+                    filterParams: filterParams,
+                    filter: 'text',
+                    menuTabs: menuTabs
                 };
 
                 var extra = {};
@@ -199,6 +211,11 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         var vm = this;
 
         cols = angular.merge(cols, {
+            cellClassRules: {
+                'oe-cell-error': function(params) {
+                    return params.data.save_error[params.colDef.field];
+                }
+            },
             cellRenderer: function(params) {
                 var studentStatusCode = params.data.student_status_code;
                 var periodEditable = params.data.period_editable;
@@ -226,14 +243,26 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                     });
                     eSelect.value = params.value;
 
-                    eSelect.addEventListener('change', function () {
+                    eSelect.addEventListener('blur', function () {
                         var newValue = eSelect.value;
-                        params.data[params.colDef.field] = newValue;
-                        vm.saveCompetencyResults(params)
-                        .then(function(response) {
-                        }, function(error) {
-                            console.log(error);
-                        });
+
+                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            params.data[params.colDef.field] = newValue;
+
+                            var controller = params.context._controller;
+                            vm.saveCompetencyResults(params)
+                            .then(function(response) {
+                                params.data.save_error[params.colDef.field] = false;
+                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
+                                params.api.refreshCells([params.node], [params.colDef.field]);
+
+                            }, function(error) {
+                                params.data.save_error[params.colDef.field] = true;
+                                console.log(error);
+                                AlertSvc.error(controller, "There was an error when saving the results");
+                                params.api.refreshCells([params.node], [params.colDef.field]);
+                            });
+                        }
                     });
 
                     eCell.appendChild(eSelect);
@@ -263,11 +292,15 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
 
     function renderText(cols, extra) {
         cols = angular.merge(cols, {
-            cellClass: function(params) {
-                var studentStatusCode = params.node.data.student_status_code;
-                var periodEditable = params.node.data.period_editable;
-                var highlightClass = 'oe-cell-highlight';
-                return (studentStatusCode == 'CURRENT' && periodEditable) ? highlightClass : false;
+            cellClassRules: {
+                'oe-cell-highlight': function(params) {
+                    var studentStatusCode = params.node.data.student_status_code;
+                    var periodEditable = params.node.data.period_editable;
+                    return (studentStatusCode == 'CURRENT' && periodEditable);
+                },
+                'oe-cell-error': function(params) {
+                    return params.data.save_error[params.colDef.field];
+                }
             },
             editable: function(params) {
                 // only enrolled student is editable

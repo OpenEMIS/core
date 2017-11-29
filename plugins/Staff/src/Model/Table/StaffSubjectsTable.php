@@ -23,6 +23,9 @@ class StaffSubjectsTable extends ControllerActionTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        // POCOR-4047 to get staff profile data
+        $this->addBehavior('Institution.StaffProfile');
+
         /*
             note that in DirectoriesController
             if ($model instanceof \Staff\Model\Table\StaffSubjectsTable) {
@@ -31,6 +34,12 @@ class StaffSubjectsTable extends ControllerActionTable {
 		$this->toggle('edit', false);
 		$this->toggle('remove', false);
 	}
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        return $events;
+    }
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->field('academic_period', []);

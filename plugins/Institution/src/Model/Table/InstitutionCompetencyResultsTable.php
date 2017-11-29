@@ -1,8 +1,10 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
+use Cake\Event\Event;
 use Cake\ORM\Query;
-
+use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
 
 class InstitutionCompetencyResultsTable extends AppTable
@@ -22,6 +24,24 @@ class InstitutionCompetencyResultsTable extends AppTable
             'StudentCompetencies' => ['index', 'add']
         ]);
         $this->addBehavior('CompositeKey');
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // do not save new record if result is empty
+        $gradingOption = $entity->competency_grading_option_id;
+        if ($entity->isNew() && empty($gradingOption)) {
+            return false;
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // delete record if user removes result
+        $gradingOption = $entity->competency_grading_option_id;
+        if (empty($gradingOption)) {
+            $this->delete($entity);
+        }
     }
 
     public function findStudentResults(Query $query, array $options)

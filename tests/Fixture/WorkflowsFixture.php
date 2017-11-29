@@ -79,6 +79,24 @@ class WorkflowsFixture extends TestFixture
             'modified' => null,
             'created_user_id' => '1',
             'created' => '2016-04-15 10:45:45'
+        ], [
+            'id' => '14',
+            'code' => 'STAFF-TRANSFER-1001',
+            'name' => 'Staff Transfer - Initiated By Incoming Institution',
+            'workflow_model_id' => '13',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2017-10-13 18:10:04'
+        ], [
+            'id' => '15',
+            'code' => 'STAFF-TRANSFER-2001',
+            'name' => 'Staff Transfer - Initiated By Outgoing Institution',
+            'workflow_model_id' => '14',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2017-10-13 18:10:04'
         ]
     ];
 }
