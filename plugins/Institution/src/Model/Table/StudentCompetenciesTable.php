@@ -468,12 +468,11 @@ class StudentCompetenciesTable extends ControllerActionTable
         } else {
             // table headers
             $tableHeaders[] = __('Competency Criteria');
+            $tableHeaders[] = __('Result');
 
             // table cells
             $tableCells[] = __('No Competency Item or Student selected');
-
-            // table footers
-            $tableFooters[] = __('Comments');
+            $tableCells[] = '';
         }
 
         $attr['tableHeaders'] = $tableHeaders;

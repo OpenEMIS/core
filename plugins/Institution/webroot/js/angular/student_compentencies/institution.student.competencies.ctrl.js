@@ -175,6 +175,16 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                             AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
                         } else {
                             AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
+                            Controller.gridOptions.api.hideOverlay();
+                            var emptyRow = [{
+                                period_editable: false,
+                                competency_criteria_name: 'No Competency Criterias',
+                                result: '',
+                                save_error: {
+                                    result: false
+                                }
+                            }];
+                            Controller.gridOptions.api.setRowData(emptyRow);
                         }
 
                         // item comments (pinned row at bottom)
