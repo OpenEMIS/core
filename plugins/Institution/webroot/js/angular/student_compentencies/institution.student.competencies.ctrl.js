@@ -282,7 +282,6 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 stopEditingWhenGridLosesFocus: true,
                 ensureDomOrder: true,
                 localeText: localeText,
-                ensureDomOrder: true,
                 domLayout: 'autoHeight',
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
@@ -299,20 +298,23 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         }, function(error){
             Controller.gridOptions = {
                 context: {
-                    institution_id: Controller.institution_id,
+                    institution_id: Controller.institutionId,
                     academic_period_id: Controller.academicPeriodId,
-                    competency_template_id: Controller.competencyTemplateId
+                    competency_template_id: Controller.competencyTemplateId,
+                    _controller: Controller
                 },
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
                 rowHeight: 38,
-                minColWidth: 200,
-                enableColResize: false,
+                minColWidth: 100,
+                enableColResize: true,
                 enableSorting: true,
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
+                suppressMovableColumns: true,
+                singleClickEdit: true,
                 // Removed options - Issues in ag-Grid AG-828
                 // suppressCellSelection: true,
 
@@ -320,8 +322,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 suppressContextMenu: true,
                 stopEditingWhenGridLosesFocus: true,
                 ensureDomOrder: true,
-                suppressMovableColumns: true,
-                singleClickEdit: true,
+                localeText: localeText,
                 domLayout: 'autoHeight',
                 onGridSizeChanged: function(e) {
                     this.api.sizeColumnsToFit();
