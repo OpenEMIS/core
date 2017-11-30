@@ -25,12 +25,12 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     Controller.studentResults = {};
     Controller.studentComments = {};
     // filters
-    Controller.periodOptions = {};
+    Controller.periodOptions = [];
     Controller.selectedPeriod = null;
     Controller.selectedPeriodStatus = null;
-    Controller.itemOptions = {};
+    Controller.itemOptions = [];
     Controller.selectedItem = null;
-    Controller.studentOptions = {};
+    Controller.studentOptions = [];
     Controller.selectedStudent = null;
 
     // Function mapping
