@@ -621,7 +621,7 @@ class DirectoriesController extends AppController
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'type' => 'staff']);
         }
-        return $this->TabPermission->checkTabPermission($studentTabElements);
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getProfessionalDevelopmentTabElements($options = [])
@@ -641,7 +641,7 @@ class DirectoriesController extends AppController
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'index']);
         }
-        return $this->TabPermission->checkTabPermission($studentTabElements);
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getStaffFinanceTabElements($options = [])
@@ -659,7 +659,7 @@ class DirectoriesController extends AppController
         foreach ($staffTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
         }
-        return $this->TabPermission->checkTabPermission($studentTabElements);
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getTrainingTabElements($options = [])
@@ -677,6 +677,6 @@ class DirectoriesController extends AppController
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
         }
-        return $this->TabPermission->checkTabPermission($studentTabElements);
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
