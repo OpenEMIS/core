@@ -12,6 +12,11 @@ $this->start('toolbar');
 $this->end();
 $this->start('panelBody');
 ?>
+<style type="text/css">
+    .ag-body-container {
+        max-height: 380px;
+    }
+</style>
 <form accept-charset="utf-8" id="content-main-form" class="ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
     <div class="form-horizontal">
         <div class="alert {{InstitutionStudentCompetenciesController.class}}" ng-hide="InstitutionStudentCompetenciesController.message == null">

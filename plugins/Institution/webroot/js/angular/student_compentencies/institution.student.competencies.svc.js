@@ -277,6 +277,15 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                     textInput.value = params.value;
                     eCell.appendChild(textInput);
 
+                    // allow left and right keys to move bewteen characters instead of going to next cell
+                    textInput.addEventListener('keydown', function(event) {
+                        var key = event.which || event.keyCode;
+                        //check if left and right keys pressed
+                        if (key === 37 || key === 39) {
+                            event.stopPropagation();
+                        }
+                    });
+
                     textInput.addEventListener('blur', function() {
                         var newValue = textInput.value;
 
