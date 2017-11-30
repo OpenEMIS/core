@@ -348,7 +348,7 @@ class InstitutionsController extends AppController
     }
     public function Cases()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCases']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Cases.InstitutionCases']);
     }
     public function ReportCardComments()
     {
@@ -1488,8 +1488,8 @@ class InstitutionsController extends AppController
     public function getProfessionalDevelopmentTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $tabs = TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
-        return $this->TabPermission->checkTabPermission($tab);
+        $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getCompetencyTabElements($options = [])
