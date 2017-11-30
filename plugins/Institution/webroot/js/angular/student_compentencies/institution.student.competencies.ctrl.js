@@ -140,7 +140,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     });
                     Controller.gridOptions.api.setColumnDefs(response.data);
 
-                    if (item != null) {
+                    if (item != null && student != null) {
                         // competency criterias
                         var rowData = [];
                         angular.forEach(criteriaGradeOptions, function (value, key) {
