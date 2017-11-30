@@ -21,7 +21,7 @@ class EmploymentsTable extends ControllerActionTable {
 
 	private function setupTabElements() {
 		$options['type'] = 'staff';
-		$tabElements = $this->controller->getProfessionalDevelopmentTabElements($options);
+		$tabElements = $this->controller->getProfessionalTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
