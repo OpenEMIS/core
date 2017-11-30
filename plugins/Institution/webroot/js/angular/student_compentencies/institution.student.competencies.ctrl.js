@@ -133,8 +133,11 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 angular.forEach(response.data, function(value, key) {
                     textToTranslate.push(value.headerName);
                 });
+                textToTranslate.push('Comments'); // translate comments title in pinned row
+
                 InstitutionStudentCompetenciesSvc.translate(textToTranslate)
                 .then(function(res){
+                    var commentTranslation = res.pop();
                     angular.forEach(res, function(value, key) {
                         response.data[key]['headerName'] = value;
                     });
@@ -197,7 +200,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                             period_editable: selectedPeriodStatus,
                             competency_period_id: period,
                             competency_item_id: item,
-                            competency_criteria_name: 'Comments',
+                            competency_criteria_name: commentTranslation,
                             result: comments,
                             save_error: {
                                 result: false

@@ -391,7 +391,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         if (!is_null($this->competencyPeriodId) && !is_null($this->competencyItemId) && !is_null($this->studentId)) {
             // table headers
-            $tableHeaders[] = $attr['item_options'][$this->competencyItemId]['name'] . ' Criteria';
+            $tableHeaders[] = __($attr['item_options'][$this->competencyItemId]['name'] . ' Criteria');
             $tableHeaders[] = $attr['student_options'][$this->studentId]['name'];
 
             $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
