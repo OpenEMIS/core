@@ -322,7 +322,7 @@ class StaffTable extends AppTable {
 		return $tabElements;
 	}
 
-	public function getProfessionalDevelopmentTabElements($options = []) {
+	public function getProfessionalTabElements($options = []) {
 		$tabElements = [];
 		$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
 		$staffTabElements = [
@@ -337,15 +337,8 @@ class StaffTable extends AppTable {
 		$tabElements = array_merge($tabElements, $staffTabElements);
 
 		foreach ($staffTabElements as $key => $tab) {
-			if ($key == 'StaffAppraisals') {
-				$staffUrl = array_key_exists('url', $options) ? $options['url'] : $staffUrl;
-				$userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
-
-				$tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', 'user_id' => $userId]);
-			} else {
-				$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-				$tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
-			}
+			$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+			$tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
 		}
 		return $tabElements;
 	}

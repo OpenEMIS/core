@@ -13,7 +13,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-	    $this->belongsTo('StatusTypes', ['className' => 'FieldOption.EmploymentTypes']);
+	    $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes', 'foreignKey' => 'status_type_id']);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.search', false);
 		$this->addBehavior('ControllerAction.FileUpload', [
@@ -49,8 +49,15 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
         $this->setupTabElements();
 
-        $session = $this->controller->request->session();
-        $header = $session->read('Staff.Staff.name');
+        $session = $this->request->session();
+        $controllerName = $this->controller->name;     
+        if ($controllerName == 'Profiles')
+        {
+            $header = $session->read('Auth.User.name');
+        } else {        
+            $header = $session->read('Staff.Staff.name');
+        }
+        
         $header = $header . ' - ' . __('Statuses');
         $this->controller->set('contentHeader', $header);
         $alias = $this->alias;
@@ -76,7 +83,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         // will do the comparison with threshold when retrieving the absence data
         $licenseData = $this->find()
             ->select([
-                'EmploymentTypes.name',
+                'EmploymentStatusTypes.name',
                 'status_date',
                 'Users.id',
                 'Users.openemis_no',
