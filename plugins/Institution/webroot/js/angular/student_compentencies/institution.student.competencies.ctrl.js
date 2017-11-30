@@ -157,7 +157,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                                     competency_criteria_name: criteriaName,
                                     competency_criteria_id: value.id,
                                     grading_options: value.grading_type.grading_options,
-                                    result: '',
+                                    result: 0,
                                     save_error: {
                                         result: false
                                     }
