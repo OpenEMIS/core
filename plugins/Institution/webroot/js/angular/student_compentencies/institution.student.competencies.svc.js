@@ -161,8 +161,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             headerName: resultHeader,
             field: "result",
             filterParams: filterParams,
-            menuTabs: menuTabs,
-            filter: 'text'
+            menuTabs: menuTabs
         };
         var extra = {};
         columnDef = this.renderInput(columnDef, extra);
@@ -277,13 +276,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                     textInput.value = params.value;
                     eCell.appendChild(textInput);
 
-                    // allow left and right keys to move bewteen characters instead of going to next cell
+                    // allow keyboard shortcuts
                     textInput.addEventListener('keydown', function(event) {
-                        var key = event.which || event.keyCode;
-                        //check if left and right keys pressed
-                        if (key === 37 || key === 39) {
-                            event.stopPropagation();
-                        }
+                        event.stopPropagation();
                     });
 
                     textInput.addEventListener('blur', function() {
