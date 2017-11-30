@@ -145,12 +145,17 @@ class InfrastructureWashSanitationsController extends PageController
         if ($entity->has('infrastructure_wash_sanitation_quantities')) {
             foreach ($entity->infrastructure_wash_sanitation_quantities as $obj) {
                 $rows[] = [
-                    'gender' => $obj->gender,
+                    'gender' => $obj->gender_id,
                     'functional' => $obj->functional,
-                    'nonfunctional' => $obj->nonfunctional
+                    'value' => $obj->value
                 ];
             }
         }
-        return $rows;
+
+        $data[] = ['gender' => 'Male', 'functional' => $rows[0]['value'], 'nonfunctional' => $rows[1]['value']];
+        $data[1] = ['gender' => 'Female', 'functional' => $rows[2]['value'], 'nonfunctional' => $rows[3]['value']];
+        $data[2] = ['gender' => 'Mixed', 'functional' => $rows[4]['value'], 'nonfunctional' => $rows[5]['value']];
+
+        return $data;
     }
 }
