@@ -391,7 +391,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         if (!is_null($this->competencyPeriodId) && !is_null($this->competencyItemId) && !is_null($this->studentId)) {
             // table headers
-            $tableHeaders[] = $attr['item_options'][$this->competencyItemId]['name'] . ' Criterias';
+            $tableHeaders[] = $attr['item_options'][$this->competencyItemId]['name'] . ' Criteria';
             $tableHeaders[] = $attr['student_options'][$this->studentId]['name'];
 
             $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
@@ -459,7 +459,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
             // table footers
             $comments = '';
-            if (!empty($itemComment) && !empty($itemComment->comments)) {
+            if (!empty($itemComment) && $itemComment->comments != '') {
                 $comments = $itemComment->comments;
             }
             $tableFooters[] = __('Comments');
@@ -467,16 +467,13 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         } else {
             // table headers
-            $tableHeaders[] = __('Competency Criterias');
-            $tableHeaders[] = '';
+            $tableHeaders[] = __('Competency Criteria');
 
             // table cells
             $tableCells[] = __('No Competency Item or Student selected');
-            $tableCells[] = '';
 
             // table footers
             $tableFooters[] = __('Comments');
-            $tableFooters[] = '';
         }
 
         $attr['tableHeaders'] = $tableHeaders;
