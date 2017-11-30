@@ -47,7 +47,7 @@ $this->start('panelBody');
             <label><?=__('Competency Period');?>:</label>
             <div class="input-select-wrapper">
                 <select name="competency_period" ng-options="period.id as period.name for period in InstitutionStudentCompetenciesController.periodOptions" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);">
-                    <option value="" ng-show="InstitutionStudentCompetenciesController.periodOptions.length == 0"><?= __('No Periods') ?></option>
+                    <option value="" ng-show="InstitutionStudentCompetenciesController.periodOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
         </div>
@@ -55,7 +55,7 @@ $this->start('panelBody');
             <label><?=__('Competency Item');?>:</label>
             <div class="input-select-wrapper">
                 <select name="competency_item" ng-options="item.id as item.name for item in InstitutionStudentCompetenciesController.itemOptions" ng-model="InstitutionStudentCompetenciesController.selectedItem" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
-                    <option value="" ng-show="InstitutionStudentCompetenciesController.itemOptions.length == 0"><?= __('No Items') ?></option>
+                    <option value="" ng-show="InstitutionStudentCompetenciesController.itemOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
         </div>
@@ -63,7 +63,7 @@ $this->start('panelBody');
             <label><?=__('Student');?>:</label>
             <div class="input-select-wrapper">
                 <select name="student" ng-options="student.student_id as student.user.name_with_id for student in InstitutionStudentCompetenciesController.studentOptions" ng-model="InstitutionStudentCompetenciesController.selectedStudent" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
-                    <option value="" ng-show="InstitutionStudentCompetenciesController.studentOptions.length == 0"><?= __('No Students') ?></option>
+                    <option value="" ng-show="InstitutionStudentCompetenciesController.studentOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
         </div>
