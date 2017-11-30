@@ -32,7 +32,7 @@ class AwardsTable extends ControllerActionTable
                 $this->controller->set('selectedAction', $this->alias());
                 break;
             case 'Staff':
-                $tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+                $tabElements = $this->controller->getProfessionalTabElements();
                 $this->controller->set('tabElements', $tabElements);
                 $this->controller->set('selectedAction', $this->alias());
                 break;
@@ -43,7 +43,7 @@ class AwardsTable extends ControllerActionTable
                 if ($type == 'student') {
                     $tabElements = $this->controller->getAcademicTabElements($options);
                 } else {
-                    $tabElements = $this->controller->getProfessionalDevelopmentTabElements($options);
+                    $tabElements = $this->controller->getProfessionalTabElements($options);
                 }
 
                 $this->controller->set('tabElements', $tabElements);

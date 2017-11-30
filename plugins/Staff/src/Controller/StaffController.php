@@ -367,7 +367,7 @@ class StaffController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getProfessionalDevelopmentTabElements($options = [])
+    public function getProfessionalTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $session = $this->request->session();
@@ -375,7 +375,7 @@ class StaffController extends AppController
             $userId = $session->read('Staff.Staff.id');
             $options['user_id'] = $userId;
         }
-        $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+        $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalTabElements($options);
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
