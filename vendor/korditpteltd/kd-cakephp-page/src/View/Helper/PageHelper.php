@@ -12,6 +12,8 @@ use Cake\Utility\Hash;
 use Cake\Utility\Text;
 use Cake\View\Helper;
 use Cake\Core\Configure;
+use Cake\Http\Client;
+use Cake\Routing\Router;
 
 use Page\Traits\RTLTrait;
 use Page\Traits\EncodingTrait;
@@ -508,62 +510,106 @@ EOT;
             $html = sprintf($row, $label, $link);
             return $html;
         } else {
-            $options = ['type' => 'file', 'class' => 'form-control', 'label' => false];
-            $required = $field['attributes']['required'];
-            $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
-            $fileSizeLimit = isset($field['fileSizeLimit']) ? $field['fileSizeLimit'] : 1;
-            $formatSupported = isset($field['supportedFileFormat']) ? $field['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
-            $fileContent = '';
-            if (is_resource($data[$field['key']])) {
-                $streamedContent = stream_get_contents($data[$field['key']]);
-                $fileContent = base64_encode($streamedContent);
-                $fileContentSize = strlen($streamedContent);
-            } else {
-                $fileContent = isset($data[$field['key'].'_content']) ? $data[$field['key'].'_content'] : null;
-                $fileContentSize = isset($data[$field['key'].'_file_size']) ? $data[$field['key'].'_file_size'] : null;
+            $type = isset($field['attributes']['type']) ? $field['attributes']['type'] : 'file';
+
+            if ($type == 'file') {
+                $options = ['type' => 'file', 'class' => 'form-control', 'label' => false];
+                $required = $field['attributes']['required'];
+                $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
+                $fileSizeLimit = isset($field['fileSizeLimit']) ? $field['fileSizeLimit'] : 1;
+                $formatSupported = isset($field['supportedFileFormat']) ? $field['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
+                $fileContent = '';
+                if (is_resource($data[$field['key']])) {
+                    $streamedContent = stream_get_contents($data[$field['key']]);
+                    $fileContent = base64_encode($streamedContent);
+                    $fileContentSize = strlen($streamedContent);
+                } else {
+                    $fileContent = isset($data[$field['key'].'_content']) ? $data[$field['key'].'_content'] : null;
+                    $fileContentSize = isset($data[$field['key'].'_file_size']) ? $data[$field['key'].'_file_size'] : null;
+                }
+
+                $comments = '';
+                $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+                $extensionSupported = '';
+                $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+                foreach ($formatSupported as &$format) {
+                    $format = '\''.$format.'\'';
+                }
+                $extensionSupported = implode(', ', $formatSupported);
+                $comments .= $fileSizeMessage . '<br/>' . $fileFormatMessage;
+                $fileName = '';
+                if ($data instanceof Entity) {
+                    $fileName = $data->offsetExists($fileNameColumn) ? $data->$fileNameColumn : null;
+                } elseif (is_array($data)) {
+                    $fileName = isset($data[$fileNameColumn]) ? $data[$fileNameColumn] : null;
+                }
+
+                if ($required) {
+                    $options['required'] = 'required';
+                }
+
+                $alias = explode('.', $field['attributes']['name'])[0];
+
+                $attr = [
+                    'id' => str_replace('.', '_', $field['attributes']['name']),
+                    'key' => $field['key'],
+                    'alias' => $alias,
+                    'name' => $field['attributes']['name'],
+                    'label' => $field['label'],
+                    'options' => $options,
+                    'required' => $required ? ' required' : '',
+                    'comments' => $comments ? $comments : '',
+                    'fileNameColumn' => $fileNameColumn,
+                    'fileName' => $fileName,
+                    'fileSizeLimit' => $fileSizeLimit,
+                    'fileContent' => $fileContent,
+                    'fileContentSize' => $fileContentSize,
+                    'extensionSupported' => $extensionSupported
+                ];
+                $this->includes['jasny']['include'] = true;
+                return $this->_View->element('Page.file_upload', $attr);
+            } elseif ($type == 'image') {
+                // Image
+                $defaultImgViewClass = "logo-image";
+                $defaultImgMsg = 'Advisable logo dimension 200 by 200';
+                $defaultImgView = '<div class=\"profile-image\"><i class=\"fa kd-institutions\"></i></div>';
+                $defaultWidth = 90;
+                $defaultHeight = 115;
+
+                $showRemoveButton = false;
+                if (isset($data[$field['key']]['tmp_name'])) {
+                    $tmp_file = ((is_array($data[$field['key']])) && (file_exists($data[$field['key']]['tmp_name']))) ? $data[$field['key']]['tmp_name'] : "";
+                    $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
+                } else {
+                    $tmp_file = true;
+                    $tmp_file_read = $data[$field['key']];
+                }
+
+                if (!is_resource($tmp_file_read)) {
+                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;
+                    $showRemoveButton = (!empty($tmp_file)) ? true : false;
+                } else {
+                    $tmp_file_read = stream_get_contents($tmp_file_read);
+                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;
+                    $showRemoveButton = true;
+                }
+                // header('Content-Type: image/jpeg');
+
+                if (isset($field['attributes']['defaultHeight'])) {
+                    $defaultWidth = $field['attributes']['defaultWidth'];
+                }
+                if (isset($field['attributes']['defaultHeight'])) {
+                    $defaultWidth = $field['attributes']['defaultHeight'];
+                }
+
+                $this->includes['jasny']['include'] = true;
+                return $this->_View->element('Page.image_uploader', ['attr' => $field, 'src' => $src,
+                                                                                                'defaultWidth' => $defaultWidth,
+                                                                                                'defaultHeight' => $defaultHeight,
+                                                                                                'showRemoveButton' => $showRemoveButton,
+                                                                                                'defaultImgMsg' => $defaultImgMsg,
+                                                                                                'defaultImgView' => $defaultImgView]);
             }
-
-
-            $comments = '';
-            $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
-            $extensionSupported = '';
-            $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
-            foreach ($formatSupported as &$format) {
-                $format = '\''.$format.'\'';
-            }
-            $extensionSupported = implode(', ', $formatSupported);
-            $comments .= $fileSizeMessage . '<br/>' . $fileFormatMessage;
-            $fileName = '';
-            if ($data instanceof Entity) {
-                $fileName = $data->offsetExists($fileNameColumn) ? $data->$fileNameColumn : null;
-            } elseif (is_array($data)) {
-                $fileName = isset($data[$fileNameColumn]) ? $data[$fileNameColumn] : null;
-            }
-
-            if ($required) {
-                $options['required'] = 'required';
-            }
-
-            $alias = explode('.', $field['attributes']['name'])[0];
-
-            $attr = [
-                'id' => str_replace('.', '_', $field['attributes']['name']),
-                'key' => $field['key'],
-                'alias' => $alias,
-                'name' => $field['attributes']['name'],
-                'label' => $field['label'],
-                'options' => $options,
-                'required' => $required ? ' required' : '',
-                'comments' => $comments ? $comments : '',
-                'fileNameColumn' => $fileNameColumn,
-                'fileName' => $fileName,
-                'fileSizeLimit' => $fileSizeLimit,
-                'fileContent' => $fileContent,
-                'fileContentSize' => $fileContentSize,
-                'extensionSupported' => $extensionSupported
-            ];
-            $this->includes['jasny']['include'] = true;
-            return $this->_View->element('Page.file_upload', $attr);
         }
     }
 

@@ -53,7 +53,6 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (empty($request->params['_ext'])) {
             $request->params['_ext'] = 'json';
         }
-
         if (isset($request->model)) {
             $tableAlias = $request->model;
             $model = $this->instantiateModel($tableAlias);
