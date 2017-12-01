@@ -54,6 +54,11 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']);
     }
 
+    public function Adaptations()
+    {
+        $this->redirect(['plugin' => 'Adaptation', 'controller' => 'Adaptations', 'action' => 'index']);
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();

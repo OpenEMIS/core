@@ -5,6 +5,7 @@ return [
         'ADmad/JwtAuth' => $baseDir . '/vendor/admad/cakephp-jwt-auth/',
         'API' => $baseDir . '/plugins/API/',
         'AcademicPeriod' => $baseDir . '/plugins/AcademicPeriod/',
+        'Adaptation' => $baseDir . '/plugins/Adaptation/',
         'Alert' => $baseDir . '/plugins/Alert/',
         'Angular' => $baseDir . '/plugins/Angular/',
         'Area' => $baseDir . '/plugins/Area/',
