@@ -571,8 +571,8 @@ EOT;
             } elseif ($type == 'image') {
                 // Image
                 $defaultImgViewClass = "logo-image";
-                $defaultImgMsg = 'Advisable logo dimension 200 by 200';
-                $defaultImgView = '<div class=\"profile-image\"><i class=\"fa kd-institutions\"></i></div>';
+                $defaultImgMsg = '<p>* Advisable logo dimension 200 by 200<br/></p>';
+                $defaultImgView = '<div class=\"profile-image\"><i class=\"kd-openemis fa-3x\"></i></div>';
                 $defaultWidth = 90;
                 $defaultHeight = 115;
 
