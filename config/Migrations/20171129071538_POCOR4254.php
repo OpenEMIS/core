@@ -292,23 +292,35 @@ class POCOR4254 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to infrastructure_wash_sanitation_uses.id'
             ])
-            ->addColumn('infrastructure_wash_sanitation_total_male', 'integer', [
+            ->addColumn('infrastructure_wash_sanitation_male_functional', 'integer', [
                 'default' => 0,
                 'limit' => 11,
-                'null' => false,
-                'comment' => 'update from infrastructure_wash_sanitation_quantities'
+                'null' => false
             ])
-            ->addColumn('infrastructure_wash_sanitation_total_female', 'integer', [
+            ->addColumn('infrastructure_wash_sanitation_male_nonfunctional', 'integer', [
                 'default' => 0,
                 'limit' => 11,
-                'null' => false,
-                'comment' => 'update from infrastructure_wash_sanitation_quantities'
+                'null' => false
             ])
-            ->addColumn('infrastructure_wash_sanitation_total_mixed', 'integer', [
+            ->addColumn('infrastructure_wash_sanitation_female_functional', 'integer', [
                 'default' => 0,
                 'limit' => 11,
-                'null' => false,
-                'comment' => 'update from infrastructure_wash_sanitation_quantities'
+                'null' => false
+            ])
+            ->addColumn('infrastructure_wash_sanitation_female_nonfunctional', 'integer', [
+                'default' => 0,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('infrastructure_wash_sanitation_mixed_functional', 'integer', [
+                'default' => 0,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('infrastructure_wash_sanitation_mixed_nonfunctional', 'integer', [
+                'default' => 0,
+                'limit' => 11,
+                'null' => false
             ])
             ->addColumn('infrastructure_wash_sanitation_quality_id', 'integer', [
                 'default' => null,
