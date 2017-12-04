@@ -960,7 +960,7 @@ class StudentsTable extends ControllerActionTable
                     'user_type' => 'Student'
                 ]);
             }
-            // end POCOR-3125 history button permission???
+            // end POCOR-3125 history button permission
         }
 
         // Remove in POCOR-3010
