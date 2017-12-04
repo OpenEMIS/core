@@ -17,7 +17,7 @@
 				<?php foreach ($this->request->data['UserContact'] as $key => $value) { ?>
 				<tr class="table_row">
 					<td class="table_cell">
-						<?php 
+						<?php
 						echo $this->Form->input('UserContact.' . $key . '.contact_type_id', array(
 							'class' => 'form-control',
 							'label' => false,
@@ -27,7 +27,7 @@
 							?>
 					</td>
 					<td class="table_cell">
-						<?php 
+						<?php
 						echo $this->Form->input('UserContact.' . $key . '.ContactType.contact_option_id', array(
 							'class' => 'form-control',
 							'label' => false,
@@ -37,7 +37,7 @@
 							?>
 					</td>
 					<td class="table_cell">
-						<?php 
+						<?php
 						echo $this->Form->input('UserContact.' . $key . '.value', array(
 							'class' => 'form-control deduction_amount',
 							'label' => false,
@@ -51,12 +51,14 @@
 						?>
 					</td>
 					<td class="table_cell">
-						<?php echo $this->Form->checkbox('UserContact.' . $key . '.preferred', array('class' => 'icheck-input')); ?>
+						<?php
+							echo $this->Form->checkbox('UserContact.' . $key . '.preferred', ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
+						?>
 					</td>
 					<td>
 						<span class="icon_delete" title="<?php echo $this->Label->get('general.delete'); ?>" onClick="$(this).closest('tr').remove()"></span>
 					</td>
-					
+
 				</tr>
 				<?php } ?>
 			</tbody>
@@ -64,8 +66,8 @@
 	</div>
 </div>
 <?php
-	echo $this->Html->link($this->Label->get('general.add'), array(), array('onclick' => "$('#reload').val('Add').click();", 'class' => 'void icon_plus'));	
-	
+	echo $this->Html->link($this->Label->get('general.add'), array(), array('onclick' => "$('#reload').val('Add').click();", 'class' => 'void icon_plus'));
+
  ?>
 
 

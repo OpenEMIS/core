@@ -54,7 +54,7 @@ class EducationsController extends AppController
 				'text' => __('Setup')
 			]
 		];
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $selectedAction);
 	}

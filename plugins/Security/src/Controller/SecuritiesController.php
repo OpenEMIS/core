@@ -126,6 +126,6 @@ class SecuritiesController extends AppController
             ]
         ];
 
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }

@@ -164,6 +164,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function getColumnDefs() {
+        var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
@@ -172,12 +173,16 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         columnDefs.push({
             headerName: "Examination Item",
             field: "examination_item",
-            filterParams: filterParams
+            filterParams: filterParams,
+            filter: "text",
+            menuTabs: menuTabs,
         });
 
         columnDefs.push({
             headerName: "Subject",
             field: "subject",
+            filter: "text",
+            menuTabs: menuTabs,
             filterParams: filterParams
         });
 
@@ -185,6 +190,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             headerName: "Mark",
             field: "mark",
             filter: "number",
+            menuTabs: menuTabs,
             filterParams: filterParams,
             cellStyle: function(params) {
                 var examinationItemId = params.data['examination_item_id'];
@@ -224,13 +230,16 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         columnDefs.push({
             headerName: "Weight",
             field: 'weight',
-            filterParams: filterParams
+            filterParams: filterParams,
+            filter: "number",
+            menuTabs: menuTabs,
         });
 
         columnDefs.push({
             headerName: "Total Mark",
             field: "total_mark",
             filter: "number",
+            menuTabs: menuTabs,
             filterParams: filterParams,
             valueGetter: function(params) {
                 params.data[params.colDef.field] = service.calculateTotal(params.data);
