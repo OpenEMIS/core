@@ -92,10 +92,12 @@ class FileUploadBehavior extends Behavior
                 $validator->add($fileContent, 'ruleFileFormat', [
                     'rule' => function ($check, array $globalData) use ($fileName) {
                         $ext = pathinfo($globalData['data'][$fileName], PATHINFO_EXTENSION);
-                        if (in_array($ext, $this->config('allowable_file_types'))) {
-                            return true;
+                        $allowableFileTypes = $this->config('allowable_file_types');
+                        if (isset($allowableFileTypes[$fileName])) {
+                            return in_array($ext, $allowableFileTypes[$fileName]);
+                        } else {
+                            return in_array($ext, $allowableFileTypes);
                         }
-                        return false;
                     },
                     'message' => __('File format not supported.')
                 ]);
