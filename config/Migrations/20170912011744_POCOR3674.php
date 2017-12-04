@@ -3705,35 +3705,35 @@ class POCOR3674 extends AbstractMigration
         $localesData = [
             [
                 'id' => 1,
-                'iso' => 'zh',
-                'name' => 'Chinese',
-                'editable' => 0,
-                'direction' => 'ltr',
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'id' => 2,
                 'iso' => 'ar',
-                'name' => 'Arabic',
+                'name' => 'العربية',
                 'editable' => 0,
                 'direction' => 'rtl',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 3,
-                'iso' => 'fr',
-                'name' => 'French',
+                'id' => 2,
+                'iso' => 'zh',
+                'name' => '中文',
                 'editable' => 0,
                 'direction' => 'ltr',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'id' => 4,
-                'iso' => 'es',
-                'name' => 'Spanish',
+                'id' => 3,
+                'iso' => 'en',
+                'name' => 'English',
+                'editable' => 0,
+                'direction' => 'rtl',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' =>4,
+                'iso' => 'fr',
+                'name' => 'Français',
                 'editable' => 0,
                 'direction' => 'ltr',
                 'created_user_id' => 1,
@@ -3742,12 +3742,21 @@ class POCOR3674 extends AbstractMigration
             [
                 'id' => 5,
                 'iso' => 'ru',
-                'name' => 'Russian',
+                'name' => 'русский',
                 'editable' => 0,
                 'direction' => 'ltr',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
-            ]
+            ],
+            [
+                'id' => 6,
+                'iso' => 'es',
+                'name' => 'español',
+                'editable' => 0,
+                'direction' => 'ltr',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
         ];
 
         $this->insert('locales', $localesData);
@@ -3844,16 +3853,7 @@ class POCOR3674 extends AbstractMigration
         // insert data to locale_content_translations
         $this->execute('
             INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`)
-            SELECT `Z`.`zh`, `L`.`id`, 1, `Z`.`created_user_id`, `Z`.`created`
-            FROM `translations` AS `Z`
-            INNER JOIN `locale_contents` `L` ON `L`.`id` = `Z`.`id`
-            WHERE `Z`.`en` = `L`.`en`
-            ;
-        '); // zh = chinese
-
-        $this->execute('
-            INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`)
-            SELECT `Z`.`ar`, `L`.`id`, 2, `Z`.`created_user_id`, `Z`.`created`
+            SELECT `Z`.`ar`, `L`.`id`, 1, `Z`.`created_user_id`, `Z`.`created`
             FROM `translations` AS `Z`
             INNER JOIN `locale_contents` `L` ON `L`.`id` = `Z`.`id`
             WHERE `Z`.`en` = `L`.`en`
@@ -3862,21 +3862,21 @@ class POCOR3674 extends AbstractMigration
 
         $this->execute('
             INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`)
-            SELECT `Z`.`fr`, `L`.`id`, 3, `Z`.`created_user_id`, `Z`.`created`
+            SELECT `Z`.`zh`, `L`.`id`, 2, `Z`.`created_user_id`, `Z`.`created`
+            FROM `translations` AS `Z`
+            INNER JOIN `locale_contents` `L` ON `L`.`id` = `Z`.`id`
+            WHERE `Z`.`en` = `L`.`en`
+            ;
+        '); // zh = chinese
+
+        $this->execute('
+            INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`)
+            SELECT `Z`.`fr`, `L`.`id`, 4, `Z`.`created_user_id`, `Z`.`created`
             FROM `translations` AS `Z`
             INNER JOIN `locale_contents` `L` ON `L`.`id` = `Z`.`id`
             WHERE `Z`.`en` = `L`.`en`
             ;
         '); // fr = french
-
-        $this->execute('
-            INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`)
-            SELECT `Z`.`es`, `L`.`id`, 4, `Z`.`created_user_id`, `Z`.`created`
-            FROM `translations` AS `Z`
-            INNER JOIN `locale_contents` `L` ON `L`.`id` = `Z`.`id`
-            WHERE `Z`.`en` = `L`.`en`
-            ;
-        '); // es = espanyol
 
         $this->execute('
             INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`)
@@ -3886,6 +3886,15 @@ class POCOR3674 extends AbstractMigration
             WHERE `Z`.`en` = `L`.`en`
             ;
         '); // ru = russian
+
+        $this->execute('
+            INSERT INTO `locale_content_translations` (`translation`,`locale_content_id`, `locale_id`,`created_user_id`,`created`)
+            SELECT `Z`.`es`, `L`.`id`, 6, `Z`.`created_user_id`, `Z`.`created`
+            FROM `translations` AS `Z`
+            INNER JOIN `locale_contents` `L` ON `L`.`id` = `Z`.`id`
+            WHERE `Z`.`en` = `L`.`en`
+            ;
+        '); // es = espanyol
         // end insert data to locale_content_translations
         // end locale_content_translations
 
