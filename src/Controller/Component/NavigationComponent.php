@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes', 'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -666,6 +666,13 @@ class NavigationComponent extends Component
                         'parent' => 'Wash',
                         'params' => ['plugin' => 'Institution'],
                         'selected' => ['InfrastructureWashSanitations.view', 'InfrastructureWashSanitations.add', 'InfrastructureWashSanitations.edit', 'InfrastructureWashSanitations.delete']
+                    ],
+
+                    'InfrastructureWashHygienes.index' => [
+                        'title' => 'Hygiene',
+                        'parent' => 'Wash',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureWashHygienes.view', 'InfrastructureWashHygienes.add', 'InfrastructureWashHygienes.edit', 'InfrastructureWashHygienes.delete']
                     ],
 
                     'InfrastructureWashWastes.index' => [
