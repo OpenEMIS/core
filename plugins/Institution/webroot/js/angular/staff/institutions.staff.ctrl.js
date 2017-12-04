@@ -288,10 +288,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (fte == '') {
             fte = 0;
         }
+
+        // POCOR-4269 used the openemis_no (unique) so same staff cant add to same position
+        var openemisNo = 0;
+        if (StaffController.hasOwnProperty('selectedStaffData')) {
+            openemisNo = StaffController.selectedStaffData.openemis_no;
+        }
+
         StaffController.displayedFTE = (fte*100) + '%';
         var startDate = StaffController.startDate;
         var endDate = StaffController.endDate;
-        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate)
+        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate, openemisNo)
         .then(function(response) {
             StaffController.institutionPositionOptions.availableOptions = response;
         }, function(errors) {
@@ -317,18 +324,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(localeText){
             StaffController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -339,31 +334,34 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 ],
                 localeText: localeText,
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
+                }
             };
 
             StaffController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -373,31 +371,33 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 ],
                 localeText: localeText,
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                 rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
         }, function(error){
             StaffController.internalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
@@ -407,31 +407,33 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
 
             StaffController.externalGridOptions = {
                 columnDefs: [
-                    {
-                        field:'id',
-                        headerName:'',
-                        suppressMenu: true,
-                        suppressSorting: true,
-                        width: 40,
-                        maxWidth: 40,
-                        cellRenderer: function(params) {
-                            var data = JSON.stringify(params.data);
-                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                        }
-                    },
                     {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
                     {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -440,15 +442,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
                 ],
                 enableColResize: false,
-                enableFilter: true,
+                enableFilter: false,
                 enableServerSideFilter: true,
                 enableServerSideSorting: true,
-                enableSorting: true,
+                enableSorting: false,
                 headerHeight: 38,
                 rowData: [],
                 rowHeight: 38,
-                rowModelType: 'pagination',
-                angularCompileRows: true
+                rowModelType: 'infinite',
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
+
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
+                // angularCompileRows: true,
+                onRowSelected: function (_e) {
+                    StaffController.selectStaff(_e.node.data.id)
+                }
             };
         });
     };
@@ -629,6 +645,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
             if (staffRecords[key]['main_nationality'] != null) {
                 staffRecords[key]['nationality_name'] = staffRecords[key]['main_nationality']['name'];
+            }
+            if (staffRecords[key]['main_identity_type'] != null) {
                 staffRecords[key]['identity_type_name'] = staffRecords[key]['main_identity_type']['name'];
             }
 
