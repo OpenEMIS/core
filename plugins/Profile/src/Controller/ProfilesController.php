@@ -120,6 +120,8 @@ class ProfilesController extends AppController
     public function HealthMedications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
     public function HealthTests()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
     // End Health
+
+    public function Employments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']); }
     // End
 
     public function implementedEvents()
@@ -481,23 +483,37 @@ class ProfilesController extends AppController
 
     public function getProfessionalTabElements($options = [])
     {
+        $session = $this->request->session();
+        $isStudent = $session->read('Auth.User.is_student');
+        $isStaff = $session->read('Auth.User.is_staff');
+
         $tabElements = [];
-        $staffUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
-        $studentTabElements = [
-            'Employments' => ['text' => __('Employments')],
-            'Qualifications' => ['text' => __('Qualifications')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
-            'Memberships' => ['text' => __('Memberships')],
-            'Licenses' => ['text' => __('Licenses')],
-            'Awards' => ['text' => __('Awards')],
-        ];
+        $profileUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
 
-        $tabElements = array_merge($tabElements, $studentTabElements);
-
-        foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index']);
+        if ($isStaff) {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
+                'Extracurriculars' => ['text' => __('Extracurriculars')],
+                'Memberships' => ['text' => __('Memberships')],
+                'Licenses' => ['text' => __('Licenses')],
+                'Awards' => ['text' => __('Awards')],
+            ];
+        } else if ($isStudent) {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+            ];
+        } else {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+            ];
         }
+        $tabElements = array_merge($tabElements, $professionalTabElements);
 
+        foreach ($professionalTabElements as $key => $tab) {
+            if ($key != 'Employments') { $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff'.$key, 'index']); }
+            else { $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']); }
+        }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 

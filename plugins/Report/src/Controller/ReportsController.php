@@ -72,7 +72,7 @@ class ReportsController extends AppController {
 				'Report.StaffContacts' => __('Contacts'),
 				'Report.StaffQualifications' => __('Qualifications'),
 				'Report.StaffLicenses' => __('Licenses'),
-				'Report.StaffEmployments' => __('Employments'),
+				'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
 				'Report.StaffSalaries' => __('Salaries'),
 				'Report.StaffSystemUsage' => __('System Usage')
 			];
