@@ -1309,35 +1309,25 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Training'],
                     'selected' => ['Trainings.Results']
                 ],
-            'Assessments.Assessments' => [
-                'title' => 'Assessments',
+
+            'Administration.Performance' => [
+                'title' => 'Performance',
                 'parent' => 'Administration',
-                'params' => ['plugin' => 'Assessment'],
-                'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
+                'link' => false
             ],
-            'Administration.Competencies' => [
-                'title' => 'Competencies',
-                'parent' => 'Administration',
-                'link' => false,
-                'params' => ['plugin' => 'Competency'],
-            ],
+
+                'Assessments.Assessments' => [
+                    'title' => 'Assessments',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Assessment'],
+                    'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
+                ],
+
                 'Competencies.Templates' => [
-                    'title' => 'Templates',
-                    'parent' => 'Administration.Competencies',
+                    'title' => 'Competencies',
+                    'parent' => 'Administration.Performance',
                     'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias']
-                ],
-                'Competencies.Periods' => [
-                    'title' => 'Periods',
-                    'parent' => 'Administration.Competencies',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Periods']
-                ],
-                'Competencies.GradingTypes' => [
-                    'title' => 'Grading Types',
-                    'parent' => 'Administration.Competencies',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.GradingTypes']
+                    'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias', 'Competencies.Periods', 'Competencies.GradingTypes']
                 ],
 
             'Administration.Examinations' => [
