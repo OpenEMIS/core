@@ -14,7 +14,6 @@ class AdaptationsController extends PageController
     const FAVICON = 4;
     const COLOUR = 5;
     const COPYRIGHTNOTICE = 6;
-    const ABOUTCONTENT = 7;
 
     public function initialize()
     {
@@ -38,10 +37,6 @@ class AdaptationsController extends PageController
             return '';
         }
         switch ($id) {
-            case self::ABOUTCONTENT:
-                $str = strlen($entity->value) > 30 ? substr($entity->value, 0, 30).'...' : $entity->value;
-                return trim($str);
-                break;
             case self::COLOUR:
                 return '<div style="float: left; width: 200px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.'"></div>';
                 break;
@@ -54,10 +49,6 @@ class AdaptationsController extends PageController
     public function onRenderDefaultValue(Event $event, Entity $entity, $key)
     {
         switch ($entity->id) {
-            case self::ABOUTCONTENT:
-                $str = strlen($entity->default_value) > 30 ? substr($entity->default_value, 0, 30).'...' : $entity->default_value;
-                return trim($str);
-                break;
             case self::COLOUR:
                 return '<div style="float: left; width: 200px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.'"></div>';
                 break;
@@ -87,6 +78,7 @@ class AdaptationsController extends PageController
         $page->get('name')->setDisabled(true);
         $page->get('default_value')->setDisabled(true);
         $page->move('default_value')->after('name');
+        $page->move('default_content')->after('default_value');
         $entityId = $page->decode($id)['id'];
         switch ($entityId) {
             case self::APPNAME:
@@ -95,20 +87,55 @@ class AdaptationsController extends PageController
                 $page->get('default_value')->setControlType('string');
                 $page->exclude(['content', 'default_content']);
                 break;
-            case self::ABOUTCONTENT:
             case self::COLOUR:
                 $page->exclude(['content', 'default_content']);
                 break;
-            default:
+            case self::LOGINBGIMAGE:
                 $page->get('content')
                     ->setLabel('Content')
                     ->setAttributes('type', 'image')
+                    ->setAttributes('imageMessage', '* Advisable photo dimension 1620px by 1080px')
+                    ->setAttributes('fileSizeLimit', 2)
+                    ->setAttributes('supportedFileFormat', ['jpeg', 'jpg', 'gif', 'png'])
                     ->setAttributes('fileNameField', 'value');
 
                 $page->get('default_content')
                     ->setLabel('Default Content')
                     ->setAttributes('type', 'image')
-                    ->setAttributes('fileNameField', 'default_value');
+                    ->setAttributes('fileNameField', 'default_value')
+                    ->setDisabled(true);
+                $page->exclude(['value', 'default_value']);
+                break;
+            case self::FAVICON:
+                $page->get('content')
+                    ->setLabel('Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('fileNameField', 'value')
+                    ->setAttributes('supportedFileFormat', ['ico']);
+
+                $page->get('default_content')
+                    ->setLabel('Default Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('fileNameField', 'default_value')
+                    ->setDisabled(true);
+                $page->exclude(['value', 'default_value']);
+                break;
+            case self::LOGO:
+                $backgroundColour = $this->Adaptations->get(self::COLOUR);
+                $backgroundColour = $backgroundColour->value ? $backgroundColour->value : $backgroundColour->default_value;
+                $page->get('content')
+                    ->setLabel('Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('fileNameField', 'value')
+                    ->setAttributes('supportedFileFormat', ['svg'])
+                    ->setAttributes('backgroundColor', '#'.$backgroundColour);
+
+                $page->get('default_content')
+                    ->setLabel('Default Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('fileNameField', 'default_value')
+                    ->setAttributes('backgroundColor', '#'.$backgroundColour)
+                    ->setDisabled(true);
                 $page->exclude(['value', 'default_value']);
                 break;
         }
@@ -126,11 +153,29 @@ class AdaptationsController extends PageController
                 $page->get('default_value')->setControlType('string');
                 $page->exclude(['content', 'default_content']);
                 break;
-            case self::ABOUTCONTENT:
             case self::COLOUR:
                 $page->exclude(['content', 'default_content']);
                 break;
-            default:
+            case self::LOGO:
+                $backgroundColour = $this->Adaptations->get(self::COLOUR);
+                $backgroundColour = $backgroundColour->value ? $backgroundColour->value : $backgroundColour->default_value;
+                $page->get('content')
+                    ->setLabel('Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('imageMessage', '* Advisable photo dimension 1620px by 1080px')
+                    ->setAttributes('fileNameField', 'value')
+                    ->setAttributes('supportedFileFormat', ['svg'])
+                    ->setAttributes('backgroundColor', '#'.$backgroundColour);
+
+                $page->get('default_content')
+                    ->setLabel('Default Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('fileNameField', 'default_value')
+                    ->setAttributes('backgroundColor', '#'.$backgroundColour)
+                    ->setDisabled(true);
+                $page->exclude(['value', 'default_value']);
+                break;
+            case self::LOGINBGIMAGE:
                 $page->get('content')
                     ->setLabel('Content')
                     ->setAttributes('type', 'image')
@@ -139,7 +184,22 @@ class AdaptationsController extends PageController
                 $page->get('default_content')
                     ->setLabel('Default Content')
                     ->setAttributes('type', 'image')
-                    ->setAttributes('fileNameField', 'default_value');
+                    ->setAttributes('fileNameField', 'default_value')
+                    ->setDisabled(true);
+                $page->exclude(['value', 'default_value']);
+                break;
+            case self::FAVICON:
+                $page->get('content')
+                    ->setLabel('Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('fileNameField', 'value')
+                    ->setAttributes('supportedFileFormat', ['ico']);
+
+                $page->get('default_content')
+                    ->setLabel('Default Content')
+                    ->setAttributes('type', 'image')
+                    ->setAttributes('fileNameField', 'default_value')
+                    ->setDisabled(true);
                 $page->exclude(['value', 'default_value']);
                 break;
         }

@@ -445,10 +445,10 @@ EOT;
                     if (array_key_exists('href', $attr['attributes'])) {
                         $value = $this->Html->link($value, $attr['attributes']['href']);
                     }
-
+                    // fall through
                 case 'textarea':
                     $value = nl2br($value);
-
+                    // fall through
                 default:
                     $html .= sprintf($row, $label, $value);
                     break;
@@ -497,8 +497,9 @@ EOT;
 EOT;
             if ($field['attributes']['value']) {
                 if (isset($field['attributes']['type']) && $field['attributes']['type'] == 'image') {
-                    $link = '<div class="table-thumb"><img src="%s" style="max-width:60px;"></div>';
-                    $link = sprintf($link, $field['attributes']['value']);
+                    $link = '<div class="table-thumb"><img src="%s" style="max-width:60px;background-color:%s;"></div>';
+                    $backgroundColour = isset($field['attributes']['backgroundColor']) ? $field['attributes']['backgroundColor'] : '#FFFFFF';
+                    $link = sprintf($link, $field['attributes']['value'], $backgroundColour);
                 } else {
                     $link = $this->Html->link($field['attributes']['file_name'], $field['attributes']['value']);
                 }
@@ -515,9 +516,9 @@ EOT;
             if ($type == 'file') {
                 $options = ['type' => 'file', 'class' => 'form-control', 'label' => false];
                 $required = $field['attributes']['required'];
-                $fileNameColumn = isset($field['fileNameColumn']) ? $field['fileNameColumn'] : 'file_name';
-                $fileSizeLimit = isset($field['fileSizeLimit']) ? $field['fileSizeLimit'] : 1;
-                $formatSupported = isset($field['supportedFileFormat']) ? $field['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
+                $fileNameColumn = isset($field['attributes']['fileNameColumn']) ? $field['attributes']['fileNameColumn'] : 'file_name';
+                $fileSizeLimit = isset($field['attributes']['fileSizeLimit']) ? $field['attributes']['fileSizeLimit'] : 1;
+                $formatSupported = isset($field['attributes']['supportedFileFormat']) ? $field['attributes']['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
                 $fileContent = '';
                 if (is_resource($data[$field['key']])) {
                     $streamedContent = stream_get_contents($data[$field['key']]);
@@ -570,12 +571,26 @@ EOT;
                 return $this->_View->element('Page.file_upload', $attr);
             } elseif ($type == 'image') {
                 // Image
+                $message = isset($field['attributes']['imageMessage']) ? $field['attributes']['imageMessage'] : '';
+                $fileSizeLimit = isset($field['attributes']['fileSizeLimit']) ? $field['attributes']['fileSizeLimit'] : 1;
+                $formatSupported = isset($field['attributes']['supportedFileFormat']) ? $field['attributes']['supportedFileFormat'] : ['jpeg', 'jpg', 'gif', 'png', 'rtf', 'txt', 'csv', 'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'odt', 'ods', 'key', 'pages', 'numbers'];
                 $defaultImgViewClass = "logo-image";
-                $defaultImgMsg = '<p>* Advisable logo dimension 200 by 200<br/></p>';
                 $defaultImgView = '<div class=\"profile-image\"><i class=\"kd-openemis fa-3x\"></i></div>';
                 $defaultWidth = 90;
                 $defaultHeight = 115;
+                $disabled = $field['attributes']['disabled'];
+                $backgroundColor = isset($field['attributes']['backgroundColor']) ? $field['attributes']['backgroundColor'] :'#FFFFFF';
 
+                $comments = !empty($message) ? $message . '<br/>' : $message;
+                $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+                $extensionSupported = '';
+                $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+                foreach ($formatSupported as &$format) {
+                    $format = '\''.$format.'\'';
+                }
+                $extensionSupported = implode(', ', $formatSupported);
+                $comments .= $fileSizeMessage . '<br/>' . $fileFormatMessage;
+                $defaultImgMsg = '<p>'. $comments .'</p>';
                 $showRemoveButton = false;
                 if (isset($data[$field['key']]['tmp_name'])) {
                     $tmp_file = ((is_array($data[$field['key']])) && (file_exists($data[$field['key']]['tmp_name']))) ? $data[$field['key']]['tmp_name'] : "";
@@ -586,14 +601,12 @@ EOT;
                 }
 
                 if (!is_resource($tmp_file_read)) {
-                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;
+                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" style="background-color: '.$backgroundColor.'" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : str_replace('\\', '', $defaultImgView);
                     $showRemoveButton = (!empty($tmp_file)) ? true : false;
                 } else {
-                    $tmp_file_read = stream_get_contents($tmp_file_read);
-                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;
+                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" style="background-color: '.$backgroundColor.'" class="'.$defaultImgViewClass.'" src="'.$field['attributes']['value']['src'].'"/>' : str_replace('\\', '', $defaultImgView);
                     $showRemoveButton = true;
                 }
-                // header('Content-Type: image/jpeg');
 
                 if (isset($field['attributes']['defaultHeight'])) {
                     $defaultWidth = $field['attributes']['defaultWidth'];
@@ -603,12 +616,16 @@ EOT;
                 }
 
                 $this->includes['jasny']['include'] = true;
-                return $this->_View->element('Page.image_uploader', ['attr' => $field, 'src' => $src,
-                                                                                                'defaultWidth' => $defaultWidth,
-                                                                                                'defaultHeight' => $defaultHeight,
-                                                                                                'showRemoveButton' => $showRemoveButton,
-                                                                                                'defaultImgMsg' => $defaultImgMsg,
-                                                                                                'defaultImgView' => $defaultImgView]);
+                return $this->_View->element('Page.image_uploader', [
+                    'attr' => $field,
+                    'disabled' => $disabled,
+                    'src' => $src,
+                    'defaultWidth' => $defaultWidth,
+                    'defaultHeight' => $defaultHeight,
+                    'showRemoveButton' => $showRemoveButton,
+                    'defaultImgMsg' => $defaultImgMsg,
+                    'defaultImgView' => $defaultImgView
+                ]);
             }
         }
     }
