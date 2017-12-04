@@ -42,7 +42,8 @@
     </div>
     <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: <?= $defaultWidth; ?>px; max-height: <?= $defaultHeight; ?>px;"></div>
       <div class="file-input-buttons">
-        <?= $defaultImgMsg ?>
+        <?= !$disabled ? $defaultImgMsg : '' ?>
+        <?php if (!$disabled) : ?>
         <span class="btn btn-default btn-file">
           <span class="fileinput-new">
             <i class="fa fa-folder"></i>
@@ -63,6 +64,7 @@
               <span><?= __('Remove') ?></span>
             </a>
           </span>
+        <?php endif; ?>
     </div>
   </div>
   <div class="error-message">
