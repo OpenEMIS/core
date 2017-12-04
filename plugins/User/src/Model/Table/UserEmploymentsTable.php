@@ -1,5 +1,5 @@
 <?php
-namespace Staff\Model\Table;
+namespace User\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
@@ -7,12 +7,12 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
-class EmploymentsTable extends ControllerActionTable {
+class UserEmploymentsTable extends ControllerActionTable {
 	public function initialize(array $config) {
-		$this->table('staff_employments');
+		$this->table('user_employments');
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -20,9 +20,9 @@ class EmploymentsTable extends ControllerActionTable {
 	}
 
 	private function setupTabElements() {
-		$options['type'] = 'staff';
+		$options['type'] = $this->controller->name;
 		$tabElements = $this->controller->getProfessionalTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', __('Employments'));
 	}
 }

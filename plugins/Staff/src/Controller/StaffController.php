@@ -83,7 +83,7 @@ class StaffController extends AppController
     // CAv4
     public function Employments()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
     public function Qualifications()
     {
