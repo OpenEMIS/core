@@ -20,7 +20,7 @@ class LocalesController extends PageController
         $this->Page->addCrumb('Localization', ['plugin' => false, 'controller' => 'Locales', 'action' => 'index']);
 
         $this->Page->get('direction')
-            ->setControlType('dropdown')
+            ->setControlType('select')
             ->setOptions([
                 '' => '-- Select --', 'ltr' => 'Left to Right', 'rtl' => 'Right to Left'
             ]);
