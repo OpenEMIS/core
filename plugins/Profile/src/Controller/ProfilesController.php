@@ -511,8 +511,11 @@ class ProfilesController extends AppController
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') { $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff'.$key, 'index']); }
-            else { $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']); }
+            if ($key != 'Employments') { 
+                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff'.$key, 'index']); 
+            } else { 
+                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']); 
+            }
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }

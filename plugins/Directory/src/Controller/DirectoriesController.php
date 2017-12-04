@@ -651,7 +651,7 @@ class DirectoriesController extends AppController
                 'Licenses' => ['text' => __('Licenses')],
                 'Awards' => ['text' => __('Awards')],
             ];
-        } else if ($isStudent) {
+        } else {
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
             ];
@@ -659,8 +659,11 @@ class DirectoriesController extends AppController
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') { $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']); }
-            else { $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']); }
+            if ($key != 'Employments') { 
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']); 
+            } else { 
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']); 
+            }
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
