@@ -214,6 +214,11 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
+
+    public function Employments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
+    }
     // End
 
     // AngularJS
@@ -630,21 +635,32 @@ class DirectoriesController extends AppController
 
     public function getProfessionalTabElements($options = [])
     {
+        $session = $this->request->session();
+        $isStudent = $session->read('Directory.Directories.is_student');
+        $isStaff = $session->read('Directory.Directories.is_staff');
+ 
         $tabElements = [];
-        $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-        $studentTabElements = [
-            'Employments' => ['text' => __('Employments')],
-            'Qualifications' => ['text' => __('Qualifications')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
-            'Memberships' => ['text' => __('Memberships')],
-            'Licenses' => ['text' => __('Licenses')],
-            'Awards' => ['text' => __('Awards')],
-        ];
+        $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
+        
+        if ($isStaff) {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
+                'Extracurriculars' => ['text' => __('Extracurriculars')],
+                'Memberships' => ['text' => __('Memberships')],
+                'Licenses' => ['text' => __('Licenses')],
+                'Awards' => ['text' => __('Awards')],
+            ];
+        } else if ($isStudent) {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+            ];
+        }
+        $tabElements = array_merge($tabElements, $professionalTabElements);
 
-        $tabElements = array_merge($tabElements, $studentTabElements);
-
-        foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'index']);
+        foreach ($professionalTabElements as $key => $tab) {
+            if ($key != 'Employments') { $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']); }
+            else { $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']); }
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }

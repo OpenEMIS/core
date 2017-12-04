@@ -783,6 +783,12 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
                     'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']
             ],
+            'Students.Employments' => [
+                'title' => 'Professional',
+                'parent' => 'Institutions.Students.index',
+                'params' => ['plugin' => 'Student'],
+                'selected' => ['Students.Employments']
+            ],
             'Counsellings.index' => [
                 'title' => 'Counselling',
                 'parent' => 'Institutions.Students.index',
@@ -876,7 +882,13 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests']
-            ]
+            ],
+            'Profiles.Employments' => [
+                'title' => 'Professional',
+                'parent' => 'Profiles.Profiles',
+                'params' => ['plugin' => 'Profile'],
+                'selected' => ['Profiles.Employments', 'Profiles.StaffQualifications', 'Profiles.StaffExtracurriculars', 'Profiles.StaffMemberships', 'Profiles.StaffLicenses', 'Profiles.StaffAwards']
+            ],
         ];
         return $navigation;
     }
@@ -896,7 +908,13 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests']
-            ]
+            ],
+            'Directories.Employments' => [
+                'title' => 'Professional',
+                'parent' => 'Directories.Directories.index',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Directories.Employments', 'Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAwards']
+            ],
         ];
         return $navigation;
     }
@@ -984,12 +1002,6 @@ class NavigationComponent extends Component
                     'parent' => 'Directories.Staff',
                     'params' => ['plugin' => 'Directory'],
                     'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffAbsences', 'Directories.StaffLeave', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals']
-                ],
-                'Directories.StaffEmployments' => [
-                    'title' => 'Professional',
-                    'parent' => 'Directories.Staff',
-                    'params' => ['plugin' => 'Directory'],
-                    'selected' => ['Directories.StaffEmployments', 'Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAwards']
                 ],
                 'Directories.StaffBankAccounts' => [
                     'title' => 'Finance',

@@ -66,7 +66,7 @@ class POCOR4177 extends AbstractMigration
         $this->execute('CREATE TABLE `employment_status_types` LIKE `z_4177_employment_types`');
         $this->execute('INSERT INTO `employment_status_types` SELECT * FROM `z_4177_employment_types`');
         
-        $table2 = $this->table('staff_employments');
+        $table2 = $this->table('user_employments');
         $table2
             ->addColumn('date_from', 'date', [
                 'default' => null,
@@ -86,7 +86,7 @@ class POCOR4177 extends AbstractMigration
                 'limit' => 100,
                 'null' => false
             ])
-            ->addColumn('staff_id', 'integer', [
+            ->addColumn('security_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
@@ -110,7 +110,7 @@ class POCOR4177 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addIndex('staff_id')
+            ->addIndex('security_user_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
@@ -139,6 +139,25 @@ class POCOR4177 extends AbstractMigration
                 WHERE id = '7020'";
         $this->execute($sql2);
 
+        $sql3 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE category = 'Staff - Professional Development'";
+        $this->execute($sql3);
+
+        //Awards 
+        $sql4 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE id = '3007'";
+        $this->execute($sql4);
+
+        //Awards 
+        $sql5 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE id = '7027'";
+        $this->execute($sql5);
+
+        //Appraisals 
+        $sql6 = "UPDATE `security_functions` SET category = 'Staff - Career' WHERE id = '3037'";
+        $this->execute($sql6);
+
+        //Appraisals 
+        $sql7 = "UPDATE `security_functions` SET category = 'Staff - Career' WHERE id = '7049'";
+        $this->execute($sql7);
+
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 117');
 
         $this->insert('security_functions', [
@@ -158,54 +177,56 @@ class POCOR4177 extends AbstractMigration
             'created' => date('Y-m-d H:i:s')
         ]);
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 267');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 109');
+
+        $this->insert('security_functions', [
+            'id' => 2036,
+            'name' => 'Employment',
+            'controller' => 'Student',
+            'module' => 'Institutions',
+            'category' => 'Student - Professional',
+            'parent_id' => 2000,
+            '_view' => 'Employments.index|Employments.view',
+            '_edit' => 'Employments.edit',
+            '_add' => 'Employments.add',
+            '_delete' => 'Employments.remove',
+            'order' => 110,
+            'visible' => 1,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 288');
 
         $this->insert('security_functions', [
             'id' => 7054,
             'name' => 'Employment',
             'controller' => 'Directories',
             'module' => 'Directory',
-            'category' => 'Staff - Professional',
+            'category' => 'Professional',
             'parent_id' => 7000,
-            '_view' => 'StaffEmployments.index|StaffEmployments.view',
-            '_edit' => 'StaffEmployments.edit',
-            '_add' => 'StaffEmployments.add',
-            '_delete' => 'StaffEmployments.remove',
-            'order' => 268,
+            '_view' => 'Employments.index|Employments.view',
+            '_edit' => 'Employments.edit',
+            '_add' => 'Employments.add',
+            '_delete' => 'Employments.remove',
+            'order' => 289,
             'visible' => 1,
             'created_user_id' => 1,
             'created' => date('Y-m-d H:i:s')
         ]);
-
-        $sql3 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE category = 'Staff - Professional Development'";
-        $this->execute($sql3);
-
-        //Awards 
-        $sql4 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE id = '3007'";
-        $this->execute($sql4);
-
-        //Awards 
-        $sql5 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE id = '7027'";
-        $this->execute($sql5);
-
-        //Appraisals 
-        $sql6 = "UPDATE `security_functions` SET category = 'Staff - Career' WHERE id = '3037'";
-        $this->execute($sql6);
-
-        //Appraisals 
-        $sql7 = "UPDATE `security_functions` SET category = 'Staff - Career' WHERE id = '7049'";
-        $this->execute($sql7);
     }
 
     public function down()
     {
-        $this->execute('DROP TABLE staff_employments');
-        
-        $this->execute('DROP TABLE employment_status_types');
-        $this->table('z_4177_employment_types')->rename('employment_types');
-        
         $this->execute('DROP TABLE staff_employment_statuses');
         $this->table('z_4177_staff_employments')->rename('staff_employments');
       
+        $this->execute('DROP TABLE employment_status_types');
+        $this->table('z_4177_employment_types')->rename('employment_types');
+
+        $this->execute('DROP TABLE user_employments');
+
+        $this->execute('DROP TABLE security_functions');
+        $this->table('z_4177_security_functions')->rename('security_functions');      
     }
 }
