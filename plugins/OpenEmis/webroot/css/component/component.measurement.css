@@ -1,4 +1,4 @@
-/* Measurements v.1.0.1 */
+/* Measurements v.1.0.2 */
 
 .no-margin {
     margin: 0 !important;
@@ -42,6 +42,14 @@
 
 .margin-5 {
 	margin: 5px !important;
+}
+
+.margin-left-5 {
+	margin-left: 5px !important;
+}
+
+.margin-right-5 {
+	margin-right: 5px !important;
 }
 
 .margin-10 {
@@ -113,6 +121,16 @@
 }
 
 /* RTL */
+
+.rtl .margin-left-5 {
+	margin-right: 5px !important;
+	margin-left: 0 !important;
+}
+
+.rtl .margin-right-5 {
+	margin-left: 5px !important;
+	margin-right: 0 !important;
+}
 
 .rtl .margin-left-10 {
 	margin-right: 10px !important;
