@@ -41,6 +41,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controller->getCompetencyTabs();
 
         if ($this->action == 'add' || $this->action == 'edit' || $this->action == 'view') {
             $this->field('grading_options', [
