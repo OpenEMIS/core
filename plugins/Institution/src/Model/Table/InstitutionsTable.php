@@ -972,8 +972,8 @@ class InstitutionsTable extends ControllerActionTable
             }
         }
 
-        if (isset($buttons['view'])) {
-            // history button need to check permission ??
+        // POCOR-3125 history button permission to hide and show the link
+        if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
             $icon = '<i class="fa fa-history"></i>';
 
             $buttons['history'] = $buttons['view'];
@@ -981,8 +981,8 @@ class InstitutionsTable extends ControllerActionTable
             $buttons['history']['url']['plugin'] = 'Institution';
             $buttons['history']['url']['controller'] = 'InstitutionHistories';
             $buttons['history']['url']['action'] = 'index';
-            // end history button
         }
+        // end history button
 
         return $buttons;
     }

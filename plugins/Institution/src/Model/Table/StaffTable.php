@@ -739,7 +739,7 @@ class StaffTable extends ControllerActionTable
             $url['id'] = $encodeValue;
             $buttons['view']['url'] = $url;
 
-            // POCOR-3125 history button permission???
+            // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StaffHistories', 'index'])) {
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
                 $userId = $entity->_matchingData['Users']->id;
@@ -759,7 +759,7 @@ class StaffTable extends ControllerActionTable
                     'user_type' => 'Staff'
                 ]);
             }
-            // end POCOR-3125 history button permission???
+            // end POCOR-3125 history button permission
         }
 
         if (isset($buttons['edit'])) {
