@@ -38,7 +38,10 @@ class LocaleContentsController extends PageController
     {
         $page = $this->Page;
 
-        $localeOptions = $this->Locales->getList()->toArray();
+        $localeOptions = $this->Locales->getList()
+            ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // english not needed
+            ->toArray()
+        ;
         $page->addFilter('locale_id')
             ->setOptions($localeOptions)
         ;
@@ -64,7 +67,10 @@ class LocaleContentsController extends PageController
 
         $page->get('en')->setDisabled(true);
         $modelAlias = $model->alias();
-        $localeNames = $this->Locales->find('allLocale');
+        $localeNames = $this->Locales->find('allLocale')
+            ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // English no needed
+        ;
+
         $counter = 0;
 
         parent::edit($id);
@@ -124,9 +130,17 @@ class LocaleContentsController extends PageController
         $page = $this->Page;
         $model = $this->LocaleContents;
 
-        $localeNames = $this->Locales->find('allLocale');
+        $localeNames = $this->Locales->find('allLocale')
+            ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // English no needed
+        ;
         $modelAlias = $model->alias();
         $counter = 0;
+
+        // set field to hidden
+        $page->get('modified_user_id')->setControlType('hidden');
+        $page->get('modified')->setControlType('hidden');
+        $page->get('created_user_id')->setControlType('hidden');
+        $page->get('created')->setControlType('hidden');
 
         parent::view($id);
 
