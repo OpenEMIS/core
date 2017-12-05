@@ -427,6 +427,35 @@ class DirectoriesTable extends ControllerActionTable
         ];
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        if (isset($buttons['view'])) {
+            // history button need to check permission ??
+            if ($this->AccessControl->check(['DirectoryHistories', 'index'])) {
+                $userId = $entity->id;
+
+                $icon = '<i class="fa fa-history"></i>';
+                $url = [
+                    'plugin' => 'Directory',
+                    'controller' => 'DirectoryHistories',
+                    'action' => 'index'
+                ];
+
+                $buttons['history'] = $buttons['view'];
+                $buttons['history']['label'] = $icon . __('History');
+                $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
+                    'security_user_id' => $userId,
+                    'user_type' => $this->alias()
+                ]);
+            }
+            // end history button
+        }
+
+        return $buttons;
+    }
+
     public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request)
     {
         $options = [
