@@ -8,14 +8,12 @@ function SgTreeController($scope, $window, SgTreeSvc) {
     $scope.outputFlag = false;
     var Controller = this;
 
-    Controller.inputModelText = [];
     $scope.outputModelText = [];
     Controller.outputValue = null;
     Controller.displayCountry = 0;
     Controller.loaded = false;
     Controller.triggerLoad = triggerLoad;
     $scope.textConfig = {
-        noSelection: 'Loading...',
         multipleSelection: '%tree_no_of_item items selected'
     };
 
@@ -26,42 +24,34 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         var counter = 0;
         SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue, true)
             .then(function(response) {
-                Controller.inputModelText = response;
+                if (angular.isDefined(response[1]) && angular.isDefined(response[1].name)) {
+                    $scope.textConfig['noSelection'] = response[1].name;
+                }
                 return SgTreeSvc.translate($scope.textConfig);
             }, function(error){
                 console.log(error)
             })
             .then(function(res) {
                 $scope.textConfig = res;
+                console.log('document ready res', res);
             }, function (error) {
                 console.log(error);
             });
+        console.log('document ready');
     });
 
-    $scope.$on("clickEvent", function(event, args) {
-        event.stopPropagation();
-        triggerLoad();
-    });
-
-    function triggerLoad() {
+    function triggerLoad(refreshList) {
+        // run ajax call to get parentData. Then pass it to refreshList(_response) callback function.
+        // eg: assign parentData to _pData.
         if (!Controller.loaded) {
-            Controller.inputModelText = [];
             Controller.loaded = true;
             var userId = JSON.parse(Controller.userId);
-            var authArea = [];
-            var counter = 0;
             SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue)
             .then(function(response) {
-                Controller.inputModelText = response;
+                refreshList(response);
                 return SgTreeSvc.translate($scope.textConfig);
             }, function(error){
                 console.log(error)
-            })
-            .then(function(res) {
-                $scope.textConfig = res;
-            }, function (error) {
-                console.log(error);
-
             });
         }
     }
