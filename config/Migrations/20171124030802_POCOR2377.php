@@ -157,6 +157,45 @@ class POCOR2377 extends AbstractMigration
             ->save()
         ;
         // end calendar_event_dates
+
+        // security_functions
+        $data = [
+            [
+                'id' => '1072',
+                'name' => 'Calendar',
+                'controller' => 'InstitutionCalendars',
+                'module' => 'Institutions',
+                'category' => 'General',
+                'parent_id' => 8,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => '1072',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '5080',
+                'name' => 'Calendar',
+                'controller' => 'Calendars',
+                'module' => 'Administration',
+                'category' => 'Calendar',
+                'parent_id' => 8,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => '5080',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('security_functions', $data);
+        // end security_functions
     }
 
     // rollback
@@ -165,5 +204,8 @@ class POCOR2377 extends AbstractMigration
         $this->execute('DROP TABLE calendar_types');
         $this->execute('DROP TABLE calendar_events');
         $this->execute('DROP TABLE calendar_event_dates');
+
+        $this->execute('DELETE FROM security_functions WHERE id = 1072');
+        $this->execute('DELETE FROM security_functions WHERE id = 5080');
     }
 }
