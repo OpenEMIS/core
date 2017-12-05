@@ -242,7 +242,7 @@ class StudentAttendancesTable extends AppTable
                 'text' => __('Absence')
             ]
         ];
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Attendance');
 
