@@ -37,34 +37,31 @@ class OutcomesController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
-    // public function getOutcomeTemplateTabs($params = [])
-    // {
-    //     $tabElements = [
-    //         'Templates' => [
-    //             'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 0 => 'view'],
-    //             'text' => __('Overview')
-    //         ],
-    //         'Items' => [
-    //             'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Items'],
-    //             'text' => __('Items')
-    //         ],
-    //         'Criterias' => [
-    //             'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Criterias'],
-    //             'text' => __('Criterias')
-    //         ]
-    //     ];
-    //     $queryString = $this->ControllerAction->getQueryString();
-    //     if (isset($queryString['competency_template_id']) && isset($queryString['academic_period_id'])) {
-    //         $tabElements['Templates']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $queryString['competency_template_id'], 'academic_period_id' => $queryString['academic_period_id']]);
-    //     }
+    public function getOutcomeTemplateTabs($params = [])
+    {
+        $tabElements = [
+            'Templates' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 0 => 'view'],
+                'text' => __('Overview')
+            ],
+            'Criterias' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Criterias'],
+                'text' => __('Criterias')
+            ]
+        ];
 
-    //     foreach ($tabElements as $key => $value) {
-    //         $tabElements[$key]['url'] = array_merge($value['url'], $params);
-    //     }
-    //     $tabElements = $this->TabPermission->checkTabPermission($tabElements);
-    //     $this->set('tabElements', $tabElements);
-    //     $this->set('selectedAction', $this->request->action);
-    // }
+        $queryString = $this->paramsDecode($params['queryString']);
+        if (isset($queryString['outcome_template_id']) && isset($queryString['academic_period_id'])) {
+            $tabElements['Templates']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $queryString['outcome_template_id'], 'academic_period_id' => $queryString['academic_period_id']]);
+        }
+
+        foreach ($tabElements as $key => $value) {
+            $tabElements[$key]['url'] = array_merge($value['url'], $params);
+        }
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', $this->request->action);
+    }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
