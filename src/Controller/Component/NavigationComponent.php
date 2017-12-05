@@ -1316,18 +1316,25 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-                'Assessments.Assessments' => [
-                    'title' => 'Assessments',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Assessment'],
-                    'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
-                ],
-
                 'Competencies.Templates' => [
                     'title' => 'Competencies',
                     'parent' => 'Administration.Performance',
                     'params' => ['plugin' => 'Competency'],
                     'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias', 'Competencies.Periods', 'Competencies.GradingTypes']
+                ],
+
+                'Outcomes.Templates' => [
+                    'title' => 'Outcomes',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Outcome'],
+                    'selected' => ['Outcomes.Templates', 'Outcomes.Criterias', 'Outcomes.Periods', 'Outcomes.GradingTypes']
+                ],
+
+                'Assessments.Assessments' => [
+                    'title' => 'Assessments',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Assessment'],
+                    'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
                 ],
 
             'Administration.Examinations' => [
