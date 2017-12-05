@@ -8,12 +8,12 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class StaffEmploymentsTable extends AppTable {
+class StaffEmploymentStatusesTable extends AppTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('EmploymentTypes', ['className' => 'FieldOption.EmploymentTypes']);
+        $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes']);
 
         $this->addBehavior('Excel', [
             'excludes' => ['staff_id', 'employment_type_id']
