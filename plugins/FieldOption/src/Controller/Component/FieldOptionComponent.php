@@ -117,6 +117,8 @@ class FieldOptionComponent extends Component
         'InfrastructureWashWaterQuantities' => ['className' => 'Institution.InfrastructureWashWaterQuantities', 'parent' => 'Infrastructure'],
         'InfrastructureWashWaterQualities' => ['className' => 'Institution.InfrastructureWashWaterQualities', 'parent' => 'Infrastructure'],
         'InfrastructureWashWaterAccessibilities' => ['className' => 'Institution.InfrastructureWashWaterAccessibilities', 'parent' => 'Infrastructure'],
+        'InfrastructureWashWasteTypes' => ['className' => 'Institution.InfrastructureWashWasteTypes', 'parent' => 'Infrastructure'],
+        'InfrastructureWashWasteFunctionalities' => ['className' => 'Institution.InfrastructureWashWasteFunctionalities', 'parent' => 'Infrastructure'],
         'UtilityElectricityTypes' => ['className' => 'Institution.UtilityElectricityTypes', 'parent' => 'Infrastructure'],
         'UtilityElectricityConditions' => ['className' => 'Institution.UtilityElectricityConditions', 'parent' => 'Infrastructure'],
         'UtilityInternetTypes' => ['className' => 'Institution.UtilityInternetTypes', 'parent' => 'Infrastructure'],
