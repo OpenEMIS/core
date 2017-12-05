@@ -27,6 +27,7 @@ class PageController extends AppController
         parent::initialize();
 
         $this->loadComponent('Page.Page');
+        $this->loadComponent('Page.Alert');
         $this->loadComponent('Paginator');
         $this->loadComponent('RequestHandler');
 

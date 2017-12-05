@@ -61,13 +61,15 @@ class InfrastructureUtilityInternetsController extends PageController
 
         // set fields
         $page->get('utility_internet_type_id')->setLabel('Type');
-        $page->get('utility_internet_condition_id')->setLabel('Condition');
-        $page->get('internet_purpose')->setSortable(false)->setLabel('Purpose');
+        $page->get('utility_internet_condition_id')->setRequired(true)->setLabel('Condition');
+        $page->get('internet_purpose')->setRequired(true)->setSortable(false)->setLabel('Purpose');
+        $page->get('utility_internet_bandwidth_id')->setLabel('Bandwidth');
 
         // set fields order
         $page->move('academic_period_id')->first();
         $page->move('internet_purpose')->after('utility_internet_condition_id');
-        $page->move('comment')->after('internet_purpose');
+        $page->move('utility_internet_bandwidth_id')->after('internet_purpose');
+        $page->move('comment')->after('utility_internet_bandwidth_id');
     }
 
     public function index()
@@ -120,6 +122,10 @@ class InfrastructureUtilityInternetsController extends PageController
 
         // set condition
         $page->get('utility_internet_condition_id')
+            ->setControlType('select');
+
+        // set condition
+        $page->get('utility_internet_bandwidth_id')
             ->setControlType('select');
     }
 }

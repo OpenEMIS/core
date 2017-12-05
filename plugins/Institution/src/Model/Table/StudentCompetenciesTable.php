@@ -19,7 +19,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     private $competencyTemplateId = null;
     private $competencyPeriodId = null;
     private $competencyItemId = null;
-    private $competencyCriteriaCount = 0;
+    private $studentId = null;
 
     public function initialize(array $config)
     {
@@ -87,7 +87,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('competency_template');
         $this->field('education_grade');
 
-        $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
+        $this->setFieldOrder(['name', 'academic_period_id', 'education_grade', 'competency_template', 'total_male_students', 'total_female_students']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -135,8 +135,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $ClassGrades->aliasField('institution_class_id'),
                 $Competencies->aliasField('id')
             ])
-            ->autoFields(true)
-            ;
+            ->autoFields(true);
 
         $extra['options']['order'] = [
             $EducationProgrammes->aliasField('order') => 'asc',
@@ -208,7 +207,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['AcademicPeriods'])
@@ -224,183 +223,57 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    private function getCompetencyPeriodOptions()
     {
-        $this->setupFields($entity);
-    }
-
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
-    {
-        return $this->processSave($entity, $data);
-    }
-
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
-    {
-        return $this->processSave($entity, $data);
-    }
-
-    private function processSave(Entity $entity, ArrayObject $data)
-    {
-        $model = $this;
-        $process = function($model, $entity) use ($data) {
-            if (!empty($entity->competency_period) && !empty($entity->competency_item)) {
-                $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
-
-                $competencyTemplateId = $data[$model->alias()]['competency_template'];
-                $competencyPeriodId = $data[$model->alias()]['competency_period'];
-                $competencyItemId = $data[$model->alias()]['competency_item'];
-                $institutionId = $data[$model->alias()]['institution_id'];
-                $academicPeriodId = $data[$model->alias()]['academic_period_id'];
-
-                if (array_key_exists('institution_competency_results', $data[$model->alias()]) && !empty($data[$model->alias()]['institution_competency_results'])) {
-                    foreach ($data[$model->alias()]['institution_competency_results'] as $studentId => $criteriaResults) {
-                        foreach ($criteriaResults as $criteriaKey => $criteriaValue) {
-                            $studentData = [
-                                'student_id' => $studentId,
-                                'competency_template_id' => $competencyTemplateId,
-                                'competency_period_id' => $competencyPeriodId,
-                                'competency_item_id' => $competencyItemId,
-                                'competency_criteria_id' => $criteriaKey,
-                                'institution_id' => $institutionId,
-                                'academic_period_id' => $academicPeriodId
-                            ];
-
-                            if (!empty($criteriaValue)) {
-                                // new or update
-                                $studentData['competency_grading_option_id'] = $criteriaValue;
-                                $studentEntity = $StudentCompetencyResults->newEntity($studentData);
-                                $StudentCompetencyResults->save($studentEntity);
-                            } else {
-                                // delete
-                                $studentResults = $StudentCompetencyResults
-                                    ->find()
-                                    ->where($studentData)
-                                    ->all();
-
-                                if (!$studentResults->isEmpty()) {
-                                    $studentEntity = $studentResults->first();
-                                    $StudentCompetencyResults->delete($studentEntity);
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // no action
-                }
-
-                return true;
-            } else {
-                return false;
-            }
-        };
-
-        return $process;
-    }
-
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'edit') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->academic_period_id;
-            $attr['attr']['value'] = $entity->academic_period->name;
-        }
-
-        return $attr;
-    }
-
-    public function onUpdateFieldCompetencyTemplate(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'edit') {
-            $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
-            $competencyEntity = $CompetencyTemplates->find()
-                ->where([
-                    $CompetencyTemplates->aliasField('id') => $this->competencyTemplateId,
-                    $CompetencyTemplates->aliasField('academic_period_id') => $this->academicPeriodId
-                ])
-                ->first();
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $competencyEntity->id;
-            $attr['attr']['value'] = $competencyEntity->code_name;
-        }
-
-        return $attr;
-    }
-
-    public function onGetCustomCompetencyPeriodElement(Event $event, $action, $entity, $attr, $options=[])
-    {
-        $value = '';
-        $form = $event->subject()->Form;
-
-        $competencyPeriodCount = 0;
         $competencyPeriodOptions = [];
-
-        $todayDate = Time::now();
-        $today = $todayDate->format('Y-m-d');
+        $baseUrl = $this->url($this->action, false);
+        $params = $this->getQueryString();
+        unset($params['competency_item_id']); // item must be unset if new period is chosen
 
         $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
-        $competencyPeriodResults = $CompetencyPeriods
-            ->find()
+        $results = $CompetencyPeriods->find()
             ->where([
                 $CompetencyPeriods->aliasField('academic_period_id') => $this->academicPeriodId,
                 $CompetencyPeriods->aliasField('competency_template_id') => $this->competencyTemplateId
             ])
-            ->all();
+            ->toArray();
 
-        if (!$competencyPeriodResults->isEmpty()) {
-            $competencyPeriodCount = $competencyPeriodResults->count();
-
-            $params = $this->getQueryString();
-            // must reset
-            unset($params['competency_item_id']);
-            $this->competencyPeriodId = $this->getQueryString('competency_period_id');
-
-            foreach ($competencyPeriodResults as $periodKey => $periodObj) {
-                $periodData = [];
-                $periodData['id'] = $periodObj->id;
-                $periodData['code_name'] = $periodObj->code_name;
-
-                $params['competency_period_id'] = $periodObj->id;
-                $baseUrl = $this->url($action, false);
-                $url = $this->setQueryString($baseUrl, $params);
-                $periodData['url'] = $url;
-
-                if (is_null($this->competencyPeriodId) || $this->competencyPeriodId == $periodObj->id) {
-                    $periodData['checked'] = true;
-                    $this->competencyPeriodId = $periodObj->id;
-                } else {
-                    $periodData['checked'] = false;
-                }
-
-                $competencyPeriodOptions[] = $periodData;
+        if (!empty($results)) {
+            foreach ($results as $period) {
+                $params['competency_period_id'] = $period->id;
+                $competencyPeriodOptions[$period->id] = [
+                    'name' => $period->code_name,
+                    'url' => $this->setQueryString($baseUrl, $params)
+                ];
             }
         }
 
-        $attr['competencyPeriodCount'] = $competencyPeriodCount;
-        $attr['competencyPeriodOptions'] = $competencyPeriodOptions;
-
-        if ($action == 'view' || $action == 'edit') {
-            $value = $event->subject()->renderElement('Institution.StudentCompetencies/competency_period', ['attr' => $attr]);
+        if (!count($competencyPeriodOptions)) {
+            // no options
+            $params['competency_period_id'] = -1;
+            $competencyPeriodOptions[-1] = [
+                'name' => __('No Options'),
+                'url' => $this->setQueryString($baseUrl, $params)
+            ];
+        } else {
+            // set default period if no period selected yet
+            if (is_null($this->competencyPeriodId)) {
+                $this->competencyPeriodId = key($competencyPeriodOptions);
+            }
         }
 
-        $event->stopPropagation();
-        return $value;
+        return $competencyPeriodOptions;
     }
 
-    public function onGetCustomCompetencyItemElement(Event $event, $action, $entity, $attr, $options=[])
+    private function getCompetencyItemOptions()
     {
-        $value = '';
-        $form = $event->subject()->Form;
-
-        $competencyItemCount = 0;
         $competencyItemOptions = [];
+        $baseUrl = $this->url($this->action, false);
+        $params = $this->getQueryString();
 
         if (!is_null($this->competencyPeriodId)) {
             $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
-            $competencyPeriodEntity = $CompetencyPeriods
-                ->find()
+            $results = $CompetencyPeriods->find()
                 ->contain(['CompetencyItems'])
                 ->where([
                     $CompetencyPeriods->aliasField('academic_period_id') => $this->academicPeriodId,
@@ -409,113 +282,50 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ])
                 ->first();
 
-            if ($competencyPeriodEntity->has('competency_items')) {
-                $params = $this->getQueryString();
-                $this->competencyItemId = $this->getQueryString('competency_item_id');
-
-                foreach ($competencyPeriodEntity->competency_items as $itemKey => $itemObj) {
-                    $competencyItemCount++;
-
-                    $itemData = [];
-                    $itemData['id'] = $itemObj->id;
-                    $itemData['name'] = $itemObj->name;
-
-                    $params['competency_period_id'] = $this->competencyPeriodId;
-                    $params['competency_item_id'] = $itemObj->id;
-                    $baseUrl = $this->url($action, false);
-                    $url = $this->setQueryString($baseUrl, $params);
-                    $itemData['url'] = $url;
-
-                    if (is_null($this->competencyItemId) || $this->competencyItemId == $itemObj->id) {
-                        $itemData['checked'] = true;
-                        $this->competencyItemId = $itemObj->id;
-                    } else {
-                        $itemData['checked'] = false;
-                    }
-
-                    $competencyItemOptions[] = $itemData;
+            if (!empty($results) && $results->has('competency_items') && !empty($results->competency_items)) {
+                foreach ($results->competency_items as $item) {
+                    $params['competency_item_id'] = $item->id;
+                    $competencyItemOptions[$item->id] = [
+                        'name' => $item->name,
+                        'url' => $this->setQueryString($baseUrl, $params)
+                    ];
                 }
             }
         }
 
-        $attr['competencyItemCount'] = $competencyItemCount;
-        $attr['competencyItemOptions'] = $competencyItemOptions;
-
-        if ($action == 'view' || $action == 'edit') {
-            $value = $event->subject()->renderElement('Institution.StudentCompetencies/competency_item', ['attr' => $attr]);
+        if (!count($competencyItemOptions)) {
+            // no options
+            $params['competency_item_id'] = -1;
+            $competencyItemOptions[-1] = [
+                'name' => __('No Options'),
+                'url' => $this->setQueryString($baseUrl, $params)
+            ];
+        } else {
+            // set default item if no item selected yet
+            if (is_null($this->competencyItemId)) {
+                $this->competencyItemId = key($competencyItemOptions);
+            }
         }
 
-        $event->stopPropagation();
-        return $value;
+        return $competencyItemOptions;
     }
 
-    public function onGetCustomStudentsElement(Event $event, $action, $entity, $attr, $options=[])
+    private function getStudentOptions()
     {
-        $gradingTypes = $this->getCompetencyGradingTypes();
-
-        $value = '';
-        $form = $event->subject()->Form;
-        $fieldPrefix = $attr['model'] . '.institution_competency_results';
-
-        $tableHeaders = [];
-        $tableCells = [];
-        $colOffset = 0;
-
-        // Build table header
-        $tableHeaders[] = __('OpenEMIS ID');
-        $tableHeaders[] = __('Student Name');
-        $tableHeaders[] = __('Student Status');
-
-        $competencyItemEntity = null;
-        if (!is_null($this->competencyItemId)) {
-            $tableHeaders[] = __('Comments');
-            $colOffset = 4; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status, 3 -> Comments
-
-            $CompetencyItems = TableRegistry::get('Competency.CompetencyItems');
-            $competencyItemEntity = $CompetencyItems
-                ->find()
-                ->contain(['Criterias'])
-                ->where([
-                    $CompetencyItems->aliasField('academic_period_id') => $this->academicPeriodId,
-                    $CompetencyItems->aliasField('competency_template_id') => $this->competencyTemplateId,
-                    $CompetencyItems->aliasField('id') => $this->competencyItemId
-                ])
-                ->first();
-
-            if ($competencyItemEntity->has('criterias')) {
-                foreach ($competencyItemEntity->criterias as $colKey => $criteriaObj) {
-                    $this->competencyCriteriaCount++;
-                    if (strlen($criteriaObj['code']) > 0) {
-                        $displayHeader = $criteriaObj['code'];
-                        $displayHeader .= '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="'.$criteriaObj['name'].'" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
-                    } else {
-                        $displayHeader = $criteriaObj['name'];
-                    }
-
-                    $tableHeaders[$colKey + $colOffset] = $displayHeader;
-                }
-            }
-        }
-
-        if ($action == 'edit' && $this->competencyCriteriaCount == 0) {
-            $this->Alert->warning('StudentCompetencies.noCriterias');
-        }
+        $studentOptions = [];
+        $baseUrl = $this->url($this->action, false);
+        $params = $this->getQueryString();
 
         if (!is_null($this->classId)) {
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
-            $CompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
-            $ItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
-            $students = $ClassStudents
-                ->find()
+            $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+            // only enrolled students will be shown
+            $results = $ClassStudents->find()
                 ->select([
-                    $CompetencyResults->aliasField('competency_grading_option_id'),
-                    $CompetencyResults->aliasField('competency_criteria_id'),
-                    $ItemComments->aliasField('comments'),
                     $ClassStudents->aliasField('student_id'),
-                    $ClassStudents->aliasField('student_status_id'),
-                    $StudentStatuses->aliasField('name'),
                     $Users->aliasField('openemis_no'),
                     $Users->aliasField('first_name'),
                     $Users->aliasField('middle_name'),
@@ -524,149 +334,153 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $Users->aliasField('preferred_name')
                 ])
                 ->matching('Users')
-                ->matching('StudentStatuses')
-                ->leftJoin(
-                    [$ItemComments->alias() => $ItemComments->table()],
-                    [
-                        $ItemComments->aliasField('student_id = ') . $ClassStudents->aliasField('student_id'),
-                        $ItemComments->aliasField('institution_id') => $this->institutionId,
-                        $ItemComments->aliasField('academic_period_id') => $this->academicPeriodId,
-                        $ItemComments->aliasField('competency_template_id') => $this->competencyTemplateId,
-                        $ItemComments->aliasField('competency_period_id') => $this->competencyPeriodId,
-                        $ItemComments->aliasField('competency_item_id') => $this->competencyItemId
-                    ]
-                )
-                ->leftJoin(
-                    [$CompetencyResults->alias() => $CompetencyResults->table()],
-                    [
-                        $CompetencyResults->aliasField('student_id = ') . $ClassStudents->aliasField('student_id'),
-                        $CompetencyResults->aliasField('institution_id') => $this->institutionId,
-                        $CompetencyResults->aliasField('academic_period_id') => $this->academicPeriodId,
-                        $CompetencyResults->aliasField('competency_template_id') => $this->competencyTemplateId,
-                        $CompetencyResults->aliasField('competency_period_id') => $this->competencyPeriodId,
-                        $CompetencyResults->aliasField('competency_item_id') => $this->competencyItemId
-                    ]
-                )
-                ->where([$ClassStudents->aliasField('institution_class_id') => $this->classId])
-                ->group([
-                    $ClassStudents->aliasField('student_id'),
-                    $CompetencyResults->aliasField('competency_criteria_id')
+                ->where([
+                    $ClassStudents->aliasField('institution_class_id') => $this->classId,
+                    $ClassStudents->aliasField('student_status_id') => $enrolledStatus
                 ])
-                ->order([
-                    $Users->aliasField('first_name'),
-                    $Users->aliasField('last_name')
+                ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
+                ->toArray();
+
+            if (!empty($results)) {
+                foreach ($results as $student) {
+                    $params['student_id'] = $student->student_id;
+                    $studentOptions[$student->student_id] = [
+                        'name' => $student->_matchingData['Users']->openemis_no . ' - ' . $student->_matchingData['Users']->name,
+                        'url' => $this->setQueryString($baseUrl, $params)
+                    ];
+                }
+            }
+        }
+
+        if (!count($studentOptions)) {
+            // no options
+            $params['student_id'] = -1;
+            $studentOptions[-1] = [
+                'name' => __('No Options'),
+                'url' => $this->setQueryString($baseUrl, $params)
+            ];
+        } else {
+            // set default student if no student selected yet
+            if (is_null($this->studentId)) {
+                $this->studentId = key($studentOptions);
+            }
+        }
+
+        return $studentOptions;
+    }
+
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        // set Competency Period filter
+        $attr['period_options'] = $this->getCompetencyPeriodOptions();
+        $attr['selected_period'] = $this->competencyPeriodId;
+
+        // set Competency Item filter
+        $attr['item_options'] = $this->getCompetencyItemOptions();
+        $attr['selected_item'] = $this->competencyItemId;
+
+        // set Student filter
+        $attr['student_options'] = $this->getStudentOptions();
+        $attr['selected_student'] = $this->studentId;
+
+        $gradingTypes = $this->getCompetencyGradingTypes();
+
+        $tableHeaders = [];
+        $tableCells = [];
+        $tableFooters = [];
+
+        if (!is_null($this->competencyPeriodId) && !is_null($this->competencyItemId) && !is_null($this->studentId)) {
+            // table headers
+            $tableHeaders[] = __($attr['item_options'][$this->competencyItemId]['name'] . ' Criteria');
+            $tableHeaders[] = $attr['student_options'][$this->studentId]['name'];
+
+            $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
+            $CompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
+            $ItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
+
+            $criteriaResults = $CompetencyCriterias->find()
+                ->select([
+                    $CompetencyCriterias->aliasField('code'),
+                    $CompetencyCriterias->aliasField('name'),
+                    $CompetencyCriterias->aliasField('competency_grading_type_id'),
+                    $CompetencyResults->aliasField('competency_grading_option_id')
+                ])
+                ->leftJoin([$CompetencyResults->alias() => $CompetencyResults->table()], [
+                    $CompetencyResults->aliasField('academic_period_id = ') . $CompetencyCriterias->aliasField('academic_period_id'),
+                    $CompetencyResults->aliasField('competency_template_id = ') . $CompetencyCriterias->aliasField('competency_template_id'),
+                    $CompetencyResults->aliasField('competency_item_id = ') . $CompetencyCriterias->aliasField('competency_item_id'),
+                    $CompetencyResults->aliasField('competency_criteria_id = ') . $CompetencyCriterias->aliasField('id'),
+                    $CompetencyResults->aliasField('competency_period_id') => $this->competencyPeriodId,
+                    $CompetencyResults->aliasField('institution_id') => $this->institutionId,
+                    $CompetencyResults->aliasField('student_id') => $this->studentId
+                ])
+                ->where([
+                    $CompetencyCriterias->aliasField('academic_period_id') => $this->academicPeriodId,
+                    $CompetencyCriterias->aliasField('competency_item_id') => $this->competencyItemId,
+                    $CompetencyCriterias->aliasField('competency_template_id') => $this->competencyTemplateId
                 ])
                 ->toArray();
 
-            $studentId = null;
-            $currentStudentId = null;
-            $answerObj = null;
-            $rowData = [];
-            $rowInput = "";
-            $rowCount = 0;
+            if (!empty($criteriaResults)) {
+                foreach ($criteriaResults as $criteriaObj) {
+                    $name = !empty($criteriaObj->code) ? $criteriaObj->code . ' - ' . $criteriaObj->name : $criteriaObj->name;
 
-            foreach ($students as $rowKey => $studentObj) {
-                $currentStudentId = $studentObj->student_id;
-                $savedGradingOptionId = $studentObj->{$CompetencyResults->alias()}['competency_grading_option_id'];
-                $savedCriteriaId = $studentObj->{$CompetencyResults->alias()}['competency_criteria_id'];
-                $savedItemComments = $studentObj->{$ItemComments->alias()}['comments'];
-                if (!is_null($savedCriteriaId) && !is_null($savedGradingOptionId)) {
-                    $answerObj[$currentStudentId][$savedCriteriaId] = $savedGradingOptionId;
-                }
-                $comments = "";
-                if (!is_null($savedItemComments)) {
-                    $comments = $savedItemComments;
-                }
-
-                $userObj = $studentObj->_matchingData['Users'];
-                $studentStatusObj = $studentObj->_matchingData['StudentStatuses'];
-
-                if ($studentId != $currentStudentId) {
-                    if ($studentId != null) {
-                        $tableCells[$rowCount] = $rowData;
-                        $rowCount++;
+                    $result = '';
+                    if (!empty($criteriaObj->{$CompetencyResults->alias()}['competency_grading_option_id'])) {
+                        $gradingTypeId = $criteriaObj->competency_grading_type_id;
+                        $gradingOptionId = $criteriaObj->{$CompetencyResults->alias()}['competency_grading_option_id'];
+                        $result = $gradingTypes[$gradingTypeId][$gradingOptionId];
                     }
-
-                    $rowPrefix = "$fieldPrefix.$currentStudentId";
 
                     $rowData = [];
-                    $rowInput = "";
+                    $rowData[] = $name;
+                    $rowData[] = $result;
 
-                    if ($action == 'view') {
-                        // $rowData[] = $event->subject->Html->link($userObj->openemis_no, [
-                        //     'plugin' => 'Institution',
-                        //     'controller' => 'Institutions',
-                        //     'action' => 'StudentUser',
-                        //     'view',
-                        //     $this->paramsEncode(['id' => $userObj->id])
-                        // ]);
-                        $rowData[] = $userObj->openemis_no;
-                        $rowData[] = $userObj->name;
-                        $rowData[] = $studentStatusObj->name;
-                    } else if ($action == 'edit') {
-                        $rowData[] = $userObj->openemis_no . $rowInput;
-                        $rowData[] = $userObj->name;
-                        $rowData[] = $studentStatusObj->name;
-                    }
-                    if (!is_null($competencyItemEntity)) {
-                        $rowData[] = $comments;
-                    }
-
-                    $studentId = $currentStudentId;
+                    // table cells
+                    $tableCells[] = $rowData;
                 }
-
-                if (!is_null($competencyItemEntity) && $competencyItemEntity->has('criterias')) {
-                    foreach ($competencyItemEntity->criterias as $colKey => $criteriaObj) {
-                        $competencyCriteriaId = $criteriaObj['id'];
-
-                        $cellPrefix = "$rowPrefix.$competencyCriteriaId";
-                        $cellInput = "";
-                        $cellValue = "";
-
-                        $cellOptions = ['label' => false, 'value' => ''];
-                        $answerValue = null;
-                        if (isset($answerObj[$currentStudentId][$competencyCriteriaId]) && !is_null($answerObj[$currentStudentId][$competencyCriteriaId])) {
-                            $answerValue = $answerObj[$currentStudentId][$competencyCriteriaId];
-                        }
-                        $dropdownOptions = $gradingTypes[$criteriaObj['competency_grading_type_id']];
-                        $dropdownDefault = null;
-
-                        $dropdownOptions = ['' => '-- '.__('Select').' --'] + $dropdownOptions;
-
-                        // for edit
-                        $cellOptions['type'] = 'select';
-                        $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
-                        $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
-                        $cellOptions['options'] = $dropdownOptions;
-
-                        // for view
-                        $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : '';
-
-                        $cellInput .= $form->input($cellPrefix, $cellOptions);
-
-                        if ($action == 'view') {
-                            $rowData[$colKey+$colOffset] = $cellValue;
-                        } else if ($action == 'edit') {
-                            $rowData[$colKey+$colOffset] = $cellInput;
-                        }
-                    }
-                }
+            } else {
+                // table cells
+                $tableCells[] = __('No Competency Criterias');
+                $tableCells[] = '';
             }
 
-            if (!empty($rowData)) {
-                $tableCells[$rowCount] = $rowData;
+            $itemComment = $ItemComments->find()
+                ->select([$ItemComments->aliasField('comments')])
+                ->where([
+                    $ItemComments->aliasField('student_id') => $this->studentId,
+                    $ItemComments->aliasField('competency_template_id') => $this->competencyTemplateId,
+                    $ItemComments->aliasField('competency_period_id') => $this->competencyPeriodId,
+                    $ItemComments->aliasField('competency_item_id') => $this->competencyItemId,
+                    $ItemComments->aliasField('institution_id') => $this->institutionId,
+                    $ItemComments->aliasField('academic_period_id') => $this->academicPeriodId
+                ])
+                ->first();
+
+            // table footers
+            $comments = '';
+            if (!empty($itemComment) && $itemComment->comments != '') {
+                $comments = $itemComment->comments;
             }
+            $tableFooters[] = __('Comments');
+            $tableFooters[] = $comments;
+
+        } else {
+            // table headers
+            $tableHeaders[] = __('Competency Criteria');
+            $tableHeaders[] = __('Result');
+
+            // table cells
+            $tableCells[] = __('No Competency Item or Student selected');
+            $tableCells[] = '';
         }
 
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-
-        if ($action == 'view' || $action == 'edit') {
-            $value = $event->subject()->renderElement('Institution.StudentCompetencies/students', ['attr' => $attr]);
-        }
+        $attr['tableFooters'] = $tableFooters;
 
         $event->stopPropagation();
-        return $value;
+        return $event->subject()->renderElement('Institution.StudentCompetencies/competency_criterias', ['attr' => $attr]);
     }
 
     private function setupFields(Entity $entity)
@@ -675,8 +489,9 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->institutionId = $this->getQueryString('institution_id');
         $this->academicPeriodId = $this->getQueryString('academic_period_id');
         $this->competencyTemplateId = $this->getQueryString('competency_template_id');
-        $this->competencyPeriodId = null;
-        $this->competencyItemId = null;
+        $this->competencyPeriodId = $this->getQueryString('competency_period_id') ;
+        $this->competencyItemId = $this->getQueryString('competency_item_id');
+        $this->studentId = $this->getQueryString('student_id');
 
         $this->field('name', ['type' => 'readonly']);
         $this->field('academic_period_id', [
@@ -684,15 +499,10 @@ class StudentCompetenciesTable extends ControllerActionTable
             'entity' => $entity
         ]);
         $this->field('competency_template');
-        $this->field('competency_period', [
-            'type' => 'custom_competency_period'
+        $this->field('student', [
+            'type' => 'custom_criterias'
         ]);
-        $this->field('competency_item', [
-            'type' => 'custom_competency_item'
-        ]);
-        $this->field('students', [
-            'type' => 'custom_students'
-        ]);
+        $this->setFieldOrder(['name', 'academic_period_id', 'competency_template', 'total_male_students', 'total_female_students', 'student']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -717,14 +527,6 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         return $buttons;
-    }
-
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {
-        if ($this->action == 'edit' && $this->competencyCriteriaCount == 0) {
-            // hide save and cancel buttons
-            $buttons->exchangeArray([]);
-        }
     }
 
     private function getCompetencyGradingTypes() {

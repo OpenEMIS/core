@@ -72,6 +72,10 @@ class StudentsController extends AppController
     }
 
     // CAv4
+    public function Employments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
+    }
     public function StudentFees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
@@ -429,6 +433,22 @@ class StudentsController extends AppController
     public function getAcademicTabElements($options = [])
     {
         $tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function getProfessionalTabElements($options = [])
+    {
+        $tabElements = [];
+        $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+        $professionalTabElements = [
+            'Employments' => ['text' => __('Employments')],
+        ];
+
+        $tabElements = array_merge($tabElements, $professionalTabElements);
+
+        foreach ($tabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+        }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
