@@ -150,7 +150,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                             if (value.competency_item_id == item) {
                                 var criteriaName = value.name;
                                 if (value.code != null && value.code.length > 0) {
-                                    criteriaName = value.code + " <span class='divider'></span> " + value.name;
+                                    criteriaName = value.code + " - " + value.name;
                                 }
                                 var row = {
                                     student_id: student,
