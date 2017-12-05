@@ -263,7 +263,7 @@ class CommentsController extends PageController
             $tabElements = array_merge($tabElements, $studentTabElements);
         }
 
-        foreach ($tabElements as $action => $obj) {
+        foreach ($tabElements as $action => &$obj) {
             if (in_array($action, [$userRole.'User', $userRole.'Account'])) {
                 $url = [
                     'plugin' => $plugin,
