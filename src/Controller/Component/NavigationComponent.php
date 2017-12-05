@@ -256,7 +256,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashWastes', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashWastes', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips', 'StudentHistories', 'StaffHistories'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -363,7 +363,7 @@ class NavigationComponent extends Component
                 'title' => 'Directory',
                 'icon' => '<span><i class="fa kd-guardian"></i></span>',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
+                'selected' => ['Directories.Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results', 'DirectoryHistories.index']
             ],
 
             'Reports' => [
@@ -422,13 +422,6 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
 
-                'Institutions.History.index' => [
-                    'title' => 'History',
-                    'parent' => 'Institution.General',
-                    'selected' => ['Institutions.History'],
-                    'params' => ['plugin' => 'Institution']
-                ],
-
             'Institution.Academic' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Institutions.index',
@@ -475,7 +468,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
                     'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
-                    'Institutions.ImportStudents', 'Institutions.Students'],
+                    'Institutions.ImportStudents', 'Institutions.Students','StudentHistories.index'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -483,7 +476,7 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut']
+                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut', 'StaffHistories.index']
             ],
 
             'Institution.Attendance' => [
