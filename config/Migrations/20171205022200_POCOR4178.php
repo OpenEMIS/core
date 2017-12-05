@@ -13,6 +13,29 @@ class POCOR4178 extends AbstractMigration
      */
     public function up()
     {
+        $table = $this->table('config_items');
+        $data = [
+            [
+                'id' => '1005',
+                'name' => 'Adaptations',
+                'code' => 'adaptations',
+                'type' => 'Adaptations',
+                'label' => 'Adaptations',
+                'value' => '0',
+                'default_value' => '0',
+                'editable' => '1',
+                'visible' => '1',
+                'field_type' => '',
+                'option_type' => '',
+                'modified_user_id' => null,
+                'modified' => null,
+                'created_user_id' => '1',
+                'created' => '2017-11-30 01:01:17'
+            ],
+        ];
+
+        $table->insert($data)->save();
+
         $loginBackground = new File(WWW_ROOT . 'img' . DS. 'default_images' .DS. 'core-login-bg.jpg');
         $favicon = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'favicon.ico');
         $logo = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'oe-logo.png');
