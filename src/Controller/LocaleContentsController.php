@@ -100,12 +100,12 @@ class LocaleContentsController extends PageController
             $localeData = $request->data['LocaleContents'];
             unset($localeData['id']); // remove the id
 
-            foreach ($localeData as $key => $value) {
+            foreach ($localeData as $localeName => $value) {
                 $translationEntity = $this->LocaleContentTranslations->find()
                     ->contain(['Locales'])
                     ->where([
                         $this->LocaleContentTranslations->aliasField('locale_content_id') => $localeContentId,
-                        'Locales.name' => $key,
+                        'Locales.name' => $localeName,
                     ])
                     ->first();
 
@@ -115,9 +115,16 @@ class LocaleContentsController extends PageController
                 } else {
                     // adding new translation
                     $translationEntity = $this->LocaleContentTranslations->newEntity();
+                    $locale = $this->Locales->find()
+                        ->where([
+                            $this->Locales->aliasField('name') => $localeName
+                        ])
+                        ->first()
+                    ;
+
                     $translationEntity['translation'] = $value;
                     $translationEntity['locale_content_id'] = $localeContentId;
-                    $translationEntity['locale_id'] = $translationEntity->locale->id;
+                    $translationEntity['locale_id'] = $locale->id;
                 }
 
                 $this->LocaleContentTranslations->save($translationEntity);
