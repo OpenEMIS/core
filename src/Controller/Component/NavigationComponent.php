@@ -1176,14 +1176,7 @@ class NavigationComponent extends Component
                     'parent' => 'SystemSetup',
                     'selected' => ['Labels.index', 'Labels.view', 'Labels.edit']
                 ],
-
-                // 'Translations.index' => [
-                //     'title' => 'Translations',
-                //     'parent' => 'SystemSetup',
-                //     'params' => ['plugin' => 'Localization'],
-                //     'selected' => ['Translations.add', 'Translations.view', 'Translations.edit']
-                // ],
-               'SystemSetup.Localization' => [
+                'SystemSetup.Localization' => [
                     'title' => 'Localization',
                     'parent' => 'SystemSetup',
                     'link' => false,
@@ -1196,7 +1189,6 @@ class NavigationComponent extends Component
                   'LocaleContents.index' => [
                         'title' => 'Translations',
                         'parent' => 'SystemSetup.Localization',
-                        // 'params' => ['plugin' => 'Localization'],
                         'selected' => ['LocaleContents.index', 'LocaleContents.view', 'LocaleContents.edit']
                     ],
 
