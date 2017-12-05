@@ -255,7 +255,7 @@ class NavigationComponent extends Component
         $institutionStudentActions = ['Students', 'StudentUser', 'StudentAccount', 'StudentSurveys', 'Students'];
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips'];
+        $institutionControllers = ['Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds', 'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets', 'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips', 'InstitutionCalendars'];
         $profileControllers = ['ProfileComments'];
         $directoryControllers = ['DirectoryComments'];
 
@@ -402,6 +402,13 @@ class NavigationComponent extends Component
                     'parent' => 'Institution.General',
                     'selected' => ['Institutions.Institutions.edit'],
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
+                ],
+
+                'InstitutionCalendars.index' => [
+                    'title' => 'Calendar',
+                    'parent' => 'Institution.General',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['InstitutionCalendars.view', 'InstitutionCalendars.add', 'InstitutionCalendars.edit', 'InstitutionCalendars.delete']
                 ],
 
                 'Institutions.Contacts.view' => [
@@ -1388,7 +1395,12 @@ class NavigationComponent extends Component
                 'title' => 'Updates',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'System']
-            ]
+            ],
+            'Calendars.index' => [
+                'title' => 'Calendar',
+                'parent' => 'Administration',
+                'selected' => ['Calendars.index', 'Calendars.view', 'Calendars.add', 'Calendars.edit', 'Calendars.remove']
+            ],
         ];
         return $navigation;
     }
