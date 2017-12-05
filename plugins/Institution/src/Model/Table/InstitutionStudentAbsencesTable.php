@@ -201,7 +201,7 @@ class InstitutionStudentAbsencesTable extends AppTable
                             }
 
                             if (in_array('closed', $records)) {
-                                $message = __('Some date fall on school closed');
+                                $message = __('Some dates fall on school closed');
                                 return $message;
                             } else {
                                 return true;
