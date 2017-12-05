@@ -1,9 +1,15 @@
-// ag-grid-enterprise v4.1.4
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+// ag-grid-enterprise v13.2.0
+"use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13,18 +19,25 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var main_1 = require('ag-grid/main');
+Object.defineProperty(exports, "__esModule", { value: true });
+var main_1 = require("ag-grid/main");
 var VirtualList = (function (_super) {
     __extends(VirtualList, _super);
     function VirtualList() {
-        _super.call(this, null);
-        this.rowsInBodyContainer = {};
-        this.rowHeight = 20;
+        var _this = _super.call(this, null) || this;
+        _this.rowsInBodyContainer = {};
+        _this.rowHeight = 20;
+        return _this;
     }
     VirtualList.prototype.init = function () {
         this.setTemplate(VirtualList.TEMPLATE);
         this.eListContainer = this.queryForHtmlElement(".ag-virtual-list-container");
         this.addScrollListener();
+        // Material data table has strict guidelines about whitespace, and these values are different than the ones
+        // ag-grid uses by default. We override the default ones for the sake of making it better out of the box
+        if (this.environment.getTheme() == "ag-material-next") {
+            this.rowHeight = 32;
+        }
     };
     VirtualList.prototype.ensureIndexVisible = function (index) {
         var lastRow = this.model.getRowCount();
@@ -32,22 +45,22 @@ var VirtualList = (function (_super) {
             console.warn('invalid row index for ensureIndexVisible: ' + index);
             return;
         }
-        // var nodeAtIndex = this.rowModel.getRow(index);
+        // let nodeAtIndex = this.rowModel.getRow(index);
         var rowTopPixel = index * this.rowHeight;
         var rowBottomPixel = rowTopPixel + this.rowHeight;
-        var viewportTopPixel = this.getGui().scrollTop;
-        var viewportHeight = this.getGui().offsetHeight;
+        var viewportTopPixel = this.getHtmlElement().scrollTop;
+        var viewportHeight = this.getHtmlElement().offsetHeight;
         var viewportBottomPixel = viewportTopPixel + viewportHeight;
         var viewportScrolledPastRow = viewportTopPixel > rowTopPixel;
         var viewportScrolledBeforeRow = viewportBottomPixel < rowBottomPixel;
         if (viewportScrolledPastRow) {
             // if row is before, scroll up with row at top
-            this.getGui().scrollTop = rowTopPixel;
+            this.getHtmlElement().scrollTop = rowTopPixel;
         }
         else if (viewportScrolledBeforeRow) {
             // if row is below, scroll down with row at bottom
             var newScrollPosition = rowBottomPixel - viewportHeight;
-            this.getGui().scrollTop = newScrollPosition;
+            this.getHtmlElement().scrollTop = newScrollPosition;
         }
     };
     VirtualList.prototype.setComponentCreator = function (componentCreator) {
@@ -57,7 +70,7 @@ var VirtualList = (function (_super) {
         return this.rowHeight;
     };
     VirtualList.prototype.getScrollTop = function () {
-        return this.getGui().scrollTop;
+        return this.getHtmlElement().scrollTop;
     };
     VirtualList.prototype.setRowHeight = function (rowHeight) {
         this.rowHeight = rowHeight;
@@ -76,8 +89,8 @@ var VirtualList = (function (_super) {
         this.removeVirtualRows(rowsToRemove);
     };
     VirtualList.prototype.drawVirtualRows = function () {
-        var topPixel = this.getGui().scrollTop;
-        var bottomPixel = topPixel + this.getGui().offsetHeight;
+        var topPixel = this.getHtmlElement().scrollTop;
+        var bottomPixel = topPixel + this.getHtmlElement().offsetHeight;
         var firstRow = Math.floor(topPixel / this.rowHeight);
         var lastRow = Math.floor(bottomPixel / this.rowHeight);
         this.ensureRowsRendered(firstRow, lastRow);
@@ -118,7 +131,7 @@ var VirtualList = (function (_super) {
         main_1.Utils.addCssClass(eDiv, 'ag-virtual-list-item');
         eDiv.style.top = (this.rowHeight * rowIndex) + "px";
         var rowComponent = this.componentCreator(value);
-        eDiv.appendChild(rowComponent.getGui());
+        eDiv.appendChild(rowComponent.getHtmlElement());
         this.eListContainer.appendChild(eDiv);
         this.rowsInBodyContainer[rowIndex] = {
             rowComponent: rowComponent,
@@ -139,15 +152,15 @@ var VirtualList = (function (_super) {
         '</div>' +
         '</div>';
     __decorate([
-        main_1.Autowired('context'), 
-        __metadata('design:type', main_1.Context)
-    ], VirtualList.prototype, "context", void 0);
+        main_1.Autowired('environment'),
+        __metadata("design:type", main_1.Environment)
+    ], VirtualList.prototype, "environment", void 0);
     __decorate([
-        main_1.PostConstruct, 
-        __metadata('design:type', Function), 
-        __metadata('design:paramtypes', []), 
-        __metadata('design:returntype', void 0)
+        main_1.PostConstruct,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", []),
+        __metadata("design:returntype", void 0)
     ], VirtualList.prototype, "init", null);
     return VirtualList;
-})(main_1.Component);
+}(main_1.Component));
 exports.VirtualList = VirtualList;

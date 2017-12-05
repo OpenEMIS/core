@@ -810,6 +810,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'text' => $this->getMessage($this->aliasField('multiGrade'))
             ],
         ];
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
 
         // $institutionId = $this->Session->read('Institution.Institutions.id');

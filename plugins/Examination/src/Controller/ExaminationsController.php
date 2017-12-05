@@ -84,7 +84,7 @@ class ExaminationsController extends AppController
                 'text' => __('Grading Types')
             ],
         ];
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
     }
@@ -130,7 +130,7 @@ class ExaminationsController extends AppController
                 $tabElements[$key]['url']['examination_id'] = $examinationId;
             }
         }
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $action = !is_null($action) ? $action : $this->request->action;
         $this->set('selectedAction', $action);
@@ -148,7 +148,7 @@ class ExaminationsController extends AppController
                 'text' => __('Not Registered')
             ]
         ];
-
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $action = !is_null($action) ? $action : $this->request->action;
         $this->set('selectedAction', $action);

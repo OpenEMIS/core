@@ -1,4 +1,4 @@
-/* PANEL ACCORDION ANCHOR v.1.0.0 */
+/* PANEL ACCORDION ANCHOR v.1.0.1 */
 
 .accordion-pagination {
     position: absolute;
@@ -11,8 +11,8 @@
 }
 
 .section-label {
-    font-weight: normal;
-    color: #999;
+    font-weight: bold;
+    color: #333;
     display: block;
     margin: 8px 0 10px;
 }
