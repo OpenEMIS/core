@@ -87,7 +87,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('competency_template');
         $this->field('education_grade');
 
-        $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
+        $this->setFieldOrder(['name', 'academic_period_id', 'education_grade', 'competency_template', 'total_male_students', 'total_female_students']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -502,6 +502,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('student', [
             'type' => 'custom_criterias'
         ]);
+        $this->setFieldOrder(['name', 'academic_period_id', 'competency_template', 'total_male_students', 'total_female_students', 'student']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
