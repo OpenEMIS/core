@@ -1,6 +1,7 @@
 <?php
 
 use Phinx\Migration\AbstractMigration;
+use Cake\ORM\TableRegistry;
 
 class POCOR4253 extends AbstractMigration
 {
@@ -18,11 +19,15 @@ class POCOR4253 extends AbstractMigration
         // end backup
 
         // insert data to utility_internet_types from z_4253_institution_network_connectivities
-        $this->execute('
-            INSERT INTO `utility_internet_types` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-            SELECT `name`, ((SELECT MAX(`id`) FROM `z_4253_utility_internet_types`)+`order`), `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
-            FROM `z_4253_institution_network_connectivities`
-        ');
+        $count = TableRegistry::get('ZUtilityInternetType', ['table' => 'z_4253_utility_internet_types'])->find()->count();
+
+        if ($count) {
+            $this->execute('
+                INSERT INTO `utility_internet_types` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+                SELECT `name`, ((SELECT MAX(`id`) FROM `z_4253_utility_internet_types`)+`order`), `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                FROM `z_4253_institution_network_connectivities`
+            ');
+        }
         // end of insert data
 
         // remove column institution_network_connectivity_id from institutions
