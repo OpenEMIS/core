@@ -358,7 +358,8 @@ class POCOR4252 extends AbstractMigration
             ->addColumn('outcome_grading_option_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true
+                'null' => false,
+                'comment' => 'links to outcome_grading_options.id'
             ])
             ->addColumn('student_id', 'integer', [
                 'default' => null,
@@ -463,7 +464,7 @@ class POCOR4252 extends AbstractMigration
             ])
             ->addColumn('comments', 'text', [
                 'default' => null,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('student_id', 'integer', [
                 'default' => null,
