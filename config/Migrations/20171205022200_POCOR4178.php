@@ -1,5 +1,6 @@
 <?php
 use Migrations\AbstractMigration;
+use Cake\Filesystem\File;
 
 class POCOR4178 extends AbstractMigration
 {
@@ -101,9 +102,9 @@ class POCOR4178 extends AbstractMigration
                 'limit' => null,
                 'null' => true,
             ])
-            ->addColumn('content', 'binary', [
+            ->addColumn('content', 'blob', [
                 'default' => null,
-                'limit' => null,
+                'limit' => 4294967295,
                 'null' => true,
             ])
             ->addColumn('default_value', 'string', [
@@ -111,7 +112,7 @@ class POCOR4178 extends AbstractMigration
                 'limit' => null,
                 'null' => false,
             ])
-            ->addColumn('default_content', 'binary', [
+            ->addColumn('default_content', 'blob', [
                 'default' => null,
                 'limit' => 4294967295,
                 'null' => true,
