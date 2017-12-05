@@ -690,22 +690,12 @@ class StudentAttendancesTable extends AppTable
 
     public function getAbsenceData(Event $event, Entity $entity, $key, $isSchoolClosed)
     {
-
         if ($isSchoolClosed) {
             $value = '<i class="fa fa-minus"></i>';
         } else {
             $value = '<i class="fa fa-check"></i>';
         }
 
-// pr($this->selectedDate);
-// pr('getAbsenceData');
-// die;
-// pr($key);
-// pr($entity->user->first_name);
-// pr($week);
-// pr($this->queryString('academic_period_id'));
-// pr($this->queryString('week'));
-// die;
         if (isset($entity->StudentAbsences['id'])) {
             $startDate = $entity->StudentAbsences['start_date'];
             $endDate = $entity->StudentAbsences['end_date'];
