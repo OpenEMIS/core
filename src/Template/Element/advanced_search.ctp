@@ -34,7 +34,7 @@ use Cake\Utility\Inflector;
                             ng-controller="SgTreeCtrl as SgTree"
                             ng-init="SgTree.model='<?= $filters[$field]['source_model'] ?>'; <?= !empty($filters[$field]['selected']) ? 'SgTree.outputValue='.$filters[$field]['selected'] : 'SgTree.outputValue=null'?>; SgTree.userId=<?= $userId ?>; SgTree.displayCountry=<?= isset($filters[$field]['displayCountry']) && !$filters[$field]['displayCountry'] ? 0 : 1 ?>;">
 
-                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" input-model="SgTree.inputModelText" output-model="outputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
+                            <kd-tree-dropdown-ng id="<?=$field ?>-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="outputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                             <?php
                                 echo $this->Form->hidden("AdvanceSearch.$model.belongsTo.$field", [
                                     'ng-value' => 'SgTree.outputValue'
