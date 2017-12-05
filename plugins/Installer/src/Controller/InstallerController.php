@@ -1,12 +1,8 @@
 <?php
 namespace Installer\Controller;
 
-require CONFIG . 'snapshot_config.php';
-use Cake\Cache\Cache;
 use Exception;
 use Installer\Form\DatabaseConnectionForm;
-use Installer\Form\SuperAdminCreationForm;
-use Migrations\Migrations;
 use PDOException;
 
 class InstallerController extends AppController
@@ -16,13 +12,15 @@ class InstallerController extends AppController
     ];
 
     public function initialize()
-    {   
+    {
         $this->loadComponent('Angular.Angular', [
             'app' => 'OE_Core',
             'modules' => [
                 'app.ctrl'
             ]
         ]);
+
+        $this->loadComponent('RequestHandler');
 
         $this->loadComponent('OpenEmis.OpenEmis', [
             'productName' => 'OpenEMIS School',
@@ -37,8 +35,18 @@ class InstallerController extends AppController
     public function index()
     {
         if (file_exists(CONFIG . 'datasource.php')) {
-            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            if ($this->request->param('_ext') != 'json') {
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            } else {
+                $this->set('code', 422);
+                $this->set('message', 'Datasource has already been created');
+                $this->response->statusCode(422);
+            }
         }
+
+        $this->set('code', 200);
+        $this->set('message', 'OK');
+        $this->set('_serialize', ['message', 'code']);
         $action = '1';
         $this->set('action', $action);
     }
@@ -46,7 +54,13 @@ class InstallerController extends AppController
     public function step2()
     {
         if (file_exists(CONFIG . 'datasource.php')) {
-            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            if ($this->request->param('_ext') != 'json') {
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            } else {
+                $this->set('code', 422);
+                $this->set('message', 'Datasource has already been created');
+                $this->response->statusCode(422);
+            }
         }
         $action = '2';
         $this->set('action', $action);
@@ -55,67 +69,50 @@ class InstallerController extends AppController
             try {
                 $execute = $databaseConnection->execute($this->request->data);
                 if ($execute) {
-                    $this->redirect(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step3']);
-                    Cache::clear(false, '_cake_model_');
+                    if ($this->request->param('_ext') != 'json') {
+                        $this->redirect(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step3']);
+                    } else {
+                        $this->set('code', 200);
+                        $this->set('message', 'OK');
+                        $this->response->statusCode(200);
+                    }
                 }
             } catch (PDOException $e) {
                 $this->Alert->error($e->getMessage(), ['type' => 'text']);
+                $this->set('code', 500);
+                $this->set('message', 'PDOException');
+                $this->response->statusCode(500);
             } catch (Exception $e) {
                 $this->Alert->error($e->getMessage(), ['type' => 'text']);
+                $this->set('code', 500);
+                $this->set('message', 'An unknown exception occur');
+                $this->response->statusCode(500);
             }
+        } elseif ($this->request->param('_ext') == 'json') {
+            $this->set('code', 422);
+            $this->set('message', 'Form error, please check the fields');
+            $this->response->statusCode(422);
+        } else {
+            $this->set('code', 200);
+            $this->set('message', 'OK');
+            $this->response->statusCode(200);
         }
         $this->set(compact('databaseConnection'));
+        $this->set('_serialize', ['message', 'code']);
         $this->render('index');
     }
 
     public function step3()
     {
-        $session = $this->request->session();
-        $migrations = new Migrations();
-        $source = 'Snapshot' . DS . VERSION;
-        $status = $migrations->status(['source' => $source]);
         if (!file_exists(CONFIG . 'datasource.php')) {
-            return $this->redirect(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index']);
-        } elseif ($status[0]['status'] == 'down') {
-            $migrate = $migrations->migrate(['source' => $source]);
-            if ($migrate) {
-                $seedSource = 'Snapshot' . DS . VERSION . DS . 'Seeds';
-                $seedStatus = $migrations->seed(['source' => $seedSource]);
-                if ($seedStatus) {
-                    // Applying missed out migrations
-                    $migrations->migrate();
-                    $session->write('Installer.superAdminCreation', true);
-                }
-            }
-        }
-
-        if (!$session->check('Installer.superAdminCreation')) {
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
-
-        $superAdminCreation = new SuperAdminCreationForm();
-        if ($this->request->is('post') && empty($superAdminCreation->errors())) {
-            $execute = $superAdminCreation->execute($this->request->data);
-            if ($execute) {
-                $session->delete('Installer.superAdminCreation');
-                return $this->redirect(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step4']);
-            } else {
-                $this->Alert->error('There is an error inserting administrator and country information.', ['type' => 'text']);
-            }
-        }
-        $this->set(compact('superAdminCreation'));
         $action = '3';
         $this->set('action', $action);
-        $this->render('index');
-    }
-
-    public function step4()
-    {
-        if (!file_exists(CONFIG . 'datasource.php')) {
-            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-        }
-        $action = '4';
-        $this->set('action', $action);
+        $this->set('code', 200);
+        $this->set('message', 'OK');
+        $this->set('_serialize', ['message', 'code']);
+        $this->response->statusCode(200);
         $this->render('index');
     }
 }

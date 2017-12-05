@@ -1,9 +1,16 @@
 <?php
 namespace Installer\Form;
 
+require CONFIG . 'snapshot_config.php';
+use Cake\Cache\Cache;
+use Cake\Core\Configure;
+use Cake\Datasource\ConnectionManager;
 use Cake\Form\Form;
 use Cake\Form\Schema;
+use Cake\I18n\Date;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Migrations\Migrations;
 use PDO;
 
 /**
@@ -112,7 +119,11 @@ return [
         return $schema->addField('database_server_host', ['type' => 'string'])
             ->addField('database_server_port', ['type' => 'string'])
             ->addField('admin_user', ['type' => 'string'])
-            ->addField('admin_password', ['type' => 'password']);
+            ->addField('admin_password', ['type' => 'password'])
+            ->addField('username', ['type' => 'string'])
+            ->addField('password', ['type' => 'string'])
+            ->addField('area_name', ['type' => 'string'])
+            ->addField('area_code', ['type' => 'string']);
     }
 
     /**
@@ -127,7 +138,17 @@ return [
             ->requirePresence('database_server_host')
             ->requirePresence('database_server_port')
             ->requirePresence('admin_user')
-            ->requirePresence('admin_password');
+            ->requirePresence('admin_password')
+            ->requirePresence('account_password')
+            ->requirePresence('retype_password')
+            ->add('account_password', [
+                'compare' => [
+                    'rule' => ['compareWith', 'retype_password'],
+                    'message' => 'Passwords entered does not match.'
+                ]
+            ])
+            ->requirePresence('area_code')
+            ->requirePresence('area_name');
     }
 
     /**
@@ -143,9 +164,9 @@ return [
         $root = $data['admin_user'];
         $rootPass = $data['admin_password'];
 
-        $db = 'oe_school';
-        $dbUser = 'oe_school_user';
-        $dbPassword = bin2hex(random_bytes(4));
+        $db = isset($data['db']) ? $data['db'] : 'oe_school';
+        $dbUser = isset($data['db_user']) ? $data['db_user'] : 'oe_school_user';
+        $dbPassword = isset($data['db_password']) ? $data['db_password'] : bin2hex(random_bytes(4));
 
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
         $pdo = new PDO($connectionString, $root, $rootPass);
@@ -171,10 +192,91 @@ return [
             $template = str_replace('{user}', "'$dbUser'", $template);
             fwrite($dbFileHandle, $template);
             fclose($dbFileHandle);
-            return true;
+
+            Configure::load('datasource', 'default');
+            Configure::load('app_extra', 'default');
+            ConnectionManager::config(Configure::consume('Datasources'));
+            $migrations = new Migrations();
+            $source = 'Snapshot' . DS . VERSION;
+            $status = $migrations->status(['source' => $source]);
+            $executed = false;
+            if ($status[0]['status'] == 'down') {
+                $migrate = $migrations->migrate(['source' => $source]);
+                if ($migrate) {
+                    $seedSource = 'Snapshot' . DS . VERSION . DS . 'Seeds';
+                    $seedStatus = $migrations->seed(['source' => $seedSource]);
+                    if ($seedStatus) {
+                        // Applying missed out migrations
+                        $executed = $migrations->migrate();
+                        Cache::clear(false, '_cake_model_');
+                        if ($executed) {
+                            return $this->createUser($data['account_password']) && $this->createArea($data['area_code'], $data['area_name']);
+                        }
+                    }
+                }
+            }
+            return false;
         } else {
             return false;
         }
+    }
+
+    private function createUser($password)
+    {
+        $UserTable = TableRegistry::get('User.Users');
+        $data = [
+            'id' => 1,
+            'username' => 'admin',
+            'password' => $password,
+            'openemis_no' => 'sysadmin',
+            'first_name' => 'System',
+            'middle_name' => null,
+            'third_name' => null,
+            'last_name' => 'Administrator',
+            'preferred_name' => null,
+            'email' => null,
+            'address' => null,
+            'postal_code' => null,
+            'address_area_id' => null,
+            'birthplace_area_id' => null,
+            'gender_id' => 1,
+            'date_of_birth' => new Date(),
+            'date_of_death' => null,
+            'nationality_id' => null,
+            'identity_type_id' => null,
+            'identity_number' => null,
+            'external_reference' => null,
+            'super_admin' => 1,
+            'status' => 1,
+            'last_login' => new Date(),
+            'photo_name' => null,
+            'photo_content' => null,
+            'preferred_language' => 'en',
+            'is_student' => 0,
+            'is_staff' => 0,
+            'is_guardian' => 0
+        ];
+
+        $entity = $UserTable->newEntity($data, ['validate' => false]);
+        return $UserTable->save($entity);
+    }
+
+    private function createArea($name, $code)
+    {
+        $AreasTable = TableRegistry::get('Area.Areas');
+        $data = [
+            'id' => 1,
+            'code' => $code,
+            'name' => $name,
+            'parent_id' => null,
+            'lft' => 1,
+            'rght' => 2,
+            'area_level_id' => 1,
+            'order' => 1,
+            'visible' => 1
+        ];
+        $entity = $AreasTable->newEntity($data);
+        return $AreasTable->save($entity);
     }
 
     private function createDb($pdo, &$db)
