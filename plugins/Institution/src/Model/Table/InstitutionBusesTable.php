@@ -39,7 +39,6 @@ class InstitutionBusesTable extends AppTable
 				'rule' => 'validateUnique',
 				'provider' => 'table'
 			])
-            ->allowEmpty('capacity')
             ->add('capacity', [
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],

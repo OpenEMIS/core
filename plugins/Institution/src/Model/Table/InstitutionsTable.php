@@ -61,7 +61,6 @@ class InstitutionsTable extends ControllerActionTable
         $this->belongsTo('Sectors', ['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Genders', ['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
-        $this->belongsTo('NetworkConnectivities', ['className' => 'Institution.NetworkConnectivities', 'foreignKey' => 'institution_network_connectivity_id']);
         /**
          * end fieldOption tables
          */
@@ -453,7 +452,6 @@ class InstitutionsTable extends ControllerActionTable
         }
         $this->field('institution_type_id');
         $this->field('institution_gender_id', ['type' => 'select']);
-        $this->field('institution_network_connectivity_id', ['type' => 'select']);
         $this->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
 
@@ -775,7 +773,7 @@ class InstitutionsTable extends ControllerActionTable
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
+            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'shift_section',
             'shift_type', 'shift_details',
@@ -834,7 +832,7 @@ class InstitutionsTable extends ControllerActionTable
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
+            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'location_section',
             'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -857,7 +855,7 @@ class InstitutionsTable extends ControllerActionTable
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
+            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'location_section',
             'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
