@@ -177,16 +177,27 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function getColumnDefs(assessmentPeriods) {
+        var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
         var columnDefs = [];
+        var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
+        var isRtl = document.querySelector("html").classList.contains("rtl");
+        var direction = 'left';
+        if (isMobile) {
+            direction = '';
+        } else if (isRtl) {
+            direction = 'right';
+        }
 
         columnDefs.push({
             headerName: "Subject",
             field: "subject",
             filterParams: filterParams,
-            pinned: 'left'
+            pinned: direction,
+            menuTabs: menuTabs,
+            filter: "text"
         });
 
         angular.forEach(assessmentPeriods, function(assessmentPeriod, key) {
@@ -196,6 +207,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 headerName: assessmentPeriod.academic_term + " - " + assessmentPeriod.name + " <span class='divider'></span> " + assessmentPeriod.weight,
                 field: assessmentPeriodField,
                 filter: "number",
+                menuTabs: menuTabs,
                 filterParams: filterParams,
                 cellStyle: function(params) {
                     var subjectId = params.data['subject_id'];
@@ -263,6 +275,8 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             columnDefs.push({
                 headerName: "weight of " + assessmentPeriod.id,
                 field: weightField,
+                menuTabs: menuTabs,
+                filter: 'text',
                 hide: true
             });
         }, columnDefs);
@@ -271,6 +285,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             headerName: "Total Mark",
             field: "total_mark",
             filter: "number",
+            menuTabs: menuTabs,
             filterParams: filterParams,
             valueGetter: function(params) {
                 params.data[params.colDef.field] = service.calculateTotal(params.data);

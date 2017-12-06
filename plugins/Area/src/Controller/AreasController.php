@@ -46,7 +46,7 @@ class AreasController extends AppController
 				'text' => __('Areas (Administrative)')
 			]
 		];
-
+		$tabElements = $this->TabPermission->checkTabPermission($tabElements);
 		$this->set('tabElements', $tabElements);
 		$this->set('selectedAction', $this->request->action);
 	}

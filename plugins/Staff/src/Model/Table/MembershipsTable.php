@@ -24,7 +24,7 @@ class MembershipsTable extends ControllerActionTable {
 	}
 
 	private function setupTabElements() {
-		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+		$tabElements = $this->controller->getProfessionalTabElements();
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
