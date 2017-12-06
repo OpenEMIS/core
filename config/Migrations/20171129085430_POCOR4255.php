@@ -333,7 +333,7 @@ class POCOR4255 extends AbstractMigration
 
         $this->insert('security_functions', [
             'id' => 1075,
-            'name' => 'Infrastructure Wash Hygienes',
+            'name' => 'Infrastructure WASH Hygienes',
             'controller' => 'InfrastructureWashHygienes',
             'module' => 'Institutions',
             'category' => 'Details',

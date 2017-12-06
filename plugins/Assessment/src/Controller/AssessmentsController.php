@@ -39,6 +39,7 @@ class AssessmentsController extends AppController
 			],
 		];
 
+		$tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 

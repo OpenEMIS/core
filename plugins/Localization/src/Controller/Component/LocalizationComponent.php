@@ -175,22 +175,24 @@ class LocalizationComponent extends Component
 
     private function getModifiedDate()
     {
-        $TranslationsTable = TableRegistry::get('Localization.Translations');
-        $selectedColumns = [
-            'modified' => '(
-                CASE
-                    WHEN '.$TranslationsTable->aliasField('modified').' > '.$TranslationsTable->aliasField('created').'
-                    THEN '.$TranslationsTable->aliasField('modified').'
-                    ELSE '.$TranslationsTable->aliasField('created').'
-                    END
-                )'
-        ];
-        $lastModified = $TranslationsTable
+        $LocaleContentTranslations = TableRegistry::get('LocaleContentTranslations');
+
+        // using modified so when new word modified able to refresh the default.po
+        $lastModified = $LocaleContentTranslations
             ->find()
-            ->select($selectedColumns)
-            ->order(['modified' => 'DESC'])
+            ->order([$LocaleContentTranslations->aliasField('modified') => 'DESC'])
             ->extract('modified')
             ->first();
+
+        // if the table is a new table and no modified records, will be sort by created and get the created date.
+        if (empty($lastModified)) {
+            $lastModified = $LocaleContentTranslations
+            ->find()
+            ->order([$LocaleContentTranslations->aliasField('created') => 'DESC'])
+            ->extract('created')
+            ->first();
+        }
+
         return $lastModified;
     }
 
@@ -199,6 +201,7 @@ class LocalizationComponent extends Component
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
         $lastModified = $this->getModifiedDate();
+
         if (file_exists($fileLocation)) {
             $file = fopen($fileLocation, "r");
             while (!feof($file)) {
@@ -220,6 +223,7 @@ class LocalizationComponent extends Component
 
             fclose($file);
         }
+
         return $lastModified;
     }
 
@@ -228,13 +232,24 @@ class LocalizationComponent extends Component
         $str = "";
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
-        $TranslationsTable = TableRegistry::get('Localization.Translations');
-        $data = $TranslationsTable
+
+        $LocaleContentTranslations = TableRegistry::get('LocaleContentTranslations');
+        $data = $LocaleContentTranslations
             ->find('list', [
-                'keyField' => $this->defaultLocale,
-                'valueField' => $locale
+                'keyField' => 'locale_content_en',
+                'valueField' => 'translation'
             ])
+            ->contain(['LocaleContents', 'Locales'])
+            ->select([
+                'translation',
+                'locale_id',
+                'locale_iso' => 'Locales.iso',
+                'locale_content_id',
+                'locale_content_en' => 'LocaleContents.en'
+            ])
+            ->where(['Locales.iso' => $locale])
             ->toArray();
+
 
         // clear persistent cache that is used for Translations
         Cache::clear(false, '_cake_core_');
@@ -283,7 +298,12 @@ class LocalizationComponent extends Component
 
         $this->Session->write('System.language', $htmlLang);
 
-        $htmlLangDir = $languages[$htmlLang]['direction'];
+        // get direction from locales table.
+        $Locales = TableRegistry::get('Locales');
+        $langDir = $Locales->getLangDir($htmlLang);
+
+        $htmlLangDir = array_key_exists($htmlLang, $languages) ? $languages[$htmlLang]['direction'] : $langDir;
+
         $controller->set('showLanguage', $this->showLanguage);
         $controller->set('languageOptions', $this->getOptions());
         $controller->set(compact('htmlLang', 'htmlLangDir'));
@@ -297,6 +317,17 @@ class LocalizationComponent extends Component
         foreach ($languages as $key => $lang) {
             $options[$key] = $lang['name'];
         }
+
+        // new languages added.
+        $Locales = TableRegistry::get('Locales');
+        $localesData = $Locales->find()->all();
+
+        foreach ($localesData as $locale) {
+            if (!array_key_exists($locale->iso, $options)) {
+                $options[$locale->iso] = $locale->name;
+            }
+        }
+
         return $options;
     }
 

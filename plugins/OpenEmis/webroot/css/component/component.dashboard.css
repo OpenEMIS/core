@@ -1,4 +1,4 @@
-/* DASHBOARD v.1.0.3 */
+/* DASHBOARD v.1.0.4 */
 
 .dashboard-container {
     background-color: #F9F9F9 !important;
@@ -32,6 +32,7 @@
     overflow: auto;
     max-height: 250px;
     border: 1px solid #CCC;
+    background-color: #FFF;
 }
 
 .dashboard-content .table-lined td,

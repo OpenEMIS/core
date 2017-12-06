@@ -1,5 +1,5 @@
 /* 
-Community Theme: v.1.0.7
+Community Theme: v.1.0.9
 Product Color: #00CCFF
 Darker Shade Color: #008FB3
 */
@@ -31,7 +31,9 @@ a:focus,
 .panel-breadcrumb i,
 .loader-text i,
 .btn-outline,
-.btn-circle {
+.btn-circle,
+#news .notice-attachments ul li:before,
+.files .files-wrapper span.btn i {
     color: #00CCFF;
 }
 
@@ -54,7 +56,9 @@ a:focus,
 
 .toggle-btn i,
 .input-group-addon,
-.selected {
+.selected,
+.image-holder .prev-arrow,
+.image-holder .next-arrow {
     background-color: #00CCFF;
     color: #FFF;
     border: 1px solid #00CCFF;
@@ -80,7 +84,12 @@ a:focus,
 .input-left-btn button,
 .tabs-action-btn,
 .customize-tab .tab-icon a,
-.sg-theme .ag-filter-header-container label {
+.sg-theme .ag-filter-header-container label,
+.notice-attachments .list-group-item:hover,
+#workbench .list-group-item:hover,
+#workbench .list-group-item.selected-item,
+#workbench .list-group-item:hover .list-icon i,
+#workbench .list-group-item.selected-item .list-icon i {
     color: #00CCFF !important;
 }
 
@@ -140,7 +149,8 @@ a:hover,
 [type="radio"]:not(:checked) + .ag-cell-value:after,
 [type="radio"]:checked + .ag-cell-value:after,
 [type="radio"]:not(:checked) + .ag-filter-value:after,
-[type="radio"]:checked + .ag-filter-value:after {
+[type="radio"]:checked + .ag-filter-value:after,
+.files .files-wrapper span.btn:hover i {
     color: #008FB3;
 }
 
@@ -236,7 +246,9 @@ a:hover,
 .customize-tab .tab-icon .nav-pills > li.active > a:hover,
 .btn-toggled,
 .sg-theme .ag-menu-option-active,
-.sg-theme .ag-paging-button:hover {
+.sg-theme .ag-paging-button:hover,
+.image-holder .prev-arrow:hover,
+.image-holder .next-arrow:hover {
     background-color: #008FB3 !important;
     color: #FFF !important;
     background-image: none !important;
@@ -245,7 +257,9 @@ a:hover,
 .horizontal-tabs span a:hover,
 .btn-dropdown:hover,
 .customize-tab .tab-icon .nav-pills > li.active > a:hover,
-.switch-candy a {
+.switch-candy a,
+.image-holder .prev-arrow:hover,
+.image-holder .next-arrow:hover {
     border-color: #008FB3;
 }
 

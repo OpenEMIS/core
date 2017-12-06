@@ -1,15 +1,8 @@
-ag-Grid-Enterprise Software Licence Agreement Version 1.3
+ag-Grid-Enterprise Software Licence Agreement Version 1.7
 
-THIS DOCUMENT IS A LEGAL AGREEMENT (the “Agreement”) BETWEEN AG GRID LTD. (“We,” “Us”) AND YOU OR THE 
-ORGANISATION ON WHOSE BEHALF YOU ARE ENTERING INTO THIS AGREEMENT (“You”) IN RELATION TO AG-GRID-ENTERPRISE SOFTWARE.
+THIS DOCUMENT IS A LEGAL AGREEMENT (the “Agreement”) BETWEEN AG GRID LTD. (“We,” “Us”) AND YOU OR THE ORGANISATION ON WHOSE BEHALF YOU ARE ENTERING INTO THIS AGREEMENT (“You”) IN RELATION TO AG-GRID-ENTERPRISE SOFTWARE. RIGHTS GRANTED HEREIN APPLY ONLY TO SOFTWARE FOR WHICH YOU HAVE PAID THE APPLICABLE FEE (AS INVOICED BY US TO YOU).
 
-RIGHTS GRANTED HEREIN APPLY ONLY TO SOFTWARE FOR WHICH YOU HAVE PAID THE APPLICABLE FEE (AS INVOICED BY US TO YOU).
-
-BY DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING THE SOFTWARE, YOU ACCEPT THE FOLLOWING TERMS AND CONDITIONS. 
-IF YOU DO NOT AGREE WITH ANY OF THE TERMS OR CONDITIONS OF THIS LICENCE AGREEMENT, DO NOT PROCEED WITH THE 
-DOWNLOADING, COPYING, INSTALLATION OR ANY OTHER USE OF THE SOFTWARE OR ANY PORTION THEREOF AS YOU HAVE NO RIGHTS 
-TO DO SO. THE SOFTWARE IS PROTECTED BY UNITED KINGDOM COPYRIGHT LAWS AND INTERNATIONAL COPYRIGHT LAWS, AS WELL AS 
-OTHER INTELLECTUAL PROPERTY LAWS AND TREATIES. THE SOFTWARE IS LICENSED, NOT SOLD. 
+BY DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING THE SOFTWARE, YOU ACCEPT THE FOLLOWING TERMS AND CONDITIONS. IF YOU DO NOT AGREE WITH ANY OF THE TERMS OR CONDITIONS OF THIS LICENCE AGREEMENT, DO NOT PROCEED WITH THE DOWNLOADING, COPYING, INSTALLATION OR ANY OTHER USE OF THE SOFTWARE OR ANY PORTION THEREOF AS YOU HAVE NO RIGHTS TO DO SO. THE SOFTWARE IS PROTECTED BY UNITED KINGDOM COPYRIGHT LAWS AND INTERNATIONAL COPYRIGHT LAWS, AS WELL AS OTHER INTELLECTUAL PROPERTY LAWS AND TREATIES. THE SOFTWARE IS LICENSED, NOT SOLD. 
 
 THIS LICENCE AGREEMENT DESCRIBES YOUR RIGHTS AND RESTRICTIONS WITH RESPECT TO THE SOFTWARE AND ITS COMPONENTS.
 
@@ -31,34 +24,42 @@ THIS LICENCE AGREEMENT DESCRIBES YOUR RIGHTS AND RESTRICTIONS WITH RESPECT TO TH
 
 “Distributor” means any person or entity selling your Application.
 
-2.LICENCE GRANT
+2.LICENSE GRANT
 
-A) Full Licence: Subject to the payment of the required fee, and subject to Your compliance with the terms and conditions of this Agreement, We grant to You a non-exclusive, royalty-free, worldwide, perpetual, non-transferable and non-sublicensable licence: (i) for Licensed Developer(s) to use the Software to create Modifications and Applications; (ii) for You to market, reproduce and distribute ag-Grid-Enterprise and/or Modifications to End Users, Distributors and Resellers solely as integrated into Your Applications; (iii) to include ag-Grid-Enterprise and/or Modifications within hosted environments solely as integrated into Your Applications and (iv) for End Users to use ag-Grid-Enterprise as integrated into Your Applications in accordance with this Agreement.
+A) SINGLE APPLICATION DEVELOPER LICENSE: Subject to the payment of the required fee, and subject to Your compliance with the terms and conditions of this Agreement, We grant to You a non-exclusive, royalty-free, worldwide, perpetual, non-transferable and non-sub licensable licence for Licensed Developer(s) to use the Software to create Modifications and Applications for one named application ("Authorized Application" or "Authorized Project") within your Organisation. The Authorized Application has to be specified in the License Order. The Project License covers new versions and different editions of the Authorized Application as long as they are in the evolutionary line of it.
 
-All developers modifying JavaScript code as part of Your Modifications and Applications are required to be covered by the set of Licensed Developers. It is not permissible to only include a subset of such developers that will be directly using the Software. For example, if you have 5 developers working with JavaScript on your application, but only 2 directly working with ag-Grid, all 5 are required to be Licenced Developers.
+B) MULTIPLE APPLICATION DEVELOPER LICENSE: Subject to the payment of the required fee, and subject to Your compliance with the terms and conditions of this Agreement, We grant to You a non-exclusive, royalty-free, worldwide, perpetual, non-transferable and non-sub licensable licence for Licensed Developer(s) to use the Software to create Modifications and Applications for multiple applications within your Organisation.
 
-B) TRIAL LICENCE: In addition to the other terms contained herein, and subject to Your compliance with this Agreement, We grant to You a revocable, non-exclusive, non-transferable and non-sublicensable licence to install and use the Software (the “Trial Licence”) strictly for Your internal evaluation and review purposes and not for production nor commercial purposes. This Trial Licence applies only if You have registered with Us for a Trial Licence of the Software and shall be effective for sixty (60) consecutive days following the date of registration (the “Trial Period”). You may only register for a Trial Licence once in any six month period. You agree not to use a Trial Licence for any purpose other than determining whether to purchase a licence to the Software. You are explicitly not permitted to distribute the Software to any user outside the Organisation. Your rights to use the Trial Licence will immediately terminate upon the earlier of: (i) the date of expiration of the Trial Period; or (ii) the date on which You purchase a licence for the Software. We reserve the right to terminate Your Trial Licence at any time in Our absolute and sole discretion.
+For both SINGLE APPLICATION DEVELOPER LICENSE and MULTIPLE APPLICATION DEVELOPER LICENSE, all developers modifying JavaScript code as part of Your Modifications and Applications are required to be covered by the set of Licensed Developers. It is not permissible to only include a subset of such developers that will be directly using the Software. For example, if you have 5 developers working with JavaScript on your application, but only 2 directly working with ag-Grid, all 5 are required to be Licenced Developers.
 
-C) BETA LICENCE: In addition to the other terms contained herein, if You have downloaded or received beta or pre-release versions of the Software (the “Beta Software”) from Us, subject to Your compliance with all of the terms and conditions of this Agreement, We grant to You a revocable, non-exclusive, non-transferable and non-sublicensable licence to install and use the Beta Software strictly for Your internal evaluation and review purposes and not for production nor commercial purposes (the “Beta Licence”). You are explicitly not permitted to distribute the Software to any user outside the Organisation. We reserve the right to terminate Your Beta Licence at any time in Our absolute and sole discretion.
+Both SINGLE APPLICATION DEVELOPER LICENSE and MULTIPLE APPLICATION DEVELOPER LICENSE must be combined with one of OEM LICENSE and SAAS LICENSE if the built application is to be sold as a product or sold as part of a SAAS offering.
+
+C) OEM LICENSE: Subject to the payment of the required fee, and subject to Your compliance with the terms and conditions of this Agreement, We grant to You a non-exclusive, worldwide, perpetual, non-transferable and non-sub licensable licence for You to include the Software within your application to be provided together as part of Your product for You to market, reproduce and distribute ag-Grid-Enterprise and/or Modifications to End Users, Distributors and Resellers solely as integrated into Your Applications;
+
+OEM LICENSE must be combined with one of either SINGLE APPLICATION DEVELOPER LICENSE or MULTIPLE APPLICATION DEVELOPER LICENSE.
+
+D) SAAS LICENSE: Subject to the payment of the required fee, and subject to Your compliance with the terms and conditions of this Agreement, We grant to You a non-exclusive, worldwide, perpetual, non-transferable and non-sub licensable licence for You to include ag-Grid-Enterprise and/or Modifications within hosted environments solely as integrated into Your Applications.
+
+SAAS LICENSE must be combined with one of either SINGLE APPLICATION DEVELOPER LICENSE or MULTIPLE APPLICATION DEVELOPER LICENSE.
+
+E) TRIAL LICENCE: In addition to the other terms contained herein, and subject to Your compliance with this Agreement, We grant to You a revocable, non-exclusive, non-transferable and non-sub licensable licence to install and use the Software (the “Trial Licence”) strictly for Your internal evaluation and review purposes and not for production nor commercial purposes. This Trial Licence applies only if You have registered with Us for a Trial Licence of the Software and shall be effective for sixty (60) consecutive days following the date of registration (the “Trial Period”). You may only register for a Trial Licence once in any six month period. You agree not to use a Trial Licence for any purpose other than determining whether to purchase a licence to the Software. You are explicitly not permitted to distribute the Software to any user outside the Organisation. Your rights to use the Trial Licence will immediately terminate upon the earlier of: (i) the date of expiration of the Trial Period; or (ii) the date on which You purchase a licence for the Software. We reserve the right to terminate Your Trial Licence at any time in Our absolute and sole discretion.
+
+F) BETA LICENCE: In addition to the other terms contained herein, if You have downloaded or received beta or pre-release versions of the Software (the “Beta Software”) from Us, subject to Your compliance with all of the terms and conditions of this Agreement, We grant to You a revocable, non-exclusive, non-transferable and non-sub licensable licence to install and use the Beta Software strictly for Your internal evaluation and review purposes and not for production nor commercial purposes (the “Beta Licence”). You are explicitly not permitted to distribute the Software to any user outside the Organisation. We reserve the right to terminate Your Beta Licence at any time in Our absolute and sole discretion.
 
 YOU ACKNOWLEDGE THAT THE TRIAL AND BETA SOFTWARE MIGHT PLACE WATERMARKS ON OUTPUT, CONTAIN LIMITED FUNCTIONALITY, FUNCTION FOR A LIMITED PERIOD OF TIME, OR LIMIT THE FUNCTIONALITY OR TIME OF FUNCTIONING OF ANY OUTPUT. ACCESS TO AND/OR USE OF ANY FILES OR OUTPUT CREATED WITH SUCH SOFTWARE IS ENTIRELY AT YOUR OWN RISK. WE ARE LICENSING THE SOFTWARE ON AN “AS IS” BASIS AT YOUR OWN RISK AND WE DISCLAIM, TO THE EXTENT PERMITTED BY LAW, ANY WARRANTY OR LIABILITY TO YOU OF ANY KIND.
 
 3.OWNERSHIP
 
-This is a licence agreement and not an agreement for sale. We reserve ownership of all intellectual property rights inherent in or relating to the Software, which include, but are not limited to, all copyright, patent rights, all rights in relation to registered and unregistered trademarks (including service marks), confidential information (including trade secrets and know-how) and all rights other than those expressly granted by this Agreement.
-Source code for ag-Grid and ag-Grid-Enterprise will be available to You at all times.
-We provide You with source code to ag-Grid and ag-Grid Enterprise so that You can:
+This is a licence agreement and not an agreement for sale. We reserve ownership of all intellectual property rights inherent in or relating to the Software, which include, but are not limited to, all copyright, patent rights, all rights in relation to registered and unregistered trademarks (including service marks), confidential information (including trade secrets and know-how) and all rights other than those expressly granted by this Agreement. Source code for ag-Grid and ag-Grid-Enterprise will be available to You at all times. We provide You with source code to ag-Grid and ag-Grid-Enterprise so that You can:
 
-* Make any Changes, Modifications, Additions or Enhancements to ag-Grid or ag-Grid Enterprise for inclusion within Your Application.
+* Make any Changes, Modifications, Additions or Enhancements to ag-Grid or ag-Grid-Enterprise for inclusion within Your Application.
 * Provide Technical Support to Your Customers.
 
-While You retain all rights to any original work authored by You as part of the Modifications, We continue to own all copyright and other intellectual property rights in the Software. 
-You must not remove, obscure or interfere with any copyright, acknowledgment, attribution, trademark, warning or disclaimer statement affixed to, incorporated in or otherwise applied in connection with the Software.
-ag-Grid Ltd is not obliged to provide support for Changes, Modifications, Additions or Enhancements You make to the code.
+While You retain all rights to any original work authored by You as part of the Modifications, We continue to own all copyright and other intellectual property rights in the Software. You must not remove, obscure or interfere with any copyright, acknowledgment, attribution, trademark, warning or disclaimer statement affixed to, incorporated in or otherwise applied in connection with the Software. ag-Grid Ltd is not obliged to provide support for Changes, Modifications, Additions or Enhancements You make to the code.
 
 4.ACTIVATION KEY
 
-Usage of ag-Grid Enterprise may be restricted via use of an Activation Key. When such is required, and activation key will be provided to You by ag-Grid Ltd upon payment of licence.
+Usage of ag-Grid-Enterprise may be restricted via use of an Activation Key. When such is required, and activation key will be provided to You by ag-Grid Ltd upon payment of licence.
 
 5.PROHIBITED USES 
 
@@ -70,12 +71,7 @@ You are required to ensure that the Software is not reused by or with any applic
 
 6.TERMINATION
 
-This Agreement and Your right to use the Software and Modifications will terminate notice to You if You fail to comply 
-with any of the terms and conditions of this Agreement, and such failure remains uncured more than thirty (30) days after 
-receipt of written notice of such failure. We may also terminate this Agreement if you suffer a bankruptcy, 
-insolvency or similar event or otherwise are unable to pay Your debts as they fall due. Upon termination, You agree to 
-immediately cease using and destroy the Software or Modifications, including all accompanying documents. The provisions 
-of sections 3, 4, 5, 6, 7, 8, 10, 11 and 12 will survive any termination of this Agreement.
+This Agreement and Your right to use the Software and Modifications will terminate notice to You if You fail to comply with any of the terms and conditions of this Agreement, and such failure remains uncured more than thirty (30) days after receipt of written notice of such failure. We may also terminate this Agreement if you suffer a bankruptcy, insolvency or similar event or otherwise are unable to pay Your debts as they fall due. Upon termination, You agree to immediately cease using and destroy the Software or Modifications, including all accompanying documents. The provisions of sections 3, 4, 5, 6, 7, 8, 10, 11 and 12 will survive any termination of this Agreement.
 
 7.DISCLAIMER OF WARRANTIES
 
@@ -97,11 +93,19 @@ If credit has been extended to You by Us, all payments under this Agreement are 
 
 10.SUPPORT AND MAINTENANCE
 
-We will supply the Support Services  to You as described in section 10(A) below and for whom any applicable maintenance and support fee has been paid, should we choose (at our discretion) to charge such fees.
+We will supply the Support Services  to You as described in section 10(A) below and
+for whom any applicable maintenance and support fee has been paid, should we choose
+(at our discretion) to charge such fees.
 
 (A) Support Services
 
-The Support Services only apply to the Software for which they are purchased and not to any other application, library or product developed or sold by Us. The Support Services are only provided in English. The Support Services will be provided for the current release of the Software and previous releases for up to 12 months from the release date. We will use Our reasonable endeavours to respond to your queries submitted via the Support Services within 24 hours on working days (as defined by the English calendar) but You acknowledge and accept that this may not always be possible.
+The Support Services only apply to the Software for which they are purchased and not to any
+other application, library or product developed or sold by Us. The Support Services are only
+provided in English. The Support Services will be provided for the current release of the
+Software and previous releases for up to 12 months from the release date. We will use Our
+reasonable endeavours to respond to your queries submitted via the Support Services within 24
+hours on working days (as defined by the English calendar) but You acknowledge and accept that
+this may not always be possible.
 
 (B) Your Responsibilities
 
@@ -111,7 +115,13 @@ It is the Your responsibility that queries are raised by suitably trained indivi
 
 (C) Limitation of Liability
 
-We shall not be responsible for providing support via the Support Services to the extent that the issue is caused by: (a) Your misuse, improper use, mis-configuration, alteration, or damage to the Software; (b) Your use of the Software with any hardware or software not supplied or supported by Us; (c) Your failure to install an update to the Software if such update would have resolved the issue; or (d) any uses of the Software that are not in accordance with the Agreement. 
+We shall not be responsible for providing support via the Support Services to the extent that the issue is caused by: (a) Your misuse, improper use, mis-configuration, alteration, or damage to the Software; (b) Your failure to install an update to the Software if such update would have resolved the issue; or (c) any uses of the Software that are not in accordance with the Agreement.
+
+(d) Fair Usage Policy
+
+Each SINGLE APPLICATION DEVELOPER LICENSE and MULTIPLE APPLICATION DEVELOPER LICENSE permits raising 10 support queries
+for the support period of the license. Should the number of support queries extend 10 then
+We reserve the right to stop providing support.
 
 11.MISCELLANEOUS
 
