@@ -404,7 +404,7 @@ class POCOR4254 extends AbstractMigration
 
         $this->insert('security_functions', [
             'id' => 1074,
-            'name' => 'Infrastructure Wash Sanitation',
+            'name' => 'Infrastructure WASH Sanitation',
             'controller' => 'InfrastructureWashSanitations',
             'module' => 'Institutions',
             'category' => 'Details',
