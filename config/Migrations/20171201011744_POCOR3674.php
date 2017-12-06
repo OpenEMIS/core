@@ -3900,11 +3900,39 @@ class POCOR3674 extends AbstractMigration
 
         // delete translations table
         $this->execute('DROP TABLE translations');
+
+        $this->execute("UPDATE `security_functions` SET controller = 'LocaleContents', category = 'Localization',  _add = NULL, _delete = NULL WHERE `id` = 5019");
+
+        $data = [
+            'id' => '5080',
+            'name' => 'Languages',
+            'controller' => 'Locales',
+            'module' => 'Administration',
+            'category' => 'Localization',
+            'parent_id' => 5000,
+            '_view' => 'index|view',
+            '_edit' => 'edit',
+            '_add' => 'add',
+            '_delete' => 'delete',
+            '_execute' => NULL,
+            'order' => 171,
+            'visible' => 1,
+            'description' => NULL,
+            'modified_user_id' => NULL,
+            'modified' => NULL,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ];
+
+        $this->insert('security_functions', $data);
     }
 
     // rollback
     public function down()
     {
+        $this->execute("UPDATE `security_functions` SET controller = 'Translations', category = 'Translations',  _add = 'add', _delete = 'remove' WHERE `id` = 5019");
+        $this->execute("DELETE FROM `security_functions` WHERE `id` = 5080");
+
         $this->execute('DROP TABLE `locales`');
         $this->execute('DROP TABLE `locale_contents`');
         $this->execute('DROP TABLE `locale_content_translations`');
