@@ -24,7 +24,6 @@ class FieldOptionsController extends AppController
         $session = $this->request->session();
         $action = $this->request->params['action'];
 
-
         $this->set('contentHeader', __($header));
     }
 
@@ -33,9 +32,9 @@ class FieldOptionsController extends AppController
         $alias = $model->alias;
         $header = __('Field Options') . ' - ' . $model->getHeader($alias);
 
-        $this->Navigation->addCrumb($model->getHeader($alias));
+        $this->Navigation->addCrumb(str_replace ('Wash', 'WASH', $model->getHeader($alias)));
 
-        $this->set('contentHeader', $header);
+        $this->set('contentHeader', str_replace ('Wash', 'WASH', $header));
     }
 
     public function index()
