@@ -1,12 +1,20 @@
-import {Utils as _} from "ag-grid/main";
-import {Bean} from "ag-grid/main";
-import {IRowNodeStage} from "ag-grid/main";
-import {Autowired} from "ag-grid/main";
-import {GridOptionsWrapper} from "ag-grid/main";
-import {ColumnController} from "ag-grid/main";
-import {ValueService} from "ag-grid/main";
-import {RowNode} from "ag-grid/main";
-import {Column} from "ag-grid/main";
+import {
+    _,
+    Bean,
+    IRowNodeStage,
+    Autowired,
+    GridOptionsWrapper,
+    ColumnController,
+    ValueService,
+    RowNode,
+    Column,
+    Utils,
+    StageExecuteParams,
+    IAggFunc,
+    ChangedPath
+} from "ag-grid/main";
+import {PivotStage} from "./pivotStage";
+import {AggFuncService} from "../aggregation/aggFuncService";
 
 @Bean('aggregationStage')
 export class AggregationStage implements IRowNodeStage {
@@ -14,140 +22,207 @@ export class AggregationStage implements IRowNodeStage {
     @Autowired('gridOptionsWrapper') private gridOptionsWrapper: GridOptionsWrapper;
     @Autowired('columnController') private columnController: ColumnController;
     @Autowired('valueService') private valueService: ValueService;
+    @Autowired('pivotStage') private pivotStage: PivotStage;
+    @Autowired('aggFuncService') private aggFuncService: AggFuncService;
 
     // it's possible to recompute the aggregate without doing the other parts
     // + gridApi.recomputeAggregates()
-    public execute(rowsToAgg: RowNode[]): RowNode[] {
+    public execute(params: StageExecuteParams): any {
+        let {rowNode, changedPath} = params;
 
-        var groupAggFunction = this.gridOptionsWrapper.getGroupAggFunction();
-        if (typeof groupAggFunction === 'function') {
-            this.recursivelyCreateAggData(rowsToAgg, groupAggFunction, 0);
+        // we don't do aggregation if user provided the groups
+        let rowsAlreadyGrouped = _.exists(this.gridOptionsWrapper.getNodeChildDetailsFunc());
+        if (rowsAlreadyGrouped) {
             return;
         }
 
-        var valueColumns = this.columnController.getValueColumns();
-        if (valueColumns && valueColumns.length > 0) {
-            var defaultAggFunction = this.defaultGroupAggFunctionFactory(valueColumns);
-            this.recursivelyCreateAggData(rowsToAgg, defaultAggFunction, 0);
+        let pivotActive = this.columnController.isPivotActive();
+
+        let measureColumns = this.columnController.getValueColumns();
+        let pivotColumns = pivotActive ? this.columnController.getPivotColumns() : [];
+
+        this.recursivelyCreateAggData(rowNode, changedPath, measureColumns, pivotColumns);
+    }
+
+    private recursivelyCreateAggData(rowNode: RowNode, changedPath: ChangedPath, measureColumns: Column[], pivotColumns: Column[]) {
+
+        // aggregate all children first, as we use the result in this nodes calculations
+        rowNode.childrenAfterFilter.forEach( (child: RowNode) => {
+            if (child.group) {
+                this.recursivelyCreateAggData(child, changedPath, measureColumns, pivotColumns);
+            }
+        });
+
+        //Optionally prevent the aggregation at the root Node
+        //https://ag-grid.atlassian.net/browse/AG-388
+        let isRootNode = rowNode.level === -1;
+        if (isRootNode) {
+            let notPivoting = !this.columnController.isPivotMode();
+            let suppressAggAtRootLevel = this.gridOptionsWrapper.isSuppressAggAtRootLevel();
+            if (suppressAggAtRootLevel && notPivoting) { return; }
+        }
+
+        let skipBecauseNoChangedPath = changedPath && !changedPath.isInPath(rowNode);
+        if (skipBecauseNoChangedPath) { return; }
+
+        this.aggregateRowNode(rowNode, changedPath, measureColumns, pivotColumns);
+    }
+
+    private aggregateRowNode(rowNode: RowNode, changedPath: ChangedPath, measureColumns: Column[], pivotColumns: Column[]): void {
+
+        let measureColumnsMissing = measureColumns.length === 0;
+        let pivotColumnsMissing = pivotColumns.length === 0;
+        let userProvidedGroupRowAggNodes = this.gridOptionsWrapper.getGroupRowAggNodesFunc();
+
+        let aggResult: any;
+        if (rowNode.group && userProvidedGroupRowAggNodes) {
+            aggResult = userProvidedGroupRowAggNodes(rowNode.childrenAfterFilter);
+        } else if (measureColumnsMissing) {
+            aggResult = null;
+        } else if (rowNode.group && pivotColumnsMissing) {
+            aggResult = this.aggregateRowNodeUsingValuesOnly(rowNode, changedPath, measureColumns);
         } else {
-            // if no agg data, need to clear out any previous items, when can be left behind
-            // if use is creating / removing columns using the tool panel.
-            // one exception - don't do this if already grouped, as this breaks the File Explorer example!!
-            // to fix another day - how to we reset when the user provided the data??
-            if (_.missing(this.gridOptionsWrapper.getNodeChildDetailsFunc())) {
-                this.recursivelyClearAggData(rowsToAgg);
-            }
+            aggResult = this.aggregateRowNodeUsingValuesAndPivot(rowNode);
         }
 
-        return rowsToAgg;
-    }
+        rowNode.setAggData(aggResult);
 
-    private recursivelyClearAggData(nodes: RowNode[]): void {
-        for (var i = 0, l = nodes.length; i < l; i++) {
-            var node = nodes[i];
-            if (node.group) {
-                // agg function needs to start at the bottom, so traverse first
-                this.recursivelyClearAggData(node.childrenAfterFilter);
-                node.data = null;
-            }
+        // if we are grouping, then it's possible there is a sibling footer
+        // to the group, so update the data here also if there is one
+        if (rowNode.sibling) {
+            rowNode.sibling.setAggData(aggResult);
         }
     }
 
-    private recursivelyCreateAggData(nodes: RowNode[], groupAggFunction: any, level: number) {
-        for (var i = 0, l = nodes.length; i < l; i++) {
-            var node = nodes[i];
-            if (node.group) {
-                // agg function needs to start at the bottom, so traverse first
-                this.recursivelyCreateAggData(node.childrenAfterFilter, groupAggFunction, level++);
-                // after traversal, we can now do the agg at this level
-                var data = groupAggFunction(node.childrenAfterFilter, level);
-                node.data = data;
-                // if we are grouping, then it's possible there is a sibling footer
-                // to the group, so update the data here also if there is one
-                if (node.sibling) {
-                    node.sibling.data = data;
+    private aggregateRowNodeUsingValuesAndPivot(rowNode: RowNode): any {
+        let result: any = {};
+        let pivotColumnDefs = this.pivotStage.getPivotColumnDefs();
+
+        // Step 1: process value columns
+        pivotColumnDefs
+            .filter(v => !Utils.exists(v.pivotTotalColumnIds)) // only process pivot value columns
+            .forEach(valueColDef => {
+                let keys: string[] = valueColDef.pivotKeys;
+                let values: any[];
+                let valueColumn: Column = valueColDef.pivotValueColumn;
+
+                if (rowNode.leafGroup) {
+                    // lowest level group, get the values from the mapped set
+                    values = this.getValuesFromMappedSet(rowNode.childrenMapped, keys, valueColumn);
+                } else {
+                    // value columns and pivot columns, non-leaf group
+                    values = this.getValuesPivotNonLeaf(rowNode, valueColDef.colId);
                 }
-            }
-        }
+
+                result[valueColDef.colId] = this.aggregateValues(values, valueColumn.getAggFunc());
+            });
+
+        // Step 2: process total columns
+        pivotColumnDefs
+            .filter(v => Utils.exists(v.pivotTotalColumnIds)) // only process pivot total columns
+            .forEach(totalColDef => {
+                let aggResults: any[] = [];
+
+                //retrieve results for colIds associated with this pivot total column
+                totalColDef.pivotTotalColumnIds.forEach((colId: string) => {
+                    aggResults.push(result[colId]);
+                });
+
+                result[totalColDef.colId] = this.aggregateValues(aggResults, totalColDef.aggFunc);
+            });
+
+        return result;
     }
 
-    private defaultGroupAggFunctionFactory(valueColumns: Column[]) {
+    private aggregateRowNodeUsingValuesOnly(rowNode: RowNode, changedPath: ChangedPath, valueColumns: Column[]): any {
+        let result: any = {};
 
-        // make closure of variable, so is available for methods below
-        var _valueService = this.valueService;
+        let changedValueColumns = changedPath ? changedPath.getValueColumnsForNode(rowNode, valueColumns) : valueColumns;
+        let notChangedValueColumns = changedPath ? changedPath.getNotValueColumnsForNode(rowNode, valueColumns) : null;
 
-        return function groupAggFunction(rows: any) {
+        let values2d = this.getValuesNormal(rowNode, changedValueColumns);
+        let oldValues = rowNode.aggData;
 
-            var result = <any>{};
+        changedValueColumns.forEach( (valueColumn: Column, index: number) => {
+            result[valueColumn.getId()] = this.aggregateValues(values2d[index], valueColumn.getAggFunc());
+        });
 
-            for (var j = 0; j < valueColumns.length; j++) {
-                var valueColumn = valueColumns[j];
-                var colKey = valueColumn.getColDef().field;
-                if (!colKey) {
-                    console.log('ag-Grid: you need to provide a field for all value columns so that ' +
-                        'the grid knows what field to store the result in. so even if using a valueGetter, ' +
-                        'the result will not be stored in a value getter.');
-                }
-                // at this point, if no values were numbers, the result is null (not zero)
-                result[colKey] = aggregateColumn(rows, valueColumn.getAggFunc(), colKey, valueColumn);
-            }
+        if (notChangedValueColumns && oldValues) {
+            notChangedValueColumns.forEach( (valueColumn: Column) => {
+                result[valueColumn.getId()] = oldValues[valueColumn.getId()];
+            });
+        }
 
-            return result;
-        };
+        return result;
+    }
 
-        // if colDef is passed in, we are working off a column value, if it is not passed in, we are
-        // working off colKeys passed in to the gridOptions
-        function aggregateColumn(rowNodes: RowNode[], aggFunc: string, colKey: string, column: Column) {
-            var resultForColumn: any = null;
-            for (var i = 0; i < rowNodes.length; i++) {
-                var rowNode = rowNodes[i];
+    private getValuesPivotNonLeaf(rowNode: RowNode, colId: string): any[] {
+        let values: any[] = [];
+        rowNode.childrenAfterFilter.forEach( (rowNode: RowNode) => {
+            let value = rowNode.aggData[colId];
+            values.push(value);
+        });
+        return values;
+    }
+
+    private getValuesFromMappedSet(mappedSet: any, keys: string[], valueColumn: Column): any[] {
+        let mapPointer = mappedSet;
+        keys.forEach( key => mapPointer = mapPointer ? mapPointer[key] : null );
+
+        if (!mapPointer) {
+            return [];
+        }
+
+        let values: any = [];
+        mapPointer.forEach( (rowNode: RowNode) => {
+            let value = this.valueService.getValue(valueColumn, rowNode);
+            values.push(value);
+        });
+
+        return values;
+    }
+
+    private getValuesNormal(rowNode: RowNode, valueColumns: Column[]): any[][] {
+        // create 2d array, of all values for all valueColumns
+        let values: any[][] = [];
+        valueColumns.forEach( ()=> values.push([]) );
+
+        let valueColumnCount = valueColumns.length;
+        let rowCount = rowNode.childrenAfterFilter.length;
+
+        for (let i = 0; i<rowCount; i++) {
+            let childNode = rowNode.childrenAfterFilter[i];
+            for (let j = 0; j<valueColumnCount; j++) {
+                let valueColumn = valueColumns[j];
+                let value: any;
                 // if the row is a group, then it will only have an agg result value,
                 // which means valueGetter is never used.
-                var thisColumnValue: any;
-                if (rowNode.group) {
-                    thisColumnValue = rowNode.data[colKey];
+                if (childNode.group) {
+                    value = childNode.aggData[valueColumn.getId()];
                 } else {
-                    thisColumnValue = _valueService.getValue(column, rowNode);
+                    value = this.valueService.getValue(valueColumn, childNode);
                 }
-                // only include if the value is a number
-                if (typeof thisColumnValue === 'number') {
-
-                    var firstRow = i === 0;
-                    var lastRow = i===(rowNodes.length-1);
-
-                    switch (aggFunc) {
-                        case Column.AGG_SUM :
-                            resultForColumn += thisColumnValue;
-                            break;
-                        case Column.AGG_MIN :
-                            if (resultForColumn === null) {
-                                resultForColumn = thisColumnValue;
-                            } else if (resultForColumn > thisColumnValue) {
-                                resultForColumn = thisColumnValue;
-                            }
-                            break;
-                        case Column.AGG_MAX :
-                            if (resultForColumn === null) {
-                                resultForColumn = thisColumnValue;
-                            } else if (resultForColumn < thisColumnValue) {
-                                resultForColumn = thisColumnValue;
-                            }
-                            break;
-                        case Column.AGG_FIRST :
-                            if (firstRow) {
-                                resultForColumn = thisColumnValue;
-                            }
-                            break;
-                        case Column.AGG_LAST :
-                            if (lastRow) {
-                                resultForColumn = thisColumnValue;
-                            }
-                            break;
-                    }
-
-                }
+                values[j].push(value);
             }
-            return resultForColumn;
         }
+
+        return values;
+    }
+
+    private aggregateValues(values: any[], aggFuncOrString: string | IAggFunc): any {
+        let aggFunction: IAggFunc;
+
+        if (typeof aggFuncOrString === 'string') {
+            aggFunction = this.aggFuncService.getAggFunc(<string>aggFuncOrString);
+        } else {
+            aggFunction = <IAggFunc> aggFuncOrString;
+        }
+
+        if (typeof aggFunction !== 'function') {
+            console.error(`ag-Grid: unrecognised aggregation function ${aggFuncOrString}`);
+            return null;
+        }
+
+        return aggFunction(values);
     }
 }

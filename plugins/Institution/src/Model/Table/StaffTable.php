@@ -50,6 +50,7 @@ class StaffTable extends ControllerActionTable
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -737,6 +738,28 @@ class StaffTable extends ControllerActionTable
             $url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
             $url['id'] = $encodeValue;
             $buttons['view']['url'] = $url;
+
+            // POCOR-3125 history button permission to hide and show the link
+            if ($this->AccessControl->check(['StaffHistories', 'index'])) {
+                $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
+                $userId = $entity->_matchingData['Users']->id;
+
+                $icon = '<i class="fa fa-history"></i>';
+                $url = [
+                    'plugin' => 'Institution',
+                    'institutionId' => $institutionId,
+                    'controller' => 'StaffHistories',
+                    'action' => 'index'
+                ];
+
+                $buttons['history'] = $buttons['view'];
+                $buttons['history']['label'] = $icon . __('History');
+                $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
+                    'security_user_id' => $userId,
+                    'user_type' => 'Staff'
+                ]);
+            }
+            // end POCOR-3125 history button permission
         }
 
         if (isset($buttons['edit'])) {
@@ -911,7 +934,7 @@ class StaffTable extends ControllerActionTable
         $staff = $this->Users->get($entity->staff_id);
         $entity->showDeletedValueAs = $staff->name_with_id;
 
-        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias()];
+        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias(), $this->StaffTransferOut->alias()];
 
         // staff transfer out
         $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
@@ -935,7 +958,7 @@ class StaffTable extends ControllerActionTable
             'Institution.InstitutionClasses' =>'InstitutionClasses',
             'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects',
             'Institution.InstitutionRubrics' => 'InstitutionRubrics',
-            'Institution.InstitutionQualityVisits' => 'InstitutionVisits'
+            'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
         ];
 
         foreach ($associationArray as $tableName => $model) {

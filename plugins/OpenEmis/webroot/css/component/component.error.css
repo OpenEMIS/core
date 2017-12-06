@@ -1,4 +1,4 @@
-/* ERROR v.1.1.1 */
+/* ERROR v.1.1.2 */
 
 .error-wrapper {
     padding: 20px;
@@ -76,7 +76,8 @@ input.form-error,
 textarea.form-error,
 .error input,
 .error textarea,
-.error .input-select-wrapper {
+.error .input-select-wrapper,
+.files.box.error {
     border-color: #CC5C5C !important;
 }
 
@@ -112,4 +113,8 @@ input[readonly] {
     }
 }
 
+/* RTL Error */
 
+.rtl .error-buttons a:first-child .fa-chevron-left:before {
+    content: "\f054";
+}

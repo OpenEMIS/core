@@ -90,6 +90,8 @@ function InstitutionStudentCompetencyCommentsController($scope, $q, $window, $ht
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 localeText: localeText,
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
                 ensureDomOrder: true,
                 onCellValueChanged: function(params) {
                     if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
@@ -97,13 +99,21 @@ function InstitutionStudentCompetencyCommentsController($scope, $q, $window, $ht
                         .then(function(response) {
                             params.data.save_error[params.colDef.field] = false;
                             AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
+                            params.api.refreshCells({
+                                rowNodes: [params.node],
+                                columns: [params.colDef.field],
+                                force: true
+                            });
 
                         }, function(error) {
                             params.data.save_error[params.colDef.field] = true;
                             console.log(error);
                             AlertSvc.error(Controller, "There was an error when saving the comments");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
+                            params.api.refreshCells({
+                                rowNodes: [params.node],
+                                columns: [params.colDef.field],
+                                force: true
+                            });
                         });
                     }
                 },
@@ -122,8 +132,8 @@ function InstitutionStudentCompetencyCommentsController($scope, $q, $window, $ht
                 rowData: [],
                 headerHeight: 38,
                 rowHeight: 38,
-                minColWidth: 200,
-                enableColResize: false,
+                minColWidth: 100,
+                enableColResize: true,
                 enableSorting: true,
                 unSortIcon: true,
                 enableFilter: true,
@@ -131,12 +141,31 @@ function InstitutionStudentCompetencyCommentsController($scope, $q, $window, $ht
                 suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                localeText: localeText,
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
                 onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue) {
+                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                         InstitutionStudentCompetencyCommentsSvc.saveCompetencyPeriodComments(params)
                         .then(function(response) {
+                            params.data.save_error[params.colDef.field] = false;
+                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+                            params.api.refreshCells({
+                                rowNodes: [params.node],
+                                columns: [params.colDef.field],
+                                force: true
+                            });
+
                         }, function(error) {
+                            params.data.save_error[params.colDef.field] = true;
                             console.log(error);
+                            AlertSvc.error(Controller, "There was an error when saving the comments");
+                            params.api.refreshCells({
+                                rowNodes: [params.node],
+                                columns: [params.colDef.field],
+                                force: true
+                            });
                         });
                     }
                 },
