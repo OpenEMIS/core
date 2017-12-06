@@ -177,6 +177,7 @@ return [
         $privateKeyHandle = fopen(CONFIG . 'private.key', 'w');
         $publicKeyHandle = fopen(CONFIG . 'public.key', 'w');
         $appExtraHandle = fopen(CONFIG . 'app_extra.php', 'w');
+        $dbUserHostPermission = isset($data['datasource_user_host']) ? $data['datasource_user_host'] : $host;
         if ($dbFileHandle && $privateKeyHandle && $publicKeyHandle) {
             $res = openssl_pkey_new(['private_key_bits' => 1024]);
             openssl_pkey_export($res, $privKey);
@@ -187,7 +188,7 @@ return [
             fclose($publicKeyHandle);
             fwrite($appExtraHandle, self::APP_EXTRA_TEMPLATE);
             $this->createDb($pdo, $db);
-            $this->createDbUser($pdo, $host, $dbUser, $dbPassword, $db);
+            $this->createDbUser($pdo, $dbUserHostPermission, $dbUser, $dbPassword, $db);
             $template = str_replace('{database}', "'$db'", $template);
             $template = str_replace('{user}', "'$dbUser'", $template);
             fwrite($dbFileHandle, $template);
