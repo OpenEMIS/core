@@ -137,8 +137,8 @@ return [
         return $validator
             ->requirePresence('database_server_host')
             ->requirePresence('database_server_port')
-            ->requirePresence('admin_user')
-            ->requirePresence('admin_password')
+            ->requirePresence('database_admin_user')
+            ->requirePresence('database_admin_password')
             ->requirePresence('account_password')
             ->requirePresence('retype_password')
             ->add('account_password', [
@@ -161,12 +161,12 @@ return [
     {
         $host = $data['database_server_host'];
         $port = $data['database_server_port'];
-        $root = $data['admin_user'];
-        $rootPass = $data['admin_password'];
+        $root = $data['database_admin_user'];
+        $rootPass = $data['database_admin_password'];
 
-        $db = isset($data['db']) ? $data['db'] : 'oe_school';
-        $dbUser = isset($data['db_user']) ? $data['db_user'] : 'oe_school_user';
-        $dbPassword = isset($data['db_password']) ? $data['db_password'] : bin2hex(random_bytes(4));
+        $db = isset($data['datasource_db']) ? $data['datasource_db'] : 'oe_school';
+        $dbUser = isset($data['datasource_user']) ? $data['datasource_user'] : 'oe_school_user';
+        $dbPassword = isset($data['datasource_password']) ? $data['datasource_password'] : bin2hex(random_bytes(4));
 
         $connectionString = sprintf('mysql:host=%s;port=%d', $host, $port);
         $pdo = new PDO($connectionString, $root, $rootPass);
