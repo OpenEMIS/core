@@ -24,7 +24,6 @@ class FieldOptionsController extends AppController
         $session = $this->request->session();
         $action = $this->request->params['action'];
 
-
         $this->set('contentHeader', __($header));
     }
 
@@ -33,9 +32,9 @@ class FieldOptionsController extends AppController
         $alias = $model->alias;
         $header = __('Field Options') . ' - ' . $model->getHeader($alias);
 
-        $this->Navigation->addCrumb($model->getHeader($alias));
+        $this->Navigation->addCrumb(str_replace ('Wash', 'WASH', $model->getHeader($alias)));
 
-        $this->set('contentHeader', $header);
+        $this->set('contentHeader', str_replace ('Wash', 'WASH', $header));
     }
 
     public function index()
@@ -120,6 +119,8 @@ class FieldOptionsController extends AppController
     public function InfrastructureWashWaterAccessibilities ()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function InfrastructureWashWasteTypes ()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function InfrastructureWashWasteFunctionalities ()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    public function InfrastructureWashSewageTypes ()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+    public function InfrastructureWashSewageFunctionalities ()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function UtilityElectricityTypes ()                  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function UtilityElectricityConditions ()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     public function UtilityInternetTypes ()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
