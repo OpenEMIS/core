@@ -195,7 +195,7 @@ class POCOR4257 extends AbstractMigration
 
         $this->insert('security_functions', [
             'id' => 1073,
-            'name' => 'Infrastructure Wash Sewage',
+            'name' => 'Infrastructure WASH Sewage',
             'controller' => 'InfrastructureWashSewages',
             'module' => 'Institutions',
             'category' => 'Details',
@@ -209,6 +209,9 @@ class POCOR4257 extends AbstractMigration
             'created_user_id' => 1,
             'created' => date('Y-m-d H:i:s')
         ]);
+
+        $this->execute("UPDATE security_functions SET `name` = 'Infrastructure WASH Water' WHERE `id` = 1065");
+        $this->execute("UPDATE security_functions SET `name` = 'Infrastructure WASH Waste' WHERE `id` = 1074");
         // end security_functions
     }
 
