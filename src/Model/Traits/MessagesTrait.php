@@ -2018,6 +2018,11 @@ trait MessagesTrait
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
             ],
+            'OutcomePeriods' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
         ],
         'FieldOption' => [
             'LicenseClassifications' => [
