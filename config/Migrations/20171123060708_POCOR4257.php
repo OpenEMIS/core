@@ -211,7 +211,7 @@ class POCOR4257 extends AbstractMigration
         ]);
 
         $this->execute("UPDATE security_functions SET `name` = 'Infrastructure WASH Water' WHERE `id` = 1065");
-        $this->execute("UPDATE security_functions SET `name` = 'Infrastructure WASH Waste' WHERE `id` = 1074");
+        $this->execute("UPDATE security_functions SET `name` = 'Infrastructure WASH Waste' WHERE `id` = 1073");
         // end security_functions
     }
 
