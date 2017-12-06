@@ -70,8 +70,8 @@
                     <?php
                         echo $this->Form->input('database_server_host', ['class' => 'form-control db-host', 'value' => 'localhost']);
                         echo $this->Form->input('database_server_port', ['class' => 'form-control db-port', 'value' => '3306']);
-                        echo $this->Form->input('admin_user', ['class' => 'form-control admin-user', 'value' => 'root']);
-                        echo $this->Form->input('admin_password', ['class' => 'form-control admin-password', 'type' => 'password']);
+                        echo $this->Form->input('database_admin_user', ['label' => __('Admin User'), 'class' => 'form-control admin-user', 'value' => 'root']);
+                        echo $this->Form->input('database_admin_password', ['label' => __('Admin Password'), 'class' => 'form-control admin-password', 'type' => 'password']);
                     ?>
                     <div class="section-header">Administrator Account</div>
                     <div class="clearfix">&nbsp;</div>
