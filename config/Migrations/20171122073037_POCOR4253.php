@@ -1,6 +1,6 @@
 <?php
 
-use Phinx\Migration\AbstractMigration;
+use Migrations\AbstractMigration;
 use Cake\ORM\TableRegistry;
 
 class POCOR4253 extends AbstractMigration
@@ -44,12 +44,10 @@ class POCOR4253 extends AbstractMigration
             ]);
         $table
             ->addColumn('name', 'string', [
-                'default' => null,
                 'limit' => 50,
                 'null' => false
             ])
             ->addColumn('order', 'integer', [
-                'default' => null,
                 'limit' => 3,
                 'null' => false
             ])
@@ -88,12 +86,10 @@ class POCOR4253 extends AbstractMigration
                 'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
-                'default' => null,
                 'limit' => 11,
                 'null' => false
             ])
             ->addColumn('created', 'datetime', [
-                'default' => null,
                 'null' => false
             ])
             ->addIndex('modified_user_id')
