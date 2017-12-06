@@ -7,13 +7,13 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
-class EmploymentsTable extends ControllerActionTable {
+class EmploymentStatusesTable extends ControllerActionTable {
 	public function initialize(array $config) {
-		$this->table('staff_employments');
+		$this->table('staff_employment_statuses');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('EmploymentTypes', ['className' => 'FieldOption.EmploymentTypes']);
+	    $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes', 'foreignKey' => 'status_type_id']);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.search', false);
 		$this->addBehavior('ControllerAction.FileUpload', [
@@ -35,7 +35,7 @@ class EmploymentsTable extends ControllerActionTable {
     }
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
-		$this->field('employment_type_id', ['type' => 'select', 'before' => 'employment_date']);
+		$this->field('status_type_id', ['type' => 'select', 'before' => 'status_date']);
 
 		$visible = ['index' => false, 'view' => true, 'add' => true, 'edit' => true];
         $this->field('file_content', ['visible' => $visible]);
@@ -45,9 +45,23 @@ class EmploymentsTable extends ControllerActionTable {
         	$this->field('file_name', ['visible' => false]);
         }
 
-		$this->setFieldOrder(['employment_type_id', 'employment_date', 'comment', 'file_content']);
+		$this->setFieldOrder(['status_type_id', 'status_date', 'comment', 'file_content']);
 
         $this->setupTabElements();
+
+        $session = $this->request->session();
+        $controllerName = $this->controller->name;     
+        if ($controllerName == 'Profiles')
+        {
+            $header = $session->read('Auth.User.name');
+        } else {        
+            $header = $session->read('Staff.Staff.name');
+        }
+        
+        $header = $header . ' - ' . __('Statuses');
+        $this->controller->set('contentHeader', $header);
+        $alias = $this->alias;
+        $this->controller->Navigation->substituteCrumb($this->getHeader($alias), __('Statuses'));
 	}
 
 	private function setupTabElements() {
@@ -62,15 +76,15 @@ class EmploymentsTable extends ControllerActionTable {
         $thresholdArray = json_decode($threshold, true);
 
         $conditions = [
-            1 => ('DATEDIFF(' . $this->aliasField('employment_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
-            2 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
+            1 => ('DATEDIFF(' . $this->aliasField('status_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
+            2 => ('DATEDIFF(NOW(), ' . $this->aliasField('status_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
         ];
 
         // will do the comparison with threshold when retrieving the absence data
         $licenseData = $this->find()
             ->select([
-                'EmploymentTypes.name',
-                'employment_date',
+                'EmploymentStatusTypes.name',
+                'status_date',
                 'Users.id',
                 'Users.openemis_no',
                 'Users.first_name',
@@ -85,8 +99,8 @@ class EmploymentsTable extends ControllerActionTable {
             ])
             ->contain(['Users', 'EmploymentTypes'])
             ->where([
-                $this->aliasField('employment_type_id') => $thresholdArray['employment_type'],
-                $this->aliasField('employment_date') . ' IS NOT NULL',
+                $this->aliasField('status_type_id') => $thresholdArray['status_type'],
+                $this->aliasField('status_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
             ->hydrate(false)

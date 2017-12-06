@@ -134,7 +134,6 @@ class InstitutionsController extends AppController
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],
-            'History'           => ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
@@ -1333,7 +1332,6 @@ class InstitutionsController extends AppController
             'SpecialNeeds' => ['text' => __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')],
             'Guardians' => ['text' => __('Guardians')],
             'StudentSurveys' => ['text' => __('Surveys')]
         ];
@@ -1485,10 +1483,10 @@ class InstitutionsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getProfessionalDevelopmentTabElements($options = [])
+    public function getProfessionalTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+        $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalTabElements($options);
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
