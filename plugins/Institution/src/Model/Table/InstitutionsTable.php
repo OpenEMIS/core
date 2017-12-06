@@ -969,6 +969,19 @@ class InstitutionsTable extends ControllerActionTable
                 $button['url']['institutionId'] = $button['url'][1];
             }
         }
+
+        // POCOR-3125 history button permission to hide and show the link
+        if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
+            $icon = '<i class="fa fa-history"></i>';
+
+            $buttons['history'] = $buttons['view'];
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url']['plugin'] = 'Institution';
+            $buttons['history']['url']['controller'] = 'InstitutionHistories';
+            $buttons['history']['url']['action'] = 'index';
+        }
+        // end history button
+
         return $buttons;
     }
 
