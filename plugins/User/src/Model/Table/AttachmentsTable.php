@@ -40,8 +40,6 @@ class AttachmentsTable extends ControllerActionTable
                 ]
             ]);
         }
-
-
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -150,7 +148,7 @@ class AttachmentsTable extends ControllerActionTable
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->fields['date_on_file']['visible'] = false;
+        $this->fields['date_on_file']['visible'] = true;
     }
 
 /******************************************************************************************************************

@@ -68,6 +68,10 @@
     cursor: not-allowed !important;
 }
 
+.switch-candy label.switch-btn-disabled {
+    color: #CCC !important;
+}
+
 
 /* Hides default checkbox */
 

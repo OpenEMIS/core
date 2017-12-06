@@ -13,33 +13,30 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     Controller.dataReady = false;
 
     // Variables
-    Controller.bodyDir = getComputedStyle(document.body).direction;
-    Controller.colDef = [
-        {headerName: 'OpenEMIS ID', field: 'openemis_no'},
-        {headerName: 'Student Name', field: 'name'},
-        {headerName: 'Student Status', field: 'student_status_name'}
-    ];
-    Controller.alertUrl = '';
-    Controller.redirectUrl = '';
+    Controller.gridOptions = {};
     Controller.classId = null;
     Controller.className = '';
     Controller.competencyTemplateId = null;
+    Controller.competencyTemplateName = '';
     Controller.academicPeriodId = null;
     Controller.academicPeriodName = '';
-    Controller.postError = [];
-    // format of competency result will be competencyperiodId.competencyItemId.studentId.criteriaId
-    Controller.competencyItemResults = {};
-    Controller.competencyTemplateName = '';
-    Controller.criteriaOptions = [];
-    Controller.gridOptions = {};
+    Controller.institutionId = null;
     Controller.criteriaGradeOptions = {};
     Controller.studentResults = {};
     Controller.studentComments = {};
+    // filters
+    Controller.periodOptions = [];
+    Controller.selectedPeriod = null;
+    Controller.selectedPeriodStatus = null;
+    Controller.itemOptions = [];
+    Controller.selectedItem = null;
+    Controller.studentOptions = [];
+    Controller.selectedStudent = null;
 
     // Function mapping
     Controller.initGrid = initGrid;
-    Controller.changeCriteria = changeCriteria;
-    Controller.changeComments = changeComments;
+    Controller.formatResults = formatResults;
+    Controller.formatComments = formatComments;
     Controller.resetColumnDefs = resetColumnDefs;
     Controller.changeCompetencyOptions = changeCompetencyOptions;
 
@@ -51,10 +48,25 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             .then(function(response) {
                 Controller.className = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
-                Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
-                Controller.studentList = response.class_students;
-                var promises = [];
+                Controller.institutionId = response.institution_id;
+                return InstitutionStudentCompetenciesSvc.getStudentStatusId("CURRENT");
+            }, function(error) {
+                console.log(error);
+            })
+            .then(function (response) {
+                var enrolledStatusId = response[0].id;
+                return InstitutionStudentCompetenciesSvc.getClassStudents(Controller.classId, enrolledStatusId);
+            }, function(error) {
+                console.log(error);
+            })
+            .then(function (classStudents) {
+                Controller.studentOptions = classStudents;
+                if (Controller.studentOptions.length > 0) {
+                    Controller.selectedStudent = Controller.studentOptions[0].student_id;
+                } else {
+                    AlertSvc.warning(Controller, "Please setup students for this class");
+                }
                 return InstitutionStudentCompetenciesSvc.getCompetencyTemplate(Controller.academicPeriodId, Controller.competencyTemplateId);
             }, function(error) {
                 console.log(error);
@@ -62,8 +74,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             .then(function (competencyTemplate) {
                 Controller.competencyTemplateId = competencyTemplate.id;
                 Controller.competencyTemplateName = competencyTemplate.code_name;
-                Controller.criterias = competencyTemplate.criterias;
-                angular.forEach(Controller.criterias, function(value, key) {
+                var criterias = competencyTemplate.criterias;
+                angular.forEach(criterias, function(value, key) {
                     Controller.criteriaGradeOptions[value.id] = {};
                     Controller.criteriaGradeOptions[value.id]['name'] = value.name;
                     Controller.criteriaGradeOptions[value.id]['code'] = value.code;
@@ -73,9 +85,9 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 });
                 Controller.periodOptions = competencyTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
-                    Controller.itemOptions = Controller.periodOptions[0].competency_items;
                     Controller.selectedPeriod = Controller.periodOptions[0].id;
                     Controller.selectedPeriodStatus = Controller.periodOptions[0].editable;
+                    Controller.itemOptions = Controller.periodOptions[0].competency_items;
                     if (Controller.itemOptions.length > 0) {
                         Controller.selectedItem = Controller.periodOptions[0].competency_items[0].id;
                     } else {
@@ -85,18 +97,18 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     AlertSvc.warning(Controller, "Please setup competency periods for the selected template");
                 }
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
-                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
                 console.log(error);
             })
             .then(function (competencyResults) {
-                Controller.changeCriteria(competencyResults);
+                Controller.formatResults(competencyResults);
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
-                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
             })
             .then(function (competencyItemComments) {
-                Controller.changeComments(competencyItemComments);
+                Controller.formatComments(competencyItemComments);
                 return Controller.initGrid();
             }, function (error) {
             })
@@ -108,8 +120,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
 
     });
 
-    function resetColumnDefs(criteria, period, selectedPeriodStatus, item) {
-        var response = InstitutionStudentCompetenciesSvc.getColumnDefs(criteria, item, Controller.bodyDir);
+    function resetColumnDefs(criteriaGradeOptions, period, selectedPeriodStatus, item, student) {
+        var response = InstitutionStudentCompetenciesSvc.getColumnDefs(item, student, Controller.itemOptions, Controller.studentOptions);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -121,67 +133,80 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 angular.forEach(response.data, function(value, key) {
                     textToTranslate.push(value.headerName);
                 });
+                textToTranslate.push('Comments'); // translate comments title in pinned row
+
                 InstitutionStudentCompetenciesSvc.translate(textToTranslate)
                 .then(function(res){
+                    var commentTranslation = res.pop();
                     angular.forEach(res, function(value, key) {
                         response.data[key]['headerName'] = value;
                     });
                     Controller.gridOptions.api.setColumnDefs(response.data);
-                    var rowData = [];
-                    var competencyCriteriaIds = [];
-                    angular.forEach(criteria, function (value, key) {
-                        if (value.competency_item_id == Controller.selectedItem) {
-                            var variableName = 'competency_criteria_id_' + value.id;
-                            var newObj = {
-                                id: value.id,
-                                name: variableName,
-                                value: 0
-                            };
-                            this.push(newObj);
-                        }
-                    }, competencyCriteriaIds);
-                    angular.forEach(Controller.studentList, function(student, key) {
-                        var copyCriteriaIds = angular.copy(competencyCriteriaIds);
-                        if (angular.isDefined(Controller.studentResults[student.student_id])) {
-                            angular.forEach(copyCriteriaIds, function (value, key) {
-                                if (angular.isDefined(Controller.studentResults[student.student_id][value.id])) {
-                                    copyCriteriaIds[key].value = Controller.studentResults[student.student_id][value.id];
+
+                    if (item != null && student != null) {
+                        // competency criterias
+                        var rowData = [];
+                        angular.forEach(criteriaGradeOptions, function (value, key) {
+                            if (value.competency_item_id == item) {
+                                var criteriaName = value.name;
+                                if (value.code != null && value.code.length > 0) {
+                                    criteriaName = value.code + " - " + value.name;
                                 }
-                            });
-                        }
-                        var row = {
-                            openemis_id: student.user.openemis_no,
-                            student_id: student.student_id,
-                            name: student.user.name,
-                            competency_item_id: item,
-                            competency_period_id: period,
-                            period_editable: selectedPeriodStatus,
-                            student_status_name: student.student_status.name,
-                            student_status_code: student.student_status.code,
-                            comments: '',
-                            save_error: {
-                                comments: false
+                                var row = {
+                                    student_id: student,
+                                    period_editable: selectedPeriodStatus,
+                                    competency_period_id: period,
+                                    competency_item_id: item,
+                                    competency_criteria_name: criteriaName,
+                                    competency_criteria_id: value.id,
+                                    grading_options: value.grading_type.grading_options,
+                                    result: 0,
+                                    save_error: {
+                                        result: false
+                                    }
+                                };
+
+                                if (angular.isDefined(Controller.studentResults[value.id])) {
+                                    row['result'] = Controller.studentResults[value.id];
+                                }
+                                this.push(row);
                             }
-                        };
-                        var studentComments = Controller.studentComments;
-                        if (angular.isDefined(studentComments[student.student_id]) && studentComments[student.student_id]['comments'] != null) {
-                            row['comments'] = studentComments[student.student_id]['comments'];
-                        }
+                        }, rowData);
+                        Controller.gridOptions.api.setRowData(rowData);
 
-                        angular.forEach(copyCriteriaIds, function(value, key) {
-                            row[value.name] = value.value;
-                            row['save_error'][value.name] = false;
-                        });
-                        rowData.push(row);
-                    });
-                    Controller.gridOptions.api.setRowData(rowData);
-
-                    if (angular.isDefined(item)) {
-                        if (response.data.length > 4) {
+                        if (rowData.length > 0) {
                             AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
                         } else {
                             AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
+                            Controller.gridOptions.api.hideOverlay();
+                            var emptyRow = [{
+                                period_editable: false,
+                                competency_criteria_name: 'No Competency Criterias',
+                                result: '',
+                                save_error: {
+                                    result: false
+                                }
+                            }];
+                            Controller.gridOptions.api.setRowData(emptyRow);
                         }
+
+                        // item comments (pinned row at bottom)
+                        var comments = '';
+                        if (angular.isDefined(Controller.studentComments['comments'])) {
+                            comments = Controller.studentComments['comments'];
+                        }
+                        var pinnedRowData = [{
+                            student_id: student,
+                            period_editable: selectedPeriodStatus,
+                            competency_period_id: period,
+                            competency_item_id: item,
+                            competency_criteria_name: commentTranslation,
+                            result: comments,
+                            save_error: {
+                                result: false
+                            }
+                        }];
+                        Controller.gridOptions.api.setPinnedBottomRowData(pinnedRowData);
                     }
 
                     Controller.gridOptions.api.sizeColumnsToFit();
@@ -195,25 +220,22 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         }
     }
 
-    function changeCriteria(competencyResults) {
+    function formatResults(competencyResults) {
         var studentResults = {};
         angular.forEach(competencyResults, function (value, key) {
-            // Format for the student criteria result will be student_id.criteria_id.grading_option_id
-            if (studentResults[value.student_id] == undefined) {
-                studentResults[value.student_id] = {}
+            // Format for the student criteria result will be criteria_id.grading_option_id
+            if (studentResults[value.competency_criteria_id] == undefined) {
+                studentResults[value.competency_criteria_id] = {};
             }
-            studentResults[value.student_id][value.competency_criteria_id] = value.competency_grading_option_id;
+            studentResults[value.competency_criteria_id] = value.competency_grading_option_id;
         });
         Controller.studentResults = studentResults;
     }
 
-    function changeComments(competencyItemComments) {
+    function formatComments(competencyItemComments) {
         var studentComments = {};
         angular.forEach(competencyItemComments, function (value, key) {
-            if (studentComments[value.student_id] == undefined) {
-                studentComments[value.student_id] = {}
-            }
-            studentComments[value.student_id]['comments'] = value.comments;
+            studentComments['comments'] = value.comments;
         });
         Controller.studentComments = studentComments;
     }
@@ -229,16 +251,16 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             });
         }
         InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
-                    Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId)
+            Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId)
         .then(function (results) {
-            Controller.changeCriteria(results);
+            Controller.formatResults(results);
             return InstitutionStudentCompetenciesSvc.getStudentCompetencyComments(
-                Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
+                Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
         .then(function (comments) {
-            Controller.changeComments(comments);
-            Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
+            Controller.formatComments(comments);
+            Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
         }, function (error) {
         });
     }
@@ -263,69 +285,68 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
-                localeText: localeText,
-                ensureDomOrder: true,
-                onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
-                        InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
-                        .then(function(response) {
-                            params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
 
-                        }, function(error) {
-                            params.data.save_error[params.colDef.field] = true;
-                            console.log(error);
-                            AlertSvc.error(Controller, "There was an error when saving the comments");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
-                        });
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                localeText: localeText,
+                domLayout: 'autoHeight',
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
+                getRowStyle: function(params) {
+                    if (params.node.rowPinned) {
+                        return {'font-weight': 'bold'}
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
+                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
                 }
             };
         }, function(error){
             Controller.gridOptions = {
                 context: {
-                    institution_id: Controller.institution_id,
+                    institution_id: Controller.institutionId,
                     academic_period_id: Controller.academicPeriodId,
-                    competency_template_id: Controller.competencyTemplateId
+                    competency_template_id: Controller.competencyTemplateId,
+                    _controller: Controller
                 },
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
                 rowHeight: 38,
-                minColWidth: 200,
-                enableColResize: false,
+                minColWidth: 100,
+                enableColResize: true,
                 enableSorting: true,
                 unSortIcon: true,
                 enableFilter: true,
                 suppressMenuHide: true,
-                suppressCellSelection: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
-                onCellValueChanged: function(params) {
-                    if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
-                        InstitutionStudentCompetenciesSvc.saveCompetencyComments(params)
-                        .then(function(response) {
-                            params.data.save_error[params.colDef.field] = false;
-                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
+                // Removed options - Issues in ag-Grid AG-828
+                // suppressCellSelection: true,
 
-                        }, function(error) {
-                            params.data.save_error[params.colDef.field] = true;
-                            console.log(error);
-                            AlertSvc.error(Controller, "There was an error when saving the comments");
-                            params.api.refreshCells([params.node], [params.colDef.field]);
-                        });
+                // Added options
+                suppressContextMenu: true,
+                stopEditingWhenGridLosesFocus: true,
+                ensureDomOrder: true,
+                localeText: localeText,
+                domLayout: 'autoHeight',
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
+                getRowStyle: function(params) {
+                    if (params.node.rowPinned) {
+                        return {'font-weight': 'bold'}
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
+                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
                 }
             };
         });

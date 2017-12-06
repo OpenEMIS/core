@@ -49,11 +49,11 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         },
         VisitRequestsTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
-            model: 'Institution.VisitRequests'
+            model: 'Quality.VisitRequests'
         },
         CasesTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
-            model: 'Institution.InstitutionCases'
+            model: 'Cases.InstitutionCases'
         },
         StaffTrainingApplicationsTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
@@ -189,6 +189,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
     };
 
     function getWorkbenchColumnDefs(cols) {
+        var menuTabs = [];
         var columnDefs = [];
 
         if (cols.indexOf('status') !== -1) {
@@ -196,44 +197,50 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 headerName: "Status",
                 field: "status",
                 width: 150,
-                suppressSizeToFit: true
+                menuTabs: menuTabs,
+                suppressSizeToFit: true,
+                filter: 'text',
             });
         }
 
         if (cols.indexOf('request_title') !== -1) {
             columnDefs.push({
                 headerName: "Request Title",
+                menuTabs: menuTabs,
                 field: "request_title",
+                filter: 'text',
                 cellRenderer: function(params) {
-                    var urlParams = params.data.url;
-                    var url = [urlParams.controller, urlParams.action].join('/');
+                    if (typeof params.data !== 'undefined') {
+                        var urlParams = params.data.url;
+                        var url = [urlParams.controller, urlParams.action].join('/');
 
-                    var queryParams = [];
-                    angular.forEach(urlParams, function(obj, key) {
-                        if (key == 'plugin' || key == 'controller' || key == 'action') {
-                            // do nothing
-                        } else {
-                            if (!isNaN(parseFloat(key))) {
-                                url += '/' + obj;
+                        var queryParams = [];
+                        angular.forEach(urlParams, function(obj, key) {
+                            if (key == 'plugin' || key == 'controller' || key == 'action') {
+                                // do nothing
                             } else {
-                                // query string
-                                this.push(key + '=' + obj);
+                                if (!isNaN(parseFloat(key))) {
+                                    url += '/' + obj;
+                                } else {
+                                    // query string
+                                    this.push(key + '=' + obj);
+                                }
                             }
+                        }, queryParams);
+
+                        if (queryParams.length > 0) {
+                            url += '?' + queryParams.join('&');
                         }
-                    }, queryParams);
 
-                    if (queryParams.length > 0) {
-                        url += '?' + queryParams.join('&');
+                        var eCell = document.createElement('a');
+                        eCell.setAttribute("href", url);
+                        eCell.setAttribute("target", "_blank");
+                        eCell.innerHTML = params.value;
+
+                        return eCell;
                     }
-
-                    var eCell = document.createElement('a');
-                    eCell.setAttribute("href", url);
-                    eCell.setAttribute("target", "_blank");
-                    eCell.innerHTML = params.value;
-
-                    return eCell;
-                },
-                // width: 500
+                    // width: 500
+                 }
             });
         }
 
@@ -241,6 +248,8 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             columnDefs.push({
                 headerName: "Institution",
                 field: "institution",
+                filter: 'text',
+                menuTabs: menuTabs,
                 width: 250,
                 suppressSizeToFit: true
             });
@@ -249,6 +258,8 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         if (cols.indexOf('received_date') !== -1) {
             columnDefs.push({
                 headerName: "Received Date",
+                filter: 'date',
+                menuTabs: menuTabs,
                 field: "received_date",
                 width: 150,
                 suppressSizeToFit: true
@@ -256,7 +267,11 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         }
 
         if (cols.indexOf('requester') !== -1) {
-            columnDefs.push({headerName: "Requester", field: "requester"});
+            columnDefs.push({
+                headerName: "Requester", field: "requester",
+                filter: 'text',
+                menuTabs: menuTabs
+            });
         }
 
         var bodyDir = getComputedStyle(document.body).direction;

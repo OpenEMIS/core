@@ -111,7 +111,12 @@ class FieldOptionBehavior extends Behavior {
             if (!array_key_exists($parent, $fieldOptions)) {
                 $fieldOptions[$parent] = [];
             }
-            $keyName = Inflector::humanize(Inflector::underscore($key));
+            
+            if (isset($obj['title'])) {
+                $keyName = $obj['title'];
+            } else {
+                $keyName = Inflector::humanize(Inflector::underscore($key));
+            }
             $fieldOptions[$parent][$key] = __($keyName);
         }
         return $fieldOptions;
