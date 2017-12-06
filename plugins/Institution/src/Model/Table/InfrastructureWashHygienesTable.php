@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 use Cake\ORM\Query;
+use Cake\Validation\Validator;
 
 class InfrastructureWashHygienesTable extends AppTable {
 
@@ -21,6 +22,52 @@ class InfrastructureWashHygienesTable extends AppTable {
         $this->belongsTo('InfrastructureWashHygieneSoapashAvailabilities',   ['className' => 'Institution.InfrastructureWashHygieneSoapashAvailabilities', 'foreign_key' => 'infrastructure_wash_hygiene_use_id']);
         $this->belongsTo('InfrastructureWashHygieneEducations',   ['className' => 'Institution.InfrastructureWashHygieneEducations', 'foreign_key' => 'infrastructure_wash_hygiene_education_id']);
         $this->hasMany('InfrastructureWashHygieneQuantities', ['className' => 'Institution.InfrastructureWashHygieneQuantities', 'foreign_key' => 'infrastructure_wash_hygiene_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        
+        $validator
+            ->add('infrastructure_wash_hygiene_male_functional', [
+                'rulePositive' => [
+                    'rule' => ['naturalNumber', true],
+                    'message' => 'This field must be a positive number'
+                ]
+            ])
+            ->add('infrastructure_wash_hygiene_male_nonfunctional', [
+                'rulePositive' => [
+                    'rule' => ['naturalNumber', true],
+                    'message' => 'This field must be a positive number'
+                ]
+            ])
+            ->add('infrastructure_wash_hygiene_female_functional', [
+                'rulePositive' => [
+                    'rule' => ['naturalNumber', true],
+                    'message' => 'This field must be a positive number'
+                ]
+            ])
+            ->add('infrastructure_wash_hygiene_female_nonfunctional', [
+                'rulePositive' => [
+                    'rule' => ['naturalNumber', true],
+                    'message' => 'This field must be a positive number'
+                ]
+            ])
+            ->add('infrastructure_wash_hygiene_mixed_functional', [
+                'rulePositive' => [
+                    'rule' => ['naturalNumber', true],
+                    'message' => 'This field must be a positive number'
+                ]
+            ])
+            ->add('infrastructure_wash_hygiene_mixed_nonfunctional', [
+                'rulePositive' => [
+                    'rule' => ['naturalNumber', true],
+                    'message' => 'This field must be a positive number'
+                ]
+            ])
+            ;
+
+        return $validator;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
