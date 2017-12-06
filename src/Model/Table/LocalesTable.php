@@ -32,6 +32,10 @@ class LocalesTable extends AppTable
                         'message' => 'This language already exist.',
                         'rule' => 'validateUnique',
                         'provider' => 'table',
+                    ],
+                    'ruleMinLength' => [
+                        'rule' => ['minLength', 2],
+                        'message' => 'Language ISO code should be 2 letters'
                     ]
                 ])
               ->add('name', [
