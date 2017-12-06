@@ -78,7 +78,7 @@ class InfrastructureWashSanitationsTable extends AppTable {
         $data6 = $SanitationQuantitiesTable->newEntity();
         $data6->gender_id = 3;
         $data6->functional = 0;
-        $data6->value = $entity->infrastructure_wash_sanitation_mixed_functional;
+        $data6->value = $entity->infrastructure_wash_sanitation_mixed_nonfunctional;
         $data6->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data6);
     }
