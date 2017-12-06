@@ -70,13 +70,15 @@ class OutcomeTemplatesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // set filter
+        // academic period filter
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+        $conditions[$this->aliasField('academic_period_id')] = $selectedPeriod;
+
         $extra['elements']['controls'] = ['name' => 'Outcome.templates_controls', 'data' => [], 'options' => [], 'order' => 1];
 
-        $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
+        $query->where($conditions);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
