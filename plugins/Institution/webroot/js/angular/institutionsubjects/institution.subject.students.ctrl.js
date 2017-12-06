@@ -134,7 +134,8 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                                 education_subject_id: value.education_subject_id,
                                 academic_period_id: value.academic_period_id,
                                 institution_id: value.institution_id,
-                                student_status_id: value.student_status_id
+                                student_status_id: value.student_status_id,
+                                gender_id: value.user.gender.id
                             }
                         ))
                     };
@@ -145,7 +146,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 var promises = [];
                 promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(response.id, Controller.academicPeriodId, Controller.educationGradeId, Controller.institutionClassIds);
                 promises[1] = InstitutionSubjectStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
-                promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.institution_id, response.academic_period_id);
+                promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.academic_period_id, Controller.institutionSubjectId);
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
@@ -168,7 +169,8 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                                 education_subject_id: Controller.educationSubjectId,
                                 academic_period_id: value.academic_period_id,
                                 institution_id: value.institution_id,
-                                student_status_id: value.student_status_id
+                                student_status_id: value.student_status_id,
+                                gender_id: value.gender_id
                             }
                         ))
                     };

@@ -1,4 +1,4 @@
-/* TOOLTIP DESCRIPTION v.1.0.0 */
+/* TOOLTIP DESCRIPTION v.1.0.1 */
 
 .tooltip-desc {
     position: relative;
@@ -20,12 +20,16 @@
     cursor: pointer;
 }
 
-.tooltip-desc .fa-left {
+.fa-left {
     left: 0;
 }
 
-.tooltip-desc .fa-right {
+.fa-right {
     right: 10px;
+}
+
+.form-label.tooltip-desc {
+    padding: 5px 30px 5px 10px !important;
 }
 
 /* BLUE(INFO) TOOLTIP */
@@ -89,6 +93,11 @@
     padding: 5px 20px 5px 30px !important;
 }
 
+.rtl .form-label.tooltip-desc {
+    padding: 5px 10px 5px 30px !important;
+    margin: 0;
+}
+
 .rtl .tooltip-desc .fa-left {
     left: auto !important;
     right: 0;
@@ -115,9 +124,9 @@
         left: auto;
         right: 9px;
     }
-    .rtl .tooltip-blue,
-    .rtl .tooltip-red,
-    .rtl .tooltip-orange {
+    .rtl .tooltip-blue:not(.ag-grid-uib-tooltip),
+    .rtl .tooltip-red:not(.ag-grid-uib-tooltip),
+    .rtl .tooltip-orange:not(.ag-grid-uib-tooltip) {
         margin-right: 0 !important;
         margin-left: 23px;
         left: 0 !important;

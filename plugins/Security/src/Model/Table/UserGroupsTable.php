@@ -156,7 +156,7 @@ class UserGroupsTable extends ControllerActionTable
                 'text' => $this->getMessage('SystemGroups.tabTitle')
             ]
         ];
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
 
