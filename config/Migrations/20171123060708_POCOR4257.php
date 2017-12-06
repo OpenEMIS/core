@@ -1,14 +1,14 @@
 <?php
 use Migrations\AbstractMigration;
 
-class POCOR4256 extends AbstractMigration
+class POCOR4257 extends AbstractMigration
 {
    public function up()
     {
-        // infrastructure_wash_waste_types
-        $table = $this->table('infrastructure_wash_waste_types', [
+        // infrastructure_wash_sewage_types
+        $table = $this->table('infrastructure_wash_sewage_types', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains types of infrastructure wash waste types'
+                'comment' => 'This field options table contains types of infrastructure wash sewage types'
             ]);
         $table
             ->addColumn('name', 'string', [
@@ -67,12 +67,12 @@ class POCOR4256 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end infrastructure_wash_waste_types
+        // end infrastructure_wash_sewage_types
 
-        // infrastructure_wash_waste_functionalities
-        $table = $this->table('infrastructure_wash_waste_functionalities', [
+        // infrastructure_wash_sewage_functionalities
+        $table = $this->table('infrastructure_wash_sewage_functionalities', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains types of infrastructure wash waste functionalities'
+                'comment' => 'This field options table contains types of infrastructure wash sewage functionalities'
             ]);
         $table
             ->addColumn('name', 'string', [
@@ -131,12 +131,12 @@ class POCOR4256 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end infrastructure_wash_waste_functionalities
+        // end infrastructure_wash_sewage_functionalities
 
-        // infrastructure_wash_wastes
-        $table = $this->table('infrastructure_wash_wastes', [
+        // infrastructure_wash_sewages
+        $table = $this->table('infrastructure_wash_sewages', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This table contains infrastructure wastes'
+                'comment' => 'This table contains infrastructure sewages'
             ]);
         $table
             ->addColumn('academic_period_id', 'integer', [
@@ -151,17 +151,17 @@ class POCOR4256 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to institutions.id'
             ])
-            ->addColumn('infrastructure_wash_waste_type_id', 'integer', [
+            ->addColumn('infrastructure_wash_sewage_type_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to infrastructure_wash_waste_types.id'
+                'comment' => 'links to infrastructure_wash_sewage_types.id'
             ])
-            ->addColumn('infrastructure_wash_waste_functionality_id', 'integer', [
+            ->addColumn('infrastructure_wash_sewage_functionality_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to infrastructure_wash_waste_functionalities.id'
+                'comment' => 'links to infrastructure_wash_sewage_functionalities.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -183,20 +183,20 @@ class POCOR4256 extends AbstractMigration
             ])
             ->addIndex('academic_period_id')
             ->addIndex('institution_id')
-            ->addIndex('infrastructure_wash_waste_type_id')
-            ->addIndex('infrastructure_wash_waste_functionality_id')
+            ->addIndex('infrastructure_wash_sewage_type_id')
+            ->addIndex('infrastructure_wash_sewage_functionality_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end infrastructure_wash_wastes
+        // end infrastructure_wash_sewages
 
         // security_functions
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 14');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 15');
 
         $this->insert('security_functions', [
-            'id' => 1072,
-            'name' => 'Infrastructure Wash Waste',
-            'controller' => 'InfrastructureWashWastes',
+            'id' => 1073,
+            'name' => 'Infrastructure WASH Sewage',
+            'controller' => 'InfrastructureWashSewages',
             'module' => 'Institutions',
             'category' => 'Details',
             'parent_id' => 8,
@@ -204,21 +204,24 @@ class POCOR4256 extends AbstractMigration
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => 15,
+            'order' => 16,
             'visible' => 1,
             'created_user_id' => 1,
             'created' => date('Y-m-d H:i:s')
         ]);
+
+        $this->execute("UPDATE security_functions SET `name` = 'Infrastructure WASH Water' WHERE `id` = 1065");
+        $this->execute("UPDATE security_functions SET `name` = 'Infrastructure WASH Waste' WHERE `id` = 1072");
         // end security_functions
     }
 
     // rollback
     public function down()
     {
-        $this->execute('DROP TABLE infrastructure_wash_waste_types');
-        $this->execute('DROP TABLE infrastructure_wash_waste_functionalities');
-        $this->execute('DROP TABLE infrastructure_wash_wastes');
+        $this->execute('DROP TABLE infrastructure_wash_sewage_types');
+        $this->execute('DROP TABLE infrastructure_wash_sewage_functionalities');
+        $this->execute('DROP TABLE infrastructure_wash_sewages');
         $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 14');
-        $this->execute('DELETE FROM security_functions WHERE id = 1072');
+        $this->execute('DELETE FROM security_functions WHERE id = 1073');
     }
 }
