@@ -60,6 +60,8 @@ class InstallerController extends AppController
                 $this->set('code', 422);
                 $this->set('message', 'Datasource has already been created');
                 $this->response->statusCode(422);
+                $this->set('_serialize', ['message', 'code']);
+                return null;
             }
         }
         $action = '2';
