@@ -48,15 +48,9 @@ class InfrastructureWashHygienesController extends PageController
         $page->get('infrastructure_wash_hygiene_type_id')->setLabel('Type');
         $page->get('infrastructure_wash_hygiene_soapash_availability_id')->setLabel('Soap/Ash Availability');
         $page->get('infrastructure_wash_hygiene_education_id')->setLabel('Hygiene Education');
-        // $page->get('infrastructure_wash_hygiene_total_male')->setLabel('Total Male');
-        // $page->get('infrastructure_wash_hygiene_total_female')->setLabel('Total Female');
-        // $page->get('infrastructure_wash_hygiene_total_mixed')->setLabel('Total Mixed');
-        $page->get('infrastructure_wash_hygiene_male_functional')->setLabel('Male (Functional)');
-        $page->get('infrastructure_wash_hygiene_male_nonfunctional')->setLabel('Male (Non-functional)');
-        $page->get('infrastructure_wash_hygiene_female_functional')->setLabel('Female (Functional)');
-        $page->get('infrastructure_wash_hygiene_female_nonfunctional')->setLabel('Female (Non-functional)');
-        $page->get('infrastructure_wash_hygiene_mixed_functional')->setLabel('Mixed (Functional)');
-        $page->get('infrastructure_wash_hygiene_mixed_nonfunctional')->setLabel('Mixed (Non-functional)');
+        $page->get('infrastructure_wash_hygiene_total_male')->setLabel('Total Male');
+        $page->get('infrastructure_wash_hygiene_total_female')->setLabel('Total Female');
+        $page->get('infrastructure_wash_hygiene_total_mixed')->setLabel('Total Mixed');
         // set queryString
         $page->setQueryString('institution_id', $institutionId);
     }
@@ -85,16 +79,53 @@ class InfrastructureWashHygienesController extends PageController
     {
         $this->addEdit();
         parent::add();
+
+        $page = $this->Page;
+        $page->get('infrastructure_wash_hygiene_male_functional')->setValue(0);
+        $page->get('infrastructure_wash_hygiene_male_nonfunctional')->setValue(0);
+        $page->get('infrastructure_wash_hygiene_female_functional')->setValue(0);
+        $page->get('infrastructure_wash_hygiene_female_nonfunctional')->setValue(0);
+        $page->get('infrastructure_wash_hygiene_mixed_functional')->setValue(0);
+        $page->get('infrastructure_wash_hygiene_mixed_nonfunctional')->setValue(0);
     }
 
     public function edit($id)
     {
         $this->addEdit();
         parent::edit($id);
+        $page = $this->Page;
+        $entity = $page->getData();
+
+        $dataArr = $entity->infrastructure_wash_hygiene_quantities;
+
+        foreach($dataArr as $key => $quantity)
+        {
+            if ($quantity['gender_id'] == 1 && $quantity['functional'] == 1 ) {
+                $page->get('infrastructure_wash_hygiene_male_functional')->setValue($quantity['value']);
+            }
+            elseif ($quantity['gender_id'] == 1 && $quantity['functional'] == 0 ) {
+                $page->get('infrastructure_wash_hygiene_male_nonfunctional')->setValue($quantity['value']);
+            }
+            elseif ($quantity['gender_id'] == 2 && $quantity['functional'] == 1 ) {
+                $page->get('infrastructure_wash_hygiene_female_functional')->setValue($quantity['value']);
+            }
+            elseif ($quantity['gender_id'] == 2 && $quantity['functional'] == 0 ) {
+                $page->get('infrastructure_wash_hygiene_female_nonfunctional')->setValue($quantity['value']);
+            }
+            elseif ($quantity['gender_id'] == 3 && $quantity['functional'] == 1 ) {
+                $page->get('infrastructure_wash_hygiene_mixed_functional')->setValue($quantity['value']);
+            }
+            elseif ($quantity['gender_id'] == 3 && $quantity['functional'] == 0 ) {
+                $page->get('infrastructure_wash_hygiene_mixed_nonfunctional')->setValue($quantity['value']);
+            }
+        }
     }
 
     private function addEdit()
-    {   $page = $this->Page;
+    {   
+        $page = $this->Page;
+
+        $page->exclude(['infrastructure_wash_hygiene_total_male', 'infrastructure_wash_hygiene_total_female', 'infrastructure_wash_hygiene_total_mixed']);
 
         // set academic
         $page->get('academic_period_id')
@@ -105,7 +136,7 @@ class InfrastructureWashHygienesController extends PageController
         $page->get('infrastructure_wash_hygiene_type_id')
            ->setControlType('select');
 
-        // set soapash availability
+        // set soap/ash availability
         $page->get('infrastructure_wash_hygiene_soapash_availability_id')
             ->setControlType('select');
 
@@ -113,6 +144,81 @@ class InfrastructureWashHygienesController extends PageController
         $page->get('infrastructure_wash_hygiene_education_id')
             ->setControlType('select');
 
+        $page->addnew('infrastructure_wash_hygiene_male_functional')
+            ->setLabel('Male (Functional)')
+            ->setControlType('integer');
+
+        $page->addnew('infrastructure_wash_hygiene_male_nonfunctional')
+            ->setLabel('Male (Non-functional)')
+            ->setControlType('integer');
+
+        $page->addnew('infrastructure_wash_hygiene_female_functional')
+            ->setLabel('Female (Functional)')
+            ->setControlType('integer');
+
+        $page->addnew('infrastructure_wash_hygiene_female_nonfunctional')
+            ->setLabel('Female (Non-functional)')
+            ->setControlType('integer');
+
+        $page->addnew('infrastructure_wash_hygiene_mixed_functional')
+            ->setLabel('Mixed (Functional)')
+            ->setControlType('integer');
+
+        $page->addnew('infrastructure_wash_hygiene_mixed_nonfunctional')
+            ->setLabel('Mixed (Non-functional)')
+            ->setControlType('integer');
+    }
+
+    public function view($id)
+    {
+        parent::view($id); 
+        $page = $this->Page;
+        $entity = $page->getData();
+        $quantity = $this->getHygieneQuantity($entity);
+
         $page->exclude(['infrastructure_wash_hygiene_total_male', 'infrastructure_wash_hygiene_total_female', 'infrastructure_wash_hygiene_total_mixed']);
+
+        $page->addNew('quantities')
+             ->setLabel('Quantity')
+             ->setControlType('table')
+             ->setAttributes('column', [
+                 ['label' => __('Gender'), 'key' => 'gender'],
+                 ['label' => __('Functional'), 'key' => 'functional'],
+                 ['label' => __('Non-functional'), 'key' => 'nonfunctional']
+             ])
+             ->setAttributes('row', $quantity);
+    }
+
+    private function getHygieneQuantity(Entity $entity)
+    {
+        $rows = [];
+        if ($entity->has('infrastructure_wash_hygiene_quantities')) {
+            foreach ($entity->infrastructure_wash_hygiene_quantities as $obj) {
+
+                if ($obj->gender_id == 1 && $obj->functional == 1 ) {
+                    $male_functional = $obj->value;
+                }
+                elseif ($obj->gender_id == 1 && $obj->functional == 0 ) {
+                    $male_nonfunctional = $obj->value;
+                }
+                elseif ($obj->gender_id == 2 && $obj->functional == 1 ) {
+                    $female_functional = $obj->value;
+                }
+                if ($obj->gender_id == 2 && $obj->functional == 0 ) {
+                    $female_nonfunctional = $obj->value;
+                }
+                if ($obj->gender_id == 3 && $obj->functional == 1 ) {
+                    $mixed_functional = $obj->value;
+                }
+                if ($obj->gender_id == 3 && $obj->functional == 0 ) {
+                    $mixed_nonfunctional = $obj->value;
+                }
+            }
+        }
+
+        //$rows[] = ['gender' => 'Male', 'functional' => $male_functional, 'nonfunctional' => $male_nonfunctional];
+        //$rows[] = ['gender' => 'Female', 'functional' => $female_functional, 'nonfunctional' => $female_nonfunctional];
+        //$rows[] = ['gender' => 'Mixed', 'functional' => $mixed_functional, 'nonfunctional' => $mixed_nonfunctional];
+        return $rows;
     }
 }
