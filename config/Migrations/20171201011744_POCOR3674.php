@@ -1259,2397 +1259,419 @@ class POCOR3674 extends AbstractMigration
 
         // words will be added to translation table
         $words = [
-            [
-                'en' => 'Allocated To',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Textbook ID',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Condition',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Profile',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Profiles',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Height',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Body Mass Index',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Body Mass',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Promote From',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Promote To',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Region',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Zone',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Shared',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Textbook',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Textbook Condition',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Textbook Conditions',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Textbook Status',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Indexes',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Number Of Risk Index',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Indexes Criterias',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Student Indexes',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Operator',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Less than or equal to',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Threshold',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'References',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Generate',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Generated By',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Generated On',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Not Generated',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Total Index',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Counsellings',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Counselling',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Intervention',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Counselor',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Guidance Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'File Name',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All associated information related to this record will also be removed. Are you sure you want to delete this record?',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'This field is required.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Not active homeroom teacher',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Not active teaching staff',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Number Of Student By Stage',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Number Of Staff By Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Number Of Staff By Year',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Delete operation is not allowed as there are other information linked to this record.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'File attachment is required',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Secondary Staff',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Secondary Teacher',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Multi-grade',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Secondary Home Room Teacher',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Textbooks',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Education Subject',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Education Grade',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Academic Term',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Genders',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Room Allocated',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Teacher(s)',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Past Teachers',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Textbooks',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Textbooks',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Textbook',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Pending Withdraw',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Withdraw',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Withdrawn',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'The current password was not matched.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Password should contain at least 1 uppercase character',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Password should contain at least 1 number',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Password should contain at least 1 non-alphanumeric character',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Both passwords do not match',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'There must be at least one Preferred Nationality',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Relation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Edit Profile',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Edit Relation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Guardian User',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Guardian found.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Guardian',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Results',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Examination Results',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Student Fees',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Card',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Cards',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'transition',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Last Executer',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Last Execution Date',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Behaviour Classification',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Classifications',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Submit For Verification & Authentication',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Rating',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Set',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competencies / Goals',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competencies',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Salaries',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Submit For Approval',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Training Need Category',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Applications',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Apply',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Number Of Months',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Number Of Hours',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Number Of Years',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Training Field Of Study',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Training Course Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Training Mode Of Delivery',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Field of Study',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Field Of Studies',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Days',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Behaviour Classification',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Linked Cases',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Case Number',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Competencies',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Competencies',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Template',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Period',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Item',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Assessment period',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Changes will be automatically saved when any value is changed',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Items',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Items',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Items',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Item',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Grading Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Assessments',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student result will be save after the result has been entered.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Examination Results',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Card Comments',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Cards',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Card',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Report Card',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Report Cards',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Card Statuses',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Statuses',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Payments',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Payment',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add New Payment',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Land Types',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Lands',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Land Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Land Status',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Buildings',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Building Types',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Floors',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Floor Types',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Floor Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Floor Status',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Rooms',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Enrolment Information',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Cases',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Case Number',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Linked Records',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'The password is automatically generated by the system',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Directories',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Business',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Probation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Extension',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Termination',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Resignation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Retirement',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Temporary',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institutions with No Students',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institutions with No Staff',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Area Education Code',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Area Administrative Code',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Year Opened',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Year Closed',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Area Code',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Of Seats',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Preferred Nationality',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Nationalities',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Previous Institution Student',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Generated',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'System Usage',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No previous login',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Logged in within the last 7 days',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Exam Centres',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Examination Results',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Registered Students by Examination Centre',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Not Registered Students',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Training Need Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Pending Review',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Session Participants',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Types',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Synchronize',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Areas (Education)',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Area Levels (Education)',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Areas (Administrative)',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Area Levels (Administrative)',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Data will be synchronized from',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'New Area',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Missing Area',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Security Group Affected',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Institution Affected',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Area Administrative Level',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Is Main Country',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Level Isced',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Cycles',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Certification',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Field Of Study',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Next Programmes',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Cycle - (Programme)',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Stage',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Hours Required',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Auto Allocation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Grade Subjects',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'If this option is set to Yes, students will be allocated automatically to this subject upon enrolment to a class',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Stages',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Programme Orientation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Network Connectivities',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Localities',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Ownerships',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Sectors',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Shift Options',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Report Card Comment Codes',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Behaviour Categories',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Transfer Reasons',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Withdraw Reasons',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Guidance Types',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Staff Behaviour Categories',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Staff Leave Types',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Is Mandatory',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Is Unique',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Validation Rule',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Validation Rules',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Rules',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Rule',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Custom Module',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Apply To All',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Custom Filters',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Field',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Section',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Length',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Decimal Place',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Create Table',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Columns',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Rows',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Module Name',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Field Name',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Translations',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Label',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Default Value',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Prefix Value',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Enable',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Validation Pattern',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'External Data Source',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Attributes',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Attribute Name',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Product Lists',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Admission Age',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Credentials',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Criteria',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Absences Excused',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Overage',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Status Repeated',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Area',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Institutions.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Subjects',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'My Subjects',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Textbooks',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'My Classes',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Profile',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Transfer Request',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Transfer Approval',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Withdraw Request',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Withdraw',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Account Username',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Student Attendances',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Undo Student Status',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Results',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Comments',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Staff Profile',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Staff Attendances',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Transfer Approvals',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Change in Staff Assignment',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Staff',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Generate/Download',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Publish/Unpublish',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Guardian Profile',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Student Body Mass',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Salary List',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Salary Details',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Staff Salaries',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Users',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Academic Period Levels',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Systems',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Levels',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Cycles',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Programmes',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Education Grade Subjects',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Webhooks',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Alerts',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Alert Rules',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Workflows',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Steps',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Exam Centre Rooms',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Exam Centre Exams',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Exam Centre Subjects',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Exam Centre Students',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Exam Centre Invigilators',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Exam Centre Linked Institutions',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Results',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Examination Rooms',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Competency Setup',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'question',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Custom Module',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Survey Questions',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Survey Question',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Surveys',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Dependent Question',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Show Options',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Enabled',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Dropdown Question Options',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Question Options',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Some Options',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Dependent On',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select One',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Save',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Template',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Weighting Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Percentage',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'rubric',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Security Roles',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Start',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Stop',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Running',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'License Renewal',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'License Validity',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Retirement Warning',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Staff Employment',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Features',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Method',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Rule Setup',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Alert Content',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Keywords',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Processed Date',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Target Population Selection',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Import Trainees',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Trainee found.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Trainer found.',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Submit for Registration',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Pending For Registration',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Pending For Review',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Pending For Evaluation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Submit For Evaluation',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Pending For Posting',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Posted',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Excel Template',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Academic Term',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Edit Academic Term',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Templates',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Criteria Grading Options',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add New Examination Item',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Examination Item',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Examination Centre',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Link Examination',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Special Need Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add All Special Need Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Special Need Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Special Need Type',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Special Need Accommodations',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Examination Date',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Rooms',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Invigilator',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Linked Institution',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Auto Assign To Room',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Register for Examination',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Single Student Registration',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'You need to configure Examination Items first',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Education Level',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Education Programme',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Education Subject',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Author',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Publisher',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Year Published',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Principal Comments Required',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Homeroom Teacher Comments Required',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Teacher Comments Required',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Filters',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Workflow Model',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Select Workflow',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Workflows',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Deletable',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add workflow steps',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Workflow Step Name',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Workflow Name',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'No Available Workflow Steps',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Workflow Step',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Next Workflow Step',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Allow By Assignee',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Post Events',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Add Event',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'All Models',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Workflow Statuses Steps Mapping',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Statuses Steps',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Changelog',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Date Released',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Date Approved',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Localization',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Approved By',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Training Session Results',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ],
-            [
-                'en' => 'Staff Training Needs',
-                'editable' => 1,
-                'created_user_id' => 1,
-                'created' => date('Y-m-d H:i:s')
-            ]
+            'Allocated To',
+            'Textbook ID',
+            'Condition',
+            'Profile',
+            'Profiles',
+            'Height',
+            'Body Mass Index',
+            'Body Mass',
+            'Promote From',
+            'Promote To',
+            'Region',
+            'Zone',
+            'Shared',
+            'Textbook',
+            'Textbook Condition',
+            'Textbook Conditions',
+            'Textbook Status',
+            'Indexes',
+            'Number Of Risk Index',
+            'Indexes Criterias',
+            'Institution Student Indexes',
+            'Operator',
+            'Less than or equal to',
+            'Threshold',
+            'References',
+            'Generate',
+            'Generated By',
+            'Generated On',
+            'Not Generated',
+            'Total Index',
+            'Counsellings',
+            'Counselling',
+            'Intervention',
+            'Counselor',
+            'Guidance Type',
+            'File Name',
+            'All associated information related to this record will also be removed. Are you sure you want to delete this record?',
+            'This field is required.',
+            'Not active homeroom teacher',
+            'Not active teaching staff',
+            'Number Of Student By Stage',
+            'Number Of Staff By Type',
+            'Number Of Staff By Year',
+            'Delete operation is not allowed as there are other information linked to this record.',
+            'File attachment is required',
+            'Secondary Staff',
+            'Secondary Teacher',
+            'Multi-grade',
+            'Secondary Home Room Teacher',
+            'Select Textbooks',
+            'Select Education Subject',
+            'Select Education Grade',
+            'Select Academic Term',
+            'All Genders',
+            'No Room Allocated',
+            'Teacher(s)',
+            'Past Teachers',
+            'Institution Textbooks',
+            'No Textbooks',
+            'Add Textbook',
+            'Pending Withdraw',
+            'Withdraw',
+            'Withdrawn',
+            'The current password was not matched.',
+            'Password should contain at least 1 uppercase character',
+            'Password should contain at least 1 number',
+            'Password should contain at least 1 non-alphanumeric character',
+            'Both passwords do not match',
+            'There must be at least one Preferred Nationality',
+            'Relation',
+            'Edit Profile',
+            'Edit Relation',
+            'Guardian User',
+            'No Guardian found.',
+            'No Guardian',
+            'No Results',
+            'No Examination Results',
+            'No Student Fees',
+            'Report Card',
+            'Report Cards',
+            'transition',
+            'Last Executer',
+            'Last Execution Date',
+            'Behaviour Classification',
+            'Classifications',
+            'Submit For Verification & Authentication',
+            'Rating',
+            'Competency Set',
+            'Competencies / Goals',
+            'Competencies',
+            'Competency',
+            'Import Salaries',
+            'Submit For Approval',
+            'Training Need Category',
+            'Applications',
+            'Apply',
+            'Number Of Months',
+            'Number Of Hours',
+            'Number Of Years',
+            'Training Field Of Study',
+            'Training Course Type',
+            'Training Mode Of Delivery',
+            'Field of Study',
+            'Field Of Studies',
+            'All Days',
+            'Behaviour Classification',
+            'Linked Cases',
+            'Case Number',
+            'Student Competencies',
+            'All Competencies',
+            'Competency Template',
+            'Competency Period',
+            'Competency Item',
+            'Competency Assessment period',
+            'Changes will be automatically saved when any value is changed',
+            'All Items',
+            'Items',
+            'Competency Items',
+            'Competency Item',
+            'Competency Grading Type',
+            'No Assessments',
+            'Student result will be save after the result has been entered.',
+            'Examination Results',
+            'Report Card Comments',
+            'Report Cards',
+            'Report Card',
+            'Select Report Card',
+            'All Report Cards',
+            'Report Card Statuses',
+            'Statuses',
+            'Payments',
+            'Add Payment',
+            'Add New Payment',
+            'All Land Types',
+            'Institution Lands',
+            'Land Type',
+            'Land Status',
+            'Institution Buildings',
+            'All Building Types',
+            'Institution Floors',
+            'All Floor Types',
+            'Floor Type',
+            'Floor Status',
+            'Institution Rooms',
+            'Enrolment Information',
+            'Cases',
+            'Case Number',
+            'Linked Records',
+            'The password is automatically generated by the system',
+            'Directories',
+            'Business',
+            'Probation',
+            'Extension',
+            'Termination',
+            'Resignation',
+            'Retirement',
+            'Temporary',
+            'Institutions with No Students',
+            'Institutions with No Staff',
+            'Area Education Code',
+            'Area Administrative Code',
+            'Year Opened',
+            'Year Closed',
+            'Area Code',
+            'No Of Seats',
+            'Preferred Nationality',
+            'All Nationalities',
+            'Previous Institution Student',
+            'Report Generated',
+            'System Usage',
+            'No previous login',
+            'Logged in within the last 7 days',
+            'All Exam Centres',
+            'Examination Results',
+            'Registered Students by Examination Centre',
+            'Not Registered Students',
+            'Training Need Type',
+            'Pending Review',
+            'Session Participants',
+            'Institution Types',
+            'Synchronize',
+            'Areas (Education)',
+            'Area Levels (Education)',
+            'Areas (Administrative)',
+            'Area Levels (Administrative)',
+            'Data will be synchronized from',
+            'New Area',
+            'Missing Area',
+            'Security Group Affected',
+            'Institution Affected',
+            'Area Administrative Level',
+            'Is Main Country',
+            'Education Level Isced',
+            'Cycles',
+            'Education Certification',
+            'Education Field Of Study',
+            'Next Programmes',
+            'Cycle - (Programme)',
+            'Education Stage',
+            'Hours Required',
+            'Auto Allocation',
+            'Grade Subjects',
+            'If this option is set to Yes, students will be allocated automatically to this subject upon enrolment to a class',
+            'Stages',
+            'Education Programme Orientation',
+            'Network Connectivities',
+            'Localities',
+            'Ownerships',
+            'Sectors',
+            'Shift Options',
+            'Report Card Comment Codes',
+            'Student Behaviour Categories',
+            'Student Transfer Reasons',
+            'Student Withdraw Reasons',
+            'Guidance Types',
+            'Staff Behaviour Categories',
+            'Staff Leave Types',
+            'Is Mandatory',
+            'Is Unique',
+            'Validation Rule',
+            'Validation Rules',
+            'Rules',
+            'Rule',
+            'Custom Module',
+            'Apply To All',
+            'Custom Filters',
+            'Add Field',
+            'Add Section',
+            'Length',
+            'Decimal Place',
+            'Create Table',
+            'Add Columns',
+            'Add Rows',
+            'Module Name',
+            'Field Name',
+            'Translations',
+            'Label',
+            'Default Value',
+            'Prefix Value',
+            'Enable',
+            'Validation Pattern',
+            'External Data Source',
+            'Attributes',
+            'Attribute Name',
+            'Product Lists',
+            'Student Admission Age',
+            'Credentials',
+            'Select Criteria',
+            'Absences Excused',
+            'Overage',
+            'Status Repeated',
+            'Add Area',
+            'Import Institutions.',
+            'All Subjects',
+            'My Subjects',
+            'Import Textbooks',
+            'My Classes',
+            'Student Profile',
+            'Transfer Request',
+            'Transfer Approval',
+            'Withdraw Request',
+            'Student Withdraw',
+            'Account Username',
+            'Import Student Attendances',
+            'Undo Student Status',
+            'Competency Results',
+            'Competency Comments',
+            'Staff Profile',
+            'Import Staff Attendances',
+            'Transfer Approvals',
+            'Change in Staff Assignment',
+            'Import Staff',
+            'Generate/Download',
+            'Publish/Unpublish',
+            'Guardian Profile',
+            'Student Body Mass',
+            'Salary List',
+            'Salary Details',
+            'Import Staff Salaries',
+            'Import Users',
+            'Academic Period Levels',
+            'Education Systems',
+            'Education Levels',
+            'Education Cycles',
+            'Education Programmes',
+            'Education Grade Subjects',
+            'Webhooks',
+            'Alerts',
+            'Alert Rules',
+            'Workflows',
+            'Steps',
+            'Exam Centre Rooms',
+            'Exam Centre Exams',
+            'Exam Centre Subjects',
+            'Exam Centre Students',
+            'Exam Centre Invigilators',
+            'Exam Centre Linked Institutions',
+            'Import Results',
+            'Import Examination Rooms',
+            'Competency Setup',
+            'question',
+            'Custom Module',
+            'Survey Questions',
+            'Survey Question',
+            'All Surveys',
+            'Dependent Question',
+            'Show Options',
+            'Enabled',
+            'Dropdown Question Options',
+            'Select Question Options',
+            'Select Some Options',
+            'Dependent On',
+            'Select One',
+            'Save',
+            'Template',
+            'Weighting Type',
+            'Percentage',
+            'rubric',
+            'Security Roles',
+            'Start',
+            'Stop',
+            'Running',
+            'License Renewal',
+            'License Validity',
+            'Retirement Warning',
+            'Staff Employment',
+            'All Features',
+            'Method',
+            'Rule Setup',
+            'Alert Content',
+            'Keywords',
+            'Processed Date',
+            'Target Population Selection',
+            'Import Trainees',
+            'No Trainee found.',
+            'No Trainer found.',
+            'Submit for Registration',
+            'Pending For Registration',
+            'Pending For Review',
+            'Pending For Evaluation',
+            'Submit For Evaluation',
+            'Pending For Posting',
+            'Posted',
+            'Excel Template',
+            'Academic Term',
+            'Edit Academic Term',
+            'All Templates',
+            'Criteria Grading Options',
+            'Add New Examination Item',
+            'Add Examination Item',
+            'Add Examination Centre',
+            'Link Examination',
+            'Add Special Need Type',
+            'Add All Special Need Type',
+            'Special Need Type',
+            'Select Special Need Type',
+            'Special Need Accommodations',
+            'Examination Date',
+            'All Rooms',
+            'Add Invigilator',
+            'Linked Institution',
+            'Auto Assign To Room',
+            'Register for Examination',
+            'Single Student Registration',
+            'You need to configure Examination Items first',
+            'Select Education Level',
+            'Select Education Programme',
+            'All Education Subject',
+            'Author',
+            'Publisher',
+            'Year Published',
+            'Principal Comments Required',
+            'Homeroom Teacher Comments Required',
+            'Teacher Comments Required',
+            'Filters',
+            'Workflow Model',
+            'Select Workflow',
+            'All Workflows',
+            'Deletable',
+            'Add workflow steps',
+            'Workflow Step Name',
+            'Workflow Name',
+            'No Available Workflow Steps',
+            'Workflow Step',
+            'Next Workflow Step',
+            'Allow By Assignee',
+            'Post Events',
+            'Add Event',
+            'All Models',
+            'Workflow Statuses Steps Mapping',
+            'Statuses Steps',
+            'Changelog',
+            'Date Released',
+            'Date Approved',
+            'Localization',
+            'Approved By',
+            'Training Session Results',
+            'Staff Training Needs',
+            'Language ISO code should be 2 letters'
         ];
 
-        $this->insert('translations', $words);
+        $wordsData = [];
+
+        foreach ($words as $text) {
+            $wordsData[] = [
+                'en' => $text,
+                'editable' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ];
+        }
+
+        $this->insert('translations', $wordsData);
 
         // locales table
         $table = $this->table('locales', [
@@ -3659,7 +1681,7 @@ class POCOR3674 extends AbstractMigration
         $table
             ->addColumn('iso', 'string', [
                 'default' => null,
-                'limit' => 6,
+                'limit' => 2,
                 'null' => false
             ])
             ->addColumn('name', 'string', [
