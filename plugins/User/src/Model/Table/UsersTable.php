@@ -276,6 +276,7 @@ class UsersTable extends AppTable
                 'academic_period_id' => 'InstitutionStudents.academic_period_id',
                 'student_status_id' => 'InstitutionStudents.student_status_id',
                 'student_status_name' => 'StudentStatuses.name',
+                'gender_id' => 'Genders.id',
                 'gender_name' => 'Genders.name',
                 'education_grade_id' => 'InstitutionStudents.education_grade_id',
                 'education_grade_name' => 'EducationGrades.name'
@@ -295,6 +296,7 @@ class UsersTable extends AppTable
                         'student_status_id' => $result->student_status_id,
                         'student_status_name' => __($result->student_status_name),
                         'academic_period_id' => $result->academic_period_id,
+                        'gender_id' => $result->gender_id,
                         'gender_name' => __($result->gender_name),
                         'institution_id' => $institutionId,
                         'institution_class_id' => $institutionClassId
@@ -340,7 +342,7 @@ class UsersTable extends AppTable
                 'text' => __('Details')
             ];
         }
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('selectedAction', $this->alias);
         $this->controller->set('tabElements', $tabElements);
     }
