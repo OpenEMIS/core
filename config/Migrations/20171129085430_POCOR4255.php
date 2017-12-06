@@ -234,32 +234,17 @@ class POCOR4255 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to infrastructure_wash_hygiene_educations.id'
             ])
-            ->addColumn('infrastructure_wash_hygiene_male_functional', 'integer', [
+            ->addColumn('infrastructure_wash_hygiene_total_male', 'integer', [
                 'default' => 0,
                 'limit' => 11,
                 'null' => false
             ])
-            ->addColumn('infrastructure_wash_hygiene_male_nonfunctional', 'integer', [
+            ->addColumn('infrastructure_wash_hygiene_total_female', 'integer', [
                 'default' => 0,
                 'limit' => 11,
                 'null' => false
             ])
-            ->addColumn('infrastructure_wash_hygiene_female_functional', 'integer', [
-                'default' => 0,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('infrastructure_wash_hygiene_female_nonfunctional', 'integer', [
-                'default' => 0,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('infrastructure_wash_hygiene_mixed_functional', 'integer', [
-                'default' => 0,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('infrastructure_wash_hygiene_mixed_nonfunctional', 'integer', [
+            ->addColumn('infrastructure_wash_hygiene_total_mixed', 'integer', [
                 'default' => 0,
                 'limit' => 11,
                 'null' => false
@@ -309,7 +294,7 @@ class POCOR4255 extends AbstractMigration
                 'null' => false
             ])
             ->addColumn('value', 'integer', [
-                'default' => null,
+                'default' => 0,
                 'limit' => 11,
                 'null' => false
             ])
