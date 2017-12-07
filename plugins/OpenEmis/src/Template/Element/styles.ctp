@@ -19,10 +19,9 @@ echo $this->Resource->css('OpenEmis.master.min');
 
 if (isset($theme)) {
 	echo $this->Resource->css($theme);
-    echo $this->Resource->css('OpenEmis.themes/custom/layout.min');
 }
 ?>
-
+<link rel="stylesheet" href="<?= $this->Url->css('OpenEmis.themes/custom/layout.min') ?>?timestamp=<?=$lastModified?>" >
 <!--[if gte IE 9]>
 <?php
 	echo $this->Resource->css('OpenEmis.ie/ie9-fixes');

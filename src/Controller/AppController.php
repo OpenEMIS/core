@@ -23,6 +23,7 @@ use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\SecurityTrait;
 use Cake\Utility\Inflector;
 use Cake\Cache\Cache;
+use Cake\I18n\Time;
 use Cake\Filesystem\File;
 
 /**
@@ -133,7 +134,8 @@ class AppController extends Controller
             'productName' => $this->productName,
             'productLogo' => $this->readAdaptation()['logo'],
             'footerText' => $this->readAdaptation()['copyright_notice_in_footer'],
-            'theme' => $theme
+            'theme' => $theme,
+            'lastModified' => $this->readAdaptation()['timestamp']
         ]);
 
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
@@ -230,6 +232,7 @@ class AppController extends Controller
             $file = new File($customPath . 'layout.min.css', true);
             $file->write($template);
             $file->close();
+            $adaptations['timestamp'] = Time::now()->toUnixString();
             Cache::write('adaptations', $adaptations);
         }
         return $adaptations;
