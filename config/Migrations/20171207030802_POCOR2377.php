@@ -161,7 +161,7 @@ class POCOR2377 extends AbstractMigration
         // security_functions
         $data = [
             [
-                'id' => '1072',
+                'id' => '1080',
                 'name' => 'Calendar',
                 'controller' => 'InstitutionCalendars',
                 'module' => 'Institutions',
@@ -171,7 +171,7 @@ class POCOR2377 extends AbstractMigration
                 '_edit' => 'edit',
                 '_add' => 'add',
                 '_delete' => 'delete',
-                'order' => '1072',
+                'order' => '1080',
                 'visible' => 1,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -205,7 +205,7 @@ class POCOR2377 extends AbstractMigration
         $this->execute('DROP TABLE calendar_events');
         $this->execute('DROP TABLE calendar_event_dates');
 
-        $this->execute('DELETE FROM security_functions WHERE id = 1072');
+        $this->execute('DELETE FROM security_functions WHERE id = 1080');
         $this->execute('DELETE FROM security_functions WHERE id = 5081');
     }
 }
