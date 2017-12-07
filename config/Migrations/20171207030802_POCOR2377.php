@@ -151,8 +151,7 @@ class POCOR2377 extends AbstractMigration
                 'comment' => 'links to calendar_events.id'
             ])
             ->addColumn('date', 'date', [
-                'default' => null,
-                'null' => true
+                'null' => false
             ])
             ->save()
         ;
