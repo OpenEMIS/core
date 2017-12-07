@@ -12,6 +12,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         getStudentStatusId: getStudentStatusId,
         getClassStudents: getClassStudents,
         getCompetencyTemplate: getCompetencyTemplate,
+        getCompetencyGradingTypes: getCompetencyGradingTypes,
         translate: translate,
         saveCompetencyResults: saveCompetencyResults,
         saveCompetencyComments: saveCompetencyComments,
@@ -26,6 +27,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         StudentStatuses: 'Student.StudentStatuses',
         InstitutionClassStudents: 'Institution.InstitutionClassStudents',
         CompetencyTemplates: 'Competency.CompetencyTemplates',
+        CompetencyGradingTypes: 'Competency.CompetencyGradingTypes',
         InstitutionCompetencyResults: 'Institution.InstitutionCompetencyResults',
         CompetencyItemComments: 'Institution.InstitutionCompetencyItemComments'
     };
@@ -119,7 +121,17 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         };
         return CompetencyTemplates
             .get(primaryKey)
-            .contain(['Periods.CompetencyItems', 'Criterias.GradingTypes.GradingOptions', 'InstitutionCompetencyResults', 'Items'])
+            .contain(['Periods.CompetencyItems', 'Criterias'])
+            .ajax({success: success, defer:true});
+    }
+
+    function getCompetencyGradingTypes() {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return CompetencyGradingTypes
+            .select()
+            .contain(['GradingOptions'])
             .ajax({success: success, defer:true});
     }
 
