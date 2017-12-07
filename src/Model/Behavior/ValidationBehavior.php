@@ -1002,24 +1002,6 @@ class ValidationBehavior extends Behavior
         return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;
     }
 
-    // To allow case sensitive entry
-    public static function checkUniqueEnglishField($check, array $globalData)
-    {
-        $condition = [];
-        $englishField = trim($check);
-        $Translation = TableRegistry::get('Localization.Translations');
-        if (!empty($globalData['data']['id'])) {
-            $condition['NOT'] = [
-                $Translation->aliasField('id') => $globalData['data']['id']
-            ];
-        }
-        $count = $Translation->find()
-            ->where(['Binary('.$Translation->aliasField('en').')' => $englishField])
-            ->where($condition)
-            ->count();
-        return $count==0;
-    }
-
     public static function inAcademicPeriod($field, $academicFieldName, $options = [], $globalData)
     {
         if (array_key_exists($academicFieldName, $globalData['data'])) {
