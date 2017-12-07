@@ -19,6 +19,7 @@ webroot/import/*
 webroot/img/adaptations/*
 webroot/img/product_list_logo/*
 webroot/analytics.txt
+plugins/OpenEmis/webroot/css/themes/custom/layout.min.css
 /build
 /dist
 /tags

@@ -26,6 +26,7 @@ $icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 
 		if (isset($theme)) {
 			echo $this->Html->css($theme);
+			echo $this->Html->css('OpenEmis.themes/custom/layout.min');
 		}
 
 		echo $this->Html->script('OpenEmis.lib/css_browser_selector');
