@@ -86,22 +86,15 @@ class StaffTrainingResultsTable extends ControllerActionTable
 				])
 				->toArray();
 
-			if (!empty($sessionOptions)) {
-				$selectedSession = $this->queryString('training_session', $sessionOptions);
-				$this->advancedSelectOptions($sessionOptions, $selectedSession);
 
-				//Add controls filter to index page
-				$toolbarElements = [
-					['name' => 'Staff.Training/controls', 'data' => [], 'options' => []]
-				];
+			//Add controls filter to index page
+			$toolbarElements = [
+				['name' => 'Staff.Training/controls', 'data' => [], 'options' => []]
+			];
 
-				$this->controller->set('toolbarElements', $toolbarElements);
-				$this->controller->set('sessionOptions', $sessionOptions);
+			$this->controller->set('toolbarElements', $toolbarElements);
+			$this->controller->set('sessionOptions', $sessionOptions);
 
-				$query->where([
-					$this->aliasField('training_session_id') => $selectedSession
-				]);
-			}
 			// End
 		} else {
 			// need better solution to return zero results as stopPropagation will cause error
