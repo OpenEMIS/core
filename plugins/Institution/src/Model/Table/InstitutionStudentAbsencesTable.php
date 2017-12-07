@@ -2,6 +2,9 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use DatePeriod;
+use DateInterval;
+use Cake\I18n\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\ORM\Query;
@@ -166,7 +169,46 @@ class InstitutionStudentAbsencesTable extends AppTable
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'on' => 'create'
-                ]
+                ],
+                'checkIfSchoolIsClosed' => [
+                    'rule' => function($value, $context) {
+                        $CalendarEventDates = TableRegistry::get('CalendarEventDates');
+                        $startDate = new Date($context['data']['start_date']);
+                        $endDate = new Date($value);
+
+                        if ($startDate == $endDate) {
+                            $isSchoolClosed = $CalendarEventDates->isSchoolClosed($startDate);
+                            if ($isSchoolClosed) {
+                                $message = __('School closed on this date');
+                                return $message;
+                            } else {
+                                return true;
+                            }
+                        } else {
+                            $endDate = $endDate->modify('+1 day');
+                            $interval = new DateInterval('P1D');
+
+                            $datePeriod = new DatePeriod($startDate, $interval, $endDate);
+
+                            $records = [];
+                            foreach ($datePeriod as $key => $date) {
+                                $isSchoolClosed = $CalendarEventDates->isSchoolClosed($date);
+                                if ($isSchoolClosed) {
+                                    $records[$date->format('d-m-Y')] = 'closed';
+                                } else {
+                                    $records[$date->format('d-m-Y')] = 'open';
+                                }
+                            }
+
+                            if (in_array('closed', $records)) {
+                                $message = __('Some dates fall on school closed');
+                                return $message;
+                            } else {
+                                return true;
+                            }
+                        }
+                    }
+                ],
             ])
             ->allowEmpty('start_time', function ($context) {
                 if (array_key_exists('full_day', $context['data'])) {

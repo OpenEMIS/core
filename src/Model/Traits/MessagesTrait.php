@@ -780,6 +780,12 @@ trait MessagesTrait
         'UserBodyMasses' => [
             'dateNotWithinPeriod' => 'Date should be within %s and %s'
         ],
+        'Calendars' => [
+            'dateNotWithinPeriod' => 'Date should be within %s and %s',
+            'endDate' => [
+                    'compareWithStartDate' => 'End Date should not be earlier than Start Date'
+                ]
+        ],
         'StaffTransferOut' => [
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
         ],
