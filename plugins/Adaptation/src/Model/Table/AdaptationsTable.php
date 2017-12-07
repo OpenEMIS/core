@@ -5,6 +5,9 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\ORM\Entity;
+use Cake\Cache\Cache;
+use Cake\Filesystem\Folder;
 
 class AdaptationsTable extends AppTable
 {
@@ -60,5 +63,12 @@ class AdaptationsTable extends AppTable
         if ($data->offsetExists('default_value')) {
             $data->offsetUnset('default_value');
         }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        Cache::delete('adaptations');
+        $folder = new Folder();
+        $folder->delete(WWW_ROOT . 'img' . DS . 'adaptations');
     }
 }

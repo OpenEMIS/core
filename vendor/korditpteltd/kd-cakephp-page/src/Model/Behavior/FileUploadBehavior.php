@@ -69,7 +69,7 @@ class FileUploadBehavior extends Behavior
                 $data[$fileContent.'_file_size'] = null;
             } elseif (isset($data[$fileContent.'_content']) && !empty($data[$fileContent.'_content'])) {
                 $data[$fileContent] = base64_decode($data[$fileContent.'_content']);
-            } else {
+            } elseif (!isset($data[$fileName])) {
                 $data[$fileContent] = null;
                 $data[$fileName] = null;
                 $data[$fileContent.'_content'] = null;
