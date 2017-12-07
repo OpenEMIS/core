@@ -49,6 +49,7 @@ class StudentAttendancesTable extends AppTable
             'pages' => ['index']
         ]);
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.Calendar');
         $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
         $this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
         $this->absenceCodeList = $AbsenceTypesTable->getCodeList();
@@ -476,6 +477,10 @@ class StudentAttendancesTable extends AppTable
             $fullDay = '';
             if (empty($entity->StudentAbsences['id'])) {
                 $type = '<i class="fa fa-check"></i>';
+
+                if ($this->isSchoolClosed($this->selectedDate)) {
+                    $type = '<i class="fa fa-minus"></i>';
+                }
             } else {
                 $absenceTypeId = $entity->StudentAbsences['absence_type_id'];
                 $type = __($absenceTypeList[$absenceTypeId]);
@@ -601,42 +606,95 @@ class StudentAttendancesTable extends AppTable
 
     public function onGetSunday(Event $event, Entity $entity)
     {
-        return $this->getAbsenceData($event, $entity, 'sunday');
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, 'Sunday');
+        $isSchoolClosed = $this->isSchoolClosed($date);
+
+        return $this->getAbsenceData($event, $entity, 'sunday', $isSchoolClosed);
     }
 
     public function onGetMonday(Event $event, Entity $entity)
     {
-        return $this->getAbsenceData($event, $entity, 'monday');
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, 'Monday');
+        $isSchoolClosed = $this->isSchoolClosed($date);
+
+        return $this->getAbsenceData($event, $entity, 'monday', $isSchoolClosed);
     }
 
     public function onGetTuesday(Event $event, Entity $entity)
     {
-        return $this->getAbsenceData($event, $entity, 'tuesday');
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, 'Tuesday');
+        $isSchoolClosed = $this->isSchoolClosed($date);
+
+        return $this->getAbsenceData($event, $entity, 'tuesday', $isSchoolClosed);
     }
 
     public function onGetWednesday(Event $event, Entity $entity)
     {
-        return $this->getAbsenceData($event, $entity, 'wednesday');
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, 'Wednesday');
+        $isSchoolClosed = $this->isSchoolClosed($date);
+
+        return $this->getAbsenceData($event, $entity, 'wednesday', $isSchoolClosed);
     }
 
     public function onGetThursday(Event $event, Entity $entity)
     {
-        return $this->getAbsenceData($event, $entity, 'thursday');
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, 'Thursday');
+        $isSchoolClosed = $this->isSchoolClosed($date);
+
+        return $this->getAbsenceData($event, $entity, 'thursday', $isSchoolClosed);
     }
 
     public function onGetFriday(Event $event, Entity $entity)
     {
-        return $this->getAbsenceData($event, $entity, 'friday');
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, 'Friday');
+        $isSchoolClosed = $this->isSchoolClosed($date);
+
+        return $this->getAbsenceData($event, $entity, 'friday', $isSchoolClosed);
     }
 
     public function onGetSaturday(Event $event, Entity $entity)
     {
-        return $this->getAbsenceData($event, $entity, 'saturday');
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, 'Saturday');
+        $isSchoolClosed = $this->isSchoolClosed($date);
+
+        return $this->getAbsenceData($event, $entity, 'saturday', $isSchoolClosed);
     }
 
-    public function getAbsenceData(Event $event, Entity $entity, $key)
+    public function getAbsenceData(Event $event, Entity $entity, $key, $isSchoolClosed)
     {
-        $value = '<i class="fa fa-check"></i>';
+        if ($isSchoolClosed) {
+            $value = '<i class="fa fa-minus"></i>';
+        } else {
+            $value = '<i class="fa fa-check"></i>';
+        }
 
         if (isset($entity->StudentAbsences['id'])) {
             $startDate = $entity->StudentAbsences['start_date'];
@@ -759,9 +817,13 @@ class StudentAttendancesTable extends AppTable
                     if ($firstDayOfWeek->isToday()) {
                         $today = $firstDayOfWeek->dayOfWeek;
                     }
+
+                    // POCOR-2377 adding the school closed text
+                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek) ? __('School Closed') : '';;
+
                     $dayOptions[$firstDayOfWeek->dayOfWeek] = [
                         'value' => $firstDayOfWeek->dayOfWeek,
-                        'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
+                        'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $schoolClosed,
                     ];
                     $this->allDayOptions[strtolower($firstDayOfWeek->format('l'))] = [
                         'date' => $firstDayOfWeek->format('Y-m-d'),
@@ -1066,6 +1128,11 @@ class StudentAttendancesTable extends AppTable
                 } else {
                     $toolbarButtons['back'] = $buttons['back'];
                     $toolbarButtons['back']['type'] = null;
+                }
+
+                // POCOR-2377 hide the edit button if school is closed
+                if ($this->isSchoolClosed($this->selectedDate)) {
+                    $toolbarButtons->offsetUnset('edit');
                 }
             } else { // if user selected All Days, Edit operation will not be allowed
                 if ($toolbarButtons->offsetExists('edit')) {
