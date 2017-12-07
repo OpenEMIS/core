@@ -66,7 +66,7 @@ class InstitutionTripsTable extends AppTable
                                 $InstitutionBuses = TableRegistry::get('Institution.InstitutionBuses');
                                 $busEntity = $InstitutionBuses->get($busId);
 
-                                if ($busEntity->has('capacity')) {
+                                if ($busEntity->has('capacity') && $busEntity->capacity > 0) {
                                     $busCapacity = $busEntity->capacity;
 
                                     if ($passengerCount > $busCapacity) {

@@ -12,6 +12,11 @@ $this->start('toolbar');
 $this->end();
 $this->start('panelBody');
 ?>
+<style type="text/css">
+    .ag-body-container {
+        max-height: 380px;
+    }
+</style>
 <form accept-charset="utf-8" id="content-main-form" class="ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
     <div class="form-horizontal">
         <div class="alert {{InstitutionStudentCompetenciesController.class}}" ng-hide="InstitutionStudentCompetenciesController.message == null">
@@ -29,33 +34,40 @@ $this->start('panelBody');
             <label><?= __('Competency Template') ?></label>
             <input ng-model="InstitutionStudentCompetenciesController.competencyTemplateName" type="text" disabled="disabled">
         </div>
-        <div class="input">
-            <label><?= __('Competency Period') ?></label>
-            <input ng-hide="InstitutionStudentCompetenciesController.itemOptions.length > 0" value="<?= __('No Period') ?>" type="text" disabled="disabled">
-            <div class="input-selection" ng-show="InstitutionStudentCompetenciesController.periodOptions.length > 0">
-                <div class="input" ng-repeat="period in InstitutionStudentCompetenciesController.periodOptions">
-                    <div class="selection-wrapper">
-                        <input ng-value="{{period.id}}" kd-checkbox-radio="{{period.name}}" type="radio" name="competency_period" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="input">
-            <label><?= __('Competency Item') ?></label>
-            <input ng-hide="InstitutionStudentCompetenciesController.itemOptions.length > 0" value="<?= __('No Item') ?>" type="text" disabled="disabled">
-            <div class="input-selection" ng-show="InstitutionStudentCompetenciesController.itemOptions.length > 0">
-                <div class="input" ng-repeat="item in InstitutionStudentCompetenciesController.itemOptions">
-                    <div class="selection-wrapper">
-                        <input ng-value="{{item.id}}" kd-checkbox-radio="{{item.name}}" type="radio" name="competency_item" ng-model="InstitutionStudentCompetenciesController.selectedItem" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-    <div class="clearfix">
-    </div>
+    <div class="clearfix"></div>
     <hr>
-    <h3><?= __('Students') ?></h3>
+    <h3><?= __('Student') ?></h3>
+    <div class="dropdown-filter">
+        <div class="filter-label">
+            <i class="fa fa-filter"></i>
+            <label>Filter</label>
+        </div>
+        <div class="select">
+            <label><?=__('Competency Period');?>:</label>
+            <div class="input-select-wrapper">
+                <select name="competency_period" ng-options="period.id as period.name for period in InstitutionStudentCompetenciesController.periodOptions" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);">
+                    <option value="" ng-show="InstitutionStudentCompetenciesController.periodOptions.length == 0"><?= __('No Options') ?></option>
+                </select>
+            </div>
+        </div>
+        <div class="select">
+            <label><?=__('Competency Item');?>:</label>
+            <div class="input-select-wrapper">
+                <select name="competency_item" ng-options="item.id as item.name for item in InstitutionStudentCompetenciesController.itemOptions" ng-model="InstitutionStudentCompetenciesController.selectedItem" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
+                    <option value="" ng-show="InstitutionStudentCompetenciesController.itemOptions.length == 0"><?= __('No Options') ?></option>
+                </select>
+            </div>
+        </div>
+        <div class="select">
+            <label><?=__('Student');?>:</label>
+            <div class="input-select-wrapper">
+                <select name="student" ng-options="student.student_id as student.user.name_with_id for student in InstitutionStudentCompetenciesController.studentOptions" ng-model="InstitutionStudentCompetenciesController.selectedStudent" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
+                    <option value="" ng-show="InstitutionStudentCompetenciesController.studentOptions.length == 0"><?= __('No Options') ?></option>
+                </select>
+            </div>
+        </div>
+    </div>
     <div id="institution-student-competency-table" class="table-wrapper">
         <div ng-if="InstitutionStudentCompetenciesController.dataReady" kd-ag-grid="InstitutionStudentCompetenciesController.gridOptions"></div>
     </div>
