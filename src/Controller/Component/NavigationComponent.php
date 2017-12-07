@@ -258,8 +258,8 @@ class NavigationComponent extends Component
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
         $institutionControllers = [
             'Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds',
-            'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashWastes',
-            'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
+            'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
+            'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars'
         ];
@@ -677,6 +677,13 @@ class NavigationComponent extends Component
                         'parent' => 'Wash',
                         'params' => ['plugin' => 'Institution'],
                         'selected' => ['InfrastructureWashSanitations.view', 'InfrastructureWashSanitations.add', 'InfrastructureWashSanitations.edit', 'InfrastructureWashSanitations.delete']
+                    ],
+
+                    'InfrastructureWashHygienes.index' => [
+                        'title' => 'Hygiene',
+                        'parent' => 'Wash',
+                        'params' => ['plugin' => 'Institution'],
+                        'selected' => ['InfrastructureWashHygienes.view', 'InfrastructureWashHygienes.add', 'InfrastructureWashHygienes.edit', 'InfrastructureWashHygienes.delete']
                     ],
 
                     'InfrastructureWashWastes.index' => [
