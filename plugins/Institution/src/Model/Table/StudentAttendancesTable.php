@@ -855,6 +855,12 @@ class StudentAttendancesTable extends AppTable
                 } else {
                     $this->selectedDate = $currentDay;
                 }
+
+                if (!is_null($this->request->query('mode'))) {
+                    if ($this->isSchoolClosed($this->selectedDate)) {
+                        unset($this->request->query['mode']);
+                    }
+                }
             } else {
                 $this->selectedDate = $week;
             }
