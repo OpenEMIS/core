@@ -2016,12 +2016,23 @@ trait MessagesTrait
             'OutcomeTemplates' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique'
-                ],
+                ]
             ],
             'OutcomePeriods' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique'
-                ],
+                ]
+            ],
+            'OutcomeGradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
+            ],
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ]
             ],
         ],
         'FieldOption' => [
