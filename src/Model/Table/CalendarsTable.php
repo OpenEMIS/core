@@ -111,11 +111,10 @@ class CalendarsTable extends AppTable
         return $query;
     }
 
-    // public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    // {
-    //     pr('beforeMarshal');
-    //     // if (array_key_exists('academic_period_id', $data)) {
+    public function findDelete(Query $query, array $options)
+    {
+        $query->contain(['CalendarEventDates', 'CalendarTypes']);
 
-    //     // }
-    // }
+        return $query;
+    }
 }
