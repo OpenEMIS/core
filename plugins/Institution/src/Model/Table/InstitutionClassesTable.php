@@ -185,13 +185,11 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
 
-        $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
-        $this->field('institution_shift_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true]]);
+        $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
+        $this->field('institution_shift_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
 
-        $this->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
-        $this->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
-        $this->field('total_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
-        $this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index'=>true]]);
+        $this->field('total_students', ['type' => 'integer', 'visible' => ['index' => true]]);
+        $this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index' => true]]);
 
         $this->field('students', [
             'label' => '',
@@ -199,10 +197,10 @@ class InstitutionClassesTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Classes/students',
             'data' => [
-                'students'=>[],
-                'studentOptions'=>[]
+                'students' => [],
+                'studentOptions' => []
             ],
-            'visible' => ['view'=>true, 'edit'=>true]
+            'visible' => ['view' => true, 'edit' => true]
         ]);
         $this->field('education_grades', [
             'type' => 'element',
@@ -210,7 +208,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'data' => [
                 'grades'=>[]
             ],
-            'visible' => ['view'=>true]
+            'visible' => ['view' => true]
         ]);
 
         $this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
@@ -218,11 +216,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('multigrade');
 
-        $this->field('total_male_students', ['visible' => false]);
-        $this->field('total_female_students', ['visible' => false]);
-
         $this->setFieldOrder([
-            'name', 'staff_id', 'multigrade', 'male_students', 'female_students', 'total_students', 'subjects',
+            'name', 'staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects',
         ]);
     }
 
@@ -248,6 +243,8 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         if ($data->offsetExists('classStudents') && empty($data['classStudents'])) { //only utilize save by association when class student empty.
             $data['class_students'] = [];
+            $data['total_male_students'] = 0;
+            $data['total_female_students'] = 0;
             $data->offsetUnset('classStudents');
         }
     }
@@ -266,18 +263,27 @@ class InstitutionClassesTable extends ControllerActionTable
                     $student = json_decode($this->urlsafeB64Decode($item), true);
                     $newStudents[$student['student_id']] = $student;
                 }
-
                 $institutionClassId = $entity->id;
 
                 $existingStudents = $this->ClassStudents
-                                        ->find('all')
-                                        ->select([
-                                            'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id', 'student_status_id'
-                                        ])
-                                        ->where([
-                                            $this->ClassStudents->aliasField('institution_class_id') => $institutionClassId
-                                        ])
-                                        ->toArray();
+                    ->find('all')
+                    ->select([
+                        'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id', 'student_status_id'
+                    ])
+                    ->where([
+                        $this->ClassStudents->aliasField('institution_class_id') => $institutionClassId
+                    ])
+                    ->toArray();
+
+                $maleTotal = 0;
+                $femaleTotal = 0;
+                foreach ($newStudents as $key => $student) {
+                    if ($student['gender_id'] == 1) {
+                        $maleTotal++;
+                    } else {
+                        $femaleTotal++;
+                    }
+                }
 
                 foreach ($existingStudents as $key => $classStudentEntity) {
                     if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
@@ -291,6 +297,8 @@ class InstitutionClassesTable extends ControllerActionTable
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
                 }
+
+                $this->updateAll(['total_male_students' => $maleTotal, 'total_female_students' => $femaleTotal], ['id' => $entity->id]);
             }
         }
     }
@@ -417,7 +425,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ];
 
         $this->setFieldOrder([
-            'staff_id', 'secondary_staff_id', 'multigrade', 'male_students', 'female_students', 'total_students', 'subjects'
+            'staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
     }
 
@@ -434,6 +442,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'name',
                 'class_number',
                 'staff_id',
+                'total_male_students',
+                'total_female_students',
                 'secondary_staff_id',
                 'institution_shift_id',
                 'institution_id',
@@ -560,8 +570,11 @@ class InstitutionClassesTable extends ControllerActionTable
             $this->controller->redirect($action);
         }
 
+        $this->field('total_students', ['visible' => true]);
+
         $this->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'staff_id', 'secondary_staff_id', 'multigrade', 'students'
+            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'total_male_students', 'total_female_students',
+            'total_students', 'staff_id', 'secondary_staff_id', 'multigrade', 'students'
         ]);
     }
 
@@ -813,9 +826,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
 
-        // $institutionId = $this->Session->read('Institution.Institutions.id');
-        // $this->InstitutionShifts->duplicateInstitutionShifts($institutionId);
-
         $this->field('multigrade', ['visible' => false]);
     }
 
@@ -905,52 +915,9 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-    public function onGetMaleStudents(Event $event, Entity $entity)
-    {
-        if ($entity->has('id')) {
-            $gender_id = 1; // male
-            $table = TableRegistry::get('Institution.InstitutionClassStudents');
-            $count = $table
-                        ->find()
-                        ->contain('Users')
-                        ->where([
-                            'Users.gender_id' => $gender_id,
-                            $table->aliasField('institution_class_id') => $entity->id,
-                            $table->aliasField('student_status_id') .' > 0'
-                            ])
-                        ->count();
-            return $count;
-        }
-    }
-
-    public function onGetFemaleStudents(Event $event, Entity $entity)
-    {
-        if ($entity->has('id')) {
-            $gender_id = 2; // female
-            $table = TableRegistry::get('Institution.InstitutionClassStudents');
-            $count = $table
-                        ->find()
-                        ->contain('Users')
-                        ->where([
-                            'Users.gender_id' => $gender_id,
-                            $table->aliasField('institution_class_id') => $entity->id,
-                            $table->aliasField('student_status_id') .' > 0'
-                            ])
-                        ->count();
-            return $count;
-        }
-    }
-
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
-        if ($entity->has('id')) {
-            $table = TableRegistry::get('Institution.InstitutionClassStudents');
-            $count = $table
-                        ->find()
-                        ->where([$table->aliasField('institution_class_id') => $entity->id])
-                        ->count();
-            return $count;
-        }
+        return $entity->total_male_students + $entity->total_female_students;
     }
 
     public function onGetSubjects(Event $event, Entity $entity)

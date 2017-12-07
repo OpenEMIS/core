@@ -96,7 +96,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                                 education_grade_id: value.education_grade_id,
                                 academic_period_id: value.academic_period_id,
                                 institution_id: value.institution_id,
-                                student_status_id: value.student_status_id
+                                student_status_id: value.student_status_id,
+                                gender_id: value.user.gender.id
                             }
                         ))
                     };
@@ -129,7 +130,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                                 education_grade_id: value.education_grade_id,
                                 academic_period_id: value.academic_period_id,
                                 institution_id: value.institution_id,
-                                student_status_id: value.student_status_id
+                                student_status_id: value.student_status_id,
+                                gender_id: value.gender_id
                             }
                         ))
                     };
