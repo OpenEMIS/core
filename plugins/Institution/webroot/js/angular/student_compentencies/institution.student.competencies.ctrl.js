@@ -21,7 +21,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     Controller.academicPeriodId = null;
     Controller.academicPeriodName = '';
     Controller.institutionId = null;
-    Controller.criteriaGradeOptions = {};
+    Controller.criterias = [];
+    Controller.gradingOptions = [];
     Controller.studentResults = {};
     Controller.studentComments = {};
     // filters
@@ -74,15 +75,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             .then(function (competencyTemplate) {
                 Controller.competencyTemplateId = competencyTemplate.id;
                 Controller.competencyTemplateName = competencyTemplate.code_name;
-                var criterias = competencyTemplate.criterias;
-                angular.forEach(criterias, function(value, key) {
-                    Controller.criteriaGradeOptions[value.id] = {};
-                    Controller.criteriaGradeOptions[value.id]['name'] = value.name;
-                    Controller.criteriaGradeOptions[value.id]['code'] = value.code;
-                    Controller.criteriaGradeOptions[value.id]['grading_type'] = value.grading_type;
-                    Controller.criteriaGradeOptions[value.id]['competency_item_id'] = value.competency_item_id;
-                    Controller.criteriaGradeOptions[value.id]['id'] = value.id;
-                });
+                Controller.criterias = competencyTemplate.criterias;
                 Controller.periodOptions = competencyTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
                     Controller.selectedPeriod = Controller.periodOptions[0].id;
@@ -96,6 +89,16 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 } else {
                     AlertSvc.warning(Controller, "Please setup competency periods for the selected template");
                 }
+
+                return InstitutionStudentCompetenciesSvc.getCompetencyGradingTypes();
+            }, function (error) {
+                console.log(error);
+            })
+            .then(function (gradingTypes) {
+                angular.forEach(gradingTypes, function(value, key) {
+                    Controller.gradingOptions[value.id] = value.grading_options;
+                });
+
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
                     Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
@@ -120,7 +123,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
 
     });
 
-    function resetColumnDefs(criteriaGradeOptions, period, selectedPeriodStatus, item, student) {
+    function resetColumnDefs(criterias, gradingOptions, period, selectedPeriodStatus, item, student) {
         var response = InstitutionStudentCompetenciesSvc.getColumnDefs(item, student, Controller.itemOptions, Controller.studentOptions);
 
         if (angular.isDefined(response.error)) {
@@ -146,7 +149,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     if (item != null && student != null) {
                         // competency criterias
                         var rowData = [];
-                        angular.forEach(criteriaGradeOptions, function (value, key) {
+                        angular.forEach(criterias, function (value, key) {
                             if (value.competency_item_id == item) {
                                 var criteriaName = value.name;
                                 if (value.code != null && value.code.length > 0) {
@@ -159,12 +162,16 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                                     competency_item_id: item,
                                     competency_criteria_name: criteriaName,
                                     competency_criteria_id: value.id,
-                                    grading_options: value.grading_type.grading_options,
+                                    grading_options: {},
                                     result: 0,
                                     save_error: {
                                         result: false
                                     }
                                 };
+
+                                if (angular.isDefined(gradingOptions[value.competency_grading_type_id])) {
+                                    row['grading_options'] = gradingOptions[value.competency_grading_type_id];
+                                }
 
                                 if (angular.isDefined(Controller.studentResults[value.id])) {
                                     row['result'] = Controller.studentResults[value.id];
@@ -260,7 +267,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         })
         .then(function (comments) {
             Controller.formatComments(comments);
-            Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
+            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
         }, function (error) {
         });
     }
@@ -305,7 +312,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
                 }
             };
         }, function(error){
@@ -346,7 +353,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
                 }
             };
         });
