@@ -19,6 +19,7 @@ echo $this->Resource->css('OpenEmis.master.min');
 
 if (isset($theme)) {
 	echo $this->Resource->css($theme);
+    echo $this->Resource->css('OpenEmis.themes/custom/layout.min');
 }
 ?>
 
