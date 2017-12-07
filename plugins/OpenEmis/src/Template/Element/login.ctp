@@ -26,13 +26,14 @@ $icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 
 		if (isset($theme)) {
 			echo $this->Html->css($theme);
-			echo $this->Html->css('OpenEmis.themes/custom/layout.min');
 		}
 
 		echo $this->Html->script('OpenEmis.lib/css_browser_selector');
 		echo $this->Html->script('OpenEmis.lib/jquery/jquery.min');
 		echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
 	?>
+
+	<link rel="stylesheet" href="<?= $this->Url->css('OpenEmis.themes/custom/layout.min') ?>?timestamp=<?=$lastModified?>" >
 
 	<!--[if gte IE 9]>
 	<?php
