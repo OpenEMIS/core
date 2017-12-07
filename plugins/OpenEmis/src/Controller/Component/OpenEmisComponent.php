@@ -47,6 +47,7 @@ class OpenEmisComponent extends Component
         $this->productName = $config['productName'];
         $this->productLogo = isset($config['productLogo']) ? $config['productLogo'] : null;
         $this->footerText = isset($config['footerText']) ? $config['footerText'] : null;
+        $this->lastModified = isset($config['lastModified']) ? $config['lastModified'] : 0;
         $this->controller = $this->_registry->getController();
     }
 
@@ -64,6 +65,7 @@ class OpenEmisComponent extends Component
         $controller->set('footerText', $this->footerText);
         $controller->set('_productName', $this->productName);
         $controller->set('productLogo', $this->productLogo);
+        $controller->set('lastModified', $this->lastModified);
 
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
