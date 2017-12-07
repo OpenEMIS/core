@@ -24,6 +24,7 @@ class POCOR4177 extends AbstractMigration
             ->addColumn('file_content', 'blob', [
                 'limit' => '4294967295',
                 'default' => null,
+                'null' => true
             ])
             ->addColumn('staff_id', 'integer', [
                 'default' => null,
@@ -60,12 +61,12 @@ class POCOR4177 extends AbstractMigration
             ->save();
 
         $this->execute('INSERT INTO `staff_employment_statuses` (id, status_date, comment, file_name, file_content, status_type_id, staff_id, modified_user_id, modified, created_user_id, created) SELECT id, employment_date, comment, file_name, file_content, employment_type_id, staff_id, modified_user_id, modified, created_user_id, created FROM `z_4177_staff_employments`');
-           
+
 
         $this->table('employment_types')->rename('z_4177_employment_types');
         $this->execute('CREATE TABLE `employment_status_types` LIKE `z_4177_employment_types`');
         $this->execute('INSERT INTO `employment_status_types` SELECT * FROM `z_4177_employment_types`');
-        
+
         $table2 = $this->table('user_employments');
         $table2
             ->addColumn('date_from', 'date', [
@@ -119,42 +120,42 @@ class POCOR4177 extends AbstractMigration
         $this->execute('CREATE TABLE `security_functions` LIKE `z_4177_security_functions`');
         $this->execute('INSERT INTO `security_functions` SELECT * FROM `z_4177_security_functions`');
 
-        $sql = "UPDATE `security_functions` 
-                SET name = 'Employment Status', 
-                _view = 'EmploymentStatuses.index|EmploymentStatuses.view', 
-                _edit = 'EmploymentStatuses.edit', 
-                _add = 'EmploymentStatuses.add', 
-                _delete = 'EmploymentStatuses.remove', 
-                _execute = 'EmploymentStatuses.download' 
+        $sql = "UPDATE `security_functions`
+                SET name = 'Employment Status',
+                _view = 'EmploymentStatuses.index|EmploymentStatuses.view',
+                _edit = 'EmploymentStatuses.edit',
+                _add = 'EmploymentStatuses.add',
+                _delete = 'EmploymentStatuses.remove',
+                _execute = 'EmploymentStatuses.download'
                 WHERE id = '3019'";
         $this->execute($sql);
 
-        $sql2 = "UPDATE `security_functions` 
-                SET name = 'Employment Status', 
-                _view = 'StaffEmploymentStatuses.index|StaffEmploymentStatuses.view', 
-                _edit = 'StaffEmploymentStatuses.edit', 
-                _add = 'StaffEmploymentStatuses.add', 
-                _delete = 'StaffEmploymentStatuses.remove', 
-                _execute = 'StaffEmploymentStatuses.download' 
+        $sql2 = "UPDATE `security_functions`
+                SET name = 'Employment Status',
+                _view = 'StaffEmploymentStatuses.index|StaffEmploymentStatuses.view',
+                _edit = 'StaffEmploymentStatuses.edit',
+                _add = 'StaffEmploymentStatuses.add',
+                _delete = 'StaffEmploymentStatuses.remove',
+                _execute = 'StaffEmploymentStatuses.download'
                 WHERE id = '7020'";
         $this->execute($sql2);
 
         $sql3 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE category = 'Staff - Professional Development'";
         $this->execute($sql3);
 
-        //Awards 
+        //Awards
         $sql4 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE id = '3007'";
         $this->execute($sql4);
 
-        //Awards 
+        //Awards
         $sql5 = "UPDATE `security_functions` SET category = 'Staff - Professional' WHERE id = '7027'";
         $this->execute($sql5);
 
-        //Appraisals 
+        //Appraisals
         $sql6 = "UPDATE `security_functions` SET category = 'Staff - Career' WHERE id = '3037'";
         $this->execute($sql6);
 
-        //Appraisals 
+        //Appraisals
         $sql7 = "UPDATE `security_functions` SET category = 'Staff - Career' WHERE id = '7049'";
         $this->execute($sql7);
 
@@ -220,13 +221,13 @@ class POCOR4177 extends AbstractMigration
     {
         $this->execute('DROP TABLE staff_employment_statuses');
         $this->table('z_4177_staff_employments')->rename('staff_employments');
-      
+
         $this->execute('DROP TABLE employment_status_types');
         $this->table('z_4177_employment_types')->rename('employment_types');
 
         $this->execute('DROP TABLE user_employments');
 
         $this->execute('DROP TABLE security_functions');
-        $this->table('z_4177_security_functions')->rename('security_functions');      
+        $this->table('z_4177_security_functions')->rename('security_functions');
     }
 }
