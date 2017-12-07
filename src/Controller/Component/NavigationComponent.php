@@ -1452,7 +1452,7 @@ class NavigationComponent extends Component
             'Calendars.index' => [
                 'title' => 'Calendar',
                 'parent' => 'Administration',
-                'selected' => ['Calendars.index', 'Calendars.view', 'Calendars.add', 'Calendars.edit', 'Calendars.remove']
+                'selected' => ['Calendars.index', 'Calendars.view', 'Calendars.add', 'Calendars.edit', 'Calendars.delete']
             ],
         ];
         return $navigation;
