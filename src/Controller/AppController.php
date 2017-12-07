@@ -176,6 +176,24 @@ class AppController extends Controller
         $this->loadComponent('TabPermission');
     }
 
+    private function darkenColour($rgb, $darker = 2)
+    {
+        $hash = (strpos($rgb, '#') !== false) ? '#' : '';
+        $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
+        if (strlen($rgb) != 6) {
+            return $hash.'000000';
+        }
+        $darker = ($darker > 1) ? $darker : 1;
+
+        list($R16,$G16,$B16) = str_split($rgb, 2);
+
+        $R = sprintf("%02X", floor(hexdec($R16)/$darker));
+        $G = sprintf("%02X", floor(hexdec($G16)/$darker));
+        $B = sprintf("%02X", floor(hexdec($B16)/$darker));
+
+        return $hash.$R.$G.$B;
+    }
+
     public function readAdaptation()
     {
         $adaptations = Cache::read('adaptations');
@@ -199,6 +217,19 @@ class AppController extends Controller
                     return $res;
                 })
                 ->toArray();
+            $colour = $adaptations['colour'];
+            $secondaryColour = $this->darkenColour($colour);
+            $loginBackground = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]). DS . Configure::read('App.imageBaseUrl') . $adaptations['login_page_image'];
+            $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
+            $file = new File($customPath . 'layout.core.template.css');
+            $template = $file->read();
+            $file->close();
+            $template = str_replace('${bgImg}', "'$loginBackground'", $template);
+            $template = str_replace('${secondColor}', $secondaryColour, $template);
+            $template = str_replace('${prodColor}', "#$colour", $template);
+            $file = new File($customPath . 'layout.min.css', true);
+            $file->write($template);
+            $file->close();
             Cache::write('adaptations', $adaptations);
         }
         return $adaptations;
