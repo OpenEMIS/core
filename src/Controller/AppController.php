@@ -21,6 +21,9 @@ use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\SecurityTrait;
+use Cake\Utility\Inflector;
+use Cake\Cache\Cache;
+use Cake\Filesystem\File;
 
 /**
  * Application Controller
@@ -113,6 +116,7 @@ class AppController extends Controller
 
         // Custom Components
         $this->loadComponent('Navigation');
+        $this->productName = $this->readAdaptation()['application_name'];
         $this->loadComponent('Localization.Localization', [
             'productName' => $this->productName
         ]);
@@ -127,6 +131,8 @@ class AppController extends Controller
                 ]
             ],
             'productName' => $this->productName,
+            'productLogo' => $this->readAdaptation()['logo'],
+            'footerText' => $this->readAdaptation()['copyright_notice_in_footer'],
             'theme' => $theme
         ]);
 
@@ -168,6 +174,34 @@ class AppController extends Controller
             $this->eventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
+    }
+
+    public function readAdaptation()
+    {
+        $adaptations = Cache::read('adaptations');
+        if (!$adaptations) {
+            $adaptations = TableRegistry::get('Adaptation.Adaptations')->find()
+                ->formatResults(function ($results) {
+                    $res = [];
+                    foreach ($results as $r) {
+                        if ($r->content) {
+                            $file = new File(WWW_ROOT . 'img' . DS . 'adaptations' . DS . $r->value, true);
+                            $file->write(stream_get_contents($r->content));
+                            $file->close();
+                        }
+                        $code = Inflector::underscore(str_replace(' ', '', $r->name));
+                        if ($code == 'login_page_image' || $code == 'logo' || $code == 'favicon') {
+                            $res[$code] = !empty($r->value) ? 'adaptations' . DS . $r->value : 'default_images' . DS . $r->default_value;
+                        } else {
+                            $res[$code] = !empty($r->value) ? $r->value : $r->default_value;
+                        }
+                    }
+                    return $res;
+                })
+                ->toArray();
+            Cache::write('adaptations', $adaptations);
+        }
+        return $adaptations;
     }
 
     /**

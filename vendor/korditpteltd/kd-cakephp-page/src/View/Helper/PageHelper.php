@@ -600,19 +600,19 @@ EOT;
                     $tmp_file_read = $data[$field['key']];
                 }
 
-                if (!is_resource($tmp_file_read)) {
-                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" style="background-color: '.$backgroundColor.'" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : str_replace('\\', '', $defaultImgView);
-                    $showRemoveButton = (!empty($tmp_file)) ? true : false;
-                } else {
-                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" style="background-color: '.$backgroundColor.'" class="'.$defaultImgViewClass.'" src="'.$field['attributes']['value']['src'].'"/>' : str_replace('\\', '', $defaultImgView);
-                    $showRemoveButton = true;
-                }
-
                 if (isset($field['attributes']['defaultHeight'])) {
                     $defaultWidth = $field['attributes']['defaultWidth'];
                 }
                 if (isset($field['attributes']['defaultHeight'])) {
                     $defaultWidth = $field['attributes']['defaultHeight'];
+                }
+
+                if (!is_resource($tmp_file_read)) {
+                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" style="max-width: ' . $defaultWidth . 'px; max-height: ' . $defaultHeight . 'px;background-color: '.$backgroundColor.'" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : str_replace('\\', '', $defaultImgView);
+                    $showRemoveButton = (!empty($tmp_file)) ? true : false;
+                } else {
+                    $src = (!empty($tmp_file_read)) ? '<img id="existingImage'.$field['key'].'" style="max-width: ' . $defaultWidth . 'px; max-height: ' . $defaultHeight . 'px;background-color: '.$backgroundColor.'" class="'.$defaultImgViewClass.'" src="'.$field['attributes']['value']['src'].'"/>' : str_replace('\\', '', $defaultImgView);
+                    $showRemoveButton = true;
                 }
 
                 $this->includes['jasny']['include'] = true;

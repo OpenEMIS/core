@@ -30,31 +30,80 @@ class AdaptationsController extends PageController
         return $events;
     }
 
+    private function darkenColour($rgb, $darker = 2)
+    {
+        $hash = (strpos($rgb, '#') !== false) ? '#' : '';
+        $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
+        if (strlen($rgb) != 6) {
+            return $hash.'000000';
+        }
+        $darker = ($darker > 1) ? $darker : 1;
+
+        list($R16,$G16,$B16) = str_split($rgb, 2);
+
+        $R = sprintf("%02X", floor(hexdec($R16)/$darker));
+        $G = sprintf("%02X", floor(hexdec($G16)/$darker));
+        $B = sprintf("%02X", floor(hexdec($B16)/$darker));
+
+        return $hash.$R.$G.$B;
+    }
+
+    private function checkIfTooLight($hex)
+    {
+        //break up the color in its RGB components
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        //do simple weighted avarage
+        //
+        //(This might be overly simplistic as different colors are perceived
+        // differently. That is a green of 128 might be brighter than a red of 128.
+        // But as long as it's just about picking a white or black text color...)
+        if ($r + $g + $b > 350) {
+            return '#000000';
+            //bright color, use dark font
+        } else {
+            return '#FFFFFF';
+            //dark color, use bright font
+        }
+    }
+
     public function onRenderValue(Event $event, Entity $entity, $key)
     {
-        $id = $entity->id;
-        if (!$entity->value) {
-            return '';
-        }
-        switch ($id) {
-            case self::COLOUR:
-                return '<div style="float: left; width: 200px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.'"></div>';
-                break;
-            default:
-                return $entity->value;
-                break;
+        if ($this->request->param('action') != 'edit') {
+            $id = $entity->id;
+            if (!$entity->value) {
+                return '';
+            }
+            switch ($id) {
+                case self::COLOUR:
+                    return
+                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.'; text-align: center; color: '.$this->checkIfTooLight($entity->value).'">'.__('Primary Colour').'</div>'.
+                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: '. $this->darkenColour('#'.$entity->value) .';text-align: center; color: '.$this->checkIfTooLight($this->darkenColour($entity->value)).'">'.__('Secondary Colour').'</div>'
+                    ;
+                    break;
+                default:
+                    return $entity->value;
+                    break;
+            }
         }
     }
 
     public function onRenderDefaultValue(Event $event, Entity $entity, $key)
     {
-        switch ($entity->id) {
-            case self::COLOUR:
-                return '<div style="float: left; width: 200px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.'"></div>';
-                break;
-            default:
-                return $entity->default_value;
-                break;
+        if ($this->request->param('action') != 'edit') {
+            switch ($entity->id) {
+                case self::COLOUR:
+                    return
+                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.'; text-align: center; color: '.$this->checkIfTooLight($entity->default_value).'">'.__('Primary Colour').'</div>'.
+                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: '. $this->darkenColour('#'.$entity->default_value) .';text-align: center; color: '.$this->checkIfTooLight($this->darkenColour($entity->default_value)).'">'.__('Secondary Colour').'</div>'
+                        ;
+                    break;
+                default:
+                    return $entity->default_value;
+                    break;
+            }
         }
     }
 

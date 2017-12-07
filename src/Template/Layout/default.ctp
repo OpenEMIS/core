@@ -40,7 +40,7 @@
 
 <body class='fuelux' ng-app="OE_Core" ng-controller="AppCtrl">
 
-	<?=  $this->element('OpenEmis.header'); ?>
+	<?= $this->element('OpenEmis.header'); ?>
 
 	<bg-splitter orientation="horizontal" class="pane-wrapper" resize-callback="splitterDragCallback" elements="getSplitterElements">
 		<bg-pane id="leftPane" class="left-pane" min-size-p="30px" max-size-p="40">
@@ -53,7 +53,6 @@
 
 		<bg-pane id="rightPane" class="right-pane pane-container">
 			<?php
-				echo $this->element('OpenEmis.header');
 				echo $this->fetch('content');
 				if (isset($modals)) {
 					echo $this->element('ControllerAction.modal');
