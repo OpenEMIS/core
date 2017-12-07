@@ -6,6 +6,7 @@ use DatePeriod;
 use DateInterval;
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Page\Model\Entity\PageElement;
 
@@ -43,7 +44,10 @@ class CalendarsController extends PageController
         $calendarEventId = $entity->id;
         $query = $this->CalendarEventDates->find();
 
-        if ($this->Page->is(['index', 'view'])) {
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $format = $ConfigItem->value('date_format');
+
+        if ($this->Page->is(['index', 'view', 'delete'])) {
             $calendarEventDate = $query
                 ->where([
                     $this->CalendarEventDates->aliasField('calendar_event_id') => $calendarEventId
@@ -52,7 +56,7 @@ class CalendarsController extends PageController
                 ->toArray()
             ;
 
-            $startDate = min($calendarEventDate)['date']->format('d-m-Y');
+            $startDate = min($calendarEventDate)['date']->format($format);
 
             return $startDate;
         }
@@ -63,7 +67,10 @@ class CalendarsController extends PageController
         $calendarEventId = $entity->id;
         $query = $this->CalendarEventDates->find();
 
-        if ($this->Page->is(['index', 'view'])) {
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $format = $ConfigItem->value('date_format');
+
+        if ($this->Page->is(['index', 'view', 'delete'])) {
             $calendarEventDate = $query
                 ->where([
                     $this->CalendarEventDates->aliasField('calendar_event_id') => $calendarEventId
@@ -72,7 +79,7 @@ class CalendarsController extends PageController
                 ->toArray()
             ;
 
-            $endDate = max($calendarEventDate)['date']->format('d-m-Y');
+            $endDate = max($calendarEventDate)['date']->format($format);
 
             return $endDate;
         }
@@ -328,9 +335,7 @@ class CalendarsController extends PageController
                 'institutionId' => $encodedInstitutionId,
                 $encodedInstitutionId
             ]);
-            $page->addCrumb(__('Calendar'));
-        } else {
-            $page->addCrumb(__('Calendar'));
         }
+        $page->addCrumb(__('Calendar'));
     }
 }
