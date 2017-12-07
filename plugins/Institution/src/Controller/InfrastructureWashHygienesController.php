@@ -187,6 +187,8 @@ class InfrastructureWashHygienesController extends PageController
                  ['label' => __('Non-functional'), 'key' => 'nonfunctional']
              ])
              ->setAttributes('row', $quantity);
+        $page->move('quantities')->after('infrastructure_wash_hygiene_education_id'); 
+
     }
 
     private function getHygieneQuantity(Entity $entity)
