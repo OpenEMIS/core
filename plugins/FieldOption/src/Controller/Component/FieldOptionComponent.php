@@ -121,6 +121,10 @@ class FieldOptionComponent extends Component
         'InfrastructureWashSanitationUses' => ['title' => 'Infrastructure WASH Sanitation Uses', 'className' => 'Institution.InfrastructureWashSanitationUses', 'parent' => 'Infrastructure'],
         'InfrastructureWashSanitationQualities' => ['title' => 'Infrastructure WASH Sanitation Qualities', 'className' => 'Institution.InfrastructureWashSanitationQualities', 'parent' => 'Infrastructure'],
         'InfrastructureWashSanitationAccessibilities' => ['title' => 'Infrastructure WASH Sanitation Accessibilities', 'className' => 'Institution.InfrastructureWashSanitationAccessibilities', 'parent' => 'Infrastructure'],
+
+        'InfrastructureWashHygieneTypes' => ['title' => 'Infrastructure WASH Hygiene Types', 'className' => 'Institution.InfrastructureWashHygieneTypes', 'parent' => 'Infrastructure'],
+        'InfrastructureWashHygieneSoapashAvailabilities' => ['title' => 'Infrastructure WASH Hygiene Soap/Ash Availabilities', 'className' => 'Institution.InfrastructureWashHygieneSoapashAvailabilities', 'parent' => 'Infrastructure'],
+        'InfrastructureWashHygieneEducations' => ['title' => 'Infrastructure WASH Hygiene Educations', 'className' => 'Institution.InfrastructureWashHygieneEducations', 'parent' => 'Infrastructure'],
         'InfrastructureWashWasteTypes' => ['title' => 'Infrastructure WASH Waste Types', 'className' => 'Institution.InfrastructureWashWasteTypes', 'parent' => 'Infrastructure'],
         'InfrastructureWashWasteFunctionalities' => ['title' => 'Infrastructure WASH Waste Functionalities', 'className' => 'Institution.InfrastructureWashWasteFunctionalities', 'parent' => 'Infrastructure'],
         'InfrastructureWashSewageTypes' => ['title' => 'Infrastructure WASH Sewage Types', 'className' => 'Institution.InfrastructureWashSewageTypes', 'parent' => 'Infrastructure'],
