@@ -131,6 +131,28 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $value;
     }
 
+    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($this->request->query('criteriaForm')) {
+            $this->request->data[$this->alias()]['education_subject_id'] = $this->getQueryString('education_subject_id', 'criteriaForm');
+            $this->request->data[$this->alias()]['name'] = $this->getQueryString('name', 'criteriaForm');
+            $this->request->data[$this->alias()]['code'] = $this->getQueryString('code', 'criteriaForm');
+            $this->request->data[$this->alias()]['outcome_grading_type_id'] = $this->getQueryString('outcome_grading_type_id', 'criteriaForm');
+        }
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+        if ($toolbarButtons->offsetExists('back')) {
+            $url = $this->url('index');
+            if (isset($url['criteriaForm'])) {
+                unset($url['criteriaForm']);
+            }
+            $toolbarButtons['back']['url'] = $url;
+        }
+    }
+
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id');
@@ -143,6 +165,15 @@ class OutcomeCriteriasTable extends ControllerActionTable
         $this->setFieldOrder([
             'academic_period_id', 'outcome_template_id', 'education_subject_id', 'code', 'name', 'outcome_grading_type_id'
         ]);
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $url = $this->url('index');
+        if (isset($url['criteriaForm'])) {
+            unset($url['criteriaForm']);
+        }
+        $extra['redirect'] = $url;
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -199,10 +230,18 @@ class OutcomeCriteriasTable extends ControllerActionTable
     public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $options = [
-                '' => '-- '.__('Select').' --',
-                'createNew' => '-- '.__('Create New'). ' --'
-            ];
+            if ($action == 'add') {
+                // only allow createNew in add
+                $options = [
+                    '' => '-- '.__('Select').' --',
+                    'createNew' => '-- '.__('Create New').' --'
+                ];
+                $attr['onChangeReload'] = 'changeGradingType';
+
+            } else {
+                $options = ['' => '-- '.__('Select').' --'];
+            }
+
             $gradingTypeOptions = $this->GradingTypes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                 ->toArray();
@@ -211,8 +250,27 @@ class OutcomeCriteriasTable extends ControllerActionTable
             $attr['options'] = $options;
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
-            $attr['onChangeReload'] = 'changeGradingType';
         }
         return $attr;
+    }
+
+    public function addOnChangeGradingType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $competencyGradingTypeId = $data[$this->alias()]['outcome_grading_type_id'];
+
+        if ($competencyGradingTypeId == 'createNew') {
+            $criteriaParams = [
+                'education_subject_id' => $data[$this->alias()]['education_subject_id'],
+                'name' => $data[$this->alias()]['name'],
+                'code' => $data[$this->alias()]['code']
+            ];
+
+            $url = $this->url('add');
+            $url['action'] = 'GradingTypes';
+            $url = $this->setQueryString($url, $criteriaParams, 'criteriaForm');
+
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
     }
 }
