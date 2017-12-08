@@ -9,20 +9,25 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
     var service = {
         init: init,
         getClassDetails: getClassDetails,
+        getStudentStatusId: getStudentStatusId,
+        getClassStudents: getClassStudents,
         getCompetencyTemplate: getCompetencyTemplate,
+        getCompetencyGradingTypes: getCompetencyGradingTypes,
         translate: translate,
         saveCompetencyResults: saveCompetencyResults,
         saveCompetencyComments: saveCompetencyComments,
         getStudentCompetencyResults: getStudentCompetencyResults,
         getStudentCompetencyComments: getStudentCompetencyComments,
         getColumnDefs: getColumnDefs,
-        renderInput: renderInput,
-        renderText: renderText
+        renderInput: renderInput
     };
 
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
+        StudentStatuses: 'Student.StudentStatuses',
+        InstitutionClassStudents: 'Institution.InstitutionClassStudents',
         CompetencyTemplates: 'Competency.CompetencyTemplates',
+        CompetencyGradingTypes: 'Competency.CompetencyGradingTypes',
         InstitutionCompetencyResults: 'Institution.InstitutionCompetencyResults',
         CompetencyItemComments: 'Institution.InstitutionCompetencyItemComments'
     };
@@ -55,7 +60,29 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .ajax({success: success, defer:true});
     }
 
-    function getStudentCompetencyResults(templateId, periodId, itemId, institutionId, academicPeriodId) {
+    function getStudentStatusId(statusCode) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return StudentStatuses
+            .select(['id'])
+            .where({code: statusCode})
+            .ajax({success: success, defer:true});
+    }
+
+    function getClassStudents(classId, enrolledStatusId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return InstitutionClassStudents
+            .select()
+            .contain(['Users'])
+            .where({institution_class_id: classId, student_status_id: enrolledStatusId})
+            .order(['Users.first_name', 'Users.last_name'])
+            .ajax({success: success, defer:true});
+    }
+
+    function getStudentCompetencyResults(templateId, periodId, itemId, studentId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -64,13 +91,14 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 competency_template_id: templateId,
                 competency_period_id: periodId,
                 competency_item_id: itemId,
+                student_id: studentId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             })
             .ajax({success: success, defer:true});
     }
 
-    function getStudentCompetencyComments(templateId, periodId, itemId, institutionId, academicPeriodId) {
+    function getStudentCompetencyComments(templateId, periodId, itemId, studentId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -79,6 +107,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 competency_template_id: templateId,
                 competency_period_id: periodId,
                 competency_item_id: itemId,
+                student_id: studentId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             })
@@ -92,122 +121,68 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         };
         return CompetencyTemplates
             .get(primaryKey)
-            .contain(['Periods.CompetencyItems', 'Criterias.GradingTypes.GradingOptions', 'InstitutionCompetencyResults', 'Items'])
+            .contain(['Periods.CompetencyItems', 'Criterias'])
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(criterias, item, direction) {
-        if (direction == 'ltr') {
-            direction = 'left';
-        } else {
-            direction = 'right';
-        }
+    function getCompetencyGradingTypes() {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return CompetencyGradingTypes
+            .select()
+            .contain(['GradingOptions'])
+            .ajax({success: success, defer:true});
+    }
+
+    function getColumnDefs(item, student, itemOptions, studentOptions) {
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
         };
-        var columnDefs = [];
 
-        columnDefs.push({
-            headerName: "OpenEMIS ID",
-            field: "openemis_id",
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-            filter: 'text'
-        });
-        columnDefs.push({
-            headerName: "Student Name",
-            field: "name",
-            sort: 'asc',
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-            filter: 'text'
-        });
-        columnDefs.push({
-            headerName: "student id",
-            field: "student_id",
-            hide: true,
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-        });
-        columnDefs.push({
-            headerName: "Student Status",
-            field: "student_status_name",
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-            filter: 'text'
-        });
-
-        var ResultsSvc = this;
-
-        // comments column
-        if (angular.isDefined(item)) {
-            var extra = {};
-            var columnDef = {
-                headerName: "Comments",
-                field: "comments",
-                filterParams: filterParams,
-                pinned: direction,
-                filter: 'text',
-                menuTabs: menuTabs
-            };
-            columnDef = ResultsSvc.renderText(columnDef, extra);
-            columnDefs.push(columnDef);
+        // dynamic table headers
+        var criteriaHeader = 'Competency Criteria';
+        var resultHeader = 'Result';
+        if (itemOptions.length > 0 && item != null && studentOptions.length > 0 && student != null) {
+            var itemObj = $filter('filter')(itemOptions, {'id':item});
+            if (itemObj.length > 0) {
+                criteriaHeader = itemObj[0].name + ' Criteria';
+            }
+            var studentObj = $filter('filter')(studentOptions, {'student_id':student});
+            if (studentObj.length > 0) {
+                resultHeader = studentObj[0].user.name_with_id;
+            }
         }
 
-        angular.forEach(criterias, function(criteria, key) {
-            if (criteria.competency_item_id == item) {
-                var isMarksType = true; // default is MARKS type
-                var isGradesType = false;
-                if (criteria.grading_type.grading_options.length == 0) {
-                    // return error if No Grading Options
-                    return {error: 'You need to configure Grading Options first'};
-                }
-                var headerLabel = criteria.name;
-                if (criteria.code != null && criteria.code.length > 0) {
-                    headerLabel = criteria.code + " <span class='divider'></span> " + criteria.name;
-                }
+        var columnDefs = [];
+        columnDefs.push({
+            headerName: criteriaHeader,
+            field: "competency_criteria_name",
+            filterParams: filterParams,
+            menuTabs: menuTabs,
+            filter: 'text'
+        });
+        columnDefs.push({
+            headerName: "competency criteria id",
+            field: "competency_criteria_id",
+            hide: true
+        });
 
-                var field = 'competency_criteria_id_' + criteria.id;
-                var columnDef = {
-                    headerName: headerLabel,
-                    field: field,
-                    filterParams: filterParams,
-                    filter: 'text',
-                    menuTabs: menuTabs
-                };
-
-                var extra = {};
-                var gradingOptions = {
-                    0 : {
-                        id: 0,
-                        code: '',
-                        name: '-- Select --'
-                    }
-                };
-
-                angular.forEach(criteria.grading_type.grading_options, function(obj, key) {
-                    gradingOptions[obj.id] = obj;
-                });
-
-                extra = {
-                    gradingOptions: gradingOptions,
-                    criteria: criteria
-                };
-                columnDef = ResultsSvc.renderInput(columnDef, extra);
-                this.push(columnDef);
-            }
-        }, columnDefs);
+        var columnDef = {
+            headerName: resultHeader,
+            field: "result",
+            filterParams: filterParams,
+            menuTabs: menuTabs
+        };
+        var extra = {};
+        columnDef = this.renderInput(columnDef, extra);
+        columnDefs.push(columnDef);
 
         return {data: columnDefs};
     }
 
     function renderInput(cols, extra) {
-        var gradingOptions = extra.gradingOptions;
         var vm = this;
 
         cols = angular.merge(cols, {
@@ -217,14 +192,22 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 }
             },
             cellRenderer: function(params) {
-                var studentStatusCode = params.data.student_status_code;
                 var periodEditable = params.data.period_editable;
+                var gradingOptions = {
+                    0 : {
+                        id: 0,
+                        code: '',
+                        name: '-- Select --'
+                    }
+                };
+                if (angular.isDefined(params.data.grading_options)) {
+                    angular.forEach(params.data.grading_options, function(obj, key) {
+                        gradingOptions[obj.id] = obj;
+                    });
+                }
 
-                if (studentStatusCode == 'CURRENT' && periodEditable) {
-
+                if (periodEditable) {
                     var oldValue = params.value;
-                    var studentId = params.data.student_id;
-                    // var periodId = period.id;
 
                     var eCell = document.createElement('div');
                     eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
@@ -254,13 +237,21 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                             .then(function(response) {
                                 params.data.save_error[params.colDef.field] = false;
                                 AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
-                                params.api.refreshCells([params.node], [params.colDef.field]);
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
 
                             }, function(error) {
                                 params.data.save_error[params.colDef.field] = true;
                                 console.log(error);
                                 AlertSvc.error(controller, "There was an error when saving the results");
-                                params.api.refreshCells([params.node], [params.colDef.field]);
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
                             });
                         }
                     });
@@ -268,7 +259,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                     eCell.appendChild(eSelect);
 
                 } else {
-                    // don't allow input if student is not enrolled
+                    // don't allow input if period is not editable
                     var cellValue = '';
                     if (angular.isDefined(params.value) && params.value.length != 0 && params.value != 0) {
                         cellValue = gradingOptions[params.value]['name'];
@@ -284,43 +275,80 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
 
                 return eCell;
             },
+            pinnedRowCellRenderer: function(params) {
+                var periodEditable = params.data.period_editable;
+
+                if (periodEditable) {
+                    var oldValue = params.value;
+
+                    var eCell = document.createElement('div');
+                    var textInput = document.createElement('input');
+                    textInput.setAttribute("type", "text");
+                    textInput.setAttribute("class", "oe-cell-editable");
+                    textInput.value = params.value;
+                    eCell.appendChild(textInput);
+
+                    // allow keyboard shortcuts
+                    textInput.addEventListener('keydown', function(event) {
+                        event.stopPropagation();
+                    });
+
+                    textInput.addEventListener('blur', function() {
+                        var newValue = textInput.value;
+
+                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            params.data[params.colDef.field] = newValue;
+
+                            var controller = params.context._controller;
+                            vm.saveCompetencyComments(params)
+                            .then(function(response) {
+                                params.data.save_error[params.colDef.field] = false;
+                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+
+                            }, function(error) {
+                                params.data.save_error[params.colDef.field] = true;
+                                console.log(error);
+                                AlertSvc.error(controller, "There was an error when saving the comments");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+                            });
+                        }
+                    });
+
+                } else {
+                    // don't allow input if period is not editable
+                    var cellValue = '';
+                    if (angular.isDefined(params.value) && params.value.length != 0) {
+                        cellValue = params.value;
+                    }
+
+                    var eCell = document.createElement('div');
+                    var eLabel = document.createTextNode(cellValue);
+                    eCell.appendChild(eLabel);
+                }
+                return eCell;
+            },
             suppressMenu: true
         });
-
         return cols;
     }
 
-    function renderText(cols, extra) {
-        cols = angular.merge(cols, {
-            cellClassRules: {
-                'oe-cell-highlight': function(params) {
-                    var studentStatusCode = params.node.data.student_status_code;
-                    var periodEditable = params.node.data.period_editable;
-                    return (studentStatusCode == 'CURRENT' && periodEditable);
-                },
-                'oe-cell-error': function(params) {
-                    return params.data.save_error[params.colDef.field];
-                }
-            },
-            editable: function(params) {
-                // only enrolled student is editable
-                var studentStatusCode = params.node.data.student_status_code;
-                var periodEditable = params.node.data.period_editable;
-                return (studentStatusCode == 'CURRENT' && periodEditable);
-            }
-        });
-        return cols;
-    };
-
     function saveCompetencyResults(params) {
-        var field = params.colDef.field;
         var competencyTemplateId = params.context.competency_template_id;
         var competencyItemId = params.data.competency_item_id;
-        var competencyCriteriaId = field.replace('competency_criteria_id_', '');
+        var competencyCriteriaId = params.data.competency_criteria_id;
         var competencyPeriodId = params.data.competency_period_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-        var competencyGradingOptionId = params.data[field];
+        var competencyGradingOptionId = params.data.result;
         var studentId = params.data.student_id;
 
         var saveObj = {
@@ -328,7 +356,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             student_id: studentId,
             competency_template_id: competencyTemplateId,
             competency_item_id: competencyItemId,
-            competency_criteria_id: parseInt(competencyCriteriaId),
+            competency_criteria_id: competencyCriteriaId,
             competency_period_id: competencyPeriodId,
             institution_id: institutionId,
             academic_period_id: academicPeriodId
@@ -342,7 +370,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         var competencyPeriodId = params.data.competency_period_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-        var itemComments = params.data.comments;
+        var itemComments = params.data.result;
         var studentId = params.data.student_id;
 
         var saveObj = {
