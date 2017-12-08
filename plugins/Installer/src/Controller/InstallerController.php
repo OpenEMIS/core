@@ -16,7 +16,7 @@ class InstallerController extends AppController
     ];
 
     public function initialize()
-    {   
+    {
         $this->loadComponent('Angular.Angular', [
             'app' => 'OE_Core',
             'modules' => [
@@ -25,7 +25,7 @@ class InstallerController extends AppController
         ]);
 
         $this->loadComponent('OpenEmis.OpenEmis', [
-            'productName' => 'OpenEMIS School',
+            'productName' => 'OpenSMIS',
             'theme' => 'school'
         ]);
 
