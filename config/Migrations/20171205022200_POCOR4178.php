@@ -41,7 +41,7 @@ class POCOR4178 extends AbstractMigration
         $loginBackground = new File(WWW_ROOT . 'img' . DS. 'default_images' .DS. $bgFile);
         $favicon = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'favicon.ico');
         $logo = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'oe-logo.png');
-        $productName = Configure::read('schoolMode') ? 'OpenSMIS School' : 'OpenEMIS Core';
+        $productName = Configure::read('schoolMode') ? 'OpenSMIS' : 'OpenEMIS Core';
         $color = Configure::read('schoolMode') ? '3366CC' : '6699CC';
         $data = [
             [
