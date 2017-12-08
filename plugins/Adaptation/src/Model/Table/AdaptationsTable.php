@@ -31,7 +31,18 @@ class AdaptationsTable extends AppTable
 
     public function validationDefault(Validator $validator)
     {
+        $adaptations = $this;
         return $validator
+            ->add('value', 'ruleNotHexadecimal', [
+                'rule' => function ($value, $context) use ($adaptations) {
+                    if ($context['data']['id'] == $adaptations::COLOUR) {
+                        return !$value || (ctype_xdigit($value) && strlen($value) == 6);
+                    } else {
+                        return true;
+                    }
+                },
+                'message' => __('Please enter a valid 6 digit hexadecimal code')
+            ])
             ->allowEmpty('content')
             ->allowEmpty('default_content')
             ->allowEmpty('default_value');
@@ -57,6 +68,9 @@ class AdaptationsTable extends AppTable
                     ]
                 ]);
                 break;
+            case self::COLOUR:
+                $data['value'] = strtoupper($data['value']);
+                break;
         }
         if ($data->offsetExists('default_content')) {
             $data->offsetUnset('default_content');
@@ -65,6 +79,8 @@ class AdaptationsTable extends AppTable
             $data->offsetUnset('default_value');
         }
     }
+
+
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
