@@ -29,7 +29,7 @@ class InstitutionCompetencyItemCommentsTable extends ControllerActionTable
     {
         // do not save new record if comment is empty
         $comments = $entity->comments;
-        if ($entity->isNew() && empty($comments)) {
+        if ($entity->isNew() && $comments === '') {
             return false;
         }
     }
@@ -38,7 +38,7 @@ class InstitutionCompetencyItemCommentsTable extends ControllerActionTable
     {
         // delete record if user removes comment
         $comments = $entity->comments;
-        if (empty($comments)) {
+        if ($comments === '') {
             $this->delete($entity);
         }
     }
@@ -50,13 +50,15 @@ class InstitutionCompetencyItemCommentsTable extends ControllerActionTable
         $competencyItemId = $options['competency_item_id'];
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
+        $studentId = $options['student_id'];
         return $query
             ->where([
                 $this->aliasField('competency_template_id') => $competencyTemplateId,
                 $this->aliasField('competency_period_id') => $competencyPeriodId,
                 $this->aliasField('competency_item_id') => $competencyItemId,
                 $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $academicPeriodId
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('student_id') => $studentId
             ]);
     }
 }

@@ -53,7 +53,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         },
         CasesTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
-            model: 'Institution.InstitutionCases'
+            model: 'Cases.InstitutionCases'
         },
         StaffTrainingApplicationsTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
