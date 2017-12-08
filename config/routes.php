@@ -82,6 +82,11 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->fallbacks('Route');
 });
 
+Router::scope('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer'], function ($route) {
+    $route->extensions(['json']);
+    $route->connect('/:action');
+});
+
 
 // For restful controller
 Router::scope('/restful', [], function ($routes) {

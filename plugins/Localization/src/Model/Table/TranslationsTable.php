@@ -25,7 +25,7 @@ class TranslationsTable extends AppTable {
 
 		// Get the localization option from localization component
 		$localeOptions = $this->Localization->getOptions();
-		
+
 		if(array_key_exists($defaultLocale, $localeOptions)){
 			unset($localeOptions[$defaultLocale]);
 		}
@@ -43,7 +43,7 @@ class TranslationsTable extends AppTable {
 		if(array_key_exists($selectedOption, $localeOptions)){
 			$selected = $selectedOption;
 		}
-		
+
 		$this->ControllerAction->setFieldOrder([
 			 $defaultLocale, $selected
 		]);
@@ -64,7 +64,7 @@ class TranslationsTable extends AppTable {
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$options['auto_search'] = false;
 		$options['auto_contain'] = false;
-		
+
 		$search = $this->ControllerAction->getSearchKey();
 
 		if (!empty($search)) {
@@ -84,15 +84,4 @@ class TranslationsTable extends AppTable {
 		}
     	return $buttons;
     }
-
-    public function validationDefault(Validator $validator) {
-    	$validator = parent::validationDefault($validator);
-
-		$validator
-			->add('en', 'ruleUnique', [
-  				'rule' => 'checkUniqueEnglishField'
-  			])
-  			;
-		return $validator;
-	}
 }

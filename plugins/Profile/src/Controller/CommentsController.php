@@ -250,8 +250,7 @@ class CommentsController extends PageController
             'Languages' => ['text' => __('Languages')],
             'SpecialNeeds' =>['text' =>  __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
-            'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')]
+            'Comments' => ['text' => __('Comments')]
         ];
 
         // extra student tabs
@@ -295,7 +294,7 @@ class CommentsController extends PageController
                     $url['queryString'] = $encodedUserAndNationalityId;
                 }
             }
-            $obj['url'] = $url;
+            $tabElements[$action]['url'] = $url;
         }
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);

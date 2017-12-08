@@ -12,7 +12,8 @@ class StudentStatusesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index', 'view']
+            'Results' => ['index', 'view'],
+            'StudentCompetencies' => ['index']
         ]);
 	}
 

@@ -19,21 +19,14 @@
                 <li class="<?=$action == '2' ? 'active' : '' ?>">
                     <div class="step-wrapper">
                         <span><i class="fa fa-lg fa-arrows-h"></i></span>
-                        Step 2: Connect Database
+                        Step 2: Setting Up
                         <span class="chevron"></span>
                     </div>
                 </li>
                 <li class="<?=$action == '3' ? 'active' : '' ?>">
                     <div class="step-wrapper">
-                        <span><i class="fa fa-lg fa-cube"></i></span>
-                        Step 3: Create Account
-                        <span class="chevron"></span>
-                    </div>
-                </li>
-                <li class="<?=$action == '4' ? 'active' : '' ?>">
-                    <div class="step-wrapper">
                         <span><i class="fa fa-lg fa-map-marker"></i></span>
-                        Step 4: Launch Application
+                        Step 3: Launch Application
                         <span class="chevron"></span>
                     </div>
                 </li>
@@ -71,40 +64,14 @@
 
                     <?php
                         echo $this->Form->create($databaseConnection, ['class' => 'form-horizontal']);
+                    ?>
+                    <div class="section-header">Database Connection Information</div>
+                    <div class="clearfix">&nbsp;</div>
+                    <?php
                         echo $this->Form->input('database_server_host', ['class' => 'form-control db-host', 'value' => 'localhost']);
                         echo $this->Form->input('database_server_port', ['class' => 'form-control db-port', 'value' => '3306']);
-                        echo $this->Form->input('admin_user', ['class' => 'form-control admin-user', 'value' => 'root']);
-                        echo $this->Form->input('admin_password', ['class' => 'form-control admin-password', 'type' => 'password']);
-                    ?>
-                    <div class="form-group">
-                        <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default', 'onclick' => "(function(){
-                            if (document.querySelector('.db-host').value === '' ||
-                                document.querySelector('.db-port').value === '' ||
-                                document.querySelector('.admin-user').value === '' ||
-                                document.querySelector('.admin-password').value === '') {
-                                    document.querySelector('.spinner-wrapper').style.display='none';
-                            }
-                            else {
-                                document.querySelector('.spinner-wrapper').style.display='block';
-                            }
-                        })();"])?>
-                    </div>
-                    <?php
-                        echo $this->Form->end();
-                    ?>
-                </div>
-            </div>
-            <?php
-                elseif ($action == '3'):
-            ?>
-
-            <div class="step-pane sample-pane <?=$action == '3' ? 'active' : '' ?>" data-restrict="3" data-step="3">
-                <div class="step-pane-wrapper">
-                    <h1>Account setup</h1>
-                    <p>In order to access OpenSMIS application, you will need to create an user account.</p>
-
-                    <?php
-                        echo $this->Form->create($superAdminCreation, ['class' => 'form-horizontal']);
+                        echo $this->Form->input('database_admin_user', ['label' => __('Admin User'), 'class' => 'form-control admin-user', 'value' => 'root']);
+                        echo $this->Form->input('database_admin_password', ['label' => __('Admin Password'), 'class' => 'form-control admin-password', 'type' => 'password']);
                     ?>
                     <div class="section-header">Administrator Account</div>
                     <div class="clearfix">&nbsp;</div>
@@ -121,7 +88,11 @@
                     ?>
                     <div class="form-group">
                         <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default', 'onclick' => "(function(){
-                            if (document.querySelector('.username').value === '' ||
+                            if (document.querySelector('.db-host').value === '' ||
+                                document.querySelector('.db-port').value === '' ||
+                                document.querySelector('.admin-user').value === '' ||
+                                document.querySelector('.admin-password').value === '' ||
+                                document.querySelector('.username').value === '' ||
                                 document.querySelector('.password').value === '' ||
                                 document.querySelector('.retype').value === '' ||
                                 document.querySelector('.area-code').value === '' ||
@@ -139,9 +110,9 @@
                 </div>
             </div>
             <?php
-                elseif ($action == '4'):
+                elseif ($action == '3'):
             ?>
-            <div class="step-pane sample-pane <?=$action == '4' ? 'active' : '' ?>" data-restrict="4" data-step="4">
+            <div class="step-pane sample-pane <?=$action == '3' ? 'active' : '' ?>" data-restrict="3" data-step="3">
                 <div class="step-pane-wrapper">
                     <h1>Installation Completed</h1>
                     <p>You have successfully installed OpenSMIS. Please click Start to launch OpenSMIS.</p>
