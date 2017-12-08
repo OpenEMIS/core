@@ -780,6 +780,12 @@ trait MessagesTrait
         'UserBodyMasses' => [
             'dateNotWithinPeriod' => 'Date should be within %s and %s'
         ],
+        'Calendars' => [
+            'dateNotWithinPeriod' => 'Date should be within %s and %s',
+            'endDate' => [
+                    'compareWithStartDate' => 'End Date should not be earlier than Start Date'
+                ]
+        ],
         'StaffTransferOut' => [
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
         ],
@@ -1430,6 +1436,11 @@ trait MessagesTrait
                     'validWeight' => 'Weight must be within 0 and 500 kilogram',
                 ],
             ],
+            'UserEmployments' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                ]
+            ],
         ],
         'Student' => [
             'Extracurriculars' => [
@@ -1546,11 +1557,11 @@ trait MessagesTrait
                     'ruleCompareDate' => 'Start Date cannot be later than End Date',
                 ]
             ],
-            'Employments' => [
-                'employment_type_id' => [
+            'EmploymentStatuses' => [
+                'status_type_id' => [
                     'ruleNotBlank' => 'Please select a Type'
                 ],
-                'employment_date' => [
+                'status_date' => [
                     'ruleNotBlank' => 'Please enter a valid Date'
                 ]
             ],
