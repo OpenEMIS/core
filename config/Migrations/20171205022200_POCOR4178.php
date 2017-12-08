@@ -1,6 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 use Cake\Filesystem\File;
+use Cake\Core\Configure;
 
 class POCOR4178 extends AbstractMigration
 {
@@ -36,16 +37,19 @@ class POCOR4178 extends AbstractMigration
 
         $table->insert($data)->save();
 
-        $loginBackground = new File(WWW_ROOT . 'img' . DS. 'default_images' .DS. 'core-login-bg.jpg');
+        $bgFile = Configure::read('schoolMode') ? 'school-login-bg.jpg' : 'core-login-bg.jpg';
+        $loginBackground = new File(WWW_ROOT . 'img' . DS. 'default_images' .DS. $bgFile);
         $favicon = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'favicon.ico');
         $logo = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'oe-logo.png');
+        $productName = Configure::read('schoolMode') ? 'OpenSMIS School' : 'OpenEMIS Core';
+        $color = Configure::read('schoolMode') ? '3366CC' : '6699CC';
         $data = [
             [
                 'id' => '1',
                 'name' => 'Application Name',
                 'value' => null,
                 'content' => null,
-                'default_value' => 'OpenEMIS Core',
+                'default_value' => $productName,
                 'default_content' => null,
                 'modified_user_id' => null,
                 'modified' => null,
@@ -57,7 +61,7 @@ class POCOR4178 extends AbstractMigration
                 'name' => 'Login Page Image',
                 'value' => null,
                 'content' => null,
-                'default_value' => 'core-login-bg.jpg',
+                'default_value' => $bgFile,
                 'default_content' => $loginBackground->read(),
                 'modified_user_id' => null,
                 'modified' => null,
@@ -81,7 +85,7 @@ class POCOR4178 extends AbstractMigration
                 'name' => 'Colour',
                 'value' => null,
                 'content' => null,
-                'default_value' => '6699CC',
+                'default_value' => $color,
                 'default_content' => null,
                 'modified_user_id' => null,
                 'modified' => null,

@@ -7,7 +7,8 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\Cache\Cache;
-use Cake\Filesystem\Folder;
+use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
 
 class AdaptationsTable extends AppTable
 {
@@ -68,7 +69,9 @@ class AdaptationsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         Cache::delete('adaptations');
-        $folder = new Folder();
-        $folder->delete(WWW_ROOT . 'img' . DS . 'adaptations');
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $adaptationConfigItemRecord = $configItems->findByCode('adaptations')->first();
+        $adaptationConfigItemRecord->value = Time::now()->toUnixString();
+        $configItems->save($adaptationConfigItemRecord);
     }
 }
