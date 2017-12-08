@@ -1430,6 +1430,11 @@ trait MessagesTrait
                     'validWeight' => 'Weight must be within 0 and 500 kilogram',
                 ],
             ],
+            'UserEmployments' => [
+                'date_to' => [
+                    'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
+                ]
+            ],
         ],
         'Student' => [
             'Extracurriculars' => [
