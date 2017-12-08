@@ -156,10 +156,14 @@ class POCOR4178 extends AbstractMigration
         $logo->close();
         $favicon->close();
         $loginBackground->close();
+
+        $this->execute("UPDATE `security_functions` SET `_view`='index|view|Adaptations.index|Adaptations.view', `_edit`='edit|Adaptations.edit' WHERE `id`='5020'");
     }
 
     public function down()
     {
+        $this->execute("DELETE FROM `config_items` WHERE `id`=1005");
         $this->dropTable('adaptations');
+        $this->execute("UPDATE `security_functions` SET `_view`='index|view', `_edit`='edit' WHERE `id`=5020");
     }
 }
