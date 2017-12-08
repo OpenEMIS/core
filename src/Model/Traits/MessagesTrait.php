@@ -2034,6 +2034,11 @@ trait MessagesTrait
                     'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
                 ]
             ],
+            'OutcomeCriterias' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
+            ],
         ],
         'FieldOption' => [
             'LicenseClassifications' => [
