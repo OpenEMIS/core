@@ -23,8 +23,8 @@ use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\SecurityTrait;
 use Cake\Utility\Inflector;
 use Cake\Cache\Cache;
-use Cake\I18n\Time;
 use Cake\Filesystem\File;
+use Cake\Filesystem\Folder;
 
 /**
  * Application Controller
@@ -200,6 +200,8 @@ class AppController extends Controller
     {
         $adaptations = Cache::read('adaptations');
         if (!$adaptations) {
+            $folder = new Folder();
+            $folder->delete(WWW_ROOT . 'img' . DS . 'adaptations');
             $adaptations = TableRegistry::get('Adaptation.Adaptations')->find()
                 ->formatResults(function ($results) {
                     $res = [];
@@ -232,7 +234,7 @@ class AppController extends Controller
             $file = new File($customPath . 'layout.min.css', true);
             $file->write($template);
             $file->close();
-            $adaptations['timestamp'] = Time::now()->toUnixString();
+            $adaptations['timestamp'] = TableRegistry::get('Configuration.ConfigItems')->value('adaptations');
             Cache::write('adaptations', $adaptations);
         }
         return $adaptations;
