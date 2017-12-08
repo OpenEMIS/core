@@ -235,7 +235,7 @@ class StudentsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $session = $this->request->session();
         $action = $this->request->params['action'];
         $institutionName = $session->read('Institution.Institutions.name');
