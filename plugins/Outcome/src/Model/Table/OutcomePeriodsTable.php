@@ -160,7 +160,7 @@ class OutcomePeriodsTable extends ControllerActionTable
 
             $attr['type'] = 'readonly';
             $attr['value'] = $templateId;
-            $attr['attr']['value'] = $this->Templates->get(['id' => $templateId, 'academic_period_id' => $periodId])->name;
+            $attr['attr']['value'] = $this->Templates->get(['id' => $templateId, 'academic_period_id' => $periodId])->code_name;
         }
         return $attr;
     }
