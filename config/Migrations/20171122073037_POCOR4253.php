@@ -1,6 +1,7 @@
 <?php
 
-use Phinx\Migration\AbstractMigration;
+use Migrations\AbstractMigration;
+use Cake\ORM\TableRegistry;
 
 class POCOR4253 extends AbstractMigration
 {
@@ -18,11 +19,15 @@ class POCOR4253 extends AbstractMigration
         // end backup
 
         // insert data to utility_internet_types from z_4253_institution_network_connectivities
-        $this->execute('
-            INSERT INTO `utility_internet_types` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-            SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
-            FROM `z_4253_institution_network_connectivities`
-        ');
+        $count = TableRegistry::get('ZUtilityInternetType', ['table' => 'z_4253_utility_internet_types'])->find()->count();
+
+        if ($count) {
+            $this->execute('
+                INSERT INTO `utility_internet_types` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+                SELECT `name`, ((SELECT MAX(`id`) FROM `z_4253_utility_internet_types`)+`order`), `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                FROM `z_4253_institution_network_connectivities`
+            ');
+        }
         // end of insert data
 
         // remove column institution_network_connectivity_id from institutions
@@ -39,12 +44,10 @@ class POCOR4253 extends AbstractMigration
             ]);
         $table
             ->addColumn('name', 'string', [
-                'default' => null,
                 'limit' => 50,
                 'null' => false
             ])
             ->addColumn('order', 'integer', [
-                'default' => null,
                 'limit' => 3,
                 'null' => false
             ])
@@ -83,12 +86,10 @@ class POCOR4253 extends AbstractMigration
                 'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
-                'default' => null,
                 'limit' => 11,
                 'null' => false
             ])
             ->addColumn('created', 'datetime', [
-                'default' => null,
                 'null' => false
             ])
             ->addIndex('modified_user_id')
@@ -109,24 +110,31 @@ class POCOR4253 extends AbstractMigration
             ->addIndex('utility_internet_bandwidth_id')
             ->save();
 
-        $this->execute("ALTER TABLE `infrastructure_utility_internets` CHANGE `utility_internet_condition_id` `utility_internet_condition_id` INT(11) NULL DEFAULT NULL COMMENT 'links to utility_internet_conditions.id'");
-        $this->execute("ALTER TABLE `infrastructure_utility_internets` CHANGE `internet_purpose` `internet_purpose` INT(11) NULL DEFAULT NULL COMMENT '1 => Teaching, 2 => Non-Teaching'");
-        // end infrastructure_utility_internets
+        $this->execute("
+            ALTER TABLE `infrastructure_utility_internets` CHANGE `utility_internet_condition_id` `utility_internet_condition_id` INT(11) NULL DEFAULT NULL COMMENT 'links to utility_internet_conditions.id'
+        ");
+        $this->execute("
+            ALTER TABLE `infrastructure_utility_internets` CHANGE `internet_purpose` `internet_purpose` INT(11) NULL DEFAULT NULL COMMENT '1 => Teaching, 2 => Non-Teaching'
+        ");
 
         // insert data infrastructure_utility_internets from institutions institution_network_connectivity_id
         $this->execute('
             INSERT INTO `infrastructure_utility_internets` (`academic_period_id`, `institution_id`, `utility_internet_type_id`, `created_user_id`, `created`)
-            SELECT (SELECT `id` FROM `academic_periods` WHERE `current` = 1), `id`, `institution_network_connectivity_id`, 1, NOW()
-            FROM  `z_4253_institutions`
+            SELECT (SELECT `id` FROM `academic_periods` WHERE `current` = 1), `ZINSTITUTIONS`.`id`, `TYPES`.`id`, 1, NOW()
+            FROM  `z_4253_institutions` AS `ZINSTITUTIONS`
+            INNER JOIN `z_4253_institution_network_connectivities` AS `ZNETWORK`
+            ON `ZNETWORK`.`id` = `ZINSTITUTIONS`.`institution_network_connectivity_id`
+            INNER JOIN `utility_internet_types` AS `TYPES`
+            ON `TYPES`.`name` = `ZNETWORK`.`name`
         ');
         // end of insert data
+        // end infrastructure_utility_internets
 
         // import_mapping
         $this->execute('
             DELETE FROM `import_mapping` WHERE `column_name` = "institution_network_connectivity_id"
         ');
         // end import_mapping
-
     }
 
     // rollback

@@ -84,7 +84,7 @@ try {
 try {
     Configure::load('datasource', 'default');
     Configure::load('app_extra', 'default');
-
+    ConnectionManager::config(Configure::consume('Datasources'));
     // if (!Configure::read('Application.private.key') || !Configure::read('Application.public.key')) {
     //     throw new Exception('Could not load application key, please contact administrator to have the key set up for your application.');
     // }
@@ -180,7 +180,6 @@ if (!Configure::read('App.fullBaseUrl')) {
 }
 
 Cache::config(Configure::consume('Cache'));
-ConnectionManager::config(Configure::consume('Datasources'));
 Email::configTransport(Configure::consume('EmailTransport'));
 Email::config(Configure::consume('Email'));
 Log::config(Configure::consume('Log'));
@@ -310,6 +309,8 @@ Plugin::load('Profile', ['routes' => true, 'autoload' => true]);
 Plugin::load('Transport', ['routes' => true, 'autoload' => true]);
 Plugin::load('Installer', ['routes' => true, 'autoload' => true]);
 Plugin::load('Quality', ['autoload' => true]);
+Plugin::load('Cases', ['autoload' => true]);
+Plugin::load('Counselling', ['autoload' => true]);
 Plugin::load('Adaptation', ['routes' => true, 'autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
