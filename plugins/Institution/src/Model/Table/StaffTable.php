@@ -738,6 +738,28 @@ class StaffTable extends ControllerActionTable
             $url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
             $url['id'] = $encodeValue;
             $buttons['view']['url'] = $url;
+
+            // POCOR-3125 history button permission to hide and show the link
+            if ($this->AccessControl->check(['StaffHistories', 'index'])) {
+                $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
+                $userId = $entity->_matchingData['Users']->id;
+
+                $icon = '<i class="fa fa-history"></i>';
+                $url = [
+                    'plugin' => 'Institution',
+                    'institutionId' => $institutionId,
+                    'controller' => 'StaffHistories',
+                    'action' => 'index'
+                ];
+
+                $buttons['history'] = $buttons['view'];
+                $buttons['history']['label'] = $icon . __('History');
+                $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
+                    'security_user_id' => $userId,
+                    'user_type' => 'Staff'
+                ]);
+            }
+            // end POCOR-3125 history button permission
         }
 
         if (isset($buttons['edit'])) {

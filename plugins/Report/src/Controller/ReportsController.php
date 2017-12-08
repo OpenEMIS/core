@@ -54,8 +54,6 @@ class ReportsController extends AppController {
 				'Report.StaffAbsences' => __('Staff Absence'),
 				'Report.StaffLeave' => __('Staff Leave'),
 				'Report.StaffTransfers' => __('Staff Transfer'),
-				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
-				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
 				'Report.InstitutionCases' => __('Cases')
 			];
 		} else if ($module == 'Students') {
@@ -72,7 +70,7 @@ class ReportsController extends AppController {
 				'Report.StaffContacts' => __('Contacts'),
 				'Report.StaffQualifications' => __('Qualifications'),
 				'Report.StaffLicenses' => __('Licenses'),
-				'Report.StaffEmployments' => __('Employments'),
+				'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
 				'Report.StaffSalaries' => __('Salaries'),
 				'Report.StaffSystemUsage' => __('System Usage')
 			];
