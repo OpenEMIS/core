@@ -1,3 +1,14 @@
+### [3.13.0] - 2017-12-08
+- Implemented Institutions > Calender feature
+- Implemented Institutions > WASH Feature
+- Implemented Employments Feature
+- Implemented ability to add more languages Administration > Localization > Langauages feature
+- Added Bandwith to Utilities feature
+- Added Count number of students in Institutions> Classes view page
+- Bug fixes on 404 errors in Administration > Delete Users
+- Bug fixes on 404 errors in Institutions > Report Cards
+- Bug fix on slow load in Institutions > Competencies
+
 ### [3.12.0] - 2017-11-24
 - Bug fixes on 404 errors
 

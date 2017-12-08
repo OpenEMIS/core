@@ -17,12 +17,11 @@ class PreferencesTable extends ControllerActionTable
         $this->table('security_users');
         parent::initialize($config);
 
-        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
-        $this->loginLanguages = $ConfigItemOptionsTable->find('list', [
-                'keyField' => 'value',
-                'valueField' => 'option'
+        $Locales = TableRegistry::get('Locales');
+        $this->loginLanguages = $Locales->find('list', [
+                'keyField' => 'iso',
+                'valueField' => 'name'
             ])
-            ->where([$ConfigItemOptionsTable->aliasField('option_type') => 'language'])
             ->toArray();
 
         $this->toggle('remove', false);
