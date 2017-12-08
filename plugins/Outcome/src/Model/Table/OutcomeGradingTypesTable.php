@@ -62,6 +62,21 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $query->contain(['GradingOptions.InstitutionOutcomeResults']);
     }
 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $criteriaForm = $this->getQueryString(null, 'criteriaForm');
+
+        // set back button to redirect to criterias page (when Create New from criterias page)
+        if ($criteriaForm) {
+            $toolbarButtons = $extra['toolbarButtons'];
+            if ($toolbarButtons->offsetExists('back')) {
+                $toolbarButtons['back']['url']['action'] = 'Criterias';
+                $toolbarButtons['back']['url'][0] = 'add';
+            }
+            $extra['criteriaForm'] = $criteriaForm;
+        }
+    }
+
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $fieldKey = 'grading_options';
@@ -82,6 +97,19 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $options['associated'] = [
             'GradingOptions' => ['validate' => false]
         ];
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        // set save button to redirect to criterias page (when Create New from criterias page)
+        if ($extra->offsetExists('criteriaForm')) {
+            $criteriaParams = $extra['criteriaForm'];
+            $criteriaParams['outcome_grading_type_id'] = $entity->id;
+
+            $url = $this->url('add');
+            $url['action'] = 'Criterias';
+            $extra['redirect'] = $this->setQueryString($url, $criteriaParams, 'criteriaForm');
+        }
     }
 
     public function setupFields()
