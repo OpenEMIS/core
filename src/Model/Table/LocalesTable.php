@@ -48,6 +48,12 @@ class LocalesTable extends AppTable
             ;
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        // translations won't work with uppercase codes
+        $data['iso'] = strtolower($data['iso']);
+    }
+
     public function findAllEditableLocales(Query $query, array $options)
     {
         return $query->where(['editable' => 1]);
