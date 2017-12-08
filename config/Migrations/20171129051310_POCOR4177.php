@@ -24,6 +24,7 @@ class POCOR4177 extends AbstractMigration
             ->addColumn('file_content', 'blob', [
                 'limit' => '4294967295',
                 'default' => null,
+                'null' => true
             ])
             ->addColumn('staff_id', 'integer', [
                 'default' => null,
@@ -34,7 +35,7 @@ class POCOR4177 extends AbstractMigration
             ->addColumn('status_type_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -177,20 +178,20 @@ class POCOR4177 extends AbstractMigration
             'created' => date('Y-m-d H:i:s')
         ]);
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 109');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 93');
 
         $this->insert('security_functions', [
             'id' => 2036,
             'name' => 'Employment',
-            'controller' => 'Student',
+            'controller' => 'Students',
             'module' => 'Institutions',
-            'category' => 'Student - Professional',
+            'category' => 'Students - Professional',
             'parent_id' => 2000,
             '_view' => 'Employments.index|Employments.view',
             '_edit' => 'Employments.edit',
             '_add' => 'Employments.add',
             '_delete' => 'Employments.remove',
-            'order' => 110,
+            'order' => 94,
             'visible' => 1,
             'created_user_id' => 1,
             'created' => date('Y-m-d H:i:s')

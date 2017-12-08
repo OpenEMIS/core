@@ -15,6 +15,16 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 	}
 
+	public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('date_to', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_from', true]
+            ]);
+    }
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
         $this->setupTabElements();
 	}

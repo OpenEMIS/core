@@ -13,10 +13,10 @@ class StaffEmploymentStatusesTable extends AppTable {
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes']);
+        $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes', 'foreignKey' => 'status_types_id']);
 
         $this->addBehavior('Excel', [
-            'excludes' => ['staff_id', 'employment_type_id']
+            'excludes' => ['staff_id', 'status_type_id']
         ]);
         $this->addBehavior('Report.ReportList');
     }
@@ -41,15 +41,15 @@ class StaffEmploymentStatusesTable extends AppTable {
         ];
 
         $newArray[] = [
-            'key' => 'StaffEmployments.staff_id',
+            'key' => 'StaffEmploymentStatuses.staff_id',
             'field' => 'staff_id',
             'type' => 'integer',
             'label' => ''
         ];
 
         $newArray[] = [
-            'key' => 'StaffEmployments.employment_type_id',
-            'field' => 'employment_type_id',
+            'key' => 'StaffEmploymentStatuses.status_type_id',
+            'field' => 'status_type_id',
             'type' => 'integer',
             'label' => ''
         ];
