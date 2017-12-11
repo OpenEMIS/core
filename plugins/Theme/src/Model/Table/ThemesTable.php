@@ -1,5 +1,5 @@
 <?php
-namespace Adaptation\Model\Table;
+namespace Theme\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
@@ -10,7 +10,7 @@ use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
 
-class AdaptationsTable extends AppTable
+class ThemesTable extends AppTable
 {
     const APPNAME = 1;
     const LOGINBGIMAGE = 2;
@@ -31,11 +31,11 @@ class AdaptationsTable extends AppTable
 
     public function validationDefault(Validator $validator)
     {
-        $adaptations = $this;
+        $themes = $this;
         return $validator
             ->add('value', 'ruleNotHexadecimal', [
-                'rule' => function ($value, $context) use ($adaptations) {
-                    if ($context['data']['id'] == $adaptations::COLOUR) {
+                'rule' => function ($value, $context) use ($themes) {
+                    if ($context['data']['id'] == $themes::COLOUR) {
                         return !$value || (ctype_xdigit($value) && strlen($value) == 6);
                     } else {
                         return true;
@@ -85,10 +85,10 @@ class AdaptationsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        Cache::delete('adaptations');
+        Cache::delete('themes');
         $configItems = TableRegistry::get('Configuration.ConfigItems');
-        $adaptationConfigItemRecord = $configItems->findByCode('adaptations')->first();
-        $adaptationConfigItemRecord->value = Time::now()->toUnixString();
-        $configItems->save($adaptationConfigItemRecord);
+        $themeConfigItemRecord = $configItems->findByCode('themes')->first();
+        $themeConfigItemRecord->value = Time::now()->toUnixString();
+        $configItems->save($themeConfigItemRecord);
     }
 }

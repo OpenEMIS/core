@@ -27,7 +27,7 @@ class ConfigurationComponent extends Component
     private $configOptions = [
         'AdministrativeBoundaries' => ['className' => 'Configuration.AdministrativeBoundaries'],
         'CustomValidation' => ['className' => 'Configuration.CustomValidation'],
-        'Adaptations' => ['className' => 'Configuration.Adaptations']
+        'Themes' => ['className' => 'Configuration.Themes']
     ];
 
     public $components = ['AccessControl'];
