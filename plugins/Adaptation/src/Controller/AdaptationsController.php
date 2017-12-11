@@ -79,9 +79,7 @@ class AdaptationsController extends PageController
             switch ($id) {
                 case self::COLOUR:
                     return
-                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.'; text-align: center; color: '.$this->checkIfTooLight($entity->value).'">'.__('Primary Colour').'</div>'.
-                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'. $this->darkenColour($entity->value) .';text-align: center; color: '.$this->checkIfTooLight($this->darkenColour($entity->value)).'">'.__('Secondary Colour').'</div>'
-                    ;
+                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.';"></div>';
                     break;
                 default:
                     return $entity->value;
@@ -96,9 +94,7 @@ class AdaptationsController extends PageController
             switch ($entity->id) {
                 case self::COLOUR:
                     return
-                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.'; text-align: center; color: '.$this->checkIfTooLight($entity->default_value).'">'.__('Primary Colour').'</div>'.
-                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'. $this->darkenColour($entity->default_value) .';text-align: center; color: '.$this->checkIfTooLight($this->darkenColour($entity->default_value)).'">'.__('Secondary Colour').'</div>'
-                        ;
+                        '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.';"></div>';
                     break;
                 default:
                     return $entity->default_value;
