@@ -16,10 +16,10 @@ tmp/tests/*
 logs/*.log*
 webroot/export/*
 webroot/import/*
-webroot/img/adaptations/*
+webroot/img/themes/*
 webroot/img/product_list_logo/*
 webroot/analytics.txt
-plugins/OpenEmis/webroot/css/themes/custom/layout.min.css
+webroot/css/themes/layout.min.css
 /build
 /dist
 /tags

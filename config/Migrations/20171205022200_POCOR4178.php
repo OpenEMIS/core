@@ -18,10 +18,10 @@ class POCOR4178 extends AbstractMigration
         $data = [
             [
                 'id' => '1005',
-                'name' => 'Adaptations',
-                'code' => 'adaptations',
-                'type' => 'Adaptations',
-                'label' => 'Adaptations',
+                'name' => 'Themes',
+                'code' => 'themes',
+                'type' => 'Themes',
+                'label' => 'Themes',
                 'value' => '0',
                 'default_value' => '0',
                 'editable' => '1',
@@ -41,7 +41,7 @@ class POCOR4178 extends AbstractMigration
         $loginBackground = new File(WWW_ROOT . 'img' . DS. 'default_images' .DS. $bgFile);
         $favicon = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'favicon.ico');
         $logo = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'oe-logo.png');
-        $productName = Configure::read('schoolMode') ? 'OpenSMIS' : 'OpenEMIS Core';
+        $productName = Configure::read('schoolMode') ? 'OpenSMIS '.Configure::read('schoolMode') : 'OpenEMIS Core';
         $color = Configure::read('schoolMode') ? '3366CC' : '6699CC';
         $data = [
             [
@@ -106,7 +106,7 @@ class POCOR4178 extends AbstractMigration
             ],
         ];
 
-        $table = $this->table('adaptations')
+        $table = $this->table('themes')
             ->addColumn('name', 'string', [
                 'default' => null,
                 'limit' => 45,
@@ -157,13 +157,13 @@ class POCOR4178 extends AbstractMigration
         $favicon->close();
         $loginBackground->close();
 
-        $this->execute("UPDATE `security_functions` SET `_view`='index|view|Adaptations.index|Adaptations.view', `_edit`='edit|Adaptations.edit' WHERE `id`='5020'");
+        $this->execute("UPDATE `security_functions` SET `_view`='index|view|Themes.index|Themes.view', `_edit`='edit|Themes.edit' WHERE `id`='5020'");
     }
 
     public function down()
     {
         $this->execute("DELETE FROM `config_items` WHERE `id`=1005");
-        $this->dropTable('adaptations');
+        $this->dropTable('themes');
         $this->execute("UPDATE `security_functions` SET `_view`='index|view', `_edit`='edit' WHERE `id`=5020");
     }
 }

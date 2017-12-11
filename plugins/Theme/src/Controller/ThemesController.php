@@ -1,12 +1,12 @@
 <?php
-namespace Adaptation\Controller;
+namespace Theme\Controller;
 
 use App\Controller\PageController;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 
-class AdaptationsController extends PageController
+class ThemesController extends PageController
 {
     const APPNAME = 1;
     const LOGINBGIMAGE = 2;
@@ -18,7 +18,7 @@ class AdaptationsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->Page->loadElementsFromTable($this->Adaptations);
+        $this->Page->loadElementsFromTable($this->Themes);
         $this->Page->disable(['add', 'delete']);
     }
 
@@ -108,8 +108,8 @@ class AdaptationsController extends PageController
         $page = $this->Page;
         $page->exclude(['content', 'default_content']);
         $page->addFilter('type')
-            ->setOptions($this->systemConfigFilterOptions('Adaptations'));
-        $key = array_search(__('Adaptations'), array_column($this->systemConfigFilterOptions(), 'text'));
+            ->setOptions($this->systemConfigFilterOptions('Themes'));
+        $key = array_search(__('Themes'), array_column($this->systemConfigFilterOptions(), 'text'));
         if ($key != $page->getQueryString('type')) {
             $this->redirect(['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => 'index', 'type' => $page->getQueryString('type')]);
         }
@@ -166,7 +166,7 @@ class AdaptationsController extends PageController
                 $page->exclude(['value', 'default_value']);
                 break;
             case self::LOGO:
-                $backgroundColour = $this->Adaptations->get(self::COLOUR);
+                $backgroundColour = $this->Themes->get(self::COLOUR);
                 $backgroundColour = $backgroundColour->value ? $backgroundColour->value : $backgroundColour->default_value;
                 $page->get('content')
                     ->setLabel('Content')
@@ -202,7 +202,7 @@ class AdaptationsController extends PageController
                 $page->exclude(['content', 'default_content']);
                 break;
             case self::LOGO:
-                $backgroundColour = $this->Adaptations->get(self::COLOUR);
+                $backgroundColour = $this->Themes->get(self::COLOUR);
                 $backgroundColour = $backgroundColour->value ? $backgroundColour->value : $backgroundColour->default_value;
                 $page->get('content')
                     ->setLabel('Content')
