@@ -33,7 +33,7 @@ $icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 		echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
 	?>
 
-	<link rel="stylesheet" href="<?= $this->Url->css('OpenEmis.themes/custom/layout.min') ?>?timestamp=<?=$lastModified?>" >
+	<link rel="stylesheet" href="<?= $this->Url->css('themes/layout.min') ?>?timestamp=<?=$lastModified?>" >
 
 	<!--[if gte IE 9]>
 	<?php

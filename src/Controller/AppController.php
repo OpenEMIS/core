@@ -117,7 +117,7 @@ class AppController extends Controller
 
         // Custom Components
         $this->loadComponent('Navigation');
-        $this->productName = $this->readAdaptation()['application_name'];
+        $this->productName = $this->getTheme()['application_name'];
         $this->loadComponent('Localization.Localization', [
             'productName' => $this->productName
         ]);
@@ -132,10 +132,10 @@ class AppController extends Controller
                 ]
             ],
             'productName' => $this->productName,
-            'productLogo' => $this->readAdaptation()['logo'],
-            'footerText' => $this->readAdaptation()['copyright_notice_in_footer'],
+            'productLogo' => $this->getTheme()['logo'],
+            'footerText' => $this->getTheme()['copyright_notice_in_footer'],
             'theme' => $theme,
-            'lastModified' => $this->readAdaptation()['timestamp']
+            'lastModified' => $this->getTheme()['timestamp']
         ]);
 
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
@@ -196,24 +196,24 @@ class AppController extends Controller
         return $hash.$R.$G.$B;
     }
 
-    public function readAdaptation()
+    public function getTheme()
     {
-        $adaptations = Cache::read('adaptations');
-        if (!$adaptations) {
+        $themes = Cache::read('themes');
+        if (!$themes) {
             $folder = new Folder();
-            $folder->delete(WWW_ROOT . 'img' . DS . 'adaptations');
-            $adaptations = TableRegistry::get('Adaptation.Adaptations')->find()
+            $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
+            $themes = TableRegistry::get('Theme.Themes')->find()
                 ->formatResults(function ($results) {
                     $res = [];
                     foreach ($results as $r) {
                         if ($r->content) {
-                            $file = new File(WWW_ROOT . 'img' . DS . 'adaptations' . DS . $r->value, true);
+                            $file = new File(WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value, true);
                             $file->write(stream_get_contents($r->content));
                             $file->close();
                         }
                         $code = Inflector::underscore(str_replace(' ', '', $r->name));
                         if ($code == 'login_page_image' || $code == 'logo' || $code == 'favicon') {
-                            $res[$code] = !empty($r->value) ? 'adaptations' . DS . $r->value : 'default_images' . DS . $r->default_value;
+                            $res[$code] = !empty($r->value) ? 'themes' . DS . $r->value : 'default_images' . DS . $r->default_value;
                         } else {
                             $res[$code] = !empty($r->value) ? $r->value : $r->default_value;
                         }
@@ -221,23 +221,24 @@ class AppController extends Controller
                     return $res;
                 })
                 ->toArray();
-            $colour = $adaptations['colour'];
+            $colour = $themes['colour'];
             $secondaryColour = $this->darkenColour($colour);
-            $loginBackground = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]). DS . Configure::read('App.imageBaseUrl') . $adaptations['login_page_image'];
             $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
+            $loginBackground = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]). DS . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
             $file = new File($customPath . 'layout.core.template.css');
             $template = $file->read();
             $file->close();
             $template = str_replace('${bgImg}', "'$loginBackground'", $template);
             $template = str_replace('${secondColor}', $secondaryColour, $template);
             $template = str_replace('${prodColor}', "#$colour", $template);
+            $customPath = WWW_ROOT . 'css' . DS . 'themes' . DS;
             $file = new File($customPath . 'layout.min.css', true);
             $file->write($template);
             $file->close();
-            $adaptations['timestamp'] = TableRegistry::get('Configuration.ConfigItems')->value('adaptations');
-            Cache::write('adaptations', $adaptations);
+            $themes['timestamp'] = TableRegistry::get('Configuration.ConfigItems')->value('themes');
+            Cache::write('themes', $themes);
         }
-        return $adaptations;
+        return $themes;
     }
 
     /**

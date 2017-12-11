@@ -20,7 +20,7 @@ $description = __d('open_emis', $_productName);
 
 		if (isset($theme)) {
 			echo $this->Html->css($theme);
-			echo $this->Html->css('OpenEmis.themes/custom/layout.min');
+			echo $this->Html->css('themes/layout.min');
 		}
 
 		echo $this->Html->script('OpenEmis.css_browser_selector');
