@@ -43,6 +43,7 @@ class AdaptationsTable extends AppTable
                 },
                 'message' => __('Please enter a valid 6 digit hexadecimal code')
             ])
+            ->allowEmpty('value')
             ->allowEmpty('content')
             ->allowEmpty('default_content')
             ->allowEmpty('default_value');
