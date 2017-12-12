@@ -7,7 +7,8 @@ class OutcomeGradingOption extends Entity
 {
     protected $_virtual = ['code_name'];
 
-    protected function _getCodeName() {
-        return $this->code . ' - ' . $this->name;
+    protected function _getCodeName()
+    {
+        return !empty($this->code) ? $this->code . ' - ' . $this->name : $this->name;
     }
 }
