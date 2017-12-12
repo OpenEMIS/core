@@ -75,6 +75,7 @@ class SecurityRolesTable extends AppTable
                 }
             }
         }
+        $data['code'] = ''; //set default role code as empty string
     }
 
     public function validationDefault(Validator $validator)
