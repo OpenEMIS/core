@@ -189,4 +189,318 @@ class StudentOutcomesTable extends ControllerActionTable
 
         return $grade->programme_grade_name;
     }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->classId = $this->getQueryString('class_id');
+        $this->institutionId = $this->getQueryString('institution_id');
+        $this->academicPeriodId = $this->getQueryString('academic_period_id');
+        $this->outcomeTemplateId = $this->getQueryString('outcome_template_id');
+        $this->outcomePeriodId = $this->getQueryString('outcome_period_id') ;
+        $this->subjectId = $this->getQueryString('education_subject_id');
+        $this->studentId = $this->getQueryString('student_id');
+
+        $this->field('outcome_template');
+        $this->field('student', ['type' => 'custom_criterias']);
+
+        $this->setFieldOrder(['name', 'academic_period_id', 'outcome_template', 'total_male_students', 'total_female_students', 'student']);
+    }
+
+    public function onGetOutcomeTemplate(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+            $template = $OutcomeTemplates->find()
+                ->where([
+                    $OutcomeTemplates->aliasField('id') => $this->outcomeTemplateId,
+                    $OutcomeTemplates->aliasField('academic_period_id') => $this->academicPeriodId
+                ])
+                ->first();
+            return $template->code_name;
+        }
+    }
+
+    private function getOutcomePeriodOptions()
+    {
+        $outcomePeriodOptions = [];
+        $baseUrl = $this->url($this->action, false);
+        $params = $this->getQueryString();
+
+        $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+        $results = $OutcomePeriods->find()
+            ->where([
+                $OutcomePeriods->aliasField('academic_period_id') => $this->academicPeriodId,
+                $OutcomePeriods->aliasField('outcome_template_id') => $this->outcomeTemplateId
+            ])
+            ->toArray();
+
+        if (!empty($results)) {
+            foreach ($results as $period) {
+                $params['outcome_period_id'] = $period->id;
+                $outcomePeriodOptions[$period->id] = [
+                    'name' => $period->code_name,
+                    'url' => $this->setQueryString($baseUrl, $params)
+                ];
+            }
+        }
+
+        if (!count($outcomePeriodOptions)) {
+            // no options
+            $params['outcome_period_id'] = -1;
+            $outcomePeriodOptions[-1] = [
+                'name' => __('No Options'),
+                'url' => $this->setQueryString($baseUrl, $params)
+            ];
+        } else {
+            // set default period if no period selected yet
+            if (is_null($this->outcomePeriodId)) {
+                $this->outcomePeriodId = key($outcomePeriodOptions);
+            }
+        }
+
+        return $outcomePeriodOptions;
+    }
+
+    private function getSubjectOptions()
+    {
+        $subjectOptions = [];
+        $baseUrl = $this->url($this->action, false);
+        $params = $this->getQueryString();
+
+        $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $template = $OutcomeTemplates->find()
+            ->where([
+                $OutcomeTemplates->aliasField('id') => $this->outcomeTemplateId,
+                $OutcomeTemplates->aliasField('academic_period_id') => $this->academicPeriodId
+            ])
+            ->first();
+
+        if (!empty($template)) {
+            $gradeId = $template->education_grade_id;
+
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $results = $EducationSubjects->find()
+                ->innerJoinWith('EducationGrades', function ($q) use ($gradeId) {
+                    return $q->where(['EducationGrades.id' => $gradeId]);
+                })
+                ->toArray();
+
+            if (!empty($results)) {
+                foreach ($results as $subject) {
+                    $params['education_subject_id'] = $subject->id;
+                    $subjectOptions[$subject->id] = [
+                        'name' => $subject->code_name,
+                        'url' => $this->setQueryString($baseUrl, $params)
+                    ];
+                }
+            }
+        }
+
+        if (!count($subjectOptions)) {
+            // no options
+            $params['education_subject_id'] = -1;
+            $subjectOptions[-1] = [
+                'name' => __('No Options'),
+                'url' => $this->setQueryString($baseUrl, $params)
+            ];
+        } else {
+            // set default item if no item selected yet
+            if (is_null($this->subjectId)) {
+                $this->subjectId = key($subjectOptions);
+            }
+        }
+
+        return $subjectOptions;
+    }
+
+    private function getStudentOptions()
+    {
+        $studentOptions = [];
+        $baseUrl = $this->url($this->action, false);
+        $params = $this->getQueryString();
+
+        if (!is_null($this->classId)) {
+            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $Users = $ClassStudents->Users;
+            $StudentStatuses = $ClassStudents->StudentStatuses;
+            $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+            // only enrolled students will be shown
+            $results = $ClassStudents->find()
+                ->select([
+                    $ClassStudents->aliasField('student_id'),
+                    $Users->aliasField('openemis_no'),
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('middle_name'),
+                    $Users->aliasField('third_name'),
+                    $Users->aliasField('last_name'),
+                    $Users->aliasField('preferred_name')
+                ])
+                ->matching('Users')
+                ->where([
+                    $ClassStudents->aliasField('institution_class_id') => $this->classId,
+                    $ClassStudents->aliasField('student_status_id') => $enrolledStatus
+                ])
+                ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
+                ->toArray();
+
+            if (!empty($results)) {
+                foreach ($results as $student) {
+                    $params['student_id'] = $student->student_id;
+                    $studentOptions[$student->student_id] = [
+                        'name' => $student->_matchingData['Users']->name_with_id,
+                        'url' => $this->setQueryString($baseUrl, $params)
+                    ];
+                }
+            }
+        }
+
+        if (!count($studentOptions)) {
+            // no options
+            $params['student_id'] = -1;
+            $studentOptions[-1] = [
+                'name' => __('No Options'),
+                'url' => $this->setQueryString($baseUrl, $params)
+            ];
+        } else {
+            // set default student if no student selected yet
+            if (is_null($this->studentId)) {
+                $this->studentId = key($studentOptions);
+            }
+        }
+
+        return $studentOptions;
+    }
+
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        // set Outcome Period filter
+        $attr['period_options'] = $this->getOutcomePeriodOptions();
+        $attr['selected_period'] = $this->outcomePeriodId;
+
+        // set Subject filter
+        $attr['subject_options'] = $this->getSubjectOptions();
+        $attr['selected_subject'] = $this->subjectId;
+
+        // set Student filter
+        $attr['student_options'] = $this->getStudentOptions();
+        $attr['selected_student'] = $this->studentId;
+
+        $gradingTypes = $this->getOutcomeGradingTypes();
+
+        $tableHeaders = [];
+        $tableCells = [];
+        $tableFooters = [];
+
+        if (!is_null($this->outcomePeriodId) && !is_null($this->subjectId) && !is_null($this->studentId)) {
+            // table headers
+            $tableHeaders[] = $attr['subject_options'][$this->subjectId]['name'] . ' ' . __('Criteria');
+            $tableHeaders[] = $attr['student_options'][$this->studentId]['name'];
+
+            $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+            $OutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
+            $SubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+
+            $criteriaResults = $OutcomeCriterias->find()
+                ->select([
+                    $OutcomeCriterias->aliasField('code'),
+                    $OutcomeCriterias->aliasField('name'),
+                    $OutcomeCriterias->aliasField('outcome_grading_type_id'),
+                    $OutcomeResults->aliasField('outcome_grading_option_id')
+                ])
+                ->leftJoin([$OutcomeResults->alias() => $OutcomeResults->table()], [
+                    $OutcomeResults->aliasField('academic_period_id = ') . $OutcomeCriterias->aliasField('academic_period_id'),
+                    $OutcomeResults->aliasField('outcome_template_id = ') . $OutcomeCriterias->aliasField('outcome_template_id'),
+                    $OutcomeResults->aliasField('education_grade_id = ') . $OutcomeCriterias->aliasField('education_grade_id'),
+                    $OutcomeResults->aliasField('education_subject_id = ') . $OutcomeCriterias->aliasField('education_subject_id'),
+                    $OutcomeResults->aliasField('outcome_criteria_id = ') . $OutcomeCriterias->aliasField('id'),
+                    $OutcomeResults->aliasField('outcome_period_id') => $this->outcomePeriodId,
+                    $OutcomeResults->aliasField('institution_id') => $this->institutionId,
+                    $OutcomeResults->aliasField('student_id') => $this->studentId
+                ])
+                ->where([
+                    $OutcomeCriterias->aliasField('academic_period_id') => $this->academicPeriodId,
+                    $OutcomeCriterias->aliasField('education_subject_id') => $this->subjectId,
+                    $OutcomeCriterias->aliasField('outcome_template_id') => $this->outcomeTemplateId
+                ])
+                ->toArray();
+
+            if (!empty($criteriaResults)) {
+                foreach ($criteriaResults as $criteriaObj) {
+                    $result = '';
+                    if (!empty($criteriaObj->{$OutcomeResults->alias()}['outcome_grading_option_id'])) {
+                        $gradingTypeId = $criteriaObj->outcome_grading_type_id;
+                        $gradingOptionId = $criteriaObj->{$OutcomeResults->alias()}['outcome_grading_option_id'];
+                        $result = $gradingTypes[$gradingTypeId][$gradingOptionId];
+                    }
+
+                    $rowData = [];
+                    $rowData[] = $criteriaObj->code_name;
+                    $rowData[] = $result;
+
+                    // table cells
+                    $tableCells[] = $rowData;
+                }
+            } else {
+                // table cells
+                $tableCells[] = __('No Outcome Criterias');
+                $tableCells[] = '';
+            }
+
+            $subjectComment = $SubjectComments->find()
+                ->select([$SubjectComments->aliasField('comments')])
+                ->where([
+                    $SubjectComments->aliasField('student_id') => $this->studentId,
+                    $SubjectComments->aliasField('outcome_template_id') => $this->outcomeTemplateId,
+                    $SubjectComments->aliasField('outcome_period_id') => $this->outcomePeriodId,
+                    $SubjectComments->aliasField('education_subject_id') => $this->subjectId,
+                    $SubjectComments->aliasField('institution_id') => $this->institutionId,
+                    $SubjectComments->aliasField('academic_period_id') => $this->academicPeriodId
+                ])
+                ->first();
+
+            // table footers
+            $comments = '';
+            if (!empty($subjectComment) && $subjectComment->comments != '') {
+                $comments = $subjectComment->comments;
+            }
+            $tableFooters[] = __('Comments');
+            $tableFooters[] = $comments;
+
+        } else {
+            // table headers
+            $tableHeaders[] = __('Outcome Criteria');
+            $tableHeaders[] = __('Result');
+
+            // table cells
+            $tableCells[] = __('No Outcome Period, Subject or Student selected');
+            $tableCells[] = '';
+        }
+
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+        $attr['tableFooters'] = $tableFooters;
+
+        $event->stopPropagation();
+        return $event->subject()->renderElement('Institution.StudentOutcomes/outcome_criterias', ['attr' => $attr]);
+    }
+
+    private function getOutcomeGradingTypes()
+    {
+        $OutcomeGradingTypes = TableRegistry::get('Outcome.OutcomeGradingTypes');
+        $results = $OutcomeGradingTypes->find()
+            ->contain('GradingOptions')
+            ->toArray();
+
+        $gradingTypes = [];
+        foreach ($results as $gradingTypeEntity) {
+            $gradingOptions = [];
+            foreach ($gradingTypeEntity->grading_options as $gradingOptionEntity) {
+                $gradingOptions[$gradingOptionEntity->id] = $gradingOptionEntity->code_name;
+            }
+
+            $gradingTypes[$gradingTypeEntity->id] = $gradingOptions;
+        }
+        return $gradingTypes;
+    }
 }

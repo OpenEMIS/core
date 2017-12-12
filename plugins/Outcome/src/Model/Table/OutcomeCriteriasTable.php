@@ -208,10 +208,13 @@ class OutcomeCriteriasTable extends ControllerActionTable
     public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
+            $gradeId = $this->gradeId;
+
             $subjectOptions = $this->EducationSubjects
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->matching('EducationGrades')
-                ->where([$this->EducationGrades->aliasField('id') => $this->gradeId])
+                ->innerJoinWith('EducationGrades', function ($q) use ($gradeId) {
+                    return $q->where(['EducationGrades.id' => $gradeId]);
+                })
                 ->toArray();
 
             $attr['type'] = 'select';
