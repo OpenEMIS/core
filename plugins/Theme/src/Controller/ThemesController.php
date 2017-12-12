@@ -89,8 +89,9 @@ class ThemesController extends PageController
         $page->exclude(['content', 'default_content']);
         $page->addFilter('type')
             ->setOptions($this->systemConfigFilterOptions('Themes'));
+        $textKeys = array_column($this->systemConfigFilterOptions(), 'value');
         $key = array_search(__('Themes'), array_column($this->systemConfigFilterOptions(), 'text'));
-        if ($key != $page->getQueryString('type')) {
+        if ($textKeys[$key] != $page->getQueryString('type')) {
             $this->redirect(['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => 'index', 'type' => $page->getQueryString('type')]);
         }
         $page = $this->Page;

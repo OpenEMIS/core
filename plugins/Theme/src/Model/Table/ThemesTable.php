@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
+use Cake\ORM\Query;
 
 class ThemesTable extends AppTable
 {
@@ -47,6 +48,11 @@ class ThemesTable extends AppTable
             ->allowEmpty('content')
             ->allowEmpty('default_content')
             ->allowEmpty('default_value');
+    }
+
+    public function findIndex(Query $query, array $options)
+    {
+        return $query->where([$this->aliasField('name').' <> ' => 'Copyright Notice In Footer']);
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
