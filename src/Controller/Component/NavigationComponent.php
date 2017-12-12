@@ -533,19 +533,32 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
 
-            'Institutions.StudentCompetencies' => [
-                'title' => 'Competencies',
+            'Institution.Performance' => [
+                'title' => 'Performance',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults', 'Institutions.StudentCompetencyComments'],
-                'params' => ['plugin' => 'Institution']
+                'link' => false
             ],
 
-            'Institutions.Assessments.index' => [
-                'title' => 'Assessments',
-                'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results'],
-                'params' => ['plugin' => 'Institution'],
-            ],
+                'Institutions.StudentCompetencies' => [
+                    'title' => 'Competencies',
+                    'parent' => 'Institution.Performance',
+                    'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults', 'Institutions.StudentCompetencyComments'],
+                    'params' => ['plugin' => 'Institution']
+                ],
+
+                'Institutions.StudentOutcomes' => [
+                    'title' => 'Outcomes',
+                    'parent' => 'Institution.Performance',
+                    'selected' => ['Institutions.StudentOutcomes'],
+                    'params' => ['plugin' => 'Institution']
+                ],
+
+                'Institutions.Assessments.index' => [
+                    'title' => 'Assessments',
+                    'parent' => 'Institution.Performance',
+                    'selected' => ['Institutions.Assessments', 'Institutions.Results'],
+                    'params' => ['plugin' => 'Institution'],
+                ],
 
             'Institutions.Indexes.index' => [
                 'title' => 'Indexes',
