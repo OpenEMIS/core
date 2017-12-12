@@ -9,6 +9,6 @@ class OutcomeCriteria extends Entity
 
     protected function _getCodeName()
     {
-        return (!empty($this->code)) ? $this->code . ' - ' . $this->name : $this->name;
+        return !empty($this->code) ? $this->code . ' - ' . $this->name : $this->name;
     }
 }

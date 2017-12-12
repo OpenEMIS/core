@@ -7,7 +7,8 @@ class OutcomeTemplate extends Entity
 {
     protected $_virtual = ['code_name'];
 
-    protected function _getCodeName() {
+    protected function _getCodeName()
+    {
         return $this->code . ' - ' . $this->name;
     }
 }
