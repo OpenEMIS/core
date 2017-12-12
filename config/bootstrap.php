@@ -237,6 +237,10 @@ Request::addDetector('tablet', function ($request) {
 
 // For Staff Module
  Inflector::rules('plural', ['/(S|s)taff$/i' => '\1taff']);
+ Inflector::rules('plural', ['/(T|t)ransport$/i' => '\1ransport']);
+ Inflector::rules('plural', ['/(T|t)raining$/i' => '\1raining']);
+ Inflector::rules('plural', ['/(C|c)ounselling$/i' => '\1ounselling']);
+ Inflector::rules('plural', ['/SSO$/i' => 'Sso']);
 
 /**
  * Plugins need to be loaded manually, you can either load them one by one or all of them in a single call
@@ -311,6 +315,7 @@ Plugin::load('Installer', ['routes' => true, 'autoload' => true]);
 Plugin::load('Quality', ['autoload' => true]);
 Plugin::load('Cases', ['autoload' => true]);
 Plugin::load('Counselling', ['autoload' => true]);
+Plugin::load('Theme', ['routes' => true, 'autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {
