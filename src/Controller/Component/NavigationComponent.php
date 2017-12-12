@@ -968,12 +968,6 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Profile'],
                     'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffAbsences', 'Profiles.StaffLeave', 'Profiles.StaffBehaviours', 'Profiles.StaffAppraisals']
                 ],
-                'Profiles.StaffEmployments' => [
-                    'title' => 'Professional',
-                    'parent' => 'Profiles.Staff',
-                    'params' => ['plugin' => 'Profile'],
-                    'selected' => ['Profiles.StaffEmployments', 'Profiles.StaffQualifications', 'Profiles.StaffExtracurriculars', 'Profiles.StaffMemberships', 'Profiles.StaffLicenses', 'Profiles.StaffAwards']
-                ],
                 'Profiles.StaffBankAccounts' => [
                     'title' => 'Finance',
                     'parent' => 'Profiles.Staff',
