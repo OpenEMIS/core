@@ -580,6 +580,54 @@ class InstitutionsController extends AppController
         }
     }
 
+    public function StudentOutcomes($subaction = 'index')
+    {
+        if ($subaction == 'edit') {
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $session = $this->request->session();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentOutcomes',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+            $this->Navigation->addCrumb($crumbTitle, $indexUrl);
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                $action = 'edit';
+                if (!$AccessControl->check(['Institutions', 'StudentOutcomes', $action], $roles)) {
+                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentOutcomes'];
+                    return $this->redirect($url);
+                }
+            }
+            $queryString = $this->ControllerAction->getQueryString();
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'StudentOutcomes';
+            $viewUrl[0] = 'view';
+
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('classId', $queryString['class_id']);
+            $this->set('outcomeTemplateId', $queryString['outcome_template_id']);
+            $this->set('queryString', $queryString);
+            $this->set('selectedAction', 'StudentOutcomes');
+            $this->render('student_outcome_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentOutcomes']);
+        }
+    }
+
     public function Classes($subaction = 'index', $classId = null)
     {
         if ($subaction == 'edit') {
@@ -1006,6 +1054,17 @@ class InstitutionsController extends AppController
                             'alert.svc',
                             'institution.student.competency_comments.ctrl',
                             'institution.student.competency_comments.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'StudentOutcomes':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'institution.student.outcomes.ctrl',
+                            'institution.student.outcomes.svc'
                         ]);
                     }
                 }

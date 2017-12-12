@@ -48,6 +48,10 @@ class OutcomeTemplatesTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentOutcomes' => ['view']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 

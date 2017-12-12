@@ -34,6 +34,10 @@ class InstitutionOutcomeResultsTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentOutcomes' => ['index', 'add']
+        ]);
+
         $this->addBehavior('CompositeKey');
     }
 
@@ -53,5 +57,25 @@ class InstitutionOutcomeResultsTable extends AppTable
         if (empty($gradingOption)) {
             $this->delete($entity);
         }
+    }
+
+    public function findStudentResults(Query $query, array $options)
+    {
+        $studentId = $options['student_id'];
+        $outcomeTemplateId = $options['outcome_template_id'];
+        $outcomePeriodId = $options['outcome_period_id'];
+        $educationSubjectId = $options['education_subject_id'];
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        return $query
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('outcome_template_id') => $outcomeTemplateId,
+                $this->aliasField('outcome_period_id') => $outcomePeriodId,
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ]);
     }
 }
