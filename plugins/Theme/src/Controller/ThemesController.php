@@ -243,7 +243,7 @@ class ThemesController extends PageController
         foreach ($options as $key => &$opt) {
             $text = $opt['text'] != 'Authentication' ? $opt['text'] : 'Sso';
             if (in_array($text, $excludedPlugins)) {
-                unset($option[$key]);
+                unset($options[$key]);
             } else {
                 $opt['value'] = $key;
                 if ($opt['text'] == __($selectedModule)) {
