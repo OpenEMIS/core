@@ -74,7 +74,7 @@ class AuthenticationBehavior extends Behavior
             ->toArray();
         $typeOptions = array_keys($typeList);
         foreach ($typeOptions as $key => $value) {
-            $value = $value != 'Authentication' ? $value : 'S S Os';
+            $value = $value != 'Authentication' ? $value : 'Sso';
             if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
             }
