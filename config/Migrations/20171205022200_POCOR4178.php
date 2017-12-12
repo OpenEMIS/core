@@ -43,6 +43,7 @@ class POCOR4178 extends AbstractMigration
         $logo = new File(WWW_ROOT . 'img' . DS .'default_images' .DS. 'oe-logo.png');
         $productName = Configure::read('schoolMode') ? 'OpenSMIS '.Configure::read('schoolMode') : 'OpenEMIS Core';
         $color = Configure::read('schoolMode') ? '3366CC' : '6699CC';
+        $copyright = Configure::read('schoolMode') ? '2017 - {{currentYear}} OpenSMIS' : '2015 - {{currentYear}} OpenEMIS';
         $data = [
             [
                 'id' => '1',
@@ -97,7 +98,7 @@ class POCOR4178 extends AbstractMigration
                 'name' => 'Copyright Notice In Footer',
                 'value' => null,
                 'content' => null,
-                'default_value' => 'Copyright &copy; 2017 OpenEMIS. All rights reserved.',
+                'default_value' => 'Copyright &copy; '. $copyright. '. All rights reserved.',
                 'default_content' => null,
                 'modified_user_id' => null,
                 'modified' => null,
