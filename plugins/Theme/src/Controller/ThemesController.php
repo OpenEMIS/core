@@ -5,6 +5,7 @@ use App\Controller\PageController;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Core\Configure;
 
 class ThemesController extends PageController
 {
@@ -46,27 +47,6 @@ class ThemesController extends PageController
         $B = sprintf("%02X", floor(hexdec($B16)/$darker));
 
         return $hash.$R.$G.$B;
-    }
-
-    private function checkIfTooLight($hex)
-    {
-        //break up the color in its RGB components
-        $r = hexdec(substr($hex, 0, 2));
-        $g = hexdec(substr($hex, 2, 2));
-        $b = hexdec(substr($hex, 4, 2));
-
-        //do simple weighted avarage
-        //
-        //(This might be overly simplistic as different colors are perceived
-        // differently. That is a green of 128 might be brighter than a red of 128.
-        // But as long as it's just about picking a white or black text color...)
-        if ($r + $g + $b > 350) {
-            return '#000000';
-            //bright color, use dark font
-        } else {
-            return '#FFFFFF';
-            //dark color, use bright font
-        }
     }
 
     public function onRenderValue(Event $event, Entity $entity, $key)
@@ -257,11 +237,18 @@ class ThemesController extends PageController
         $options = $configItems
             ->find('optionList', ['keyField' => 'id', 'valueField' => 'type', 'defaultOption' => false])
             ->group([$configItems->aliasField('type')])
+            ->where([$configItems->aliasField('visible') => 1])
             ->toArray();
+        $excludedPlugins = (array) Configure::read('School.excludedPlugins');
         foreach ($options as $key => &$opt) {
-            $opt['value'] = $key;
-            if ($opt['text'] == __($selectedModule)) {
-                $opt['selected'] = true;
+            $text = $opt['text'] != 'Authentication' ? $opt['text'] : 'S S Os';
+            if (in_array($text, $excludedPlugins)) {
+                unset($option[$key]);
+            } else {
+                $opt['value'] = $key;
+                if ($opt['text'] == __($selectedModule)) {
+                    $opt['selected'] = true;
+                }
             }
         }
         return $options;

@@ -1242,7 +1242,7 @@ class NavigationComponent extends Component
                 'Configurations.index' => [
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Configurations.index', 'Configurations.add', 'Configurations.view', 'Configurations.edit', 'Adaptations.index', 'Adaptations.view', 'Adaptations.edit']
+                    'selected' => ['Configurations.index', 'Configurations.add', 'Configurations.view', 'Configurations.edit', 'Themes.index', 'Themes.view', 'Themes.edit']
                 ],
                 'API' => [
                     'title' => 'APIs',

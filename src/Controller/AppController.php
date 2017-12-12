@@ -212,8 +212,10 @@ class AppController extends Controller
                             $file->close();
                         }
                         $code = Inflector::underscore(str_replace(' ', '', $r->name));
-                        if ($code == 'login_page_image' || $code == 'logo' || $code == 'favicon') {
+                        if ($code == 'login_page_image' || $code == 'favicon') {
                             $res[$code] = !empty($r->value) ? 'themes' . DS . $r->value : 'default_images' . DS . $r->default_value;
+                        } elseif ($code == 'copyright_notice_in_footer' || $code == 'logo') {
+                            $res[$code] = !empty($r->value) ? $r->value : null;
                         } else {
                             $res[$code] = !empty($r->value) ? $r->value : $r->default_value;
                         }

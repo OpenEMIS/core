@@ -66,6 +66,8 @@ class OpenEmisComponent extends Component
         $controller->set('_productName', $this->productName);
         $controller->set('productLogo', $this->productLogo);
         $controller->set('lastModified', $this->lastModified);
+        $brand = Configure::read('schoolMode') ? 'OpenSMIS' : 'OpenEMIS';
+        $controller->set('footerBrand', $brand);
 
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
