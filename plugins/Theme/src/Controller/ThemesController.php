@@ -241,7 +241,7 @@ class ThemesController extends PageController
             ->toArray();
         $excludedPlugins = (array) Configure::read('School.excludedPlugins');
         foreach ($options as $key => &$opt) {
-            $text = $opt['text'] != 'Authentication' ? $opt['text'] : 'S S Os';
+            $text = $opt['text'] != 'Authentication' ? $opt['text'] : 'Sso';
             if (in_array($text, $excludedPlugins)) {
                 unset($option[$key]);
             } else {
