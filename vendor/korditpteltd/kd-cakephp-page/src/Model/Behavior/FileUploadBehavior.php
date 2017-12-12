@@ -69,7 +69,7 @@ class FileUploadBehavior extends Behavior
                 $data[$fileContent.'_file_size'] = null;
             } elseif (isset($data[$fileContent.'_content']) && !empty($data[$fileContent.'_content'])) {
                 $data[$fileContent] = base64_decode($data[$fileContent.'_content']);
-            } else {
+            } elseif (!isset($data[$fileName])) {
                 $data[$fileContent] = null;
                 $data[$fileName] = null;
                 $data[$fileContent.'_content'] = null;
@@ -92,10 +92,12 @@ class FileUploadBehavior extends Behavior
                 $validator->add($fileContent, 'ruleFileFormat', [
                     'rule' => function ($check, array $globalData) use ($fileName) {
                         $ext = pathinfo($globalData['data'][$fileName], PATHINFO_EXTENSION);
-                        if (in_array($ext, $this->config('allowable_file_types'))) {
-                            return true;
+                        $allowableFileTypes = $this->config('allowable_file_types');
+                        if (isset($allowableFileTypes[$fileName])) {
+                            return in_array($ext, $allowableFileTypes[$fileName]);
+                        } else {
+                            return in_array($ext, $allowableFileTypes);
                         }
-                        return false;
                     },
                     'message' => __('File format not supported.')
                 ]);
