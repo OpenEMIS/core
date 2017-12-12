@@ -31,7 +31,7 @@
                 <a href="#">
                     <div class="brand-logo">
                         <i class="kd-openemis"></i>
-                        <h1><?php echo 'OpenEMIS School' ?></h1>
+                        <h1><?= $_productName ?></h1>
                     </div>
                 </a>
             </div>
