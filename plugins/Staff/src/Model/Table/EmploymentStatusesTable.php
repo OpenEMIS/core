@@ -38,7 +38,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		$this->field('status_type_id', ['type' => 'select', 'before' => 'status_date']);
 
 		$visible = ['index' => false, 'view' => true, 'add' => true, 'edit' => true];
-        $this->field('file_content', ['visible' => $visible]);
+        $this->field('file_content', ['visible' => $visible, 'attr' => ['label' => __('Attachment')]]);
 
         $this->field('file_name', ['type' => 'hidden']);
         if ($this->action == 'index' || $this->action == 'view') {
