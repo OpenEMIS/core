@@ -133,8 +133,8 @@ function bgSplitter($compile, $rootScope, $interval) {
         });
 
         function init() {
-            console.log('first call');
-            console.log($rootScope);
+            // console.log('first call');
+            // console.log($rootScope);
             paneElems = getChildPanes(element[0].childNodes);
             //add handler to the view
             paneElems.left.after(handler).injector().invoke(function($compile) {
@@ -155,9 +155,9 @@ function bgSplitter($compile, $rootScope, $interval) {
                     }
                 }
 
-                console.log('initial load = ' + panelObj.collapse);
+                // console.log('initial load = ' + panelObj.collapse);
             }
-            console.log('second call');
+            // console.log('second call');
             // defaultConfig.collapse = paneObj.collapse;
             //reupdate paneElems to get handler;
             paneElems = getChildPanes(element[0].childNodes);
@@ -290,7 +290,7 @@ function bgSplitter($compile, $rootScope, $interval) {
         }
 
         function showHideSidePane(_withAnimation) {
-            console.log('after click = ' + panelObj.collapse);
+            // console.log('after click = ' + panelObj.collapse);
             // var paneElems = getChildPanes(element[0].childNodes); //Get updated dom when angular is ready
             if ((panelObj.isRoot === false) && (window.innerWidth <= 1024)) { // mobile view
                 if (panelObj.collapse === "true") {
