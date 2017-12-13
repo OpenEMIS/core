@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
+use Cake\Core\Configure;
 
 class AuthenticationBehavior extends Behavior
 {
@@ -69,24 +70,17 @@ class AuthenticationBehavior extends Behavior
                 'valueField' => 'type'
             ])
             ->order('type')
+            ->where([$ConfigItem->aliasField('visible') => 1])
             ->toArray();
         $typeOptions = array_keys($typeList);
-
-        $selectedType = $this->model->queryString('type', $typeOptions);
-        $this->selectedType = $selectedType;
-        $buffer = $typeOptions;
-        foreach ($buffer as $key => $value) {
-            $result = $ConfigItem
-                ->find()
-                ->where([
-                    $ConfigItem->aliasField('type') => $value,
-                    $ConfigItem->aliasField('visible') => 1
-                ])
-                ->count();
-            if (!$result) {
+        foreach ($typeOptions as $key => $value) {
+            $value = $value != 'Authentication' ? $value : 'Sso';
+            if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
             }
         }
+        $selectedType = $this->model->queryString('type', $typeOptions);
+        $this->selectedType = $selectedType;
         $this->model->request->query['type_value'] = $typeOptions[$selectedType];
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);

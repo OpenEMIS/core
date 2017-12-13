@@ -33,6 +33,8 @@ $icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 		echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
 	?>
 
+	<link rel="stylesheet" href="<?= $this->Url->css('themes/layout.min') ?>?timestamp=<?=$lastModified?>" >
+
 	<!--[if gte IE 9]>
 	<?php
 		echo $this->Html->css('OpenEmis.ie/ie9-fixes');
@@ -47,7 +49,13 @@ $icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 		<div class="login-box">
 			<div class="title">
 				<span class="title-wrapper">
+					<?php if (!$productLogo) : ?>
 					<i class="kd-openemis"></i>
+					<?php else: ?>
+					<?= $this->Html->image($productLogo, [
+						'style' => 'max-height: 45px; vertical-align: top'
+					]); ?>
+					<?php endif; ?>
 					<h1><?= $_productName ?></h1>
 				</span>
 			</div>
