@@ -8,19 +8,19 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     var Controller = this;
 
     // Constants
-    var suppressMenu = true;
-    var suppressSorting = true;
     Controller.dataReady = false;
 
     // Variables
     Controller.classId = null;
     Controller.outcomeTemplateId = null;
+
     Controller.gridOptions = {};
     Controller.className = '';
     Controller.academicPeriodId = null;
     Controller.academicPeriodName = '';
     Controller.institutionId = null;
     Controller.outcomeTemplateName = '';
+    Controller.educationGradeId = null;
     Controller.criterias = [];
     Controller.gradingOptions = [];
     Controller.studentResults = [];
@@ -43,7 +43,8 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     angular.element(document).ready(function () {
         InstitutionStudentOutcomesSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
-        if (Controller.classId != null) {
+
+        if (Controller.classId != null && Controller.outcomeTemplateId != null) {
             InstitutionStudentOutcomesSvc.getClassDetails(Controller.classId)
             .then(function(response) {
                 Controller.className = response.name;
@@ -74,7 +75,9 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             })
             .then(function (outcomeTemplate) {
                 Controller.outcomeTemplateName = outcomeTemplate.code_name;
+                Controller.educationGradeId = outcomeTemplate.education_grade_id;
                 Controller.criterias = outcomeTemplate.criterias;
+
                 Controller.periodOptions = outcomeTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
                     Controller.selectedPeriod = Controller.periodOptions[0].id;
@@ -82,6 +85,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 } else {
                     AlertSvc.warning(Controller, "Please setup outcome periods for the selected template");
                 }
+
                 Controller.subjectOptions = outcomeTemplate.education_grade.education_subjects;
                 if (Controller.subjectOptions.length > 0) {
                     Controller.selectedSubject = outcomeTemplate.education_grade.education_subjects[0].id;
@@ -98,22 +102,22 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 });
 
                 return InstitutionStudentOutcomesSvc.getStudentOutcomeResults(
-                    Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+                    Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
                 console.log(error);
             })
             .then(function (outcomeResults) {
                 Controller.formatResults(outcomeResults);
                 return InstitutionStudentOutcomesSvc.getStudentOutcomeComments(
-                    Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+                    Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
+                console.log(error);
             })
             .then(function (outcomeComments) {
-                if (outcomeComments.length > 0) {
-                    Controller.studentComments = outcomeComments[0].comments;
-                }
+                Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
                 return Controller.initGrid();
             }, function (error) {
+                console.log(error);
             })
             .finally(function(){
                 Controller.dataReady = true;
@@ -125,17 +129,16 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     function formatResults(outcomeResults) {
         var studentResults = [];
         angular.forEach(outcomeResults, function (value, key) {
-            // Format for the student criteria result will be criteria_id.grading_option_id
             if (studentResults[value.outcome_criteria_id] == undefined) {
-                studentResults[value.outcome_criteria_id] = {};
+                studentResults[value.outcome_criteria_id] = 0;
             }
             studentResults[value.outcome_criteria_id] = value.outcome_grading_option_id;
         });
         Controller.studentResults = studentResults;
     }
 
-    function resetColumnDefs(criterias, gradingOptions, period, selectedPeriodStatus, item, student) {
-        var response = InstitutionStudentOutcomesSvc.getColumnDefs(item, student, Controller.itemOptions, Controller.studentOptions);
+    function resetColumnDefs(criterias, gradingOptions, period, selectedPeriodStatus, subject, student) {
+        var response = InstitutionStudentOutcomesSvc.getColumnDefs(subject, student, Controller.subjectOptions, Controller.studentOptions);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -157,22 +160,17 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     });
                     Controller.gridOptions.api.setColumnDefs(response.data);
 
-                    if (item != null && student != null) {
-                        // outcome criterias
+                    if (subject != null && student != null) {
                         var rowData = [];
                         angular.forEach(criterias, function (value, key) {
-                            if (value.outcome_item_id == item) {
-                                var criteriaName = value.name;
-                                if (value.code != null && value.code.length > 0) {
-                                    criteriaName = value.code + " - " + value.name;
-                                }
+                            if (value.education_subject_id == subject) {
                                 var row = {
                                     student_id: student,
-                                    period_editable: selectedPeriodStatus,
                                     outcome_period_id: period,
-                                    outcome_item_id: item,
-                                    outcome_criteria_name: criteriaName,
+                                    period_editable: selectedPeriodStatus,
+                                    education_subject_id: subject,
                                     outcome_criteria_id: value.id,
+                                    outcome_criteria_name: value.code_name,
                                     grading_options: {},
                                     result: 0,
                                     save_error: {
@@ -195,7 +193,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                         if (rowData.length > 0) {
                             AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
                         } else {
-                            AlertSvc.warning(Controller, "Please setup outcome criterias for the selected item");
+                            AlertSvc.warning(Controller, "Please setup outcome criterias for the selected subject");
                             Controller.gridOptions.api.hideOverlay();
                             var emptyRow = [{
                                 period_editable: false,
@@ -208,18 +206,14 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                             Controller.gridOptions.api.setRowData(emptyRow);
                         }
 
-                        // item comments (pinned row at bottom)
-                        var comments = '';
-                        if (angular.isDefined(Controller.studentComments['comments'])) {
-                            comments = Controller.studentComments['comments'];
-                        }
+                        // subject comments (pinned row at bottom)
                         var pinnedRowData = [{
                             student_id: student,
-                            period_editable: selectedPeriodStatus,
                             outcome_period_id: period,
-                            outcome_item_id: item,
+                            period_editable: selectedPeriodStatus,
+                            education_subject_id: subject,
                             outcome_criteria_name: commentTranslation,
-                            result: comments,
+                            result: Controller.studentComments,
                             save_error: {
                                 result: false
                             }
@@ -242,23 +236,22 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         if (periodChange) {
             angular.forEach(Controller.periodOptions, function(value, key) {
                 if (value.id == Controller.selectedPeriod) {
-                    Controller.itemOptions = value.outcome_items;
-                    Controller.selectedItem = value.outcome_items[0].id;
                     Controller.selectedPeriodStatus = value.editable;
                 }
             });
         }
+
         InstitutionStudentOutcomesSvc.getStudentOutcomeResults(
-            Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId)
+            Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId)
         .then(function (results) {
             Controller.formatResults(results);
             return InstitutionStudentOutcomesSvc.getStudentOutcomeComments(
-                Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.selectedStudent, Controller.institutionId, Controller.academicPeriodId);
+                Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
-        .then(function (comments) {
-            Controller.formatComments(comments);
-            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
+        .then(function (outcomeComments) {
+            Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
+            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent);
         }, function (error) {
         });
     }
@@ -271,6 +264,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     institution_id: Controller.institutionId,
                     academic_period_id: Controller.academicPeriodId,
                     outcome_template_id: Controller.outcomeTemplateId,
+                    education_grade_id: Controller.educationGradeId,
                     _controller: Controller
                 },
                 columnDefs: [],
@@ -299,7 +293,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent);
                 }
             };
         }, function(error){
@@ -308,6 +302,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     institution_id: Controller.institutionId,
                     academic_period_id: Controller.academicPeriodId,
                     outcome_template_id: Controller.outcomeTemplateId,
+                    education_grade_id: Controller.educationGradeId,
                     _controller: Controller
                 },
                 columnDefs: [],
@@ -336,7 +331,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent);
                 }
             };
         });

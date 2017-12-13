@@ -58,6 +58,7 @@ class InstitutionOutcomeSubjectCommentsTable extends ControllerActionTable
         $studentId = $options['student_id'];
         $outcomeTemplateId = $options['outcome_template_id'];
         $outcomePeriodId = $options['outcome_period_id'];
+        $educationGradeId = $options['education_grade_id'];
         $educationSubjectId = $options['education_subject_id'];
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
@@ -67,6 +68,7 @@ class InstitutionOutcomeSubjectCommentsTable extends ControllerActionTable
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('outcome_template_id') => $outcomeTemplateId,
                 $this->aliasField('outcome_period_id') => $outcomePeriodId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
