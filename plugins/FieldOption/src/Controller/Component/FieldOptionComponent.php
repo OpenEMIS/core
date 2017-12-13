@@ -93,7 +93,7 @@ class FieldOptionComponent extends Component
 
     // Others
         'ContactTypes' => ['className' => 'User.ContactTypes', 'parent' => 'Others'],
-        'EmploymentTypes' => ['className' => 'FieldOption.EmploymentTypes', 'parent' => 'Others'],
+        'EmploymentStatusTypes' => ['className' => 'FieldOption.EmploymentStatusTypes', 'parent' => 'Others'],
         'ExtracurricularTypes' => ['className' => 'FieldOption.ExtracurricularTypes', 'parent' => 'Others'],
         'IdentityTypes' => ['className' => 'FieldOption.IdentityTypes', 'parent' => 'Others'],
         'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
