@@ -12,8 +12,6 @@ use Cake\Utility\Hash;
 use Cake\Utility\Text;
 use Cake\View\Helper;
 use Cake\Core\Configure;
-use Cake\Http\Client;
-use Cake\Routing\Router;
 
 use Page\Traits\RTLTrait;
 use Page\Traits\EncodingTrait;
@@ -249,7 +247,7 @@ class PageHelper extends Helper
         foreach ($data as $entity) {
             $row = [];
             foreach ($fields as $field => $attr) {
-                if (!$this->isRTL($this->getValue($entity, $attr))) {
+                if (($attr['controlType'] == 'string' || $attr['controlType'] == 'text') && !$this->isRTL($this->getValue($entity, $attr))) {
                     $row[] = '<div style = "direction: ltr !important">' . $this->getValue($entity, $attr) . '</div>';
                 } else {
                     $row[] = $this->getValue($entity, $attr);
@@ -429,7 +427,7 @@ EOT;
 
             if (array_key_exists('value', $attr['attributes'])) {
                 $value = $attr['attributes']['value'];
-                if (!$this->isRTL($value)) {
+                if (($attr['controlType'] == 'string' || $attr['controlType'] == 'text') && !$this->isRTL($value)) {
                     $value = '<div style = "direction:ltr !important">' . $value . '</div>';
                 }
             }
