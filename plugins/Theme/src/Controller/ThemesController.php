@@ -31,6 +31,12 @@ class ThemesController extends PageController
         return $events;
     }
 
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $this->Page->addCrumb(__('System Configurations'), ['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => 'index']);
+    }
+
     private function darkenColour($rgb, $darker = 2)
     {
         $hash = (strpos($rgb, '#') !== false) ? '#' : '';
