@@ -13,7 +13,7 @@ class StaffEmploymentStatusesTable extends AppTable {
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes', 'foreignKey' => 'status_types_id']);
+        $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes', 'foreignKey' => 'status_type_id']);
 
         $this->addBehavior('Excel', [
             'excludes' => ['staff_id', 'status_type_id']
