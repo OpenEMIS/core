@@ -103,7 +103,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getStudentOutcomeResults(studentId, templateId, periodId, subjectId, institutionId, academicPeriodId) {
+    function getStudentOutcomeResults(studentId, templateId, periodId, gradeId, subjectId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -112,6 +112,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                 student_id: studentId,
                 outcome_template_id: templateId,
                 outcome_period_id: periodId,
+                education_grade_id: gradeId,
                 education_subject_id: subjectId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
@@ -119,7 +120,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getStudentOutcomeComments(studentId,  templateId, periodId, subjectId, institutionId, academicPeriodId) {
+    function getStudentOutcomeComments(studentId,  templateId, periodId, gradeId, subjectId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -128,6 +129,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                 student_id: studentId,
                 outcome_template_id: templateId,
                 outcome_period_id: periodId,
+                education_grade_id: gradeId,
                 education_subject_id: subjectId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
@@ -135,7 +137,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(item, student, itemOptions, studentOptions) {
+    function getColumnDefs(subject, student, subjectOptions, studentOptions) {
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
@@ -144,10 +146,10 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         // dynamic table headers
         var criteriaHeader = 'Outcome Criteria';
         var resultHeader = 'Result';
-        if (itemOptions.length > 0 && item != null && studentOptions.length > 0 && student != null) {
-            var itemObj = $filter('filter')(itemOptions, {'id':item});
-            if (itemObj.length > 0) {
-                criteriaHeader = itemObj[0].name + ' Criteria';
+        if (subjectOptions.length > 0 && subject != null && studentOptions.length > 0 && student != null) {
+            var subjectObj = $filter('filter')(subjectOptions, {'id':subject});
+            if (subjectObj.length > 0) {
+                criteriaHeader = subjectObj[0].code_name + ' Criteria';
             }
             var studentObj = $filter('filter')(studentOptions, {'student_id':student});
             if (studentObj.length > 0) {
@@ -162,11 +164,6 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             filterParams: filterParams,
             menuTabs: menuTabs,
             filter: 'text'
-        });
-        columnDefs.push({
-            headerName: "outcome criteria id",
-            field: "outcome_criteria_id",
-            hide: true
         });
 
         var columnDef = {
@@ -194,15 +191,11 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             cellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
                 var gradingOptions = {
-                    0 : {
-                        id: 0,
-                        code: '',
-                        name: '-- Select --'
-                    }
+                    0 : '-- Select --'
                 };
                 if (angular.isDefined(params.data.grading_options)) {
                     angular.forEach(params.data.grading_options, function(obj, key) {
-                        gradingOptions[obj.id] = obj;
+                        gradingOptions[obj.id] = obj.code_name;
                     });
                 }
 
@@ -214,14 +207,10 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
 
                     var eSelect = document.createElement("select");
 
-                    angular.forEach(gradingOptions, function(obj, key) {
+                    angular.forEach(gradingOptions, function(value, key) {
                         var eOption = document.createElement("option");
-                        var labelText = obj.name;
-                        if (obj.code.length > 0) {
-                            labelText = obj.code + ' - ' + labelText;
-                        }
                         eOption.setAttribute("value", key);
-                        eOption.innerHTML = labelText;
+                        eOption.innerHTML = value;
                         eSelect.appendChild(eOption);
                     });
                     eSelect.value = params.value;
@@ -262,10 +251,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                     // don't allow input if period is not editable
                     var cellValue = '';
                     if (angular.isDefined(params.value) && params.value.length != 0 && params.value != 0) {
-                        cellValue = gradingOptions[params.value]['name'];
-                        if (gradingOptions[params.value]['code'].length > 0) {
-                            cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
-                        }
+                        cellValue = gradingOptions[params.value];
                     }
 
                     var eCell = document.createElement('div');
@@ -342,22 +328,24 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
     }
 
     function saveOutcomeResults(params) {
-        var outcomeTemplateId = params.context.outcome_template_id;
-        var outcomeItemId = params.data.outcome_item_id;
-        var outcomeCriteriaId = params.data.outcome_criteria_id;
-        var outcomePeriodId = params.data.outcome_period_id;
-        var institutionId = params.context.institution_id;
-        var academicPeriodId = params.context.academic_period_id;
         var outcomeGradingOptionId = params.data.result;
         var studentId = params.data.student_id;
+        var outcomeTemplateId = params.context.outcome_template_id;
+        var outcomePeriodId = params.data.outcome_period_id;
+        var educationGradeId = params.context.education_grade_id;
+        var educationSubjectId = params.data.education_subject_id;
+        var outcomeCriteriaId = params.data.outcome_criteria_id;
+        var institutionId = params.context.institution_id;
+        var academicPeriodId = params.context.academic_period_id;
 
         var saveObj = {
             outcome_grading_option_id: parseInt(outcomeGradingOptionId),
             student_id: studentId,
             outcome_template_id: outcomeTemplateId,
-            outcome_item_id: outcomeItemId,
-            outcome_criteria_id: outcomeCriteriaId,
             outcome_period_id: outcomePeriodId,
+            education_grade_id: educationGradeId,
+            education_subject_id: educationSubjectId,
+            outcome_criteria_id: outcomeCriteriaId,
             institution_id: institutionId,
             academic_period_id: academicPeriodId
         };
@@ -365,23 +353,25 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
     }
 
     function saveOutcomeComments(params) {
+        var comments = params.data.result;
+        var studentId = params.data.student_id;
         var outcomeTemplateId = params.context.outcome_template_id;
-        var outcomeItemId = params.data.outcome_item_id;
         var outcomePeriodId = params.data.outcome_period_id;
+        var educationGradeId = params.context.education_grade_id;
+        var educationSubjectId = params.data.education_subject_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-        var itemComments = params.data.result;
-        var studentId = params.data.student_id;
 
         var saveObj = {
-            comments: itemComments,
+            comments: comments,
             student_id: studentId,
             outcome_template_id: outcomeTemplateId,
-            outcome_item_id: outcomeItemId,
             outcome_period_id: outcomePeriodId,
+            education_grade_id: educationGradeId,
+            education_subject_id: educationSubjectId,
             institution_id: institutionId,
             academic_period_id: academicPeriodId
         };
-        return OutcomeItemComments.save(saveObj);
+        return OutcomeSubjectComments.save(saveObj);
     }
 };
