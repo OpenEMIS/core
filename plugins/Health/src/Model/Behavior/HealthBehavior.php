@@ -14,7 +14,7 @@ class HealthBehavior extends Behavior
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.beforeAction']          = ['callable' => 'beforeAction', 'priority' => 100];
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];
         return $events;
     }
 
@@ -83,7 +83,6 @@ class HealthBehavior extends Behavior
         }
 
         if ($name == 'Students' && $controller->AccessControl->check(['StudentBodyMasses', 'index'])) {
-            // currently only support Institution student.
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
@@ -91,6 +90,25 @@ class HealthBehavior extends Behavior
             $tabElements['BodyMasses'] = [
                 'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentBodyMasses', 'action' => 'index'],
                 'text' => __('Body Mass')
+            ];
+        } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffBodyMasses', 'index'])) {
+            $session = $this->_table->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+            $params = $this->_table->paramsEncode(['id' => $institutionId]);
+
+            $tabElements['BodyMasses'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffBodyMasses', 'action' => 'index'],
+                'text' => __('Body Mass')
+            ];
+        } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryBodyMasses', 'index'])) {
+            $tabElements['BodyMasses'] = [
+                'url' => ['plugin' => 'Directory', 'controller' => 'DirectoryBodyMasses', 'action' => 'index'],
+               'text' => __('Body Mass')
+            ];
+        } elseif ($name == 'Profiles' && $controller->AccessControl->check(['ProfileBodyMasses', 'index'])) {
+            $tabElements['BodyMasses'] = [
+                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileBodyMasses', 'action' => 'index'],
+               'text' => __('Body Mass')
             ];
         }
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
