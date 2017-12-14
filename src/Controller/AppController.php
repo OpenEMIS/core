@@ -21,6 +21,10 @@ use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use ControllerAction\Model\Traits\SecurityTrait;
+use Cake\Utility\Inflector;
+use Cake\Cache\Cache;
+use Cake\Filesystem\File;
+use Cake\Filesystem\Folder;
 
 /**
  * Application Controller
@@ -113,6 +117,7 @@ class AppController extends Controller
 
         // Custom Components
         $this->loadComponent('Navigation');
+        $this->productName = $this->getTheme()['application_name'];
         $this->loadComponent('Localization.Localization', [
             'productName' => $this->productName
         ]);
@@ -127,7 +132,10 @@ class AppController extends Controller
                 ]
             ],
             'productName' => $this->productName,
-            'theme' => $theme
+            'productLogo' => $this->getTheme()['logo'],
+            'footerText' => $this->getTheme()['copyright_notice_in_footer'],
+            'theme' => $theme,
+            'lastModified' => $this->getTheme()['timestamp']
         ]);
 
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
@@ -168,6 +176,71 @@ class AppController extends Controller
             $this->eventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
+    }
+
+    private function darkenColour($rgb, $darker = 2)
+    {
+        $hash = (strpos($rgb, '#') !== false) ? '#' : '';
+        $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
+        if (strlen($rgb) != 6) {
+            return $hash.'000000';
+        }
+        $darker = ($darker > 1) ? $darker : 1;
+
+        list($R16,$G16,$B16) = str_split($rgb, 2);
+
+        $R = sprintf("%02X", floor(hexdec($R16)/$darker));
+        $G = sprintf("%02X", floor(hexdec($G16)/$darker));
+        $B = sprintf("%02X", floor(hexdec($B16)/$darker));
+
+        return $hash.$R.$G.$B;
+    }
+
+    public function getTheme()
+    {
+        $themes = Cache::read('themes');
+        if (!$themes) {
+            $folder = new Folder();
+            $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
+            $themes = TableRegistry::get('Themes')->find()
+                ->formatResults(function ($results) {
+                    $res = [];
+                    foreach ($results as $r) {
+                        if ($r->content) {
+                            $file = new File(WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value, true);
+                            $file->write(stream_get_contents($r->content));
+                            $file->close();
+                        }
+                        $code = Inflector::underscore(str_replace(' ', '', $r->name));
+                        if ($code == 'login_page_image' || $code == 'favicon') {
+                            $res[$code] = !empty($r->value) ? 'themes' . DS . $r->value : 'default_images' . DS . $r->default_value;
+                        } elseif ($code == 'copyright_notice_in_footer' || $code == 'logo') {
+                            $res[$code] = !empty($r->value) ? 'themes' . DS . $r->value : null;
+                        } else {
+                            $res[$code] = !empty($r->value) ? $r->value : $r->default_value;
+                        }
+                    }
+                    return $res;
+                })
+                ->toArray();
+            $colour = $themes['colour'];
+            $secondaryColour = $this->darkenColour($colour);
+            $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
+            $loginBackground = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]). DS . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
+            $file = new File($customPath . 'layout.core.template.css');
+            $template = $file->read();
+            $file->close();
+            $template = str_replace('${bgImg}', "'$loginBackground'", $template);
+            $template = str_replace('${secondColor}', $secondaryColour, $template);
+            $template = str_replace('${prodColor}', "#$colour", $template);
+            $customPath = WWW_ROOT . 'css' . DS . 'themes' . DS;
+            $file = new File($customPath . 'layout.min.css', true);
+            $file->write($template);
+            $file->close();
+            $themes['timestamp'] = TableRegistry::get('Configuration.ConfigItems')->value('themes');
+            Cache::write('themes', $themes);
+        }
+        return $themes;
     }
 
     /**

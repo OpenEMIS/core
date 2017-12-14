@@ -37,15 +37,15 @@
             <?= $this->element('OpenEmis.alert') ?>
             <div class="step-pane sample-pane <?=$action == '1' ? 'active' : '' ?>" data-restrict="1" data-step="1">
                 <div class="step-pane-wrapper">
-                    <h1>Welcome to OpenEMIS School</h1>
-                    <h2 style="margin-top: 20px">OPENEMIS SCHOOL LICENSE LAST UPDATED ON 2014-01-30</h2>
-                    <h3 style="margin-top: 20px">OpenEMIS SCHOOL</h3>
+                    <h1>Welcome to OpenSMIS</h1>
+                    <h2 style="margin-top: 20px">OPENEMIS LICENSE LAST UPDATED ON 2014-01-30</h2>
+                    <h3 style="margin-top: 20px">OpenEMIS</h3>
                     <h3>Open School Management Information System</h3>
 
                     <p style="margin-top: 30px">
                     Copyright © 2017 KORD IT. This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see GNU. For more information please wire to contact@openemis.org.
 
-                    By clicking Next, you agree to the terms stated in the OpenEmis School License Agreement above.
+                    By clicking Next, you agree to the terms stated in the OpenSMIS License Agreement above.
                     </p>
                     <div class="form-group">
                         <a href=<?=$this->Url->build(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'step2']); ?> type="submit" class="btn btn-default" onClick="(function(){document.querySelector('.spinner-wrapper').style.display='block';})();">Start</a>
@@ -115,7 +115,7 @@
             <div class="step-pane sample-pane <?=$action == '3' ? 'active' : '' ?>" data-restrict="3" data-step="3">
                 <div class="step-pane-wrapper">
                     <h1>Installation Completed</h1>
-                    <p>You have successfully installed OpenEMIS School. Please click Start to launch OpenEMIS School.</p>
+                    <p>You have successfully installed OpenSMIS. Please click Start to launch OpenSMIS.</p>
                     <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                         <div class="form-group">
                             <a href=<?=$this->Url->build(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']); ?> type="submit" class="btn btn-default" style="text-">Complete</a>
