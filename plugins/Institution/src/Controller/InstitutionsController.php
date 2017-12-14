@@ -1506,8 +1506,12 @@ class InstitutionsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate = '')
+    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate)
     {
+        if ($endDate == 'null') {
+            $endDate = null;
+        }
+
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
         $positionTable = TableRegistry::get('Institution.InstitutionPositions');
