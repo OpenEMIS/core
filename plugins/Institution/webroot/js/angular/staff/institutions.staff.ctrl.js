@@ -291,7 +291,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         // POCOR-4269 used the openemis_no (unique) so same staff cant add to same position
         var openemisNo = 0;
-        if (StaffController.hasOwnProperty('selectedStaffData')) {
+        if (StaffController.hasOwnProperty('selectedStaffData') && StaffController.selectedStaffData.openemis_no != undefined) {
             openemisNo = StaffController.selectedStaffData.openemis_no;
         }
 
