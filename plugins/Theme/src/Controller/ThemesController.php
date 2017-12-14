@@ -159,7 +159,8 @@ class ThemesController extends PageController
                     ->setLabel('Content')
                     ->setAttributes('type', 'image')
                     ->setAttributes('fileNameField', 'value')
-                    ->setAttributes('supportedFileFormat', ['svg'])
+                    ->setAttributes('fileSizeLimit', 2)
+                    ->setAttributes('supportedFileFormat', ['jpeg', 'jpg', 'gif', 'png'])
                     ->setAttributes('backgroundColor', '#'.$backgroundColour);
 
                 $page->get('default_content')
