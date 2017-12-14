@@ -257,15 +257,15 @@ class NavigationComponent extends Component
         $institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
         $institutionControllers = [
-            'Counsellings', 'StudentBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds',
+            'Counsellings', 'StudentBodyMasses', 'StaffBodyMasses', 'StudentComments', 'StaffComments', 'InfrastructureNeeds',
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars'
         ];
 
-        $profileControllers = ['ProfileComments'];
-        $directoryControllers = ['DirectoryComments'];
+        $profileControllers = ['ProfileBodyMasses', 'ProfileComments'];
+        $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments'];
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -286,6 +286,7 @@ class NavigationComponent extends Component
             $this->checkClassification($navigations);
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
+
 
             $session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -810,7 +811,8 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution', '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
                     'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
-                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete']],
+                    'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull', 'Students.StudentSurveys', 'StudentComments.index', 'StudentComments.view', 'StudentComments.add', 'StudentComments.edit', 'StudentComments.delete']
+            ],
             'Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
@@ -834,12 +836,14 @@ class NavigationComponent extends Component
                 'title' => 'Finance',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.StudentFees']],
+                'selected' => ['Students.StudentFees']
+            ],
             'Students.Healths' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete']],
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete']
+            ],
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -886,13 +890,13 @@ class NavigationComponent extends Component
                 'title' => 'Training',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Institutions.CourseCatalogue', 'Staff.Courses',],
+                'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Institutions.CourseCatalogue', 'Staff.Courses'],
             ],
             'Staff.Healths' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests']
+                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'StaffBodyMasses.index', 'StaffBodyMasses.add', 'StaffBodyMasses.edit', 'StaffBodyMasses.view', 'StaffBodyMasses.delete']
             ],
         ];
         foreach ($navigation as &$n) {
@@ -916,7 +920,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests']
+                'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests', 'ProfileBodyMasses.index', 'ProfileBodyMasses.add', 'ProfileBodyMasses.edit', 'ProfileBodyMasses.view', 'ProfileBodyMasses.delete']
             ],
             'Profiles.Employments' => [
                 'title' => 'Professional',
@@ -942,7 +946,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests']
+                'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests', 'DirectoryBodyMasses.index', 'DirectoryBodyMasses.add', 'DirectoryBodyMasses.edit', 'DirectoryBodyMasses.view', 'DirectoryBodyMasses.delete']
             ],
             'Directories.Employments' => [
                 'title' => 'Professional',
@@ -1236,7 +1240,7 @@ class NavigationComponent extends Component
                 'Configurations.index' => [
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Configurations.index', 'Configurations.add', 'Configurations.view', 'Configurations.edit']
+                    'selected' => ['Configurations.index', 'Configurations.add', 'Configurations.view', 'Configurations.edit', 'Themes.index', 'Themes.view', 'Themes.edit']
                 ],
                 'API' => [
                     'title' => 'APIs',

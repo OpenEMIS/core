@@ -1,5 +1,5 @@
 /*
-Core Overwrites: v.1.0.14
+Core Overwrites: v.1.0.15
 */
 
 
@@ -187,237 +187,27 @@ a,
 }
 
 
-/* Ag-Grid Overwrites  - Removing all after this task */
-.rtl .sg-theme .ag-body-viewport {
-    direction: rtl !important;
-}
-
-/* Adding the aboved css for kd-angular-ag-grid to work for the latest  - Also to removed together */
-
-/*.ag-fresh {
-    overflow: hidden;
-}
-
-.ag-fresh .ag-root {
-    min-height: 200px;
-}*/
+/* Ag-Grid Overwrites */
 
 .ag-height-fixed {
     height: 650px;
     min-height: 200px;
 }
-/*
-.rtl .ag-fresh div.ag-header,
-.rtl .ag-body-viewport {
-    direction: ltr !important;
-}
-
-.ag-fresh .ag-header-cell .ag-header-cell-label {
-    padding: 10px 35px 10px 10px;
-    cursor: pointer;
-    line-height: normal;
-}
-
-.ag-fresh .ag-header-cell-text {
-    vertical-align: middle;
-}
-
-.ag-fresh .ag-cell {
-    padding: 8px !important;
-}
-
-.ag-fresh .ag-cell-focus {
-    outline: 0 !important;
-}
-
-.ag-fresh div.ag-header {
-    background: none;
-    border-bottom: 0px;
-}
-
-.ag-fresh .header-icon {
-    color: #999;
-    margin: 0 5px;
-}
-
-.ag-fresh .ag-sort-ascending-icon::after,
-.ag-sort-descending-icon::after {
-    vertical-align: middle;
-}
-
-.ag-fresh .ag-sort-none-icon {
-    vertical-align: middle;
-}
-
-.ag-fresh .oe-cell-highlight {
-    background-color: #FFF9CA !important;
-    border-color: transparent;
-}
-
-.ag-fresh .oe-cell-editable,
-.ag-fresh .oe-cell-editable select {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 36px;
-    background-color: #FFF9CA;
-    border: 0;
-    padding: 10px;
-    width: 100%;
-}
-
-.ag-fresh .ag-cell-edit-input {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    right: 0;
-    bottom: 0;
-    height: 30px;
-    background-color: #FFF9CA;
-    border: 0;
-    padding: 5px;
-    width: 97%;
-}*/
 
 .ag-header-icon {
     display: inline;
 }
 
-/*.ag-fresh .ag-header-cell-menu-button {
-    line-height: 14px !important;
-    z-index: 1;
-    background-color: #F6F6F6;
-}
-
-.ag-fresh .ag-header-cell-menu-button,
-.ag-header-icon .ag-sort-ascending-icon,
-.ag-header-icon .ag-sort-descending-icon {
-    display: inline !important;
-}
-
-.ag-fresh .ag-header-cell-menu-button:hover {
-    background-color: #EEE;
-}*/
-
 .ag-header-cell-menu-button svg,
 .ag-sort-none-icon svg {
     display: none;
 }
-/*
-.ag-sort-descending-icon:after,
-.ag-sort-none-icon:after,
-.ag-fresh .oe-cell-editable.oe-select-wrapper:after,
-.ag-fresh .ag-filter div div:after {
-    font-family: "FontAwesome";
-    font-size: 12px;
-    color: #555;
-    margin-right: 10px;
-}
 
-.ag-fresh .oe-cell-editable.oe-select-wrapper:after,
-.ag-fresh .ag-filter div div:after {
-    content: "\f0d7";
-    position: absolute;
-    right: 0;
-}
-
-.ag-fresh .oe-cell-editable.oe-select-wrapper:after {
-    top: 50%;
-    -webkit-transform: translateY(-50%);
-    -moz-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
-    -o-transform: translateY(-50%);
-    transform: translateY(-50%);
-}
-
-.ag-fresh .ag-filter div div:after {
-    top: 10px;
-}
-
-.ag-fresh .oe-cell-editable select {
-    background-color: #FFF9CA;
-}*/
-
-/*.ag-sort-none-icon:after {
-    content: "\f0dc";
-}
-*/
-/*.ag-fresh .ag-header-row div.ag-header-cell {
-    border-color: #DDD;
-    border-style: solid;
-}
-
-.ag-fresh .ag-menu .ag-filter .ag-filter-select {
-    margin: 4px 0 0;
-    border: 0;
-    border-bottom: 1px solid #DDD;
-    border-radius: 0;
-}
-*/
 .ag-filter select {
     -webkit-appearance: auto !important;
     -moz-appearance: auto !important;
     appearance: auto !important;
 }
-
-/*.ag-fresh .ag-cell:last-child {
-    border-right: 1px dotted #DDD !important;
-}
-
-.ag-fresh .ag-header-cell:last-child {
-    border-right: 1px solid #DDD !important;
-}
-*/
-/*.rtl .ag-fresh .ag-cell,
-.rtl .ag-fresh .ag-header-cell-text {
-    font-size: 14px;
-}
-
-.rtl .ag-fresh .ag-header-cell .ag-header-cell-label {
-    padding: 10px 10px 10px 35px;
-}
-
-.rtl .ag-fresh .ag-header-row {
-    direction: ltr;
-}
-
-.rtl .ag-fresh .ag-cell:last-child {
-    border-left: 1px dotted #DDD !important;
-}
-
-.rtl .ag-fresh .ag-header-cell:last-child {
-    border-left: 1px solid #DDD !important;
-}
-
-.rtl .ag-fresh .ag-header-icon {
-    float: right;
-}
-
-.rtl .ag-sort-descending-icon:after,
-.rtl .ag-sort-none-icon:after,
-.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
-.rtl .ag-fresh .ag-filter div div:after,
-.rtl .ag-sort-ascending-icon:after,
-.rtl .ag-sort-descending-icon:after {
-    margin-right: 0;
-    margin-left: 10px;
-}
-
-.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
-.rtl .ag-fresh .ag-filter div div:after {
-    right: auto !important;
-    left: 0;
-}
-
-.rtl .ag-fresh .ag-menu {
-    margin-left: 212px;
-}
-
-.rtl .ag-fresh .ag-header-cell-menu-button {
-    float: left;
-}*/
 
 /* Error message on the fileinput */
 
@@ -605,16 +395,6 @@ a,
 }
 
 /* End of Temporary fix for POCOR-1855 */
-
-/* For Checkbox iCheck - To be depreciate */
-
-/*.icheck-input[type="checkbox"],
-.icheck-input[type="radio"] {
-    z-index: -1 !important;
-}
-*/
-/* End of iCheck */
-
 
 /* Fixed Navigation Menu in RTL (Force font to always align right) */
 
@@ -924,45 +704,79 @@ a,
 
 /* End of fix for POCOR-3658 */
 
+/* Security Permission font-size fix for POCOR-3877 */
+
+.security-permission-checkbox label{
+    font-size: 13px !important;
+}
+
+/* End of security permission font-size fix */
+
 /* Temp fix by KK POCOR-3880 */
-
-/*.ag-fresh .ag-pinned-left-header,
-.ag-fresh .ag-pinned-right-header {
-    background: none !important;
-    background-color: rgba(204, 204, 204, 0.2) !important;
-    -webkit-box-shadow: inset 0 1px 0 #FFF;
-    -moz-box-shadow: inset 0 1px 0 #FFF;
-    box-shadow: inset 0 1px 0 #FFF;
-    border-bottom: 1px solid #DDD !important;
-}
-
-.ag-fresh .ag-pinned-left-header .ag-header-cell:last-child {
-    border-right: 1px solid #DDD !important;
-}
-
-.ag-fresh .ag-header-icon#agMenu {
-    display: block !important;
-}*/
 
 .ag-menu input.ag-filter-filter {
     width: 89% !important;
 }
 
-/*.ag-fresh .ag-menu {
-    border: none !important;
-}*/
 /* End of fix for POCOR-3880 */
 
-/* Fix for error border POCOR-3233 */
+/* verify and check to remove - kk */
+/* Fix for normal table sorting issue in POCOR-2547 */
+
+.rtl .table-sortable th > a.asc:after {
+    content: "\f0dd";
+}
+
+.rtl .table-sortable th > a.desc:after {
+    content: "\f0de";
+}
+
+/* End of fix for normal table sorting */
+
+/* verify and check to remove - kk */
+/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
+/* Temp fix for adding error border in ag Grid (last child for pinned and not pinned) for task POCOR-4260 */
+
+.ag-fresh .ag-cell-no-focus.oe-cell-error,
+.ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned {
+    border: 2px solid #CC5C5C !important;
+    border-radius: 0px !important;
+}
+
+/* End of fix for adding error border */
+
+/* verify and check to remove - kk */
+/* Temp fix for core error border for POCOR-3783 */
+
+.table .error input,
+.table .error .input-select-wrapper,
+.table .error textarea {
+    border-color: #CC5C5C !important;
+}
+
+.table div.input > label {
+    display: none !important;
+}
+
+/* End of temp fix for error border */
+
+
+
+/* Overwrites for POCOR-3233 task */
+
+/* Error */
 .sg-theme .oe-cell-error,
 .rtl .sg-theme .oe-cell-error {
     border: 2px solid #CC5C5C !important;
     border-radius: 0px !important;
 }
+/* End of error */
 
-/* End of fix for error border POCOR-3233 */
-
-/* Fix for required label:before in table affecting input checkbox label:before POCOR-3233
+/* Fix for required label:before in table affecting input checkbox label:before
     - Proper fix in styleguide - required > label:before instead of required label:before
 */
 [type="checkbox"]:not(:checked) + label:before,
@@ -1004,11 +818,9 @@ a,
 .rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
     margin: 0 !important;
 }
+/* End of fix for required label:before */
 
-/* End of fix for required label:before fix POCOR-3233 */
-
-/* Fix for #south styling in styleguide requires to update to [ref="south"] due to styleguide update POCOR-3233 */
-
+/* Fix for #south styling in styleguide requires to update to [ref="south"]*/
 .sg-theme div[ref="south"] {
     background-color: #F9F9F9;
     border-top: 1px solid #DDD;
@@ -1047,11 +859,9 @@ a,
 .rtl .sg-theme [ref="south"] .ag-paging-button[ref="btLast"]:before {
     content: "\f100";
 }
-
 /* End of fix for #south styling */
 
-/* Temp fix for radio in ag-Grid not style for task POCOR-3233 */
-
+/* Temp fix for radio in ag-Grid not style */
 .ag-radio-wrapper input.ag-grid-radio {
     top: 10px;
     left: 10px;
@@ -1083,35 +893,15 @@ a,
 .ag-rtl .ag-header-cell-resize {
     position: relative;
 }
+/* End of fix for radio */
 
-/* End of fix for radio */ 
-
-/* Temp fix for dropdown editing cell for task POCOR-3233 */
-
+/* Temp fix for dropdown editing cell*/
 .rtl .sg-theme .oe-cell-editable.oe-select-wrapper:after {
     right: auto;
     left: 0;
     margin-left: 10px;
     margin-right: 0;
 }
-
 /* End of fix for dropdown editing cell */
 
-/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
-/* Temp fix for adding error border in ag Grid (last child for pinned and not pinned) for task POCOR-4260 */
-.ag-fresh .ag-cell-no-focus.oe-cell-error,
-.ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
-.ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned,
-.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error,
-.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
-.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned {
-    border: 2px solid #CC5C5C !important;
-    border-radius: 0px !important;
-}
-
-td.checkbox-column,
-th.checkbox-column {
-    width: 50px;
-}
-
-/* End of fix for adding error border in ag Grid */
+/* End of overwrites for POCOR-3233 */
