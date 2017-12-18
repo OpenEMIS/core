@@ -73,7 +73,6 @@ class TransferApprovalsTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         $events['ControllerAction.Model.associated'] = 'associated';
 
         return $events;
@@ -159,7 +158,7 @@ class TransferApprovalsTable extends ControllerActionTable
                 unset($toolbarButtons['back']['url'][0]);
                 unset($toolbarButtons['back']['url'][1]);
 
-            } else if ($toolbarButtons['back']['url']['controller'] == 'Institutions') {
+            } elseif ($toolbarButtons['back']['url']['controller'] == 'Institutions') {
                 $toolbarButtons['back']['url']['action'] = 'StudentAdmission';
                 $toolbarButtons['back']['url'][0] = 'index';
                 unset($toolbarButtons['back']['url'][1]);
