@@ -23,7 +23,7 @@ class InstallerController extends AppController
         $this->loadComponent('RequestHandler');
 
         $this->loadComponent('OpenEmis.OpenEmis', [
-            'productName' => 'OpenEMIS School',
+            'productName' => 'OpenSMIS',
             'theme' => 'school'
         ]);
 

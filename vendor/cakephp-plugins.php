@@ -56,6 +56,7 @@ return [
         'Survey' => $baseDir . '/plugins/Survey/',
         'System' => $baseDir . '/plugins/System/',
         'Textbook' => $baseDir . '/plugins/Textbook/',
+        'Theme' => $baseDir . '/plugins/Theme/',
         'Training' => $baseDir . '/plugins/Training/',
         'Transport' => $baseDir . '/plugins/Transport/',
         'User' => $baseDir . '/plugins/User/',

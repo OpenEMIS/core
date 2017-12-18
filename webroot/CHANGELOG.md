@@ -1,3 +1,8 @@
+### [3.14.0] - 2017-12-14
+- Implemented Adaptation feature in Administration > System Setup > System configuration > Themes page
+- Bug fix on 404 errors in Administration >System Setup > Field Options - Employment Types
+- Bug fix on selecting a position in Institution > Add staff page
+
 ### [3.13.0] - 2017-12-08
 - Implemented Institutions > Calender feature
 - Implemented Institutions > WASH Feature
