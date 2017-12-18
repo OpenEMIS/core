@@ -714,8 +714,7 @@
     border-left: 1px solid #ddd;
 }
 
-.rtl .sg-theme .ag-cell-no-focus,
-.rtl .sg-theme .ag-cell {
+.rtl .sg-theme .ag-cell-no-focus {
     border-right: 0 !important;
     border-left: 1px dotted #ddd;
 }
