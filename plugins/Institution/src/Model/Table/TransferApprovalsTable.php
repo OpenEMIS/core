@@ -44,6 +44,10 @@ class TransferApprovalsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+
+        $this->toggle('index', false);
+        $this->toggle('add', false);
+        $this->toggle('remove', false);
     }
 
     public function validationDefault(Validator $validator)
@@ -142,6 +146,25 @@ class TransferApprovalsTable extends ControllerActionTable
         }
 
         return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        // from onUpdateToolbarButtons
+        if ($this->action == 'edit' || $this->action == 'view') {
+            $toolbarButtons = $extra['toolbarButtons'];
+
+            if ($toolbarButtons['back']['url']['controller'] == 'Dashboard') {
+                $toolbarButtons['back']['url']['action'] = 'index';
+                unset($toolbarButtons['back']['url'][0]);
+                unset($toolbarButtons['back']['url'][1]);
+
+            } else if ($toolbarButtons['back']['url']['controller'] == 'Institutions') {
+                $toolbarButtons['back']['url']['action'] = 'StudentAdmission';
+                $toolbarButtons['back']['url'][0] = 'index';
+                unset($toolbarButtons['back']['url'][1]);
+            }
+        }
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -397,7 +420,11 @@ class TransferApprovalsTable extends ControllerActionTable
 
     public function viewAfterAction($event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['status'] = $entity->status;
+        $toolbarButtons = $extra['toolbarButtons'];
+        if ($entity->status != self::NEW_REQUEST || (!$this->AccessControl->check(['Institutions', 'TransferApprovals', 'execute']))) {
+            unset($toolbarButtons['edit']);
+        }
+
         $this->field('type', ['visible'=>     false]);
         $this->setFieldOrder([
             'created', 'status', 'student_id',
@@ -589,27 +616,6 @@ class TransferApprovalsTable extends ControllerActionTable
         }
 
         return $attr;
-    }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        if ($action == 'edit' || $action == 'view') {
-            if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
-                $toolbarButtons['back']['url']['action']= 'index';
-                unset($toolbarButtons['back']['url'][0]);
-                unset($toolbarButtons['back']['url'][1]);
-            } else if ($toolbarButtons['back']['url']['controller']=='Institutions') {
-                $toolbarButtons['back']['url']['action']= 'StudentAdmission';
-                unset($toolbarButtons['back']['url'][0]);
-                unset($toolbarButtons['back']['url'][1]);
-            }
-        }
-
-        if ($action == 'view') {
-            if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check(['Institutions', 'TransferApprovals', 'edit']))) {
-                unset($toolbarButtons['edit']);
-            }
-        }
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
