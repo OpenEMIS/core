@@ -1,3 +1,9 @@
+### [3.14.1] - 2017-12-18
+- Bug fix on 404 errors in Administration > Training > Session
+- Bug fix on SSO redirect url
+- Bug fix on Institution > Add staff button greyed out
+- Bug fix on approving Pending Admission for Transferred students from an Institution
+
 ### [3.14.0] - 2017-12-14
 - Implemented Adaptation feature in Administration > System Setup > System configuration > Themes page
 - Bug fix on 404 errors in Administration >System Setup > Field Options - Employment Types
