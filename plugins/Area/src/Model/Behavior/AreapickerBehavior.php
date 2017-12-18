@@ -75,7 +75,7 @@ class AreapickerBehavior extends Behavior
                         ->where(['OR' => $areaCondition]);
                 }
             } // If there is a restriction on the area administrative's main country to display (Use in Institution only)
-            else if ($targetModel == 'Area.AreaAdministratives' && isset($attr['displayCountry']) && !$attr['displayCountry']) {
+            elseif ($targetModel == 'Area.AreaAdministratives' && isset($attr['displayCountry']) && !$attr['displayCountry']) {
                 $options['display-country'] = 1;
             }
 
@@ -85,7 +85,8 @@ class AreapickerBehavior extends Behavior
             $session = $HtmlField->request->session();
 
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
-            $session->write('FormTampering.'.$fieldName, $areaKeys);
+            // Temporary disabled for further investigation
+            // $session->write('FormTampering.'.$fieldName, $areaKeys);
 
             return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
