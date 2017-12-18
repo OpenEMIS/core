@@ -315,11 +315,8 @@ Plugin::load('Installer', ['routes' => true, 'autoload' => true]);
 Plugin::load('Quality', ['autoload' => true]);
 Plugin::load('Cases', ['autoload' => true]);
 Plugin::load('Counselling', ['autoload' => true]);
-<<<<<<< HEAD
 Plugin::load('Outcome', ['routes' => true, 'autoload' => true]);
-=======
 Plugin::load('Theme', ['routes' => true, 'autoload' => true]);
->>>>>>> a1c27d48e1a5951cbb681f169375de6e537d89e9
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {
