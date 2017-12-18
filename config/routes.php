@@ -50,6 +50,12 @@ Router::scope('/', function (RouteBuilder $routes) {
      * to use (in this case, src/Template/Pages/home.ctp)...
      */
 
+    // For SSO Redirection (Critical route added just in case, do not modify)
+    $routes->connect('/Users/postLogin/*', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin']);
+
+    // For SSO Logout (Critical route added just in case, do not modify)
+    $routes->connect('/Users/logout/*', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']);
+
     // For landing page
     $routes->connect('/', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
 
