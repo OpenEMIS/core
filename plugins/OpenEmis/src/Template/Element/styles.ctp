@@ -21,7 +21,7 @@ if (isset($theme)) {
 	echo $this->Resource->css($theme);
 }
 ?>
-
+<link rel="stylesheet" href="<?= $this->Url->css('themes/layout.min') ?>?timestamp=<?=$lastModified?>" >
 <!--[if gte IE 9]>
 <?php
 	echo $this->Resource->css('OpenEmis.ie/ie9-fixes');

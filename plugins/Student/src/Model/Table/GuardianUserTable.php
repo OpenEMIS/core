@@ -174,7 +174,7 @@ class GuardianUserTable extends UserTable {
 
         $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $studentGuardiansId])]);
         $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->id, 'StudentGuardians.id' => $studentGuardiansId])]);
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }

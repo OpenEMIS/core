@@ -4,24 +4,28 @@ namespace Health\Model\Behavior;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 
-class HealthBehavior extends Behavior {
-	public function initialize(array $config) {
-		parent::initialize($config);
-	}
+class HealthBehavior extends Behavior
+{
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+    }
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] 			= ['callable' => 'beforeAction', 'priority' => 100];
-		return $events;
-	}
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];
+        return $events;
+    }
 
-	public function beforeAction(Event $event) {
-		$controller = $this->_table->controller;
-		$model = $this->_table;
-		$plugin = $controller->plugin;
-		$name = $controller->name;
+    public function beforeAction(Event $event)
+    {
+        $controller = $this->_table->controller;
+        $model = $this->_table;
+        $plugin = $controller->plugin;
+        $name = $controller->name;
 
-		$tabElements = [];
+        $tabElements = [];
         if ($controller->AccessControl->check([$name, 'Healths', 'index'])) {
             $tabElements['Healths'] = [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Healths'],
@@ -79,7 +83,6 @@ class HealthBehavior extends Behavior {
         }
 
         if ($name == 'Students' && $controller->AccessControl->check(['StudentBodyMasses', 'index'])) {
-            // currently only support Institution student.
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
@@ -88,9 +91,28 @@ class HealthBehavior extends Behavior {
                 'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentBodyMasses', 'action' => 'index'],
                 'text' => __('Body Mass')
             ];
-        }
+        } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffBodyMasses', 'index'])) {
+            $session = $this->_table->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+            $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
-		$controller->set('tabElements', $tabElements);
-		$controller->set('selectedAction', $model->alias());
-	}
+            $tabElements['BodyMasses'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffBodyMasses', 'action' => 'index'],
+                'text' => __('Body Mass')
+            ];
+        } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryBodyMasses', 'index'])) {
+            $tabElements['BodyMasses'] = [
+                'url' => ['plugin' => 'Directory', 'controller' => 'DirectoryBodyMasses', 'action' => 'index'],
+               'text' => __('Body Mass')
+            ];
+        } elseif ($name == 'Profiles' && $controller->AccessControl->check(['ProfileBodyMasses', 'index'])) {
+            $tabElements['BodyMasses'] = [
+                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileBodyMasses', 'action' => 'index'],
+               'text' => __('Body Mass')
+            ];
+        }
+        $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
+        $controller->set('tabElements', $tabElements);
+        $controller->set('selectedAction', $model->alias());
+    }
 }

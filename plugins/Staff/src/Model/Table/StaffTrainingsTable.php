@@ -80,7 +80,7 @@ class StaffTrainingsTable extends ControllerActionTable
         } else {
             $tabElements = $this->controller->getTrainingTabElements(); // Directories controller
         }
-
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Courses');
     }

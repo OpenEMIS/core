@@ -86,7 +86,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             $options['user_id'] = $userId;
         }
 
-        $tabElements = $this->controller->getProfessionalDevelopmentTabElements($options);
+        $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }

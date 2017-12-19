@@ -1,5 +1,6 @@
 <?php
 $description = __d('open_emis', $_productName);
+$icon = strpos($_productName, 'School') != -1 ? '_school' : '';
 ?>
 
 <!DOCTYPE html>
@@ -9,7 +10,7 @@ $description = __d('open_emis', $_productName);
 	<title><?= $description ?></title>
 	<?php
 		echo $this->Html->meta(['name' => 'viewport', 'content' => 'width=320, initial-scale=1']);
-		echo $this->Html->meta('favicon', 'favicon.ico', ['type' => 'icon']);
+		echo $this->Html->meta('favicon', 'favicon'.$icon.'.ico', ['type' => 'icon']);
 		echo $this->fetch('meta');
 
 		echo $this->Html->css('OpenEmis.../plugins/bootstrap/css/bootstrap.min', ['media' => 'screen']);
@@ -32,6 +33,8 @@ $description = __d('open_emis', $_productName);
 		echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
 	?>
 
+	<link rel="stylesheet" href="<?= $this->Url->css('themes/layout.min') ?>?timestamp=<?=$lastModified?>" >
+
 	<!--[if gte IE 9]>
 	<?php
 		echo $this->Html->css('OpenEmis.ie/ie9-fixes');
@@ -46,8 +49,14 @@ $description = __d('open_emis', $_productName);
 		<div class="login-box">
 			<div class="title">
 				<span class="title-wrapper">
+					<?php if (!$productLogo) : ?>
 					<i class="kd-openemis"></i>
-					<h1>OpenEMIS Core</h1>
+					<?php else: ?>
+					<?= $this->Html->image($productLogo, [
+						'style' => 'max-height: 45px; vertical-align: top'
+					]); ?>
+					<?php endif; ?>
+					<h1><?= $_productName ?></h1>
 				</span>
 			</div>
 			<?php
