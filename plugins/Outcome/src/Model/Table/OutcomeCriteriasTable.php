@@ -23,7 +23,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('GradingTypes', ['className' => 'Outcome.OutcomeGradingTypes', 'foreignKey' => 'outcome_grading_type_id']);
+        $this->belongsTo('OutcomeGradingTypes', ['className' => 'Outcome.OutcomeGradingTypes', 'foreignKey' => 'outcome_grading_type_id']);
         $this->belongsTo('Templates', [
             'className' => 'Outcome.OutcomeTemplates',
             'foreignKey' => ['outcome_template_id', 'academic_period_id'],
@@ -245,7 +245,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
                 $options = ['' => '-- '.__('Select').' --'];
             }
 
-            $gradingTypeOptions = $this->GradingTypes
+            $gradingTypeOptions = $this->OutcomeGradingTypes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                 ->toArray();
             $options = $options + $gradingTypeOptions;
