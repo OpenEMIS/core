@@ -53,6 +53,8 @@ class StudentOutcomesTable extends ControllerActionTable
             'targetForeignKey' => 'institution_subject_id'
         ]);
 
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportOutcomeResults']);
+
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
