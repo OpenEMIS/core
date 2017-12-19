@@ -537,6 +537,44 @@ class POCOR4252 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+
+        // import_mapping
+        $importMappingData = [
+            [
+                'model' => 'Institution.InstitutionOutcomeResults',
+                'column_name' => 'outcome_criteria_id',
+                'description' => 'Id',
+                'order' => 1,
+                'is_optional' => 0,
+                'foreign_key' => 2,
+                'lookup_plugin' => 'Outcome',
+                'lookup_model' => 'OutcomeCriterias',
+                'lookup_column' => 'id'
+            ],
+            [
+                'model' => 'Institution.InstitutionOutcomeResults',
+                'column_name' => 'student_id',
+                'description' => 'OpenEMIS ID',
+                'order' => 2,
+                'is_optional' => 0,
+                'foreign_key' => 2,
+                'lookup_plugin' => 'Security',
+                'lookup_model' => 'Users',
+                'lookup_column' => 'openemis_no'
+            ],
+            [
+                'model' => 'Institution.InstitutionOutcomeResults',
+                'column_name' => 'outcome_grading_option_id',
+                'description' => 'Id',
+                'order' => 3,
+                'is_optional' => 0,
+                'foreign_key' => 2,
+                'lookup_plugin' => 'Outcome',
+                'lookup_model' => 'OutcomeGradingOptions',
+                'lookup_column' => 'id'
+            ]
+        ];
+        $this->insert('import_mapping', $importMappingData);
     }
 
     // rollback
@@ -558,5 +596,9 @@ class POCOR4252 extends AbstractMigration
         $this->dropTable('outcome_criterias');
         $this->dropTable('institution_outcome_results');
         $this->dropTable('institution_outcome_subject_comments');
+
+        // import_mapping
+        $this->execute("DELETE FROM `import_mapping`
+            WHERE `model` = 'Institution.InstitutionOutcomeResults'");
     }
 }
