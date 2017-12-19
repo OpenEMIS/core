@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Core\Configure;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -16,6 +17,7 @@ use Cake\ORM\ResultSet;
 use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
+
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -59,7 +61,6 @@ class InstitutionsTable extends ControllerActionTable
         $this->belongsTo('Sectors', ['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Genders', ['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
-        $this->belongsTo('NetworkConnectivities', ['className' => 'Institution.NetworkConnectivities', 'foreignKey' => 'institution_network_connectivity_id']);
         /**
          * end fieldOption tables
          */
@@ -102,7 +103,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
         $this->hasMany('AssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionQualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionQualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -451,7 +452,6 @@ class InstitutionsTable extends ControllerActionTable
         }
         $this->field('institution_type_id');
         $this->field('institution_gender_id', ['type' => 'select']);
-        $this->field('institution_network_connectivity_id', ['type' => 'select']);
         $this->field('area_administrative_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives', 'displayCountry' => false]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
 
@@ -535,9 +535,9 @@ class InstitutionsTable extends ControllerActionTable
             $cloneClass = clone $this->dashboardQuery;
 
             $models = [
-                ['Types', 'institution_type_id', 'Type', 'query' => $this->dashboardQuery],
+                ['Types', $this->aliasField('institution_type_id'), 'Type', 'query' => $this->dashboardQuery],
                 ['Sectors', $this->aliasField('institution_sector_id'), 'Sector', 'query' => $this->dashboardQuery],
-                ['Localities', 'institution_locality_id', 'Locality', 'query' => $this->dashboardQuery],
+                ['Localities', $this->aliasField('institution_locality_id'), 'Locality', 'query' => $this->dashboardQuery],
             ];
 
             foreach ($models as $key => $model) {
@@ -592,7 +592,7 @@ class InstitutionsTable extends ControllerActionTable
             $dataSet = [];
             foreach ($institutionTypesCount->toArray() as $key => $value) {
                 // Compile the dataset
-                $dataSet[] = [__($value['name']), $value['count']];
+                $dataSet[] = [0 => $value['name'], 1 =>$value['count']];
             }
             $params['dataSet'] = $dataSet;
         }
@@ -727,14 +727,18 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-
         if (empty($search)) {
             // redirect to school dashboard if it is only one record and no add access
             $addAccess = $this->AccessControl->check(['Institutions', 'add']);
-            if ($data->count() == 1 && !$addAccess) {
+            if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();
                 $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                return $this->controller->redirect($action);
+            } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
+                $event->stopPropagation();
+                $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
+                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Institutions', 'add'];
                 return $this->controller->redirect($action);
             }
         }
@@ -769,7 +773,7 @@ class InstitutionsTable extends ControllerActionTable
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
+            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'shift_section',
             'shift_type', 'shift_details',
@@ -828,7 +832,7 @@ class InstitutionsTable extends ControllerActionTable
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
+            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'location_section',
             'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -851,7 +855,7 @@ class InstitutionsTable extends ControllerActionTable
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'date_opened', 'date_closed', 'institution_status_id',
+            'institution_ownership_id', 'institution_gender_id', 'date_opened', 'date_closed', 'institution_status_id',
 
             'location_section',
             'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
@@ -965,6 +969,19 @@ class InstitutionsTable extends ControllerActionTable
                 $button['url']['institutionId'] = $button['url'][1];
             }
         }
+
+        // POCOR-3125 history button permission to hide and show the link
+        if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
+            $icon = '<i class="fa fa-history"></i>';
+
+            $buttons['history'] = $buttons['view'];
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url']['plugin'] = 'Institution';
+            $buttons['history']['url']['controller'] = 'InstitutionHistories';
+            $buttons['history']['url']['action'] = 'index';
+        }
+        // end history button
+
         return $buttons;
     }
 
@@ -1003,8 +1020,13 @@ class InstitutionsTable extends ControllerActionTable
     public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['select'] = false;
-            $attr['options'] = $this->classificationOptions;
+            if (!Configure::read('schoolMode')) {
+                $attr['select'] = false;
+                $attr['options'] = $this->classificationOptions;
+            } else {
+                $attr['type'] = 'hidden';
+                $attr['value'] = self::ACADEMIC;
+            }
         } elseif ($action == 'edit') {
             $attr['type'] = 'disabled';
             $attr['attr']['value'] = __($this->classificationOptions[$attr['entity']->classification]);

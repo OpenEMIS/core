@@ -288,10 +288,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (fte == '') {
             fte = 0;
         }
+
+        // POCOR-4269 used the openemis_no (unique) so same staff cant add to same position
+        var openemisNo = 0;
+        if (StaffController.hasOwnProperty('selectedStaffData') && StaffController.selectedStaffData.openemis_no != undefined) {
+            openemisNo = StaffController.selectedStaffData.openemis_no;
+        }
+
         StaffController.displayedFTE = (fte*100) + '%';
         var startDate = StaffController.startDate;
         var endDate = StaffController.endDate;
-        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate)
+        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate, openemisNo)
         .then(function(response) {
             StaffController.institutionPositionOptions.availableOptions = response;
         }, function(errors) {
@@ -385,7 +392,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id)
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
                 }
             };
         }, function(error){
@@ -421,7 +429,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id)
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
                 }
             };
 
@@ -456,7 +465,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    StaffController.selectStaff(_e.node.data.id)
+                    StaffController.selectStaff(_e.node.data.id);
+                    $scope.$apply();
                 }
             };
         });

@@ -21,6 +21,10 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias']);
         $this->hasMany('GradingOptions', ['className' => 'Competency.CompetencyGradingOptions', 'foreignKey' => 'competency_grading_type_id', 'saveStrategy' => 'replace']);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentCompetencies' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 

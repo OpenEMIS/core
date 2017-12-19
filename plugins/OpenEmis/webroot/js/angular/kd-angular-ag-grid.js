@@ -186,7 +186,7 @@ function kdAgGrid() {
 
         /////////////////////////////////////////////////////////////////
         /// Header Checkbox Component Prototype
-        /////////////////////////////////////////////////////////////////   
+        /////////////////////////////////////////////////////////////////
 
         headerCheckboxComponent.prototype.init = function(params) {
 
@@ -247,7 +247,7 @@ function kdAgGrid() {
 
     /////////////////////////////////////////////////////////////////
     /// Header Tooltip Functions
-    /////////////////////////////////////////////////////////////////   
+    /////////////////////////////////////////////////////////////////
 
     function getDefaultTooltip() {
         return {
@@ -447,7 +447,7 @@ function kdAgGrid() {
     }
 
     function updateInitSelection(_params) {
-        if (_params.node.data.agSelect != "undefined" && _params.node.data.agSelect) {
+        if (typeof _params.node.data != 'undefined' && typeof _params.node.data.agSelect != "undefined" && _params.node.data.agSelect) {
             _params.node.selectThisNode(true);
         }
     }
@@ -455,7 +455,7 @@ function kdAgGrid() {
 
 /////////////////////////////////////////////////////////////////
 /// Header Tooltip Component Prototype
-/////////////////////////////////////////////////////////////////   
+/////////////////////////////////////////////////////////////////
 
 // headerTooltipComponent.prototype.init = function(params) {
 //  console.log("init!", params);
@@ -563,36 +563,36 @@ function kdAgGrid() {
 //  //      case "eSortNone":
 //  //          this.updateDOMSortIcons(labelWrapper, currentRefElement, 'asc');
 //  //          break;
-//  //      case "eSortAsc": 
+//  //      case "eSortAsc":
 //  //          this.updateDOMSortIcons(labelWrapper, currentRefElement, 'desc');
 //  //          break;
-//  //      case "eSortDesc": 
+//  //      case "eSortDesc":
 //  //          this.updateDOMSortIcons(labelWrapper, currentRefElement, 'none');
 //  //          break;
 //  //  }
-//  // });  
+//  // });
 
 //  var spanArray = [
 //      /*{
 //          ref: "eSortOrder",
 //          class: "ag-header-icon ag-sort-order ag-hidden",
 //          icon: undefined,
-//          innerText: undefined 
+//          innerText: undefined
 //      },*/ {
 //          ref: "eSortAsc",
 //          class: "ag-header-icon ag-sort-ascending-icon ag-hidden",
 //          icon: "fa fa-caret-down",
-//          innerText: undefined 
+//          innerText: undefined
 //      }, {
 //          ref: "eSortDesc",
 //          class: "ag-header-icon ag-sort-descending-icon ag-hidden",
 //          icon: "fa fa-caret-up",
-//          innerText: undefined 
+//          innerText: undefined
 //      }, {
 //          ref: "eSortNone",
 //          class: "ag-header-icon ag-sort-none-icon",
 //          icon: "fa fa-sort",
-//          innerText: undefined 
+//          innerText: undefined
 //      }, {
 //          ref: "eText",
 //          class: "ag-header-cell-text",

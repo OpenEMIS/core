@@ -19,7 +19,7 @@ class AttachmentsTable extends ControllerActionTable
         $this->table('user_attachments');
         parent::initialize($config);
 
-        $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => true, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
+        $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
@@ -149,11 +149,6 @@ class AttachmentsTable extends ControllerActionTable
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['date_on_file']['visible'] = true;
-        $this->field('file_content', ['type' => 'binary', 'visible' => ['edit' => true]]);
-
-        $this->setFieldOrder([
-            'name', 'description', 'date_on_file', 'file_content', 'security_roles'
-        ]);
     }
 
 /******************************************************************************************************************
@@ -190,7 +185,8 @@ class AttachmentsTable extends ControllerActionTable
 
             $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
             $buttons['download']['attr'] = $indexAttr;
-            $buttons['download']['url']['action'] = $this->alias.'/download';
+            $buttons['download']['url']['action'] = $this->alias;
+            $buttons['download']['url'][0] = 'download';
             $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
 

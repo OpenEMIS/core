@@ -5,9 +5,12 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Http\Client;
+use Page\Traits\EncodingTrait;
 
 class ConfigurationsController extends AppController
 {
+    use EncodingTrait;
+
     public function initialize()
     {
         parent::initialize();
@@ -52,6 +55,11 @@ class ConfigurationsController extends AppController
     public function AdministrativeBoundaries()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']);
+    }
+
+    public function Themes()
+    {
+        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->query)]);
     }
 
     public function implementedEvents()
