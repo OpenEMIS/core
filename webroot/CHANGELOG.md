@@ -1,4 +1,29 @@
-### [3.11.0] - 
+### [3.14.1] - 2017-12-18
+- Bug fix on 404 errors in Administration > Training > Session
+- Bug fix on SSO redirect url
+- Bug fix on Institution > Add staff button greyed out
+- Bug fix on approving Pending Admission for Transferred students from an Institution
+
+### [3.14.0] - 2017-12-14
+- Implemented Adaptation feature in Administration > System Setup > System configuration > Themes page
+- Bug fix on 404 errors in Administration >System Setup > Field Options - Employment Types
+- Bug fix on selecting a position in Institution > Add staff page
+
+### [3.13.0] - 2017-12-08
+- Implemented Institutions > Calender feature
+- Implemented Institutions > WASH Feature
+- Implemented Employments Feature
+- Implemented ability to add more languages Administration > Localization > Langauages feature
+- Added Bandwith to Utilities feature
+- Added Count number of students in Institutions> Classes view page
+- Bug fixes on 404 errors in Administration > Delete Users
+- Bug fixes on 404 errors in Institutions > Report Cards
+- Bug fix on slow load in Institutions > Competencies
+
+### [3.12.0] - 2017-11-24
+- Bug fixes on 404 errors
+
+### [3.11.0] - 2017-11-16
 - Implemented customisable workflow for Staff Transfer.
 - Staff Transfer can now be triggered by both receiving and sending Schools.
 - System now allows editing on Staff start dates. 

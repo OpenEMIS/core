@@ -126,7 +126,6 @@ class CommentsController extends PageController
                 $encodedUserId
             ]);
             $page->addCrumb('Comments');
-
         } else if ($plugin == 'Profile') {
             $page->addCrumb('Profile', [
                 'plugin' => 'Profile',
@@ -137,7 +136,6 @@ class CommentsController extends PageController
             ]);
             $page->addCrumb($userName);
             $page->addCrumb('Comments');
-
         } else if ($plugin == 'Directory') {
             $page->addCrumb('Directory', [
                 'plugin' => 'Directory',
@@ -181,7 +179,7 @@ class CommentsController extends PageController
             'History' => ['text' => __('History')]
         ];
 
-        foreach ($tabElements as $action => $obj) {
+        foreach ($tabElements as $action => &$obj) {
             if (in_array($action, [$pluralPlugin, 'Accounts'])) {
                 $url = [
                     'plugin' => $plugin,
@@ -190,15 +188,13 @@ class CommentsController extends PageController
                     'view',
                     $this->paramsEncode(['id' => $userId])
                 ];
-
-            } else if ($action == 'Comments') {
+            } elseif ($action == 'Comments') {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $plugin.'Comments',
                     'action' => 'index',
                     'queryString' => $encodedUserId
                 ];
-
             } else {
                 $url = [
                     'plugin' => $plugin,
@@ -207,17 +203,21 @@ class CommentsController extends PageController
                     'index',
                     'queryString' => $encodedUserId
                 ];
-
                 // exceptions
                 if ($action == 'UserNationalities') {
                     $url['action'] = 'Nationalities';
                     $url['queryString'] = $encodedUserAndNationalityId;
                 }
             }
+            $obj['url'] = $url;
+        }
 
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+
+        foreach ($tabElements as $action => $obj) {
             $page->addTab($action)
                 ->setTitle($obj['text'])
-                ->setUrl($url);
+                ->setUrl($obj['url']);
         }
 
         // set active tab
@@ -250,8 +250,7 @@ class CommentsController extends PageController
             'Languages' => ['text' => __('Languages')],
             'SpecialNeeds' =>['text' =>  __('Special Needs')],
             'Attachments' => ['text' => __('Attachments')],
-            'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')]
+            'Comments' => ['text' => __('Comments')]
         ];
 
         // extra student tabs
@@ -272,8 +271,7 @@ class CommentsController extends PageController
                     'view',
                     $this->paramsEncode(['id' => $userId])
                 ];
-
-            } else if ($action == 'Comments') {
+            } elseif ($action == 'Comments') {
                 $url = [
                     'plugin' => $plugin,
                     'institutionId' => $encodedInstitutionId,
@@ -281,7 +279,6 @@ class CommentsController extends PageController
                     'action' => 'index',
                     'queryString' => $encodedUserId
                 ];
-
             } else {
                 $url = [
                     'plugin' => $userRole,
@@ -297,10 +294,15 @@ class CommentsController extends PageController
                     $url['queryString'] = $encodedUserAndNationalityId;
                 }
             }
+            $tabElements[$action]['url'] = $url;
+        }
 
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+
+        foreach ($tabElements as $action => $obj) {
             $page->addTab($action)
                 ->setTitle($obj['text'])
-                ->setUrl($url);
+                ->setUrl($obj['url']);
         }
 
         // set active tab

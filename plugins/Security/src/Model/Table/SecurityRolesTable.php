@@ -75,6 +75,7 @@ class SecurityRolesTable extends AppTable
                 }
             }
         }
+        $data['code'] = ''; //set default role code as empty string
     }
 
     public function validationDefault(Validator $validator)
@@ -119,6 +120,7 @@ class SecurityRolesTable extends AppTable
         }
 
         $this->request->query['type'] = $selectedAction;
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
 

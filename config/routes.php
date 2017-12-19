@@ -50,6 +50,12 @@ Router::scope('/', function (RouteBuilder $routes) {
      * to use (in this case, src/Template/Pages/home.ctp)...
      */
 
+    // For SSO Redirection (Critical route added just in case, do not modify)
+    $routes->connect('/Users/postLogin/*', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin']);
+
+    // For SSO Logout (Critical route added just in case, do not modify)
+    $routes->connect('/Users/logout/*', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']);
+
     // For landing page
     $routes->connect('/', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
 
@@ -60,6 +66,8 @@ Router::scope('/', function (RouteBuilder $routes) {
      * ...and connect the rest of 'Pages' controller's URLs.
      */
     $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
+
+
 
     /**
      * Connect catchall routes for all controllers.
@@ -78,6 +86,11 @@ Router::scope('/', function (RouteBuilder $routes) {
      * routes you want in your application.
      */
     $routes->fallbacks('Route');
+});
+
+Router::scope('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer'], function ($route) {
+    $route->extensions(['json']);
+    $route->connect('/:action');
 });
 
 

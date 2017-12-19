@@ -518,7 +518,6 @@ class HtmlFieldHelper extends Helper
                 $src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;
                 $showRemoveButton = true;
             }
-
             header('Content-Type: image/jpeg');
 
             if (isset($attr['defaultWidth'])) {

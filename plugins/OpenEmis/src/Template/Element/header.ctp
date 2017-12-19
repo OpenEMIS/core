@@ -15,7 +15,13 @@ if (!empty($homeUrl)) {
 			</div>
 			<a href="<?= $url ?>">
 				<div class="brand-logo">
+					<?php if (!$productLogo) : ?>
 					<i class="kd-openemis"></i>
+					<?php else: ?>
+					<?= $this->Html->image($productLogo, [
+						'style' => 'max-height: 35px;'
+					]); ?>
+					<?php endif; ?>
 					<h1><?php echo $_productName ?></h1>
 				</div>
 			</a>
