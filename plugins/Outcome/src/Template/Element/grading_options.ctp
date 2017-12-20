@@ -1,5 +1,3 @@
-<?php use Cake\Utility\Inflector;?>
-
 <?php if ($action == 'add' || $action == 'edit') : ?>
 	<style>
 		table th label.table-header-label {
@@ -45,13 +43,14 @@
 								<tr>
 									<td>
 										<?php
-                                            echo $this->Form->hidden("$fieldPrefix.id", ['value' => $option->id]);
+											if ($option->has('id')) {
+												echo $this->Form->hidden("$fieldPrefix.id", ['value' => $option->id]);
+											}
 											echo $this->Form->hidden("$fieldPrefix.outcome_grading_type_id", ['value' => $option->outcome_grading_type_id]);
 
 											echo $this->Form->input("$fieldPrefix.code", [
                                                 'type' => 'string',
-                                                'label' => false,
-                                                'value' => $option->code
+                                                'label' => false
                                             ]);
 										?>
 									</td>
@@ -59,8 +58,7 @@
 										<?php
 											echo $this->Form->input("$fieldPrefix.name", [
                                                 'type' => 'string',
-                                                'label' => false,
-                                                'value' => $option->name
+                                                'label' => false
                                             ]);
 										?>
 									</td>
@@ -68,8 +66,7 @@
 										<?php
 											echo $this->Form->input("$fieldPrefix.description", [
                                                 'type' => 'textarea',
-                                                'label' => false,
-                                                'value' => $option->description
+                                                'label' => false
                                             ]);
 										?>
 									</td>
