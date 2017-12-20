@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 use PHPExcel_Worksheet;
 
 use App\Model\Table\AppTable;
@@ -40,6 +41,22 @@ class ImportOutcomeResultsTable extends AppTable
         $events['Model.import.onImportPopulateOutcomeGradingOptionsData'] = 'onImportPopulateOutcomeGradingOptionsData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->notEmpty(['academic_period', 'outcome_template', 'outcome_period', 'select_file']);
+    }
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        $request = $this->request;
+        if (empty($request->query('template')) || empty($request->query('outcome_period'))) {
+            unset($buttons[0]);
+            unset($buttons[1]);
+        }
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
@@ -165,7 +182,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldSelectFile(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (!is_null($request->query('template')) && !is_null($request->query('outcome_period')) && !empty($request->query('outcome_period'))) {
+            if (!empty($request->query('template')) && !empty($request->query('outcome_period'))) {
                 $attr['visible'] = true;
             } else {
                 $attr['visible'] = false;
