@@ -550,7 +550,7 @@ class NavigationComponent extends Component
                 'Institutions.StudentOutcomes' => [
                     'title' => 'Outcomes',
                     'parent' => 'Institution.Performance',
-                    'selected' => ['Institutions.StudentOutcomes'],
+                    'selected' => ['Institutions.StudentOutcomes', 'Institutions.ImportOutcomeResults.add', 'Institutions.ImportOutcomeResults.results'],
                     'params' => ['plugin' => 'Institution']
                 ],
 

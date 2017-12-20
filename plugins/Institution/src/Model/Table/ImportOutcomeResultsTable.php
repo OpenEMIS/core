@@ -291,9 +291,10 @@ class ImportOutcomeResultsTable extends AppTable
                     ->first();
 
                 if (empty($outcomeCriteriaEntity)) {
-                    // Criteria is not added to the template
-                    $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Criteria is not configured in the Outcome Template');
+                    // criteria is not added to the template
+                    $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Criteria does not belong to this Outcome Template');
                     return false;
+
                 } else {
                     $tempRow['education_subject_id'] = $outcomeCriteriaEntity->education_subject_id;
                     $tempRow['education_grade_id'] = $outcomeCriteriaEntity->_matchingData['Templates']->education_grade_id;
@@ -309,8 +310,8 @@ class ImportOutcomeResultsTable extends AppTable
                         ->first();
 
                     if (empty($studentEntity)) {
-                        // Student is not in the education grade
-                        $rowInvalidCodeCols['student_id'] = __('Student is not in the education grade in this institution');
+                        // student is not in the education grade
+                        $rowInvalidCodeCols['student_id'] = __('Student does not belong to this Education Grade in this Institution');
                         return false;
                     }
 
@@ -319,35 +320,35 @@ class ImportOutcomeResultsTable extends AppTable
 
                         if (empty($gradingOptions)) {
                             // no grading options added
-                            $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Grading Options is not configured for ' . $outcomeCriteriaEntity->outcome_grading_type->code_name);
+                            $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Grading Options are not configured for ' . $outcomeCriteriaEntity->outcome_grading_type->code_name . ' Grading Type');
                             return false;
 
                         } else {
                             if ($tempRow->offsetExists('outcome_grading_option_id')) {
-                                $gradingOptionId = $tempRow['outcome_grading_option_id'];
+                                $selectedGradingOption = $tempRow['outcome_grading_option_id'];
 
-                                if (strlen($gradingOptionId) == 0) {
-                                    // not allow empty for grades type
+                                if (strlen($selectedGradingOption) == 0) {
+                                    // not allow empty for grading option
                                     $rowInvalidCodeCols['outcome_grading_option_id'] = __('This field cannot be left empty');
                                     return false;
 
                                 } else {
                                     $valid = false;
-                                    foreach ($gradingOptions as $key => $obj) {
-                                        if ($gradingOptionId == $obj->id) {
+                                    foreach ($gradingOptions as $key => $option) {
+                                        if ($selectedGradingOption == $option->id) {
                                             $valid = true;
                                         }
                                     }
 
                                     if (!$valid) {
-                                        $rowInvalidCodeCols['outcome_grading_option_id'] = __('Selected value does not match with Outcome Grading Options of the Criteria');
+                                        $rowInvalidCodeCols['outcome_grading_option_id'] = __('Selected value is not a Grading Option of this Outcome Criteria');
                                         return false;
                                     }
                                 }
                             }
                         }
                     } else {
-                        // will never come to here unless orphan record in exam item
+                        // will never come to here unless orphan record
                         $rowInvalidCodeCols['outcome_criteria_id'] = __('Outcome Grading Type is not configured');
                         return false;
                     }
