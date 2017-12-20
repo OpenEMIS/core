@@ -201,10 +201,10 @@ class ImportOutcomeResultsTable extends AppTable
             ->select([
                 $this->EducationSubjects->aliasField('name'),
                 $this->EducationSubjects->aliasField('code'),
+                $this->OutcomeGradingTypes->aliasField('name'),
                 $lookedUpTable->aliasField('name'),
                 $lookedUpTable->aliasField('code'),
-                $lookedUpTable->aliasField($lookupColumn),
-                $this->OutcomeGradingTypes->aliasField('name')
+                $lookedUpTable->aliasField($lookupColumn)
             ])
             ->matching($this->EducationSubjects->alias())
             ->matching($this->OutcomeGradingTypes->alias())
@@ -218,17 +218,17 @@ class ImportOutcomeResultsTable extends AppTable
             ]);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 5;
-        $data[$columnOrder]['data'][] = [__('Education Subject Name'), __('Education Subject Code'), $translatedReadableCol, __('Code'), $translatedCol, __('Grading Type')];
+        $data[$columnOrder]['lookupColumn'] = 6;
+        $data[$columnOrder]['data'][] = [__('Education Subject Name'), __('Education Subject Code'),  __('Grading Type'), $translatedReadableCol, __('Code'), $translatedCol];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->_matchingData[$this->EducationSubjects->alias()]->name,
                     $row->_matchingData[$this->EducationSubjects->alias()]->code,
+                    $row->_matchingData[$this->OutcomeGradingTypes->alias()]->name,
                     $row->name,
                     $row->code,
-                    $row->{$lookupColumn},
-                    $row->_matchingData[$this->OutcomeGradingTypes->alias()]->name
+                    $row->{$lookupColumn}
                 ];
             }
         }
