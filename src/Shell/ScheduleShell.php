@@ -3,12 +3,24 @@ namespace App\Shell;
 
 use Cake\I18n\Time;
 use Cake\Console\Shell;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 
 /**
  * Schedule shell command.
  */
 class ScheduleShell extends Shell
 {
+    const SCHEDULED = 1;
+    const RUNNING = 2;
+    const STOPPED = 3;
+
+    public function initialize()
+    {
+        parent::initialize();
+        $this->loadModel('Schedule.ScheduleJobs');
+    }
+
     /**
      * Manage the available sub-commands along with their arguments and help
      *
@@ -46,6 +58,11 @@ class ScheduleShell extends Shell
     {
         $this->tasks = [$taskName];
         $this->loadTasks();
+        $scheduleTable = $this->ScheduleJobs;
+        $code = Inflector::underscore($taskName);
+        $entity = $scheduleTable->find()->innerJoinWith('Jobs')->where(['Jobs.code' => $code])->first();
+        $entity->pid = getmypid();
+        $scheduleTable->save($entity);
 
         $timeToStart = Time::now();
         $timeToStart->hour($timeHour);
@@ -64,11 +81,22 @@ class ScheduleShell extends Shell
                 time_sleep_until($timeToStart);
                 $timeToStart += $interval;
             }
+            $entity->pid = getmypid();
+            $entity->status = self::RUNNING;
+            $entity->last_run = Time::now();
+            $scheduleTable->save($entity);
             $this->{$taskName}->main();
+
             if ($interval) {
                 // Patch schedule record with the PID and status to set to scheduled
+                $entity->pid = getmypid();
+                $entity->status = self::SCHEDULED;
+                $scheduleTable->save($entity);
             } else {
                 // Patch schedule record with the PID and status to set to stopped
+                $entity->pid = getmypid();
+                $entity->status = self::STOPPED;
+                $scheduleTable->save($entity);
             }
         } while ($interval);
     }
