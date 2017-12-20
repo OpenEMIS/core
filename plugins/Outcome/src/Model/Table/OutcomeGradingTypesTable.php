@@ -83,24 +83,34 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $fieldKey = 'grading_options';
-
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
-        }
         if ($data->offsetExists($this->alias())) {
-            $data[$this->alias()][$fieldKey][] = [
+            if (!array_key_exists('grading_options', $data[$this->alias()])) {
+                $data[$this->alias()]['grading_options'] = [];
+            } else {
+                // reindex array keys
+                $gradingOptions = $data[$this->alias()]['grading_options'];
+                $data[$this->alias()]['grading_options'] = array_values($gradingOptions);
+            }
+
+            $data[$this->alias()]['grading_options'][] = [
+                'outcome_grading_type_id' => '',
                 'code' => '',
                 'name' => '',
-                'description' => '',
-                'outcome_grading_type_id' => '',
-                'id' => ''
+                'description' => ''
             ];
         }
 
         $options['associated'] = [
             'GradingOptions' => ['validate' => false]
         ];
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        // enables all options to be deleted
+        if (!$data->offsetExists('grading_options')) {
+            $data->offsetSet('grading_options', []);
+        }
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)

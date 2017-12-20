@@ -26,12 +26,12 @@ class OutcomeGradingOptionsTable extends ControllerActionTable
         return $validator
             ->allowEmpty('code')
             ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['checkUniqueCode', 'outcome_grading_type_id'],
-                    'provider' => 'table'
-                ],
                 'ruleUniqueCodeWithinForm' => [
-                    'rule' => ['checkUniqueCodeWithinForm', $this->OutcomeGradingTypes]
+                    'rule' => ['checkUniqueCodeWithinForm', $this->OutcomeGradingTypes],
+                    'last' => true
+                ],
+                'ruleUniqueCode' => [
+                    'rule' => ['checkUniqueCode', 'outcome_grading_type_id']
                 ]
             ])
             ->requirePresence('name')
