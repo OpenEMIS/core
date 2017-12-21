@@ -32,8 +32,8 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
         $this->hasMany('InstitutionOutcomeResults', [
             'className' => 'Institution.InstitutionOutcomeResults',
-            'foreignKey' => ['outcome_criteria_id', 'outcome_template_id', 'academic_period_id'],
-            'bindingKey' => ['id', 'outcome_template_id', 'academic_period_id'],
+            'foreignKey' => ['outcome_criteria_id', 'academic_period_id', 'outcome_template_id', 'education_grade_id', 'education_subject_id'],
+            'bindingKey' => ['id', 'academic_period_id', 'outcome_template_id', 'education_grade_id', 'education_subject_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -88,14 +88,15 @@ class OutcomeCriteriasTable extends ControllerActionTable
         $conditions[$this->aliasField('academic_period_id')] = $this->periodId;
 
         // subject filter
+        $gradeId = $this->gradeId;
+
         $subjectOptions = $this->EducationSubjects
             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-            ->matching('EducationGrades')
-            ->where([$this->EducationGrades->aliasField('id') => $this->gradeId])
+            ->innerJoinWith('EducationGrades', function ($q) use ($gradeId) {
+                return $q->where(['EducationGrades.id' => $gradeId]);
+            })
             ->toArray();
-        if (!empty($subjectOptions)) {
-            $subjectOptions = ['0' => '-- '.__('All Subjects').' --'] + $subjectOptions;
-        }
+        $subjectOptions = ['0' => '-- '.__('All Subjects').' --'] + $subjectOptions;
 
         $selectedSubject = !is_null($this->request->query('subject')) ? $this->request->query('subject') : 0;
         if (!empty($selectedSubject)){
@@ -103,7 +104,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         }
         $this->controller->set(compact('subjectOptions', 'selectedSubject'));
 
-        // set baseUrl for filter
+        // set baseUrl for filter (to maintain queryString)
         $baseUrl = $this->url('index');
         if (isset($baseUrl['subject'])) {
             unset($baseUrl['subject']);
@@ -145,11 +146,9 @@ class OutcomeCriteriasTable extends ControllerActionTable
     {
         $toolbarButtons = $extra['toolbarButtons'];
         if ($toolbarButtons->offsetExists('back')) {
-            $url = $this->url('index');
-            if (isset($url['criteriaForm'])) {
-                unset($url['criteriaForm']);
+            if (isset($toolbarButtons['back']['url']['criteriaForm'])) {
+                unset($toolbarButtons['back']['url']['criteriaForm']);
             }
-            $toolbarButtons['back']['url'] = $url;
         }
     }
 
@@ -157,10 +156,10 @@ class OutcomeCriteriasTable extends ControllerActionTable
     {
         $this->field('academic_period_id');
         $this->field('outcome_template_id');
-        $this->field('education_grade_id');
         $this->field('education_subject_id', ['entity' => $entity]);
         $this->field('name', ['type' => 'text']);
         $this->field('outcome_grading_type_id', ['entity' => $entity]);
+        $this->field('education_grade_id', ['type' => 'hidden', 'value' => $this->gradeId]);
 
         $this->setFieldOrder([
             'academic_period_id', 'outcome_template_id', 'education_subject_id', 'code', 'name', 'outcome_grading_type_id'
@@ -196,15 +195,6 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $attr['type'] = 'hidden';
-            $attr['value'] = $this->gradeId;
-        }
-        return $attr;
-    }
-
     public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -233,22 +223,18 @@ class OutcomeCriteriasTable extends ControllerActionTable
     public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
-                // only allow createNew in add
-                $options = [
-                    '' => '-- '.__('Select').' --',
-                    'createNew' => '-- '.__('Create New').' --'
-                ];
-                $attr['onChangeReload'] = 'changeGradingType';
+            $defaultOptions = ['' => '-- '.__('Select').' --'];
 
-            } else {
-                $options = ['' => '-- '.__('Select').' --'];
+            // only allow createNew in add
+            if ($action == 'add') {
+                $defaultOptions['createNew'] = '-- ' . __('Create New') . ' --';
+                $attr['onChangeReload'] = 'changeGradingType';
             }
 
             $gradingTypeOptions = $this->OutcomeGradingTypes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                 ->toArray();
-            $options = $options + $gradingTypeOptions;
+            $options = $defaultOptions + $gradingTypeOptions;
 
             $attr['options'] = $options;
             $attr['type'] = 'chosenSelect';
@@ -268,6 +254,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
                 'code' => $data[$this->alias()]['code']
             ];
 
+            // redirect to GradingTypes add page
             $url = $this->url('add');
             $url['action'] = 'GradingTypes';
             $url = $this->setQueryString($url, $criteriaParams, 'criteriaForm');
