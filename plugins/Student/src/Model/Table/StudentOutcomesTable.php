@@ -33,8 +33,8 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('OutcomeCriterias', [
             'className' => 'Outcome.OutcomeCriterias',
-            'foreignKey' => ['outcome_criteria_id', 'outcome_template_id', 'academic_period_id'],
-            'bindingKey' => ['id', 'outcome_template_id', 'academic_period_id']
+            'foreignKey' => ['outcome_criteria_id', 'academic_period_id', 'outcome_template_id', 'education_grade_id', 'education_subject_id'],
+            'bindingKey' => ['id', 'academic_period_id', 'outcome_template_id', 'education_grade_id', 'education_subject_id']
         ]);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -48,7 +48,7 @@ class StudentOutcomesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->Session;
+        $session = $this->request->session();
         if ($this->controller->name == 'Directories') {
             $this->studentId = $session->read('Directory.Directories.id');
         } else if ($this->controller->name == 'Profiles') {
@@ -57,8 +57,8 @@ class StudentOutcomesTable extends ControllerActionTable
             $this->studentId = $session->read('Student.Students.id');
         }
 
-        $this->field('education_subject_id', ['type' => 'integer']);
         $this->field('outcome_period_id', ['type' => 'integer']);
+        $this->field('education_subject_id', ['type' => 'integer']);
         $this->field('outcome_criteria_id', ['type' => 'integer']);
 
         $this->setFieldOrder(['outcome_period_id', 'education_subject_id', 'outcome_criteria_id', 'outcome_grading_option_id']);

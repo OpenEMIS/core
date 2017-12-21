@@ -113,11 +113,25 @@ class ImportOutcomeResultsTable extends AppTable
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-            $templateOptions = $this->OutcomeTemplates
-                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->where([$this->OutcomeTemplates->aliasField('academic_period_id') => $academicPeriodId])
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $educationGrades = $InstitutionGrades->find()
+                ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+                ->extract('education_grade_id')
                 ->toArray();
+
+            $templateOptions = [];
+            if (!empty($educationGrades)) {
+                $templateOptions = $this->OutcomeTemplates
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                    ->where([
+                        $this->OutcomeTemplates->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->OutcomeTemplates->aliasField('education_grade_id IN') => $educationGrades
+                    ])
+                    ->order([$this->OutcomeTemplates->aliasField('code')])
+                    ->toArray();
+            }
 
             $attr['options'] = $templateOptions;
             $attr['onChangeReload'] = 'changeOutcomeTemplate';
@@ -276,7 +290,7 @@ class ImportOutcomeResultsTable extends AppTable
         $tempRow['academic_period_id'] = $requestData['academic_period'];
         $tempRow['outcome_template_id'] = $requestData['outcome_template'];
         $tempRow['outcome_period_id'] = $requestData['outcome_period'];
-        $tempRow['institution_id'] = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $tempRow['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         if ($tempRow->offsetExists('outcome_criteria_id') && $tempRow->offsetExists('student_id')) {
             if (!empty($tempRow['outcome_criteria_id']) && !empty($tempRow['student_id'])) {
