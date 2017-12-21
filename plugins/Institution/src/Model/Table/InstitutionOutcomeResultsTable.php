@@ -28,8 +28,8 @@ class InstitutionOutcomeResultsTable extends AppTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('OutcomeCriterias', [
             'className' => 'Outcome.OutcomeCriterias',
-            'foreignKey' => ['outcome_criteria_id', 'outcome_template_id', 'academic_period_id'],
-            'bindingKey' => ['id', 'outcome_template_id', 'academic_period_id']
+            'foreignKey' => ['outcome_criteria_id', 'academic_period_id', 'outcome_template_id', 'education_grade_id', 'education_subject_id'],
+            'bindingKey' => ['id', 'academic_period_id', 'outcome_template_id', 'education_grade_id', 'education_subject_id']
         ]);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);

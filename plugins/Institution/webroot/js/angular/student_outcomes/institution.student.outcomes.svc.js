@@ -137,7 +137,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(subject, student, subjectOptions, studentOptions) {
+    function getColumnDefs(period, subject, student, periodOptions, subjectOptions, studentOptions) {
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
@@ -146,7 +146,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         // dynamic table headers
         var criteriaHeader = 'Outcome Criteria';
         var resultHeader = 'Result';
-        if (subjectOptions.length > 0 && subject != null && studentOptions.length > 0 && student != null) {
+        if (periodOptions.length > 0 && period != null && subjectOptions.length > 0 && subject != null && studentOptions.length > 0 && student != null) {
             var subjectObj = $filter('filter')(subjectOptions, {'id':subject});
             if (subjectObj.length > 0) {
                 criteriaHeader = subjectObj[0].code_name + ' Criteria';
@@ -190,9 +190,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             },
             cellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
-                var gradingOptions = {
-                    0 : '-- Select --'
-                };
+                var gradingOptions = {0 : '-- Select --'};
                 if (angular.isDefined(params.data.grading_options)) {
                     angular.forEach(params.data.grading_options, function(obj, key) {
                         gradingOptions[obj.id] = obj.code_name;
@@ -206,7 +204,6 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                     eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
 
                     var eSelect = document.createElement("select");
-
                     angular.forEach(gradingOptions, function(value, key) {
                         var eOption = document.createElement("option");
                         eOption.setAttribute("value", key);
