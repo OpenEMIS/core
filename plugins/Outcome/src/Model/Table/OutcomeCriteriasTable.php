@@ -95,6 +95,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
             ->innerJoinWith('EducationGrades', function ($q) use ($gradeId) {
                 return $q->where(['EducationGrades.id' => $gradeId]);
             })
+            ->order([$this->EducationSubjects->aliasField('order')])
             ->toArray();
         $subjectOptions = ['0' => '-- '.__('All Subjects').' --'] + $subjectOptions;
 

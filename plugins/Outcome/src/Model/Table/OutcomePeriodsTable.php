@@ -74,6 +74,7 @@ class OutcomePeriodsTable extends ControllerActionTable
         $templateOptions = $this->Templates
             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
             ->where([$this->Templates->aliasField('academic_period_id') => $selectedPeriod])
+            ->order([$this->Templates->aliasField('code')])
             ->toArray();
         if (!empty($templateOptions)) {
             $templateOptions = ['0' => '-- '.__('All Templates').' --'] + $templateOptions;
