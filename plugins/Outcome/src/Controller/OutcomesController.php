@@ -52,10 +52,11 @@ class OutcomesController extends AppController
 
         $queryString = $this->paramsDecode($params['queryString']);
         if (isset($queryString['outcome_template_id']) && isset($queryString['academic_period_id'])) {
-            $tabElements['Templates']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $queryString['outcome_template_id'], 'academic_period_id' => $queryString['academic_period_id']]);
+            $tabElements['Templates']['url'][1] = $this->paramsEncode(['id' => $queryString['outcome_template_id'], 'academic_period_id' => $queryString['academic_period_id']]);
         }
 
         foreach ($tabElements as $key => $value) {
+            // set querystring to tab urls
             $tabElements[$key]['url'] = array_merge($value['url'], $params);
         }
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);

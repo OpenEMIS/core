@@ -70,8 +70,8 @@ class OutcomeGradingTypesTable extends ControllerActionTable
     {
         $criteriaForm = $this->getQueryString(null, 'criteriaForm');
 
-        // set back button to redirect to criterias page (when Create New from criterias page)
-        if ($criteriaForm) {
+        // set back button to redirect to Criterias add page (when Create New from Criterias add page)
+        if (!empty($criteriaForm)) {
             $toolbarButtons = $extra['toolbarButtons'];
             if ($toolbarButtons->offsetExists('back')) {
                 $toolbarButtons['back']['url']['action'] = 'Criterias';
@@ -115,7 +115,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        // set save button to redirect to criterias page (when Create New from criterias page)
+        // set save button to redirect to Criterias add page (when Create New from Criterias add page)
         if ($extra->offsetExists('criteriaForm')) {
             $criteriaParams = $extra['criteriaForm'];
             $criteriaParams['outcome_grading_type_id'] = $entity->id;

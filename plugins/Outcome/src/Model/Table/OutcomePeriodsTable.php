@@ -144,13 +144,11 @@ class OutcomePeriodsTable extends ControllerActionTable
         if ($action == 'add') {
             $selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
 
-            $templateOptions = [];
-            if (!empty($selectedPeriod)) {
-                $templateOptions = $this->Templates
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                    ->where([$this->Templates->aliasField('academic_period_id') => $selectedPeriod])
-                    ->toArray();
-            }
+            $templateOptions = $this->Templates
+                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                ->where([$this->Templates->aliasField('academic_period_id') => $selectedPeriod])
+                ->toArray();
+
             $attr['type'] = 'select';
             $attr['options'] = $templateOptions;
 
