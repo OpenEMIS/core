@@ -15,6 +15,7 @@ class StudentOutcomesTable extends ControllerActionTable
     private $institutionId = null;
     private $academicPeriodId = null;
     private $outcomeTemplateId = null;
+    private $gradeId = null;
     private $outcomePeriodId = null;
     private $subjectId = null;
     private $studentId = null;
@@ -67,7 +68,8 @@ class StudentOutcomesTable extends ControllerActionTable
             'class_id' => $entity->institution_class_id,
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
-            'outcome_template_id' => $entity->outcome_template_id
+            'outcome_template_id' => $entity->outcome_template_id,
+            'education_grade_id' => $entity->education_grade_id
         ];
 
         if (isset($buttons['view']['url'])) {
@@ -100,16 +102,15 @@ class StudentOutcomesTable extends ControllerActionTable
     {
         $this->field('outcome_template');
         $this->field('education_grade');
-
         $this->setFieldOrder(['name', 'academic_period_id', 'education_grade', 'outcome_template', 'total_male_students', 'total_female_students']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Outcomes = TableRegistry::get('Outcome.OutcomeTemplates');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $query
             ->select([
@@ -122,28 +123,28 @@ class StudentOutcomesTable extends ControllerActionTable
                     $Outcomes->aliasField('name') => 'literal',
                 ])
             ])
-            ->innerJoin([$ClassGrades->alias() => $ClassGrades->table()], [
-                $ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')
+            ->innerJoin([$this->ClassGrades->alias() => $this->ClassGrades->table()], [
+                $this->ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')
             ])
             ->innerJoin([$Outcomes->alias() => $Outcomes->table()], [
                 $Outcomes->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                $Outcomes->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+                $Outcomes->aliasField('education_grade_id = ') . $this->ClassGrades->aliasField('education_grade_id')
             ])
-            ->innerJoin([$EducationGrades->alias() => $EducationGrades->table()], [
-                $EducationGrades->aliasField('id = ') . $Outcomes->aliasField('education_grade_id')
+            ->innerJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()], [
+                $this->EducationGrades->aliasField('id = ') . $Outcomes->aliasField('education_grade_id')
             ])
             ->innerJoin([$EducationProgrammes->alias() => $EducationProgrammes->table()], [
-                $EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')
+                $EducationProgrammes->aliasField('id = ') . $this->EducationGrades->aliasField('education_programme_id')
             ])
             ->group([
-                $ClassGrades->aliasField('institution_class_id'),
+                $this->aliasField('id'),
                 $Outcomes->aliasField('id')
             ])
             ->autoFields(true);
 
         $extra['options']['order'] = [
             $EducationProgrammes->aliasField('order') => 'asc',
-            $EducationGrades->aliasField('order') => 'asc',
+            $this->EducationGrades->aliasField('order') => 'asc',
             $Outcomes->aliasField('code') => 'asc',
             $Outcomes->aliasField('name') => 'asc',
             $this->aliasField('name') => 'asc'
@@ -157,12 +158,25 @@ class StudentOutcomesTable extends ControllerActionTable
         // End
 
         // Outcome template filter
-        $outcomeOptions = $Outcomes
-            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-            ->where([$Outcomes->aliasField('academic_period_id') => $selectedPeriod])
+        $educationGrades = $InstitutionGrades->find()
+            ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+            ->extract('education_grade_id')
             ->toArray();
-        if (!empty($outcomeOptions)) {
-            $outcomeOptions = ['0' => '-- '.__('All Outcomes').' --'] + $outcomeOptions;
+
+        $outcomeOptions = [];
+        if (!empty($educationGrades)) {
+            $outcomeOptions = $Outcomes
+                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                ->where([
+                    $Outcomes->aliasField('academic_period_id') => $selectedPeriod,
+                    $Outcomes->aliasField('education_grade_id IN') => $educationGrades
+                ])
+                ->order([$Outcomes->aliasField('code')])
+                ->toArray();
+
+            if (!empty($outcomeOptions)) {
+                $outcomeOptions = ['0' => '-- '.__('All Outcomes').' --'] + $outcomeOptions;
+            }
         }
 
         $selectedOutcome = !is_null($this->request->query('outcome')) ? $this->request->query('outcome') : 0;
@@ -186,18 +200,19 @@ class StudentOutcomesTable extends ControllerActionTable
 
     public function onGetEducationGrade(Event $event, Entity $entity)
     {
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $grade = $EducationGrades->get($entity->education_grade_id);
-
+        $grade = $this->EducationGrades->get($entity->education_grade_id);
         return $grade->programme_grade_name;
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        // from action button
         $this->classId = $this->getQueryString('class_id');
         $this->institutionId = $this->getQueryString('institution_id');
         $this->academicPeriodId = $this->getQueryString('academic_period_id');
         $this->outcomeTemplateId = $this->getQueryString('outcome_template_id');
+        $this->gradeId = $this->getQueryString('education_grade_id');
+        // filters
         $this->outcomePeriodId = $this->getQueryString('outcome_period_id') ;
         $this->subjectId = $this->getQueryString('education_subject_id');
         $this->studentId = $this->getQueryString('student_id');
@@ -228,21 +243,24 @@ class StudentOutcomesTable extends ControllerActionTable
         $baseUrl = $this->url($this->action, false);
         $params = $this->getQueryString();
 
-        $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
-        $results = $OutcomePeriods->find()
-            ->where([
-                $OutcomePeriods->aliasField('academic_period_id') => $this->academicPeriodId,
-                $OutcomePeriods->aliasField('outcome_template_id') => $this->outcomeTemplateId
-            ])
-            ->toArray();
+        if (!is_null($this->academicPeriodId) && !is_null($this->outcomeTemplateId)) {
+            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+            $results = $OutcomePeriods->find()
+                ->where([
+                    $OutcomePeriods->aliasField('academic_period_id') => $this->academicPeriodId,
+                    $OutcomePeriods->aliasField('outcome_template_id') => $this->outcomeTemplateId
+                ])
+                ->order([$OutcomePeriods->aliasField('start_date')])
+                ->toArray();
 
-        if (!empty($results)) {
-            foreach ($results as $period) {
-                $params['outcome_period_id'] = $period->id;
-                $outcomePeriodOptions[$period->id] = [
-                    'name' => $period->code_name,
-                    'url' => $this->setQueryString($baseUrl, $params)
-                ];
+            if (!empty($results)) {
+                foreach ($results as $period) {
+                    $params['outcome_period_id'] = $period->id;
+                    $outcomePeriodOptions[$period->id] = [
+                        'name' => $period->code_name,
+                        'url' => $this->setQueryString($baseUrl, $params)
+                    ];
+                }
             }
         }
 
@@ -269,22 +287,15 @@ class StudentOutcomesTable extends ControllerActionTable
         $baseUrl = $this->url($this->action, false);
         $params = $this->getQueryString();
 
-        $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
-        $template = $OutcomeTemplates->find()
-            ->where([
-                $OutcomeTemplates->aliasField('id') => $this->outcomeTemplateId,
-                $OutcomeTemplates->aliasField('academic_period_id') => $this->academicPeriodId
-            ])
-            ->first();
-
-        if (!empty($template)) {
-            $gradeId = $template->education_grade_id;
-
+        if (!is_null($this->gradeId)) {
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $gradeId = $this->gradeId;
+
             $results = $EducationSubjects->find()
                 ->innerJoinWith('EducationGrades', function ($q) use ($gradeId) {
                     return $q->where(['EducationGrades.id' => $gradeId]);
                 })
+                ->order([$EducationSubjects->aliasField('order')])
                 ->toArray();
 
             if (!empty($results)) {
@@ -411,19 +422,20 @@ class StudentOutcomesTable extends ControllerActionTable
                     $OutcomeResults->aliasField('outcome_grading_option_id')
                 ])
                 ->leftJoin([$OutcomeResults->alias() => $OutcomeResults->table()], [
-                    $OutcomeResults->aliasField('academic_period_id = ') . $OutcomeCriterias->aliasField('academic_period_id'),
                     $OutcomeResults->aliasField('outcome_template_id = ') . $OutcomeCriterias->aliasField('outcome_template_id'),
                     $OutcomeResults->aliasField('education_grade_id = ') . $OutcomeCriterias->aliasField('education_grade_id'),
                     $OutcomeResults->aliasField('education_subject_id = ') . $OutcomeCriterias->aliasField('education_subject_id'),
                     $OutcomeResults->aliasField('outcome_criteria_id = ') . $OutcomeCriterias->aliasField('id'),
+                    $OutcomeResults->aliasField('academic_period_id = ') . $OutcomeCriterias->aliasField('academic_period_id'),
+                    $OutcomeResults->aliasField('student_id') => $this->studentId,
                     $OutcomeResults->aliasField('outcome_period_id') => $this->outcomePeriodId,
-                    $OutcomeResults->aliasField('institution_id') => $this->institutionId,
-                    $OutcomeResults->aliasField('student_id') => $this->studentId
+                    $OutcomeResults->aliasField('institution_id') => $this->institutionId
                 ])
                 ->where([
                     $OutcomeCriterias->aliasField('academic_period_id') => $this->academicPeriodId,
-                    $OutcomeCriterias->aliasField('education_subject_id') => $this->subjectId,
-                    $OutcomeCriterias->aliasField('outcome_template_id') => $this->outcomeTemplateId
+                    $OutcomeCriterias->aliasField('outcome_template_id') => $this->outcomeTemplateId,
+                    $OutcomeCriterias->aliasField('education_grade_id') => $this->gradeId,
+                    $OutcomeCriterias->aliasField('education_subject_id') => $this->subjectId
                 ])
                 ->toArray();
 
@@ -455,6 +467,7 @@ class StudentOutcomesTable extends ControllerActionTable
                     $SubjectComments->aliasField('student_id') => $this->studentId,
                     $SubjectComments->aliasField('outcome_template_id') => $this->outcomeTemplateId,
                     $SubjectComments->aliasField('outcome_period_id') => $this->outcomePeriodId,
+                    $SubjectComments->aliasField('education_grade_id') => $this->gradeId,
                     $SubjectComments->aliasField('education_subject_id') => $this->subjectId,
                     $SubjectComments->aliasField('institution_id') => $this->institutionId,
                     $SubjectComments->aliasField('academic_period_id') => $this->academicPeriodId
