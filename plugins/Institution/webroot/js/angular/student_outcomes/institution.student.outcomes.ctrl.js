@@ -25,7 +25,8 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     Controller.gradingOptions = [];
     Controller.studentResults = [];
     Controller.studentComments = '';
-    // filters
+
+    // Filters
     Controller.studentOptions = [];
     Controller.selectedStudent = null;
     Controller.periodOptions = [];
@@ -100,7 +101,6 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 angular.forEach(gradingTypes, function(value, key) {
                     Controller.gradingOptions[value.id] = value.grading_options;
                 });
-
                 return InstitutionStudentOutcomesSvc.getStudentOutcomeResults(
                     Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
             }, function (error) {
@@ -138,7 +138,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     }
 
     function resetColumnDefs(criterias, gradingOptions, period, selectedPeriodStatus, subject, student) {
-        var response = InstitutionStudentOutcomesSvc.getColumnDefs(subject, student, Controller.subjectOptions, Controller.studentOptions);
+        var response = InstitutionStudentOutcomesSvc.getColumnDefs(period, subject, student, Controller.periodOptions, Controller.subjectOptions, Controller.studentOptions);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -160,7 +160,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     });
                     Controller.gridOptions.api.setColumnDefs(response.data);
 
-                    if (subject != null && student != null) {
+                    if (period != null && subject != null && student != null) {
                         var rowData = [];
                         angular.forEach(criterias, function (value, key) {
                             if (value.education_subject_id == subject) {
@@ -188,10 +188,10 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                                 this.push(row);
                             }
                         }, rowData);
-                        Controller.gridOptions.api.setRowData(rowData);
 
                         if (rowData.length > 0) {
                             AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+                            Controller.gridOptions.api.setRowData(rowData);
                         } else {
                             AlertSvc.warning(Controller, "Please setup outcome criterias for the selected subject");
                             Controller.gridOptions.api.hideOverlay();
