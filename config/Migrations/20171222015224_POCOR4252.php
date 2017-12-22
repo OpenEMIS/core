@@ -646,7 +646,7 @@ class POCOR4252 extends AbstractMigration
                 '_edit' => 'Templates.edit|Criterias.edit',
                 '_add' => 'Templates.add|Criterias.add',
                 '_delete' => 'Templates.remove|Criterias.remove',
-                'order' => '302',
+                'order' => '306',
                 'visible' => 1,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -662,7 +662,7 @@ class POCOR4252 extends AbstractMigration
                 '_edit' => 'Periods.edit',
                 '_add' => 'Periods.add',
                 '_delete' => 'Periods.remove',
-                'order' => '303',
+                'order' => '307',
                 'visible' => 1,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -678,7 +678,7 @@ class POCOR4252 extends AbstractMigration
                 '_edit' => 'GradingTypes.edit',
                 '_add' => 'GradingTypes.add',
                 '_delete' => 'GradingTypes.remove',
-                'order' => '304',
+                'order' => '308',
                 'visible' => 1,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -708,13 +708,12 @@ class POCOR4252 extends AbstractMigration
         $this->dropTable('institution_outcome_subject_comments');
 
         // import_mapping
-        $this->execute("DELETE FROM `import_mapping`
-            WHERE `model` = 'Institution.InstitutionOutcomeResults'");
+        $this->execute("DELETE FROM `import_mapping` WHERE `model` = 'Institution.InstitutionOutcomeResults'");
 
         // security_functions
-        $this->execute("DELETE FROM `security_functions` WHERE `id` IN (1081,1082,2037,7056)");
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 263'); //258
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 95'); // 92
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= 76'); // 74
+        $this->execute("DELETE FROM `security_functions` WHERE `id` IN (1081,1082,2037,7056,5082,5083,5084)");
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 263');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 95');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= 76');
     }
 }
