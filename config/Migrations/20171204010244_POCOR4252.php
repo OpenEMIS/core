@@ -575,6 +575,116 @@ class POCOR4252 extends AbstractMigration
             ]
         ];
         $this->insert('import_mapping', $importMappingData);
+
+        // security_functions
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= 74');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 94');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 262');
+
+        $securityFunctionsData = [
+            [
+                'id' => '1081',
+                'name' => 'Outcome Results',
+                'controller' => 'Institutions',
+                'module' => 'Institutions',
+                'category' => 'Students',
+                'parent_id' => 8,
+                '_view' => 'StudentOutcomes.index|StudentOutcomes.view',
+                '_edit' => 'StudentOutcomes.edit',
+                'order' => '74',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '1082',
+                'name' => 'Import Outcome Results',
+                'controller' => 'Institutions',
+                'module' => 'Institutions',
+                'category' => 'Students',
+                'parent_id' => 8,
+                '_execute' => 'ImportOutcomeResults.add|ImportOutcomeResults.template|ImportOutcomeResults.results|ImportOutcomeResults.downloadFailed|ImportOutcomeResults.downloadPassed',
+                'order' => '75',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '2037',
+                'name' => 'Outcomes',
+                'controller' => 'Students',
+                'module' => 'Institutions',
+                'category' => 'Students - Academic',
+                'parent_id' => 2000,
+                '_view' => 'Outcomes.index',
+                'order' => '94',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '7056',
+                'name' => 'Outcomes',
+                'controller' => 'Directories',
+                'module' => 'Directory',
+                'category' => 'Students - Academic',
+                'parent_id' => 7000,
+                '_view' => 'StudentOutcomes.index',
+                'order' => '262',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '5082',
+                'name' => 'Outcome Setup',
+                'controller' => 'Outcomes',
+                'module' => 'Administration',
+                'category' => 'Learning Outcomes',
+                'parent_id' => 5000,
+                '_view' => 'Templates.index|Templates.view|Criterias.index|Criterias.view',
+                '_edit' => 'Templates.edit|Criterias.edit',
+                '_add' => 'Templates.add|Criterias.add',
+                '_delete' => 'Templates.remove|Criterias.remove',
+                'order' => '302',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '5083',
+                'name' => 'Periods',
+                'controller' => 'Outcomes',
+                'module' => 'Administration',
+                'category' => 'Learning Outcomes',
+                'parent_id' => 5000,
+                '_view' => 'Periods.index|Periods.view',
+                '_edit' => 'Periods.edit',
+                '_add' => 'Periods.add',
+                '_delete' => 'Periods.remove',
+                'order' => '303',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '5084',
+                'name' => 'Grading Types',
+                'controller' => 'Outcomes',
+                'module' => 'Administration',
+                'category' => 'Learning Outcomes',
+                'parent_id' => 5000,
+                '_view' => 'GradingTypes.index|GradingTypes.view',
+                '_edit' => 'GradingTypes.edit',
+                '_add' => 'GradingTypes.add',
+                '_delete' => 'GradingTypes.remove',
+                'order' => '304',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('security_functions', $securityFunctionsData);
     }
 
     // rollback
@@ -600,5 +710,11 @@ class POCOR4252 extends AbstractMigration
         // import_mapping
         $this->execute("DELETE FROM `import_mapping`
             WHERE `model` = 'Institution.InstitutionOutcomeResults'");
+
+        // security_functions
+        $this->execute("DELETE FROM `security_functions` WHERE `id` IN (1081,1082,2037,7056)");
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 263'); //258
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 95'); // 92
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= 76'); // 74
     }
 }
