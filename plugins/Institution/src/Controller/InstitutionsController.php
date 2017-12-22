@@ -114,6 +114,10 @@ class InstitutionsController extends AppController
         'ReportCardStatuses',
         'InstitutionStudentsReportCards',
 
+        // outcomes
+        'StudentOutcomes',
+        'ImportOutcomeResults'
+
         // misc
         // 'IndividualPromotion',
         // 'TransferRequests',
