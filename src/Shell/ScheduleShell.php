@@ -61,8 +61,7 @@ class ScheduleShell extends Shell
         $scheduleTable = $this->ScheduleJobs;
         $code = Inflector::underscore($taskName);
         $entity = $scheduleTable->find()->innerJoinWith('Jobs')->where(['Jobs.code' => $code])->first();
-        $entity->pid = getmypid();
-        $scheduleTable->save($entity);
+        $scheduleTable->updateAll(['pid' => getmypid()], ['id' => $entity->id]);
 
         $timeToStart = Time::now();
         $timeToStart->hour($timeHour);
@@ -74,6 +73,7 @@ class ScheduleShell extends Shell
         // id, name, task_name, description, pid, status (running, scheduled, stop), modified, modified_user_id, created, created_user_id
         do {
             // Patch schedule record with the PID and status to set to running
+            $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Job Started');
             if ($interval) {
                 while ($timeToStart < (int)(Time::now())->toUnixString() + 1) {
                     $timeToStart += $interval;
@@ -83,8 +83,9 @@ class ScheduleShell extends Shell
             }
             $entity->pid = getmypid();
             $entity->status = self::RUNNING;
-            $entity->last_run = Time::now();
+            $entity->last_ran = Time::now();
             $scheduleTable->save($entity);
+            $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Running');
             $this->{$taskName}->main();
 
             if ($interval) {
@@ -92,11 +93,13 @@ class ScheduleShell extends Shell
                 $entity->pid = getmypid();
                 $entity->status = self::SCHEDULED;
                 $scheduleTable->save($entity);
+                $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Scheduled');
             } else {
                 // Patch schedule record with the PID and status to set to stopped
                 $entity->pid = getmypid();
                 $entity->status = self::STOPPED;
                 $scheduleTable->save($entity);
+                $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Stopped');
             }
         } while ($interval);
     }
