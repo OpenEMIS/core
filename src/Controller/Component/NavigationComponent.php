@@ -1237,6 +1237,12 @@ class NavigationComponent extends Component
                         'selected' => ['LocaleContents.index', 'LocaleContents.view', 'LocaleContents.edit']
                     ],
 
+                'Schedules.index' => [
+                    'title' => 'Scheduled Tasks',
+                    'parent' => 'SystemSetup',
+                    'selected' => ['Schedules.index', 'Schedules.view', 'Schedules.edit']
+                ],
+
                 'Configurations.index' => [
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
