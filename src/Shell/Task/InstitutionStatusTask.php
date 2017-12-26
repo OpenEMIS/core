@@ -23,7 +23,7 @@ class InstitutionStatusTask extends Shell
     public function main()
     {
         $inactiveStatus = $this->Statuses->findByCode('INACTIVE')->first()->id;
-        $this->updateAll(['institution_status_id' => $inactiveStatus], ['date_closed < ' => new Date()]);
+        $this->Institutions->updateAll(['institution_status_id' => $inactiveStatus], ['date_closed < ' => new Date()]);
         return true;
     }
 }
