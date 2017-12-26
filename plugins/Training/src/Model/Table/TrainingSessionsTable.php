@@ -592,7 +592,7 @@ class TrainingSessionsTable extends ControllerActionTable
                     $rowData = [];
                     $name = $object['name'];
 
-                    if (empty($joinData['status'])) {
+                    if (empty($object['status'])) {
                         $object['status'] = 1;
                         $obj = $this->paramsEncode($object);
                     }
