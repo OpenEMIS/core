@@ -28,6 +28,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('SecondaryStaff', ['className' => 'User.Users', 'foreignKey' => 'secondary_staff_id']);
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 
@@ -345,7 +346,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 foreach ($results as $student) {
                     $params['student_id'] = $student->student_id;
                     $studentOptions[$student->student_id] = [
-                        'name' => $student->_matchingData['Users']->openemis_no . ' - ' . $student->_matchingData['Users']->name,
+                        'name' => $student->_matchingData['Users']->name_with_id,
                         'url' => $this->setQueryString($baseUrl, $params)
                     ];
                 }
@@ -391,7 +392,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         if (!is_null($this->competencyPeriodId) && !is_null($this->competencyItemId) && !is_null($this->studentId)) {
             // table headers
-            $tableHeaders[] = __($attr['item_options'][$this->competencyItemId]['name'] . ' Criteria');
+            $tableHeaders[] = $attr['item_options'][$this->competencyItemId]['name'] . ' ' . __('Criteria');
             $tableHeaders[] = $attr['student_options'][$this->studentId]['name'];
 
             $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
