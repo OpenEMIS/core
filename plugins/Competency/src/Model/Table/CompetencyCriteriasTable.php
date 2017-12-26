@@ -47,7 +47,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
     {
         $queryString = $this->request->query('queryString');
         if ($queryString) {
-            $this->controller->getCompetencyTabs(['queryString' => $queryString]);
+            $this->controller->getCompetencyTemplateTabs(['queryString' => $queryString]);
             $queryStringArr = $this->getQueryString();
             $academicPeriodId = $queryStringArr['academic_period_id'];
             $competencyTemplateId = $queryStringArr['competency_template_id'];

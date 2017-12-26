@@ -285,8 +285,7 @@ class ImportBehavior extends Behavior
         }
         if ($data[$this->_table->alias()]['select_file']['error']==4) {
             $options['validate'] = true;
-        }
-        if ($data[$this->_table->alias()]['select_file']['error']>0) {
+        } elseif ($data[$this->_table->alias()]['select_file']['error']>0) {
             $options['validate'] = true;
             $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
         }
