@@ -56,12 +56,15 @@ class ScheduleShell extends Shell
      */
     public function main($taskName, $timeHour, $timeMinute, $interval)
     {
+        $this->out(getmypid() . ' started');
         $this->tasks = [$taskName];
         $this->loadTasks();
         $scheduleTable = $this->ScheduleJobs;
         $code = Inflector::underscore($taskName);
         $entity = $scheduleTable->find()->innerJoinWith('Jobs')->where(['Jobs.code' => $code])->first();
-        $scheduleTable->updateAll(['pid' => getmypid()], ['id' => $entity->id]);
+        $pid = getmypid();
+        $entity->pid = $pid;
+        TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
 
         $timeToStart = Time::now();
         $timeToStart->hour($timeHour);
@@ -84,7 +87,7 @@ class ScheduleShell extends Shell
             $entity->pid = getmypid();
             $entity->status = self::RUNNING;
             $entity->last_ran = Time::now();
-            $scheduleTable->save($entity);
+            TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
             $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Running');
             $this->{$taskName}->main();
 
@@ -92,13 +95,13 @@ class ScheduleShell extends Shell
                 // Patch schedule record with the PID and status to set to scheduled
                 $entity->pid = getmypid();
                 $entity->status = self::SCHEDULED;
-                $scheduleTable->save($entity);
+                TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
                 $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Scheduled');
             } else {
                 // Patch schedule record with the PID and status to set to stopped
                 $entity->pid = getmypid();
                 $entity->status = self::STOPPED;
-                $scheduleTable->save($entity);
+                TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
                 $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Stopped');
             }
         } while ($interval);
