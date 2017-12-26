@@ -29,8 +29,9 @@ class SchedulesController extends PageController
     public function edit($id)
     {
         $page = $this->Page;
-        $page->get('pid')->setControlType('hidden');
-        $page->get('status')->setControlType('hidden');
+        $page->get('pid')->setControlType('hidden')->setValue(null);
+        $page->get('status')->setControlType('hidden')->setValue(self::STOPPED);
+        $page->addNew('start_shell')->setControlType('hidden')->setValue(true);
         parent::edit($id);
     }
 

@@ -425,9 +425,9 @@ class Shell
         } catch (ConsoleException $e) {
             $this->err('Error: ' . $e->getMessage());
             $this->out($this->OptionParser->help($command));
-
             return false;
         }
+
 
         if (!empty($extra) && is_array($extra)) {
             $this->params = array_merge($this->params, $extra);
