@@ -2,6 +2,7 @@
 namespace Outcome\Model\Entity;
 
 use Cake\ORM\Entity;
+use Cake\I18n\Date;
 
 class OutcomePeriod extends Entity
 {
