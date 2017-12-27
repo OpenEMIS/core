@@ -3,6 +3,7 @@ namespace App\Shell\Task;
 
 use Cake\Console\Shell;
 use Cake\I18n\Date;
+use Cake\I18n\Time;
 
 /**
  * InstitutionStatus shell task.
@@ -22,8 +23,11 @@ class InstitutionStatusTask extends Shell
      */
     public function main()
     {
+        $this->out(getmypid() . ' - Running Institution Status Update');
         $inactiveStatus = $this->Statuses->findByCode('INACTIVE')->first()->id;
-        $this->Institutions->updateAll(['institution_status_id' => $inactiveStatus], ['date_closed < ' => new Date()]);
+        $rowUpdated = $this->Institutions->updateAll(['institution_status_id' => $inactiveStatus], ['date_closed < ' => new Date()]);
+        $this->out(getmypid() . ' - ' . $rowUpdated . ' rows updated');
+        $this->out(getmypid() . ' - Finish Institution Status Update');
         return true;
     }
 }
