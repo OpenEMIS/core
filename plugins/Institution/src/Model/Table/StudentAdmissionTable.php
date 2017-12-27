@@ -19,7 +19,8 @@ use Cake\Utility\Hash;
 
 use App\Model\Traits\MessagesTrait;
 
-class StudentAdmissionTable extends AppTable {
+class StudentAdmissionTable extends AppTable
+{
     const NEW_REQUEST = 0;
     const APPROVED = 1;
     const REJECTED = 2;
@@ -30,7 +31,8 @@ class StudentAdmissionTable extends AppTable {
 
     use MessagesTrait;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('institution_student_admission');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -49,7 +51,8 @@ class StudentAdmissionTable extends AppTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
 
         $validator
@@ -102,7 +105,8 @@ class StudentAdmissionTable extends AppTable {
         return $validator;
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
@@ -215,7 +219,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
         $options['auto_search'] = false;
 
         $statusToshow = [self::NEW_REQUEST, self::REJECTED];
@@ -238,14 +243,16 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function editOnInitialize(Event $event, Entity $entity) {
+    public function editOnInitialize(Event $event, Entity $entity)
+    {
         $this->request->data[$this->alias()]['status'] = $entity->status;
         $this->request->data[$this->alias()]['start_date'] = $entity->start_date;
         $this->request->data[$this->alias()]['end_date'] = $entity->end_date;
         $this->request->data[$this->alias()]['type'] = $entity->type;
     }
 
-    public function afterAction($event) {
+    public function afterAction($event)
+    {
         $this->ControllerAction->field('student_transfer_reason_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
         $this->ControllerAction->field('start_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
         $this->ControllerAction->field('end_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
@@ -265,7 +272,8 @@ class StudentAdmissionTable extends AppTable {
         $this->ControllerAction->field('new_education_grade_id', ['visible' => false]);
     }
 
-    public function editAfterAction($event, Entity $entity) {
+    public function editAfterAction($event, Entity $entity)
+    {
         $selectedClassId = $entity->institution_class_id;// it will check if the students have class
 
         if (!is_null($selectedClassId)) {
@@ -304,7 +312,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function viewAfterAction($event, Entity $entity) {
+    public function viewAfterAction($event, Entity $entity)
+    {
         $this->request->data[$this->alias()]['status'] = $entity->status;
         $this->ControllerAction->setFieldOrder([
             'created', 'status', 'type', 'student_id',
@@ -313,7 +322,8 @@ class StudentAdmissionTable extends AppTable {
         ]);
     }
 
-    public function onGetStatus(Event $event, Entity $entity) {
+    public function onGetStatus(Event $event, Entity $entity)
+    {
         $statusName = "";
         switch ($entity->status) {
             case self::NEW_REQUEST:
@@ -332,7 +342,8 @@ class StudentAdmissionTable extends AppTable {
         return __($statusName);
     }
 
-    public function onGetType(Event $event, Entity $entity) {
+    public function onGetType(Event $event, Entity $entity)
+    {
         $typeName = "";
         switch ($entity->type) {
             case self::ADMISSION:
@@ -347,11 +358,13 @@ class StudentAdmissionTable extends AppTable {
         }
         return __($typeName);
     }
-    public function onGetOpenemisNo(Event $event, Entity $entity){
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
         return $entity->user->openemis_no;
     }
 
-    public function onGetStudentId(Event $event, Entity $entity){
+    public function onGetStudentId(Event $event, Entity $entity)
+    {
         $urlParams = $this->ControllerAction->url('index');
         $action = $urlParams['action'];
         if ($entity->type == self::TRANSFER) {
@@ -370,7 +383,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, $request)
+    {
         if ($action == 'edit') {
             $status = $request->data[$this->alias()]['status'];
             $attr['type'] = 'readonly';
@@ -385,7 +399,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
         if ($this->action == 'edit') {
             // If the status is new application then display the approve and reject button,
             // if not remove the button just in case the user gets to access the edit page
@@ -403,7 +418,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
+    {
         if ($action == 'edit') {
             $endDate = $request->data[$this->alias()]['end_date'];
             $attr['type'] = 'readonly';
@@ -413,7 +429,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    {
         if ($action == 'edit') {
             if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
                 $startDate = $request->data[$this->alias()]['start_date'];
@@ -437,7 +454,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldComment(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldComment(Event $event, array $attr, $action, $request)
+    {
         if ($action == 'edit') {
             if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
                 $attr['type'] = 'readonly';
@@ -446,7 +464,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldType(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldType(Event $event, array $attr, $action, $request)
+    {
         if ($action == 'edit') {
             $type = $request->data[$this->alias()]['type'];
             $attr['type'] = 'readonly';
@@ -464,7 +483,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $newItem = [];
 
@@ -488,7 +508,8 @@ class StudentAdmissionTable extends AppTable {
         return $buttons;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
         if ($action == 'index') {
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
             $toolbarButtons['back']['attr']['title'] = __('Back');
@@ -645,7 +666,8 @@ class StudentAdmissionTable extends AppTable {
         }
     }
 
-    public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
 
         $entity->comment = $data['StudentAdmission']['comment'];
         $this->updateAll(
@@ -669,7 +691,8 @@ class StudentAdmissionTable extends AppTable {
         return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
     }
 
-    public function findWorkbench(Query $query, array $options) {
+    public function findWorkbench(Query $query, array $options)
+    {
         $controller = $options['_controller'];
         $controller->loadComponent('AccessControl');
 
