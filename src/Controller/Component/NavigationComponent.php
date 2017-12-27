@@ -534,19 +534,32 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Institution']
                 ],
 
-            'Institutions.StudentCompetencies' => [
-                'title' => 'Competencies',
+            'Institution.Performance' => [
+                'title' => 'Performance',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults', 'Institutions.StudentCompetencyComments'],
-                'params' => ['plugin' => 'Institution']
+                'link' => false
             ],
 
-            'Institutions.Assessments.index' => [
-                'title' => 'Assessments',
-                'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.Assessments', 'Institutions.Results'],
-                'params' => ['plugin' => 'Institution'],
-            ],
+                'Institutions.StudentCompetencies' => [
+                    'title' => 'Competencies',
+                    'parent' => 'Institution.Performance',
+                    'selected' => ['Institutions.StudentCompetencies', 'Institutions.InstitutionCompetencyResults', 'Institutions.StudentCompetencyComments'],
+                    'params' => ['plugin' => 'Institution']
+                ],
+
+                'Institutions.StudentOutcomes' => [
+                    'title' => 'Outcomes',
+                    'parent' => 'Institution.Performance',
+                    'selected' => ['Institutions.StudentOutcomes', 'Institutions.ImportOutcomeResults.add', 'Institutions.ImportOutcomeResults.results'],
+                    'params' => ['plugin' => 'Institution']
+                ],
+
+                'Institutions.Assessments.index' => [
+                    'title' => 'Assessments',
+                    'parent' => 'Institution.Performance',
+                    'selected' => ['Institutions.Assessments', 'Institutions.Results'],
+                    'params' => ['plugin' => 'Institution'],
+                ],
 
             'Institutions.Indexes.index' => [
                 'title' => 'Indexes',
@@ -818,7 +831,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
-                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']
+                    'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes', 'Students.Outcomes']
             ],
             'Students.Employments' => [
                 'title' => 'Professional',
@@ -1007,7 +1020,7 @@ class NavigationComponent extends Component
                     'parent' => 'Profiles.Student',
                     'params' => ['plugin' => 'Profile'],
                     'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours',
-                        'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks']
+                        'Profiles.StudentResults', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes']
                 ],
                 'Profiles.StudentBankAccounts' => [
                     'title' => 'Finance',
@@ -1074,7 +1087,7 @@ class NavigationComponent extends Component
                     'parent' => 'Directories.Student',
                     'params' => ['plugin' => 'Directory'],
                     'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-                        'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
+                        'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks', 'Directories.StudentOutcomes']
                 ],
                 'Directories.StudentBankAccounts' => [
                     'title' => 'Finance',
@@ -1363,35 +1376,32 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Training'],
                     'selected' => ['Trainings.Results']
                 ],
-            'Assessments.Assessments' => [
-                'title' => 'Assessments',
+
+            'Administration.Performance' => [
+                'title' => 'Performance',
                 'parent' => 'Administration',
-                'params' => ['plugin' => 'Assessment'],
-                'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
+                'link' => false
             ],
-            'Administration.Competencies' => [
-                'title' => 'Competencies',
-                'parent' => 'Administration',
-                'link' => false,
-                'params' => ['plugin' => 'Competency'],
-            ],
+
                 'Competencies.Templates' => [
-                    'title' => 'Templates',
-                    'parent' => 'Administration.Competencies',
+                    'title' => 'Competencies',
+                    'parent' => 'Administration.Performance',
                     'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias']
+                    'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias', 'Competencies.Periods', 'Competencies.GradingTypes']
                 ],
-                'Competencies.Periods' => [
-                    'title' => 'Periods',
-                    'parent' => 'Administration.Competencies',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Periods']
+
+                'Outcomes.Templates' => [
+                    'title' => 'Outcomes',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Outcome'],
+                    'selected' => ['Outcomes.Templates', 'Outcomes.Criterias', 'Outcomes.Periods', 'Outcomes.GradingTypes']
                 ],
-                'Competencies.GradingTypes' => [
-                    'title' => 'Grading Types',
-                    'parent' => 'Administration.Competencies',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.GradingTypes']
+
+                'Assessments.Assessments' => [
+                    'title' => 'Assessments',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Assessment'],
+                    'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
                 ],
 
             'Administration.Examinations' => [
