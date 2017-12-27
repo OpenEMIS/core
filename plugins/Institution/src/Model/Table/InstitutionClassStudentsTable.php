@@ -55,7 +55,8 @@ class InstitutionClassStudentsTable extends AppTable
             'OpenEMIS_Classroom' => ['index', 'view'],
             'SubjectStudents' => ['index'],
             'ReportCardComments' => ['index'],
-            'StudentCompetencies' => ['index']
+            'StudentCompetencies' => ['index'],
+            'StudentOutcomes' => ['index']
         ]);
     }
 
