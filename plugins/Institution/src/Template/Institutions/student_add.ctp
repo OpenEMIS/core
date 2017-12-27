@@ -382,11 +382,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="input string" ng-show="!InstitutionStudentController.completeDisabled">
                     <label><?= __('Student Status') ?></label>
-                    <?php if ($admissionExecutePermission) { ?>
-                        <input type="string" value="<?= __('Enrolled') ?>" disabled="disabled">
-                    <?php } else { ?>
-                        <input type="string" value="<?= __('Pending Admission') ?>" disabled="disabled">
-                    <?php } ?>
+                    <input type="string" value="<?= __('Pending Admission') ?>" disabled="disabled">
                 </div>
 
 
