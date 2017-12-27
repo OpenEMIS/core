@@ -483,6 +483,9 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('class', ['after' => 'education_grade_id']);
         $this->field('student_status_id', ['after' => 'class']);
@@ -505,7 +508,7 @@ class StudentsTable extends ControllerActionTable
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
-            $url = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
             return $this->controller->redirect($url);
