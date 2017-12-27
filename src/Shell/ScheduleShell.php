@@ -56,15 +56,14 @@ class ScheduleShell extends Shell
      */
     public function main($taskName, $timeHour, $timeMinute, $interval)
     {
-        $this->out(getmypid() . ' started');
+        $this->out(getmypid() . ' - Schedule Shell Started');
         $this->tasks = [$taskName];
         $this->loadTasks();
         $scheduleTable = $this->ScheduleJobs;
         $code = Inflector::underscore($taskName);
-        $entity = $scheduleTable->find()->innerJoinWith('Jobs')->where(['Jobs.code' => $code])->first();
+        $entity = $scheduleTable->find()->innerJoinWith('Jobs')->where(['Jobs.code' => $code])->first()->toArray();
         $pid = getmypid();
-        $entity->pid = $pid;
-        TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
+        $scheduleTable->updateStatus($entity['id'], $pid, self::SCHEDULED);
 
         $timeToStart = Time::now();
         $timeToStart->hour($timeHour);
@@ -84,26 +83,21 @@ class ScheduleShell extends Shell
                 time_sleep_until($timeToStart);
                 $timeToStart += $interval;
             }
-            $entity->pid = getmypid();
-            $entity->status = self::RUNNING;
-            $entity->last_ran = Time::now();
-            TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
+            $scheduleTable->updateLastRan($entity['id'], $pid, Time::now());
             $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Running');
             $this->{$taskName}->main();
 
             if ($interval) {
                 // Patch schedule record with the PID and status to set to scheduled
-                $entity->pid = getmypid();
-                $entity->status = self::SCHEDULED;
-                TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
+                $scheduleTable->updateStatus($entity['id'], $pid, self::SCHEDULED);
                 $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Scheduled');
             } else {
                 // Patch schedule record with the PID and status to set to stopped
-                $entity->pid = getmypid();
-                $entity->status = self::STOPPED;
-                TableRegistry::get('Schedule.ScheduleJobs')->save($entity, ['atomic' => false]);
+                $scheduleTable->updateStatus($entity['id'], $pid, self::STOPPED);
                 $this->out(getmypid() . ' - '. Inflector::humanize($code) .' Stopped');
             }
         } while ($interval);
+
+        return true;
     }
 }
