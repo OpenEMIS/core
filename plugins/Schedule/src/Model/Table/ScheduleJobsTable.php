@@ -12,13 +12,17 @@ use Cake\Utility\Inflector;
 
 class ScheduleJobsTable extends AppTable
 {
+    const SCHEDULED = 1;
+    const RUNNING = 2;
+    const STOPPED = 3;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
         $this->belongsTo('Jobs', ['className' => 'Schedule.Jobs']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
         $scheduledTime = new Time($entity->scheduled_time);
         $entity->scheduled_time = $scheduledTime;
@@ -30,7 +34,17 @@ class ScheduleJobsTable extends AppTable
             $consoleDir = ROOT . DS . 'bin' . DS . 'cake';
             $job = TableRegistry::get('Schedule.Jobs')->get($entity->job_id);
             $cmd = sprintf($consoleDir . ' schedule %s %s %s %s', Inflector::camelize($job->code), $hour, $minute, $interval);
-            return shell_exec("$cmd >>$log");
+            return exec("$cmd >>$log | at $hour$minute");
         }
+    }
+
+    public function updateStatus($id, $pid, $status)
+    {
+        return $this->updateAll(['status' => $status, 'pid' => $pid], ['id' => $id]);
+    }
+
+    public function updateLastRan($id, $lastRanDateTime)
+    {
+        return $this->updateAll(['status' => self::RUNNING, 'last_ran' => $lastRanDateTime], ['id' => $id]);
     }
 }
