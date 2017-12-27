@@ -7,7 +7,6 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
-use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
@@ -16,39 +15,41 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Utility\Inflector;
 use Cake\Utility\Hash;
+use App\Model\Table\ControllerActionTable;
 
 use App\Model\Traits\MessagesTrait;
 
-class StudentAdmissionTable extends AppTable
+class StudentAdmissionTable extends ControllerActionTable
 {
-    const NEW_REQUEST = 0;
-    const APPROVED = 1;
-    const REJECTED = 2;
-
-    // Type status for admission
-    const TRANSFER = 2;
-    const ADMISSION = 1;
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
 
     use MessagesTrait;
 
     public function initialize(array $config)
     {
         $this->table('institution_student_admission');
+
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('StudentTransferReasons', ['className' => 'Student.StudentTransferReasons']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        $this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 
+        $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index'],
             'Students' => ['index', 'add']
         ]);
+
+        $this->toggle('add', false);
     }
 
     public function validationDefault(Validator $validator)
@@ -108,10 +109,8 @@ class StudentAdmissionTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
-        $events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
         return $events;
     }
 
@@ -219,209 +218,91 @@ class StudentAdmissionTable extends AppTable
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $options['auto_search'] = false;
+        $toolbarButtons = $extra['toolbarButtons'];
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
 
-        $statusToshow = [self::NEW_REQUEST, self::REJECTED];
-        $typeToShow = [];
-
-        if ($this->AccessControl->check(['Institutions', 'TransferApprovals', 'view'])) {
-            $typeToShow[] = self::TRANSFER;
-        }
-
-        if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'view'])) {
-            $typeToShow[] = self::ADMISSION;
-        }
-
-        $query->where([$this->aliasField('type').' IN' => $typeToShow, $this->aliasField('status').' IN' => $statusToshow]);
-
-        $search = $this->ControllerAction->getSearchKey();
-        if (!empty($search)) {
-            // function from AdvancedNameSearchBehavior
-            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
-        }
-    }
-
-    public function editOnInitialize(Event $event, Entity $entity)
-    {
-        $this->request->data[$this->alias()]['status'] = $entity->status;
-        $this->request->data[$this->alias()]['start_date'] = $entity->start_date;
-        $this->request->data[$this->alias()]['end_date'] = $entity->end_date;
-        $this->request->data[$this->alias()]['type'] = $entity->type;
-    }
-
-    public function afterAction($event)
-    {
-        $this->ControllerAction->field('student_transfer_reason_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
-        $this->ControllerAction->field('start_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
-        $this->ControllerAction->field('end_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
-        $this->ControllerAction->field('previous_institution_id', ['visible' => ['edit' => true, 'index' => false, 'view' => false]]);
-        $this->ControllerAction->field('type');
-        $this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
         if ($this->action == 'index') {
-            $this->ControllerAction->field('openemis_no');
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = [
+                'title' => __('Back'),
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false
+            ];
+            $toolbarButtons['back']['url'] = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                'action' => 'Students',
+                0 => 'index'
+            ];
+
+        } elseif ($this->action == 'edit') {
+            $toolbarButtons['back']['url'][0] = 'index';
+            if ($toolbarButtons['back']['url']['controller'] == 'Dashboard') {
+                $toolbarButtons['back']['url']['action'] = 'index';
+                unset($toolbarButtons['back']['url'][0]);
+            }
+            unset($toolbarButtons['back']['url'][1]);
         }
-        $this->ControllerAction->field('student_id');
-        $this->ControllerAction->field('status');
-        $this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
-        $this->ControllerAction->field('education_grade_id');
-        $this->ControllerAction->field('comment');
-        $this->ControllerAction->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
-        $this->ControllerAction->field('new_education_grade_id', ['visible' => false]);
     }
 
-    public function editAfterAction($event, Entity $entity)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $selectedClassId = $entity->institution_class_id;// it will check if the students have class
+        $this->field('comment', ['type' => 'hidden']);
+        $this->field('start_date', ['type' => 'hidden']);
+        $this->field('end_date', ['type' => 'hidden']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id']);
+    }
 
-        if (!is_null($selectedClassId)) {
-            try {
-                $selectedClassName = $this->InstitutionClasses->get($selectedClassId)->name;
-            } catch (RecordNotFoundException $ex) {
-                Log::write('debug', $ex->getMessage());
-                Log::write('debug', $selectedClassId);
-                $selectedClassId = NULL;
-                $entity->institution_class_id = null;
-                $this->save($entity, ['validate' => false]);
-            }
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
         }
+    }
 
-        if (is_null($selectedClassId)) {
-            $selectedClassName = $this->getMessage($this->aliasField('noClass'));
-        }
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
+        $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+        $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
+        $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+        $this->field('institution_class_id', ['entity' => $entity]);
+        $this->field('end_date', ['entity' => $entity]);
+        $this->setFieldOrder(['student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
 
-        $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
-        $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
-        $this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-        $this->ControllerAction->field('institution_class_id', ['type' => 'readonly', 'attr' => ['value' => $selectedClassName]]);
-        $this->ControllerAction->field('student_transfer_reason_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('previous_institution_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
-        $this->ControllerAction->setFieldOrder([
-            'created', 'status', 'type', 'student_id',
-            'institution_id', 'academic_period_id', 'education_grade_id', 'institution_class_id',
-            'start_date', 'end_date', 'comment',
-        ]);
-
-        $urlParams = $this->ControllerAction->url('edit');
+        $urlParams = $this->url('edit');
         if ($urlParams['controller'] == 'Dashboard') {
             $this->Navigation->addCrumb('Student Admission', $urlParams);
         }
     }
 
-    public function viewAfterAction($event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['status'] = $entity->status;
-        $this->ControllerAction->setFieldOrder([
-            'created', 'status', 'type', 'student_id',
-            'institution_id', 'academic_period_id', 'education_grade_id',
-            'start_date', 'end_date', 'comment'
-        ]);
-    }
-
-    public function onGetStatus(Event $event, Entity $entity)
-    {
-        $statusName = "";
-        switch ($entity->status) {
-            case self::NEW_REQUEST:
-                $statusName = "New";
-                break;
-            case self::APPROVED:
-                $statusName = "Approved";
-                break;
-            case self::REJECTED:
-                $statusName = "Rejected";
-                break;
-            default:
-                $statusName = $entity->status;
-                break;
-        }
-        return __($statusName);
-    }
-
-    public function onGetType(Event $event, Entity $entity)
-    {
-        $typeName = "";
-        switch ($entity->type) {
-            case self::ADMISSION:
-                $typeName = "Admission";
-                break;
-            case self::TRANSFER:
-                $typeName = "Transfer";
-                break;
-            default:
-                $typeName = $entity->status;
-                break;
-        }
-        return __($typeName);
-    }
-    public function onGetOpenemisNo(Event $event, Entity $entity)
-    {
-        return $entity->user->openemis_no;
+        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
     }
 
     public function onGetStudentId(Event $event, Entity $entity)
     {
-        $urlParams = $this->ControllerAction->url('index');
-        $action = $urlParams['action'];
-        if ($entity->type == self::TRANSFER) {
-            $action = 'TransferApprovals';
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name_with_id;
         }
-        if ($entity->status == self::NEW_REQUEST) {
-            if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
-                return $event->subject()->Html->link($entity->user->name, [
-                    'plugin' => $urlParams['plugin'],
-                    'controller' => $urlParams['controller'],
-                    'action' => $action,
-                    '0' => 'edit',
-                    '1' => $this->paramsEncode(['id' => $entity->id])
-                ]);
-            }
-        }
-    }
-
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'edit') {
-            $status = $request->data[$this->alias()]['status'];
-            $attr['type'] = 'readonly';
-            if ($status == self::NEW_REQUEST) {
-                $attr['attr']['value'] = __('New');
-            } else if ($status == self::APPROVED) {
-                $attr['attr']['value'] = __('Approved');
-            } else if ($status == self::REJECTED) {
-                $attr['attr']['value'] = __('Rejected');
-            }
-            return $attr;
-        }
-    }
-
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {
-        if ($this->action == 'edit') {
-            // If the status is new application then display the approve and reject button,
-            // if not remove the button just in case the user gets to access the edit page
-            if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
-                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Approve');
-
-                $buttons[1] = [
-                    'name' => '<i class="fa fa-close"></i> ' . __('Reject'),
-                    'attr' => ['class' => 'btn btn-outline btn-cancel', 'div' => false, 'name' => 'submit', 'value' => 'reject']
-                ];
-            } else {
-                unset($buttons[0]);
-                unset($buttons[1]);
-            }
-        }
+        return $value;
     }
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
-            $endDate = $request->data[$this->alias()]['end_date'];
+            $endDate = $attr['entity']->end_date;
             $attr['type'] = 'readonly';
             $attr['value'] = $endDate->format('d-m-Y');
             $attr['attr']['value'] = $endDate->format('d-m-Y');
@@ -429,108 +310,24 @@ class StudentAdmissionTable extends AppTable
         }
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
-            if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
-                $startDate = $request->data[$this->alias()]['start_date'];
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $startDate->format('d-m-Y');
-            } else {
-                $endDate = $request->data[$this->alias()]['end_date'];
+            $entity = $attr['entity'];
+            $Classes = TableRegistry::get('Institution.InstitutionClasses');
 
-                if (!empty($endDate)) {
-                    $endDate = new Date(date('Y-m-d', strtotime($endDate)));
-                    $request->data[$this->alias()]['end_date'] = $endDate;
-                }
+            $options = $Classes->find('list')
+                ->innerJoinWith('ClassGrades')
+                ->where([
+                    $Classes->aliasField('institution_id') => $entity->institution_id,
+                    $Classes->aliasField('academic_period_id') => $entity->academic_period_id,
+                    'ClassGrades.education_grade_id' => $entity->education_grade_id
+                ])
+                ->toArray();
 
-                if (array_key_exists('startDate', $request->query)) {
-                    $attr['value'] = $request->query['startDate'];
-                    $attr['attr']['value'] = $request->query['startDate'];
-                }
-            }
-
+            $attr['type'] = 'select';
+            $attr['options'] = $options;
             return $attr;
-        }
-    }
-
-    public function onUpdateFieldComment(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'edit') {
-            if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
-                $attr['type'] = 'readonly';
-            }
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldType(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'edit') {
-            $type = $request->data[$this->alias()]['type'];
-            $attr['type'] = 'readonly';
-            $typeName = "";
-            switch ($type) {
-                case self::ADMISSION:
-                    $typeName = "Admission";
-                    break;
-                case self::TRANSFER:
-                    $typeName = "Transfer";
-                    break;
-            }
-            $attr['attr']['value'] = $typeName;
-            return $attr;
-        }
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $newItem = [];
-
-        $status = $this->get($entity->id)->status;
-        if ($status == self::NEW_REQUEST) {
-            if (isset($buttons['view'])) {
-                $newItem['view'] = $buttons['view'];
-            }
-            if ($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
-                if (isset($buttons['edit'])) {
-                    $newItem['edit'] = $buttons['edit'];
-                }
-            }
-        } else {
-            if (isset($buttons['view'])) {
-                $newItem['view'] = $buttons['view'];
-            }
-        }
-        $buttons = $newItem;
-
-        return $buttons;
-    }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        if ($action == 'index') {
-            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-            $toolbarButtons['back']['attr']['title'] = __('Back');
-            $toolbarButtons['back']['url']['plugin'] = 'Institution';
-            $toolbarButtons['back']['url']['controller'] = 'Institutions';
-            $toolbarButtons['back']['url']['action'] = 'Students';
-            $toolbarButtons['back']['url'][0] = 'index';
-            $toolbarButtons['back']['attr'] = $attr;
-        }
-
-        if ($action == 'edit') {
-            $toolbarButtons['back']['url'][0] = 'index';
-            if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
-                $toolbarButtons['back']['url']['action']= 'index';
-                unset($toolbarButtons['back']['url'][0]);
-            }
-            unset($toolbarButtons['back']['url'][1]);
-        } else if ($action == 'view') {
-            if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
-                unset($toolbarButtons['edit']);
-            }
         }
     }
 
@@ -666,31 +463,6 @@ class StudentAdmissionTable extends AppTable
         }
     }
 
-    public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-
-        $entity->comment = $data['StudentAdmission']['comment'];
-        $this->updateAll(
-            ['status' => self::REJECTED, 'comment' => $entity->comment],
-            ['id' => $entity->id]);
-
-        $this->Alert->success('StudentAdmission.reject');
-
-        // To redirect back to the student admission if it is not access from the workbench
-        $urlParams = $this->ControllerAction->url('index');
-        $plugin = false;
-        $controller = 'Dashboard';
-        $action = 'index';
-        if ($urlParams['controller'] == 'Institutions') {
-            $plugin = 'Institution';
-            $controller = 'Institutions';
-            $action = 'StudentAdmission';
-        }
-
-        $event->stopPropagation();
-        return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
-    }
-
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
@@ -776,19 +548,5 @@ class StudentAdmissionTable extends AppTable
             });
 
         return $query;
-    }
-
-    public function getPendingRecords($institutionId = null)
-    {
-        $count = $this
-            ->find()
-            ->where([
-                $this->aliasField('status') => self::NEW_REQUEST,
-                $this->aliasField('institution_id') => $institutionId,
-            ])
-            ->count()
-        ;
-
-        return $count;
     }
 }
