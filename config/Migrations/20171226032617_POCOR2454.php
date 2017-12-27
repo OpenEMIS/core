@@ -29,7 +29,7 @@ class POCOR2454 extends AbstractMigration
         $workflowData = [
             [
                 'code' => 'STUDENT-ADMISSION-1001',
-                'name' => 'Staff Admission',
+                'name' => 'Student Admission',
                 'workflow_model_id' => $this->admissionModelId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -214,7 +214,7 @@ class POCOR2454 extends AbstractMigration
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => 'Workflow.onApprove',
                 'workflow_step_id' => $pendingApprovalStatusId,
                 'next_workflow_step_id' => $approvedStatusId,
                 'created_user_id' => '1',
