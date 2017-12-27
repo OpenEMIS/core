@@ -1851,16 +1851,20 @@ class ValidationBehavior extends Behavior
         $institutionId = $data['institution_id'];
         $academicPeriodId = $data['academic_period_id'];
         $educationGradeId = $data['education_grade_id'];
+
         $AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+        $doneStatus = $AdmissionTable::DONE;
+
         $studentExist = $AdmissionTable->find()
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['Statuses.category <>' => $doneStatus]);
+            })
             ->where([
-                    $AdmissionTable->aliasField('status') => 0,
-                    $AdmissionTable->aliasField('student_id') => $studentId,
-                    $AdmissionTable->aliasField('institution_id') => $institutionId,
-                    $AdmissionTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $AdmissionTable->aliasField('education_grade_id') => $educationGradeId,
-                    $AdmissionTable->aliasField('type') => 1
-                ])
+                $AdmissionTable->aliasField('student_id') => $studentId,
+                $AdmissionTable->aliasField('institution_id') => $institutionId,
+                $AdmissionTable->aliasField('academic_period_id') => $academicPeriodId,
+                $AdmissionTable->aliasField('education_grade_id') => $educationGradeId,
+            ])
             ->count();
 
         return $studentExist == 0;

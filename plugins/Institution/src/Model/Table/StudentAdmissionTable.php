@@ -2,7 +2,6 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -10,11 +9,6 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
-use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\I18n\Time;
-use Cake\I18n\Date;
-use Cake\Utility\Inflector;
-use Cake\Utility\Hash;
 use App\Model\Table\ControllerActionTable;
 
 use App\Model\Traits\MessagesTrait;
@@ -27,6 +21,16 @@ class StudentAdmissionTable extends ControllerActionTable
     const DONE = 3;
 
     use MessagesTrait;
+
+    private $workflowEvents = [
+        [
+            'value' => 'Workflow.onApprove',
+            'text' => 'Approval of Student Admission',
+            'description' => 'Performing this action will enroll the student into the institution.',
+            'method' => 'OnApprove',
+            'unique' => true
+        ]
+    ];
 
     public function initialize(array $config)
     {
@@ -111,20 +115,45 @@ class StudentAdmissionTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
+        $events['Workflow.getEvents'] = 'getWorkflowEvents';
+        foreach ($this->workflowEvents as $event) {
+            $events[$event['value']] = $event['method'];
+        }
         return $events;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
     {
-        //this is meant to force gender_id validation
-        if ($data->offsetExists('student_id')) {
-            $studentId = $data['student_id'];
-
-            if (!$data->offsetExists('gender_id')) {
-                $query = $this->Users->get($studentId);
-                $data['gender_id'] = $query->gender_id;
-            }
+        foreach ($this->workflowEvents as $key => $attr) {
+            $attr['text'] = __($attr['text']);
+            $attr['description'] = __($attr['description']);
+            $eventsObject[] = $attr;
         }
+    }
+
+    public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        $entity = $this->get($id);
+
+        // add the student to the new school
+        $incomingStudent = [
+            'student_status_id' => $statuses['CURRENT'],
+            'student_id' => $entity->student_id,
+            'education_grade_id' => $entity->education_grade_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'start_date' => $entity->start_date,
+            'end_date' => $entity->end_date,
+            'institution_id' => $entity->institution_id
+        ];
+        if (!empty($entity->institution_class_id)) {
+            $incomingStudent['class'] = $entity->institution_class_id;
+        }
+
+        $newEntity = $Students->newEntity($incomingStudent);
+        $Students->save($newEntity);
     }
 
     public function studentsAfterSave(Event $event, $student)
@@ -278,11 +307,6 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('institution_class_id', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
         $this->setFieldOrder(['student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
-
-        $urlParams = $this->url('edit');
-        if ($urlParams['controller'] == 'Dashboard') {
-            $this->Navigation->addCrumb('Student Admission', $urlParams);
-        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity)
@@ -331,134 +355,15 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) // admission approval
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $errors = $entity->errors();
+        //this is meant to force gender_id validation
+        if ($data->offsetExists('student_id')) {
+            $studentId = $data['student_id'];
 
-        if (empty($errors)) {
-            $Students = TableRegistry::get('Institution.Students');
-
-            $newSchoolId = $entity->institution_id;
-            $studentId = $entity->student_id;
-            $gradeId = $entity->education_grade_id;
-            $newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
-
-            $validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
-            if (!empty($validateEnrolledInAnyInstitutionResult)) {
-                $this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
-            } else if ($Students->completedGrade($gradeId, $studentId)) {
-                $this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
-            } else { // if not exists
-
-                $entity->status = self::APPROVED;
-                if (!$this->save($entity, ['validate' => false])) {
-                    $this->Alert->error('general.edit.failed');
-                    $this->log($entity->errors(), 'debug');
-                } else {
-                    $this->Alert->success('StudentAdmission.approve');
-                }
-            }
-
-            // To redirect back to the student admission if it is not access from the workbench
-            $urlParams = $this->ControllerAction->url('index');
-            $plugin = false;
-            $controller = 'Dashboard';
-            $action = 'index';
-            if ($urlParams['controller'] == 'Institutions') {
-                $plugin = 'Institution';
-                $controller = 'Institutions';
-                $action = 'StudentAdmission';
-            }
-
-            $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
-        } else {
-            // required for validation to work
-            $process = function($model, $entity) {
-                return false;
-            };
-
-            return $process;
-        }
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $processStudent = false;
-        $errors = $entity->errors();
-
-        //this logic is meant for auto approve admission and add student into the institution when the creator has 'Student Admission -> Execute' permission
-        if ($entity->isNew()) {
-            //check for super admin
-            $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
-
-            if (!$superAdmin) {
-                $processStudent = Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
-            } else {
-                $processStudent = true;
-            }
-        } else {
-            if ($entity->dirty('status') && $entity->status == self::APPROVED) { // if the status has been changed from Pending to Approved
-                $processStudent = true;
-            }
-        }
-
-        if ($processStudent && empty($errors)) {
-            $EducationGradesTable = TableRegistry::get('Education.EducationGrades');
-
-            $educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
-            $educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
-
-            $conditions = [
-                'student_id' => $entity->student_id,
-                'status' => self::NEW_REQUEST,
-                'education_grade_id IN' => $educationGradesToUpdate
-            ];
-
-            // Reject all other new pending admission / transfer application entry of the
-            // same student for the same academic period
-            $this->updateAll(
-                ['status' => self::REJECTED],
-                [$conditions]
-            );
-
-            $selectedClassId = $entity->institution_class_id;
-            $Students = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-            $statuses = $StudentStatuses->findCodeList();
-
-            $newSchoolId = $entity->institution_id;
-            $studentId = $entity->student_id;
-            $periodId = $entity->academic_period_id;
-            $gradeId = $entity->education_grade_id;
-
-            // add the student to the new school
-            $entityData = [
-                'institution_id' => $newSchoolId,
-                'student_id' => $studentId,
-                'academic_period_id' => $periodId,
-                'education_grade_id' => $gradeId,
-                'student_status_id' => $statuses['CURRENT']
-            ];
-
-            if ($entity->start_date instanceof Date) {
-                $entityData['start_date'] = $entity->start_date->format('Y-m-d');
-            } else {
-                $entityData['start_date'] = $entity->start_date;
-            }
-            $entityData['end_date'] = $entity->end_date->format('Y-m-d');
-
-            if (!is_null($selectedClassId)) {
-                $entityData['class'] = $selectedClassId;
-            }
-
-            $newEntity = $Students->newEntity($entityData);
-
-            if ($Students->save($newEntity)) {
-                // once student is added to institution successfully, the admission status will be set to Approved
-                $entity->status = self::APPROVED;
-            } else {
-                return false; // to stop admission record from saving
+            if (!$data->offsetExists('gender_id')) {
+                $query = $this->Users->get($studentId);
+                $data['gender_id'] = $query->gender_id;
             }
         }
     }
@@ -466,35 +371,11 @@ class StudentAdmissionTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $controller->loadComponent('AccessControl');
-
         $session = $controller->request->session();
-        $AccessControl = $controller->AccessControl;
 
-        $isAdmin = $session->read('Auth.User.super_admin');
         $userId = $session->read('Auth.User.id');
-
-        $where = [
-            $this->aliasField('status') => self::NEW_REQUEST,
-            $this->aliasField('type') => self::ADMISSION
-        ];
-
-        if (!$isAdmin) {
-            if ($AccessControl->check(['Institutions', 'StudentAdmission', 'edit'])) {
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
-
-                if (empty($institutionIds)) {
-                    // return empty list if the user does not have access to any schools
-                    return $query->where([$this->aliasField('id') => -1]);
-                } else {
-                    $where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
-                }
-            } else {
-            //  // return empty list if the user does not permission to approve Student Admission
-                return $query->where([$this->aliasField('id') => -1]);
-            }
-        }
+        $Statuses = $this->Statuses;
+        $doneStatus = self::DONE;
 
         $query
             ->select([
@@ -502,6 +383,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $this->aliasField('institution_id'),
                 $this->aliasField('modified'),
                 $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
                 $this->Users->aliasField('openemis_no'),
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('middle_name'),
@@ -518,16 +400,20 @@ class StudentAdmissionTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('preferred_name')
             ])
             ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
-            ->where($where)
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId])
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
                     $url = [
-                        'plugin' => false,
-                        'controller' => 'Dashboard',
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
                         'action' => 'StudentAdmission',
-                        'edit',
-                        $this->paramsEncode(['id' => $row->id])
+                        'view',
+                        $this->paramsEncode(['id' => $row->id]),
+                        'institution_id' => $row->institution_id
                     ];
 
                     if (is_null($row->modified)) {
@@ -537,7 +423,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     }
 
                     $row['url'] = $url;
-                    $row['status'] = __('Pending For Approval');
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
                     $row['request_title'] = sprintf(__('Admission of student %s'), $row->user->name_with_id);
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
