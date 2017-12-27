@@ -591,14 +591,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function postEnrolledStudent(data) {
         var institutionId = this.getInstitutionId();
-        data['institution_id'] = institutionId;
-        data['student_status_id'] = 1;
-        data['previous_institution_id'] = 0;
-        data['student_transfer_reason_id'] = 0;
-        data['type'] = 1;
-        data['status'] = 0;
         data['start_date'] = this.formatDateForSaving(data['start_date']);
         data['end_date'] = this.formatDateForSaving(data['end_date']);
+        data['status_id'] = 0;
+        data['institution_id'] = institutionId;
         data['institution_class_id'] = data['class'];
         return StudentRecords.save(data)
     };
