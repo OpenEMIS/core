@@ -855,6 +855,16 @@ class POCOR4306 extends AbstractMigration
                 'en' => 'Training Sessions',
                 'created_user_id' => 1,
                 'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Outcome Template',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Outcome Period',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
             ]
         ];
         $table->insert($data)->save();
