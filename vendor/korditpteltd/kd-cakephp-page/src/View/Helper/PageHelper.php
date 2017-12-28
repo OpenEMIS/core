@@ -530,7 +530,7 @@ EOT;
                 $comments = '';
                 $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
                 $extensionSupported = '';
-                $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+                $fileFormatMessage = '* '. sprintf(__('Format Supported: %s'), implode(', ', $formatSupported));
                 foreach ($formatSupported as &$format) {
                     $format = '\''.$format.'\'';
                 }
@@ -582,7 +582,7 @@ EOT;
                 $comments = !empty($message) ? $message . '<br/>' : $message;
                 $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
                 $extensionSupported = '';
-                $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+                $fileFormatMessage = '* ' . sprintf(__('* Format Supported: %s'), implode(', ', $formatSupported));
                 foreach ($formatSupported as &$format) {
                     $format = '\''.$format.'\'';
                 }

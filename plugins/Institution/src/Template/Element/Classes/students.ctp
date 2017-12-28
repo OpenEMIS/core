@@ -3,14 +3,14 @@
 	<hr>
 
 	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
-	
+
 	<div class="dropdown-filter">
 		<div class="filter-label">
 			<i class="fa fa-filter"></i>
-			<label>Filter</label>
+			<label><?= __('Filter')?></label>
 		</div>
 
-		<?php 
+		<?php
 			$gradeOptions = $attr['data']['filter']['education_grades']['options'];
 			$selectedGrade = $attr['data']['filter']['education_grades']['selected'];
 		?>
@@ -19,7 +19,7 @@
 				<div class="input-select-wrapper">
 					<select onchange="window.location.href = this.value">
 						<?php foreach ($gradeOptions as $key => $value) { ?>
-							<option 
+							<option
 								value="<?= $this->Url->build($value['url']); ?>"
 								<?php if ($selectedGrade == $key) { ?>
 									selected
@@ -30,7 +30,7 @@
 				</div>
 			</div>
 
-		<?php 
+		<?php
 			$statusOptions = $attr['data']['filter']['student_status']['options'];
 			$selectedStatus = $attr['data']['filter']['student_status']['selected'];
 		?>
@@ -39,7 +39,7 @@
 				<div class="input-select-wrapper">
 					<select onchange="window.location.href = this.value">
 						<?php foreach ($statusOptions as $key => $value) { ?>
-							<option 
+							<option
 								value="<?= $this->Url->build($value['url']); ?>"
 								<?php if ($selectedStatus == $key) { ?>
 									selected
@@ -50,7 +50,7 @@
 				</div>
 			</div>
 
-		<?php 
+		<?php
 			$genderOptions = $attr['data']['filter']['genders']['options'];
 			$selectedGender = $attr['data']['filter']['genders']['selected'];
 		?>
@@ -59,8 +59,8 @@
 				<div class="input-select-wrapper">
 					<select onchange="window.location.href = this.value">
 						<?php foreach ($genderOptions as $key => $value) { ?>
-							<option 
-								value="<?= $this->Url->build($value['url']); ?>" 
+							<option
+								value="<?= $this->Url->build($value['url']); ?>"
 								<?php if ($selectedGender == $key) { ?>
 									selected
 								<?php } ?>
@@ -91,7 +91,7 @@
 					<tr>
 						<?php
 							$baseUrl = $attr['data']['baseUrl'];
-								
+
 							$params = [];
 							if (!empty($attr['data']['params'])) {
 								$params = $attr['data']['params'];
