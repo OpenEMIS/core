@@ -15,13 +15,33 @@ class POCOR2454 extends AbstractMigration
     {
         // workflow_models
         $workflowModelData = [
-            'id' => $this->admissionModelId,
-            'name' => 'Institutions > Student Admission',
-            'model' => 'Institution.StudentAdmission',
-            'filter' => NULL,
-            'is_school_based' => '1',
-            'created_user_id' => '1',
-            'created' => date('Y-m-d H:i:s')
+            [
+                'id' => $this->admissionModelId,
+                'name' => 'Institutions > Student Admission',
+                'model' => 'Institution.StudentAdmission',
+                'filter' => NULL,
+                'is_school_based' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => $this->incomingTransferModelId,
+                'name' => 'Institutions > Student Transfer > Receiving',
+                'model' => 'Institution.StudentTransferIn',
+                'filter' => NULL,
+                'is_school_based' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => $this->outgoingTransferModelId,
+                'name' => 'Institutions > Student Transfer > Sending',
+                'model' => 'Institution.StudentTransferOut',
+                'filter' => NULL,
+                'is_school_based' => '1',
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
         ];
         $this->insert('workflow_models', $workflowModelData);
 
@@ -33,7 +53,21 @@ class POCOR2454 extends AbstractMigration
                 'workflow_model_id' => $this->admissionModelId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
-            ]
+            ],
+            [
+                'code' => 'STUDENT-TRANSFER-1001',
+                'name' => 'Student Transfer - Receiving',
+                'workflow_model_id' => $this->incomingTransferModelId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'code' => 'STUDENT-TRANSFER-2001',
+                'name' => 'Student Transfer - Sending',
+                'workflow_model_id' => $this->outgoingTransferModelId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
         ];
         $this->insert('workflows', $workflowData);
 
@@ -42,7 +76,6 @@ class POCOR2454 extends AbstractMigration
 
         // new institution_student_admission
         $this->execute('CREATE TABLE `institution_student_admission` LIKE `z_2454_institution_student_admission`');
-
         $studentAdmission = $this->table('institution_student_admission');
         $studentAdmission
             ->addColumn('status_id', 'integer', [
@@ -68,45 +101,43 @@ class POCOR2454 extends AbstractMigration
             ->removeColumn('student_transfer_reason_id')
             ->removeColumn('type')
             ->save();
+        $this->setupAdmissionWorkflow();
 
-        $this->setupStudentAdmissionWorkflow();
-
-        // // institution_student_transfers
-        // $this->execute('CREATE TABLE `institution_student_transfers` LIKE `z_2454_institution_student_admission`');
-        // $this->execute('INSERT INTO `institution_student_transfers`
-        //     SELECT * FROM `z_2454_institution_student_admission`
-        //     WHERE `z_2454_institution_student_admission`.`type` = 2');
-
-        // $studentTransfers = $this->table('institution_student_transfers');
-        // $studentTransfers
-        //     ->addColumn('status_id', 'integer', [
-        //         'default' => null,
-        //         'limit' => 11,
-        //         'null' => false,
-        //         'comment' => 'links to workflow_steps.id',
-        //         'after' => 'student_id'
-        //     ])
-        //     ->addColumn('assignee_id', 'integer', [
-        //         'default' => '0',
-        //         'limit' => 11,
-        //         'null' => false,
-        //         'comment' => 'links to security_users.id',
-        //         'after' => 'status_id'
-        //     ])
-        //     ->addColumn('all_visible', 'integer', [
-        //         'default' => '0',
-        //         'limit' => 1,
-        //         'null' => false
-        //     ])
-        //     ->addIndex('status_id')
-        //     ->addIndex('assignee_id')
-        //     ->removeColumn('status')
-        //     ->removeColumn('type')
-        //     ->save();
+        // institution_student_transfers
+        $this->execute('CREATE TABLE `institution_student_transfers` LIKE `z_2454_institution_student_admission`');
+        $studentTransfers = $this->table('institution_student_transfers');
+        $studentTransfers
+            ->addColumn('status_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to workflow_steps.id',
+                'after' => 'student_id'
+            ])
+            ->addColumn('assignee_id', 'integer', [
+                'default' => '0',
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to security_users.id',
+                'after' => 'status_id'
+            ])
+            ->addColumn('all_visible', 'integer', [
+                'default' => '0',
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addIndex('status_id')
+            ->addIndex('assignee_id')
+            ->renameColumn('new_education_grade_id', 'previous_education_grade_id')
+            ->changeColumn('previous_education_grade_id', 'integer', ['after' => 'previous_institution_id'])
+            ->removeColumn('status')
+            ->removeColumn('type')
+            ->save();
+        $this->setupIncomingTransferWorkflow();
     }
 
     // STUDENT-ADMISSION-1001
-    public function setupStudentAdmissionWorkflow()
+    public function setupAdmissionWorkflow()
     {
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
@@ -259,6 +290,302 @@ class POCOR2454 extends AbstractMigration
         ");
     }
 
+    // STUDENT-TRANSFER-1001
+    public function setupIncomingTransferWorkflow()
+    {
+        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+
+        $incomingTransferWorkflowId = $WorkflowsTable->find()
+            ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->incomingTransferModelId])
+            ->extract('id')
+            ->first();
+
+        // workflow_steps
+        $workflowStepData = [
+            [
+                'name' => 'Open',
+                'category' => '1',
+                'is_editable' => '1',
+                'is_removable' => '1',
+                'is_system_defined' => '1',
+                'workflow_id' => $incomingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Pending Approval',
+                'category' => '2',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
+                'workflow_id' => $incomingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Pending Approval From Sending Institution',
+                'category' => '2',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '1',
+                'workflow_id' => $incomingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Pending Student Admission',
+                'category' => '2',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
+                'workflow_id' => $incomingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Admitted',
+                'category' => '3',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
+                'workflow_id' => $incomingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Closed',
+                'category' => '3',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '1',
+                'workflow_id' => $incomingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('workflow_steps', $workflowStepData);
+
+        $openStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 1
+            ])
+            ->extract('id')
+            ->first();
+        $pendingApprovalStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval'
+            ])
+            ->extract('id')
+            ->first();
+        $pendingApprovalOutgoingStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Approval From Sending Institution'
+            ])
+            ->extract('id')
+            ->first();
+        $pendingAdmissionStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending Student Admission'
+            ])
+            ->extract('id')
+            ->first();
+        $admittedStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Admitted'
+            ])
+            ->extract('id')
+            ->first();
+        $closedStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Closed'
+            ])
+            ->extract('id')
+            ->first();
+
+        // workflow_actions
+        $workflowActionData = [
+            [
+                'name' => 'Submit For Approval',
+                'description' => NULL,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '1',
+                'event_key' => NULL,
+                'workflow_step_id' => $openStatusId,
+                'next_workflow_step_id' => $pendingApprovalStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Approve',
+                'description' => NULL,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'next_workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'next_workflow_step_id' => $closedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Approve',
+                'description' => NULL,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'next_workflow_step_id' => $pendingAdmissionStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'next_workflow_step_id' => $closedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Assign',
+                'description' => NULL,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => 'Workflow.onTransferStudent',
+                'workflow_step_id' => $pendingAdmissionStatusId,
+                'next_workflow_step_id' => $admittedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingAdmissionStatusId,
+                'next_workflow_step_id' => $closedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('workflow_actions', $workflowActionData);
+
+        // workflow_steps_params
+        $institutionOwner = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $openStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'name' => 'institution_owner',
+                'value' => '2'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingAdmissionStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $admittedStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $closedStatusId,
+                'name' => 'institution_owner',
+                'value' => '1'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $institutionOwner);
+
+        $validateApprove = [
+            [
+                'id' => Text::uuid(),
+                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'name' => 'validate_approve',
+                'value' => '1'
+            ]
+        ];
+        $this->insert('workflow_steps_params', $validateApprove);
+
+        // migrate data from z_2454_institution_student_admission to institution_student_transfers
+        $this->execute("
+            INSERT INTO `institution_student_transfers` (
+                `start_date`, `end_date`, `requested_date`, `student_id`,
+                `status_id`,
+                `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
+                `previous_institution_id`, `previous_education_grade_id`, `student_transfer_reason_id`, `comment`,
+                `modified_user_id`, `modified`, `created_user_id`, `created`
+            )
+            SELECT
+                `start_date`, `end_date`, `requested_date`, `student_id`,
+                CASE
+                    WHEN `status` = 0 THEN " . $openStatusId . "
+                    WHEN `status` = 1 THEN " . $admittedStatusId . "
+                    WHEN `status` = 2 THEN " . $closedStatusId . "
+                    WHEN `status` = 3 THEN " . $closedStatusId . "
+                END,
+                `institution_id`, `academic_period_id`, `new_education_grade_id`, `institution_class_id`,
+                `previous_institution_id`, `education_grade_id`, `student_transfer_reason_id`, `comment`,
+                `modified_user_id`, `modified`, `created_user_id`, `created`
+            FROM `z_2454_institution_student_admission`
+            WHERE `type` = 2
+        ");
+    }
+
     // rollback
     public function down()
     {
@@ -266,12 +593,12 @@ class POCOR2454 extends AbstractMigration
         $this->dropTable('institution_student_admission');
 
         // drop institution_student_transfers
-        // $this->dropTable('institution_student_transfers');
+        $this->dropTable('institution_student_transfers');
 
         // rename z_2454_institution_student_admission
         $this->table('z_2454_institution_student_admission')->rename('institution_student_admission');
 
-        $workflowModelsToDelete = [$this->admissionModelId];
+        $workflowModelsToDelete = [$this->admissionModelId, $this->incomingTransferModelId, $this->outgoingTransferModelId];
         foreach ($workflowModelsToDelete as $modelId) {
             $this->cascadeDeleteWorkflowModel($modelId);
         }
