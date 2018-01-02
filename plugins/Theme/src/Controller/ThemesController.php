@@ -123,10 +123,15 @@ class ThemesController extends PageController
                 $page->exclude(['content', 'default_content']);
                 break;
             case self::LOGINBGIMAGE:
+                $width = '1620px';
+                $height = '1080px';
+                $photoMessage = __('Advisable photo dimension %width by %height');
+                $photoMessage = str_replace('%width', $width, $photoMessage);
+                $photoMessage = str_replace('%height', $height, $photoMessage);
                 $page->get('content')
                     ->setLabel('Content')
                     ->setAttributes('type', 'image')
-                    ->setAttributes('imageMessage', '* Advisable photo dimension 1620px by 1080px')
+                    ->setAttributes('imageMessage', '* '.$photoMessage)
                     ->setAttributes('fileSizeLimit', 2)
                     ->setAttributes('supportedFileFormat', ['jpeg', 'jpg', 'gif', 'png'])
                     ->setAttributes('fileNameField', 'value');
@@ -192,10 +197,15 @@ class ThemesController extends PageController
             case self::LOGO:
                 $backgroundColour = $this->Themes->get(self::COLOUR);
                 $backgroundColour = $backgroundColour->value ? $backgroundColour->value : $backgroundColour->default_value;
+                $width = '1620px';
+                $height = '1080px';
+                $photoMessage = __('Advisable photo dimension %width by %height');
+                $photoMessage = str_replace('%width', $width, $photoMessage);
+                $photoMessage = str_replace('%height', $height, $photoMessage);
                 $page->get('content')
                     ->setLabel('Content')
                     ->setAttributes('type', 'image')
-                    ->setAttributes('imageMessage', '* Advisable photo dimension 1620px by 1080px')
+                    ->setAttributes('imageMessage', '* ' . $photoMessage)
                     ->setAttributes('fileNameField', 'value')
                     ->setAttributes('supportedFileFormat', ['svg'])
                     ->setAttributes('backgroundColor', '#'.$backgroundColour);

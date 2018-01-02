@@ -230,8 +230,7 @@ class ImportBehavior extends Behavior
         $this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
         $this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
         $this->_table->ControllerAction->field('is_optional', ['visible' => false]);
-
-        $comment = sprintf(__('* Format Supported: %s'), implode(', ', $this->config('allowable_file_types')));
+        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->config('allowable_file_types')));
         $comment .= '<br/>';
         $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->config('max_size')));
         $comment .= '<br/>';
