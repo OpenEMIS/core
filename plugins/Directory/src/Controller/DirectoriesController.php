@@ -641,10 +641,10 @@ class DirectoriesController extends AppController
         $session = $this->request->session();
         $isStudent = $session->read('Directory.Directories.is_student');
         $isStaff = $session->read('Directory.Directories.is_staff');
- 
+
         $tabElements = [];
         $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-        
+
         if ($isStaff) {
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
@@ -662,10 +662,10 @@ class DirectoriesController extends AppController
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') { 
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']); 
-            } else { 
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']); 
+            if ($key != 'Employments') {
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
+            } else {
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
             }
         }
         return $this->TabPermission->checkTabPermission($tabElements);
