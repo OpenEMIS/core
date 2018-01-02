@@ -316,7 +316,6 @@ Plugin::load('Quality', ['autoload' => true]);
 Plugin::load('Cases', ['autoload' => true]);
 Plugin::load('Counselling', ['autoload' => true]);
 Plugin::load('Theme', ['routes' => true, 'autoload' => true]);
-Plugin::load('Schedule', ['routes' => true, 'autoload' => true]);
 
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {
