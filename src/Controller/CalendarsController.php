@@ -34,9 +34,17 @@ class CalendarsController extends PageController
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderStartDate'] = 'onRenderStartDate';
         $event['Controller.Page.onRenderEndDate'] = 'onRenderEndDate';
+        $event['Controller.Page.onRenderCalendarTypeId'] = 'onRenderCalendarTypeId';
         $event['Controller.Page.getEntityDisabledActions'] = 'getEntityDisabledActions';
 
         return $event;
+    }
+
+    public function onRenderCalendarTypeId(Event $event, Entity $entity, PageElement $element)
+    {
+        if ($this->Page->is(['view'])) {
+            return __($entity->calendar_type->name);
+        }
     }
 
     public function onRenderStartDate(Event $event, Entity $entity, PageElement $element)
@@ -48,6 +56,8 @@ class CalendarsController extends PageController
         $format = $ConfigItem->value('date_format');
 
         if ($this->Page->is(['index', 'view', 'delete'])) {
+            // for translation
+            $entity->calendar_type->name = __($entity->calendar_type->name);
             $calendarEventDate = $query
                 ->where([
                     $this->CalendarEventDates->aliasField('calendar_event_id') => $calendarEventId
@@ -98,7 +108,7 @@ class CalendarsController extends PageController
         return $disabledActions;
     }
 
-    private function setCalendarTypeOptions()
+    private function setCalendarTypeOptions() : void
     {
         $plugin = $this->plugin;
 

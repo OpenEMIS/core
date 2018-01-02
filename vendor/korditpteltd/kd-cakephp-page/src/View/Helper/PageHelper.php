@@ -340,7 +340,6 @@ class PageHelper extends Helper
         $array = $entity instanceof Entity ? $entity->toArray() : $entity;
         $data = Hash::flatten($array);
         $value = array_key_exists($field['key'], $data) ? $data[$field['key']] : '';
-
         if (array_key_exists('displayFrom', $field)) { // if displayFrom exists, always get value based on displayFrom
             $key = $field['displayFrom'];
             if (array_key_exists($key, $data)) {

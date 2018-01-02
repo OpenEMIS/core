@@ -14,7 +14,7 @@ class POCOR4306 extends AbstractMigration
     {
         $table = $this->table('locale_contents');
         $this->execute("UPDATE locale_contents SET en = 'Professional' WHERE en = 'Professional Development'");
-        $this->execute("UPDATE locale_contents SET en = 'File size should not be larger than 2MB.' WHERE en = 'File size should not be larger than %s.'");
+        $this->execute("UPDATE locale_contents SET en = 'File size should not be larger than %s.' WHERE en = '*File size should not be larger than 2MB.'");
         $data = [
             [
                 'en' => 'Student Bank Accounts',
@@ -27,7 +27,17 @@ class POCOR4306 extends AbstractMigration
                 'created' => '2017-12-27 17:09:49'
             ],
             [
+                'en' => 'Advisable photo dimension %width by %height',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
                 'en' => 'School Holiday',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Uploaded On',
                 'created_user_id' => 1,
                 'created' => '2017-12-27 17:09:49'
             ],
