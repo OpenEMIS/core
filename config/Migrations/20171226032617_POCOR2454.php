@@ -121,17 +121,25 @@ class POCOR2454 extends AbstractMigration
                 'comment' => 'links to security_users.id',
                 'after' => 'status_id'
             ])
+            ->addColumn('previous_education_grade_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to education_grades.id',
+                'after' => 'previous_institution_id'
+            ])
             ->addColumn('all_visible', 'integer', [
                 'default' => '0',
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'after' => 'comment'
             ])
             ->addIndex('status_id')
             ->addIndex('assignee_id')
-            ->renameColumn('new_education_grade_id', 'previous_education_grade_id')
-            ->changeColumn('previous_education_grade_id', 'integer', ['after' => 'previous_institution_id'])
+            ->addIndex('previous_education_grade_id')
             ->removeColumn('status')
             ->removeColumn('type')
+            ->removeColumn('new_education_grade_id')
             ->save();
         $this->setupIncomingTransferWorkflow();
         $this->setupOutgoingTransferWorkflow();
@@ -273,7 +281,8 @@ class POCOR2454 extends AbstractMigration
             INSERT INTO `institution_student_admission` (
                 `start_date`, `end_date`, `student_id`,
                 `status_id`,
-                `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`, `comment`,
+                `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
+                `comment`,
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             )
             SELECT
@@ -284,7 +293,8 @@ class POCOR2454 extends AbstractMigration
                     WHEN `status` = 2 THEN " . $closedStatusId . "
                     WHEN `status` = 3 THEN " . $closedStatusId . "
                 END,
-                `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`, `comment`,
+                `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
+                IF(LENGTH(`comment`), `comment`, NULL),
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             FROM `z_2454_institution_student_admission`
             WHERE `type` = 1
@@ -568,7 +578,8 @@ class POCOR2454 extends AbstractMigration
                 `start_date`, `end_date`, `requested_date`, `student_id`,
                 `status_id`,
                 `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
-                `previous_institution_id`, `previous_education_grade_id`, `student_transfer_reason_id`, `comment`,
+                `previous_institution_id`, `previous_education_grade_id`, `student_transfer_reason_id`,
+                `comment`,
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             )
             SELECT
@@ -580,7 +591,8 @@ class POCOR2454 extends AbstractMigration
                     WHEN `status` = 3 THEN " . $closedStatusId . "
                 END,
                 `institution_id`, `academic_period_id`, `new_education_grade_id`, `institution_class_id`,
-                `previous_institution_id`, `education_grade_id`, `student_transfer_reason_id`, `comment`,
+                `previous_institution_id`, `education_grade_id`, `student_transfer_reason_id`,
+                IF(LENGTH(`comment`), `comment`, NULL),
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             FROM `z_2454_institution_student_admission`
             WHERE `type` = 2
