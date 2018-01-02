@@ -37,6 +37,11 @@ class POCOR4306 extends AbstractMigration
                 'created' => '2017-12-27 17:09:49'
             ],
             [
+                'en' => 'Water',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
                 'en' => 'Uploaded On',
                 'created_user_id' => 1,
                 'created' => '2017-12-27 17:09:49'

@@ -5,6 +5,11 @@ use Cake\Utility\Inflector;
 
 trait UtilityTrait
 {
+    public function translateArray(&$value, $key)
+    {
+        $value = __($value);
+    }
+
     public function endsWith($haystack, $needle)
     {
         return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== false);
@@ -32,12 +37,12 @@ trait UtilityTrait
     }
 
     // PHP 5.5 array_column alternative
-    public function array_column($array, $column_name)
+    public function array_column($array, $columnName)
     {
         return array_map(
             function ($element) use ($column_name) {
-                if (isset($element[$column_name])) {
-                    return $element[$column_name];
+                if (isset($element[$columnName])) {
+                    return $element[$columnName];
                 }
             }, $array);
     }
