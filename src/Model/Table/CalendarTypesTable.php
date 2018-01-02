@@ -11,11 +11,6 @@ class CalendarTypesTable extends AppTable
         $this->belongsTo('CalendarsTable', ['className' => 'CalendarsTable', 'foreignKey' => 'calendar_type_id']);
     }
 
-    public function translateArray(&$value, $key)
-    {
-        $value = __($value);
-    }
-
     public function getInstitutionCalendarTypeList()
     {
         $list = $this->find('list')

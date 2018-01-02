@@ -527,7 +527,7 @@ EOT;
                 }
 
                 $comments = '';
-                $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+                $fileSizeMessage = '* '.str_replace('%s', $fileSizeLimit.'MB', __('File size should not be larger than %s.'));
                 $extensionSupported = '';
                 $fileFormatMessage = '* '. sprintf(__('Format Supported: %s'), implode(', ', $formatSupported));
                 foreach ($formatSupported as &$format) {
@@ -579,7 +579,7 @@ EOT;
                 $backgroundColor = isset($field['attributes']['backgroundColor']) ? $field['attributes']['backgroundColor'] :'#FFFFFF';
 
                 $comments = !empty($message) ? $message . '<br/>' : $message;
-                $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+                $fileSizeMessage = '* ' . str_replace('%s', $fileSizeLimit, __('File size should not be larger than %s.'));
                 $extensionSupported = '';
                 $fileFormatMessage = '* ' . sprintf(__('* Format Supported: %s'), implode(', ', $formatSupported));
                 foreach ($formatSupported as &$format) {
