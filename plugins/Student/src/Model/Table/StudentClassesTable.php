@@ -37,7 +37,12 @@ class StudentClassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra) : void
     {
-
+        $contentHeader = $this->controller->viewVars['contentHeader'];
+        list($studentName, $module) = explode(' - ', $contentHeader);
+        $module = __('Classes');
+        $contentHeader = $studentName . ' - ' . $module;
+        $this->controller->set('contentHeader', $contentHeader);
+        $this->controller->Navigation->substituteCrumb(__('Student Classes'), __('Classes'));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
