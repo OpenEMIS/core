@@ -150,6 +150,7 @@ class POCOR2454 extends AbstractMigration
     {
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 
         $admissionWorkflowId = $WorkflowsTable->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->admissionModelId])
@@ -197,6 +198,16 @@ class POCOR2454 extends AbstractMigration
                 'workflow_id' => $admissionWorkflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Undo',
+                'category' => '3',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
+                'workflow_id' => $admissionWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('workflow_steps', $workflowStepData);
@@ -228,6 +239,14 @@ class POCOR2454 extends AbstractMigration
                 $WorkflowStepsTable->aliasField('workflow_id') => $admissionWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
                 $WorkflowStepsTable->aliasField('name') => 'Closed'
+            ])
+            ->extract('id')
+            ->first();
+        $undoStepId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $admissionWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Undo'
             ])
             ->extract('id')
             ->first();
@@ -276,6 +295,38 @@ class POCOR2454 extends AbstractMigration
         ];
         $this->insert('workflow_actions', $workflowActionData);
 
+        // workflow_statuses
+        $workflowStatusesData = [
+            [
+                'code' => 'UNDO',
+                'name' => 'Undo',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'workflow_model_id' => $this->admissionModelId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('workflow_statuses', $workflowStatusesData);
+
+        $undoStatusId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'UNDO',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->admissionModelId
+            ])
+            ->extract('id')
+            ->first();
+
+        // workflow_statuses_steps
+        $workflowStatusesStepsData = [
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $undoStatusId,
+                'workflow_step_id' => $undoStepId
+            ]
+        ];
+        $this->insert('workflow_statuses_steps', $workflowStatusesStepsData);
+
         // migrate data from z_2454_institution_student_admission to institution_student_admission
         $this->execute("
             INSERT INTO `institution_student_admission` (
@@ -306,6 +357,7 @@ class POCOR2454 extends AbstractMigration
     {
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 
         $incomingTransferWorkflowId = $WorkflowsTable->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->incomingTransferModelId])
@@ -373,6 +425,16 @@ class POCOR2454 extends AbstractMigration
                 'workflow_id' => $incomingTransferWorkflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Undo',
+                'category' => '3',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
+                'workflow_id' => $incomingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('workflow_steps', $workflowStepData);
@@ -421,6 +483,14 @@ class POCOR2454 extends AbstractMigration
                 $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
                 $WorkflowStepsTable->aliasField('name') => 'Closed'
+            ])
+            ->extract('id')
+            ->first();
+        $undoStepId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Undo'
             ])
             ->extract('id')
             ->first();
@@ -572,6 +642,38 @@ class POCOR2454 extends AbstractMigration
         ];
         $this->insert('workflow_steps_params', $validateApprove);
 
+        // workflow_statuses
+        $workflowStatusesData = [
+            [
+                'code' => 'UNDO',
+                'name' => 'Undo',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'workflow_model_id' => $this->incomingTransferModelId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('workflow_statuses', $workflowStatusesData);
+
+        $undoStatusId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'UNDO',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->incomingTransferModelId
+            ])
+            ->extract('id')
+            ->first();
+
+        // workflow_statuses_steps
+        $workflowStatusesStepsData = [
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $undoStatusId,
+                'workflow_step_id' => $undoStepId
+            ]
+        ];
+        $this->insert('workflow_statuses_steps', $workflowStatusesStepsData);
+
         // migrate data from z_2454_institution_student_admission to institution_student_transfers
         $this->execute("
             INSERT INTO `institution_student_transfers` (
@@ -606,6 +708,7 @@ class POCOR2454 extends AbstractMigration
     {
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 
         $outgoingTransferWorkflowId = $WorkflowsTable->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->outgoingTransferModelId])
@@ -673,6 +776,16 @@ class POCOR2454 extends AbstractMigration
                 'workflow_id' => $outgoingTransferWorkflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Undo',
+                'category' => '3',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
+                'workflow_id' => $outgoingTransferWorkflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('workflow_steps', $workflowStepData);
@@ -721,6 +834,14 @@ class POCOR2454 extends AbstractMigration
                 $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
                 $WorkflowStepsTable->aliasField('name') => 'Closed'
+            ])
+            ->extract('id')
+            ->first();
+        $undoStepId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Undo'
             ])
             ->extract('id')
             ->first();
@@ -871,6 +992,38 @@ class POCOR2454 extends AbstractMigration
             ]
         ];
         $this->insert('workflow_steps_params', $validateApprove);
+
+        // workflow_statuses
+        $workflowStatusesData = [
+            [
+                'code' => 'UNDO',
+                'name' => 'Undo',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'workflow_model_id' => $this->outgoingTransferModelId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('workflow_statuses', $workflowStatusesData);
+
+        $undoStatusId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'UNDO',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->outgoingTransferModelId
+            ])
+            ->extract('id')
+            ->first();
+
+        // workflow_statuses_steps
+        $workflowStatusesStepsData = [
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $undoStatusId,
+                'workflow_step_id' => $undoStepId
+            ]
+        ];
+        $this->insert('workflow_statuses_steps', $workflowStatusesStepsData);
     }
 
     // rollback
