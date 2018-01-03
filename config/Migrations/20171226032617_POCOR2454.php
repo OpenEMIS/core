@@ -201,21 +201,21 @@ class POCOR2454 extends AbstractMigration
         ];
         $this->insert('workflow_steps', $workflowStepData);
 
-        $openStatusId = $WorkflowStepsTable->find()
+        $openStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $admissionWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 1
             ])
             ->extract('id')
             ->first();
-        $pendingApprovalStatusId = $WorkflowStepsTable->find()
+        $pendingApprovalStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $admissionWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2
             ])
             ->extract('id')
             ->first();
-        $approvedStatusId = $WorkflowStepsTable->find()
+        $approvedStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $admissionWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
@@ -223,7 +223,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $closedStatusId = $WorkflowStepsTable->find()
+        $closedStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $admissionWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
@@ -242,8 +242,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '1',
                 'event_key' => NULL,
-                'workflow_step_id' => $openStatusId,
-                'next_workflow_step_id' => $pendingApprovalStatusId,
+                'workflow_step_id' => $openStepId,
+                'next_workflow_step_id' => $pendingApprovalStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -255,8 +255,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => 'Workflow.onApprove',
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $approvedStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
+                'next_workflow_step_id' => $approvedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -268,8 +268,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
+                'next_workflow_step_id' => $closedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -288,10 +288,10 @@ class POCOR2454 extends AbstractMigration
             SELECT
                 `start_date`, `end_date`, `student_id`,
                 CASE
-                    WHEN `status` = 0 THEN " . $openStatusId . "
-                    WHEN `status` = 1 THEN " . $approvedStatusId . "
-                    WHEN `status` = 2 THEN " . $closedStatusId . "
-                    WHEN `status` = 3 THEN " . $closedStatusId . "
+                    WHEN `status` = 0 THEN " . $openStepId . "
+                    WHEN `status` = 1 THEN " . $approvedStepId . "
+                    WHEN `status` = 2 THEN " . $closedStepId . "
+                    WHEN `status` = 3 THEN " . $closedStepId . "
                 END,
                 `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
                 IF(LENGTH(`comment`), `comment`, NULL),
@@ -377,14 +377,14 @@ class POCOR2454 extends AbstractMigration
         ];
         $this->insert('workflow_steps', $workflowStepData);
 
-        $openStatusId = $WorkflowStepsTable->find()
+        $openStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 1
             ])
             ->extract('id')
             ->first();
-        $pendingApprovalStatusId = $WorkflowStepsTable->find()
+        $pendingApprovalStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
@@ -392,7 +392,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $pendingApprovalOutgoingStatusId = $WorkflowStepsTable->find()
+        $pendingApprovalOutgoingStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
@@ -400,7 +400,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $pendingAdmissionStatusId = $WorkflowStepsTable->find()
+        $pendingAdmissionStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
@@ -408,7 +408,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $admittedStatusId = $WorkflowStepsTable->find()
+        $admittedStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
@@ -416,7 +416,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $closedStatusId = $WorkflowStepsTable->find()
+        $closedStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $incomingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
@@ -435,8 +435,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '1',
                 'event_key' => NULL,
-                'workflow_step_id' => $openStatusId,
-                'next_workflow_step_id' => $pendingApprovalStatusId,
+                'workflow_step_id' => $openStepId,
+                'next_workflow_step_id' => $pendingApprovalStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -448,8 +448,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
+                'next_workflow_step_id' => $pendingApprovalOutgoingStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -461,8 +461,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
+                'next_workflow_step_id' => $closedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -474,8 +474,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
-                'next_workflow_step_id' => $pendingAdmissionStatusId,
+                'workflow_step_id' => $pendingApprovalOutgoingStepId,
+                'next_workflow_step_id' => $pendingAdmissionStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -487,8 +487,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
-                'next_workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $pendingApprovalOutgoingStepId,
+                'next_workflow_step_id' => $closedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -500,8 +500,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => 'Workflow.onTransferStudent',
-                'workflow_step_id' => $pendingAdmissionStatusId,
-                'next_workflow_step_id' => $admittedStatusId,
+                'workflow_step_id' => $pendingAdmissionStepId,
+                'next_workflow_step_id' => $admittedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -513,8 +513,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingAdmissionStatusId,
-                'next_workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $pendingAdmissionStepId,
+                'next_workflow_step_id' => $closedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -525,37 +525,37 @@ class POCOR2454 extends AbstractMigration
         $institutionOwner = [
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $openStatusId,
+                'workflow_step_id' => $openStepId,
                 'name' => 'institution_owner',
                 'value' => '1'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
                 'name' => 'institution_owner',
                 'value' => '1'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'workflow_step_id' => $pendingApprovalOutgoingStepId,
                 'name' => 'institution_owner',
                 'value' => '2'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingAdmissionStatusId,
+                'workflow_step_id' => $pendingAdmissionStepId,
                 'name' => 'institution_owner',
                 'value' => '1'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $admittedStatusId,
+                'workflow_step_id' => $admittedStepId,
                 'name' => 'institution_owner',
                 'value' => '1'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $closedStepId,
                 'name' => 'institution_owner',
                 'value' => '1'
             ]
@@ -565,7 +565,7 @@ class POCOR2454 extends AbstractMigration
         $validateApprove = [
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalOutgoingStatusId,
+                'workflow_step_id' => $pendingApprovalOutgoingStepId,
                 'name' => 'validate_approve',
                 'value' => '1'
             ]
@@ -580,19 +580,21 @@ class POCOR2454 extends AbstractMigration
                 `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
                 `previous_institution_id`, `previous_education_grade_id`, `student_transfer_reason_id`,
                 `comment`,
+                `all_visible`,
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             )
             SELECT
                 `start_date`, `end_date`, `requested_date`, `student_id`,
                 CASE
-                    WHEN `status` = 0 THEN " . $openStatusId . "
-                    WHEN `status` = 1 THEN " . $admittedStatusId . "
-                    WHEN `status` = 2 THEN " . $closedStatusId . "
-                    WHEN `status` = 3 THEN " . $closedStatusId . "
+                    WHEN `status` = 0 THEN " . $openStepId . "
+                    WHEN `status` = 1 THEN " . $admittedStepId . "
+                    WHEN `status` = 2 THEN " . $closedStepId . "
+                    WHEN `status` = 3 THEN " . $closedStepId . "
                 END,
                 `institution_id`, `academic_period_id`, `new_education_grade_id`, `institution_class_id`,
                 `previous_institution_id`, `education_grade_id`, `student_transfer_reason_id`,
                 IF(LENGTH(`comment`), `comment`, NULL),
+                IF(`status` = 0, 0, 1),
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             FROM `z_2454_institution_student_admission`
             WHERE `type` = 2
@@ -675,14 +677,14 @@ class POCOR2454 extends AbstractMigration
         ];
         $this->insert('workflow_steps', $workflowStepData);
 
-        $openStatusId = $WorkflowStepsTable->find()
+        $openStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 1
             ])
             ->extract('id')
             ->first();
-        $pendingApprovalStatusId = $WorkflowStepsTable->find()
+        $pendingApprovalStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
@@ -690,7 +692,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $pendingApprovalIncomingStatusId = $WorkflowStepsTable->find()
+        $pendingApprovalIncomingStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
@@ -698,7 +700,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $pendingTransferStatusId = $WorkflowStepsTable->find()
+        $pendingTransferStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
@@ -706,7 +708,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $transferredStatusId = $WorkflowStepsTable->find()
+        $transferredStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
@@ -714,7 +716,7 @@ class POCOR2454 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $closedStatusId = $WorkflowStepsTable->find()
+        $closedStepId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $outgoingTransferWorkflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
@@ -733,8 +735,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '1',
                 'event_key' => NULL,
-                'workflow_step_id' => $openStatusId,
-                'next_workflow_step_id' => $pendingApprovalStatusId,
+                'workflow_step_id' => $openStepId,
+                'next_workflow_step_id' => $pendingApprovalStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -746,8 +748,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $pendingApprovalIncomingStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
+                'next_workflow_step_id' => $pendingApprovalIncomingStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -759,8 +761,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalStatusId,
-                'next_workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
+                'next_workflow_step_id' => $closedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -772,8 +774,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalIncomingStatusId,
-                'next_workflow_step_id' => $pendingTransferStatusId,
+                'workflow_step_id' => $pendingApprovalIncomingStepId,
+                'next_workflow_step_id' => $pendingTransferStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -785,8 +787,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingApprovalIncomingStatusId,
-                'next_workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $pendingApprovalIncomingStepId,
+                'next_workflow_step_id' => $closedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -798,8 +800,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => 'Workflow.onTransferStudent',
-                'workflow_step_id' => $pendingTransferStatusId,
-                'next_workflow_step_id' => $transferredStatusId,
+                'workflow_step_id' => $pendingTransferStepId,
+                'next_workflow_step_id' => $transferredStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -811,8 +813,8 @@ class POCOR2454 extends AbstractMigration
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $pendingTransferStatusId,
-                'next_workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $pendingTransferStepId,
+                'next_workflow_step_id' => $closedStepId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
@@ -823,37 +825,37 @@ class POCOR2454 extends AbstractMigration
         $institutionOwner = [
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $openStatusId,
+                'workflow_step_id' => $openStepId,
                 'name' => 'institution_owner',
                 'value' => '2'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalStatusId,
+                'workflow_step_id' => $pendingApprovalStepId,
                 'name' => 'institution_owner',
                 'value' => '2'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalIncomingStatusId,
+                'workflow_step_id' => $pendingApprovalIncomingStepId,
                 'name' => 'institution_owner',
                 'value' => '1'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingTransferStatusId,
+                'workflow_step_id' => $pendingTransferStepId,
                 'name' => 'institution_owner',
                 'value' => '2'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $transferredStatusId,
+                'workflow_step_id' => $transferredStepId,
                 'name' => 'institution_owner',
                 'value' => '2'
             ],
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $closedStatusId,
+                'workflow_step_id' => $closedStepId,
                 'name' => 'institution_owner',
                 'value' => '2'
             ]
@@ -863,7 +865,7 @@ class POCOR2454 extends AbstractMigration
         $validateApprove = [
             [
                 'id' => Text::uuid(),
-                'workflow_step_id' => $pendingApprovalIncomingStatusId,
+                'workflow_step_id' => $pendingApprovalIncomingStepId,
                 'name' => 'validate_approve',
                 'value' => '1'
             ]
