@@ -40,7 +40,7 @@ trait UtilityTrait
     public function array_column($array, $columnName)
     {
         return array_map(
-            function ($element) use ($column_name) {
+            function ($element) use ($columnName) {
                 if (isset($element[$columnName])) {
                     return $element[$columnName];
                 }
