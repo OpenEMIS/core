@@ -36,11 +36,11 @@
 			<?php
 				$attr['model'] = $alias;
 				$attr['field'] = 'selected_custom_field';
-				echo $this->HtmlField->chosenSelectInput($attr, ['label' => $labels['add_field'], 'multiple' => false, 'onchange' => "$('#reload').val('addField').click();"]);
+				echo $this->HtmlField->chosenSelectInput($attr, ['label' => __($labels['add_field']), 'multiple' => false, 'onchange' => "$('#reload').val('addField').click();"]);
 			?>
 			<?=
 				$this->Form->input($alias.".sectiontxt", [
-					'label' => 'Add Section',
+					'label' => __('Add Section'),
 					'type' => 'text',
 					'id' => 'sectionTxt',
 					'maxLength' => 250
