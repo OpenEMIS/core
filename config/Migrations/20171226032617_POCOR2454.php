@@ -330,14 +330,14 @@ class POCOR2454 extends AbstractMigration
         // migrate data from z_2454_institution_student_admission to institution_student_admission
         $this->execute("
             INSERT INTO `institution_student_admission` (
-                `start_date`, `end_date`, `student_id`,
+                `id`, `start_date`, `end_date`, `student_id`,
                 `status_id`,
                 `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
                 `comment`,
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             )
             SELECT
-                `start_date`, `end_date`, `student_id`,
+                NULL, `start_date`, `end_date`, `student_id`,
                 CASE
                     WHEN `status` = 0 THEN " . $openStepId . "
                     WHEN `status` = 1 THEN " . $approvedStepId . "
@@ -677,7 +677,7 @@ class POCOR2454 extends AbstractMigration
         // migrate data from z_2454_institution_student_admission to institution_student_transfers
         $this->execute("
             INSERT INTO `institution_student_transfers` (
-                `start_date`, `end_date`, `requested_date`, `student_id`,
+                `id`, `start_date`, `end_date`, `requested_date`, `student_id`,
                 `status_id`,
                 `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
                 `previous_institution_id`, `previous_education_grade_id`, `student_transfer_reason_id`,
@@ -686,7 +686,7 @@ class POCOR2454 extends AbstractMigration
                 `modified_user_id`, `modified`, `created_user_id`, `created`
             )
             SELECT
-                `start_date`, `end_date`, `requested_date`, `student_id`,
+                NULL, `start_date`, `end_date`, `requested_date`, `student_id`,
                 CASE
                     WHEN `status` = 0 THEN " . $openStepId . "
                     WHEN `status` = 1 THEN " . $admittedStepId . "
