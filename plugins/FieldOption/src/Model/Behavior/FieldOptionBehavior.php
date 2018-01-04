@@ -65,6 +65,13 @@ class FieldOptionBehavior extends Behavior {
         return $events;
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (!$data->offsetExists('default')) {
+            $data['default'] = '0';
+        }
+    }
+
     public function buildValidator(Event $event, Validator $validator, $name)
     {
         $addUniqueName = false;
@@ -111,7 +118,7 @@ class FieldOptionBehavior extends Behavior {
             if (!array_key_exists($parent, $fieldOptions)) {
                 $fieldOptions[$parent] = [];
             }
-            
+
             if (isset($obj['title'])) {
                 $keyName = $obj['title'];
             } else {
@@ -136,12 +143,12 @@ class FieldOptionBehavior extends Behavior {
         return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onGetDefault(Event $event, Entity $entity) 
+    public function onGetDefault(Event $event, Entity $entity)
     {
         return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) 
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $fieldOptions = $this->buildFieldOptions();
@@ -165,7 +172,7 @@ class FieldOptionBehavior extends Behavior {
         }
     }
 
-    public function indexBeforeAction(Event $event) 
+    public function indexBeforeAction(Event $event)
     {
         $model = $this->_table;
         $model->field('name', ['after' => 'editable']);
