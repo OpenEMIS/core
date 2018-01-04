@@ -22,6 +22,7 @@ class StudentWithdrawTable extends AppTable
         $this->table('institution_student_withdraw');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -29,12 +30,14 @@ class StudentWithdrawTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->addBehavior('Workflow.Workflow');
     }
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
         $statusToshow = [self::NEW_REQUEST, self::REJECTED];
-        $query->where([$this->aliasField('status').' IN' => $statusToshow]);
+        $query->where([$this->aliasField('status_id').' IN' => $statusToshow]);
     }
 
     public function implementedEvents()
@@ -56,7 +59,7 @@ class StudentWithdrawTable extends AppTable
         $conditions = [
             'student_id' => $studentId,
             'institution_id' => $institutionId,
-            'status' => 0, //pending status
+            'status_id' => 0, //pending status_id
         ];
 
         $entity = $this
@@ -73,7 +76,7 @@ class StudentWithdrawTable extends AppTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['status'] = $entity->status;
+        $this->request->data[$this->alias()]['status_id'] = $entity->status_id;
         $this->request->data[$this->alias()]['effective_date'] = $entity->start_date;
     }
 
@@ -82,7 +85,7 @@ class StudentWithdrawTable extends AppTable
         $this->ControllerAction->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
         $this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
         $this->ControllerAction->field('student_id');
-        $this->ControllerAction->field('status');
+        $this->ControllerAction->field('status_id');
         $this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
         $this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
         $this->ControllerAction->field('education_grade_id');
@@ -100,7 +103,7 @@ class StudentWithdrawTable extends AppTable
         $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
         $this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
         $this->ControllerAction->setFieldOrder([
-            'created', 'status', 'student_id',
+            'created', 'status_id', 'student_id',
             'institution_id', 'academic_period_id', 'education_grade_id',
             'effective_date', 'student_withdraw_reason_id', 'comment',
         ]);
@@ -113,41 +116,21 @@ class StudentWithdrawTable extends AppTable
 
     public function viewAfterAction($event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['status'] = $entity->status;
+        $this->request->data[$this->alias()]['status_id'] = $entity->status_id;
         $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
         $this->ControllerAction->setFieldOrder([
-            'created', 'status', 'student_id',
+            'created', 'status_id', 'student_id',
             'institution_id', 'academic_period_id', 'education_grade_id',
             'effective_date', 'student_withdraw_reason_id', 'comment'
         ]);
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
-    {
-        $statusName = "";
-        switch ($entity->status) {
-            case self::NEW_REQUEST:
-                $statusName = "New";
-                break;
-            case self::APPROVED:
-                $statusName = "Approved";
-                break;
-            case self::REJECTED:
-                $statusName = "Rejected";
-                break;
-            default:
-                $statusName = $entity->status;
-                break;
-        }
-        return __($statusName);
-    }
-
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         if ($this->action == 'edit') {
-            // If the status is new application then display the approve and reject button,
+            // If the status_id is new application then display the approve and reject button,
             // if not remove the button just in case the user gets to access the edit page
-            if ($this->request->data[$this->alias()]['status'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
+            if ($this->request->data[$this->alias()]['status_id'] == self::NEW_REQUEST && ($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
                 $buttons[0] = [
                     'name' => '<i class="fa fa-check"></i> ' . __('Approve'),
                     'attr' => ['class' => 'btn btn-default', 'div' => false, 'name' => 'submit', 'value' => 'save']
@@ -167,7 +150,7 @@ class StudentWithdrawTable extends AppTable
     public function onGetStudentId(Event $event, Entity $entity)
     {
         $urlParams = $this->ControllerAction->url('index');
-        if ($entity->status == self::NEW_REQUEST) {
+        if ($entity->status_id == self::NEW_REQUEST) {
             if ($this->AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
                 return $event->subject()->Html->link($entity->user->name, [
                     'plugin' => $urlParams['plugin'],
@@ -183,13 +166,13 @@ class StudentWithdrawTable extends AppTable
     public function onUpdateFieldStatus(Event $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
-            $status = $request->data[$this->alias()]['status'];
+            $status_id = $request->data[$this->alias()]['status_id'];
             $attr['type'] = 'readonly';
-            if ($status == self::NEW_REQUEST) {
+            if ($status_id == self::NEW_REQUEST) {
                 $attr['attr']['value'] = __('New');
-            } else if ($status == self::APPROVED) {
+            } else if ($status_id == self::APPROVED) {
                 $attr['attr']['value'] = __('Approved');
-            } else if ($status == self::REJECTED) {
+            } else if ($status_id == self::REJECTED) {
                 $attr['attr']['value'] = __('Rejected');
             }
             return $attr;
@@ -199,7 +182,7 @@ class StudentWithdrawTable extends AppTable
     public function onUpdateFieldComment(Event $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
-            if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
+            if ($request->data[$this->alias()]['status_id'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
                 $attr['type'] = 'readonly';
             }
             return $attr;
@@ -209,7 +192,7 @@ class StudentWithdrawTable extends AppTable
     public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
-            if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
+            if ($request->data[$this->alias()]['status_id'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', $this->alias(), 'edit']))) {
                 $attr['type'] = 'readonly';
             }
 
@@ -253,7 +236,7 @@ class StudentWithdrawTable extends AppTable
             }
             unset($toolbarButtons['back']['url'][1]);
         } else if ($action == 'view') {
-            if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST && isset($toolbarButtons['edit'])) {
+            if ($this->request->data[$this->alias()]['status_id'] != self::NEW_REQUEST && isset($toolbarButtons['edit'])) {
                 unset($toolbarButtons['edit']);
             }
         }
@@ -263,8 +246,8 @@ class StudentWithdrawTable extends AppTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $newItem = [];
-        $status = $this->get($entity->id)->status;
-        if ($status == self::NEW_REQUEST) {
+        $status_id = $this->get($entity->id)->status_id;
+        if ($status_id == self::NEW_REQUEST) {
             if (isset($buttons['view'])) {
                 $newItem['view'] = $buttons['view'];
             }
@@ -312,7 +295,7 @@ class StudentWithdrawTable extends AppTable
 
             // If the student is not already drop out
             if (!$Students->exists($conditions)) {
-                // Change the status of the student in the school
+                // Change the status_id of the student in the school
                 // Update only enrolled statuses student
                 $existingStudentEntity = $Students->find()->where([
                         $Students->aliasField('institution_id') => $institutionId,
@@ -330,7 +313,7 @@ class StudentWithdrawTable extends AppTable
                     $result = $Students->save($existingStudentEntity);
 
                     if ($result) {
-                        $entity->status = self::APPROVED;
+                        $entity->status_id = self::APPROVED;
                         $entity->effective_date = date('Y-m-d', $effectiveDate);
                         if ($this->save($entity)) {
                             return true;
@@ -363,7 +346,7 @@ class StudentWithdrawTable extends AppTable
     public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $this->updateAll(
-            ['status' => self::REJECTED, 'comment' => $data[$this->alias()]['comment'], 'effective_date' => strtotime($data[$this->alias()]['effective_date'])],
+            ['status_id' => self::REJECTED, 'comment' => $data[$this->alias()]['comment'], 'effective_date' => strtotime($data[$this->alias()]['effective_date'])],
             ['id' => $entity->id]);
 
         $this->Alert->success('StudentWithdraw.reject');
@@ -404,7 +387,7 @@ class StudentWithdrawTable extends AppTable
         $isAdmin = $session->read('Auth.User.super_admin');
         $userId = $session->read('Auth.User.id');
 
-        $where = [$this->aliasField('status') => self::NEW_REQUEST];
+        $where = [$this->aliasField('status_id') => self::NEW_REQUEST];
 
         if (!$isAdmin) {
             if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
@@ -464,7 +447,7 @@ class StudentWithdrawTable extends AppTable
                     }
 
                     $row['url'] = $url;
-                    $row['status'] = __('Pending For Approval');
+                    $row['status_id'] = __('Pending For Approval');
                     $row['request_title'] = sprintf(__('Withdraw request of %s'), $row->user->name_with_id);
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
@@ -482,7 +465,7 @@ class StudentWithdrawTable extends AppTable
         $count = $this
             ->find()
             ->where([
-                $this->aliasField('status') => self::NEW_REQUEST,
+                $this->aliasField('status_id') => self::NEW_REQUEST,
                 $this->aliasField('institution_id') => $institutionId,
             ])
             ->count()
