@@ -9,7 +9,7 @@
     <div class="dropdown-filter">
         <div class="filter-label">
             <i class="fa fa-filter"></i>
-            <label>Filter</label>
+            <label><?= __('Filter')?></label>
         </div>
 
         <?php

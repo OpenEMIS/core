@@ -16,7 +16,7 @@ class DirectoryCommentsController extends BaseController
         parent::beforeFilter($event);
 
         // setup
-        $page->setHeader($userName . ' - Comments');
+        $page->setHeader($userName . ' - ' . __('Comments'));
         $page->setQueryString('security_user_id', $userId);
         $this->setBreadCrumb(['userId' => $userId, 'userName' => $userName]);
         $this->setupTabElements(['userId' => $userId, 'userName' => $userName]);

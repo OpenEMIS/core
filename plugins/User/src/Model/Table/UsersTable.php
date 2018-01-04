@@ -37,9 +37,9 @@ class UsersTable extends AppTable
 
     private $defaultImgIndexClass = "profile-image-thumbnail";
     private $defaultImgViewClass= "profile-image";
-    private $photoMessage = 'Advisable photo dimension 90 by 115px';
-    private $formatSupport = 'Format Supported: ';
-    private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
+    private $photoMessage = 'Advisable photo dimension %width by %height';
+    private $formatSupport = 'Format Supported: %s';
+    private $defaultImgMsg = "<p>* %s <br>* %s</p>";
 
     public $fieldOrder1;
     public $fieldOrder2;
@@ -767,7 +767,14 @@ class UsersTable extends AppTable
 
     public function getDefaultImgMsg()
     {
-        return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
+        $width = 90;
+        $height = 115;
+        $photoMsg = __($this->photoMessage);
+        $photoMsg = str_replace('%width', $width, $photoMsg);
+        $photoMsg = str_replace('%height', $height, $photoMsg);
+        $formatSupported = '.jpg, .jpeg, .png, .gif';
+        $formatMsg = sprintf(__($this->formatSupport), $formatSupported);
+        return sprintf($this->defaultImgMsg, $photoMsg, $formatMsg);
     }
 
     public function getDefaultImgIndexClass()
