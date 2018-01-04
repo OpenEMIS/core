@@ -35,7 +35,7 @@ class StudentClassesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) : void
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $contentHeader = $this->controller->viewVars['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
