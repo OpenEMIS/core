@@ -671,11 +671,11 @@ class TrainingSessionsTable extends ControllerActionTable
             /**
              * Import field variables
              */
-            $comment = __('* Format Supported: ' . implode(', ', array_keys($this->fileTypesMap)));
+            $comment = '* '. sprintf(__('Format Supported: %s'), implode(', ', array_keys($this->fileTypesMap)));
             $comment .= '<br/>';
-            $comment .= __('* Recommended Maximum File Size: ' . $this->bytesToReadableFormat($this->MAX_SIZE));
+            $comment .= '* '. sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->MAX_SIZE));
             $comment .= '<br/>';
-            $comment .= __('* Recommended Maximum Records: ' . $this->MAX_ROWS);
+            $comment .= '* '. sprintf(__('Recommended Maximum Records: %s'), $this->MAX_ROWS);
             // $data = $event->subject()->request->data;
             $data = $this->controller->request->data;
             if ((is_object($data) && $data->offsetExists('trainees_import_error')) || (is_array($data) && isset($data['trainees_import_error']))) {
