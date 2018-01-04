@@ -108,7 +108,7 @@ class CalendarsController extends PageController
         return $disabledActions;
     }
 
-    private function setCalendarTypeOptions() : void
+    private function setCalendarTypeOptions()
     {
         $plugin = $this->plugin;
 
