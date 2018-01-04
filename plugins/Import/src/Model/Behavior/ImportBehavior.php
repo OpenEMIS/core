@@ -202,7 +202,6 @@ class ImportBehavior extends Behavior
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
-
         } else {
             $toolbarButtons['back']['url']['action'] = 'index';
         }
@@ -231,12 +230,11 @@ class ImportBehavior extends Behavior
         $this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
         $this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
         $this->_table->ControllerAction->field('is_optional', ['visible' => false]);
-
-        $comment = __('* Format Supported: ' . implode(', ', $this->config('allowable_file_types')));
+        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->config('allowable_file_types')));
         $comment .= '<br/>';
-        $comment .= __('* Recommended Maximum File Size: ' . $this->bytesToReadableFormat($this->config('max_size')));
+        $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->config('max_size')));
         $comment .= '<br/>';
-        $comment .= __('* Recommended Maximum Records: ' . $this->config('max_rows'));
+        $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->config('max_rows'));
 
         $this->_table->ControllerAction->field('select_file', [
             'type' => 'binary',

@@ -23,7 +23,7 @@ class InfrastructureNeedsTable extends AppTable
         $this->table('infrastructure_needs');
         parent::initialize($config);
 
-        $this->belongsTo('InfrastructureNeedTypes',   ['className' => 'Institution.InfrastructureNeedTypes', 'foreign_key' => 'infrastructure_need_type_id']);
+        $this->belongsTo('InfrastructureNeedTypes', ['className' => 'Institution.InfrastructureNeedTypes', 'foreign_key' => 'infrastructure_need_type_id']);
 
         $this->belongsToMany('InfrastructureProjects', [
             'className' => 'Institution.InfrastructureProjects',
@@ -110,6 +110,7 @@ class InfrastructureNeedsTable extends AppTable
 
     public function getNeedPrioritiesOptions()
     {
+        array_walk($this->needPriorities, [$this, "translateArray"]);
         return $this->needPriorities;
     }
 }

@@ -5,7 +5,7 @@ angular
 SurveyRulesController.$inject = ['$scope', '$anchorScroll', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'SurveyRulesSvc'];
 
 function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, UtilsSvc, AlertSvc, SurveyRulesSvc) {
-    
+
     var vm = this;
     $scope.action = 'index';
     var filterValue = '';
@@ -28,23 +28,23 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         SurveyRulesSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
         SurveyRulesSvc.getSurveyForm(0)
-        .then(function(response) 
+        .then(function(response)
         {
             var formData = response.data;
             var options = [];
-            for(i = 0; i < formData.length; i++) 
-            {   
+            for(i = 0; i < formData.length; i++)
+            {
                 options.push({text: formData[i].name.toString(), value: formData[i].id});
             }
-            
+
             vm.surveyFormOptions = options;
             if (!isNaN(surveyFormId) && surveyFormId !=0) {
-                vm.surveyFormId = surveyFormId; 
+                vm.surveyFormId = surveyFormId;
             } else {
                 vm.surveyFormId = options[0].value;
             }
             vm.getSurveySection(vm.surveyFormId);
-        }, function(error) 
+        }, function(error)
         {
             console.log(error);
             AlertSvc.warning(vm, error);
@@ -60,8 +60,8 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         .then(function(sections) {
             var sectionData = sections.data;
             var options = [];
-            for(i = 0; i < sectionData.length; i++) 
-            {   
+            for(i = 0; i < sectionData.length; i++)
+            {
                 if (sectionData[i].section.toString() == "") {
                     options.push({text: "No Section", value: sectionData[i].section});
                 } else {
@@ -79,7 +79,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
         SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
         .then(function(response)
-        {   
+        {
             var surveyQuestions = [];
             var rules = [];
             // console.log(response.data);
@@ -187,9 +187,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
         			var data = {
         				survey_form_id: vm.surveyFormId,
-        				enabled: enableStatus, 
-        				survey_question_id: surveyQuestionId, 
-        				dependent_question_id: dependentQuestionId, 
+        				enabled: enableStatus,
+        				survey_question_id: surveyQuestionId,
+        				dependent_question_id: dependentQuestionId,
         				show_options: options
         			};
         			this.push(data);
@@ -200,7 +200,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 		SurveyRulesSvc.saveData(data)
         .then(function (response){
             vm.getQuestionsFromSection(vm.surveyFormId, vm.sectionName);
-            AlertSvc.success($scope, "Record has been added successfully");
+            AlertSvc.success($scope, "The record has been added successfully.");
             var newHash = 'anchorTop';
             if ($location.hash() !== newHash) {
               $location.hash(newHash);
@@ -213,7 +213,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
         });
-        
+
     }
 
 }

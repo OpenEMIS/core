@@ -20,14 +20,14 @@ angular.module('utils.svc', [])
 	                        if (hasClass) {
 	                            angular.element('div').remove(".load-page");
 	                        }
-	                        var loaderElement = angular.element('<div class="load-page"><div class="loader-text"><div class="loader lt-ie9"></div><p>Loading...</p><div id="bodyLoadPercentIndicator" class="loading-percentage">'+_percent+'</div></div></div>');
+	                        var loaderElement = angular.element('<div class="load-page"><div class="loader-text"><div class="loader lt-ie9"></div><p></p><div id="bodyLoadPercentIndicator" class="loading-percentage">'+_percent+'</div></div></div>');
 	                        angular.element(document.body).prepend(loaderElement);
 	                    }
 	                    return;
 	                }
 	            }
 	            if (!hasClass) {
-	                var loaderElement = angular.element('<div class="load-page"><div class="loader-text"><i class="fa kd-openemis"></i><div class="loader lt-ie9"></div><p>Loading...</p></div></div>');
+	                var loaderElement = angular.element('<div class="load-page"><div class="loader-text"><i class="fa kd-openemis"></i><div class="loader lt-ie9"></div><p></p></div></div>');
 	                angular.element(document.body).prepend(loaderElement);
 	            }
 	        } else {

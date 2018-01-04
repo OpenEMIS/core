@@ -395,7 +395,7 @@ class CustomFormsTable extends ControllerActionTable
             $attr['reorder'] = true;
             $attr['labels'] = $this->extra['label'];
 
-            $customFieldOptions = ['' => '-- '.$this->extra['label']['add_field'].' --'] + $customFieldOptions;
+            $customFieldOptions = ['' => '-- '. __($this->extra['label']['add_field']) .' --'] + $customFieldOptions;
             $selectedCustomField = '';    // Set selected custom field to empty
             $this->advancedSelectOptions($customFieldOptions, $selectedCustomField, [
                 'message' => '{{label}} - ' . $this->getMessage('CustomForms.notSupport'),
