@@ -19,11 +19,11 @@
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 		$reorder = isset($attr['reorder']) ? $attr['reorder'] : [];
 		echo $this->Html->script('Survey.surveyform', ['block' => true]);
-		
+
 		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 0;
 		if ($displayReorder) {
 			echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
-			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];	
+			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 		}else{
 			$tableHeaders[] = [__('') => ['class' => 'cell-reorder']];
 			$displayReorder = true;
@@ -33,7 +33,7 @@
 		<hr>
 		<h3><?= __('Survey Questions')?></h3>
 		<div class="clearfix">
-			<?= 
+			<?=
 				$this->Form->input($ControllerAction['table']->alias().".survey_question_id", [
 					'label' => $this->Label->get('SurveyForms.add_question'),
 					'type' => 'select',
@@ -42,7 +42,7 @@
 					'onchange' => "$('#reload').val('addQuestion').click();"
 				]);
 			?>
-			<?php 
+			<?php
 				// echo $this->Form->input($ControllerAction['table']->alias().".section", [
 				// 	'label' => $this->Label->get('SurveyForms.add_to_section'),
 				// 	'type' => 'select',
@@ -51,9 +51,9 @@
 				// 	'id' => 'sectionDropdown'
 				// ]);
 			?>
-			<?= 
+			<?=
 				$this->Form->input($ControllerAction['table']->alias().".sectiontxt", [
-					'label' => 'Add Section',
+					'label' => __('Add Section'),
 					'type' => 'text',
 					'id' => 'sectionTxt'
 				]);
@@ -70,5 +70,5 @@
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
 		</div>
-	</div>	
+	</div>
 <?php endif ?>

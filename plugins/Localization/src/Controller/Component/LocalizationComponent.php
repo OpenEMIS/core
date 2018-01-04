@@ -185,15 +185,17 @@ class LocalizationComponent extends Component
             ->first();
 
         // if the table is a new table and no modified records, will be sort by created and get the created date.
-        if (empty($lastModified)) {
-            $lastModified = $LocaleContentTranslations
+        $lastCreated = $LocaleContentTranslations
             ->find()
             ->order([$LocaleContentTranslations->aliasField('created') => 'DESC'])
             ->extract('created')
             ->first();
-        }
 
-        return $lastModified;
+        if ($lastModified->lt($lastCreated)) {
+            return $lastCreated;
+        } else {
+            return $lastModified;
+        }
     }
 
     private function isChanged($locale)
@@ -201,7 +203,6 @@ class LocalizationComponent extends Component
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
         $lastModified = $this->getModifiedDate();
-
         if (file_exists($fileLocation)) {
             $file = fopen($fileLocation, "r");
             while (!feof($file)) {
