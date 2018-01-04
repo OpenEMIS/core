@@ -9,6 +9,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
 use App\Model\Traits\MessagesTrait;
@@ -166,19 +167,62 @@ class StudentAdmissionTable extends ControllerActionTable
         $Withdraw = $statusList['WITHDRAWN'];
 
         if ($student->isNew()) { // add
+            // close other pending admission applications (in same education system) if the student is successfully enrolled in one school
             if ($student->student_status_id == $Enrolled) {
-                // the logic below is to set all pending admission applications to rejected status once the student is successfully enrolled in a school
                 $educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
                 $educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
 
-                $conditions = [
-                    'student_id' => $student->student_id,
-                    'status' => 0, // pending status
-                    'education_grade_id IN' => $educationGradesToUpdate
-                ];
+                $doneStatus = self::DONE;
+                $workflowEntity = $this->getWorkflow($this->registryAlias());
+                $workflowId = $workflowEntity->id;
 
-                // set to rejected status
-                $this->updateAll(['status' => 2], $conditions);
+                // get closed step based on done category and system defined
+                $closedStepEntity = $this->Statuses->find()
+                    ->where([
+                        $this->Statuses->aliasField('workflow_id') => $workflowId,
+                        $this->Statuses->aliasField('category') => $doneStatus,
+                        $this->Statuses->aliasField('is_system_defined') => 1
+                    ])
+                    ->first();
+
+                if (!empty($closedStepEntity)) {
+                    $pendingAdmissions = $this->find()
+                        ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+                            return $q->where(['category <> ' => $doneStatus]);
+                        })
+                        ->where([
+                            $this->aliasField('student_id') => $student->student_id,
+                            $this->aliasField('education_grade_id IN') => $educationGradesToUpdate
+                        ])
+                        ->toArray();
+
+                    foreach ($pendingAdmissions as $entity) {
+                        $prevStep = $entity->status_id;
+
+                        // update status_id and assignee_id
+                        $entity->status_id = $closedStepEntity->id;
+                        $this->autoAssignAssignee($entity);
+
+                        if ($this->save($entity)) {
+                            // add workflow transition
+                            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                            $prevStepEntity = $this->Statuses->get($prevStep);
+
+                            $transition = [
+                                'comment' => __('On Student Admission into another Institution'),
+                                'prev_workflow_step_name' => $prevStepEntity->name,
+                                'workflow_step_name' => $closedStepEntity->name,
+                                'workflow_action_name' => __('Administration - Close Record'),
+                                'workflow_model_id' => $workflowEntity->workflow_model_id,
+                                'model_reference' => $entity->id,
+                                'created_user_id' => 1,
+                                'created' => new Time('NOW')
+                            ];
+                            $transitionEntity = $WorkflowTransitions->newEntity($transition);
+                            $WorkflowTransitions->save($transitionEntity);
+                        }
+                    }
+                }
             }
         } else { // edit
             // to cater logic if during undo promoted / graduate (without immediate enrolled record), there is still pending admission / transfer
@@ -204,46 +248,39 @@ class StudentAdmissionTable extends ControllerActionTable
 
     protected function removePendingAdmission($studentId, $institutionId)
     {
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $statusList = $StudentStatuses->findCodeList();
+        $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $doneStatus = self::DONE;
 
         //remove pending transfer request.
         //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
-        $conditions = [
-            'student_id' => $studentId,
-            'previous_institution_id' => $institutionId,
-            'status' => 0, //pending status
-            'type' => 2 //transfer
-        ];
+        $pendingTransfers = $StudentTransfers->find()
+            ->innerJoinWith($StudentTransfers->Statuses->alias(), function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
+            ->where([
+                $StudentTransfers->aliasField('student_id') => $studentId,
+                $StudentTransfers->aliasField('previous_institution_id') => $institutionId
+            ])
+            ->toArray();
 
-        $entity = $this
-                ->find()
-                ->where(
-                    $conditions
-                )
-                ->first();
-
-        if (!empty($entity)) {
-            $this->delete($entity);
+        if (!empty($pendingTransfers)) {
+            foreach ($pendingTransfers as $entity) {
+                $StudentTransfers->delete($entity);
+            }
         }
 
         //remove pending admission request.
-        //no institution_id because in the pending admission, the value will be (0)
-        $conditions = [
-            'student_id' => $studentId,
-            'status' => 0, //pending status
-            'type' => 1 //admission
-        ];
+        $pendingAdmissions = $this->find()
+            ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
+            ->where([$this->aliasField('student_id') => $studentId])
+            ->toArray();
 
-        $entity = $this
-                ->find()
-                ->where(
-                    $conditions
-                )
-                ->first();
-
-        if (!empty($entity)) {
-            $this->delete($entity);
+        if (!empty($pendingAdmissions)) {
+            foreach ($pendingAdmissions as $entity) {
+                $this->delete($entity);
+            }
         }
     }
 
