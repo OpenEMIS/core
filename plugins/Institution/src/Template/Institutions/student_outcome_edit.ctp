@@ -41,7 +41,7 @@ $this->start('panelBody');
     <div class="dropdown-filter">
         <div class="filter-label">
             <i class="fa fa-filter"></i>
-            <label>Filter</label>
+            <label><?= __('Filter')?></label>
         </div>
         <div class="select">
             <label><?= __('Outcome Period') ?>:</label>

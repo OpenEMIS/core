@@ -199,14 +199,14 @@ class ConfigItemsTable extends AppTable
                         $model = Inflector::pluralize($exp[1]);
                         $model = $this->getActualModeLocation($model);
                         $optionTable = TableRegistry::get($model);
-                       
+
                         $listeners = [
                             $optionTable
                         ];
-                        
+
                         $customOptions = new ArrayObject([]);
                         $this->dispatchEventToModels('Model.ConfigItems.populateOptions', [$customOptions], $this, $listeners);
-                        
+
                         if (!empty((array) $customOptions)) {
                             $attr['options'] = $customOptions;
                         } else {
@@ -440,7 +440,6 @@ class ConfigItemsTable extends AppTable
             $status = $languageFile->write(json_encode($languageArr));
         }
         $languageArr = json_decode($languageFile->read(), true);
-
         return $languageArr;
     }
 
