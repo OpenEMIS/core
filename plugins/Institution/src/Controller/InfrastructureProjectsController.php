@@ -62,7 +62,7 @@ class InfrastructureProjectsController extends PageController
             ->setOptions($this->projectStatusesOptions);
 
         // set field order
-        $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding source'));
+        $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding Source'));
     }
 
     public function index()

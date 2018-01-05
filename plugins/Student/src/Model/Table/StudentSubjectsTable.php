@@ -11,7 +11,8 @@ use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
-class StudentSubjectsTable extends ControllerActionTable {
+class StudentSubjectsTable extends ControllerActionTable
+{
 
     public function initialize(array $config)
     {
@@ -32,6 +33,16 @@ class StudentSubjectsTable extends ControllerActionTable {
         $this->toggle('search', false);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $contentHeader = $this->controller->viewVars['contentHeader'];
+        list($studentName, $module) = explode(' - ', $contentHeader);
+        $module = __('Subjects');
+        $contentHeader = $studentName . ' - ' . $module;
+        $this->controller->set('contentHeader', $contentHeader);
+        $this->controller->Navigation->substituteCrumb(__('Student Subjects'), $module);
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['student_status_id']['visible'] = false;
@@ -43,7 +54,8 @@ class StudentSubjectsTable extends ControllerActionTable {
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();

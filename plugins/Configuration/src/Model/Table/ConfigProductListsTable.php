@@ -57,9 +57,14 @@ class ConfigProductListsTable extends ControllerActionTable
 
     public function getDefaultImgMsg()
     {
-        $formatSupported = __('Format Supported') . ': ';
-        $photoMessage = __('Advisable photo dimension 35px by 35px');
-        $defaultImgMsg = '<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>';
+        $formatSupported = __('Format Supported: %s');
+        $formatSupported = sprintf($formatSupported, '.jpg, .jpeg, .png, .gif');
+        $width = 35;
+        $height = 35;
+        $photoMessage = __('Advisable photo dimension %width by %height');
+        $photoMessage = str_replace('%width', $width, $photoMessage);
+        $photoMessage = str_replace('%height', $height, $photoMessage);
+        $defaultImgMsg = '<p>* %s <br>* %s</p>';
         return sprintf($defaultImgMsg, __($photoMessage), $formatSupported);
     }
 
