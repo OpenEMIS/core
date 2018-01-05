@@ -1,3 +1,6 @@
+### [3.15.0] - 2018-01-05
+- Implemented Learning Outcomes in Institutions > Performance
+
 ### [3.14.1] - 2017-12-18
 - Bug fix on 404 errors in Administration > Training > Session
 - Bug fix on SSO redirect url
