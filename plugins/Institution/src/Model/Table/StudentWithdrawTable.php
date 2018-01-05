@@ -34,12 +34,6 @@ class StudentWithdrawTable extends AppTable
         $this->addBehavior('Workflow.Workflow');
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
-    {
-        $statusToshow = [self::NEW_REQUEST, self::REJECTED];
-        $query->where([$this->aliasField('status_id').' IN' => $statusToshow]);
-    }
-
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
