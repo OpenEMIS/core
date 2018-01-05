@@ -48,6 +48,7 @@ class CredentialsController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['public_key']);
+        $page->get('client_id')->setLabel(__('Client ID'));
         parent::index();
     }
 

@@ -6,7 +6,8 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
-class RenderFileBehavior extends RenderBehavior {
+class RenderFileBehavior extends RenderBehavior
+{
     protected $_defaultConfig = [
         'name' => 'text_value',
         'content' => 'file',
@@ -33,19 +34,21 @@ class RenderFileBehavior extends RenderBehavior {
         'zip'   => 'application/zip'
     ];
 
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadFile'] = 'downloadFile';
 
         return $events;
     }
 
-	public function onGetCustomFileElement(Event $event, $action, $entity, $attr, $options=[]) {
+    public function onGetCustomFileElement(Event $event, $action, $entity, $attr, $options = [])
+    {
         $value = '';
 
         $model = $this->_table;
@@ -111,11 +114,13 @@ class RenderFileBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    {
         $includes['jasny']['include'] = true;
     }
 
-    public function onFileInitialize(Event $event, Entity $entity, ArrayObject $settings) {
+    public function onFileInitialize(Event $event, Entity $entity, ArrayObject $settings)
+    {
         $fieldKey = $settings['fieldKey'];
         $customValue = $settings['customValue'];
 
@@ -131,7 +136,8 @@ class RenderFileBehavior extends RenderBehavior {
         $session->write($sessionKey, $parseFileData);
     }
 
-    public function patchFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function patchFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
         $fieldKey = $settings['fieldKey'];
         $customValue = $settings['customValue'];
 
@@ -176,7 +182,8 @@ class RenderFileBehavior extends RenderBehavior {
         $settings['customValue'] = $customValue;
     }
 
-    public function processFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processFileValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
         $settings['valueKey'] = 'text_value';
 
         $fieldKey = $settings['fieldKey'];
@@ -213,13 +220,15 @@ class RenderFileBehavior extends RenderBehavior {
         }
     }
 
-    private function getFileComment() {
-        $comment = '* ' . __('File size should not be larger than ') . $this->config('size');
+    private function getFileComment()
+    {
+        $comment = '* ' . sprintf(__('File size should not be larger than '), $this->config('size'));
 
         return $comment;
     }
 
-    private function readableFormatToBytes() {
+    private function readableFormatToBytes()
+    {
         $KILO = 1024;
         $MEGA = $KILO * 1024;
         $GIGA = $MEGA * 1024;
@@ -242,11 +251,13 @@ class RenderFileBehavior extends RenderBehavior {
         }
     }
 
-    private function fileSizeAllowed($file) {
+    private function fileSizeAllowed($file)
+    {
         return !(isset($file['type']) && ($file['size'] > $this->readableFormatToBytes()));
     }
 
-    private function parseFile($file=null) {
+    private function parseFile($file = null)
+    {
         if (!is_null($file)) {
             $fileName = $file['name'];
             $fileContent = file_get_contents($file['tmp_name']);
@@ -258,7 +269,8 @@ class RenderFileBehavior extends RenderBehavior {
         return ['fileName' => $fileName, 'fileContent' => $fileContent];
     }
 
-    public function downloadFile(Event $mainEvent, ArrayObject $extra) {
+    public function downloadFile(Event $mainEvent, ArrayObject $extra)
+    {
         $model = $this->_table->CustomFieldValues->target();
         $ids = $model->paramsDecode($this->_table->paramsPass(0));
         $idKey = $model->getIdKeys($model, $ids);
@@ -289,7 +301,8 @@ class RenderFileBehavior extends RenderBehavior {
         exit();
     }
 
-    private function getFile($phpResourceFile) {
+    private function getFile($phpResourceFile)
+    {
         $file = '';
         while (!feof($phpResourceFile)) {
             $file .= fread($phpResourceFile, 8192);
