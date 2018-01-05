@@ -16,6 +16,7 @@ class POCOR2455 extends AbstractMigration
     {
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 
         // rename institution_staff_assignments
         $InstitutionStaffAssignments = $this->table('institution_student_withdraw');
@@ -316,6 +317,30 @@ class POCOR2455 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
         ];
+
+        $pendingId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'PENDING',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
+
+        $approvedId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'APPROVED',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
+
+        $rejectedId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'REJECTED',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
     }
 
     public function down()
