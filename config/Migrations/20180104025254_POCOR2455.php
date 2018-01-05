@@ -265,7 +265,7 @@ class POCOR2455 extends AbstractMigration
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => 'Workflow.onApproval',
                 'workflow_step_id' => $pendingApprovalStatusId,
                 'next_workflow_step_id' => $withdrawnStatusId,
                 'created_user_id' => '1',
@@ -286,6 +286,36 @@ class POCOR2455 extends AbstractMigration
             ]
         ];
         $this->insert('workflow_actions', $workflowActionData);
+
+        $workflowStatusData = [
+            [
+                'code' => 'PENDING',
+                'name' => 'Pending',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'code' => 'APPROVED',
+                'name' => 'Approved',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'code' => 'REJECTED',
+                'name' => 'Rejected',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+        ];
     }
 
     public function down()
