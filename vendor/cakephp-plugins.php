@@ -46,7 +46,6 @@ return [
         'Rest' => $baseDir . '/plugins/Rest/',
         'Restful' => $baseDir . '/vendor/korditpteltd/kd-cakephp-restful/',
         'Rubric' => $baseDir . '/plugins/Rubric/',
-        'Schedule' => $baseDir . '/plugins/Schedule/',
         'SSO' => $baseDir . '/vendor/korditpteltd/kd-cakephp-sso/',
         'Security' => $baseDir . '/plugins/Security/',
         'Staff' => $baseDir . '/plugins/Staff/',
