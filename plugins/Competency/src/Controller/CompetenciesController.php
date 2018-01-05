@@ -19,7 +19,28 @@ class CompetenciesController extends AppController
     public function GradingTypes()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyGradingTypes']); }
     // End
 
-    public function getCompetencyTabs($params = [])
+    public function getCompetencyTabs()
+    {
+        $tabElements = [
+            'Templates' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates'],
+                'text' => __('Templates')
+            ],
+            'Periods' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Periods'],
+                'text' => __('Periods')
+            ],
+            'GradingTypes' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
+                'text' => __('Grading Types')
+            ],
+        ];
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', $this->request->action);
+    }
+
+    public function getCompetencyTemplateTabs($params = [])
     {
         $tabElements = [
             'Templates' => [

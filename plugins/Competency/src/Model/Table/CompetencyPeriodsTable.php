@@ -59,6 +59,11 @@ class CompetencyPeriodsTable extends ControllerActionTable
             ]);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getCompetencyTabs();
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $request = $this->request;

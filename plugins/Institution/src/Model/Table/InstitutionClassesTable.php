@@ -75,7 +75,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'ClassStudents' => ['view', 'edit'],
             'StudentCompetencies' => ['view'],
             'StudentCompetencyComments' => ['view'],
-            'OpenEMIS_Classroom' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'StudentOutcomes' => ['view']
         ]);
 
         // POCOR-4047 to get staff profile data

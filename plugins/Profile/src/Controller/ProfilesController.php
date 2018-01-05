@@ -109,6 +109,7 @@ class ProfilesController extends AppController
     public function Courses()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
     public function StaffSalaries()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
     public function StaffBehaviours()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
+    public function StudentOutcomes()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']); }
 
     // health
     public function Healths()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -212,7 +213,6 @@ class ProfilesController extends AppController
         } else {
             // record not found
         }
-
         $this->set('contentHeader', $header);
     }
 
@@ -256,7 +256,6 @@ class ProfilesController extends AppController
         $alias = $model->alias;
         $this->Navigation->addCrumb($model->getHeader($alias));
         $header = $header . ' - ' . $model->getHeader($alias);
-
         $this->set('contentHeader', $header);
 
         if ($model->hasField('security_user_id')) {
@@ -414,6 +413,7 @@ class ProfilesController extends AppController
             'Subjects' => ['text' => __('Subjects')],
             'Absences' => ['text' => __('Absences')],
             'Behaviours' => ['text' => __('Behaviours')],
+            'Outcomes' => ['text' => __('Outcomes')],
             'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
@@ -511,10 +511,10 @@ class ProfilesController extends AppController
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') { 
-                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff'.$key, 'index']); 
-            } else { 
-                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']); 
+            if ($key != 'Employments') {
+                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff'.$key, 'index']);
+            } else {
+                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']);
             }
         }
         return $this->TabPermission->checkTabPermission($tabElements);

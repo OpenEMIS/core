@@ -12,12 +12,13 @@ use Cake\Utility\Security;
 use Cake\Core\Configure;
 use Cake\Validation\Validator;
 
-
-class ConfigExternalDataSourceTable extends ControllerActionTable {
+class ConfigExternalDataSourceTable extends ControllerActionTable
+{
     public $id;
     public $authenticationType;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
@@ -75,7 +76,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $url = $this->url('view');
             $url[1] = $this->paramsEncode(['id' => $this->id]);
             $this->controller->redirect($url);
-        } else if ($this->action == 'view') {
+        } elseif ($this->action == 'view') {
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
             $this->checkController();
         }
@@ -130,7 +131,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         return $event->subject()->renderElement('Configuration.external_data_source', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    {
         if (in_array($action, ['edit', 'add'])) {
             $id = $this->id;
             if (!empty($id)) {
@@ -204,9 +206,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
             $requestData[$this->alias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
-        } else if ($requestData[$this->alias()]['value'] == 'None') {
+        } elseif ($requestData[$this->alias()]['value'] == 'None') {
             $patchOption['validate'] = false;
-        } else if ($requestData[$this->alias()]['value'] == 'Custom') {
+        } elseif ($requestData[$this->alias()]['value'] == 'Custom') {
             $patchOption['validate'] = 'Custom';
         }
         if (empty($requestData[$this->alias()]['private_key'])) {
@@ -236,7 +238,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $protectedKey = $this->urlsafeB64Encode($key);
             $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
         }
-
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
@@ -266,7 +267,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $value = $entity->value;
         $this->field('value', ['visible' => true]);
 
-        switch($value) {
+        switch ($value) {
             case 'OpenEMIS Identity':
                 $this->field('url');
                 $this->field('token_uri', ['type' => 'hidden']);
@@ -315,9 +316,5 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             default:
                 break;
         }
-
-
-
     }
-
 }

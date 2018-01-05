@@ -1,5 +1,4 @@
 <?php
-    $fieldPrefix = $ControllerAction['table']->alias() . '.institution_competency_results';
     $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
     $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
     $tableFooters = isset($attr['tableFooters']) ? $attr['tableFooters'] : [];
@@ -10,7 +9,7 @@
     <div class="dropdown-filter">
         <div class="filter-label">
             <i class="fa fa-filter"></i>
-            <label>Filter</label>
+            <label><?= __('Filter')?></label>
         </div>
 
         <?php

@@ -11,7 +11,8 @@ use Cake\Network\Request;
 use User\Model\Entity\User;
 use Cake\I18n\I18n;
 
-class UserBehavior extends Behavior {
+class UserBehavior extends Behavior
+{
     private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
     private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
     private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-guardian'></i></div></div>";
@@ -24,11 +25,12 @@ class UserBehavior extends Behavior {
 
     private $defaultImgIndexClass = "profile-image-thumbnail";
     private $defaultImgViewClass= "profile-image";
-    private $photoMessage = 'Advisable photo dimension 90 by 115px';
-    private $formatSupport = 'Format Supported: ';
-    private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
+    private $photoMessage = 'Advisable photo dimension %width by %height';
+    private $formatSupport = 'Format Supported: %s';
+    private $defaultImgMsg = "<p>* %s <br>* %s</p>";
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         if ($this->_table->table() == 'security_users') {
             $this->_table->addBehavior('ControllerAction.FileUpload', [
                 'name' => 'photo_name',
@@ -45,7 +47,8 @@ class UserBehavior extends Behavior {
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 0];
         $events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
@@ -59,7 +62,8 @@ class UserBehavior extends Behavior {
         return $events;
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $dataArray = $data->getArrayCopy();
         if (array_key_exists($this->_table->alias(), $dataArray)) {
             if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
@@ -68,7 +72,8 @@ class UserBehavior extends Behavior {
         }
     }
 
-    public function onExcelGetStatus(Event $event, Entity $entity) {
+    public function onExcelGetStatus(Event $event, Entity $entity)
+    {
         if ($entity->status == 1) {
             return __('Active');
         } else {
@@ -88,7 +93,8 @@ class UserBehavior extends Behavior {
         }
     }
 
-    private function isCAv4() {
+    private function isCAv4()
+    {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
@@ -102,7 +108,7 @@ class UserBehavior extends Behavior {
             default:
                 $this->_table->fields['username']['visible'] = false;
                 $this->_table->fields['last_login']['visible'] = false;
-            break;
+                break;
         }
         if ($this->_table->table() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');
@@ -211,13 +217,12 @@ class UserBehavior extends Behavior {
                     $this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                 }
-
             }
-
         }
     }
 
-    public function addBeforeAction(Event $event) {
+    public function addBeforeAction(Event $event)
+    {
         if ($this->_table->table() == 'security_users') {
             $this->_table->fields['is_student']['value'] = 0;
             $this->_table->fields['is_staff']['value'] = 0;
@@ -241,7 +246,6 @@ class UserBehavior extends Behavior {
                 $imageDefault = 'kd-guardian';
                 break;
             case 'Directories':
-
                 $tableClass = get_class($this->_table);
                 $userType = $tableClass::OTHER;
                 $session = $this->_table->request->session();
@@ -315,7 +319,8 @@ class UserBehavior extends Behavior {
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         $extra['auto_search'] = false;
         // $extra['auto_contain'] = false;
 
@@ -332,11 +337,13 @@ class UserBehavior extends Behavior {
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
         $this->indexBeforeQuery($event, $query, $options);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity) {
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
         $value = '';
         if ($entity instanceof User) {
             $value = $entity->openemis_no;
@@ -348,7 +355,8 @@ class UserBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetIdentity(Event $event, Entity $entity) {
+    public function onGetIdentity(Event $event, Entity $entity)
+    {
         $value = '';
         if ($entity instanceof User) {
             $value = $entity->default_identity_type;
@@ -360,7 +368,8 @@ class UserBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetName(Event $event, Entity $entity) {
+    public function onGetName(Event $event, Entity $entity)
+    {
         $value = '';
         if ($entity instanceof User) {
             $value = $entity->name;
@@ -372,13 +381,15 @@ class UserBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetGenderId(Event $event, Entity $entity) {
+    public function onGetGenderId(Event $event, Entity $entity)
+    {
         if ($entity->has('gender') && $entity->gender->name) {
             return __($entity->gender->name);
         }
     }
 
-    public function onGetPhotoContent(Event $event, Entity $entity) {
+    public function onGetPhotoContent(Event $event, Entity $entity)
+    {
         // check file name instead of file content
         $fileContent = null;
         $userEntity = null;
@@ -411,20 +422,30 @@ class UserBehavior extends Behavior {
         return $value;
     }
 
-    public function getDefaultImgMsg() {
-
-        return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
+    public function getDefaultImgMsg()
+    {
+        $width = 90;
+        $height = 115;
+        $photoMsg = __($this->photoMessage);
+        $photoMsg = str_replace('%width', $width, $photoMsg);
+        $photoMsg = str_replace('%height', $height, $photoMsg);
+        $formatSupported = '.jpg, .jpeg, .png, .gif';
+        $formatMsg = sprintf(__($this->formatSupport), $formatSupported);
+        return sprintf($this->defaultImgMsg, $photoMsg, $formatMsg);
     }
 
-    public function getDefaultImgIndexClass() {
+    public function getDefaultImgIndexClass()
+    {
         return $this->defaultImgIndexClass;
     }
 
-    public function getDefaultImgViewClass() {
+    public function getDefaultImgViewClass()
+    {
         return $this->defaultImgViewClass;
     }
 
-    public function getDefaultImgView() {
+    public function getDefaultImgView()
+    {
         // const STUDENT = 1;
         // const STAFF = 2;
         // const GUARDIAN = 3;
@@ -448,11 +469,13 @@ class UserBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
         return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    public function getUniqueOpenemisId($options = []) {
+    public function getUniqueOpenemisId($options = [])
+    {
         $prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0)? $prefix[0]: '';
@@ -464,23 +487,24 @@ class UserBehavior extends Behavior {
 
         $latestOpenemisNo = $latest->openemis_no;
         $latestOpenemisNo = 0;
-        if(empty($prefix)){
+        if (empty($prefix)) {
             $latestDbStamp = $latestOpenemisNo;
-        }else{
+        } else {
             $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
         }
 
         $currentStamp = time();
-        if($latestDbStamp >= $currentStamp){
+        if ($latestDbStamp >= $currentStamp) {
             $newStamp = $latestDbStamp + 1;
-        }else{
+        } else {
             $newStamp = $currentStamp;
         }
 
         return $prefix.$newStamp;
     }
 
-    public function getImage($id) {
+    public function getImage($id)
+    {
         $base64Format = (array_key_exists('base64', $this->_table->controller->request->query))? $this->_table->controller->request->query['base64']: false;
 
         $this->_table->controller->autoRender = false;

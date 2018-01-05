@@ -178,6 +178,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
     }
+    public function StudentOutcomes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+    }
 
     // health
     public function Healths()
@@ -566,6 +570,7 @@ class DirectoriesController extends AppController
             'Subjects' => ['text' => __('Subjects')],
             'Absences' => ['text' => __('Absences')],
             'Behaviours' => ['text' => __('Behaviours')],
+            'Outcomes' => ['text' => __('Outcomes')],
             'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
@@ -636,10 +641,10 @@ class DirectoriesController extends AppController
         $session = $this->request->session();
         $isStudent = $session->read('Directory.Directories.is_student');
         $isStaff = $session->read('Directory.Directories.is_staff');
- 
+
         $tabElements = [];
         $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-        
+
         if ($isStaff) {
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
@@ -657,10 +662,10 @@ class DirectoriesController extends AppController
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') { 
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']); 
-            } else { 
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']); 
+            if ($key != 'Employments') {
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
+            } else {
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
             }
         }
         return $this->TabPermission->checkTabPermission($tabElements);
