@@ -28,6 +28,7 @@ class ThemesController extends PageController
         $events = parent::implementedEvents();
         $events['Controller.Page.onRenderValue'] = 'onRenderValue';
         $events['Controller.Page.onRenderDefaultValue'] = 'onRenderDefaultValue';
+        $events['Controller.Page.onRenderName'] = 'onRenderName';
         return $events;
     }
 
@@ -86,6 +87,13 @@ class ThemesController extends PageController
                     return $entity->default_value;
                     break;
             }
+        }
+    }
+
+    public function onRenderName(Event $event, Entity $entity, $key)
+    {
+        if ($this->request->param('action') != 'edit') {
+            return __($entity->name);
         }
     }
 
