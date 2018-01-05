@@ -93,7 +93,7 @@ class POCOR2455 extends AbstractMigration
             ->addIndex('education_grade_id')
             ->addIndex('institution_id')
             ->addIndex('assignee_id')
-            ->addIndex('student_dropout_reason_id')
+            ->addIndex('student_withdraw_reason_id')
             ->addIndex('student_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
@@ -242,6 +242,50 @@ class POCOR2455 extends AbstractMigration
                             `created_user_id`,
                             `created`
                         FROM `z_2455_institution_student_withdraw`");
+
+        // workflow_actions
+        $workflowActionData = [
+            [
+                'name' => 'Submit For Approval',
+                'description' => NULL,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '1',
+                'event_key' => NULL,
+                'workflow_step_id' => $openStatusId,
+                'next_workflow_step_id' => $pendingApprovalStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Approve',
+                'description' => NULL,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'next_workflow_step_id' => $withdrawnStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingApprovalStatusId,
+                'next_workflow_step_id' => $rejectedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('workflow_actions', $workflowActionData);
     }
 
     public function down()
