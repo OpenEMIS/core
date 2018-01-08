@@ -318,6 +318,8 @@ class POCOR2455 extends AbstractMigration
             ],
         ];
 
+        $this->insert('workflow_statuses', $workflowStatusData);
+
         $pendingId = $WorkflowStatusesTable->find()
             ->where([
                 $WorkflowStatusesTable->aliasField('code') => 'PENDING',
@@ -341,6 +343,10 @@ class POCOR2455 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
+
+        $workflowStatusStepsData = [
+
+        ];
     }
 
     public function down()
