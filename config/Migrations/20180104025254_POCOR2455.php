@@ -1,6 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Text;
 
 class POCOR2455 extends AbstractMigration
 {
@@ -345,8 +346,29 @@ class POCOR2455 extends AbstractMigration
             ->first();
 
         $workflowStatusStepsData = [
-
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $pendingId,
+                'workflow_step_id' => $pendingApprovalStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $approvedId,
+                'workflow_step_id' => $withdrawnStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $rejectedId,
+                'workflow_step_id' => $rejectedStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $pendingId,
+                'workflow_step_id' => $openStatusId
+            ]
         ];
+
+        $this->insert('workflow_statuses_steps', $workflowStatusStepsData);
     }
 
     public function down()

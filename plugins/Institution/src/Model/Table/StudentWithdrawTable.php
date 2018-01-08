@@ -76,6 +76,7 @@ class StudentWithdrawTable extends AppTable
 
     public function afterAction($event)
     {
+        pr($this->Workflow->getWorkflowStatuses('Institution.StudentWithdraw'));die;
         $this->ControllerAction->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
         $this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
         $this->ControllerAction->field('student_id');
@@ -452,19 +453,5 @@ class StudentWithdrawTable extends AppTable
             });
 
         return $query;
-    }
-
-    public function getPendingRecords($institutionId = null)
-    {
-        $count = $this
-            ->find()
-            ->where([
-                $this->aliasField('status_id') => self::NEW_REQUEST,
-                $this->aliasField('institution_id') => $institutionId,
-            ])
-            ->count()
-        ;
-
-        return $count;
     }
 }
