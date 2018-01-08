@@ -257,7 +257,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
         $doneStatus = self::DONE;
 
-        //remove pending transfer request.
+        //remove all pending transfer requests
         //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
         $pendingTransfers = $StudentTransfers->find()
             ->innerJoinWith($StudentTransfers->Statuses->alias(), function ($q) use ($doneStatus) {
@@ -275,7 +275,7 @@ class StudentAdmissionTable extends ControllerActionTable
             }
         }
 
-        //remove pending admission request.
+        //remove all pending admission requests
         $pendingAdmissions = $this->find()
             ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
                 return $q->where(['category <> ' => $doneStatus]);
