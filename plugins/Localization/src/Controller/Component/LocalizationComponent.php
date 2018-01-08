@@ -180,7 +180,12 @@ class LocalizationComponent extends Component
         // using modified so when new word modified able to refresh the default.po
         $lastModified = $LocaleContentTranslations
             ->find()
-            ->order([$LocaleContentTranslations->aliasField('modified') => 'DESC'])
+            ->where([
+                $LocaleContentTranslations->aliasField('modified'). ' IS NOT NULL'
+            ])
+            ->order([
+                $LocaleContentTranslations->aliasField('modified') => 'DESC',
+            ])
             ->extract('modified')
             ->first();
 
