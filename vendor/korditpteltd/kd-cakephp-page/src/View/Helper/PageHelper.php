@@ -340,7 +340,6 @@ class PageHelper extends Helper
         $array = $entity instanceof Entity ? $entity->toArray() : $entity;
         $data = Hash::flatten($array);
         $value = array_key_exists($field['key'], $data) ? $data[$field['key']] : '';
-
         if (array_key_exists('displayFrom', $field)) { // if displayFrom exists, always get value based on displayFrom
             $key = $field['displayFrom'];
             if (array_key_exists($key, $data)) {
@@ -528,9 +527,9 @@ EOT;
                 }
 
                 $comments = '';
-                $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+                $fileSizeMessage = '* '.str_replace('%s', $fileSizeLimit.'MB', __('File size should not be larger than %s.'));
                 $extensionSupported = '';
-                $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+                $fileFormatMessage = '* '. sprintf(__('Format Supported: %s'), implode(', ', $formatSupported));
                 foreach ($formatSupported as &$format) {
                     $format = '\''.$format.'\'';
                 }
@@ -580,9 +579,9 @@ EOT;
                 $backgroundColor = isset($field['attributes']['backgroundColor']) ? $field['attributes']['backgroundColor'] :'#FFFFFF';
 
                 $comments = !empty($message) ? $message . '<br/>' : $message;
-                $fileSizeMessage = str_replace('%size', $fileSizeLimit, __('* File should not be larger than %size MB'));
+                $fileSizeMessage = '* ' . str_replace('%s', $fileSizeLimit, __('File size should not be larger than %s.'));
                 $extensionSupported = '';
-                $fileFormatMessage = __('* Format Supported: ') . implode(', ', $formatSupported);
+                $fileFormatMessage = '* ' . sprintf(__('* Format Supported: %s'), implode(', ', $formatSupported));
                 foreach ($formatSupported as &$format) {
                     $format = '\''.$format.'\'';
                 }
@@ -878,7 +877,7 @@ EOT;
 
         $options['time_options'] = array_merge($_options, $options['time_options']);
 
-        if (($data instanceof Entity && $data->offsetExists($field['key'])) || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
+        if (($data instanceof Entity && $data->offsetExists($field['key'])) && $data[$field['key']] instanceof Time || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
             $options['value'] = $data[$field['key']]->i18nFormat('h:mm a');
             $options['time_options']['defaultTime'] = $options['value'];
         } else {

@@ -13,21 +13,25 @@ class CalendarTypesTable extends AppTable
 
     public function getInstitutionCalendarTypeList()
     {
-        return $this->find('list')
+        $list = $this->find('list')
             ->where([
                 $this->aliasField('is_institution') => 1
             ])
             ->toArray()
         ;
+        array_walk($list, [$this, 'translateArray']);
+        return $list;
     }
 
     public function getAdministrationCalendarTypeList()
     {
-        return $this->find('list')
+        $list = $this->find('list')
             ->where([
                 $this->aliasField('is_institution') => 0
             ])
             ->toArray()
         ;
+        array_walk($list, [$this, 'translateArray']);
+        return $list;
     }
 }
