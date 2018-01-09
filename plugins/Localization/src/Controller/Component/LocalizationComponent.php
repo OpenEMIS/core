@@ -192,7 +192,9 @@ class LocalizationComponent extends Component
             ->extract('created')
             ->first();
 
-        if ($lastModified->lt($lastCreated)) {
+        if (!$lastModified) {
+            return $lastCreated;
+        } elseif ($lastModified->lt($lastCreated)) {
             return $lastCreated;
         } else {
             return $lastModified;
