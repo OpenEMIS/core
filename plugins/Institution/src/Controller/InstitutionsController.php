@@ -151,7 +151,7 @@ class InstitutionsController extends AppController
             'Promotion'         => ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
             'Transfer'          => ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
             'StudentWithdraw'   => ['className' => 'Institution.StudentWithdraw', 'actions' => ['index', 'edit', 'view']],
-            'WithdrawRequests'  => ['className' => 'Institution.WithdrawRequests', 'actions' => ['add', 'edit', 'remove']],
+            'WithdrawRequests'  => ['className' => 'Institution.WithdrawRequests', 'actions' => ['add', 'remove']],
             'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view', 'search']],
             'Undo'              => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
             'ClassStudents'     => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
