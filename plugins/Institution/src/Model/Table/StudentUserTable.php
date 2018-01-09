@@ -446,6 +446,7 @@ class StudentUserTable extends ControllerActionTable
                 $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
                 $rejectedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'REJECTED');
+                $status = $rejectedStatus + $approvedStatus;
 
                 try {
                     // check if there is an existing withdraw request
@@ -455,14 +456,7 @@ class StudentUserTable extends ControllerActionTable
                             $WithdrawRequests->aliasField('student_id') => $studentEntity->student_id,
                             $WithdrawRequests->aliasField('institution_id') => $studentEntity->institution_id,
                             $WithdrawRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
-                            'OR' => [
-                                [
-                                    $WithdrawRequests->aliasField('status_id').' IN' => $approvedStatus
-                                ],
-                                [
-                                    $WithdrawRequests->aliasField('status_id').' IN' => $rejectedStatus
-                                ]
-                            ]
+                            $WithdrawRequests->aliasField('status_id').' NOT IN' => $status
                         ])
                         ->first();
                 } catch (DatabaseException $e) {
@@ -477,10 +471,9 @@ class StudentUserTable extends ControllerActionTable
                 $withdrawButton['attr']['title'] = __('Withdraw');
 
                 $withdrawButton['url'] = $this->url('add', 'QUERY');
-                $withdrawButton['url']['action'] = 'WithdrawRequests';
-
                 if (!empty($withdrawRequest)) {
-                    $withdrawButton['url'][0] = 'edit';
+                    $withdrawButton['url']['action'] = 'StudentWithdraw';
+                    $withdrawButton['url'][0] = 'view';
                     $withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
                     $toolbarButtons['withdraw'] = $withdrawButton;
                 } elseif ($withdrawRequest !== false) {

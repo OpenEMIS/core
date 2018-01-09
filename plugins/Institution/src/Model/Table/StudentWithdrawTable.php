@@ -18,7 +18,7 @@ class StudentWithdrawTable extends AppTable
             'value' => 'Workflow.onApproval',
             'text' => 'Approval of Withdrawal Request',
             'description' => 'Performing this action will apply the proposed changes to the student record.',
-            'method' => 'OnApprove'
+            'method' => 'OnApproval'
         ]
     ];
 
@@ -89,12 +89,11 @@ class StudentWithdrawTable extends AppTable
 
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
-        $entity = $this->get($id)->toArray();
+        $entity = $this->get($id);
 
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
-
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
         $periodId = $entity->academic_period_id;
