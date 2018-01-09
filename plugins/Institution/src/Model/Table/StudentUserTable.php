@@ -446,7 +446,6 @@ class StudentUserTable extends ControllerActionTable
                 $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
                 $rejectedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'REJECTED');
-                $approvedStatus = [];
 
                 try {
                     // check if there is an existing withdraw request
