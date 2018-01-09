@@ -42,9 +42,9 @@ class InstitutionsTable extends ControllerActionTable
     private $defaultLogoView = "<div class='profile-image'><i class='fa kd-institutions'></i></div>";
     private $defaultImgIndexClass = "logo-thumbnail";
     private $defaultImgViewClass= "logo-image";
-    private $photoMessage = 'Advisable logo dimension 200 by 200';
-    private $formatSupport = 'Format Supported: ';
-    private $defaultImgMsg = "<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>";
+    private $photoMessage = 'Advisable logo dimension %width by %height';
+    private $formatSupport = 'Format Supported: %s';
+    private $defaultImgMsg = "<p>* %s <br>* %s</p>";
 
     public function initialize(array $config)
     {
@@ -1187,7 +1187,14 @@ class InstitutionsTable extends ControllerActionTable
 
     public function getDefaultImgMsg()
     {
-        return sprintf($this->defaultImgMsg, __($this->photoMessage), __($this->formatSupport));
+        $width = 200;
+        $height = 200;
+        $photoMsg = __($this->photoMessage);
+        $photoMsg = str_replace('%width', $width, $photoMsg);
+        $photoMsg = str_replace('%height', $height, $photoMsg);
+        $formatSupported = '.jpg, .jpeg, .png, .gif';
+        $formatMsg = sprintf(__($this->formatSupport), $formatSupported);
+        return sprintf($this->defaultImgMsg, $photoMsg, $formatMsg);
     }
 
     public function getDefaultImgIndexClass()

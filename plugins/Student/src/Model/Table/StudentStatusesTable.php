@@ -13,7 +13,8 @@ class StudentStatusesTable extends AppTable {
 
 		$this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'view'],
-            'StudentCompetencies' => ['index']
+            'StudentCompetencies' => ['index'],
+            'StudentOutcomes' => ['index']
         ]);
 	}
 

@@ -26,13 +26,13 @@ class TrainingSessionsTable extends ControllerActionTable
     use ImportExcelTrait;
 
     // Workflow Steps - category
-    CONST TO_DO = 1;
-    CONST IN_PROGRESS = 2;
-    CONST DONE = 3;
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
 
-    CONST STAFF = 'Staff';
-    CONST OTHERS = 'Others';
-    CONST SELECT_ALL_TARGET_POPULATIONS = '-1';
+    const STAFF = 'Staff';
+    const OTHERS = 'Others';
+    const SELECT_ALL_TARGET_POPULATIONS = '-1';
 
     public function initialize(array $config)
     {
@@ -80,6 +80,19 @@ class TrainingSessionsTable extends ControllerActionTable
             ]);
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['trainees']) && is_array($data['trainees'])) {
+            foreach ($data['trainees'] as &$trainee) {
+                $t = $this->paramsDecode($trainee);
+                $trainee = [
+                    'id' => $t['trainee_id'],
+                    '_joinData' => $t
+                ];
+            }
+        }
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
@@ -89,11 +102,11 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->field('comment', ['visible' => $visible]);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $userId = $this->Session->read('Auth.User.id');
-        
+
         if (!$this->AccessControl->isAdmin()) {
             if ($entity->created_user_id != $userId) {
                 if (!$this->AccessControl->check(['Trainings', 'Sessions', 'edit'])) {
@@ -241,10 +254,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 try {
                     $obj = $this->Trainees->get($id);
 
-                    $data[$alias][$fieldKey][] = [
-                        'id' => $obj->id,
-                        '_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $entity->id]
-                    ];
+                    $data[$alias][$fieldKey][] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $entity->id]);
                 } catch (RecordNotFoundException $ex) {
                     Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
                 }
@@ -464,7 +474,7 @@ class TrainingSessionsTable extends ControllerActionTable
                     $tableCells[] = $rowData;
                 }
             }
-        } else if ($action == 'add' || $action == 'edit') {
+        } elseif ($action == 'add' || $action == 'edit') {
             $tableHeaders[] = ''; // for delete column
             $Form = $event->subject()->Form;
             $Form->unlockField('TrainingSessions.trainers');
@@ -553,8 +563,7 @@ class TrainingSessionsTable extends ControllerActionTable
                     $tableCells[] = $rowData;
                 }
             }
-        } else if ($action == 'edit') {
-            $tableHeaders[] = ''; // for delete column
+        } elseif ($action == 'edit') {
             $Form = $event->subject()->Form;
             $Form->unlockField('TrainingSessions.trainees');
             $Form->unlockField('TrainingSessions.trainees_import');
@@ -569,10 +578,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 $associated = $entity->extractOriginal([$key]);
                 if (!empty($associated[$key])) {
                     foreach ($associated[$key] as $i => $obj) {
-                        $this->request->data[$alias][$key][$obj->id] = [
-                            'id' => $obj->id,
-                            '_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]
-                        ];
+                        $this->request->data[$alias][$key][$obj->id] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]);
                     }
                 }
             }
@@ -582,26 +588,22 @@ class TrainingSessionsTable extends ControllerActionTable
                 $associated = $this->request->data("$alias.$key");
 
                 foreach ($associated as $i => $obj) {
-                    $joinData = $obj['_joinData'];
+                    $object = $this->paramsDecode($obj);
                     $rowData = [];
-                    $name = $joinData['name'];
-                    $name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['trainee_id']]);
-                    $name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
-                    $name .= $Form->hidden("$alias.$key.$i._joinData.trainee_id", ['value' => $joinData['trainee_id']]);
-                    $name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-                    $name .= $Form->hidden("$alias.$key.$i._joinData.training_session_id", ['value' => $joinData['training_session_id']]);
-                    if (empty($joinData['status'])) {
-                        $joinData['status'] = 1;
+                    $name = $object['name'];
+
+                    if (empty($object['status'])) {
+                        $object['status'] = 1;
+                        $obj = $this->paramsEncode($object);
                     }
-                    $name .= $Form->hidden("$alias.$key.$i._joinData.status", ['value' => $joinData['status']]);
-                    $rowData[] = [$joinData['openemis_no'], ['autocomplete-exclude' => $joinData['trainee_id']]];
+                    $name .= $Form->hidden("$alias.$key.$i", ['value' => $obj]);
+                    $rowData[] = [$object['openemis_no'], ['autocomplete-exclude' => $object['trainee_id']]];
                     $rowData[] = $name;
                     $rowData[] = $this->getDeleteButton();
                     $tableCells[] = $rowData;
                 }
             }
         }
-
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
@@ -669,11 +671,11 @@ class TrainingSessionsTable extends ControllerActionTable
             /**
              * Import field variables
              */
-            $comment = __('* Format Supported: ' . implode(', ', array_keys($this->fileTypesMap)));
+            $comment = '* '. sprintf(__('Format Supported: %s'), implode(', ', array_keys($this->fileTypesMap)));
             $comment .= '<br/>';
-            $comment .= __('* Recommended Maximum File Size: ' . $this->bytesToReadableFormat($this->MAX_SIZE));
+            $comment .= '* '. sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->MAX_SIZE));
             $comment .= '<br/>';
-            $comment .= __('* Recommended Maximum Records: ' . $this->MAX_ROWS);
+            $comment .= '* '. sprintf(__('Recommended Maximum Records: %s'), $this->MAX_ROWS);
             // $data = $event->subject()->request->data;
             $data = $this->controller->request->data;
             if ((is_object($data) && $data->offsetExists('trainees_import_error')) || (is_array($data) && isset($data['trainees_import_error']))) {

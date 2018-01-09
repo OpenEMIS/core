@@ -713,6 +713,9 @@ trait MessagesTrait
         'Items' => [
             'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
         ],
+        'OutcomeTemplates' => [
+            'addSuccess' => 'Outcome Template was added successfully, please set up the Outcome Criterias'
+        ],
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
@@ -2018,6 +2021,34 @@ trait MessagesTrait
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
+            ],
+        ],
+        'Outcome' => [
+            'OutcomeTemplates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
+            ],
+            'OutcomePeriods' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
+            ],
+            'OutcomeGradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
+            ],
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ]
+            ],
+            'OutcomeCriterias' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ]
             ],
         ],
         'FieldOption' => [
