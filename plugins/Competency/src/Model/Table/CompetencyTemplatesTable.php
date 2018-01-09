@@ -47,6 +47,13 @@ class CompetencyTemplatesTable extends ControllerActionTable
             ]);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->action == 'index' || $this->action == 'add') {
+            $this->controller->getCompetencyTabs();
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
@@ -69,7 +76,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $queryString = ['queryString' => $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
-        $this->controller->getCompetencyTabs($queryString);
+        $this->controller->getCompetencyTemplateTabs($queryString);
         $header = $entity->name . ' - ' . __('Overview');
         $this->controller->set('contentHeader', $header);
         $this->controller->Navigation->substituteCrumb(Inflector::humanize(Inflector::underscore($this->alias())), $header);
@@ -78,7 +85,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $queryString = ['queryString' => $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
-        $this->controller->getCompetencyTabs($queryString);
+        $this->controller->getCompetencyTemplateTabs($queryString);
         $header = $entity->name . ' - ' . __('Overview');
         $this->controller->set('contentHeader', $header);
         $this->controller->Navigation->substituteCrumb($this->alias(), $header);
