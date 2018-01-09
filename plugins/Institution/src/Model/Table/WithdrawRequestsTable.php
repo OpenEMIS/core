@@ -12,8 +12,6 @@ use Cake\I18n\Date;
 class WithdrawRequestsTable extends AppTable
 {
     const NEW_REQUEST = 0;
-    const APPROVED = 1;
-    const REJECTED = 2;
 
     public function initialize(array $config)
     {
@@ -84,7 +82,6 @@ class WithdrawRequestsTable extends AppTable
     {
         if ($this->Session->check($this->registryAlias().'.id')) {
             $this->ControllerAction->field('application_status');
-            $this->ControllerAction->field('status_id', ['type' => 'hidden', 'attr' => ['value' => self::NEW_REQUEST]]);
             $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
             $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
@@ -158,22 +155,6 @@ class WithdrawRequestsTable extends AppTable
             case 'add':
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = __('New');
-                break;
-            case 'edit':
-                $transferStatus = $attr['status_id'];
-                $attr['type'] = 'readonly';
-
-                switch ($transferStatus) {
-                    case self::NEW_REQUEST:
-                        $attr['attr']['value'] = __('New');
-                        break;
-                    case self::APPROVED:
-                        $attr['attr']['value'] = __('Approve');
-                        break;
-                    case self::REJECTED:
-                        $attr['attr']['value'] = __('Reject');
-                        break;
-                }
                 break;
         }
         return $attr;
