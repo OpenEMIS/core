@@ -76,7 +76,6 @@ class StudentWithdrawTable extends AppTable
 
     public function afterAction($event)
     {
-        pr($this->Workflow->getWorkflowStatuses('Institution.StudentWithdraw'));die;
         $this->ControllerAction->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
         $this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
         $this->ControllerAction->field('student_id');
@@ -235,29 +234,6 @@ class StudentWithdrawTable extends AppTable
                 unset($toolbarButtons['edit']);
             }
         }
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $newItem = [];
-        $status_id = $this->get($entity->id)->status_id;
-        if ($status_id == self::NEW_REQUEST) {
-            if (isset($buttons['view'])) {
-                $newItem['view'] = $buttons['view'];
-            }
-            if ($this->AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
-                if (isset($buttons['edit'])) {
-                    $newItem['edit'] = $buttons['edit'];
-                }
-            }
-        } else {
-            if (isset($buttons['view'])) {
-                $newItem['view'] = $buttons['view'];
-            }
-        }
-        $buttons = $newItem;
-        return $buttons;
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)

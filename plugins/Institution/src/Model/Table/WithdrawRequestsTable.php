@@ -24,7 +24,7 @@ class WithdrawRequestsTable extends AppTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentWithdrawReasons', ['className' => 'Student.StudentWithdrawReasons', 'foreignKey' => 'student_withdraw_reason_id']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StudentWithdraw']);
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
@@ -47,7 +47,7 @@ class WithdrawRequestsTable extends AppTable
 
         $conditions = [
             'student_id' => $entity->student_id,
-            'status_id' => self::NEW_REQUEST,
+            'status' => self::NEW_REQUEST,
             'type' => 2,
             'education_grade_id' => $entity->education_grade_id,
             'previous_institution_id' => $entity->institution_id
@@ -81,7 +81,6 @@ class WithdrawRequestsTable extends AppTable
     public function addAfterAction(Event $event, Entity $entity)
     {
         if ($this->Session->check($this->registryAlias().'.id')) {
-            $this->ControllerAction->field('application_status');
             $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
             $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
@@ -91,7 +90,7 @@ class WithdrawRequestsTable extends AppTable
             $this->ControllerAction->field('comment');
 
             $this->ControllerAction->setFieldOrder([
-                'application_status','student_id','institution_id', 'academic_period_id', 'education_grade_id',
+                'student_id','institution_id', 'academic_period_id', 'education_grade_id',
                 'effective_date',
                 'student_withdraw_reason_id', 'comment',
             ]);
@@ -106,7 +105,6 @@ class WithdrawRequestsTable extends AppTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('application_status', ['status_id' => $entity->status_id]);
         $this->ControllerAction->field('status_id', ['type' => 'hidden']);
         $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
         $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
@@ -147,17 +145,6 @@ class WithdrawRequestsTable extends AppTable
                     'provider' => 'table'
                     ]);
         return $validator;
-    }
-
-    public function onUpdateFieldApplicationStatus(Event $event, array $attr, $action, $request)
-    {
-        switch ($action) {
-            case 'add':
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = __('New');
-                break;
-        }
-        return $attr;
     }
 
     public function implementedEvents()
