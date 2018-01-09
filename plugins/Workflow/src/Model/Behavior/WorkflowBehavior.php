@@ -726,7 +726,6 @@ class WorkflowBehavior extends Behavior
                 $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
                 $workflowStep = $this->getWorkflowStep($entity);
-
                 $isEditable = false;
                 $isDeletable = false;
                 if (!empty($workflowStep)) {
@@ -1228,13 +1227,12 @@ class WorkflowBehavior extends Behavior
                 if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
                     unset($toolbarButtons['add']);
                 }
-            } else if ($action == 'view') {
+            } elseif ($action == 'view') {
                 $isEditable = false;
                 $isDeletable = false;
 
                 $entity = $this->getRecord();
                 $workflowStep = $this->getWorkflowStep($entity);
-
                 $actionButtons = [];
                 if (!empty($workflowStep)) {
                     $isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
