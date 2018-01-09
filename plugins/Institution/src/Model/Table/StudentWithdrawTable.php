@@ -44,7 +44,7 @@ class StudentWithdrawTable extends AppTable
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
-        // $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
+        $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
 
         foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
@@ -61,31 +61,33 @@ class StudentWithdrawTable extends AppTable
         }
     }
 
-    // public function studentsAfterDelete(Event $event, Entity $student)
-    // {
-    //     $this->removePendingWithdraw($student->student_id, $student->institution_id);
-    // }
+    public function studentsAfterDelete(Event $event, Entity $student)
+    {
+        $this->removePendingWithdraw($student->student_id, $student->institution_id);
+    }
 
-    // protected function removePendingWithdraw($studentId, $institutionId)
-    // {
-    //     //could not include grade / academic period because not always valid. (promotion/graduation/repeat and withdraw can be done on different grade / academic period)
-    //     $conditions = [
-    //         'student_id' => $studentId,
-    //         'institution_id' => $institutionId,
-    //         'status_id' => 0, //pending status_id
-    //     ];
+    protected function removePendingWithdraw($studentId, $institutionId)
+    {
+        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and withdraw can be done on different grade / academic period)
+        $pendingStatus = TableRegistry::get('Workflow.WorkflowModels')->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
 
-    //     $entity = $this
-    //             ->find()
-    //             ->where(
-    //                 $conditions
-    //             )
-    //             ->first();
+        $conditions = [
+            'student_id' => $studentId,
+            'institution_id' => $institutionId,
+            'status_id IN ' => $pendingStatus //pending status_id
+        ];
 
-    //     if (!empty($entity)) {
-    //         $this->delete($entity);
-    //     }
-    // }
+        $entity = $this
+                ->find()
+                ->where(
+                    $conditions
+                )
+                ->first();
+
+        if (!empty($entity)) {
+            $this->delete($entity);
+        }
+    }
 
     public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
     {
