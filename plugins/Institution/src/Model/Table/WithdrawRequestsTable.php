@@ -65,19 +65,6 @@ class WithdrawRequestsTable extends AppTable
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data)
-    {
-        $studentId = $this->Session->read('Student.Students.id');
-        $action = $this->ControllerAction->url('edit');
-        $action['action'] = 'StudentUser';
-        $action[0] = 'view';
-        $action[1] = $this->paramsEncode(['id' => $studentId]);
-        $action['id'] = $this->Session->read($this->registryAlias().'.id');
-        $event->stopPropagation();
-        $this->Session->delete($this->registryAlias().'.id');
-        return $this->controller->redirect($action);
-    }
-
     public function addAfterAction(Event $event, Entity $entity)
     {
         if ($this->Session->check($this->registryAlias().'.id')) {
@@ -101,24 +88,6 @@ class WithdrawRequestsTable extends AppTable
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
-    }
-
-    public function editAfterAction(Event $event, Entity $entity)
-    {
-        $this->ControllerAction->field('status_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
-        $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
-        $this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-        $this->ControllerAction->field('effective_date');
-        $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'select', 'attr' => ['value' => $entity->student_withdraw_reason_id]]);
-        $this->ControllerAction->field('comment');
-
-        $this->ControllerAction->setFieldOrder([
-            'status_id', 'student_id','institution_id', 'academic_period_id', 'education_grade_id',
-            'effective_date',
-            'student_withdraw_reason_id', 'comment',
-        ]);
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
@@ -167,7 +136,6 @@ class WithdrawRequestsTable extends AppTable
 
     public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request)
     {
-
         $id = $this->Session->read($this->registryAlias().'.id');
         $studentData = TableRegistry::get('Institution.Students')->get($id);
         $enrolledDate = $studentData['start_date']->format('d-m-Y');
