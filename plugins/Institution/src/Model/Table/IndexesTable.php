@@ -66,12 +66,7 @@ class IndexesTable extends ControllerActionTable
         ];
         // end element control
 
-       //Rename Indexes to Risk - POCOR - 4344
-       $session = $this->request->session();
-       $institutionName = $session->read('Institution.Institutions.name');
-       $header = $institutionName .' - '.__('Risks');
-       $this->controller->Navigation->substituteCrumb($this->alias(), __('Risks'));
-       $this->controller->set('contentHeader', $header);
+      
 
           
     }
