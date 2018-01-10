@@ -26,11 +26,11 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StudentAdmission'
         },
+        // SCHOOL_BASED Workflow
         StudentWithdrawTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StudentWithdraw'
         },
-        // SCHOOL_BASED Workflow
         StaffLeaveTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffLeave'
