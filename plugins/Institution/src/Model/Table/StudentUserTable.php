@@ -477,6 +477,7 @@ class StudentUserTable extends ControllerActionTable
                     $withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
                     $toolbarButtons['withdraw'] = $withdrawButton;
                 } elseif ($withdrawRequest !== false) {
+                    $withdrawButton['url']['action'] = 'WithdrawRequests';
                     $toolbarButtons['withdraw'] = $withdrawButton;
                 }
             }
