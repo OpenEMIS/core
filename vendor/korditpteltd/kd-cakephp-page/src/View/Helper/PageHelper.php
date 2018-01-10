@@ -877,7 +877,7 @@ EOT;
 
         $options['time_options'] = array_merge($_options, $options['time_options']);
 
-        if (($data instanceof Entity && $data->offsetExists($field['key'])) || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
+        if (($data instanceof Entity && $data->offsetExists($field['key'])) && $data[$field['key']] instanceof Time || (is_array($data) && isset($data[$field['key']])) && $data[$field['key']] instanceof Time) {
             $options['value'] = $data[$field['key']]->i18nFormat('h:mm a');
             $options['time_options']['defaultTime'] = $options['value'];
         } else {

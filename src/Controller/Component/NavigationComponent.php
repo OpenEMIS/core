@@ -1249,7 +1249,6 @@ class NavigationComponent extends Component
                         'parent' => 'SystemSetup.Localization',
                         'selected' => ['LocaleContents.index', 'LocaleContents.view', 'LocaleContents.edit']
                     ],
-
                 'Configurations.index' => [
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
