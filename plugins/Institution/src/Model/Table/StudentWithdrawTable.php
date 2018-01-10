@@ -274,9 +274,10 @@ class StudentWithdrawTable extends AppTable
                 $this->CreatedUser->aliasField('middle_name'),
                 $this->CreatedUser->aliasField('third_name'),
                 $this->CreatedUser->aliasField('last_name'),
-                $this->CreatedUser->aliasField('preferred_name')
+                $this->CreatedUser->aliasField('preferred_name'),
+                'Statuses.name'
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(), 'Statuses'])
             ->where($where)
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
@@ -294,9 +295,8 @@ class StudentWithdrawTable extends AppTable
                     } else {
                         $receivedDate = $this->formatDate($row->modified);
                     }
-
                     $row['url'] = $url;
-                    $row['status_id'] = __('Pending For Approval');
+                    $row['status'] = __($row->status->name);
                     $row['request_title'] = sprintf(__('Withdraw request of %s'), $row->user->name_with_id);
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
