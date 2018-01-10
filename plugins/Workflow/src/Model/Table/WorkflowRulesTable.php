@@ -18,7 +18,7 @@ class WorkflowRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    private $excludedModels = ['Institution.InstitutionCases'];
+    private $excludedModels = ['Cases.InstitutionCases'];
 	private $ruleTypes = [];
 
 	public function initialize(array $config)

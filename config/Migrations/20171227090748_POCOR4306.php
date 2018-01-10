@@ -602,7 +602,7 @@ class POCOR4306 extends AbstractMigration
                 'created' => '2017-12-27 17:09:49'
             ],
             [
-                'en' => 'Infrastructure Conditions ',
+                'en' => 'Infrastructure Conditions',
                 'created_user_id' => 1,
                 'created' => '2017-12-27 17:09:49'
             ],
@@ -878,6 +878,86 @@ class POCOR4306 extends AbstractMigration
             ],
             [
                 'en' => 'Outcome Period',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Performance',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Outcomes',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Banks',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Qualification Specialisations',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Training Mode Deliveries',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Training Need Categories',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Training Specialisations',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Employment Status Types',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Behaviour Classifications',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Infrastructure Conditions',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Programme Orientations',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Themes',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Application Name',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Login Page Image',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Logo',
+                'created_user_id' => 1,
+                'created' => '2017-12-27 17:09:49'
+            ],
+            [
+                'en' => 'Colour',
                 'created_user_id' => 1,
                 'created' => '2017-12-27 17:09:49'
             ]
