@@ -27,7 +27,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             model: 'Institution.StudentAdmission'
         },
         StudentWithdrawTable: {
-            cols: workbenchItemTypes.FIXED,
+            cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StudentWithdraw'
         },
         // SCHOOL_BASED Workflow
