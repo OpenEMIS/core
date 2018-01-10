@@ -10,8 +10,9 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Datasource\ResultSetInterface;
+use App\Model\Table\ControllerActionTable;
 
-class StudentWithdrawTable extends AppTable
+class StudentWithdrawTable extends ControllerActionTable
 {
     private $workflowEvents = [
         [
@@ -37,6 +38,7 @@ class StudentWithdrawTable extends AppTable
         ]);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->addBehavior('Workflow.Workflow');
+        $this->toggle('add', false);
     }
 
     public function implementedEvents()
@@ -122,35 +124,55 @@ class StudentWithdrawTable extends AppTable
         $this->request->data[$this->alias()]['effective_date'] = $entity->start_date;
     }
 
-    public function afterAction($event)
+    public function afterAction($event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
-        $this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
-        $this->ControllerAction->field('student_id');
-        $this->ControllerAction->field('status_id');
-        $this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
-        $this->ControllerAction->field('education_grade_id');
-        $this->ControllerAction->field('comment');
-        $this->ControllerAction->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+        $this->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
+        $this->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+        $this->field('student_id');
+        $this->field('status_id');
+        $this->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
+        $this->field('academic_period_id', ['type' => 'readonly']);
+        $this->field('education_grade_id');
+        $this->field('comment');
+        $this->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+
+        $toolbarButtons = $extra['toolbarButtons'];
+
+        if ($this->action == 'index') {
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr']['title'] = __('Back');
+            $toolbarButtons['back']['url']['plugin'] = 'Institution';
+            $toolbarButtons['back']['url']['controller'] = 'Institutions';
+            $toolbarButtons['back']['url']['action'] = 'Students';
+            $toolbarButtons['back']['url'][0] = 'index';
+            $toolbarButtons['back']['attr'] = $attr;
+        }
+        if ($this->action == 'edit') {
+            $toolbarButtons['back']['url'][0] = 'index';
+            if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
+                $toolbarButtons['back']['url']['action']= 'index';
+                unset($toolbarButtons['back']['url'][0]);
+            }
+            unset($toolbarButtons['back']['url'][1]);
+        }
     }
 
     public function editAfterAction($event, Entity $entity)
     {
-        $this->ControllerAction->field('effective_date', ['attr' => ['entity' => $entity]]);
-        $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
-        $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
-        $this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-        $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'select']);
-        $this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
-        $this->ControllerAction->setFieldOrder([
+        $this->field('effective_date', ['attr' => ['entity' => $entity]]);
+        $this->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
+        $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+        $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
+        $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+        $this->field('student_withdraw_reason_id', ['type' => 'select']);
+        $this->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
+        $this->setFieldOrder([
             'created', 'status_id', 'student_id',
             'institution_id', 'academic_period_id', 'education_grade_id',
             'effective_date', 'student_withdraw_reason_id', 'comment',
         ]);
 
-        $urlParams = $this->ControllerAction->url('edit');
+        $urlParams = $this->url('edit');
         if ($urlParams['controller'] == 'Dashboard') {
             $this->Navigation->addCrumb('Withdraw Approvals', $urlParams);
         }
@@ -159,8 +181,8 @@ class StudentWithdrawTable extends AppTable
     public function viewAfterAction($event, Entity $entity)
     {
         $this->request->data[$this->alias()]['status_id'] = $entity->status_id;
-        $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
-        $this->ControllerAction->setFieldOrder([
+        $this->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
+        $this->setFieldOrder([
             'created', 'status_id', 'student_id',
             'institution_id', 'academic_period_id', 'education_grade_id',
             'effective_date', 'student_withdraw_reason_id', 'comment'
@@ -188,27 +210,6 @@ class StudentWithdrawTable extends AppTable
             }
 
             return $attr;
-        }
-    }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        if ($action == 'index') {
-            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-            $toolbarButtons['back']['attr']['title'] = __('Back');
-            $toolbarButtons['back']['url']['plugin'] = 'Institution';
-            $toolbarButtons['back']['url']['controller'] = 'Institutions';
-            $toolbarButtons['back']['url']['action'] = 'Students';
-            $toolbarButtons['back']['url'][0] = 'index';
-            $toolbarButtons['back']['attr'] = $attr;
-        }
-        if ($action == 'edit') {
-            $toolbarButtons['back']['url'][0] = 'index';
-            if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
-                $toolbarButtons['back']['url']['action']= 'index';
-                unset($toolbarButtons['back']['url'][0]);
-            }
-            unset($toolbarButtons['back']['url'][1]);
         }
     }
 
@@ -286,7 +287,7 @@ class StudentWithdrawTable extends AppTable
                         'plugin' => false,
                         'controller' => 'Dashboard',
                         'action' => $this->alias(),
-                        'edit',
+                        'view',
                         $this->paramsEncode(['id' => $row->id])
                     ];
 
