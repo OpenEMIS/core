@@ -5,30 +5,30 @@ use Cake\ORM\Behavior;
 
 class RuleBehavior extends Behavior
 {
-	protected $rule;
-	protected $_defaultConfig = [
-		'feature' => '',
+    protected $rule;
+    protected $_defaultConfig = [
+        'feature' => '',
         'rule' => []
-	];
+    ];
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
 
-		$class = basename(str_replace('\\', '/', get_class($this)));
-		$class = str_replace('Rule', '', $class);
-		$class = str_replace('Behavior', '', $class);
+        $class = basename(str_replace('\\', '/', get_class($this)));
+        $class = str_replace('Rule', '', $class);
+        $class = str_replace('Behavior', '', $class);
 
-		$this->_table->addRuleType($class, $this->config());
-		$this->rule = $class;
-	}
+        $this->_table->addRuleType($class, $this->config());
+        $this->rule = $class;
+    }
 
-	public function implementedEvents()
-	{
-    	$events = parent::implementedEvents();
-    	$eventMap = [
-    		'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields',
-    		'WorkflowRule.onGet'.$this->rule.'Rule' => 'onGet'.$this->rule.'Rule'
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $eventMap = [
+            'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields',
+            'WorkflowRule.onGet'.$this->rule.'Rule' => 'onGet'.$this->rule.'Rule'
         ];
 
         foreach ($eventMap as $event => $method) {
@@ -37,6 +37,6 @@ class RuleBehavior extends Behavior
             }
             $events[$event] = $method;
         }
-		return $events;
-	}
+        return $events;
+    }
 }
