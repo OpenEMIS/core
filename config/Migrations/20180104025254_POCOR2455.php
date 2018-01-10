@@ -20,8 +20,8 @@ class POCOR2455 extends AbstractMigration
         $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 
         // rename institution_staff_assignments
-        $InstitutionStaffAssignments = $this->table('institution_student_withdraw');
-        $InstitutionStaffAssignments->rename('z_2455_institution_student_withdraw');
+        $InstitutionStudentWithdraw = $this->table('institution_student_withdraw');
+        $InstitutionStudentWithdraw->rename('z_2455_institution_student_withdraw');
 
         // institution_staff_transfers
         $InstitutionStudentWithdraw = $this->table('institution_student_withdraw', [
@@ -107,7 +107,7 @@ class POCOR2455 extends AbstractMigration
                 'id' => $this->workflowModelId,
                 'name' => 'Institutions > Students > Student Withdraw',
                 'model' => 'Institution.StudentWithdraw',
-                'filter' => NULL,
+                'filter' => null,
                 'is_school_based' => '1',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -249,12 +249,12 @@ class POCOR2455 extends AbstractMigration
         $workflowActionData = [
             [
                 'name' => 'Submit For Approval',
-                'description' => NULL,
+                'description' => null,
                 'action' => '0',
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '1',
-                'event_key' => NULL,
+                'event_key' => null,
                 'workflow_step_id' => $openStatusId,
                 'next_workflow_step_id' => $pendingApprovalStatusId,
                 'created_user_id' => '1',
@@ -262,7 +262,7 @@ class POCOR2455 extends AbstractMigration
             ],
             [
                 'name' => 'Approve',
-                'description' => NULL,
+                'description' => null,
                 'action' => '0',
                 'visible' => '1',
                 'comment_required' => '0',
@@ -275,12 +275,12 @@ class POCOR2455 extends AbstractMigration
             ],
             [
                 'name' => 'Reject',
-                'description' => NULL,
+                'description' => null,
                 'action' => '1',
                 'visible' => '1',
                 'comment_required' => '1',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => null,
                 'workflow_step_id' => $pendingApprovalStatusId,
                 'next_workflow_step_id' => $rejectedStatusId,
                 'created_user_id' => '1',
@@ -373,5 +373,49 @@ class POCOR2455 extends AbstractMigration
 
     public function down()
     {
+        $this->dropTable('institution_student_withdraw');
+        $InstitutionStudentWithdraw = $this->table('z_2455_institution_student_withdraw');
+        $InstitutionStudentWithdraw->rename('institution_student_withdraw');
+
+        // delete workflow_models
+        $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $this->workflowModelId);
+
+        // delete workflow statuses
+        $this->execute("DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = " . $this->workflowModelId);
+
+        $WorkflowTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+
+        $workflowIds = $WorkflowTable
+            ->find()
+            ->select([$WorkflowTable->aliasField('id')])
+            ->where([
+                $WorkflowTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ]);
+
+        // workflow steps
+        $steps = $WorkflowStepsTable
+            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+            ->select([
+                $WorkflowStepsTable->aliasField('id')
+            ])
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id'). ' IN ' => $workflowIds
+            ])
+            ->toArray();
+
+        $steps = '('. implode(',', $steps) . ')';
+
+        // delete workflow
+        $this->execute("DELETE FROM `workflows` WHERE `workflow_model_id` = " . $this->workflowModelId);
+
+        // delete workflow steps
+        $this->execute("DELETE FROM `workflow_steps` WHERE `id` IN $steps");
+
+        // delete workflow_statuses_steps
+        $this->execute("DELETE FROM `workflow_statuses_steps` WHERE `workflow_step_id` IN $steps");
+
+        // delete workflow_actions
+        $this->execute("DELETE FROM `workflow_actions` WHERE `workflow_step_id` IN $steps");
     }
 }
