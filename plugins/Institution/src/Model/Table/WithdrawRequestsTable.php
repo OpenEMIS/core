@@ -8,8 +8,9 @@ use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Date;
+use App\Model\Table\ControllerActionTable;
 
-class WithdrawRequestsTable extends AppTable
+class WithdrawRequestsTable extends ControllerActionTable
 {
     const NEW_REQUEST = 0;
 
@@ -25,12 +26,16 @@ class WithdrawRequestsTable extends AppTable
         $this->belongsTo('StudentWithdrawReasons', ['className' => 'Student.StudentWithdrawReasons', 'foreignKey' => 'student_withdraw_reason_id']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StudentWithdraw']);
+        $this->toggle('edit', false);
+        $this->toggle('view', false);
+        $this->toggle('remove', false);
+        $this->toggle('index', false);
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $studentId = $this->Session->read('Student.Students.id');
-        $action = $this->ControllerAction->url('add');
+        $action = $this->url('add');
         $action['action'] = 'StudentUser';
         $action[0] = 'view';
         $action[1] = $this->paramsEncode(['id' => $studentId]);
@@ -65,29 +70,36 @@ class WithdrawRequestsTable extends AppTable
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->Session->check($this->registryAlias().'.id')) {
-            $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
-            $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
-            $this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
-            $this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-            $this->ControllerAction->field('effective_date');
-            $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'select']);
-            $this->ControllerAction->field('comment');
+            $this->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
+            $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+            $this->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
+            $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+            $this->field('effective_date');
+            $this->field('student_withdraw_reason_id', ['type' => 'select']);
+            $this->field('comment');
 
-            $this->ControllerAction->setFieldOrder([
+            $this->setFieldOrder([
                 'student_id','institution_id', 'academic_period_id', 'education_grade_id',
                 'effective_date',
                 'student_withdraw_reason_id', 'comment',
             ]);
         } else {
             $Students = TableRegistry::get('Institution.Students');
-            $action = $this->ControllerAction->url('index');
+            $action = $this->url('index');
             $action['action'] = $Students->alias();
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
+
+        $toolbarButtons = $extra['toolbarButtons'];
+        $studentId = $this->Session->read('Student.Students.id');
+        $Students = TableRegistry::get('Institution.StudentUser');
+        $toolbarButtons['back']['url']['action'] = $Students->alias();
+        $toolbarButtons['back']['url'][0] = 'view';
+        $toolbarButtons['back']['url'][1] = $this->paramsEncode(['id' => $studentId]);
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
@@ -121,17 +133,6 @@ class WithdrawRequestsTable extends AppTable
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         return $events;
-    }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $studentId = $this->Session->read('Student.Students.id');
-            $Students = TableRegistry::get('Institution.StudentUser');
-            $toolbarButtons['back']['url']['action'] = $Students->alias();
-            $toolbarButtons['back']['url'][0] = 'view';
-            $toolbarButtons['back']['url'][1] = $this->paramsEncode(['id' => $studentId]);
-        }
     }
 
     public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request)
