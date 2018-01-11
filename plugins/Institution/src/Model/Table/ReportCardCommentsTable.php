@@ -35,6 +35,8 @@ class ReportCardCommentsTable extends ControllerActionTable
         $this->fields['institution_shift_id']['visible'] = false;
         $this->fields['staff_id']['visible'] = false;
         $this->fields['secondary_staff_id']['visible'] = false;
+        $this->fields['total_male_students']['visible'] = false;
+        $this->fields['total_female_students']['visible'] = false;
 
         $this->field('subjects', ['type' => 'integer']);
         $this->field('male_students', ['type' => 'integer']);
