@@ -1110,7 +1110,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Indexes')
+                'StudentIndexes' => __('Risks') //Rename Indexes to Risks POCOR- 4344
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1150,6 +1150,12 @@ class InstitutionsController extends AppController
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
+            } elseif ($model->alias() == 'StudentIndexes') {
+                $header .= ' - '. __('Risks'); //Rename Indexes to Risks POCOR-4344
+            } elseif ($model->alias() == 'Indexes') {
+                $header .= ' - '. __('Risks'); //Rename Indexes to Risks POCOR-4344
+                $this->Navigation->substituteCrumb($model->alias(), __('Risks'));
+           
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
@@ -1494,7 +1500,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentIndexes' => ['text' => __('Indexes')]
+            'StudentIndexes' => ['text' => __('Risks')] //Rename Indexes to Risks POCOR-4344
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
