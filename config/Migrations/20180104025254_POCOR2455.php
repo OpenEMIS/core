@@ -146,7 +146,7 @@ class POCOR2455 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Pending Withdrawal Approval',
+                'name' => 'Pending for Approval',
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
