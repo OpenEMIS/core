@@ -139,6 +139,13 @@ class StudentWithdrawTable extends ControllerActionTable
         $toolbarButtons = $extra['toolbarButtons'];
 
         if ($this->action == 'index') {
+            $attr = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Back')
+            ];
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
             $toolbarButtons['back']['attr']['title'] = __('Back');
             $toolbarButtons['back']['url']['plugin'] = 'Institution';
