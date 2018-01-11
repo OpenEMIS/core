@@ -24,9 +24,10 @@ class IndexesController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $header = __('Indexes');
-        $this->Navigation->addCrumb('Indexes', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Indexes']);
-
+        
+        //Rename Indexes to Risk - POCOR - 4344
+        $header = __('Risks');
+        $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Indexes']);
         $this->set('contentHeader', $header);
     }
 }
