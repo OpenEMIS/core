@@ -14,8 +14,9 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Table\ControllerActionTable;
 
-class InstitutionStudentAbsencesTable extends AppTable
+class InstitutionStudentAbsencesTable extends ControllerActionTable
 {
     use OptionsTrait;
     private $_fieldOrder = [
@@ -51,6 +52,7 @@ class InstitutionStudentAbsencesTable extends AppTable
             ],
             'pages' => ['index']
         ]);
+        $this->addBehavior('Institution.Case');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
@@ -388,15 +390,15 @@ class InstitutionStudentAbsencesTable extends AppTable
 
     public function afterAction(Event $event)
     {
-        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->_fieldOrder);
     }
 
     public function indexBeforeAction(Event $event)
     {
         $absenceTypeOptions = $this->absenceList;
 
-        $this->ControllerAction->field('date');
-        $this->ControllerAction->field('absence_type_id', [
+        $this->field('date');
+        $this->field('absence_type_id', [
             'options' => $absenceTypeOptions
         ]);
 
@@ -434,11 +436,11 @@ class InstitutionStudentAbsencesTable extends AppTable
         // Temporary fix for error on view page
         unset($this->_fieldOrder[1]); // Academic period not in use in view page
         unset($this->_fieldOrder[2]); // Class not in use in view page
-        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->_fieldOrder);
         // End fix
 
         $absenceTypeOptions = $this->absenceList;
-        $this->ControllerAction->field('absence_type_id', [
+        $this->field('absence_type_id', [
             'options' => $absenceTypeOptions
         ]);
 
@@ -462,19 +464,19 @@ class InstitutionStudentAbsencesTable extends AppTable
         $fullDayOptions = $this->getSelectOptions('general.yesno');
         $absenceTypeOptions = $this->absenceList;
 
-        $this->ControllerAction->field('absence_type_id', [
+        $this->field('absence_type_id', [
             'options' => $absenceTypeOptions
         ]);
-        $this->ControllerAction->field('academic_period_id', [
+        $this->field('academic_period_id', [
             'options' => $periodOptions
         ]);
-        $this->ControllerAction->field('class', [
+        $this->field('class', [
             'options' => $classOptions
         ]);
-        $this->ControllerAction->field('student_id', [
+        $this->field('student_id', [
             'options' => $studentOptions
         ]);
-        $this->ControllerAction->field('full_day', [
+        $this->field('full_day', [
             'options' => $fullDayOptions
         ]);
         // Start Date and End Date
@@ -483,21 +485,21 @@ class InstitutionStudentAbsencesTable extends AppTable
             $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
             $endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
-            $this->ControllerAction->field('end_date');
+            $this->field('end_date');
 
             $this->fields['start_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
             $this->fields['start_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
             $this->fields['end_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
             $this->fields['end_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
         } else if ($this->action == 'edit') {
-            $this->ControllerAction->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
-            $this->ControllerAction->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
+            $this->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
+            $this->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
         }
         // End
 
-        $this->ControllerAction->field('start_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->start_time))]]);
-        $this->ControllerAction->field('end_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->end_time))]]);
-        $this->ControllerAction->field('student_absence_reason_id', ['type' => 'select']);
+        $this->field('start_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->start_time))]]);
+        $this->field('end_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->end_time))]]);
+        $this->field('student_absence_reason_id', ['type' => 'select']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
