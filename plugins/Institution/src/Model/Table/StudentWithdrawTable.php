@@ -10,8 +10,9 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Datasource\ResultSetInterface;
+use App\Model\Table\ControllerActionTable;
 
-class StudentWithdrawTable extends AppTable
+class StudentWithdrawTable extends ControllerActionTable
 {
     private $workflowEvents = [
         [
@@ -37,6 +38,7 @@ class StudentWithdrawTable extends AppTable
         ]);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->addBehavior('Workflow.Workflow');
+        $this->toggle('add', false);
     }
 
     public function implementedEvents()
@@ -122,35 +124,62 @@ class StudentWithdrawTable extends AppTable
         $this->request->data[$this->alias()]['effective_date'] = $entity->start_date;
     }
 
-    public function afterAction($event)
+    public function afterAction($event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
-        $this->ControllerAction->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
-        $this->ControllerAction->field('student_id');
-        $this->ControllerAction->field('status_id');
-        $this->ControllerAction->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'readonly']);
-        $this->ControllerAction->field('education_grade_id');
-        $this->ControllerAction->field('comment');
-        $this->ControllerAction->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+        $this->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
+        $this->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+        $this->field('student_id');
+        $this->field('status_id');
+        $this->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
+        $this->field('academic_period_id', ['type' => 'readonly']);
+        $this->field('education_grade_id');
+        $this->field('comment');
+        $this->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+
+        $toolbarButtons = $extra['toolbarButtons'];
+
+        if ($this->action == 'index') {
+            $attr = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Back')
+            ];
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr']['title'] = __('Back');
+            $toolbarButtons['back']['url']['plugin'] = 'Institution';
+            $toolbarButtons['back']['url']['controller'] = 'Institutions';
+            $toolbarButtons['back']['url']['action'] = 'Students';
+            $toolbarButtons['back']['url'][0] = 'index';
+            $toolbarButtons['back']['attr'] = $attr;
+        }
+        if ($this->action == 'edit') {
+            $toolbarButtons['back']['url'][0] = 'index';
+            if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
+                $toolbarButtons['back']['url']['action']= 'index';
+                unset($toolbarButtons['back']['url'][0]);
+            }
+            unset($toolbarButtons['back']['url'][1]);
+        }
     }
 
     public function editAfterAction($event, Entity $entity)
     {
-        $this->ControllerAction->field('effective_date', ['attr' => ['entity' => $entity]]);
-        $this->ControllerAction->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
-        $this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
-        $this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
-        $this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-        $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'select']);
-        $this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
-        $this->ControllerAction->setFieldOrder([
+        $this->field('effective_date', ['attr' => ['entity' => $entity]]);
+        $this->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
+        $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
+        $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
+        $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
+        $this->field('student_withdraw_reason_id', ['type' => 'select']);
+        $this->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
+        $this->setFieldOrder([
             'created', 'status_id', 'student_id',
             'institution_id', 'academic_period_id', 'education_grade_id',
             'effective_date', 'student_withdraw_reason_id', 'comment',
         ]);
 
-        $urlParams = $this->ControllerAction->url('edit');
+        $urlParams = $this->url('edit');
         if ($urlParams['controller'] == 'Dashboard') {
             $this->Navigation->addCrumb('Withdraw Approvals', $urlParams);
         }
@@ -159,8 +188,8 @@ class StudentWithdrawTable extends AppTable
     public function viewAfterAction($event, Entity $entity)
     {
         $this->request->data[$this->alias()]['status_id'] = $entity->status_id;
-        $this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
-        $this->ControllerAction->setFieldOrder([
+        $this->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
+        $this->setFieldOrder([
             'created', 'status_id', 'student_id',
             'institution_id', 'academic_period_id', 'education_grade_id',
             'effective_date', 'student_withdraw_reason_id', 'comment'
@@ -190,105 +219,6 @@ class StudentWithdrawTable extends AppTable
             return $attr;
         }
     }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        if ($action == 'index') {
-            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-            $toolbarButtons['back']['attr']['title'] = __('Back');
-            $toolbarButtons['back']['url']['plugin'] = 'Institution';
-            $toolbarButtons['back']['url']['controller'] = 'Institutions';
-            $toolbarButtons['back']['url']['action'] = 'Students';
-            $toolbarButtons['back']['url'][0] = 'index';
-            $toolbarButtons['back']['attr'] = $attr;
-        }
-        if ($action == 'edit') {
-            $toolbarButtons['back']['url'][0] = 'index';
-            if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
-                $toolbarButtons['back']['url']['action']= 'index';
-                unset($toolbarButtons['back']['url'][0]);
-            }
-            unset($toolbarButtons['back']['url'][1]);
-        }
-    }
-
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
-    {
-        $process = function ($model, $entity) use ($data) {
-            if (!empty($entity->errors())) {
-                return false;
-            }
-
-            $entity->comment = $data[$this->alias()]['comment'];
-            $effectiveDate = strtotime($data[$this->alias()]['effective_date']);
-            $Students = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-            $statuses = $StudentStatuses->findCodeList();
-
-            $institutionId = $entity->institution_id;
-            $studentId = $entity->student_id;
-            $periodId = $entity->academic_period_id;
-            $gradeId = $entity->education_grade_id;
-
-            $conditions = [
-                'institution_id' => $institutionId,
-                'student_id' => $studentId,
-                'academic_period_id' => $periodId,
-                'education_grade_id' => $gradeId,
-                'student_status_id' => $statuses['WITHDRAWN']
-            ];
-
-            $newData = $conditions;
-
-            // If the student is not already drop out
-            if (!$Students->exists($conditions)) {
-                // Change the status_id of the student in the school
-                // Update only enrolled statuses student
-                $existingStudentEntity = $Students->find()->where([
-                        $Students->aliasField('institution_id') => $institutionId,
-                        $Students->aliasField('student_id') => $studentId,
-                        $Students->aliasField('academic_period_id') => $periodId,
-                        $Students->aliasField('education_grade_id') => $gradeId,
-                        $Students->aliasField('student_status_id') => $statuses['CURRENT']
-                    ])
-                    ->first();
-
-                if (!empty($existingStudentEntity)) {
-                    // approval should not proceed
-                    $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
-                    $existingStudentEntity->end_date = $effectiveDate;
-                    $result = $Students->save($existingStudentEntity);
-
-                    if ($result) {
-                        $entity->status_id = self::APPROVED;
-                        $entity->effective_date = date('Y-m-d', $effectiveDate);
-                        if ($this->save($entity)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        };
-        return $process;
-    }
-
-    // public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    // {
-    //     $this->Alert->success('StudentWithdraw.approve', ['reset' => true]);
-    //     // To redirect back to the student withdraw if it is not access from the workbench
-    //     $urlParams = $this->ControllerAction->url('index');
-    //     $plugin = false;
-    //     $controller = 'Dashboard';
-    //     $action = 'index';
-    //     if ($urlParams['controller'] == 'Institutions') {
-    //         $plugin = 'Institution';
-    //         $controller = 'Institutions';
-    //         $action = 'StudentWithdraw';
-    //     }
-    //     $event->stopPropagation();
-    //     return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
-    // }
 
     public function validationDefault(Validator $validator)
     {
@@ -352,9 +282,10 @@ class StudentWithdrawTable extends AppTable
                 $this->CreatedUser->aliasField('middle_name'),
                 $this->CreatedUser->aliasField('third_name'),
                 $this->CreatedUser->aliasField('last_name'),
-                $this->CreatedUser->aliasField('preferred_name')
+                $this->CreatedUser->aliasField('preferred_name'),
+                'Statuses.name'
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(), 'Statuses'])
             ->where($where)
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
@@ -363,7 +294,7 @@ class StudentWithdrawTable extends AppTable
                         'plugin' => false,
                         'controller' => 'Dashboard',
                         'action' => $this->alias(),
-                        'edit',
+                        'view',
                         $this->paramsEncode(['id' => $row->id])
                     ];
 
@@ -372,9 +303,8 @@ class StudentWithdrawTable extends AppTable
                     } else {
                         $receivedDate = $this->formatDate($row->modified);
                     }
-
                     $row['url'] = $url;
-                    $row['status_id'] = __('Pending For Approval');
+                    $row['status'] = __($row->status->name);
                     $row['request_title'] = sprintf(__('Withdraw request of %s'), $row->user->name_with_id);
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
