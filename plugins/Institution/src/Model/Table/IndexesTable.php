@@ -65,10 +65,6 @@ class IndexesTable extends ControllerActionTable
             'order' => 3
         ];
         // end element control
-
-      
-
-          
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
