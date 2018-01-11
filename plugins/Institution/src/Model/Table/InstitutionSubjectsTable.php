@@ -488,6 +488,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->fields['students']['visible'] = false;
         $this->fields['education_subject_id']['visible'] = false;
 
+        $this->fields['total_male_students']['visible'] = false;
+        $this->fields['total_female_students']['visible'] = false; 
         $this->fields['class_name']['visible'] = true;
         $this->fields['subjects']['visible'] = true;
         $this->setFieldOrder([
