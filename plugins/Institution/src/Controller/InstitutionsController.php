@@ -1118,7 +1118,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Risks') //Rename Indexes to Risks POCOR- 4344
+                'StudentIndexes' => __('Risks') 
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1159,12 +1159,14 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
             } elseif ($model->alias() == 'StudentIndexes') {
-                $header .= ' - '. __('Risks'); //Rename Indexes to Risks POCOR-4344
+                $header .= ' - '. __('Risks'); 
             } elseif ($model->alias() == 'Indexes') {
-                $header .= ' - '. __('Risks'); //Rename Indexes to Risks POCOR-4344
-                $this->Navigation->substituteCrumb($model->alias(), __('Risks'));
-           
-            } else {
+                $header .= ' - '. __('Risks'); 
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
+            } elseif ($model->alias() == 'InstitutionStudentIndexes') {
+                $header .= ' - '. __('Institution Student Risks'); 
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
+            }else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1508,7 +1510,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentIndexes' => ['text' => __('Risks')] //Rename Indexes to Risks POCOR-4344
+            'StudentIndexes' => ['text' => __('Risks')] 
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);

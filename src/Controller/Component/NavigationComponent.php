@@ -562,7 +562,7 @@ class NavigationComponent extends Component
                 ],
         
             'Institutions.Indexes.index' => [
-                'title' => 'Risks', //Rename Indexes to Risk - POCOR - 4344
+                'title' => 'Risks', 
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Indexes','Institutions.InstitutionStudentIndexes'],
                 'params' => ['plugin' => 'Institution'],
@@ -1270,7 +1270,7 @@ class NavigationComponent extends Component
                     'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit', 'Notices.delete']
                 ],
                 'Indexes.Indexes' => [
-                    'title' => 'Risks', //Rename Indexes to Risk - POCOR - 4344
+                    'title' => 'Risks', 
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Indexes'],
                     'selected' => ['Indexes.Indexes']
