@@ -2113,7 +2113,6 @@ class ValidationBehavior extends Behavior
             })
             ->where([
                 $InstitutionStudentTransfers->aliasField('student_id') => $studentId,
-                $InstitutionStudentTransfers->aliasField('institution_id') => $institutionId,
                 $InstitutionStudentTransfers->aliasField('previous_institution_id') => $previousInstitutionId
             ])
             ->first();
@@ -2121,9 +2120,11 @@ class ValidationBehavior extends Behavior
         if (!empty($pendingTransfer)) {
             // check if the incoming institution can view the transfer record
             $visible = 0;
-            $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
-            if ($institutionOwner == $InstitutionStudentTransfers::INCOMING || $pendingTransfer->all_visible) {
-                $visible = 1;
+            if ($pendingTransfer->institution_id == $institutionId) {
+                $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
+                if ($institutionOwner == $InstitutionStudentTransfers::INCOMING || $pendingTransfer->all_visible) {
+                    $visible = 1;
+                }
             }
 
             if ($visible) {
