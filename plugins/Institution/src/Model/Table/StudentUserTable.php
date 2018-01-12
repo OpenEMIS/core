@@ -344,11 +344,11 @@ class StudentUserTable extends ControllerActionTable
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->name, 'StudentTransferOut', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
-            $TransferRequests = TableRegistry::get('Institution.TransferRequests');
+            $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
 
             $institutionStudentId = $extra['institutionStudentId'];
             $studentEntity = $StudentsTable->get($institutionStudentId);
@@ -357,7 +357,7 @@ class StudentUserTable extends ControllerActionTable
             $studentId = $studentEntity->student_id;
 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'TransferRequests', 'add'], $params);
+            $action = $this->setQueryString(['controller' => $this->controller->name, 'action' => 'StudentTransferOut', 'add'], $params);
 
             $checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
@@ -370,16 +370,18 @@ class StudentUserTable extends ControllerActionTable
                 $transferButton['url'] = $action;
 
                 // check if there is an existing transfer request
-                $transferRequest = $TransferRequests
-                    ->find()
+                $doneStatus = $StudentTransfers::DONE;
+                $existingTransfers = $StudentTransfers->find()
+                    ->matching('Statuses', function ($q) use ($doneStatus) {
+                        return $q->where(['category <> ' => $doneStatus]);
+                    })
                     ->where([
-                        $TransferRequests->aliasField('previous_institution_id') => $institutionId,
-                        $TransferRequests->aliasField('student_id') => $studentId,
-                        $TransferRequests->aliasField('status') => 0
+                        $StudentTransfers->aliasField('previous_institution_id') => $institutionId,
+                        $StudentTransfers->aliasField('student_id') => $studentId
                     ])
                     ->first();
 
-                if (!empty($transferRequest)) {
+                if (!empty($existingTransfers)) {
                     $transferButton['url'][0] = 'view';
                     $transferButton['url'][1] = $this->paramsEncode(['id' => $transferRequest->id]);
                 }
