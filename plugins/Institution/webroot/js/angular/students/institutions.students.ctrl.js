@@ -213,7 +213,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             } else if ($location.search().student_transfer_added) {
                 AlertSvc.success($scope, 'Student transfer request is added successfully.');
             }  else if ($location.search().transfer_exists) {
-                AlertSvc.success($scope, 'There is an existing transfer record for this student.');
+                AlertSvc.warning($scope, 'There is an existing transfer record for this student.');
             }
         });
 
@@ -908,11 +908,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.addStudentTransferRequest(data)
         .then(function(postResponse) {
             StudentController.postResponse = postResponse.data;
+            var counter = 0;
+            angular.forEach(postResponse.data.error , function(value) {
+                counter++;
+            });
 
-            if (postResponse.data.error.length == 0) {
+            if (counter == 0) {
                 AlertSvc.success($scope, 'Student transfer request is added successfully.');
                 $window.location.href = 'add?student_transfer_added=true';
-            } else if (postResponse.data.error.hasOwnProperty('student_id') && postResponse.data.error.student_id.hasOwnProperty('ruleTransferRequestExists')) {
+            } else if (counter == 1 && postResponse.data.error.hasOwnProperty('student_id') && postResponse.data.error.student_id.hasOwnProperty('ruleTransferRequestExists')) {
                 AlertSvc.warning($scope, 'There is an existing transfer record for this student.');
                 $window.location.href = postResponse.data.error.student_id.ruleTransferRequestExists;
             } else {
@@ -1133,7 +1137,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // Step 5 - Transfer Student
         else {
             var studentData = StudentController.selectedStudentData;
-            AlertSvc.info($scope, 'By clicking save, a transfer request will be sent to the institution for approval');
+            AlertSvc.info($scope, 'By clicking save, a transfer workflow will be initiated for this student');
 
             var periodStartDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['start_date']);
             var periodEndDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['end_date']);
