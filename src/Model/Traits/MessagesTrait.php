@@ -1232,7 +1232,12 @@ trait MessagesTrait
                 'previous_effective_date' => [
                     'ruleCompareDateReverse' => 'Effective Date should not be earlier than Position Start Date'
                 ]
-            ]
+            ],
+            'StudentTransferIn' => [
+                'education_grade_id' => [
+                    'ruleCheckInstitutionOffersGrade' => 'This institution does not offer this Education Grade'
+                ]
+            ],
         ],
         'User' => [
             'Users' => [
