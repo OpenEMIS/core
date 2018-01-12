@@ -19,7 +19,8 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentsTable extends ControllerActionTable
 {
-    const PENDING_TRANSFER = -2;
+    const PENDING_TRANSFERIN = -1;
+    const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
     const PENDING_WITHDRAW = -4;
 
@@ -502,9 +503,10 @@ class StudentsTable extends ControllerActionTable
 
         // To redirect to Pending statuses page
         $pendingStatuses = [
-            $StudentStatusesTable->PENDING_ADMISSION => 'StudentAdmission',
-            $StudentStatusesTable->PENDING_TRANSFER => 'TransferRequests',
-            $StudentStatusesTable->PENDING_WITHDRAW => 'StudentWithdraw'
+            self::PENDING_ADMISSION => 'StudentAdmission',
+            self::PENDING_TRANSFERIN => 'StudentTransferIn',
+            self::PENDING_TRANSFEROUT => 'StudentTransferOut',
+            self::PENDING_WITHDRAW => 'StudentWithdraw'
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
@@ -571,9 +573,10 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
         $StudentStatusesTable = $this->StudentStatuses;
         $pendingStatus = [
-            $StudentStatusesTable->PENDING_TRANSFER => __('Pending Transfer'),
-            $StudentStatusesTable->PENDING_ADMISSION => __('Pending Admission'),
-            $StudentStatusesTable->PENDING_WITHDRAW => __('Pending Withdraw'),
+            self::PENDING_TRANSFERIN => __('Pending Transfer In'),
+            self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
+            self::PENDING_ADMISSION => __('Pending Admission'),
+            self::PENDING_WITHDRAW => __('Pending Withdraw'),
         ];
 
         $statusOptions = $statusOptions + $pendingStatus;
