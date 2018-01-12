@@ -213,9 +213,9 @@ class AppController extends Controller
                         }
                         $code = Inflector::underscore(str_replace(' ', '', $r->name));
                         if ($code == 'login_page_image' || $code == 'favicon') {
-                            $res[$code] = !empty($r->value) ? 'themes' . DS . $r->value : 'default_images' . DS . $r->default_value;
+                            $res[$code] = !empty($r->value) ? 'themes/' . $r->value : 'default_images/' . $r->default_value;
                         } elseif ($code == 'copyright_notice_in_footer' || $code == 'logo') {
-                            $res[$code] = !empty($r->value) ? 'themes' . DS . $r->value : null;
+                            $res[$code] = !empty($r->value) ? 'themes/' . $r->value : null;
                         } else {
                             $res[$code] = !empty($r->value) ? $r->value : $r->default_value;
                         }
@@ -226,7 +226,8 @@ class AppController extends Controller
             $colour = $themes['colour'];
             $secondaryColour = $this->darkenColour($colour);
             $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
-            $loginBackground = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]). DS . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
+            $basePath = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]) . '/';
+            $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
             $file = new File($customPath . 'layout.core.template.css');
             $template = $file->read();
             $file->close();
