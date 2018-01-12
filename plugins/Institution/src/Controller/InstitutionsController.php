@@ -380,6 +380,14 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
     }
+    public function StudentTransferIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
+    }
+    public function StudentTransferOut()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferOut']);
+    }
     // End
 
     // AngularJS
@@ -1175,7 +1183,7 @@ class InstitutionsController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferOut'])) {
+                    if (in_array($model->alias(), ['StaffTransferOut', 'StudentTransferOut'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
@@ -1233,7 +1241,7 @@ class InstitutionsController extends AppController
                     $this->Alert->error('general.notExists');
                     // should redirect
                 } else {
-                    if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut'])) {
+                    if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut', 'StudentTransferIn', 'StudentTransferOut'])) {
                         $institutionId = $this->request->param('institutionId');
                         try {
                             $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];
