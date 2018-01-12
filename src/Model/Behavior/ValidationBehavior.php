@@ -2039,6 +2039,7 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    // only used for StaffTransferIn
     public static function checkPendingStaffTransfer($field, array $globalData)
     {
         $data = $globalData['data'];
@@ -2082,6 +2083,65 @@ class ValidationBehavior extends Behavior
                     'institutionId' => $InstitutionStaffTransfers->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
                     'action' => 'Staff',
+                    'add',
+                    'transfer_exists' => 'true'
+                ], true);
+            }
+            return $url;
+        }
+
+        return true;
+    }
+
+    // only used for StudentTransferIn
+    public static function checkPendingStudentTransfer($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        $studentId = $data['student_id'];
+        $institutionId = $data['institution_id'];
+        $previousInstitutionId = $data['previous_institution_id'];
+
+        $InstitutionStudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $doneStatus = $InstitutionStudentTransfers::DONE;
+
+        $pendingTransfer = $InstitutionStudentTransfers->find()
+            ->matching('Statuses.WorkflowStepsParams', function ($q) use ($doneStatus) {
+                return $q->where([
+                    'Statuses.category <> ' => $doneStatus,
+                    'WorkflowStepsParams.name' => 'institution_owner'
+                ]);
+            })
+            ->where([
+                $InstitutionStudentTransfers->aliasField('student_id') => $studentId,
+                $InstitutionStudentTransfers->aliasField('institution_id') => $institutionId,
+                $InstitutionStudentTransfers->aliasField('previous_institution_id') => $previousInstitutionId
+            ])
+            ->first();
+
+        if (!empty($pendingTransfer)) {
+            // check if the incoming institution can view the transfer record
+            $visible = 0;
+            $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
+            if ($institutionOwner == $InstitutionStudentTransfers::INCOMING || $pendingTransfer->all_visible) {
+                $visible = 1;
+            }
+
+            if ($visible) {
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'institutionId' => $InstitutionStudentTransfers->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StudentTransferIn',
+                    'view',
+                    $InstitutionStudentTransfers->paramsEncode(['id' => $pendingTransfer->id])
+                ], true);
+
+            } else {
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'institutionId' => $InstitutionStudentTransfers->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'Students',
                     'add',
                     'transfer_exists' => 'true'
                 ], true);
@@ -2417,5 +2477,25 @@ class ValidationBehavior extends Behavior
         }
 
         return true;
+    }
+
+    public static function checkInstitutionOffersGrade($field, array $globalData)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $institutionId = (array_key_exists('institution_id', $globalData['data']))? $globalData['data']['institution_id']: null;
+
+        if (!empty($institutionId)) {
+            $query = $InstitutionGrades->find()
+                ->where([
+                    $InstitutionGrades->aliasField('education_grade_id') => $field,
+                    $InstitutionGrades->aliasField('institution_id') => $institutionId
+                ])
+                ->first();
+
+            if (!empty($query)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
@@ -54,6 +55,17 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             'unique' => true
         ]
     ];
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('education_grade_id', 'ruleCheckInstitutionOffersGrade', [
+                'rule' => ['checkInstitutionOffersGrade'],
+                'on' => 'create'
+            ]);
+    }
 
     public function implementedEvents()
     {
