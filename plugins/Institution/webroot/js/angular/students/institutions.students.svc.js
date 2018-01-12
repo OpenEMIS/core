@@ -24,6 +24,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getColumnDefs: getColumnDefs,
         getStudentData: getStudentData,
         postEnrolledStudent: postEnrolledStudent,
+        addStudentTransferRequest: addStudentTransferRequest,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
         makeDate: makeDate,
@@ -50,7 +51,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         addUserNationality: addUserNationality,
         getExternalSourceMapping: getExternalSourceMapping,
         generatePassword: generatePassword,
-        translate: translate
+        translate: translate,
+        getStudentTransferReasons: getStudentTransferReasons
     };
 
     var models = {
@@ -68,7 +70,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
-        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
+        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes',
+        StudentTransferIn: 'Institution.StudentTransferIn',
+        StudentTransferReasons: 'Student.StudentTransferReasons'
     };
 
     return service;
@@ -596,7 +600,14 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         data['status_id'] = 0;
         data['institution_id'] = institutionId;
         data['institution_class_id'] = data['class'];
-        return StudentRecords.save(data)
+        return StudentRecords.save(data);
+    };
+
+    function addStudentTransferRequest(data) {
+        data['start_date'] = this.formatDateForSaving(data['start_date']);
+        data['end_date'] = this.formatDateForSaving(data['end_date']);
+        data['requested_date'] = this.formatDateForSaving(data['requested_date']);
+        return StudentTransferIn.save(data);
     };
 
     function setInstitutionId(id) {
@@ -768,8 +779,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .contain(['IdentityTypes'])
             .ajax({defer: true});
     }
+
     function getSpecialNeedTypes() {
         return SpecialNeedTypes
+            .select()
+            .ajax({defer: true});
+    }
+
+    function getStudentTransferReasons() {
+        return StudentTransferReasons
             .select()
             .ajax({defer: true});
     }
