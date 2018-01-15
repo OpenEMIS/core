@@ -109,7 +109,7 @@ class ExcelReportBehavior extends Behavior
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
 
-        $temppath = tempnam(TMP, 'ExcelReport');
+        $temppath = tempnam($extra['path'], $this->config('filename') . '_');
         $extra['file_path'] = $temppath;
 
         $objPHPExcel = $this->loadExcelTemplate($extra);
@@ -136,12 +136,7 @@ class ExcelReportBehavior extends Behavior
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
             $tempfile->close();
-
-            // delete file as content is already stored in a variable
-            if ($this->config('purge')) {
-                $tempfile->delete();
-            }
-
+            
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
 
@@ -170,12 +165,10 @@ class ExcelReportBehavior extends Behavior
             $entity = $Table->get($recordId);
 
             if ($entity->has('excel_template_name')) {
-                $pathInfo = pathinfo($entity->excel_template_name);
-                $filename = $this->config('filename') . '_Template_' . date('Ymd') . 'T' . date('His') . '.' . $pathInfo['extension'];
                 $file = $this->getFile($entity->excel_template);
 
                 // Create a temporary file
-                $filepath = $extra['path'] . DS . $filename;
+                $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
