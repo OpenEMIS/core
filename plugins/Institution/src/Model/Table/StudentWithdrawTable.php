@@ -133,8 +133,13 @@ class StudentWithdrawTable extends ControllerActionTable
         $this->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
         $this->field('academic_period_id', ['type' => 'readonly']);
         $this->field('education_grade_id');
-        $this->field('comment');
         $this->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+
+        $this->setFieldOrder([
+            'created', 'status_id', 'student_id',
+            'institution_id', 'academic_period_id', 'education_grade_id',
+            'effective_date', 'student_withdraw_reason_id', 'comment'
+        ]);
 
         $toolbarButtons = $extra['toolbarButtons'];
 
