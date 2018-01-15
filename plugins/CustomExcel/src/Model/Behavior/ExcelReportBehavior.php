@@ -109,14 +109,14 @@ class ExcelReportBehavior extends Behavior
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
 
-        $filepath = $extra['path'] . $extra['file'];
-        $extra['file_path'] = $extra['path'] . $extra['file'];
+        $temppath = tempnam(TMP, 'ExcelReport');
+        $extra['file_path'] = $temppath;
 
         $objPHPExcel = $this->loadExcelTemplate($extra);
         $this->generateExcel($objPHPExcel, $extra);
 
         if ($this->config('format') == 'xlsx') {
-            $this->saveExcel($objPHPExcel, $filepath);
+            $this->saveExcel($objPHPExcel, $temppath);
         }
 
         if ($extra->offsetExists('temp_logo')) {
@@ -132,12 +132,22 @@ class ExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
         if ($this->config('download')) {
-            $this->downloadFile($filepath);
+            $tempfile = new File($temppath);
+            $tempinfo = $tempfile->info();
+            $tempcontent = $tempfile->read();
+            $tempfile->close();
+
+            // delete file as content is already stored in a variable
+            if ($this->config('purge')) {
+                $tempfile->delete();
+            }
+
+            $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
 
         if ($this->config('purge')) {
             // delete excel file after download
-            $this->deleteFile($filepath);
+            $this->deleteFile($temppath);
         }
     }
 
@@ -353,20 +363,18 @@ class ExcelReportBehavior extends Behavior
         $objWriter->save($filepath);
     }
 
-    public function downloadFile($filepath)
+    public function downloadFile($filecontent, $filename, $filesize)
     {
-        $filename = basename($filepath);
-
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
         header("Content-Type: application/force-download");
         header("Content-Type: application/octet-stream");
         header("Content-Type: application/download");
-        header("Content-Disposition: attachment; filename=".$filename);
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
         header("Content-Transfer-Encoding: binary");
-        header("Content-Length: ".filesize($filepath));
-        echo file_get_contents($filepath);
+        header("Content-Length: " . $filesize);
+        echo $filecontent;
     }
 
     public function deleteFile($filepath)
