@@ -112,7 +112,7 @@ class TransferBehavior extends Behavior
 
     public function onGetInstitutionOwner(Event $event, Entity $entity)
     {
-        $value = '';
+        $value = ' ';
         if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
             $params = $entity->workflow_steps_params;
             $key = array_search('institution_owner', array_column($params, 'name'));
