@@ -655,7 +655,9 @@ class StudentUserTable extends ControllerActionTable
             'InstitutionStudents' => function ($q) {
                 return $q->where(['InstitutionStudents.student_status_id' => 1]);
             },
-            'InstitutionStudents.Institutions.Areas'
+            'InstitutionStudents.Institutions.Areas',
+            'InstitutionStudents.AcademicPeriods',
+            'InstitutionStudents.EducationGrades'
         ]);
         return $query;
     }
