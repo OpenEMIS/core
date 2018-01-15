@@ -6,7 +6,6 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
@@ -55,17 +54,6 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             'unique' => true
         ]
     ];
-
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-        return $validator
-            ->add('education_grade_id', 'ruleCheckInstitutionOffersGrade', [
-                'rule' => ['checkInstitutionOffersGrade'],
-                'on' => 'create'
-            ]);
-    }
 
     public function implementedEvents()
     {
@@ -133,6 +121,13 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
     }
 
+    public function addSections()
+    {
+        $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
+        $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('all_visible', ['type' => 'hidden']);
@@ -187,6 +182,15 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $value = '';
         if ($entity->has('institution')) {
             $value = $entity->institution->code_name;
+        }
+        return $value;
+    }
+
+    public function onGetStudentId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name_with_id;
         }
         return $value;
     }
