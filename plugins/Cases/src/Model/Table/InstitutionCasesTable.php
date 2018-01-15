@@ -113,7 +113,7 @@ class InstitutionCasesTable extends ControllerActionTable
             if ($entity->has('linked_records')) {
                 $attr['value'] = sizeof($entity->linked_records);
             }
-        } else if ($action == 'view') {
+        } elseif ($action == 'view') {
             $tableHeaders = [__('Feature'), __('Summary')];
             $tableCells = [];
 
@@ -186,7 +186,6 @@ class InstitutionCasesTable extends ControllerActionTable
                 $WorkflowRules->aliasField('feature') => $feature
             ])
             ->all();
-
         // loop through each rule setup for the feature
         // if the record match the rule, then create a new case and linked it with the record
         if (!$workflowRuleResults->isEmpty()) {
@@ -197,10 +196,17 @@ class InstitutionCasesTable extends ControllerActionTable
                     $where['id'] = $recordId;
 
                     $query = $linkedRecordModel
-                        ->find()
-                        ->where($where);
+                        ->find();
 
-                    if ($query->count() > 0) {
+                    $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetLinkedRecordsCheckCondition', [$query, $where], $linkedRecordModel);
+
+                    if ($event->result) {
+                        $checkCondition = $event->result;
+                    } else {
+                        $checkCondition = $query->where($where)->count() > 0;
+                    }
+
+                    if ($checkCondition) {
                         $existingLinkedCaseResults = $this
                             ->find()
                             ->matching('LinkedRecords', function ($q) use ($recordId, $feature) {
