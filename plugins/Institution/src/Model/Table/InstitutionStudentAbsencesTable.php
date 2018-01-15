@@ -68,7 +68,49 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
+        $events['InstitutionCase.onSetLinkedRecordsCheckCondition'] = 'onSetLinkedRecordsCheckCondition';
+        $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         return $events;
+    }
+
+    public function onSetCustomCaseTitle(Event $event, Entity $entity)
+    {
+        $recordEntity = $this->get($entity->id, [
+            'contain' => ['Users', 'AbsenceTypes', 'Institutions']
+        ]);
+        $title = '';
+        $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->absence_type->name;
+
+        return $title;
+    }
+
+    public function onSetCustomCaseSummary(Event $event, int $id)
+    {
+        $recordEntity = $this->get($id, [
+            'contain' => ['Users', 'AbsenceTypes', 'Institutions']
+        ]);
+        $title = '';
+        $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->absence_type->name;
+
+        return $title;
+    }
+
+    public function onSetLinkedRecordsCheckCondition(Event $event, Query $query, array $where)
+    {
+        $record = $this->get($where['id']);
+        $currentAcademicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
+        $newQuery = $this->find();
+        $query
+            ->find('academicPeriod', ['academic_period_id' => $currentAcademicPeriodId])
+            ->select(['absent_days' => '(DATEDIFF(`end_date`, `start_date`)) + 1'])
+            ->where([
+                $this->aliasField('absence_type_id') => $where['absence_type_id'],
+                $this->aliasField('student_id') => $record->student_id
+            ]);
+        $arr = array_column($query->hydrate(false)->toArray(), 'absent_days');
+        $sum = array_sum($arr);
+        return $sum;
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
