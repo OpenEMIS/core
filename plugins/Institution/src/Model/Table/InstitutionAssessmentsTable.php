@@ -294,12 +294,11 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'name') {
             return __('Class Name');
-        } else if ($field == 'total_male_students'){
+        } else if ($field == 'total_male_students') {
             return  __('Male Students');
-        }else if ($field == 'total_female_students'){
+        } else if ($field == 'total_female_students') {
             return  __('Female Students');
-        }
-        else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
