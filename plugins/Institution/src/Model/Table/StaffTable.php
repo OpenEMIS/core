@@ -387,10 +387,10 @@ class StaffTable extends ControllerActionTable
         $activeStatusId = $this->Workflow->getStepsByModelCode('Institution.InstitutionPositions', 'ACTIVE');
 
         $positionData = $StaffPositionTitles->find('list')
-            ->matching('Titles', function ($q) use ($institutionId, $activeStatusId) {
+            ->matching('InstitutionPositions', function ($q) use ($institutionId, $activeStatusId) {
                 $q->where([
-                    'Titles.institution_id' => $institutionId,
-                    'Titles.status_id IN ' => $activeStatusId
+                    'InstitutionPositions.institution_id' => $institutionId,
+                    'InstitutionPositions.status_id IN ' => $activeStatusId
                 ]);
                 return $q;
             })
