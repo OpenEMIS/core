@@ -887,12 +887,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
         var endDate = $scope.endDate;
-        var requestedDate = $filter('date')(new Date(), 'yyyy-MM-dd');
 
         var data = {
             start_date: startDate,
             end_date: endDate,
-            requested_date: requestedDate,
             student_id: StudentController.selectedStudent,
             status_id: 0,
             institution_id: StudentController.institutionId,
