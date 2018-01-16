@@ -100,7 +100,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $canAddButtons;
     }
 
-    // to get the correct list of assignees
+    // to get the correct list of assignees in modal and in UpdateAssigneeShell
     public function onSetCustomAssigneeParams(Event $event, Entity $entity, $params)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
