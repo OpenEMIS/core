@@ -10,6 +10,7 @@ use Cake\I18n\Date;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Utility\Inflector;
 use Institution\Model\Table\InstitutionStudentTransfersTable;
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
@@ -40,6 +41,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         $events = parent::implementedEvents();
         $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';
+        $events['ControllerAction.Model.associated'] = 'associated';
         return $events;
     }
 
@@ -49,6 +51,117 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $where[$this->aliasField('previous_institution_id')] = $entity->id;
         unset($where[$this->aliasField('institution_id')]);
         return $where;
+    }
+
+    // POCOR-3649
+    public function associated(Event $event, ArrayObject $extra)
+    {
+        $this->Alert->error($this->aliasField('unableToTransfer'));
+        $currentEntity = $this->Session->read($this->registryAlias().'.associated');
+        $action = $this->Session->read($this->registryAlias().'.referralAction');
+
+        $extra['config']['form'] = true;
+        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
+        $this->fields = []; // reset all the fields
+
+        $this->field('student_id', ['entity' => $currentEntity]);
+        $this->field('requested_date', ['entity' => $currentEntity]);
+        $this->field('associated_records', ['type' => 'associated_records']);
+
+        // back button
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $toolbarButtonsArray['back']['type'] = 'button';
+        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
+        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
+        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
+        $toolbarButtonsArray['back']['url'] = $this->url($action);
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // end back button
+
+        $entity = $this->newEntity();
+        $this->controller->set('data', $entity);
+        return $entity;
+    }
+
+    public function onGetAssociatedRecordsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        $fieldKey = 'associated_records';
+        $dataBetweenDate = [];
+        $sessionKey = $this->registryAlias().'.associatedData';
+
+        if ($this->Session->check($sessionKey)) {
+            $dataBetweenDate = $this->Session->read($sessionKey);
+
+            if (!empty($dataBetweenDate)) {
+                $tableHeaders =[__('Feature'), __('No of Records')];
+                $tableCells = [];
+
+                foreach ($dataBetweenDate as $feature => $count) {
+                    $rowData = [];
+                    $rowData[] = __(Inflector::humanize(Inflector::underscore($feature)));
+                    $rowData[] = __($count);
+                    $tableCells[] = $rowData;
+                }
+
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
+            }
+        }
+        return $event->subject()->renderElement('StudentTransfer/' . $fieldKey, ['attr' => $attr]);;
+    }
+
+    public function getDataBetweenDate($data, $alias)
+    {
+        $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
+
+        $relatedModels = [$StudentAbsences, $StudentBehaviours];
+
+        $studentId = $data[$alias]['student_id'];
+        $previousInstitutionId = $data[$alias]['previous_institution_id'];
+        $dateRequested = new Date($data[$alias]['requested_date']);
+        $today = new Date();
+
+        $dataBetweenDate = [];
+        foreach ($relatedModels as $model) {
+            switch ($model->alias()) {
+                case 'InstitutionStudentAbsences':
+                    $absenceCount = $model->find()
+                        ->where([
+                            $model->aliasField('student_id') => $studentId,
+                            $model->aliasField('institution_id') => $previousInstitutionId,
+                            $model->aliasField('start_date >=') => $dateRequested,
+                            $model->aliasField('end_date <=') => $today
+                        ])
+                        ->count();
+                    if ($absenceCount) {
+                        $dataBetweenDate[$model->alias()] = $absenceCount;
+                    }
+                    break;
+
+                case 'StudentBehaviours':
+                    $behaviourCount = $model->find()
+                        ->where([
+                            $model->aliasField('student_id') => $studentId,
+                            $model->aliasField('institution_id') => $previousInstitutionId,
+                            $model->aliasField('date_of_behaviour >=') => $dateRequested,
+                            $model->aliasField('date_of_behaviour <=') => $today
+                        ])
+                        ->count();
+                    if ($behaviourCount) {
+                        $dataBetweenDate[$model->alias()] = $behaviourCount;
+                    }
+                    break;
+            }
+        }
+
+        return $dataBetweenDate;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -197,6 +310,40 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        // get the data between requested date and today date (if its back date)
+        $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+
+        if (!empty($dataBetweenDate)) {
+            // redirect if have student data between date
+            $url = $this->url('associated');
+            $session = $this->Session;
+            $session->write($this->registryAlias().'.associated', $entity);
+            $session->write($this->registryAlias().'.associatedData', $dataBetweenDate);
+            $session->write($this->registryAlias().'.referralAction', $this->action);
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
+    }
+
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        // get the data between requested date and today date (if its back date)
+        $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+
+        if (!empty($dataBetweenDate)) {
+            // redirect if have student data between date
+            $url = $this->url('associated');
+            $session = $this->Session;
+            $session->write($this->registryAlias().'.associated', $entity);
+            $session->write($this->registryAlias().'.associatedData', $dataBetweenDate);
+            $session->write($this->registryAlias().'.referralAction', $this->action);
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
+    }
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         // redirect to view page of record after save
@@ -239,11 +386,16 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
     {
-        if (in_array($action, ['add', 'edit', 'approve'])) {
+        if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
+            if ($action == 'associated') {
+                $attr['value'] = $entity->student_id;
+                $attr['attr']['value'] = $this->Users->get($entity->student_id)->name_with_id;
+            } else {
+                 $attr['value'] = $entity->student_id;
+                $attr['attr']['value'] = $entity->user->name_with_id;
+            }
             $attr['type'] = 'readonly';
-            $attr['value'] = $entity->student_id;
-            $attr['attr']['value'] = $entity->user->name_with_id;
             return $attr;
         }
     }
@@ -286,74 +438,66 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, $request)
     {
-        if ($action == 'add') {
-            $entity = $attr['entity'];
-            $academicPeriodId = $entity->academic_period_id;
-            $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-            $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-            $studentStartDate = $entity->start_date;
-            $studentEndDate = $entity->end_date;
-
-            // for date_options, date restriction
-            $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
-            $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate: $periodEndDate;
-
-            $attr['type'] = 'date';
-            $attr['date_options'] = [
-                'startDate' => $startDate->format('d-m-Y'),
-                'endDate' => $endDate->format('d-m-Y'),
-                'todayBtn' => false
-            ];
-        } elseif ($action == 'edit') {
-            // using institution_student_transfer entity
+        if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
 
-            $academicPeriodId = $entity->academic_period_id;
-            $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-            $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+            if ($action == 'add') {
+                // using institution_student entity
+                $academicPeriodId = $entity->academic_period_id;
+                $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+                $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+                $studentStartDate = $entity->start_date;
+                $studentEndDate = $entity->end_date;
 
-            $Students = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-            $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
-
-            $studentEntity = $Students->find()
-                ->where([
-                    $Students->aliasField('academic_period_id') => $entity->academic_period_id,
-                    $Students->aliasField('education_grade_id') => $entity->education_grade_id,
-                    $Students->aliasField('student_id') => $entity->student_id,
-                    $Students->aliasField('student_status_id') => $enrolledStatus
-                ])
-                ->first();
-
-            $studentStartDate = $studentEntity->start_date;
-            $studentEndDate = $studentEntity->end_date;
-
-            // for date_options, date restriction
-            $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
-            if (!empty($entity->start_date)) {
-                $endDate = $entity->start_date->modify('-1 day');
-            } else {
+                // for date options, date restriction
+                $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
                 $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate: $periodEndDate;
+
+                $attr['type'] = 'date';
+                $attr['date_options'] = [
+                    'startDate' => $startDate->format('d-m-Y'),
+                    'endDate' => $endDate->format('d-m-Y')
+                ];
+            } elseif ($action == 'edit' || $action == 'approve') {
+                // using institution_student_transfer entity
+                $academicPeriodId = $entity->academic_period_id;
+                $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+                $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+                $Students = TableRegistry::get('Institution.Students');
+                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+                $studentEntity = $Students->find()
+                    ->where([
+                        $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                        $Students->aliasField('education_grade_id') => $entity->education_grade_id,
+                        $Students->aliasField('student_id') => $entity->student_id,
+                        $Students->aliasField('student_status_id') => $enrolledStatus
+                    ])
+                    ->first();
+                $studentStartDate = $studentEntity->start_date;
+                $studentEndDate = $studentEntity->end_date;
+
+                // for date options, date restriction
+                $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
+                if (!empty($entity->start_date)) {
+                    $endDate = (new Date($entity->start_date))->modify('-1 day');
+                } else {
+                    $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate: $periodEndDate;
+                }
+
+                $attr['type'] = 'date';
+                $attr['date_options'] = [
+                    'startDate' => $startDate->format('d-m-Y'),
+                    'endDate' => $endDate->format('d-m-Y')
+                ];
+            } elseif ($action == 'associated') {
+                $attr['type'] = 'readonly';
+                $attr['value'] = $entity->requested_date->format('d-m-Y');
+                $attr['attr']['value'] = $this->formatDate($entity->requested_date);
             }
-
-            $attr['type'] = 'date';
-            $attr['date_options'] = [
-                'startDate' => $startDate->format('d-m-Y'),
-                'endDate' => $endDate->format('d-m-Y'),
-                'todayBtn' => false
-            ];
+            return $attr;
         }
-        //  else if ($action == 'associated') {
-        //     $sessionKey = $this->registryAlias() . '.associated';
-        //     $currentEntity = $this->Session->read($sessionKey);
-        //     $requestedDate = $currentEntity->requested_date;
-
-        //     $attr['type'] = 'readonly';
-        //     $attr['value'] = $requestedDate->format('d-m-Y');
-        //     $attr['attr']['value'] = $requestedDate->format('d-m-Y');
-        // }
-
-        return $attr;
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -506,6 +650,17 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $attr['type'] = 'hidden';
             }
             return $attr;
+        }
+    }
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        if ($this->action == 'associated') {
+            $sessionKey = $this->registryAlias().'.associatedData';
+            if ($this->Session->check($sessionKey) && !empty($this->Session->read($sessionKey))) {
+                unset($buttons[0]);
+                unset($buttons[1]);
+            }
         }
     }
 
