@@ -368,24 +368,6 @@ class StudentUserTable extends ControllerActionTable
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
                 $transferButton['url'] = $action;
-
-                // check if there is an existing transfer request
-                $doneStatus = $StudentTransfers::DONE;
-                $existingTransfers = $StudentTransfers->find()
-                    ->matching('Statuses', function ($q) use ($doneStatus) {
-                        return $q->where(['category <> ' => $doneStatus]);
-                    })
-                    ->where([
-                        $StudentTransfers->aliasField('previous_institution_id') => $institutionId,
-                        $StudentTransfers->aliasField('student_id') => $studentId
-                    ])
-                    ->first();
-
-                if (!empty($existingTransfers)) {
-                    $transferButton['url'][0] = 'view';
-                    $transferButton['url'][1] = $this->paramsEncode(['id' => $existingTransfers->id]);
-                }
-
                 $toolbarButtons['transfer'] = $transferButton;
             }
         }
