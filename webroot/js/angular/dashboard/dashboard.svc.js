@@ -17,19 +17,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
     };
 
     var configModels = {
-        // FIXED Workflow
-<<<<<<< HEAD
-=======
-        StudentTransferApprovalTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.TransferApprovals'
-        },
-        StudentAdmissionTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.StudentAdmission'
-        },
         // SCHOOL_BASED Workflow
->>>>>>> 2554e063cf843b483883b598e958e212b220dcb3
         StudentWithdrawTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StudentWithdraw'
