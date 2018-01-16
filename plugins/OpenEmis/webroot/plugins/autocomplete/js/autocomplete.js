@@ -5,6 +5,8 @@ $(document).ready(function() {
 var Autocomplete = {
 	loader: '<span class="autocomplete-loader"></span>',
 	text: '<span class="autocomplete-text"></span>',
+	timer: 0,
+	extra: {},
 
 	init: function() {
 		this.attachAutoComplete('.autocomplete');
@@ -41,6 +43,11 @@ var Autocomplete = {
 		if (text.length > 0) {
 			text.remove();
 		}
+		if ($(obj).next().size() > 0) {
+			if($(obj).next().hasClass('error-message')) {
+				$(obj).next().remove();
+			}
+		}
 		obj.after(Autocomplete.loader);
 
 		var beforeSearch = obj.attr('autocomplete-before-search');
@@ -72,6 +79,10 @@ var Autocomplete = {
 
 			if (noResultsTxt != 'false') {
 				text.html(noResultsTxt);
+				// if not remove will append the error message.
+				if($(obj).next().hasClass('error-message')) {
+					$(obj).next().remove();
+				}
 				obj.after(text);
 			}
 
@@ -90,7 +101,7 @@ var Autocomplete = {
 			$('[autocomplete-ref="' + target + '"]').find('[autocomplete-exclude]').each(function() {
 				excludes.push($(this).attr('autocomplete-exclude').toString());
 			});
-			
+
 			for (var i=0; i<data.length; i++) {
 				value = data[i].value.toString();
 				if ($.inArray(value, excludes) != -1) {
@@ -105,7 +116,7 @@ var Autocomplete = {
 	 * This "source" function exists to make autocomplete fires an event when the input is cleared after it has a selected value.
 	 * Autocomplete does not support onBlur event.
 	 * Checking of minimum length required before triggering the search will be done here.
-	 * 
+	 *
 	 * http://stackoverflow.com/questions/6851645/jquery-ui-autocomplete-input-how-to-check-if-input-is-empty-on-change
 	 * http://forum.jquery.com/topic/autocomplete-and-change-event
 	 *
@@ -116,22 +127,50 @@ var Autocomplete = {
 	source: function(request, response) {
 		var url = this.element.attr('autocomplete-url');
 		var length = this.element.attr('length');
-		if (length === undefined) length = 2;
-			
+		if (length === undefined) length = 5;
+
+		var triggerAjax = function (event) {
+				// check if the event is undefined will clear the loader and show loader
+				if (event != undefined) {
+					var obj = $(event.target);
+					var loader = obj.parent().find('.autocomplete-loader');
+					// if not remove, it will append, will have more loader.
+					if (loader.length > 0) {
+						loader.remove();
+					}
+					// show the loader.
+					obj.after(Autocomplete.loader);
+				}
+
+	    		$.ajax({
+		            url: url,
+		            dataType: "json",
+		            data: {
+		                term: request.term,
+		                extra: Autocomplete.extra
+		            },
+		            success: function(data) {
+		                response(data);
+		            },
+		            error: function() {
+		                response(false);
+		            }
+		        });
+		    };
+
+		this.element.keypress(function(event) {
+		    var keycode = (event.keyCode ? event.keyCode : event.which);
+		    if(keycode == '13'){
+		    	triggerAjax(event);
+		        event.preventDefault();
+		    }
+		});
+
 		if (request.term.length >= length) {
-			$.ajax({
-	            url: url,
-	            dataType: "json",
-	            data: {
-	                term: request.term
-	            },
-	            success: function(data) {
-	                response(data);
-	            },
-	            error: function() { 
-	                response(false);
-	            }
-	        });
+			clearTimeout(Autocomplete.timer);
+			Autocomplete.timer = setTimeout(function() {
+				triggerAjax();
+			}, 1000);
 	    } else {
 	    	response(false);
 	    }
@@ -140,7 +179,7 @@ var Autocomplete = {
 	attachAutoComplete: function(e) {
 		$(e).each(function() {
 			var obj = $(this);
-			
+
 			obj.autocomplete({
 				// autocomplete options
 				source: Autocomplete.source,
