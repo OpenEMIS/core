@@ -21,7 +21,7 @@ $this->start('panelBody');
 		<div class="marker-body">
 			<p class="name"></p>
 			<p class="code"></p>
-			<?= $this->Html->link(__('View Details'), ['plugin'=>'Institution', 'controller'=>'Institutions', 'action'=>'view'])?>
+			<?= $this->Html->link(__('View Details'), ['plugin'=>'Institution', 'controller'=>'Institutions', 'action' =>  'Institutions', 'view'])?>
 		</div>
 
 		<?= $this->Html->link('', ['plugin'=>'Map', 'controller'=>'Map'], ['class'=>'plugin-url'])?>
