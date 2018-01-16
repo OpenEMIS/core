@@ -33,7 +33,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);
-        $this->belongsTo('Classes', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
         // Previous institution data
         $this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_id']);
         $this->belongsTo('PreviousEducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'previous_education_grade_id']);
@@ -182,6 +182,24 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $value = '';
         if ($entity->has('institution')) {
             $value = $entity->institution->code_name;
+        }
+        return $value;
+    }
+
+    public function onGetPreviousEducationGradeId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('previous_education_grade')) {
+            $value = $entity->previous_education_grade->programme_grade_name;
+        }
+        return $value;
+    }
+
+    public function onGetEducationGradeId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('education_grade')) {
+            $value = $entity->education_grade->programme_grade_name;
         }
         return $value;
     }
