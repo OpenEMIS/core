@@ -45,7 +45,7 @@ class LocalesTable extends AppTable
                         'provider' => 'table',
                     ]
                 ])
-              ->notEmpty('direction', 'Please select direction', 'create')
+              ->notEmpty('direction')
             ;
     }
 
