@@ -3,13 +3,6 @@ $(document).ready(function() {
     Map.init();
 });
 
-function replaceMapLink(_link, _institutionId) {
-    var regex = new RegExp('Institutions/Institutions');
-    var replacedString = 'Institutions/' + _institutionId + '/Institutions';
-    var newLink = _link.replace(regex, replacedString);
-    return newLink + '/' + _institutionId;
-}
-
 var Map = {
     gmap: '',
     iconStyles: [],
@@ -81,7 +74,7 @@ var Map = {
             var infoContent = $('#config .marker-body').clone();
             infoContent.find('.name').html(institution.name);
             infoContent.find('.code').html(institution.code);
-            infoContent.find('a').prop( 'href', replaceMapLink(infoContent.find('a').prop('href'), institution.id) );
+            infoContent.find('a').prop( 'href', infoContent.find('a').prop('href') + '/' + institution.id );
             var marker = Map.gmap.addMarker({
                 id: institution.code,
                 lat: institution.latitude,
