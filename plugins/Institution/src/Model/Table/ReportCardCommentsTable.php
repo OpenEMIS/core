@@ -35,15 +35,11 @@ class ReportCardCommentsTable extends ControllerActionTable
         $this->fields['institution_shift_id']['visible'] = false;
         $this->fields['staff_id']['visible'] = false;
         $this->fields['secondary_staff_id']['visible'] = false;
-        $this->fields['total_male_students']['visible'] = false;
-        $this->fields['total_female_students']['visible'] = false;
 
         $this->field('subjects', ['type' => 'integer']);
-        $this->field('male_students', ['type' => 'integer']);
-        $this->field('female_students', ['type' => 'integer']);
         $this->field('report_card');
         $this->field('education_grade');
-        $this->setFieldOrder(['name', 'report_card', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
+        $this->setFieldOrder(['name', 'report_card', 'academic_period_id', 'education_grade', 'subjects', 'total_male_students', 'total_female_students']);
     }
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -156,7 +152,11 @@ class ReportCardCommentsTable extends ControllerActionTable
     {
         if ($field == 'name') {
             return __('Class Name');
-        } else {
+        }  else if ($field == 'total_male_students'){
+            return  __('Male Students');
+        }else if ($field == 'total_female_students'){
+            return  __('Female Students');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -168,37 +168,6 @@ class ReportCardCommentsTable extends ControllerActionTable
         return $grade->programme_grade_name;
     }
 
-    public function onGetFemaleStudents(Event $event, Entity $entity)
-    {
-        $gender_id = 2; // female
-        $ClassStudents = $this->ClassStudents;
-        $count = $ClassStudents
-            ->find()
-            ->contain('Users')
-            ->where([
-                'Users.gender_id' => $gender_id,
-                $ClassStudents->aliasField('institution_class_id') => $entity->institution_class_id,
-                $ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id
-            ])
-            ->count();
-        return $count;
-    }
-
-    public function onGetMaleStudents(Event $event, Entity $entity)
-    {
-        $gender_id = 1; // male
-        $ClassStudents = $this->ClassStudents;
-        $count = $ClassStudents
-            ->find()
-            ->contain('Users')
-            ->where([
-                'Users.gender_id' => $gender_id,
-                $ClassStudents->aliasField('institution_class_id') => $entity->institution_class_id,
-                $ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id
-            ])
-            ->count();
-        return $count;
-    }
 
     public function onGetSubjects(Event $event, Entity $entity)
     {
