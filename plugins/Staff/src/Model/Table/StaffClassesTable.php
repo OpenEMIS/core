@@ -231,9 +231,9 @@ class StaffClassesTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'total_male_students'){
+        if ($field == 'total_male_students') {
             return  __('Male Students');
-        }else if ($field == 'total_female_students'){
+        } else if ($field == 'total_female_students') {
             return  __('Female Students');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
