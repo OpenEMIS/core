@@ -90,8 +90,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->field('staff_id', ['visible' => false]);
         $this->field('institution_shift_id', ['visible' => false]);
         $this->field('secondary_staff_id', ['visible' => false]);
-        $this->field('total_male_students', ['visible' => false]);
-        $this->field('total_female_students', ['visible' => false]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -100,10 +98,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->field('assessment');
         $this->field('education_grade');
         $this->field('subjects');
-        $this->field('male_students');
-        $this->field('female_students');
 
-        $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
+        $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'total_male_students', 'total_female_students']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -298,7 +294,12 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'name') {
             return __('Class Name');
-        } else {
+        } else if ($field == 'total_male_students'){
+            return  __('Male Students');
+        }else if ($field == 'total_female_students'){
+            return  __('Female Students');
+        }
+        else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
