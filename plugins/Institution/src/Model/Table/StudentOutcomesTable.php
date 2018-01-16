@@ -193,9 +193,9 @@ class StudentOutcomesTable extends ControllerActionTable
     {
         if ($field == 'name') {
             return __('Class Name');
-        }else if ($field == 'total_male_students'){
+        } else if ($field == 'total_male_students') {
             return  __('Male Students');
-        }else if ($field == 'total_female_students'){
+        } else if ($field == 'total_female_students') {
             return  __('Female Students');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
