@@ -606,7 +606,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     function addStudentTransferRequest(data) {
         data['start_date'] = this.formatDateForSaving(data['start_date']);
         data['end_date'] = this.formatDateForSaving(data['end_date']);
-        data['requested_date'] = this.formatDateForSaving(data['requested_date']);
         return StudentTransferIn.save(data);
     };
 
