@@ -473,13 +473,35 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
 
-            if ($action == 'add') {
-                // using institution_student entity
+            if ($action == 'associated') {
+                $attr['type'] = 'readonly';
+                $attr['value'] = $entity->requested_date->format('d-m-Y');
+                $attr['attr']['value'] = $this->formatDate($entity->requested_date);
+            } else {
+                // using institution_student_transfer entity
                 $academicPeriodId = $entity->academic_period_id;
                 $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
                 $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-                $studentStartDate = $entity->start_date;
-                $studentEndDate = $entity->end_date;
+
+                if ($action == 'add') {
+                    // using institution_student entity
+                    $studentStartDate = $entity->start_date;
+                    $studentEndDate = $entity->end_date;
+                } else {
+                    $Students = TableRegistry::get('Institution.Students');
+                    $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                    $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+                    $studentEntity = $Students->find()
+                        ->where([
+                            $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                            $Students->aliasField('education_grade_id') => $entity->education_grade_id,
+                            $Students->aliasField('student_id') => $entity->student_id,
+                            $Students->aliasField('student_status_id') => $enrolledStatus
+                        ])
+                        ->first();
+                    $studentStartDate = $studentEntity->start_date;
+                    $studentEndDate = $studentEntity->end_date;
+                }
 
                 // for date options, date restriction
                 $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
@@ -490,43 +512,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'startDate' => $startDate->format('d-m-Y'),
                     'endDate' => $endDate->format('d-m-Y')
                 ];
-            } elseif ($action == 'edit' || $action == 'approve') {
-                // using institution_student_transfer entity
-                $academicPeriodId = $entity->academic_period_id;
-                $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-                $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-
-                $Students = TableRegistry::get('Institution.Students');
-                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-                $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
-                $studentEntity = $Students->find()
-                    ->where([
-                        $Students->aliasField('academic_period_id') => $entity->academic_period_id,
-                        $Students->aliasField('education_grade_id') => $entity->education_grade_id,
-                        $Students->aliasField('student_id') => $entity->student_id,
-                        $Students->aliasField('student_status_id') => $enrolledStatus
-                    ])
-                    ->first();
-                $studentStartDate = $studentEntity->start_date;
-                $studentEndDate = $studentEntity->end_date;
-
-                // for date options, date restriction
-                $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
-                if (!empty($entity->start_date)) {
-                    $endDate = (new Date($entity->start_date))->modify('-1 day');
-                } else {
-                    $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate: $periodEndDate;
-                }
-
-                $attr['type'] = 'date';
-                $attr['date_options'] = [
-                    'startDate' => $startDate->format('d-m-Y'),
-                    'endDate' => $endDate->format('d-m-Y')
-                ];
-            } elseif ($action == 'associated') {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $entity->requested_date->format('d-m-Y');
-                $attr['attr']['value'] = $this->formatDate($entity->requested_date);
             }
             return $attr;
         }
