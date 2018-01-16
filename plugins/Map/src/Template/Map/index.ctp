@@ -21,10 +21,10 @@ $this->start('panelBody');
 		<div class="marker-body">
 			<p class="name"></p>
 			<p class="code"></p>
-			<?= $this->Html->link(__('View Details'), ['plugin'=>'Institution', 'controller'=>'Institutions', 'action' =>  'Institutions', 'view'])?>
+			<?= $this->Html->link(__('View Details'), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'view'])?>
 		</div>
 
-		<?= $this->Html->link('', ['plugin'=>'Map', 'controller'=>'Map'], ['class'=>'plugin-url'])?>
+		<?= $this->Html->link('', ['plugin' => 'Map', 'controller' => 'Map'], ['class' => 'plugin-url'])?>
 	</div>
 
 
@@ -35,7 +35,7 @@ $this->start('panelBody');
 
 				<?php
 				$colorCount = 0;
-				foreach ($institutionTypes as $key=>$type):
+				foreach ($institutionTypes as $key => $type):
 				?>
 
 				<div style="float: left;display: block;margin-right: 5px;margin-left: 5px;margin-top: 5px;margin-bottom: 5px;padding: 5px;" class="institution-type" data-type-code="<?= $key?>">
@@ -57,7 +57,7 @@ $this->start('panelBody');
 				?>
 
 			</div>
-			<h6><?= __('Total Institutions: '). $totalInstitutions ?></h6>
+			<h6><?= __('Total Institutions: ') . $totalInstitutions ?></h6>
 		</div>
 	</div>
 
