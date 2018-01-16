@@ -29,48 +29,30 @@ class POCOR4334 extends AbstractMigration
     {
         // back up tables
         $this->execute('CREATE TABLE `z_4334_institution_positions` LIKE `institution_positions`');
+        $this->execute('INSERT INTO `z_4334_institution_positions` SELECT * FROM `institution_positions`');
+
         $this->execute('CREATE TABLE `z_4334_training_courses_target_populations` LIKE `training_courses_target_populations`');
+        $this->execute('INSERT INTO `z_4334_training_courses_target_populations` SELECT * FROM training_courses_target_populations');
 
-        // insert all orphan records to the backup table from institution_positions
-        $this->execute('INSERT INTO `z_4334_institution_positions`
-                        SELECT * FROM `institution_positions`
-                        WHERE `staff_position_title_id` 
-                        NOT IN ( 
-                            SELECT `id` FROM `staff_position_titles`
-                        )');
-
-        // delete all records from the original table from institution_positions
         $this->execute('DELETE FROM `institution_positions`
-                        WHERE `staff_position_title_id`
-                        NOT IN (
-                            SELECT `id` FROM `staff_position_titles`
-                        )');
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM `staff_position_titles` 
+                            WHERE `staff_position_titles`.`id` = `institution_positions`.`staff_position_title_id`
+                        );');
 
-        // insert all orphan records to the backup table from training_courses_target_populations
-        $this->execute('INSERT INTO `z_4334_training_courses_target_populations`
-                        SELECT * FROM `training_courses_target_populations`
-                        WHERE `target_population_id`
-                        NOT IN (
-                            SELECT `id` FROM `staff_position_titles`
-                        )');
-
-        // delete all records from the original table from training_courses_target_populations
         $this->execute('DELETE FROM `training_courses_target_populations`
-                        WHERE `target_population_id`
-                        NOT IN (
-                            SELECT `id` FROM `staff_position_titles`
-                        )');
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM `staff_position_titles` 
+                            WHERE `staff_position_titles`.`id` = `training_courses_target_populations`.`target_population_id`
+                        );');
     }
 
     public function down()
     {
-        $this->execute('INSERT INTO `institution_positions` 
-                        SELECT * FROM `z_4334_institution_positions`');
+        $this->execute('DROP TABLE IF EXISTS `institution_positions`');
+        $this->execute('DROP TABLE IF EXISTS `training_courses_target_populations`');
 
-        $this->execute('INSERT INTO `training_courses_target_populations`
-                        SELECT * FROM `z_4334_training_courses_target_populations`');
-
-        $this->execute('DROP TABLE IF EXISTS `z_4334_institution_positions`');
-        $this->execute('DROP TABLE IF EXISTS `z_4334_training_courses_target_populations`');
+        $this->execute('RENAME TABLE `z_4334_institution_positions` TO `institution_positions`');
+        $this->execute('RENAME TABLE `z_4334_training_courses_target_populations` TO `training_courses_target_populations`');
     }
 }
