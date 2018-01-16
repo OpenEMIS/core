@@ -34,7 +34,39 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        return $validator->notEmpty(['requested_date']);
+        return $validator
+            ->notEmpty('requested_date')
+            ->add('requested_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ],
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'start_date', false],
+                    'on' => function ($context) {
+                        return array_key_exists('start_date', $context['data']) && !empty($context['data']['start_date']);
+                    }
+                ]
+            ])
+            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution'],
+                'on' => 'create'
+            ])
+            ->add('student_id', [
+                'ruleNoNewWithdrawRequestInGradeAndInstitution' => [
+                    'rule' => ['noNewWithdrawRequestInGradeAndInstitution'],
+                    'on' => 'create'
+                ],
+                'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+                    'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+                        'excludeInstitutions' => ['previous_institution_id']
+                    ]],
+                    'on' => 'create'
+                ],
+                'ruleStudentNotCompletedGrade' => [
+                    'rule' => ['studentNotCompletedGrade', []],
+                    'on' => 'create'
+                ]
+            ]);
     }
 
     public function implementedEvents()
