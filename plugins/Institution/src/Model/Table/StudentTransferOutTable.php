@@ -43,6 +43,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $events;
     }
 
+    // to get correct set of unassigned records for each workflow model in UpdateAssigneeShell
     public function onSetSchoolBasedConditions(Event $event, Entity $entity, $where)
     {
         $where[$this->aliasField('previous_institution_id')] = $entity->id;
@@ -53,7 +54,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         parent::beforeAction($event, $extra);
-
         $this->field('institution_class_id', ['type' => 'hidden']);
     }
 
@@ -64,15 +64,15 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
 
         $this->field('start_date', ['type' => 'hidden']);
+        $this->field('end_date', ['type' => 'hidden']);
         $this->field('previous_institution_id', ['type' => 'hidden']);
         $this->field('previous_education_grade_id', ['type' => 'hidden']);
-        $this->field('end_date', ['type' => 'hidden']);
         $this->field('student_transfer_reason_id', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('institution_id', ['type' => 'integer', 'sort' => ['field' => 'Institutions.code']]);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'requested_date', 'institution_id', 'academic_period_id', 'education_grade_id']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'institution_id', 'requested_date', 'academic_period_id', 'education_grade_id']);
 
         // back button
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -103,7 +103,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 
         // sort
-        $sortList = ['assignee_id', 'Institutions.code'];
+        $sortList = ['assignee_id', 'Institutions.code', 'requested_date'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -121,75 +121,80 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         $this->addSections();
         $this->field('institution_id', ['type' => 'integer']);
-        $this->field('end_date', ['type' => 'hidden']);
 
         if (empty($entity->start_date)) {
             $this->field('start_date', ['type' => 'hidden']);
+            $this->field('end_date', ['type' => 'hidden']);
         }
 
         $this->setFieldOrder([
             'status_id', 'assignee_id',
             'previous_information_header', 'student_id', 'previous_institution_id', 'previous_education_grade_id', 'requested_date',
-            'new_information_header', 'academic_period_id', 'institution_id', 'education_grade_id', 'institution_class_id', 'start_date',
+            'new_information_header', 'academic_period_id', 'institution_id', 'education_grade_id', 'start_date', 'end_date',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
         $studentId = $this->getQueryString('student_id');
+        $userId = $this->getQueryString('user_id');
 
-        // if (empty($studentId)) {
-        //     $event->stopPropagation();
-        //     return $this->controller->redirect($this->url('index'));
-        // } else {
-        //     // url to redirect to staffUser page
-        //     $staffUserUrl = $this->url('view');
-        //     $staffUserUrl['action'] = 'StaffUser';
-        //     $staffUserUrl[1] = $this->paramsEncode(['id' => $userId]);
+        if (empty($studentId) || empty($userId)) {
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
+        } else {
+            // url to redirect to studentUser page
+            $studentUserUrl = $this->url('view');
+            $studentUserUrl['action'] = 'StudentUser';
+            $studentUserUrl[1] = $this->paramsEncode(['id' => $userId]);
 
-        //     // check pending transfers
-        //     $pendingTransfer = $this->find()
-        //         ->matching('Statuses.WorkflowStepsParams', function ($q) {
-        //             return $q->where(['WorkflowStepsParams.name' => 'institution_owner']);
-        //         })
-        //         ->where([
-        //             $this->aliasField('staff_id') => $userId,
-        //             $this->Statuses->aliasField('category <> ') => self::DONE
-        //         ])
-        //         ->first();
+            // check pending transfers
+            $doneStatus = self::DONE;
+            $pendingTransfer = $this->find()
+                ->matching('Statuses.WorkflowStepsParams', function ($q) use ($doneStatus) {
+                    return $q->where([
+                        'Statuses.category <> ' => $doneStatus,
+                        'WorkflowStepsParams.name' => 'institution_owner'
+                    ]);
+                })
+                ->where([
+                    $this->aliasField('student_id') => $userId,
+                    $this->aliasField('previous_institution_id') => $institutionId
+                ])
+                ->first();
 
-        //     if (!empty($pendingTransfer)) {
-        //         // check if the outgoing institution can view the transfer record
-        //         $visible = 0;
-        //         if ($pendingTransfer->previous_institution_id == $institutionId) {
-        //             $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
-        //             if ($institutionOwner == self::OUTGOING || $pendingTransfer->all_visible) {
-        //                 $visible = 1;
-        //             }
-        //         }
+            if (!empty($pendingTransfer)) {
+                // check if the outgoing institution can view the transfer record
+                $visible = 0;
+                $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
+                if ($institutionOwner == self::OUTGOING || $pendingTransfer->all_visible) {
+                    $visible = 1;
+                }
 
-        //         if ($visible) {
-        //             $url = $this->url('view');
-        //             $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
-        //             $event->stopPropagation();
-        //             return $this->controller->redirect($url);
-        //         } else {
-        //             $this->Alert->warning($this->aliasField('existingStaffTransfer'), ['reset' => true]);
-        //             $event->stopPropagation();
-        //             return $this->controller->redirect($staffUserUrl);
-        //         }
-        //     }
+                if ($visible) {
+                    $url = $this->url('view');
+                    $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                } else {
+                    $this->Alert->warning($this->aliasField('existingStudentTransfer'), ['reset' => true]);
+                    $event->stopPropagation();
+                    return $this->controller->redirect($studentUserUrl);
+                }
 
-            // if no pending transfers
-            $Students = TableRegistry::get('Institution.Students');
-            $institutionStudentEntity = $Students->get($studentId, [
-                'contain' => ['Users', 'Institutions', 'EducationGrades', 'AcademicPeriods']
-            ]);
-            $this->setupFields($institutionStudentEntity);
-
-            // $extra['toolbarButtons']['back']['url'] = $staffUserUrl;
-        // }
+            } else {
+                // if no pending transfers
+                $Students = TableRegistry::get('Institution.Students');
+                $institutionStudentEntity = $Students->get($studentId, [
+                    'contain' => ['Users', 'Institutions', 'EducationGrades', 'AcademicPeriods']
+                ]);
+                $this->setupFields($institutionStudentEntity);
+                $extra['toolbarButtons']['back']['url'] = $studentUserUrl;
+            }
+        }
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
@@ -222,12 +227,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $this->field('area_id', ['entity' => $entity]);
         $this->field('institution_id', ['entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
-        $this->field('end_date', ['type' => 'hidden', 'entity' => $entity]);
+        $this->field('end_date', ['entity' => $entity]);
         $this->field('student_transfer_reason_id', ['type' => 'select']);
 
         $this->setFieldOrder([
             'previous_information_header', 'student_id', 'previous_institution_id', 'previous_education_grade_id', 'requested_date',
-            'new_information_header', 'academic_period_id', 'education_grade_id', 'area_id', 'institution_id',  'start_date', 'institution_class_id',
+            'new_information_header', 'academic_period_id', 'education_grade_id', 'area_id', 'institution_id',  'start_date', 'end_date',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
     }
@@ -378,18 +383,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $Areas = TableRegistry::get('Area.Areas');
             $entity = $attr['entity'];
-            $today = Date::now();
 
             if ($action == 'add') {
                 // using institution_student entity
+                $today = Date::now();
+
                 $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
-
-                if ($selectedAcademicPeriodData->start_date instanceof Time || $selectedAcademicPeriodData->start_date instanceof Date) {
-                    $academicPeriodStartDate = $selectedAcademicPeriodData->start_date->format('Y-m-d');
-                } else {
-                    $academicPeriodStartDate = date('Y-m-d', $selectedAcademicPeriodData->start_date);
-                }
-
                 if ($selectedAcademicPeriodData->end_date instanceof Time || $selectedAcademicPeriodData->end_date instanceof Date) {
                     $academicPeriodEndDate = $selectedAcademicPeriodData->end_date->format('Y-m-d');
                 } else {
@@ -429,21 +428,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
-            $today = Date::now();
 
             if ($action == 'add') {
                 // using institution_student entity
                 $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                 $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+                $today = Date::now();
 
                 $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
-
-                if ($selectedAcademicPeriodData->start_date instanceof Time || $selectedAcademicPeriodData->start_date instanceof Date) {
-                    $academicPeriodStartDate = $selectedAcademicPeriodData->start_date->format('Y-m-d');
-                } else {
-                    $academicPeriodStartDate = date('Y-m-d', $selectedAcademicPeriodData->start_date);
-                }
-
                 if ($selectedAcademicPeriodData->end_date instanceof Time || $selectedAcademicPeriodData->end_date instanceof Date) {
                     $academicPeriodEndDate = $selectedAcademicPeriodData->end_date->format('Y-m-d');
                 } else {
@@ -467,9 +459,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     ->where([$this->Institutions->aliasField('institution_status_id') => $InstitutionStatuses->getIdByCode('ACTIVE')])
                     ->order([$this->Institutions->aliasField('code')]);
 
-                    if (!empty($request->data[$this->alias()]['area_id'])) {
-                        $institutionOptions->where([$this->Institutions->aliasField('area_id') => $request->data[$this->alias()]['area_id']]);
-                    }
+                if (!empty($request->data[$this->alias()]['area_id'])) {
+                    $institutionOptions->where([$this->Institutions->aliasField('area_id') => $request->data[$this->alias()]['area_id']]);
+                }
 
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
@@ -503,12 +495,16 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
     {
-        if (in_array($action, ['edit', 'approve'])) {
+        if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
-            if (!empty($entity->end_date)) {
+
+            if (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
+                $attr['type'] = 'readonly';
                 $attr['value'] = $entity->end_date->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($entity->end_date);
+            } else {
+                $attr['type'] = 'hidden';
             }
-            $attr['type'] = 'hidden';
             return $attr;
         }
     }
