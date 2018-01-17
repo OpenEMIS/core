@@ -132,6 +132,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
+        $session = $this->request->session();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
         $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
         $previousTitle = Inflector::humanize(Inflector::underscore($this->alias()));
