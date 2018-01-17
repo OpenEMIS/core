@@ -6,6 +6,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
+use Cake\Controller\Component;
+use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
@@ -64,6 +67,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $events['UpdateAssignee.onSetCustomAssigneeParams'] = 'onSetCustomAssigneeParams';
         $events['Workflow.setAutoAssignAssigneeFlag'] = 'setAutoAssignAssigneeFlag';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
 
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
@@ -121,21 +125,31 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
     }
 
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'student_id';
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->alias()));
+
+        $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
+        $Navigation->addCrumb($previousTitle);
+    }
+
     public function addSections()
     {
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
-        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('all_visible', ['type' => 'hidden']);
-    }
-
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
-    {
-        $searchableFields[] = 'student_id';
     }
 
     // for index
