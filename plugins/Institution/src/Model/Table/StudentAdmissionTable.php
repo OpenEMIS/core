@@ -9,8 +9,10 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\Controller\Component;
 use Cake\I18n\Time;
 use Cake\Utility\Hash;
+use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
 use App\Model\Traits\MessagesTrait;
@@ -118,6 +120,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
@@ -288,6 +291,16 @@ class StudentAdmissionTable extends ControllerActionTable
                 $this->delete($entity);
             }
         }
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->alias()));
+
+        $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
+        $Navigation->addCrumb($previousTitle);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
