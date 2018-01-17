@@ -150,8 +150,6 @@ class InstitutionsController extends AppController
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
             'Promotion'         => ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
             'Transfer'          => ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
-            'StudentWithdraw'   => ['className' => 'Institution.StudentWithdraw', 'actions' => ['index', 'edit', 'view']],
-            'WithdrawRequests'  => ['className' => 'Institution.WithdrawRequests', 'actions' => ['add', 'edit', 'remove']],
             'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view', 'search']],
             'Undo'              => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
             'ClassStudents'     => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
@@ -376,6 +374,16 @@ class InstitutionsController extends AppController
     public function StaffTransferOut()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferOut']);
+    }
+
+    public function WithdrawRequests()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.WithdrawRequests']);
+    }
+
+    public function StudentWithdraw()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentWithdraw']);
     }
     // End
 
@@ -1110,7 +1118,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Indexes')
+                'StudentIndexes' => __('Risks') 
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1150,7 +1158,15 @@ class InstitutionsController extends AppController
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
-            } else {
+            } elseif ($model->alias() == 'StudentIndexes') {
+                $header .= ' - '. __('Risks'); 
+            } elseif ($model->alias() == 'Indexes') {
+                $header .= ' - '. __('Risks'); 
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
+            } elseif ($model->alias() == 'InstitutionStudentIndexes') {
+                $header .= ' - '. __('Institution Student Risks'); 
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
+            }else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1494,7 +1510,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentIndexes' => ['text' => __('Indexes')]
+            'StudentIndexes' => ['text' => __('Risks')] 
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
