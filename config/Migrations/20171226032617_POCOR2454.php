@@ -6,9 +6,9 @@ use Phinx\Migration\AbstractMigration;
 
 class POCOR2454 extends AbstractMigration
 {
-    private $admissionModelId = 15;
-    private $incomingTransferModelId = 16;
-    private $outgoingTransferModelId = 17;
+    private $admissionModelId = 16;
+    private $incomingTransferModelId = 17;
+    private $outgoingTransferModelId = 18;
 
     // commit
     public function up()
@@ -17,7 +17,7 @@ class POCOR2454 extends AbstractMigration
         $workflowModelData = [
             [
                 'id' => $this->admissionModelId,
-                'name' => 'Institutions > Student Admission',
+                'name' => 'Institutions > Students > Student Admission',
                 'model' => 'Institution.StudentAdmission',
                 'filter' => NULL,
                 'is_school_based' => '1',
