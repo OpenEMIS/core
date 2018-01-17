@@ -46,7 +46,9 @@ class RenderCheckboxBehavior extends RenderBehavior
             if (is_array($checkedValues) && !empty($checkedValues)) {
                 $answers = [];
                 foreach ($checkedValues as $checkedValue) {
-                    $answers[] = $checkboxOptions[$checkedValue];
+                    if (isset($checkboxOptions[$checkedValue])) {
+                        $answers[] = $checkboxOptions[$checkedValue];
+                    }
                 }
                 $value = implode(', ', $answers);
             }
@@ -65,9 +67,9 @@ class RenderCheckboxBehavior extends RenderBehavior
                         $option['checked'] = true;
                     }
                 }
-                    $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
-                    $unlockFields[] = "$fieldPrefix.number_value.$key";
-                    $html .= '<label class="selection-label">'. $value .'</label>';
+                $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
+                $unlockFields[] = "$fieldPrefix.number_value.$key";
+                $html .= '<label class="selection-label">'. $value .'</label>';
                 $html .= '</div>';
             }
             $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
