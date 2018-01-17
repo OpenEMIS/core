@@ -587,6 +587,7 @@ trait MessagesTrait
         ],
         'WithdrawRequests' => [
             'request' => 'Withdraw request has been submitted successfully.',
+            'configureWorkflowStatus' => 'Please configure the steps to the Approved and Pending statuses before adding any withdrawal record.',
             'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
         ],
         'StudentWithdraw' => [
