@@ -46,9 +46,7 @@ class RenderCheckboxBehavior extends RenderBehavior
             if (is_array($checkedValues) && !empty($checkedValues)) {
                 $answers = [];
                 foreach ($checkedValues as $checkedValue) {
-                    if (isset($checkboxOptions[$checkedValue])) {
-                        $answers[] = $checkboxOptions[$checkedValue];
-                    }
+                    $answers[] = $checkboxOptions[$checkedValue];
                 }
                 $value = implode(', ', $answers);
             }
