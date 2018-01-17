@@ -71,7 +71,16 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
         $events['InstitutionCase.onSetLinkedRecordsCheckCondition'] = 'onSetLinkedRecordsCheckCondition';
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
+        $events['Model.afterSave'] = ['callable' => 'afterSave', 'priority' => '9'];
         return $events;
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
+        $startDate = $entity->start_date;
+        $endDate = $entity->end_date;
+
     }
 
     public function onSetCustomCaseTitle(Event $event, Entity $entity)
@@ -215,7 +224,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     'on' => 'create'
                 ],
                 'checkIfSchoolIsClosed' => [
-                    'rule' => function($value, $context) {
+                    'rule' => function ($value, $context) {
                         $CalendarEventDates = TableRegistry::get('CalendarEventDates');
                         $startDate = new Date($context['data']['start_date']);
                         $endDate = new Date($value);
@@ -433,6 +442,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     public function afterAction(Event $event)
     {
         $this->setFieldOrder($this->_fieldOrder);
+        $this->fields['institution_student_absence_day_id']['visible'] = false;
     }
 
     public function indexBeforeAction(Event $event)
