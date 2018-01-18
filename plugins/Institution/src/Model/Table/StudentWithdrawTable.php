@@ -20,6 +20,12 @@ class StudentWithdrawTable extends ControllerActionTable
             'text' => 'Approval of Withdrawal Request',
             'description' => 'Performing this action will apply the proposed changes to the student record.',
             'method' => 'OnApproval'
+        ],
+        [
+            'value' => 'Workflow.onCancel',
+            'text' => 'Cancellation of Withdrawal Request',
+            'description' => 'Performing this action will set student back to enrolled status',
+            'method' => 'onCancel'
         ]
     ];
 
@@ -118,6 +124,33 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
+    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $entity = $this->get($id);
+
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        $institutionId = $entity->institution_id;
+        $studentId = $entity->student_id;
+        $periodId = $entity->academic_period_id;
+        $gradeId = $entity->education_grade_id;
+
+        $existingStudentEntity = $Students->find()->where([
+            $Students->aliasField('institution_id') => $institutionId,
+            $Students->aliasField('student_id') => $studentId,
+            $Students->aliasField('academic_period_id') => $periodId,
+            $Students->aliasField('education_grade_id') => $gradeId,
+            $Students->aliasField('student_status_id') => $statuses['WITHDRAWN']
+        ])
+        ->first();
+
+        if ($existingStudentEntity) {
+            $existingStudentEntity->student_status_id = $statuses['CURRENT'];
+            $Students->save($existingStudentEntity);
+        }
+    }
+
     public function editOnInitialize(Event $event, Entity $entity)
     {
         $this->request->data[$this->alias()]['status_id'] = $entity->status_id;
@@ -133,8 +166,13 @@ class StudentWithdrawTable extends ControllerActionTable
         $this->field('institution_id', ['visible' => ['index' => false, 'edit' => true, 'view' => 'true']]);
         $this->field('academic_period_id', ['type' => 'readonly']);
         $this->field('education_grade_id');
-        $this->field('comment');
         $this->field('created', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
+
+        $this->setFieldOrder([
+            'created', 'status_id', 'student_id',
+            'institution_id', 'academic_period_id', 'education_grade_id',
+            'effective_date', 'student_withdraw_reason_id', 'comment'
+        ]);
 
         $toolbarButtons = $extra['toolbarButtons'];
 

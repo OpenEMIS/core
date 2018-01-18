@@ -127,6 +127,15 @@ class IndexesTable extends ControllerActionTable
             ]);
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'indexes_criterias') {
+            return __('Risks Criterias');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function getCriteriasData()
     {
         $criteriaData = [];
