@@ -131,6 +131,8 @@ class SingleGradeBehavior extends Behavior
         $model->fields['staff_id']['type'] = 'hidden';
         $model->fields['secondary_staff_id']['visible'] = false;
         $model->fields['secondary_staff_id']['type'] = 'hidden';
+        $model->fields['total_male_students']['visible'] = false;
+        $model->fields['total_female_students']['visible'] = false;   
         $model->setFieldOrder([
             'academic_period_id', 'education_grade', 'institution_shift_id', 'class_number', 'number_of_classes', 'single_grade_field'
         ]);

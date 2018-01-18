@@ -34,16 +34,18 @@ class WithdrawRequestsTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        $studentId = $this->Session->read('Student.Students.id');
-        $action = $this->url('add');
-        $action['action'] = 'StudentUser';
-        $action[0] = 'view';
-        $action[1] = $this->paramsEncode(['id' => $studentId]);
-        $action['id'] = $this->Session->read($this->registryAlias().'.id');
+        if (!$entity->invalid()) {
+            $studentId = $this->Session->read('Student.Students.id');
+            $action = $this->url('add');
+            $action['action'] = 'StudentUser';
+            $action[0] = 'view';
+            $action[1] = $this->paramsEncode(['id' => $studentId]);
+            $action['id'] = $this->Session->read($this->registryAlias().'.id');
 
-        $event->stopPropagation();
-        $this->Session->delete($this->registryAlias().'.id');
-        return $this->controller->redirect($action);
+            $event->stopPropagation();
+            $this->Session->delete($this->registryAlias().'.id');
+            return $this->controller->redirect($action);
+        }
     }
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData)

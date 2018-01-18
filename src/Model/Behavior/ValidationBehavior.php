@@ -1778,10 +1778,13 @@ class ValidationBehavior extends Behavior
             return true;
         }
 
+        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $pendingStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
+
         $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
         $conditions = [
             'student_id' => $studentId,
-            'status' => $model::NEW_REQUEST,
+            'status_id IN ' => $pendingStatus,
             'education_grade_id' => $educationGradeId,
             'institution_id' => $previousInstitutionId
         ];
