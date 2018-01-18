@@ -324,7 +324,7 @@ class POCOR2455 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Cancelled',
+                'name' => 'Cancel',
                 'description' => null,
                 'action' => '0',
                 'visible' => '1',
@@ -333,6 +333,19 @@ class POCOR2455 extends AbstractMigration
                 'event_key' => 'Workflow.onCancel',
                 'workflow_step_id' => $pendingCancelStatusId,
                 'next_workflow_step_id' => $cancelledStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => null,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => null,
+                'workflow_step_id' => $pendingCancelStatusId,
+                'next_workflow_step_id' => $rejectedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
