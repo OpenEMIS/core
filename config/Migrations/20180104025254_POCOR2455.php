@@ -174,6 +174,26 @@ class POCOR2455 extends AbstractMigration
                 'workflow_id' => $studentWithdrawId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Pending for Cancellation',
+                'category' => '2',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '1',
+                'workflow_id' => $studentWithdrawId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Cancelled',
+                'category' => '3',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '1',
+                'workflow_id' => $studentWithdrawId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
 
@@ -189,7 +209,8 @@ class POCOR2455 extends AbstractMigration
         $pendingApprovalStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $studentWithdrawId,
-                $WorkflowStepsTable->aliasField('category') => 2
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending for Approval'
             ])
             ->extract('id')
             ->first();
@@ -206,6 +227,22 @@ class POCOR2455 extends AbstractMigration
                 $WorkflowStepsTable->aliasField('workflow_id') => $studentWithdrawId,
                 $WorkflowStepsTable->aliasField('category') => 3,
                 $WorkflowStepsTable->aliasField('name') => 'Rejected'
+            ])
+            ->extract('id')
+            ->first();
+        $pendingCancelStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $studentWithdrawId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending for Cancellation'
+            ])
+            ->extract('id')
+            ->first();
+        $cancelledStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $studentWithdrawId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Cancelled'
             ])
             ->extract('id')
             ->first();
@@ -274,6 +311,45 @@ class POCOR2455 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
+                'name' => 'Submit For Cancellation',
+                'description' => null,
+                'action' => null,
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '1',
+                'event_key' => null,
+                'workflow_step_id' => $withdrawnStatusId,
+                'next_workflow_step_id' => $pendingCancelStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Approve',
+                'description' => null,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => 'Workflow.onCancel',
+                'workflow_step_id' => $pendingCancelStatusId,
+                'next_workflow_step_id' => $cancelledStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => null,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '1',
+                'allow_by_assignee' => '0',
+                'event_key' => null,
+                'workflow_step_id' => $pendingCancelStatusId,
+                'next_workflow_step_id' => $rejectedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
                 'name' => 'Reject',
                 'description' => null,
                 'action' => '1',
@@ -317,6 +393,15 @@ class POCOR2455 extends AbstractMigration
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
             ],
+            [
+                'code' => 'CANCELLED',
+                'name' => 'Cancelled',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
         ];
 
         $this->insert('workflow_statuses', $workflowStatusData);
@@ -345,6 +430,14 @@ class POCOR2455 extends AbstractMigration
             ->extract('id')
             ->first();
 
+        $cancelledId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'CANCELLED',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
+
         $workflowStatusStepsData = [
             [
                 'id' => Text::uuid(),
@@ -365,10 +458,40 @@ class POCOR2455 extends AbstractMigration
                 'id' => Text::uuid(),
                 'workflow_status_id' => $pendingId,
                 'workflow_step_id' => $openStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $pendingId,
+                'workflow_step_id' => $pendingCancelStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $cancelledStatusId,
+                'workflow_step_id' => $cancelledId
             ]
         ];
 
         $this->insert('workflow_statuses_steps', $workflowStatusStepsData);
+
+        $localeContent = [
+            [
+                'en' => 'Submit For Cancellation',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Cancelled',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Reject',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ]
+        ];
+
+        $this->insert('locale_contents', $localeContent);
     }
 
     public function down()
@@ -417,5 +540,8 @@ class POCOR2455 extends AbstractMigration
 
         // delete workflow_actions
         $this->execute("DELETE FROM `workflow_actions` WHERE `workflow_step_id` IN $steps");
+
+        // locale_contents
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` IN ('Submit For Cancellation', 'Cancelled', 'Reject')");
     }
 }
