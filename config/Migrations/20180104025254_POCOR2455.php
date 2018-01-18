@@ -313,7 +313,7 @@ class POCOR2455 extends AbstractMigration
             [
                 'name' => 'Submit For Cancellation',
                 'description' => null,
-                'action' => '0',
+                'action' => null,
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '1',
