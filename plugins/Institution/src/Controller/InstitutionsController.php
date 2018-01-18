@@ -904,6 +904,8 @@ class InstitutionsController extends AppController
             } else {
                 $session->delete('Institution.Institutions.id');
             }
+        } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'view' && isset($this->request->pass[1])) {
+            $this->request->params['institutionId'] = $this->request->pass[1];
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         } elseif ($action == 'StaffUser') {
@@ -1029,6 +1031,7 @@ class InstitutionsController extends AppController
                     'institutions.comments.ctrl',
                     'institutions.comments.svc'
                 ]);
+                // no break
             case 'Classes':
                 if (isset($this->request->pass[0])) {
                     if ($this->request->param('pass')[0] == 'edit') {
@@ -1119,7 +1122,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Indexes')
+                'StudentIndexes' => __('Risks') 
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1146,7 +1149,7 @@ class InstitutionsController extends AppController
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
-                } else if ($model->table() == 'staff_appraisals'  && !$isDownload) {
+                } elseif ($model->table() == 'staff_appraisals'  && !$isDownload) {
                     $ids = array_key_exists('user_id', $requestQuery) ? $requestQuery['user_id']: $session->read('Staff.Staff.id');
                     $persona = $model->Users->get($ids);
                 }
@@ -1159,7 +1162,15 @@ class InstitutionsController extends AppController
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
-            } else {
+            } elseif ($model->alias() == 'StudentIndexes') {
+                $header .= ' - '. __('Risks'); 
+            } elseif ($model->alias() == 'Indexes') {
+                $header .= ' - '. __('Risks'); 
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
+            } elseif ($model->alias() == 'InstitutionStudentIndexes') {
+                $header .= ' - '. __('Institution Student Risks'); 
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
+            }else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1243,7 +1254,7 @@ class InstitutionsController extends AppController
             if ($model->hasField('institution_id')) {
                 if (!$session->check('Institution.Institutions.id')) {
                     $this->Alert->error('general.notExists');
-                    // should redirect
+                // should redirect
                 } else {
                     if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut'])) {
                         $institutionId = $this->request->param('institutionId');
@@ -1322,8 +1333,7 @@ class InstitutionsController extends AppController
                 'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_year', $params);
-
-        } else if ($classification == $Institutions::NON_ACADEMIC) {
+        } elseif ($classification == $Institutions::NON_ACADEMIC) {
             //Staffs By Position Title for current year, only shows assigned staff
             $params = [
                 'conditions' => ['institution_id' => $id, 'staff_status_id' => $assignedStatus]
@@ -1503,7 +1513,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentIndexes' => ['text' => __('Indexes')]
+            'StudentIndexes' => ['text' => __('Risks')] 
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1728,7 +1738,7 @@ class InstitutionsController extends AppController
                     $model->toggle('add', false);
                     $model->toggle('edit', false);
                     $model->toggle('remove', false);
-                } else if ($model instanceof \App\Model\Table\AppTable) {
+                } elseif ($model instanceof \App\Model\Table\AppTable) {
                     // CAv3 hide button and redirect when user change the Url
                     $model->addBehavior('ControllerAction.HideButton');
                 }

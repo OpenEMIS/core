@@ -571,7 +571,7 @@ class StudentUserTable extends ControllerActionTable
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Indexes' => ['text' => __('Indexes')]
+            'Indexes' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
