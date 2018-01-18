@@ -20,6 +20,12 @@ class StudentWithdrawTable extends ControllerActionTable
             'text' => 'Approval of Withdrawal Request',
             'description' => 'Performing this action will apply the proposed changes to the student record.',
             'method' => 'OnApproval'
+        ],
+        [
+            'value' => 'Workflow.onCancel',
+            'text' => 'Cancellation of Withdrawal Request',
+            'description' => 'Performing this action will set student back to enrolled status',
+            'method' => 'onCancel'
         ]
     ];
 
@@ -114,6 +120,33 @@ class StudentWithdrawTable extends ControllerActionTable
 
         if ($existingStudentEntity) {
             $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
+            $Students->save($existingStudentEntity);
+        }
+    }
+
+    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $entity = $this->get($id);
+
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        $institutionId = $entity->institution_id;
+        $studentId = $entity->student_id;
+        $periodId = $entity->academic_period_id;
+        $gradeId = $entity->education_grade_id;
+
+        $existingStudentEntity = $Students->find()->where([
+            $Students->aliasField('institution_id') => $institutionId,
+            $Students->aliasField('student_id') => $studentId,
+            $Students->aliasField('academic_period_id') => $periodId,
+            $Students->aliasField('education_grade_id') => $gradeId,
+            $Students->aliasField('student_status_id') => $statuses['WITHDRAWN']
+        ])
+        ->first();
+
+        if ($existingStudentEntity) {
+            $existingStudentEntity->student_status_id = $statuses['CURRENT'];
             $Students->save($existingStudentEntity);
         }
     }
