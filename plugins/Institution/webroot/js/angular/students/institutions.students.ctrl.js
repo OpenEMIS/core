@@ -699,8 +699,48 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function onTransferStudentClick() {
-        angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-            step: "transferStudent"
+        // setup transfer student input fields
+        var studentData = StudentController.selectedStudentData;
+        var periodStartDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['start_date']);
+        var periodEndDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['end_date']);
+
+        StudentController.startDate = periodStartDate;
+        $scope.endDate = periodEndDate;
+
+        var startDatePicker = angular.element(document.getElementById('Students_transfer_start_date'));
+        startDatePicker.datepicker("setStartDate", periodStartDate);
+        startDatePicker.datepicker("setEndDate", periodEndDate);
+        startDatePicker.datepicker("setDate", periodStartDate);
+
+        StudentController.classOptions = {};
+        StudentController.transferReasonOptions = {};
+
+        InstitutionsStudentsSvc.getClasses({
+            institutionId: StudentController.institutionId,
+            academicPeriodId: studentData['institution_students'][0]['academic_period_id'],
+            gradeId: studentData['institution_students'][0]['education_grade_id'],
+        })
+        .then(function(classes) {
+            StudentController.classOptions = {
+                availableOptions: classes,
+            };
+            return InstitutionsStudentsSvc.getStudentTransferReasons();
+        }, function(error) {
+            console.log(error);
+        })
+        .then(function(response) {
+            if (angular.isDefined(response) && response.hasOwnProperty('data')) {
+                StudentController.transferReasonOptions = {
+                    availableOptions: response.data
+                };
+            }
+        }, function(error) {
+            console.log(error);
+        })
+        .finally(function(result) {
+            angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                step: "transferStudent"
+            });
         });
     }
 
@@ -1134,48 +1174,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         // Step 5 - Transfer Student
         else {
-            var studentData = StudentController.selectedStudentData;
             AlertSvc.info($scope, 'By clicking save, a transfer workflow will be initiated for this student');
-
-            var periodStartDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['start_date']);
-            var periodEndDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['end_date']);
-
-            StudentController.startDate = periodStartDate;
-            $scope.endDate = periodEndDate;
-
-            var startDatePicker = angular.element(document.getElementById('Students_transfer_start_date'));
-            startDatePicker.datepicker("setStartDate", periodStartDate);
-            startDatePicker.datepicker("setEndDate", periodEndDate);
-            startDatePicker.datepicker("setDate", periodStartDate);
-
-            StudentController.classOptions = null;
-            InstitutionsStudentsSvc.getClasses({
-                institutionId: StudentController.institutionId,
-                academicPeriodId: studentData['institution_students'][0]['academic_period_id'],
-                gradeId: studentData['institution_students'][0]['education_grade_id'],
-            })
-            .then(function(classes) {
-                StudentController.classOptions = {
-                    availableOptions: classes,
-                };
-
-                return InstitutionsStudentsSvc.getStudentTransferReasons();
-            }, function(error) {
-                console.log(error);
-            })
-            .then(function(response) {
-                if (angular.isDefined(response) && response.hasOwnProperty('data')) {
-                    StudentController.transferReasonOptions = {
-                        availableOptions: response.data
-                    };
-                }
-            }, function(error) {
-                console.log(error);
-            });
-
             StudentController.step = 'transfer_student';
         }
+
+        // to ensure that the StudentController.step is updated
+        setTimeout(function() {
+            $scope.$apply();
+        });
     });
-
-
 }
