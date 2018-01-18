@@ -75,72 +75,209 @@ class POCOR2454 extends AbstractMigration
         $this->table('institution_student_admission')->rename('z_2454_institution_student_admission');
 
         // new institution_student_admission
-        $this->execute('CREATE TABLE `institution_student_admission` LIKE `z_2454_institution_student_admission`');
-        $studentAdmission = $this->table('institution_student_admission');
+        $studentAdmission = $this->table('institution_student_admission', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all the student admission requests'
+        ]);
         $studentAdmission
+            ->addColumn('start_date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('end_date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('student_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to security_users.id'
+            ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to workflow_steps.id',
-                'after' => 'student_id'
+                'comment' => 'links to workflow_steps.id'
             ])
             ->addColumn('assignee_id', 'integer', [
                 'default' => '0',
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to security_users.id',
-                'after' => 'status_id'
+                'comment' => 'links to security_users.id'
             ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('education_grade_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to education_grades.id'
+            ])
+            ->addColumn('institution_class_id', 'integer', [
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to institution_classes.id'
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'limit' => 11,
+                'null' => true,
+                'default' => null,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('student_id')
             ->addIndex('status_id')
             ->addIndex('assignee_id')
-            ->removeColumn('requested_date')
-            ->removeColumn('status')
-            ->removeColumn('new_education_grade_id')
-            ->removeColumn('previous_institution_id')
-            ->removeColumn('student_transfer_reason_id')
-            ->removeColumn('type')
+            ->addIndex('institution_id')
+            ->addIndex('academic_period_id')
+            ->addIndex('education_grade_id')
+            ->addIndex('institution_class_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
+
         $this->setupAdmissionWorkflow();
 
         // institution_student_transfers
-        $this->execute('CREATE TABLE `institution_student_transfers` LIKE `z_2454_institution_student_admission`');
-        $studentTransfers = $this->table('institution_student_transfers');
+        $studentTransfers = $this->table('institution_student_transfers', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains all the student transfer requests'
+        ]);
         $studentTransfers
+            ->addColumn('start_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('end_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('requested_date', 'date', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('student_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to security_users.id'
+            ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to workflow_steps.id',
-                'after' => 'student_id'
+                'comment' => 'links to workflow_steps.id'
             ])
             ->addColumn('assignee_id', 'integer', [
                 'default' => '0',
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to security_users.id',
-                'after' => 'status_id'
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
+            ->addColumn('education_grade_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to education_grades.id'
+            ])
+            ->addColumn('institution_class_id', 'integer', [
+                'limit' => 11,
+                'null' => true,
+                'comment' => 'links to institution_classes.id'
+            ])
+            ->addColumn('previous_institution_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('previous_education_grade_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to education_grades.id',
-                'after' => 'previous_institution_id'
+                'comment' => 'links to education_grades.id'
+            ])
+            ->addColumn('student_transfer_reason_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to student_transfer_reasons.id'
+            ])
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'null' => true
             ])
             ->addColumn('all_visible', 'integer', [
                 'default' => '0',
                 'limit' => 1,
-                'null' => false,
-                'after' => 'comment'
+                'null' => false
             ])
+            ->addColumn('modified_user_id', 'integer', [
+                'limit' => 11,
+                'null' => true,
+                'default' => null,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('student_id')
             ->addIndex('status_id')
             ->addIndex('assignee_id')
+            ->addIndex('institution_id')
+            ->addIndex('academic_period_id')
+            ->addIndex('education_grade_id')
+            ->addIndex('institution_class_id')
+            ->addIndex('previous_institution_id')
             ->addIndex('previous_education_grade_id')
-            ->removeColumn('status')
-            ->removeColumn('type')
-            ->removeColumn('new_education_grade_id')
+            ->addIndex('student_transfer_reason_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
+
         $this->setupIncomingTransferWorkflow();
         $this->setupOutgoingTransferWorkflow();
     }
