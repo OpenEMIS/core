@@ -36,13 +36,13 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]);
 
         $this->belongsToMany('EducationSubjects', [
-        'className' => 'Education.EducationSubjects',
-        'joinTable' => 'assessment_items_grading_types',
-        'foreignKey' => 'assessment_period_id',
-        'targetForeignKey' => 'education_subject_id',
-        'through' => 'Assessment.AssessmentItemsGradingTypes',
-        'dependent' => true,
-        'cascadeCallbacks' => true
+            'className' => 'Education.EducationSubjects',
+            'joinTable' => 'assessment_items_grading_types',
+            'foreignKey' => 'assessment_period_id',
+            'targetForeignKey' => 'education_subject_id',
+            'through' => 'Assessment.AssessmentItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
