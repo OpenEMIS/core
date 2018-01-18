@@ -324,7 +324,7 @@ class POCOR2455 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Cancel',
+                'name' => 'Approve',
                 'description' => null,
                 'action' => '0',
                 'visible' => '1',
@@ -472,6 +472,26 @@ class POCOR2455 extends AbstractMigration
         ];
 
         $this->insert('workflow_statuses_steps', $workflowStatusStepsData);
+
+        $localeContent = [
+            [
+                'en' => 'Submit For Cancellation',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Cancelled',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Reject',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ]
+        ];
+
+        $this->insert('locale_contents', $localeContent);
     }
 
     public function down()
@@ -520,5 +540,8 @@ class POCOR2455 extends AbstractMigration
 
         // delete workflow_actions
         $this->execute("DELETE FROM `workflow_actions` WHERE `workflow_step_id` IN $steps");
+
+        // locale_contents
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` IN ('Submit For Cancellation', 'Cancelled', 'Reject')");
     }
 }
