@@ -1,3 +1,7 @@
+### [3.16.0] - 2018-01-19
+- Implemented customisable workflow for Student Dropouts
+- Renamed Indexes to Risks
+
 ### [3.15.0] - 2018-01-05
 - Implemented Learning Outcomes in Institutions > Performance
 
