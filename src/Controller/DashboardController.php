@@ -18,8 +18,7 @@ class DashboardController extends AppController
         // $this->loadComponent('Paginator');
 
         $this->ControllerAction->models = [
-            'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']],
-            'StudentWithdraw'   => ['className' => 'Institution.StudentWithdraw', 'actions' => ['edit']],
+            'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']]
         ];
         $this->attachAngularModules();
     }
@@ -28,6 +27,11 @@ class DashboardController extends AppController
     public function TransferApprovals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferApprovals']);
+    }
+
+    public function StudentWithdraw()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentWithdraw']);
     }
     // end of CAv4
 

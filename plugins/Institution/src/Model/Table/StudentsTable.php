@@ -31,10 +31,10 @@ class StudentsTable extends ControllerActionTable
         parent::initialize($config);
 
         // Associations
-        $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
@@ -123,7 +123,8 @@ class StudentsTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
@@ -225,7 +226,7 @@ class StudentsTable extends ControllerActionTable
 
         foreach ($fieldCopy as $key => $field) {
             if ($field['field'] != 'institution_id') {
-            $newFields[] = $field;
+                $newFields[] = $field;
                 if ($field['field'] == 'education_grade_id') {
                     $newFields[] = [
                         'key' => 'StudentClasses.institution_class_id',
@@ -309,7 +310,7 @@ class StudentsTable extends ControllerActionTable
     public function onExcelRenderNationalities(Event $event, Entity $entity, array $attr)
     {
         $str = '';
-        if(!empty($entity['user']['nationalities'])) {
+        if (!empty($entity['user']['nationalities'])) {
             $nationalities = $entity['user']['nationalities'];
             foreach ($nationalities as $nationality) {
                 if (isset($nationality['nationalities_look_up']['name'])) {
@@ -612,7 +613,7 @@ class StudentsTable extends ControllerActionTable
         $studentTable = $this;
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-            'callable' => function($id) use ($studentTable, $institutionId) {
+            'callable' => function ($id) use ($studentTable, $institutionId) {
                 return $studentTable->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
             }
         ]);
@@ -693,7 +694,8 @@ class StudentsTable extends ControllerActionTable
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentProgrammes';
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
         $studentStatusId = $entity->student_status_id;
         $statuses = $this->StudentStatuses->findCodeList();
         $code = array_search($studentStatusId, $statuses);
@@ -870,7 +872,7 @@ class StudentsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($this->action == 'view') {
             $studentStatusId = $entity->student_status_id;
@@ -903,6 +905,8 @@ class StudentsTable extends ControllerActionTable
 
                 case 'WITHDRAWN':
                     $WithdrawRequestsTable = TableRegistry::get('Institution.WithdrawRequests');
+                    $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                    $approvedStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
                     $withdrawReason = $WithdrawRequestsTable->find()
                         ->matching('StudentWithdrawReasons')
@@ -912,7 +916,7 @@ class StudentsTable extends ControllerActionTable
                             $WithdrawRequestsTable->aliasField('education_grade_id') => $educationGradeId,
                             $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
                             // Status = 1 is approved withdraw, in case student has a previous withdraw request that was undone
-                            $WithdrawRequestsTable->aliasField('status') => 1,
+                            $WithdrawRequestsTable->aliasField('status_id').' IN ' => $approvedStatus,
                         ])
                         ->first();
 
@@ -1092,7 +1096,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // Function use by the mini dashboard (For Institution Students)
-    public function getNumberOfStudentsByGender($params=[])
+    public function getNumberOfStudentsByGender($params = [])
     {
         $query = $params['query'];
         $InstitutionRecords = clone $query;
@@ -1116,7 +1120,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // Function use by the mini dashboard (For Institution Students)
-    public function getNumberOfStudentsByAge($params=[])
+    public function getNumberOfStudentsByAge($params = [])
     {
         $query = $params['query'];
         $InstitutionRecords = $query->cleanCopy();
@@ -1137,7 +1141,7 @@ class StudentsTable extends ControllerActionTable
 
         // (Logic to be reviewed)
         // Calculate the age taking account to the average of leap years
-        foreach($InstitutionStudentCount as $val){
+        foreach ($InstitutionStudentCount as $val) {
             $convertAge[] = floor($val['age']/365.25);
         }
         // Count and sort the age
@@ -1164,7 +1168,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // Function use by the mini dashboard (For Institution Students)
-    public function getNumberOfStudentsByGradeByInstitution($params=[])
+    public function getNumberOfStudentsByGradeByInstitution($params = [])
     {
         $query = $params['query'];
         $InstitutionRecords = clone $query;
@@ -1180,7 +1184,7 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
 
         $dataSet = [];
-        foreach($studentByGrades as $value){
+        foreach ($studentByGrades as $value) {
             $dataSet[] = [__($value['grade']), $value['count']];
         }
         $params['dataSet'] = $dataSet;
@@ -1189,7 +1193,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // For Dashboard (Institution Dashboard and Home Page)
-    public function getNumberOfStudentsByYear($params=[])
+    public function getNumberOfStudentsByYear($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
@@ -1234,7 +1238,7 @@ class StudentsTable extends ControllerActionTable
                 $queryCondition = array_merge(['Genders.id' => $genderId, 'AcademicPeriods.id' => $periodId], $_conditions);
 
                 $studentsByYear = $this
-                ->find('list',[
+                ->find('list', [
                     'groupField' => 'gender_name',
                     'keyField' => 'period_name',
                     'valueField' => 'total'
@@ -1265,7 +1269,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // For Dashboard (Home Page and Institution Dashboard page)
-    public function getNumberOfStudentsByStage($params=[])
+    public function getNumberOfStudentsByStage($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
@@ -1414,7 +1418,6 @@ class StudentsTable extends ControllerActionTable
                     ->first();
 
                 if (!empty($results)) {
-
                     $educationGradeId = $results->education_grade_id;
                     $educationProgrammeId = $this->EducationGrades->get($educationGradeId)->education_programme_id;
                     $admissionAge = $this->EducationGrades->getAdmissionAge($educationGradeId);
@@ -1468,7 +1471,6 @@ class StudentsTable extends ControllerActionTable
                 return $getValueIndex;
                 break;
         }
-
     }
 
     public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)

@@ -32,7 +32,7 @@ class CaseBehavior extends Behavior
 
 		$broadcaster = $model;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Institution.InstitutionCases');
+        $listeners[] = TableRegistry::get('Cases.InstitutionCases');
 
         if (!empty($listeners)) {
             $model->dispatchEventToModels('Model.LinkedRecord.afterSave', [$entity], $broadcaster, $listeners);
@@ -123,7 +123,7 @@ class CaseBehavior extends Behavior
     public function getLinkedCaseQuery(Entity $entity)
     {
     	$WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
-    	$InstitutionCases = TableRegistry::get('Institution.InstitutionCases');
+    	$InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
 
     	$feature = $WorkflowRules->getFeatureByEntity($entity);
     	$recordId = $entity->id;
