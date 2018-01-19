@@ -44,16 +44,14 @@ class StaffClassesTable extends ControllerActionTable
         $this->fields['institution_shift_id']['visible'] = false;
         $this->fields['secondary_staff_id']['visible'] = false;
 
-        $this->field('male_students', []);
-        $this->field('female_students', []);
         $this->field('total_students', []);
 
         $this->setFieldOrder([
             'academic_period_id',
             'institution_id',
             'name',
-            'male_students',
-            'female_students',
+            'total_male_students',
+            'total_female_students',
             'total_students'
         ]);
     }
@@ -66,23 +64,7 @@ class StaffClassesTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetMaleStudents(Event $event, Entity $entity)
-    {
-        if (!isset($this->InstitutionClassStudents)) {
-            $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        }
-        $count = $this->InstitutionClassStudents->getMaleCountByClass($entity->id);
-        return $count.' ';
-    }
-
-    public function onGetFemaleStudents(Event $event, Entity $entity)
-    {
-        if (!isset($this->InstitutionClassStudents)) {
-            $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        }
-        $count = $this->InstitutionClassStudents->getFemaleCountByClass($entity->id);
-        return $count.' ';
-    }
+   
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
@@ -245,6 +227,17 @@ class StaffClassesTable extends ControllerActionTable
         };
 
         return $process;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'total_male_students') {
+            return  __('Male Students');
+        } else if ($field == 'total_female_students') {
+            return  __('Female Students');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)

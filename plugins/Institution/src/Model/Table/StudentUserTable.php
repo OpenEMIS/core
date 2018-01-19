@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Network\Session;
 use App\Model\Table\ControllerActionTable;
+use Cake\Database\Exception as DatabaseException;
 
 class StudentUserTable extends ControllerActionTable
 {
@@ -179,7 +180,7 @@ class StudentUserTable extends ControllerActionTable
                 'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date'],
                 'on' => 'create'
             ])
-			->requirePresence('education_grade_id', 'create')
+            ->requirePresence('education_grade_id', 'create')
             ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
                 'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
                 'on' => 'create'
@@ -304,7 +305,7 @@ class StudentUserTable extends ControllerActionTable
 
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
-        
+
         $this->field('institution_id', ['type' => 'hidden']);
         $this->fields['institution_id']['value'] = $extra['institutionId'];
     }
@@ -441,17 +442,27 @@ class StudentUserTable extends ControllerActionTable
             if ($studentEntity->student_status_id == $enrolledStatus) {
                 $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
                 $session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
-                $NEW = 0;
+                $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+                $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
-                // check if there is an existing withdraw request
-                $withdrawRequest = $WithdrawRequests->find()
-                    ->select(['institution_student_withdraw_id' => 'id'])
-                    ->where([$WithdrawRequests->aliasField('student_id') => $studentEntity->student_id,
+                $rejectedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'REJECTED');
+                $status = $rejectedStatus + $approvedStatus;
+
+                try {
+                    // check if there is an existing withdraw request
+                    $withdrawRequest = $WithdrawRequests->find()
+                        ->select(['institution_student_withdraw_id' => 'id'])
+                        ->where([
+                            $WithdrawRequests->aliasField('student_id') => $studentEntity->student_id,
                             $WithdrawRequests->aliasField('institution_id') => $studentEntity->institution_id,
                             $WithdrawRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
-                            $WithdrawRequests->aliasField('status') => $NEW
+                            $WithdrawRequests->aliasField('status_id').' NOT IN' => $status
                         ])
-                    ->first();
+                        ->first();
+                } catch (DatabaseException $e) {
+                    $withdrawRequest = false;
+                    $this->Alert->error('WithdrawRequests.configureWorkflowStatus');
+                }
 
                 $withdrawButton = $toolbarButtons['back'];
                 $withdrawButton['type'] = 'button';
@@ -460,13 +471,15 @@ class StudentUserTable extends ControllerActionTable
                 $withdrawButton['attr']['title'] = __('Withdraw');
 
                 $withdrawButton['url'] = $this->url('add', 'QUERY');
-                $withdrawButton['url']['action'] = 'WithdrawRequests';
-
                 if (!empty($withdrawRequest)) {
-                    $withdrawButton['url'][0] = 'edit';
+                    $withdrawButton['url']['action'] = 'StudentWithdraw';
+                    $withdrawButton['url'][0] = 'view';
                     $withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
+                    $toolbarButtons['withdraw'] = $withdrawButton;
+                } elseif ($withdrawRequest !== false) {
+                    $withdrawButton['url']['action'] = 'WithdrawRequests';
+                    $toolbarButtons['withdraw'] = $withdrawButton;
                 }
-                $toolbarButtons['withdraw'] = $withdrawButton;
             }
         }
     }
@@ -558,7 +571,7 @@ class StudentUserTable extends ControllerActionTable
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Indexes' => ['text' => __('Indexes')]
+            'Indexes' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -611,9 +624,10 @@ class StudentUserTable extends ControllerActionTable
             $conditions['openemis_no LIKE'] = $openemisNo . '%';
         }
         if (!empty($dateOfBirth)) {
-            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');;
+            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');
+            ;
         }
-        
+
         $identityConditions = [];
         if (!empty($identityNumber)) {
             $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
