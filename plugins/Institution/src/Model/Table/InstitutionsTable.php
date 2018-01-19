@@ -688,9 +688,9 @@ class InstitutionsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //the query options are setup so that Security.InstitutionBehavior can reuse it
+        // the query options are setup so that Security.InstitutionBehavior can reuse it
         $extra['query'] = [
-            'contain' => ['Types', 'Areas','Statuses'],
+            'contain' => ['Types'],
             'select' => [
                 $this->aliasField('id'),
                 $this->aliasField('code'),
@@ -701,17 +701,17 @@ class InstitutionsTable extends ControllerActionTable
                 'Types.name',
                 'Statuses.name'
             ],
-            // 'join' => [
-            //     [
-            //         'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
-            //         'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
-            //     ]
-            // ]
+            'join' => [
+                [
+                    'table' => 'areas', 'alias' => 'Areas', 'type' => 'INNER',
+                    'conditions' => ['Areas.id = ' . $this->aliasField('area_id')]
+                ]
+            ]
         ];
-        $extra['auto_contain'] = false;
+        $options['auto_contain'] = false;
         $query->contain($extra['query']['contain']);
         $query->select($extra['query']['select']);
-        //$query->join($extra['query']['join']);
+        $query->join($extra['query']['join']);
 
         // POCOR-3983 if no sort, active status will be followed by inactive status
         if (!isset($this->request->query['sort'])) {
