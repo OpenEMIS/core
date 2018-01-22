@@ -115,7 +115,7 @@ class LocalizationComponent extends Component
 
         // Language menu enabled
         if ($session->read('System.language_menu')) {
-            if (array_key_exists($request->query('lang'), $this->languages)) {
+            if ($request->query('lang')) {
                 $lang = $request->query('lang');
                 $user = $this->Auth->user();
                 if ($user) {
