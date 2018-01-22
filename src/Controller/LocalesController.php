@@ -51,13 +51,36 @@ class LocalesController extends PageController
         parent::index();
     }
 
+    public function add()
+    {
+        parent::add();
+        $this->addEdit();
+    }
+
+    public function edit($id)
+    {
+        parent::edit($id);
+        $this->addEdit();
+    }
+
+    private function addEdit()
+    {
+        $page = $this->Page;
+
+        $page->get('iso')
+            ->setLabel('ISO');
+    }
+
     public function view($id)
     {
         parent::view($id);
-        $entity = $this->Page->getData();
+        $page = $this->Page;
+        $entity = $page->getData();
 
         if (in_array($entity->iso, $this->officialLanguages)) {
-            $this->Page->disable(['delete']);
+            $page->disable(['delete']);
         }
+        $page->get('iso')
+            ->setLabel('ISO');
     }
 }

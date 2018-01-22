@@ -959,7 +959,7 @@ class StudentsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomStatusReasonElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($this->action == 'view') {
             $studentStatusId = $entity->student_status_id;
@@ -992,6 +992,8 @@ class StudentsTable extends ControllerActionTable
 
                 case 'WITHDRAWN':
                     $WithdrawRequestsTable = TableRegistry::get('Institution.WithdrawRequests');
+                    $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                    $approvedStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
                     $withdrawReason = $WithdrawRequestsTable->find()
                         ->matching('StudentWithdrawReasons')
@@ -1001,7 +1003,7 @@ class StudentsTable extends ControllerActionTable
                             $WithdrawRequestsTable->aliasField('education_grade_id') => $educationGradeId,
                             $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
                             // Status = 1 is approved withdraw, in case student has a previous withdraw request that was undone
-                            $WithdrawRequestsTable->aliasField('status') => 1,
+                            $WithdrawRequestsTable->aliasField('status_id').' IN ' => $approvedStatus,
                         ])
                         ->first();
 
@@ -1181,7 +1183,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // Function use by the mini dashboard (For Institution Students)
-    public function getNumberOfStudentsByGender($params=[])
+    public function getNumberOfStudentsByGender($params = [])
     {
         $query = $params['query'];
         $InstitutionRecords = clone $query;
@@ -1205,7 +1207,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // Function use by the mini dashboard (For Institution Students)
-    public function getNumberOfStudentsByAge($params=[])
+    public function getNumberOfStudentsByAge($params = [])
     {
         $query = $params['query'];
         $InstitutionRecords = $query->cleanCopy();
@@ -1253,7 +1255,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // Function use by the mini dashboard (For Institution Students)
-    public function getNumberOfStudentsByGradeByInstitution($params=[])
+    public function getNumberOfStudentsByGradeByInstitution($params = [])
     {
         $query = $params['query'];
         $InstitutionRecords = clone $query;
@@ -1278,7 +1280,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // For Dashboard (Institution Dashboard and Home Page)
-    public function getNumberOfStudentsByYear($params=[])
+    public function getNumberOfStudentsByYear($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
@@ -1354,7 +1356,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // For Dashboard (Home Page and Institution Dashboard page)
-    public function getNumberOfStudentsByStage($params=[])
+    public function getNumberOfStudentsByStage($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
