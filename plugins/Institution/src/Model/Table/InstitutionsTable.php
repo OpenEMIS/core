@@ -174,8 +174,8 @@ class InstitutionsTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
 
         $this->classificationOptions = [
-            self::ACADEMIC => 'Academic Institution',
-            self::NON_ACADEMIC => 'Non-Academic Institution'
+            self::ACADEMIC => __('Academic Institution'),
+            self::NON_ACADEMIC => __('Non-Academic Institution')
         ];
 
         $this->setDeleteStrategy('restrict');
@@ -1038,6 +1038,11 @@ class InstitutionsTable extends ControllerActionTable
     {
         $selectedClassification = $entity->classification;
         return __($this->classificationOptions[$selectedClassification]);
+    }
+
+    public function onExcelGetClassification(Event $event, Entity $entity)
+    {
+        return __($this->classificationOptions[$entity->classification]);
     }
 
     /**
