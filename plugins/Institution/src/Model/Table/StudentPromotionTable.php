@@ -638,10 +638,12 @@ class StudentPromotionTable extends AppTable
                     }
 
                     $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
+                    $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                    $pendingStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
                     foreach ($students as $key => $value) {
                         $conditions = [
                             'student_id' => $value->student_id,
-                            'status' => $StudentWithdrawTable::NEW_REQUEST,
+                            'status_id IN ' =>  $pendingStatus,
                             'education_grade_id' => $value->education_grade_id,
                             'institution_id' => $value->institution_id,
                             'academic_period_id' => $value->academic_period_id,

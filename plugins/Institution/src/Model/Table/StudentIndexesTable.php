@@ -49,7 +49,7 @@ class StudentIndexesTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $requestQuery = $this->request->query;
 
-        $selectedAcademicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriodId = !empty($requestQuery) && array_key_exists('academic_period_id', $requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
