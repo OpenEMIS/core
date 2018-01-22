@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Controller\Component;
 use Cake\Utility\Inflector;
+use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
@@ -51,9 +52,16 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     private $workflowEvents = [
         [
             'value' => 'Workflow.onTransferStudent',
-            'text' => 'Transfer Student',
-            'description' => 'Performing this action will transfer the student to the selected institution.',
+            'text' => 'Transfer of Student',
+            'description' => 'Performing this action will transfer the student to the receiving institution.',
             'method' => 'onTransferStudent',
+            'unique' => true
+        ],
+        [
+            'value' => 'Workflow.onCancel',
+            'text' => 'Cancellation of Student Transfer',
+            'description' => 'Performing this action will return the student to the sending institution.',
+            'method' => 'onCancel',
             'unique' => true
         ]
     ];
@@ -86,7 +94,99 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
     public function onTransferStudent(Event $event, $id, Entity $workflowTransitionEntity)
     {
+        $entity = $this->get($id);
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
 
+        $previousStudentRecord = $Students->find()
+            ->where([
+                $Students->aliasField('institution_id') => $entity->previous_institution_id,
+                $Students->aliasField('student_id') => $entity->student_id,
+                $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                $Students->aliasField('education_grade_id') => $entity->previous_education_grade_id,
+                $Students->aliasField('student_status_id') => $statuses['CURRENT']
+            ])
+            ->first();
+
+        if (!empty($previousStudentRecord)) {
+            // add new student record in the new institution
+            $newStudent = [
+                'student_status_id' => $statuses['CURRENT'],
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'start_date' => $entity->start_date,
+                'end_date' => $entity->end_date,
+                'institution_id' => $entity->institution_id,
+                'previous_institution_student_id' => $previousStudentRecord->id
+            ];
+            if (!empty($entity->institution_class_id)) {
+                $newStudent['class'] = $entity->institution_class_id;
+            }
+            $newStudentEntity = $Students->newEntity($newStudent);
+
+            if ($Students->save($newStudentEntity)) {
+                // end previous student record
+                if ($entity->requested_date < $entity->start_date) {
+                    $newEndDate = $entity->requested_date;
+                } else {
+                    $newEndDate = (new Date($entity->start_date))->modify('-1 day');
+                }
+                $previousStudentRecord->end_date = $newEndDate;
+                $previousStudentRecord->student_status_id = $statuses['TRANSFERRED'];
+                $Students->save($previousStudentRecord);
+            }
+        }
+    }
+
+    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $entity = $this->get($id);
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+
+        $newStudentRecord = $Students->find()
+            ->where([
+                $Students->aliasField('institution_id') => $entity->institution_id,
+                $Students->aliasField('student_id') => $entity->student_id,
+                $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                $Students->aliasField('education_grade_id') => $entity->education_grade_id,
+                $Students->aliasField('student_status_id') => $statuses['CURRENT']
+            ])
+            ->first();
+
+        $prevStudentId = null;
+        if (!empty($newStudentRecord)) {
+            // delete student record in the new institution
+            $prevStudentId = $newStudentRecord->previous_institution_student_id;
+            $Students->delete($newStudentRecord);
+        }
+
+        if (!is_null($prevStudentId)) {
+            $previousStudentRecord = $Students->get($prevStudentId);
+        } else {
+            $previousStudentRecord = $Students->find()
+                ->where([
+                    $Students->aliasField('institution_id') => $entity->previous_institution_id,
+                    $Students->aliasField('student_id') => $entity->student_id,
+                    $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                    $Students->aliasField('education_grade_id') => $entity->previous_education_grade_id,
+                    $Students->aliasField('student_status_id') => $statuses['TRANSFERRED']
+                ])
+                ->first();
+        }
+
+        if ($previousStudentRecord) {
+            // update previous student record back to enrolled status
+            $academicPeriod = $this->AcademicPeriods->get($entity->academic_period_id);
+            if (!empty($academicPeriod)) {
+                $previousStudentRecord->end_date = $academicPeriod->end_date;
+            }
+            $previousStudentRecord->student_status_id = $statuses['CURRENT'];
+            $Students->save($previousStudentRecord);
+        }
     }
 
     // to determine if workflow buttons should be shown in view page
@@ -226,6 +326,19 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $value = $entity->user->name_with_id;
         }
         return $value;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_id') {
+            return __('New Institution');
+        } else if ($field == 'previous_institution_id') {
+            return __('Current Institution');
+        } else if ($field == 'previous_education_grade_id') {
+            return __('Education Grade');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
