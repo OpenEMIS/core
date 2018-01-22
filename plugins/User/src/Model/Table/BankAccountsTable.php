@@ -58,6 +58,13 @@ class BankAccountsTable extends ControllerActionTable
         $this->request->query['bank_option'] = $bankId;
     }
 
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('bank_name');
+        $this->setFieldOrder(['account_name', 'account_number', 'active', 'bank_name', 'bank_branch_id']);
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
