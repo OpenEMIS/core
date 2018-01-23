@@ -26,7 +26,7 @@ class CaseBehavior extends Behavior
         return $events;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
         $model = $this->_table;
 
