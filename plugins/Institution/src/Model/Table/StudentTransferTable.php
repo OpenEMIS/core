@@ -6,13 +6,14 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
+use App\Model\Table\ControllerActionTable;
 
-class StudentTransferTable extends AppTable {
+class StudentTransferTable extends ControllerActionTable
+{
 	// Status of Transfer Request
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
@@ -32,7 +33,8 @@ class StudentTransferTable extends AppTable {
 	private $currentPeriod = null;
 	private $statuses = [];	// Student Status
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+    {
 		$this->table('institution_students');
 		parent::initialize($config);
 		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
@@ -41,17 +43,22 @@ class StudentTransferTable extends AppTable {
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
+
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('Institution.ClassStudents');
+
+        $this->toggle('edit', false);
+        $this->toggle('view', false);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity)
+	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		// To clear the query string from the previous page to prevent logic conflict on this page
 		$this->request->query = [];
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+    {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -70,20 +77,23 @@ class StudentTransferTable extends AppTable {
 			;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents()
+    {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
     	return $events;
     }
 
-	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona=false) {
+	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
 		$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
 		$Navigation->substituteCrumb('Transfer', 'Students', $url);
 		$Navigation->addCrumb('Transfer');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra)
+    {
 		$this->Grades = TableRegistry::get('Institution.InstitutionGrades');
 		$this->GradeStudents = TableRegistry::get('Institution.StudentTransfer');
 		$this->StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
@@ -96,33 +106,36 @@ class StudentTransferTable extends AppTable {
     	$this->statuses = $this->StudentStatuses->findCodeList();
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
     	$this->_redirect();
     }
 
-    public function addAfterAction(Event $event, Entity $entity) {
-    	$this->ControllerAction->field('student_status_id', ['visible' => false]);
-    	$this->ControllerAction->field('student_id', ['visible' => false]);
-		$this->ControllerAction->field('start_date', ['visible' => false]);
-		$this->ControllerAction->field('end_date', ['visible' => false]);
-		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
-		$this->ControllerAction->field('from_academic_period_id');
-		$this->ControllerAction->field('education_grade_id');
-		$this->ControllerAction->field('class');
-		$this->ControllerAction->field('next_academic_period_id');
-		$this->ControllerAction->field('next_education_grade_id');
-		$this->ControllerAction->field('area_id');
-		$this->ControllerAction->field('next_institution_id');
-		$this->ControllerAction->field('student_transfer_reason_id');
-		$this->ControllerAction->field('students');
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+    	$this->field('student_status_id', ['visible' => false]);
+    	$this->field('student_id', ['visible' => false]);
+		$this->field('start_date', ['visible' => false]);
+		$this->field('end_date', ['visible' => false]);
+		$this->field('academic_period_id', ['visible' => false]);
+		$this->field('from_academic_period_id');
+		$this->field('education_grade_id');
+		$this->field('class');
+		$this->field('next_academic_period_id');
+		$this->field('next_education_grade_id');
+		$this->field('area_id');
+		$this->field('next_institution_id');
+		$this->field('student_transfer_reason_id');
+		$this->field('students');
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'from_academic_period_id', 'education_grade_id', 'class',
 			'next_academic_period_id', 'next_education_grade_id', 'area_id', 'next_institution_id', 'student_transfer_reason_id'
 		]);
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
     	if (array_key_exists($this->alias(), $data)) {
 			$nextAcademicPeriodId = null;
 			$nextEducationGradeId = null;
@@ -189,7 +202,8 @@ class StudentTransferTable extends AppTable {
 		}
     }
 
-    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
     	if (isset($request->data[$this->alias()]['from_academic_period_id'])) {
     		$fromAcademicPeriodId = $request->data[$this->alias()]['from_academic_period_id'];
     		if (!empty($fromAcademicPeriodId)) {
@@ -207,7 +221,8 @@ class StudentTransferTable extends AppTable {
     	return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
 		$gradeOptions = [];
 
 		if (!is_null($this->currentPeriod)) {
@@ -266,7 +281,8 @@ class StudentTransferTable extends AppTable {
     	return $attr;
     }
 
-    public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
     	$nextPeriodOptions = [];
 
     	if (!is_null($this->currentPeriod)) {
@@ -310,7 +326,8 @@ class StudentTransferTable extends AppTable {
     	return $attr;
     }
 
-    public function onUpdateFieldNextEducationGradeId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldNextEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
 		$selectedGrade = $request->query('education_grade_id');
 		$nextPeriodId = $request->query('next_academic_period_id');
     	$nextGradeOptions = [];
@@ -410,7 +427,8 @@ class StudentTransferTable extends AppTable {
     	return $attr;
     }
 
-    public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
 		$nextPeriodId = $request->query('next_academic_period_id');
 		$nextGradeId = $request->query('next_education_grade_id');
         $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
@@ -466,13 +484,15 @@ class StudentTransferTable extends AppTable {
     	return $attr;
     }
 
-    public function onUpdateFieldStudentTransferReasonId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldStudentTransferReasonId(Event $event, array $attr, $action, Request $request)
+    {
     	$StudentTransferReasons = TableRegistry::get('Student.StudentTransferReasons');
 		$attr['options'] = $StudentTransferReasons->getList()->toArray();
     	return $attr;
     }
 
-    public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request)
+    {
     	$institutionId = $this->institutionId;
     	$selectedGrade = $request->query('education_grade_id');
     	$selectedClass = $request->query('institution_class');
@@ -542,7 +562,8 @@ class StudentTransferTable extends AppTable {
 		return $attr;
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    {
     	$attr['type'] = 'select';
     	$attr['options'] = [];
     	if (!is_null($this->currentPeriod)) {
@@ -580,7 +601,8 @@ class StudentTransferTable extends AppTable {
 		return $attr;
     }
 
-	public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
 		unset($this->request->query['institution_class']);
 
 		if ($this->request->is(['post', 'put'])) {
@@ -592,7 +614,8 @@ class StudentTransferTable extends AppTable {
 		}
 	}
 
-    public function findByNoExistingTransferRequest(Query $query, array $options) {
+    public function findByNoExistingTransferRequest(Query $query, array $options)
+    {
     	$StudentAdmission = $this->StudentAdmission;
     	$query->leftJoin(
 				[$StudentAdmission->alias() => $StudentAdmission->table()],
@@ -643,7 +666,8 @@ class StudentTransferTable extends AppTable {
 		return $query;
     }
 
-    public function findByStatus(Query $query, array $options) {
+    public function findByStatus(Query $query, array $options)
+    {
     	$statuses = array_key_exists('statuses', $options)? $options['statuses']: null;
 		if (empty($statuses)) {
 			return $query;
@@ -656,7 +680,8 @@ class StudentTransferTable extends AppTable {
 
 		return $query;
     }
-    public function addOnChangeFromAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnChangeFromAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
     	if (isset($data[$this->alias()]['education_grade_id'])) {
     		unset($data[$this->alias()]['education_grade_id']);
     	}
@@ -665,7 +690,8 @@ class StudentTransferTable extends AppTable {
     	}
     }
 
-    public function addOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
 		unset($this->request->query['education_grade_id']);
 		unset($this->request->query['institution_class']);
 		unset($this->request->query['next_academic_period_id']);
@@ -680,7 +706,8 @@ class StudentTransferTable extends AppTable {
 		}
     }
 
-    public function addOnChangeNextPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnChangeNextPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
 		unset($this->request->query['next_academic_period_id']);
 		unset($this->request->query['next_education_grade_id']);
 
@@ -693,7 +720,8 @@ class StudentTransferTable extends AppTable {
 		}
     }
 
-    public function addOnChangeNextGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addOnChangeNextGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
 		unset($this->request->query['next_education_grade_id']);
 
 		if ($this->request->is(['post', 'put'])) {
@@ -705,7 +733,8 @@ class StudentTransferTable extends AppTable {
 		}
     }
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
 		$toolbarButtons['back'] = $buttons['back'];
 		$toolbarButtons['back']['type'] = 'button';
 		$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
@@ -714,7 +743,8 @@ class StudentTransferTable extends AppTable {
 		$toolbarButtons['back']['url']['action'] = 'Students';
 	}
 
-	private function _redirect() {
+	private function _redirect()
+    {
 		$url = $this->ControllerAction->url('index');
 		$url['action'] = 'Students';
 

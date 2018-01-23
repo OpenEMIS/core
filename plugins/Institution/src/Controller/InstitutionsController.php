@@ -149,7 +149,6 @@ class InstitutionsController extends AppController
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
             'Promotion'         => ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
-            'Transfer'          => ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
             'Undo'              => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
             'ClassStudents'     => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
 
@@ -386,11 +385,14 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferOut']);
     }
+    public function Transfer()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransfer']);
+    }
     public function WithdrawRequests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.WithdrawRequests']);
     }
-
     public function StudentWithdraw()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentWithdraw']);
