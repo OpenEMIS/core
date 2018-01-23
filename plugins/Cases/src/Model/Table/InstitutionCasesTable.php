@@ -218,27 +218,39 @@ class InstitutionCasesTable extends ControllerActionTable
                             ->all();
 
                         if ($existingLinkedCaseResults->isEmpty()) {
-                            $linkedRecords = [];
-                            $linkedRecords[] = [
-                                'record_id' => $recordId,
-                                'feature' => $feature
-                            ];
+                            $extra = new ArrayObject();
+                            $extra['record_id'] = $recordId;
+                            $extra['feature'] = $feature;
+                            $extra['title'] = $title;
+                            $extra['status_id'] = $statusId;
+                            $extra['assignee_id'] = $assigneeId;
+                            $extra['institution_id'] = $institutionId;
+                            $extra['workflow_rule_id'] = $workflowRuleEntity->id;
 
-                            $newData = [
-                                'case_number' => '',
-                                'title' => $title,
-                                'status_id' => $statusId,
-                                'assignee_id' => $assigneeId,
-                                'institution_id' => $institutionId,
-                                'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
-                                'linked_records' => $linkedRecords
-                            ];
+                            $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetCaseRecord', [$extra], $linkedRecordModel);
+                            if (!$event->result) {
+                                $linkedRecords = [];
+                                $linkedRecords[] = [
+                                    'record_id' => $recordId,
+                                    'feature' => $feature
+                                ];
 
-                            $patchOptions = ['validate' => false];
+                                $newData = [
+                                    'case_number' => '',
+                                    'title' => $title,
+                                    'status_id' => $statusId,
+                                    'assignee_id' => $assigneeId,
+                                    'institution_id' => $institutionId,
+                                    'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
+                                    'linked_records' => $linkedRecords
+                                ];
 
-                            $newEntity = $this->newEntity();
-                            $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
-                            $this->save($newEntity);
+                                $patchOptions = ['validate' => false];
+
+                                $newEntity = $this->newEntity();
+                                $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
+                                $this->save($newEntity);
+                            }
                         }
                     }
                 }
