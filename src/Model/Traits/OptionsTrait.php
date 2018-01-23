@@ -109,7 +109,7 @@ trait OptionsTrait
                         'url' => [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
-                            'action' => 'InstitutionStudentAbsences'
+                            'action' => 'StudentAbsences'
                         ]
                     ]
                 ]
