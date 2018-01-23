@@ -84,18 +84,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $entityEnd = clone $endDate;
         $entityEnd->addDay(1);
         $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
-        $consecutiveRecords = $InstitutionStudentAbsenceDays
-            ->find('inDateRange', [
-                'start_date' => $entityStart,
-                'end_date' => $entityEnd
-            ])
-            ->where([
-                $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id,
-                $InstitutionStudentAbsenceDays->aliasField('student_id') => $entity->student_id,
-                $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->order([$InstitutionStudentAbsenceDays->aliasField('start_date')]);
-        $count = $consecutiveRecords->count();
+
         $days = [
             0 => 'Sunday',
             1 => 'Monday',
@@ -115,6 +104,43 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         $days = array_diff_key($days, $workingDays);
+        $s = clone $entityStart;
+        $tmp = clone $s;
+        $tmp->subDay(1);
+        $changeStart = false;
+        while (in_array($tmp->format('l'), $days)) {
+            $tmp->subDay(1);
+            $changeStart = true;
+        }
+        if ($changeStart) {
+            $s = $tmp;
+        }
+
+        $e = clone $entityEnd;
+        $tmp = clone $e;
+        $tmp->addDay(1);
+        $changeEnd = false;
+        while (in_array($tmp->format('l'), $days)) {
+            $tmp->addDay(1);
+            $changeEnd = true;
+        }
+        if ($changeEnd) {
+            $e = $tmp;
+        }
+
+
+        $consecutiveRecords = $InstitutionStudentAbsenceDays
+            ->find('inDateRange', [
+                'start_date' => $s,
+                'end_date' => $e
+            ])
+            ->where([
+                $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id,
+                $InstitutionStudentAbsenceDays->aliasField('student_id') => $entity->student_id,
+                $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id
+            ])
+            ->order([$InstitutionStudentAbsenceDays->aliasField('start_date')]);
+        $count = $consecutiveRecords->count();
 
         switch ($count) {
             // There is no record, we will add the entry
@@ -230,8 +256,39 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $recordEntity = $this->get($id, [
             'contain' => ['Users', 'AbsenceTypes', 'Institutions']
         ]);
+        $days = [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday'
+        ];
+
+        $start = TableRegistry::get('Configuration.ConfigItems')->value('first_day_of_week');
+        $daysPerWeek = TableRegistry::get('Configuration.ConfigItems')->value('days_per_week') - 1;
+        $workingDays = [];
+        for ($a = $daysPerWeek; $a >= 0; $a--) {
+            $key = (($start + $a) % 7);
+            $workingDays[$key] = $key;
+        }
+
+        $days = array_diff_key($days, $workingDays);
+        $daysAbsent = 0;
+
+        $s = clone $recordEntity->start_date;
+        $daysAbsent = 0;
+        do {
+            if (!in_array($s->format('l'), $days)) {
+                $daysAbsent++;
+            }
+            $s->addDay(1);
+        } while ($s->lte($recordEntity->end_date));
+
+
         $title = '';
-        $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->absence_type->name;
+        $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ' . __('Days Absent: ') . $daysAbsent;
 
         return $title;
     }
