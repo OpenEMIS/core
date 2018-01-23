@@ -47,41 +47,43 @@ class AdvancedIdentitySearchBehavior extends Behavior {
             $query->group('UserIdentities.security_user_id');
         }
         return $query;
-	}
+    }
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [
-			'AdvanceSearch.onSetupFormField' => 'onSetupFormField',
-			'AdvanceSearch.onBuildQuery' => 'onBuildQuery',
-		];
-		$events = array_merge($events, $newEvent);
-		return $events;
-	}
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'AdvanceSearch.onSetupFormField' => 'onSetupFormField',
+            'AdvanceSearch.onBuildQuery' => 'onBuildQuery',
+        ];
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
 
-	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
-		$searchables['identity_type'] = [
-			'label' => __('Identity Type'),
-			'type' => 'select',
-			'options' => $this->getIdentityTypeOptions(),
-			'selected' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['identity_type'])) ? $advanceSearchModelData['hasMany']['identity_type'] : '',
-		];
+    public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData)
+    {
+        $searchables['identity_type'] = [
+            'label' => __('Identity Type'),
+            'type' => 'select',
+            'options' => $this->getIdentityTypeOptions(),
+            'selected' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['identity_type'])) ? $advanceSearchModelData['hasMany']['identity_type'] : '',
+        ];
 
-		$searchables['identity_number'] = [
-			'label' => __('Identity Number'),
-			'value' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['identity_number'])) ? $advanceSearchModelData['hasMany']['identity_number'] : '',
-		];
-	}
+        $searchables['identity_number'] = [
+            'label' => __('Identity Number'),
+            'value' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['identity_number'])) ? $advanceSearchModelData['hasMany']['identity_number'] : '',
+        ];
+    }
 
-	public function getIdentityTypeOptions()
+    public function getIdentityTypeOptions()
     {
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
 
-        return 	$IdentityTypes
+        return  $IdentityTypes
                 ->find('list')
                 ->find('visible')
-                ->order('order')
+                //POCOR-4375 Error 404 When Accessing Directory
+                ->order([$IdentityTypes->aliasField('order')])
                 ->toArray();
     }
-
 }
