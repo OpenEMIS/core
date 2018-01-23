@@ -200,7 +200,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
                     $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetLinkedRecordsCheckCondition', [$query, $where], $linkedRecordModel);
 
-                    if ($event->result) {
+                    if ($event->result || $event->result === false) {
                         $checkCondition = $event->result;
                     } else {
                         $checkCondition = $query->where($where)->count() > 0;

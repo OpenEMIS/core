@@ -83,10 +83,16 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $entityStart->subDay(1);
         $entityEnd = clone $endDate;
         $entityEnd->addDay(1);
+        $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
         $consecutiveRecords = $InstitutionStudentAbsenceDays
             ->find('inDateRange', [
                 'start_date' => $entityStart,
                 'end_date' => $entityEnd
+            ])
+            ->where([
+                $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id,
+                $InstitutionStudentAbsenceDays->aliasField('student_id') => $entity->student_id,
+                $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id
             ])
             ->order([$InstitutionStudentAbsenceDays->aliasField('start_date')]);
         $count = $consecutiveRecords->count();
@@ -143,7 +149,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 if ($startDate->lt($recordStartDate)) {
                     $recordStartDate = $startDate;
                 } elseif ($startDate->gt($recordEndDate)) {
-                    $recordEndDate = $startDate;
+                    $recordEndDate = $endDate;
                 }
 
                 $s = clone $recordStartDate;
@@ -232,9 +238,16 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function onSetCaseRecord(Event $event, ArrayObject $extra)
     {
+        $recordId = $extra['record_id'];
+        $feature = $extra['feature'];
+        $title = $extra['title'];
+        $statusId = $extra['status_id'];
+        $assigneeId = $extra['assignee_id'];
+        $institutionId = $extra['institution_id'];
+        $workflowRuleId = $extra['workflow_rule_id'];
         $institutionStudentAbsenceDayId = $this->get($recordId)->institution_student_absence_day_id;
 
-        $recordIds = $this->find()->select([$this->aliasField('id')])->where([$this->aliasField('institution_student_absence_day_id') => $InstitutionStudentAbsenceDayId])->toArray();
+        $recordIds = $this->find()->select([$this->aliasField('id')])->where([$this->aliasField('institution_student_absence_day_id') => $institutionStudentAbsenceDayId])->toArray();
 
         $linkedRecords = [];
 
@@ -247,8 +260,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 'feature' => $feature
             ];
         }
-        $InstitutionCases = TableRegistry::get('Case.InstitutionCases');
-        $record = $InstitutionCases->find()->where([$this->aliasField('record_id'). ' IN ' => $records])->first();
+        $InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
 
         $newData = [
             'case_number' => '',
@@ -256,16 +268,14 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'status_id' => $statusId,
             'assignee_id' => $assigneeId,
             'institution_id' => $institutionId,
-            'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
+            'workflow_rule_id' => $workflowRuleId, // required by workflow behavior to get the correct workflow
             'linked_records' => $linkedRecords
         ];
 
         $patchOptions = ['validate' => false];
 
-        $newEntity = $this->newEntity();
-
-        $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
-        $this->save($newEntity);
+        $newEntity = $InstitutionCases->newEntity($newData, $patchOptions);
+        return $InstitutionCases->save($newEntity);
     }
 
     public function onSetLinkedRecordsCheckCondition(Event $event, Query $query, array $where)
@@ -274,18 +284,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $institutionStudentAbsenceDayId = $record->institution_student_absence_day_id;
         $absentDays = 0;
         if ($institutionStudentAbsenceDayId) {
-            $absentDayRecord = $this->InstitutionStudentAbsenceDays->get($InstitutionStudentAbsenceDays);
+            $absentDayRecord = $this->InstitutionStudentAbsenceDays->get($institutionStudentAbsenceDayId);
             $absentDays = $absentDayRecord->absent_days;
         }
 
-        if ($where['absence_type_id'] != $record->absence_type_id) {
-            return false;
-        }
-        if ($absentDays == $where['days_absent']) {
+        if ($where['absence_type_id'] == $record->absence_type_id && $absentDays == $where['days_absent']) {
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
