@@ -57,8 +57,8 @@ $this->start('panelBody');
             ng-options="item.id as item.name for item in InstitutionSubjectStudentsController.classOptions"
             ng-init="InstitutionSubjectStudentsController.questionOptions = []">
         </select>
-        <div ng-if="InstitutionSubjectStudentsController.postError.classes" class="error-message">
-            <p ng-repeat="error in InstitutionSubjectStudentsController.postError.classes">{{ error }}</p>
+        <div ng-if="InstitutionSubjectStudentsController.postError.class_subjects" class="error-message">
+            <p ng-repeat="error in InstitutionSubjectStudentsController.postError.class_subjects">{{ error }}</p>
         </div>
     </div>
     <div class="input select">

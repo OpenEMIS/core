@@ -108,7 +108,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        $validator->requirePresence('name');
+        $validator
+            ->requirePresence('name')
+            ->requirePresence('class_subjects')
+            ->notEmpty('class_subjects');
         return $validator;
     }
 
@@ -627,27 +630,50 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $educationGradeId = $entity->education_grade_id;
+        $educationSubjectId = $entity->education_subject_id;
+        $institutionSubjectId = $entity->id;
+        $academicPeriodId = $entity->academic_period_id;
+
+        $query = $InstitutionSubjectStudents
+                    ->find()
+                    ->where([
+                        'education_grade_id' => $educationGradeId,
+                        'education_subject_id' => $educationSubjectId,
+                        'institution_subject_id' => $institutionSubjectId,
+                        'academic_period_id' => $academicPeriodId
+                    ])
+                    ->extract('institution_class_id')
+                    ->toArray();
+
+        $options['originalClass'] = $query;
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew()) {
             //empty subject student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
             if ($entity->has('subjectStudent') && !empty($entity->subjectStudent)) {
-                $institutionClassId = 0;
+                // $institutionClassId = 0;
                 $newStudents = [];
                 //decode string sent through form
                 foreach ($entity->subjectStudent as $item) {
                     $student = json_decode($this->urlsafeB64Decode($item), true);
                     $newStudents[$student['student_id']] = $student;
-                    if ($institutionClassId == 0) {
-                        $institutionClassId = $student['institution_class_id'];
-                    }
+                    // if ($institutionClassId == 0) {
+                    //     $institutionClassId = $student['institution_class_id'];
+                    // }
                 }
 
                 //find existing subject student to make comparison
                 $educationGradeId = $entity->education_grade_id;
                 $educationSubjectId = $entity->education_subject_id;
                 $institutionSubjectId = $entity->id;
+                $institutionClassIds = $options['originalClass'];
 
                 $existingStudents = $this->SubjectStudents
                     ->find('all')
@@ -656,7 +682,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         'student_status_id', 'institution_subject_id', 'education_subject_id'
                     ])
                     ->where([
-                        $this->SubjectStudents->aliasField('institution_class_id') => $institutionClassId,
+                        $this->SubjectStudents->aliasField('institution_class_id') . ' IN ' => $institutionClassIds,
                         $this->SubjectStudents->aliasField('education_grade_id') => $educationGradeId,
                         $this->SubjectStudents->aliasField('education_subject_id') => $educationSubjectId,
                         $this->SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId
