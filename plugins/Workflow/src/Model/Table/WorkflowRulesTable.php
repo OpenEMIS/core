@@ -35,7 +35,8 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $eventMap = [
-            'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields'
+            'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields',
+            'ControllerAction.Model.getSearchableFields' => 'getSearchableFields'
         ];
 
         foreach ($eventMap as $event => $method) {
@@ -45,6 +46,11 @@ class WorkflowRulesTable extends ControllerActionTable
             $events[$event] = $method;
         }
         return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'workflow_id';
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -101,6 +107,15 @@ class WorkflowRulesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->matching('Workflows');
+
+        $searchKey = $this->getSearchKey();
+
+        if (strlen($searchKey)) {
+            $extra['OR'] = [
+                $this->Workflows->aliasField('code').' LIKE' => '%' . $searchKey . '%',
+                $this->Workflows->aliasField('name').' LIKE' => '%' . $searchKey . '%',
+            ];
+        }
 
         if ($extra->offsetExists('selectedFeature') && !empty($extra['selectedFeature'])) {
             $query->where([$this->aliasField('feature') => $extra['selectedFeature']]);
