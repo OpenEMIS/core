@@ -14,8 +14,10 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
-class InstitutionStudentAbsencesTable extends AppTable
+class InstitutionStudentAbsencesTable extends ControllerActionTable
 {
     use OptionsTrait;
     private $_fieldOrder = [
@@ -35,6 +37,7 @@ class InstitutionStudentAbsencesTable extends AppTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
+        $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' =>'institution_student_absence_day_id']);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('Excel', [
@@ -51,6 +54,7 @@ class InstitutionStudentAbsencesTable extends AppTable
             ],
             'pages' => ['index']
         ]);
+        $this->addBehavior('Institution.Case');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
@@ -66,7 +70,291 @@ class InstitutionStudentAbsencesTable extends AppTable
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
+        $events['InstitutionCase.onSetLinkedRecordsCheckCondition'] = 'onSetLinkedRecordsCheckCondition';
+        $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
+        $events['InstitutionCase.onSetCaseRecord'] = 'onSetCaseRecord';
+        $events['Model.afterSaveCommit'] = ['callable' => 'afterSaveCommit', 'priority' => '9'];
         return $events;
+    }
+
+    private function addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate)
+    {
+        $entityStart = clone $startDate;
+        $entityStart->subDay(1);
+        $entityEnd = clone $endDate;
+        $entityEnd->addDay(1);
+        $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
+
+        $days = [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday'
+        ];
+
+        $start = TableRegistry::get('Configuration.ConfigItems')->value('first_day_of_week');
+        $daysPerWeek = TableRegistry::get('Configuration.ConfigItems')->value('days_per_week') - 1;
+        $workingDays = [];
+        for ($a = $daysPerWeek; $a >= 0; $a--) {
+            $key = (($start + $a) % 7);
+            $workingDays[$key] = $key;
+        }
+
+        $days = array_diff_key($days, $workingDays);
+        $s = clone $entityStart;
+        $tmp = clone $s;
+        $tmp->subDay(1);
+        $changeStart = false;
+        while (in_array($tmp->format('l'), $days)) {
+            $tmp->subDay(1);
+            $changeStart = true;
+        }
+        if ($changeStart) {
+            $s = $tmp;
+        }
+
+        $e = clone $entityEnd;
+        $tmp = clone $e;
+        $tmp->addDay(1);
+        $changeEnd = false;
+        while (in_array($tmp->format('l'), $days)) {
+            $tmp->addDay(1);
+            $changeEnd = true;
+        }
+        if ($changeEnd) {
+            $e = $tmp;
+        }
+
+
+        $consecutiveRecords = $InstitutionStudentAbsenceDays
+            ->find('inDateRange', [
+                'start_date' => $s,
+                'end_date' => $e
+            ])
+            ->where([
+                $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id,
+                $InstitutionStudentAbsenceDays->aliasField('student_id') => $entity->student_id,
+                $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id
+            ])
+            ->order([$InstitutionStudentAbsenceDays->aliasField('start_date')]);
+        $count = $consecutiveRecords->count();
+
+        switch ($count) {
+            // There is no record, we will add the entry
+            case 0:
+                $s = clone $startDate;
+                $daysAbsent = 0;
+                do {
+                    if (!in_array($s->format('l'), $days)) {
+                        $daysAbsent++;
+                    }
+                    $s->addDay(1);
+                } while ($s->lte($endDate));
+
+                $dayEntity = $InstitutionStudentAbsenceDays->newEntity([
+                    'student_id' => $entity->student_id,
+                    'institution_id' => $entity->institution_id,
+                    'absence_type_id' => $entity->absence_type_id,
+                    'absent_days' => $daysAbsent,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate
+                ]);
+
+                $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
+                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
+                break;
+            // When there is one record found
+            case 1:
+                $recordEntity = $consecutiveRecords->first();
+                $recordStartDate = $recordEntity->start_date;
+                $recordEndDate = $recordEntity->end_date;
+
+                if ($startDate->lt($recordStartDate)) {
+                    $recordStartDate = $startDate;
+                } elseif ($startDate->gt($recordEndDate)) {
+                    $recordEndDate = $endDate;
+                }
+
+                $s = clone $recordStartDate;
+                $daysAbsent = 0;
+                do {
+                    if (!in_array($s->format('l'), $days)) {
+                        $daysAbsent++;
+                    }
+                    $s->addDay(1);
+                } while ($s->lte($recordEndDate));
+
+                $dayEntity = $InstitutionStudentAbsenceDays->patchEntity($recordEntity, [
+                    'start_date' => $recordStartDate,
+                    'end_date' => $recordEndDate,
+                    'absent_days' => $daysAbsent
+                ]);
+                $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
+                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
+                break;
+            // When there is two records found, it means this record happen to fall in between the two record
+            case 2:
+                $recordEntities = $consecutiveRecords->toArray();
+                $recordStartDate = $recordEntities[0]->start_date;
+                $recordEndDate = $recordEntities[1]->end_date;
+
+                $recordsId = [$recordEntities[0]->id, $recordEntities[1]->id];
+
+                $s = clone $recordStartDate;
+                $daysAbsent = 0;
+                do {
+                    if (!in_array($s->format('l'), $days)) {
+                        $daysAbsent++;
+                    }
+                    $s->addDay(1);
+                } while ($s->lte($recordEndDate));
+
+                $dayEntity = $InstitutionStudentAbsenceDays->newEntity([
+                    'student_id' => $entity->student_id,
+                    'institution_id' => $entity->institution_id,
+                    'absence_type_id' => $entity->absence_type_id,
+                    'absent_days' => $daysAbsent,
+                    'start_date' => $recordStartDate,
+                    'end_date' => $recordEndDate
+                ]);
+                $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
+                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['institution_student_absence_day_id IN ' => $recordsId]);
+                $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
+                break;
+        }
+    }
+
+
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
+        $startDate = $entity->start_date;
+        $endDate = $entity->end_date;
+        $fullDay = $entity->full_day;
+
+        if ($fullDay && $entity->isNew()) {
+            $this->addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate);
+        }
+    }
+
+    public function onSetCustomCaseTitle(Event $event, Entity $entity)
+    {
+        $recordEntity = $this->get($entity->id, [
+            'contain' => ['Users', 'AbsenceTypes', 'Institutions']
+        ]);
+        $title = '';
+        $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->absence_type->name;
+
+        return $title;
+    }
+
+    public function onSetCustomCaseSummary(Event $event, int $id)
+    {
+        try {
+            $recordEntity = $this->get($id, [
+                'contain' => ['Users', 'AbsenceTypes', 'Institutions']
+            ]);
+            $days = [
+                0 => 'Sunday',
+                1 => 'Monday',
+                2 => 'Tuesday',
+                3 => 'Wednesday',
+                4 => 'Thursday',
+                5 => 'Friday',
+                6 => 'Saturday'
+            ];
+
+            $start = TableRegistry::get('Configuration.ConfigItems')->value('first_day_of_week');
+            $daysPerWeek = TableRegistry::get('Configuration.ConfigItems')->value('days_per_week') - 1;
+            $workingDays = [];
+            for ($a = $daysPerWeek; $a >= 0; $a--) {
+                $key = (($start + $a) % 7);
+                $workingDays[$key] = $key;
+            }
+
+            $days = array_diff_key($days, $workingDays);
+            $daysAbsent = 0;
+
+            $s = clone $recordEntity->start_date;
+            $daysAbsent = 0;
+            do {
+                if (!in_array($s->format('l'), $days)) {
+                    $daysAbsent++;
+                }
+                $s->addDay(1);
+            } while ($s->lte($recordEntity->end_date));
+
+
+            $title = '';
+            $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ' . __('Days Absent: ') . $daysAbsent;
+
+            return [$title, true];
+        } catch (RecordNotFoundException $e) {
+            return [__('Absent Record Deleted'), false];
+        }
+    }
+
+    public function onSetCaseRecord(Event $event, ArrayObject $extra)
+    {
+        $recordId = $extra['record_id'];
+        $feature = $extra['feature'];
+        $title = $extra['title'];
+        $statusId = $extra['status_id'];
+        $assigneeId = $extra['assignee_id'];
+        $institutionId = $extra['institution_id'];
+        $workflowRuleId = $extra['workflow_rule_id'];
+        $institutionStudentAbsenceDayId = $this->get($recordId)->institution_student_absence_day_id;
+
+        $recordIds = $this->find()->select([$this->aliasField('id')])->where([$this->aliasField('institution_student_absence_day_id') => $institutionStudentAbsenceDayId])->toArray();
+
+        $linkedRecords = [];
+
+        $records = [];
+
+        foreach ($recordIds as $record) {
+            $records[] = $record->id;
+            $linkedRecords[] = [
+                'record_id' => $record->id,
+                'feature' => $feature
+            ];
+        }
+        $InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
+
+        $newData = [
+            'case_number' => '',
+            'title' => $title,
+            'status_id' => $statusId,
+            'assignee_id' => $assigneeId,
+            'institution_id' => $institutionId,
+            'workflow_rule_id' => $workflowRuleId, // required by workflow behavior to get the correct workflow
+            'linked_records' => $linkedRecords
+        ];
+
+        $patchOptions = ['validate' => false];
+
+        $newEntity = $InstitutionCases->newEntity($newData, $patchOptions);
+        return $InstitutionCases->save($newEntity);
+    }
+
+    public function onSetLinkedRecordsCheckCondition(Event $event, Query $query, array $where)
+    {
+        $record = $this->get($where['id']);
+        $institutionStudentAbsenceDayId = $record->institution_student_absence_day_id;
+        $absentDays = 0;
+        if ($institutionStudentAbsenceDayId) {
+            $absentDayRecord = $this->InstitutionStudentAbsenceDays->get($institutionStudentAbsenceDayId);
+            $absentDays = $absentDayRecord->absent_days;
+        }
+
+        if ($where['absence_type_id'] == $record->absence_type_id && $absentDays == $where['days_absent']) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
@@ -171,7 +459,7 @@ class InstitutionStudentAbsencesTable extends AppTable
                     'on' => 'create'
                 ],
                 'checkIfSchoolIsClosed' => [
-                    'rule' => function($value, $context) {
+                    'rule' => function ($value, $context) {
                         $CalendarEventDates = TableRegistry::get('CalendarEventDates');
                         $startDate = new Date($context['data']['start_date']);
                         $endDate = new Date($value);
@@ -388,15 +676,16 @@ class InstitutionStudentAbsencesTable extends AppTable
 
     public function afterAction(Event $event)
     {
-        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->_fieldOrder);
+        $this->fields['institution_student_absence_day_id']['visible'] = false;
     }
 
     public function indexBeforeAction(Event $event)
     {
         $absenceTypeOptions = $this->absenceList;
 
-        $this->ControllerAction->field('date');
-        $this->ControllerAction->field('absence_type_id', [
+        $this->field('date');
+        $this->field('absence_type_id', [
             'options' => $absenceTypeOptions
         ]);
 
@@ -434,11 +723,11 @@ class InstitutionStudentAbsencesTable extends AppTable
         // Temporary fix for error on view page
         unset($this->_fieldOrder[1]); // Academic period not in use in view page
         unset($this->_fieldOrder[2]); // Class not in use in view page
-        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->_fieldOrder);
         // End fix
 
         $absenceTypeOptions = $this->absenceList;
-        $this->ControllerAction->field('absence_type_id', [
+        $this->field('absence_type_id', [
             'options' => $absenceTypeOptions
         ]);
 
@@ -462,19 +751,19 @@ class InstitutionStudentAbsencesTable extends AppTable
         $fullDayOptions = $this->getSelectOptions('general.yesno');
         $absenceTypeOptions = $this->absenceList;
 
-        $this->ControllerAction->field('absence_type_id', [
+        $this->field('absence_type_id', [
             'options' => $absenceTypeOptions
         ]);
-        $this->ControllerAction->field('academic_period_id', [
+        $this->field('academic_period_id', [
             'options' => $periodOptions
         ]);
-        $this->ControllerAction->field('class', [
+        $this->field('class', [
             'options' => $classOptions
         ]);
-        $this->ControllerAction->field('student_id', [
+        $this->field('student_id', [
             'options' => $studentOptions
         ]);
-        $this->ControllerAction->field('full_day', [
+        $this->field('full_day', [
             'options' => $fullDayOptions
         ]);
         // Start Date and End Date
@@ -483,21 +772,21 @@ class InstitutionStudentAbsencesTable extends AppTable
             $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
             $endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
-            $this->ControllerAction->field('end_date');
+            $this->field('end_date');
 
             $this->fields['start_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
             $this->fields['start_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
             $this->fields['end_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
             $this->fields['end_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
         } else if ($this->action == 'edit') {
-            $this->ControllerAction->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
-            $this->ControllerAction->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
+            $this->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
+            $this->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
         }
         // End
 
-        $this->ControllerAction->field('start_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->start_time))]]);
-        $this->ControllerAction->field('end_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->end_time))]]);
-        $this->ControllerAction->field('student_absence_reason_id', ['type' => 'select']);
+        $this->field('start_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->start_time))]]);
+        $this->field('end_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->end_time))]]);
+        $this->field('student_absence_reason_id', ['type' => 'select']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)

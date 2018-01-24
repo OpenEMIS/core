@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
+use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 
@@ -21,6 +22,15 @@ class AssessmentItemsGradingTypesTable extends AppTable {
             'Results' => ['index'],
             'OpenEMIS_Classroom' => ['index']
         ]);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+        ->requirePresence('assessment_grading_type_id');
+       
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)

@@ -355,6 +355,13 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        if ($entity->isNew()) { 
+            $id = $entity->institution_class_id;
+            $countMale = $this->getMaleCountByClass($id);
+            $countFemale = $this->getFemaleCountByClass($id);
+            $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+        }
+
         $listeners = [
             TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
@@ -546,6 +553,11 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
+        $id = $entity->institution_class_id;
+        $countMale = $this->getMaleCountByClass($id);
+        $countFemale = $this->getFemaleCountByClass($id);
+        $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+
         $listeners = [
             TableRegistry::get('Institution.InstitutionCompetencyResults'),
             TableRegistry::get('Institution.InstitutionSubjectStudents')
