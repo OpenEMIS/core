@@ -311,9 +311,9 @@ class RestSurveyComponent extends Component
                         $entity = $CustomRecords->newEntity($formData, ['validate' => false]);
                         if ($CustomRecords->save($entity)) {
                             // if($entity->status == 2) {
-                                $message = 'Survey record has been submitted successfully.';
+                            $message = 'Survey record has been submitted successfully.';
                             // } else {
-                                // $message = 'Survey record has been saved to draft successfully.';
+                            // $message = 'Survey record has been saved to draft successfully.';
                             // }
                             $this->log('Message:', 'debug');
                             $this->log($message, 'debug');
@@ -357,7 +357,7 @@ class RestSurveyComponent extends Component
                                     $extra['model'] = $this->FieldValue;
                                     $extra['cellModel'] = $this->TableCell;
                                     $extra['data'] = $responseData;
-                                    $extra['value'] = $responseValue;
+                                    $extra['value'] = trim($responseValue);
                                     $extra['recordKey'] = $this->recordKey;
                                     $extra['formKey'] = $this->formKey;
                                     $extra['fieldKey'] = $this->fieldKey;
@@ -763,7 +763,9 @@ class RestSurveyComponent extends Component
             $extra['field_id'] = $field->field_id;
             $extra['rules'] = $rules;
 
-            if (is_null($sectionName)) { $parentNode = $bodyNode; }
+            if (is_null($sectionName)) {
+                $parentNode = $bodyNode;
+            }
 
             // Section
             if ($field->section_name != $sectionName) {
@@ -945,8 +947,8 @@ class RestSurveyComponent extends Component
                 }
 
                 $itemNode = $dropdownNode->addChild("item", null, NS_XF);
-                    $itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
-                    $itemNode->addChild("value", $fieldOption->id, NS_XF);
+                $itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
+                $itemNode->addChild("value", $fieldOption->id, NS_XF);
             }
         }
 
@@ -972,8 +974,8 @@ class RestSurveyComponent extends Component
             $fieldOptions = $fieldOptionResults->toArray();
             foreach ($fieldOptions as $fieldOption) {
                 $itemNode = $checkboxNode->addChild("item", null, NS_XF);
-                    $itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
-                    $itemNode->addChild("value", $fieldOption->id, NS_XF);
+                $itemNode->addChild("label", htmlspecialchars($fieldOption->name, ENT_QUOTES), NS_XF);
+                $itemNode->addChild("value", $fieldOption->id, NS_XF);
             }
         }
 
@@ -994,11 +996,11 @@ class RestSurveyComponent extends Component
 
         $tableNode = $tableBreakNode->addChild("table", null, NS_XHTML);
         $tableNode->addAttribute("ref", $this->getRef($instanceId, $extra['references']));
-            $tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
-            $tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
-                $repeatNode = $tableBody->addChild("repeat", null, NS_XF);
-                $repeatNode->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableRow->alias()])));
-                $tbodyRow = $repeatNode->addChild("tr", null, NS_XHTML);
+        $tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
+        $tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
+        $repeatNode = $tableBody->addChild("repeat", null, NS_XF);
+        $repeatNode->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableRow->alias()])));
+        $tbodyRow = $repeatNode->addChild("tr", null, NS_XHTML);
 
         $tableColumnResults = $this->TableColumn
             ->find()
@@ -1043,8 +1045,8 @@ class RestSurveyComponent extends Component
                     if ($row == 0) {
                         $tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
                         $tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
-                            $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
-                            $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col])));
+                        $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
+                        $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col])));
 
                         $extra['type'] = 'string';
 
@@ -1069,10 +1071,10 @@ class RestSurveyComponent extends Component
             if (!is_null($startDate) && !is_null($endDate)) {
                 $constraint = ". >= '".$startDate."'' && ".". <= '".$endDate."'";
                 $validationHint = $this->Field->getMessage('CustomField.date.between', ['sprintf' => [$startDate, $endDate]]);
-            } else if (!is_null($startDate)) {
+            } elseif (!is_null($startDate)) {
                 $constraint = ". >= '$startDate'";
                 $validationHint = $this->Field->getMessage('CustomField.date.earlier', ['sprintf' => $startDate]);
-            } else if (!is_null($endDate)) {
+            } elseif (!is_null($endDate)) {
                 $constraint = ". <= '$endDate'";
                 $validationHint = $this->Field->getMessage('CustomField.date.later', ['sprintf' => $endDate]);
             }
@@ -1099,10 +1101,10 @@ class RestSurveyComponent extends Component
             if (!is_null($startTime) && !is_null($endTime)) {
                 $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'' && ".". <= '".$this->twentyFourHourFormat($endTime)."'";
                 $validationHint = $this->Field->getMessage('CustomField.time.between', ['sprintf' => [$startTime, $endTime]]);
-            } else if (!is_null($startTime)) {
+            } elseif (!is_null($startTime)) {
                 $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'";
                 $validationHint = $this->Field->getMessage('CustomField.time.earlier', ['sprintf' => $startTime]);
-            } else if (!is_null($endTime)) {
+            } elseif (!is_null($endTime)) {
                 $constraint = ". <= '".$this->twentyFourHourFormat($endTime)."'";
                 $validationHint = $this->Field->getMessage('CustomField.time.later', ['sprintf' => $endTime]);
             }
@@ -1228,7 +1230,6 @@ class RestSurveyComponent extends Component
         }
 
         if (isset($attr['rules'])) {
-
             $questionId = $attr['field_id'];
             $attr['rules']['dependent_question_mapping'][$questionId] = $attr['references'][1];
             if (isset($attr['rules'][$questionId])) {
@@ -1257,7 +1258,8 @@ class RestSurveyComponent extends Component
         return $fieldNode;
     }
 
-    private function getRef($instanceId, $references=[]) {
+    private function getRef($instanceId, $references=[])
+    {
         $ref = "instance('" . $instanceId . "')";
         if (!empty($references)) {
             foreach ($references as $reference) {
@@ -1294,7 +1296,7 @@ class RestSurveyComponent extends Component
     private function addResponse($xmlResponse)
     {
         $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
-            $responseData = [
+        $responseData = [
             'id' => Text::uuid(),
             'response' => $xmlResponse
         ];
