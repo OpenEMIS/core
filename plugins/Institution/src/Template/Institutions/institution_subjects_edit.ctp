@@ -46,6 +46,21 @@ $this->start('panelBody');
         <label><?= __('Subject Name') ?></label>
         <input ng-model="InstitutionSubjectStudentsController.educationSubjectName" type="text" disabled="disabled">
     </div>
+    <div class="input select required">
+        <label><?= __('Classes') ?></label>
+        <select chosen
+            multiple="multiple"
+            data-placeholder="<?=__('Select Classes') ?>"
+            class="chosen-select"
+            options="InstitutionSubjectStudentsController.classOptions"
+            ng-model="InstitutionSubjectStudentsController.classes"
+            ng-options="item.id as item.name for item in InstitutionSubjectStudentsController.classOptions"
+            ng-init="InstitutionSubjectStudentsController.questionOptions = []">
+        </select>
+        <div ng-if="InstitutionSubjectStudentsController.postError.classes" class="error-message">
+            <p ng-repeat="error in InstitutionSubjectStudentsController.postError.classes">{{ error }}</p>
+        </div>
+    </div>
     <div class="input select">
         <label><?= __('Teachers') ?></label>
         <select chosen
