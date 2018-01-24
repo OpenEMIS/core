@@ -270,6 +270,12 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
             $start = TableRegistry::get('Configuration.ConfigItems')->value('first_day_of_week');
             $daysPerWeek = TableRegistry::get('Configuration.ConfigItems')->value('days_per_week') - 1;
+
+            $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+            $format = $ConfigItem->value('date_format');
+            $startDate = $recordEntity->start_date->format($format);
+            $endDate = $recordEntity->end_date->format($format);
+
             $workingDays = [];
             for ($a = $daysPerWeek; $a >= 0; $a--) {
                 $key = (($start + $a) % 7);
@@ -290,11 +296,11 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
 
             $title = '';
-            $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ' . __('Days Absent: ') . $daysAbsent;
+            $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ('.$startDate.' - '. $endDate .') - ' . __('Days Absent') . ': ' . $daysAbsent;
 
             return [$title, true];
         } catch (RecordNotFoundException $e) {
-            return [__('Absent Record Deleted'), false];
+            return [__('Absence Record Deleted'), false];
         }
     }
 
