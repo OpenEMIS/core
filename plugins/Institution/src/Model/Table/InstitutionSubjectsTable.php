@@ -689,16 +689,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ])
                     ->toArray();
 
-                $maleTotal = 0;
-                $femaleTotal = 0;
-                foreach ($newStudents as $key => $student) {
-                    if ($student['gender_id'] == 1) {
-                        $maleTotal++;
-                    } else {
-                        $femaleTotal++;
-                    }
-                }
-
                 foreach ($existingStudents as $key => $subjectStudentEntity) {
                     if (!array_key_exists($subjectStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
                         $this->SubjectStudents->delete($subjectStudentEntity);
@@ -711,8 +701,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $subjectStudentEntity = $this->SubjectStudents->newEntity($student);
                     $this->SubjectStudents->save($subjectStudentEntity);
                 }
-
-                $this->updateAll(['total_male_students' => $maleTotal, 'total_female_students' => $femaleTotal], ['id' => $entity->id]);
             }
         }
     }
