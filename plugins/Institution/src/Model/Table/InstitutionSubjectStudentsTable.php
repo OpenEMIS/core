@@ -321,9 +321,26 @@ class InstitutionSubjectStudentsTable extends AppTable
         ;
         return $count;
     }
+    
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) { 
+            $id = $entity->institution_subject_id;
+            $countMale = $this->getMaleCountBySubject($id);
+            $countFemale = $this->getFemaleCountBySubject($id);
+            $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+        }
+
+    }
+
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {   
+        $id = $entity->institution_subject_id;
+        $countMale = $this->getMaleCountBySubject($id);
+        $countFemale = $this->getFemaleCountBySubject($id);
+        $this->InstitutionSubjects->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+    
         // Disabled this logic because results should never be deleted when removing students from subjects
 
         //PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
