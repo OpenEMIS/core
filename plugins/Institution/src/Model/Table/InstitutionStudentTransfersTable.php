@@ -355,6 +355,14 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
     }
 
+    public function getPendingTransferWorkflowStatuses()
+    {
+        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $pendingTransferInStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferIn', 'PENDING');
+        $pendingTransferOutStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferOut', 'PENDING');
+        return $pendingTransferInStatus + $pendingTransferOutStatus;
+    }
+
     public function findInstitutionStudentTransferIn(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
