@@ -20,7 +20,7 @@ class StudentAbsencesTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
         $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons', 'foreignKey' =>'student_absence_reason_id']);
         $this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
-
+        $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' =>'institution_student_absence_day_id']);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
             'excludes' => [
