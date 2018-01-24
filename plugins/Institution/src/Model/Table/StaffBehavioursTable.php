@@ -307,7 +307,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $title = '';
         $title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
 
-        return $title;
+        return [$title, true];
     }
 
     public function onSetCustomCaseSummary(Event $event, $id = null)
