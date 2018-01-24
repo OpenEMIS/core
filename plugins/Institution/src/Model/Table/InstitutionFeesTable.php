@@ -264,6 +264,21 @@ class InstitutionFeesTable extends ControllerActionTable {
 	}
 
 
+
+/******************************************************************************************************************
+**
+** delete action events
+**
+******************************************************************************************************************/
+
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+			
+        $extra['excludedModels'] = [
+            $this->InstitutionFeeTypes->alias()
+        ];
+		
+	}
+	
 /******************************************************************************************************************
 **
 ** field specific methods
