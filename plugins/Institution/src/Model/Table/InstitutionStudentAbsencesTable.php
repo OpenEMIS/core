@@ -15,6 +15,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 class InstitutionStudentAbsencesTable extends ControllerActionTable
 {
@@ -253,44 +254,48 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function onSetCustomCaseSummary(Event $event, int $id)
     {
-        $recordEntity = $this->get($id, [
-            'contain' => ['Users', 'AbsenceTypes', 'Institutions']
-        ]);
-        $days = [
-            0 => 'Sunday',
-            1 => 'Monday',
-            2 => 'Tuesday',
-            3 => 'Wednesday',
-            4 => 'Thursday',
-            5 => 'Friday',
-            6 => 'Saturday'
-        ];
+        try {
+            $recordEntity = $this->get($id, [
+                'contain' => ['Users', 'AbsenceTypes', 'Institutions']
+            ]);
+            $days = [
+                0 => 'Sunday',
+                1 => 'Monday',
+                2 => 'Tuesday',
+                3 => 'Wednesday',
+                4 => 'Thursday',
+                5 => 'Friday',
+                6 => 'Saturday'
+            ];
 
-        $start = TableRegistry::get('Configuration.ConfigItems')->value('first_day_of_week');
-        $daysPerWeek = TableRegistry::get('Configuration.ConfigItems')->value('days_per_week') - 1;
-        $workingDays = [];
-        for ($a = $daysPerWeek; $a >= 0; $a--) {
-            $key = (($start + $a) % 7);
-            $workingDays[$key] = $key;
-        }
-
-        $days = array_diff_key($days, $workingDays);
-        $daysAbsent = 0;
-
-        $s = clone $recordEntity->start_date;
-        $daysAbsent = 0;
-        do {
-            if (!in_array($s->format('l'), $days)) {
-                $daysAbsent++;
+            $start = TableRegistry::get('Configuration.ConfigItems')->value('first_day_of_week');
+            $daysPerWeek = TableRegistry::get('Configuration.ConfigItems')->value('days_per_week') - 1;
+            $workingDays = [];
+            for ($a = $daysPerWeek; $a >= 0; $a--) {
+                $key = (($start + $a) % 7);
+                $workingDays[$key] = $key;
             }
-            $s->addDay(1);
-        } while ($s->lte($recordEntity->end_date));
+
+            $days = array_diff_key($days, $workingDays);
+            $daysAbsent = 0;
+
+            $s = clone $recordEntity->start_date;
+            $daysAbsent = 0;
+            do {
+                if (!in_array($s->format('l'), $days)) {
+                    $daysAbsent++;
+                }
+                $s->addDay(1);
+            } while ($s->lte($recordEntity->end_date));
 
 
-        $title = '';
-        $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ' . __('Days Absent: ') . $daysAbsent;
+            $title = '';
+            $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ' . __('Days Absent: ') . $daysAbsent;
 
-        return $title;
+            return $title;
+        } catch (RecordNotFoundException $e) {
+            return __('Absent Record Deleted');
+        }
     }
 
     public function onSetCaseRecord(Event $event, ArrayObject $extra)
