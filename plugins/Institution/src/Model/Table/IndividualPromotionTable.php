@@ -14,7 +14,8 @@ use App\Model\Table\ControllerActionTable;
 
 class IndividualPromotionTable extends ControllerActionTable
 {
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('institution_students');
         parent::initialize($config);
 
@@ -33,7 +34,8 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->addBehavior('Indexes.Indexes');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.reconfirm'] = 'reconfirm';
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
@@ -71,7 +73,6 @@ class IndividualPromotionTable extends ControllerActionTable
             // if value is empty, redirect back to the list page
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Students', 'index']);
-
         } else {
             $params = $this->getUrlParams([$this->controller->name, $this->alias(), 'add'], $hash);
             $extra['params'] = $params; // student_id and user_id in extra
@@ -109,13 +110,15 @@ class IndividualPromotionTable extends ControllerActionTable
             $this->Alert->error('IndividualPromotion.pendingTransfer', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($extra['redirect']);
-
         } else {
+            $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $pendingStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
+
             // check withdraw requests
             $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
             $conditions = [
                 'student_id' => $studentEntity->student_id,
-                'status' => $StudentWithdrawTable::NEW_REQUEST,
+                'status_id' => $pendingStatus,
                 'education_grade_id' => $studentEntity->education_grade_id,
                 'institution_id' => $studentEntity->institution_id,
                 'academic_period_id' => $studentEntity->academic_period_id,
@@ -125,11 +128,11 @@ class IndividualPromotionTable extends ControllerActionTable
              ->where($conditions)
              ->count();
 
-             if ($withdrawCount) {
+            if ($withdrawCount) {
                 $this->Alert->error('IndividualPromotion.pendingWithdraw', ['reset' => true]);
                 $event->stopPropagation();
                 return $this->controller->redirect($extra['redirect']);
-             }
+            }
         }
 
         // populate request data for request
@@ -330,7 +333,7 @@ class IndividualPromotionTable extends ControllerActionTable
                         $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($fromGradeId);
 
                     // REPEATED status
-                    } else if ($studentStatusId == $statuses['REPEATED'])  {
+                    } else if ($studentStatusId == $statuses['REPEATED']) {
                         $fromAcademicPeriodId = $attr['entity']->academic_period_id;
 
                         $gradeData = $this->EducationGrades->get($fromGradeId);
@@ -348,7 +351,6 @@ class IndividualPromotionTable extends ControllerActionTable
                         if ($toAcademicPeriodId == $fromAcademicPeriodId) {
                             // if same year is chosen, only show lower grades
                             $query->where([$this->EducationGrades->aliasField('order').' < ' => $gradeOrder]);
-
                         } else {
                             // if other year is chosen, show current and lower grades
                             $query->where([$this->EducationGrades->aliasField('order').' <= ' => $gradeOrder]);
@@ -384,7 +386,6 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     $attr['type'] = 'readonly';
                     $attr['attr']['value'] = $this->InstitutionClasses->get($classId)->name;
-
                 } else {
                     $attr['type'] = 'hidden';
                 }
@@ -409,7 +410,6 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     $attr['type'] = 'select';
                     $attr['options'] = $classOptions;
-
                 } else {
                     $attr['type'] = 'hidden';
                 }
@@ -444,14 +444,12 @@ class IndividualPromotionTable extends ControllerActionTable
                         $attr['type'] = 'date';
                         $attr['value'] = Time::now()->format('d-m-Y');
                         $attr['date_options'] = ['startDate' => $excludeFirstDay, 'endDate' => $endDate];
-
                     } else {
                         // if different academic period chosen, start date is fixed to start date of academic period
                         $attr['type'] = 'readonly';
                         $attr['value'] = $startDate;
                         $attr['attr']['value'] = $startDate;
                     }
-
                 } else {
                     $attr['type'] = 'date';
                 }
@@ -463,7 +461,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        $process = function($model, $entity) use ($event, $extra) {
+        $process = function ($model, $entity) use ($event, $extra) {
             if (empty($entity->errors())) {
                 // write data to session
                 $this->Session->write($this->registryAlias().'.confirm', $entity);
@@ -481,7 +479,6 @@ class IndividualPromotionTable extends ControllerActionTable
         $sessionKey = $this->registryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
-
         } else {
             $this->Alert->warning('general.notExists');
             return $this->controller->redirect($this->url('add'));
@@ -512,7 +509,6 @@ class IndividualPromotionTable extends ControllerActionTable
                     $this->Session->delete($this->registryAlias());
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
-
                 } else {
                     $this->Alert->error($this->aliasField('savingPromotionError'), ['reset' => true]);
                 }
@@ -620,7 +616,6 @@ class IndividualPromotionTable extends ControllerActionTable
                     $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
                 }
                 return true;
-
             } else {
                 $this->log($newInstitutionStudent->errors, 'debug');
             }

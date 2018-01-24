@@ -38,7 +38,7 @@ class WorkflowsTable extends AppTable {
         'through' => 'Workflow.WorkflowsFilters',
         'dependent' => true
     ];
-    private $excludedModels = ['Institution.InstitutionCases'];
+    private $excludedModels = ['Cases.InstitutionCases'];
 
     public function initialize(array $config) {
         parent::initialize($config);

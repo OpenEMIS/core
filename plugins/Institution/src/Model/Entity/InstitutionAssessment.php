@@ -7,32 +7,7 @@ use Cake\ORM\Query;
 
 class InstitutionAssessment extends Entity
 {
-	protected $_virtual = ['male_students', 'female_students', 'subjects'];
-	
-    protected function _getMaleStudents() {
-        $gender_id = 1; // male
-        $table = TableRegistry::get('Institution.InstitutionClassStudents');
-        $count = $table
-                    ->find()
-                    ->contain('Users')
-                    ->where(['Users.gender_id' => $gender_id])
-                    ->where([$table->aliasField('institution_class_id') => $this->id])
-                    ->count()
-        ;
-        return $count;
-	}
-
-    protected function _getFemaleStudents() {
-        $gender_id = 2; // female
-        $table = TableRegistry::get('Institution.InstitutionClassStudents');
-        $count = $table
-                    ->find()
-                    ->contain('Users')
-                    ->where(['Users.gender_id' => $gender_id])
-                    ->where([$table->aliasField('institution_class_id') => $this->id])
-                    ->count();
-        return $count;
-    }
+	protected $_virtual = ['subjects'];
 
     protected function _getSubjects() {
         $value = 0;
