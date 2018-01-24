@@ -292,9 +292,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $title = '';
             $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ' . __('Days Absent: ') . $daysAbsent;
 
-            return $title;
+            return [$title, true];
         } catch (RecordNotFoundException $e) {
-            return __('Absent Record Deleted');
+            return [__('Absent Record Deleted'), false];
         }
     }
 
