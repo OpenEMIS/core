@@ -48,8 +48,8 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
                 $validator->requirePresence('absence_type_id');
                 $validator->add('days_absent', 'notBlank', ['rule' => 'notBlank']);
                 $validator->requirePresence('days_absent');
-                $validator->add('days_absent', 'wrongNumberRange', [
-                    'rule' => ['comparison', '>', 0],
+                $validator->add('days_absent', 'notWholeNumber', [
+                    'rule' => ['naturalNumber', false],
                     'message' => __('Please enter a valid number more than 0.')
                 ]);
             }
