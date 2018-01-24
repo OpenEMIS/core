@@ -19,16 +19,17 @@ class WorkflowRulesTable extends ControllerActionTable
     use OptionsTrait;
 
     private $excludedModels = ['Cases.InstitutionCases'];
-	private $ruleTypes = [];
+    private $ruleTypes = [];
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
-		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+        $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 
-		$this->addBehavior('Workflow.RuleStaffBehaviours');
+        $this->addBehavior('Workflow.RuleStaffBehaviours');
+        $this->addBehavior('Workflow.RuleStudentAttendances');
         // $this->addBehavior('Workflow.RuleStudentBehaviours');
-	}
+    }
 
     public function implementedEvents()
     {
@@ -139,7 +140,9 @@ class WorkflowRulesTable extends ControllerActionTable
         $this->field('rule', ['type' => 'hidden']);
 
         $event = $this->dispatchEvent('WorkflowRule.SetupFields', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
+        if ($event->isStopped()) {
+            return $event->result;
+        }
 
         $this->setFieldOrder(['feature', 'workflow_id', 'rule']);
     }
@@ -196,7 +199,9 @@ class WorkflowRulesTable extends ControllerActionTable
         $origEntity = $this->get($entity->id);
         if ($origEntity->has('feature') && !empty($origEntity->feature)) {
             $event = $this->dispatchEvent('WorkflowRule.onGet'.$origEntity->feature.'Rule', [$origEntity], $this);
-            if ($event->isStopped()) { return $event->result; }
+            if ($event->isStopped()) {
+                return $event->result;
+            }
             if (!empty($event->result)) {
                 return $event->result;
             }
@@ -255,13 +260,13 @@ class WorkflowRulesTable extends ControllerActionTable
         return $this->ruleTypes;
     }
 
-    public function addRuleType($newRuleType, $config=[])
+    public function addRuleType($newRuleType, $config = [])
     {
-    	if (empty($config)) {
-			$this->ruleTypes[$newRuleType] = $newRuleType;
-    	} else {
-    		$this->ruleTypes[$newRuleType] = $config;
-    	}
+        if (empty($config)) {
+            $this->ruleTypes[$newRuleType] = $newRuleType;
+        } else {
+            $this->ruleTypes[$newRuleType] = $config;
+        }
     }
 
     public function getRuleConfigByFeature($selectedFeature)
