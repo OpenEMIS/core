@@ -69,7 +69,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.rooms = [];
     Controller.classOptions = [];
     Controller.classes = [];
-    Controller.toValidateClasses = true;
+    Controller.toValidateClasses = false;
 
     // Function mapping
     Controller.setTop = setTop;
@@ -215,6 +215,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             })
             .finally(function(){
                 Controller.dataReady = true;
+                Controller.toValidateClasses = true;
                 UtilsSvc.isAppendLoader(false);
             });
         }
@@ -223,7 +224,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             if (Controller.toValidateClasses) {
                 UtilsSvc.isAppendLoader(true);
                 validateClassUpdate(_newVal, _oldVal);
-            } else {
+            } else if (Controller.dataReady) {
                 Controller.toValidateClasses = true;
             }
         })
@@ -376,7 +377,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             }
 
             if (validateError) {
-                Controller.postError.classes = {
+                Controller.postError.class_subjects = {
                     'error': 'Class cannot be removed due to existing student that is assigned to the subject.'
                 };
                 Controller.classes = classDiff.original;
@@ -392,21 +393,48 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
 
                 Controller.unassignedStudents = tempUnassignedStudents;
                 if (typeof Controller.gridOptionsTop.api !== 'undefined') {
+                    Controller.setTop(Controller.colDef, Controller.unassignedStudents);
                     Controller.gridOptionsTop.api.setRowData(Controller.unassignedStudents);
                 }
             }
             UtilsSvc.isAppendLoader(false);
         } else {
             InstitutionSubjectStudentsSvc.getUnassignedStudent(Controller.institutionSubjectId, Controller.academicPeriodId, Controller.educationGradeId, classDiff.value).then(function(response) {
-                Controller.unassignedStudents = Controller.unassignedStudents.concat(response);
+                var unassignedStudentsArr = [];
+                angular.forEach(response, function(value, key) {
+                    var toPush = {
+                        openemis_no: value.openemis_no,
+                        name: value.name,
+                        student_status_name: value.student_status,
+                        gender_name: value.gender,
+                        student_id: value.student_id,
+                        institution_class: value.institution_class,
+                        institution_class_id: value.institution_class_id,
+                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
+                            {
+                                student_id: value.student_id,
+                                institution_class_id: value.institution_class_id,
+                                institution_subject_id: Controller.institutionSubjectId,
+                                education_grade_id: value.education_grade_id,
+                                education_subject_id: Controller.educationSubjectId,
+                                academic_period_id: value.academic_period_id,
+                                institution_id: value.institution_id,
+                                student_status_id: value.student_status_id,
+                                gender_id: value.gender_id
+                            }
+                        ))
+                    };
+                    this.push(toPush);
+                }, unassignedStudentsArr);
+
+                Controller.unassignedStudents = Controller.unassignedStudents.concat(unassignedStudentsArr);
                 if (typeof Controller.gridOptionsTop.api !== 'undefined') {
+                    Controller.setTop(Controller.colDef, Controller.unassignedStudents);
                     Controller.gridOptionsTop.api.setRowData(Controller.unassignedStudents);
                 }
                 UtilsSvc.isAppendLoader(false);
             })
         }
-
-        console.log('classDiff', angular.copy(classDiff));
     }
 
     // get the required data for validation check
