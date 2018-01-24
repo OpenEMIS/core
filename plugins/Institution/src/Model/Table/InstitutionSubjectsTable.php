@@ -32,7 +32,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-        $this->hasMany('ClassSubjects', ['className' => 'Institution.InstitutionClassSubjects']);
+        $this->hasMany('ClassSubjects', ['className' => 'Institution.InstitutionClassSubjects', 'saveStrategy' => 'replace']);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
         $this->hasMany('SubjectStaff', ['className' => 'Institution.InstitutionSubjectStaff', 'saveStrategy' => 'replace']);
         $this->hasMany('QualityRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -128,7 +128,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->field('modified_user_id', ['type' => 'string', 'visible' => false]);
         $this->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'sort' => ['field' => 'EducationSubjects.name']]);
         $this->field('no_of_seats', ['type' => 'integer', 'attr'=>['min' => 1], 'visible' => false]);
-        $this->field('class_name', ['type' => 'select', 'visible' => ['view'=>true], 'onChangeReload' => true]);
+        $this->field('class_name', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'onChangeReload' => true]);
 
         $this->field('students', [
             'label' => '',
@@ -182,9 +182,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'visible' => ['index'=>true]
         ]);
 
-
         $this->setFieldOrder([
-            'name', 'education_grade_id', 'education_subject_id', 'teachers', 'rooms', 'total_male_students', 'total_female_students','total_students',
+            'name', 'education_grade_id', 'education_subject_id', 'class_name', 'teachers', 'rooms', 'total_male_students', 'total_female_students','total_students',
         ]);
 
         $academicPeriodOptions = $this->getAcademicPeriodOptions($extra['institution_id']);
@@ -201,11 +200,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** index action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** index action methods
+    **
+    ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $Classes = $this->Classes;
@@ -228,7 +227,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $AccessControl = $this->AccessControl;
         $userId = $this->Auth->user('id');
         $controller = $this->controller;
-
 
         $classOptions = $Classes->find('list')
                                 ->where([
@@ -316,6 +314,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function findSubjectDetails(Query $query, array $options)
     {
+
         // POCOR-2547 sort list of staff and student by name
         // move the contain from institution.subject.student.ctrl.js since its using finder method
         return $query
@@ -328,7 +327,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'SubjectStudents' => ['sort' => ['Users.first_name', 'Users.last_name']],
                 'SubjectStudents.Users.Genders',
                 'SubjectStudents.StudentStatuses',
-                'ClassSubjects'
+                'ClassSubjects',
+                'SubjectStudents.InstitutionClasses'
             ]);
     }
 
@@ -379,7 +379,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $query
             ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
-            ->contain(['Teachers', 'Rooms', 'EducationSubjects', 'EducationGrades'])
+            ->contain(['Teachers', 'Rooms', 'EducationSubjects', 'EducationGrades', 'Classes'])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
 
         // search function to search education grade and education subject
@@ -420,11 +420,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** view action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** view action methods
+    **
+    ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($extra['selectedAcademicPeriodId'] == -1) {
@@ -466,11 +466,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** add action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** add action methods
+    **
+    ******************************************************************************************************************/
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
@@ -489,7 +489,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->fields['education_subject_id']['visible'] = false;
 
         $this->fields['total_male_students']['visible'] = false;
-        $this->fields['total_female_students']['visible'] = false; 
+        $this->fields['total_female_students']['visible'] = false;
         $this->fields['class_name']['visible'] = true;
         $this->fields['subjects']['visible'] = true;
         $this->setFieldOrder([
@@ -743,11 +743,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $extra['associatedRecords'][] = ['model' => 'Institution Textbooks', 'count' => $associatedTextbooksCount];
     }
 
-/******************************************************************************************************************
-**
-** essential functions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** essential functions
+    **
+    ******************************************************************************************************************/
     public function prepareEntityObjects($model, ArrayObject $data, ArrayObject $extra)
     {
         $commonData = $data['InstitutionSubjects'];
@@ -757,7 +757,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $existedSubjects = $this->getExistedSubjects($extra['selectedClassId'], true);
         if (count($subjectOptions) == count($existedSubjects)) {
             $error = $this->aliasField('allSubjectsAlreadyAdded');
-        } else if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
+        } elseif (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
             foreach ($data['MultiSubjects'] as $key => $row) {
                 if (isset($row['education_subject_id']) && isset($row['subject_staff'])) {
                     $subjectSelected = true;
@@ -872,7 +872,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     if ($data->student_id == $id) {
                         $recordId = $data->id;
                     }
-                } else if (array_key_exists('student_id', $data)) {
+                } elseif (array_key_exists('student_id', $data)) {
                     if ($data['student_id'] == $id) {
                         $recordId = $data['id'];
                     }
@@ -1078,7 +1078,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $query = $Students
             ->find('all')
             ->matching('Users')
-            ->where( $conditions )
+            ->where($conditions)
             ->toArray();
 
         /**
@@ -1287,11 +1287,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
     }
 
-/******************************************************************************************************************
-**
-** field specific methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** field specific methods
+    **
+    ******************************************************************************************************************/
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
