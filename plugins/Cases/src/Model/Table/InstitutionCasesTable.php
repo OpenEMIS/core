@@ -139,11 +139,21 @@ class InstitutionCasesTable extends ControllerActionTable
                         $summary = $event->result;
                     }
 
-                    $baseUrl = $featureAttr[$feature]['url'];
-                    $baseUrl[] = 'view';
-                    $baseUrl[] = $this->paramsEncode(['id' => $recordId]);
+                    if (is_array($summary) && isset($summary[1]) && $summary[1] === true) {
+                        $baseUrl = $featureAttr[$feature]['url'];
+                        $baseUrl[] = 'view';
+                        $baseUrl[] = $this->paramsEncode(['id' => $recordId]);
 
-                    $url = $mainEvent->subject()->Html->link($summary, $baseUrl);
+                        $url = $mainEvent->subject()->Html->link($summary[0], $baseUrl);
+                    } elseif (is_array($summary)) {
+                        if (isset($summary[1]) && $summary[1] !== false) {
+                            $url = $mainEvent->subject()->Html->link($summary[0], $summary[1]);
+                        } else {
+                            $url = $summary[0];
+                        }
+                    } else {
+                        $url = $summary;
+                    }
 
                     $rowData[] = isset($featureOptions[$recordEntity->feature]) ? $featureOptions[$recordEntity->feature] : $recordEntity->feature;
                     $rowData[] = $url;
