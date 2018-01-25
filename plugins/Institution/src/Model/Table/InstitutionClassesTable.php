@@ -76,7 +76,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'StudentCompetencies' => ['view'],
             'StudentCompetencyComments' => ['view'],
             'OpenEMIS_Classroom' => ['index', 'view'],
-            'StudentOutcomes' => ['view']
+            'StudentOutcomes' => ['view'],
+            'SubjectStudents' => ['index']
         ]);
 
         // POCOR-4047 to get staff profile data
@@ -293,11 +294,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** delete action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** delete action methods
+    **
+    ******************************************************************************************************************/
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         // only show the student and the subject of the class.
@@ -331,11 +332,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** index action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** index action methods
+    **
+    ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $query = $this->request->query;
@@ -532,11 +533,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** view action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** view action methods
+    **
+    ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($extra['selectedAcademicPeriodId'] == -1) {
@@ -601,7 +602,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (!empty($extra['sort'])) {
             if ($extra['sort'] == 'name') {
                 $sortConditions = 'Users.first_name ' .  $extra['direction'];
-            } else if ($extra['sort'] == 'openemis_no') {
+            } elseif ($extra['sort'] == 'openemis_no') {
                 $sortConditions = 'Users.openemis_no ' .  $extra['direction'];
             }
         }
@@ -766,11 +767,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** add action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** add action methods
+    **
+    ******************************************************************************************************************/
     // selected grade_type behavior's addBeforeAction will be called later
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -843,11 +844,11 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->controller->set('selectedAction', $extra['selectedGradeType']);
     }
 
-/******************************************************************************************************************
-**
-** field specific methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** field specific methods
+    **
+    ******************************************************************************************************************/
     public function onGetInstitutionShiftId(Event $event, Entity $entity)
     {
         if ($entity->institution_shift->institution_id != $entity->institution_id) { //if the current institution is not the owner of the shift.
@@ -929,11 +930,11 @@ class InstitutionClassesTable extends ControllerActionTable
             return __('No');
         }
     }
-/******************************************************************************************************************
-**
-** essential functions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** essential functions
+    **
+    ******************************************************************************************************************/
     public function getClassGradeOptions($institutionClassId)
     {
         $Grade = $this->ClassGrades;
@@ -1221,7 +1222,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'InstitutionClasses.institution_id' => $institutionId
             ]);
             if ($gradeId != false) {
-                $query->join([
+                $query->join(
+                    [
                         [
                             'table' => 'institution_class_grades',
                             'alias' => 'InstitutionClassGrades',
@@ -1238,6 +1240,7 @@ class InstitutionClassesTable extends ControllerActionTable
             // incomplete data return nothing
             $query->where([$this->aliasField('id') => -1]);
         }
+
         return $query;
     }
 
