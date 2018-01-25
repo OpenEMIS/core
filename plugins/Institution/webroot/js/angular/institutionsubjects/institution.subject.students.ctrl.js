@@ -159,7 +159,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(response.id, Controller.academicPeriodId, Controller.educationGradeId, Controller.institutionClassIds);
                 promises[1] = InstitutionSubjectStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                 promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.academic_period_id, Controller.institutionSubjectId);
-                promises[3] = InstitutionSubjectStudentsSvc.getClassOptions(response.institution_id, response.academic_period_id, Controller.educationGradeId);
+                promises[3] = InstitutionSubjectStudentsSvc.getClassOptions(response.institution_id, response.academic_period_id, Controller.educationGradeId, response.id);
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
