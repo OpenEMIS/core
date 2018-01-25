@@ -1244,6 +1244,41 @@ class InstitutionClassesTable extends ControllerActionTable
         return $query;
     }
 
+    public function findSubjectClassOptions(Query $query, array $options)
+    {
+        $institutionId = array_key_exists('institution_id', $options)? $options['institution_id']: null;
+        $academicPeriodId = array_key_exists('academic_period_id', $options)? $options['academic_period_id']: null;
+        $gradeId = array_key_exists('grade_id', $options)? $options['grade_id']: null;
+        $institutionSubjectId = array_key_exists('institution_subject_id', $options)? $options['institution_subject_id']: null;
+
+        if (!is_null($academicPeriodId) && !is_null($institutionId) && !is_null($gradeId)) {
+            $query
+                ->select(['InstitutionClasses.id', 'InstitutionClasses.name'])
+                ->where([
+                    'InstitutionClasses.academic_period_id' => $academicPeriodId,
+                    'InstitutionClasses.institution_id' => $institutionId
+                ])
+                ->join(
+                    [
+                        [
+                            'table' => 'institution_class_grades',
+                            'alias' => 'InstitutionClassGrades',
+                            'conditions' => [
+                                'InstitutionClassGrades.institution_class_id = InstitutionClasses.id',
+                                'InstitutionClassGrades.education_grade_id = ' . $gradeId
+                            ]
+                        ]
+                    ]
+                )
+                ->group(['InstitutionClasses.id']);
+        } else {
+            // incomplete data return nothing
+            $query->where([$this->aliasField('id') => -1]);
+        }
+
+        return $query;
+    }
+
     /**
      * Used by Institution/UserBehavior && Institution/InstitutionStudentsTable
      * @param  [integer]  $academicPeriodId [description]
