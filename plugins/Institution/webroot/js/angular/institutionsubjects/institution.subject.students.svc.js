@@ -86,15 +86,16 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
         return Rooms.find('subjectRoomOptions', {academic_period_id: academicPeriodId, institution_subject_id: institutionSubjectId}).ajax({success: success, defer: true});
     }
 
-    function getClassOptions(institutionId, academicPeriodId, educationGradeId) {
+    function getClassOptions(institutionId, academicPeriodId, educationGradeId, institutionSubjectId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
 
-        return InstitutionClasses.find('classOptions', {
+        return InstitutionClasses.find('subjectClassOptions', {
             institution_id: institutionId,
             academic_period_id: academicPeriodId,
-            grade_id: educationGradeId
+            grade_id: educationGradeId,
+            institution_subject_id: institutionSubjectId
         }).ajax({success: success, defer: true});
     }
 

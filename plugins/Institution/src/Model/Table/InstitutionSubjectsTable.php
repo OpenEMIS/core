@@ -111,7 +111,42 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $validator
             ->requirePresence('name')
             ->requirePresence('class_subjects')
-            ->notEmpty('class_subjects');
+            ->notEmpty('class_subjects')
+            ->add('class_subjects', 'ruleCheckDuplicateClassSubjects', [
+                'rule' => function ($check, $global) {
+                    if ($global['newRecord']) {
+                        return true;
+                    }
+                    $institutionSubjectId = $global['data']['id'];
+                    // die;
+                    $ClassSubjectsTable = TableRegistry::get('Institution.InstitutionClassSubjects');
+
+                    $conditions = [];
+                    $conditions['OR'] = [];
+                    foreach ($check as $record) {
+                        $conditions['OR'][] = [
+                            $ClassSubjectsTable->aliasField('institution_class_id') .' != ' => $record['institution_class_id'],
+                            $ClassSubjectsTable->aliasField('institution_subject_id') .' != ' => $record['institution_subject_id']
+                        ];
+                    }
+
+                    $educationSubjectId = $this->get($institutionSubjectId)->education_subject_id;
+
+                    $anotherCondition = [];
+                    $anotherCondition['OR'] = [];
+                    foreach ($check as $record) {
+                        $anotherCondition['OR'][] = [
+                            $ClassSubjectsTable->aliasField('institution_class_id') => $record['institution_class_id']
+                        ];
+                    }
+                    
+                    $recordFound = $ClassSubjectsTable->find()->innerJoinWith('InstitutionSubjects', function ($q) use ($educationSubjectId) {
+                        return $q->where(['InstitutionSubjects.education_subject_id' => $educationSubjectId]);
+                    })->where($conditions)->where($anotherCondition)->count();
+                    return $recordFound == 0;
+                },
+                'message' => __('Institution Subject has already been added to one of the classes.')
+            ]);
         return $validator;
     }
 
