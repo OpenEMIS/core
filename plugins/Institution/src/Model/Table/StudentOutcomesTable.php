@@ -342,7 +342,6 @@ class StudentOutcomesTable extends ControllerActionTable
             $StudentStatuses = $ClassStudents->StudentStatuses;
             $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
-            // only enrolled students will be shown
             $results = $ClassStudents->find()
                 ->select([
                     $ClassStudents->aliasField('student_id'),
@@ -355,8 +354,7 @@ class StudentOutcomesTable extends ControllerActionTable
                 ])
                 ->matching('Users')
                 ->where([
-                    $ClassStudents->aliasField('institution_class_id') => $this->classId,
-                    $ClassStudents->aliasField('student_status_id') => $enrolledStatus
+                    $ClassStudents->aliasField('institution_class_id') => $this->classId
                 ])
                 ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
                 ->toArray();
