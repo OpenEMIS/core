@@ -414,6 +414,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
     }
 
+    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $id = $entity->id;
+        $countMale = $this->SubjectStudents->getMaleCountBySubject($id);
+        $countFemale = $this->SubjectStudents->getFemaleCountBySubject($id);
+        $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+    }
+
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
@@ -455,6 +463,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'SubjectStudents' => [
                 'Users.Genders',
                 'StudentStatuses',
+                'InstitutionClasses',
                 'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
             ]
         ]);
@@ -632,19 +641,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $educationGradeId = $entity->education_grade_id;
-        $educationSubjectId = $entity->education_subject_id;
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $institutionSubjectId = $entity->id;
-        $academicPeriodId = $entity->academic_period_id;
 
-        $query = $InstitutionSubjectStudents
+        $query = $InstitutionClassSubjects
                     ->find()
                     ->where([
-                        'education_grade_id' => $educationGradeId,
-                        'education_subject_id' => $educationSubjectId,
-                        'institution_subject_id' => $institutionSubjectId,
-                        'academic_period_id' => $academicPeriodId
+                        'institution_subject_id' => $institutionSubjectId
                     ])
                     ->extract('institution_class_id')
                     ->toArray();
