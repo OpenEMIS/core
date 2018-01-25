@@ -48,8 +48,9 @@ class InstitutionSubject extends Entity
         if ($this->has('classes')) {
             foreach ($this->classes as $class) {
                 $className[] = $class['name'];
-                return implode(',', $className);
             }
+            sort($className);
+            return implode(', ', $className);
         }
         return  '-';
     }
