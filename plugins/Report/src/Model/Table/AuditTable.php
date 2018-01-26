@@ -87,8 +87,7 @@ class AuditTable extends AppTable
                 'last_login' => 'Audit.last_login',
                 'preferred_language' => 'Audit.preferred_language'
             ])
-            ->contain(['MainNationalities', 'MainIdentityTypes'])
-            ->where([$this->aliasField('is_student') => 1]);
+            ->contain(['MainNationalities', 'MainIdentityTypes']);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
