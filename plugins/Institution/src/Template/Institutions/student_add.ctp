@@ -464,10 +464,16 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string">
                     <label><?= __('Student') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['name']" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_id">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input string">
                     <label><?= __('Currently Allocated To') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['code_name']" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.institution_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.institution_id">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input string">
                     <label><?= __('Academic Period') ?></label>
@@ -489,6 +495,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                             ng-change="InstitutionStudentController.onChangeClass()">
                             <option value="">-- <?= __('No Class Assignment') ?> --</option>
                         </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.institution_class_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.institution_class_id">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string">
