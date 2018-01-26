@@ -225,6 +225,11 @@ class POCOR2454 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to institutions.id'
             ])
+            ->addColumn('previous_academic_period_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
+            ])
             ->addColumn('previous_education_grade_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -272,6 +277,7 @@ class POCOR2454 extends AbstractMigration
             ->addIndex('education_grade_id')
             ->addIndex('institution_class_id')
             ->addIndex('previous_institution_id')
+            ->addIndex('previous_academic_period_id')
             ->addIndex('previous_education_grade_id')
             ->addIndex('student_transfer_reason_id')
             ->addIndex('modified_user_id')
@@ -1100,7 +1106,7 @@ class POCOR2454 extends AbstractMigration
                 `id`, `start_date`, `end_date`, `requested_date`, `student_id`,
                 `status_id`,
                 `institution_id`, `academic_period_id`, `education_grade_id`, `institution_class_id`,
-                `previous_institution_id`, `previous_education_grade_id`, `student_transfer_reason_id`,
+                `previous_institution_id`, `previous_academic_period_id`, `previous_education_grade_id`, `student_transfer_reason_id`,
                 `comment`,
                 `all_visible`,
                 `modified_user_id`, `modified`, `created_user_id`, `created`
@@ -1114,7 +1120,7 @@ class POCOR2454 extends AbstractMigration
                     WHEN `status` = 3 THEN " . $closedStepId . "
                 END,
                 `institution_id`, `academic_period_id`, `new_education_grade_id`, `institution_class_id`,
-                `previous_institution_id`, `education_grade_id`, `student_transfer_reason_id`,
+                `previous_institution_id`, `academic_period_id`, `education_grade_id`, `student_transfer_reason_id`,
                 IF(LENGTH(`comment`), `comment`, NULL),
                 IF(`status` = 0, 0, 1),
                 `modified_user_id`, `modified`, `created_user_id`, `created`
