@@ -219,7 +219,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('multigrade');
 
         $this->setFieldOrder([
-            'name', 'staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects',
+            'name', 'staff_id','secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects',
         ]);
     }
 
@@ -415,7 +415,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ];
 
         $this->setFieldOrder([
-            'staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
+            'name','staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
     }
 
