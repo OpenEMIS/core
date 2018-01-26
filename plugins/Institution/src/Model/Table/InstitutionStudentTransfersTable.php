@@ -40,6 +40,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
         // Previous institution data
         $this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_id']);
+        $this->belongsTo('PreviousAcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'previous_academic_period_id']);
         $this->belongsTo('PreviousEducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'previous_education_grade_id']);
         $this->belongsTo('StudentTransferReasons', ['className' => 'Student.StudentTransferReasons', 'foreignKey' => 'student_transfer_reason_id']);
 
@@ -99,13 +100,14 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
 
+        // find previous student record (could be enrolled/promoted/graduated status)
         $previousStudentRecord = $Students->find()
             ->where([
-                $Students->aliasField('institution_id') => $entity->previous_institution_id,
                 $Students->aliasField('student_id') => $entity->student_id,
-                $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                $Students->aliasField('institution_id') => $entity->previous_institution_id,
+                $Students->aliasField('academic_period_id') => $entity->previous_academic_period_id,
                 $Students->aliasField('education_grade_id') => $entity->previous_education_grade_id,
-                $Students->aliasField('student_status_id') => $statuses['CURRENT']
+                $Students->aliasField('student_status_id IN ') => [$statuses['CURRENT'], $statuses['PROMOTED'], $statuses['GRADUATED']]
             ])
             ->first();
 
@@ -127,15 +129,13 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $newStudentEntity = $Students->newEntity($newStudent);
 
             if ($Students->save($newStudentEntity)) {
-                // end previous student record
-                if ($entity->requested_date < $entity->start_date) {
-                    $newEndDate = $entity->requested_date;
-                } else {
+                // end previous student record (if not promoted/graduated status)
+                if ($previousStudentRecord->student_status_id == $statuses['CURRENT']) {
                     $newEndDate = (new Date($entity->start_date))->modify('-1 day');
+                    $previousStudentRecord->end_date = $newEndDate;
+                    $previousStudentRecord->student_status_id = $statuses['TRANSFERRED'];
+                    $Students->save($previousStudentRecord);
                 }
-                $previousStudentRecord->end_date = $newEndDate;
-                $previousStudentRecord->student_status_id = $statuses['TRANSFERRED'];
-                $Students->save($previousStudentRecord);
             }
         }
     }
@@ -162,30 +162,33 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             // delete student record in the new institution
             $prevStudentId = $newStudentRecord->previous_institution_student_id;
             $Students->delete($newStudentRecord);
-        }
 
-        if (!is_null($prevStudentId)) {
-            $previousStudentRecord = $Students->get($prevStudentId);
-        } else {
-            $previousStudentRecord = $Students->find()
-                ->where([
-                    $Students->aliasField('institution_id') => $entity->previous_institution_id,
-                    $Students->aliasField('student_id') => $entity->student_id,
-                    $Students->aliasField('academic_period_id') => $entity->academic_period_id,
-                    $Students->aliasField('education_grade_id') => $entity->previous_education_grade_id,
-                    $Students->aliasField('student_status_id') => $statuses['TRANSFERRED']
-                ])
-                ->first();
-        }
-
-        if ($previousStudentRecord) {
-            // update previous student record back to enrolled status
-            $academicPeriod = $this->AcademicPeriods->get($entity->academic_period_id);
-            if (!empty($academicPeriod)) {
-                $previousStudentRecord->end_date = $academicPeriod->end_date;
+            if (!is_null($prevStudentId)) {
+                $previousStudentRecord = $Students->get($prevStudentId);
+            } else {
+                // find previous student record (could be enrolled/promoted/graduated status)
+                $previousStudentRecord = $Students->find()
+                    ->where([
+                        $Students->aliasField('student_id') => $entity->student_id,
+                        $Students->aliasField('institution_id') => $entity->previous_institution_id,
+                        $Students->aliasField('academic_period_id') => $entity->previous_academic_period_id,
+                        $Students->aliasField('education_grade_id') => $entity->previous_education_grade_id,
+                        $Students->aliasField('student_status_id IN ') => [$statuses['TRANSFERRED'], $statuses['PROMOTED'], $statuses['GRADUATED']]
+                    ])
+                    ->first();
             }
-            $previousStudentRecord->student_status_id = $statuses['CURRENT'];
-            $Students->save($previousStudentRecord);
+
+            if ($previousStudentRecord) {
+                if ($previousStudentRecord->student_status_id == $statuses['TRANSFERRED']) {
+                    // update previous student record back to enrolled status (if status is transferred)
+                    $academicPeriod = $this->AcademicPeriods->get($entity->academic_period_id);
+                    if (!empty($academicPeriod)) {
+                        $previousStudentRecord->end_date = $academicPeriod->end_date;
+                    }
+                    $previousStudentRecord->student_status_id = $statuses['CURRENT'];
+                    $Students->save($previousStudentRecord);
+                }
+            }
         }
     }
 
@@ -239,13 +242,6 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
         $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
         $Navigation->addCrumb($previousTitle);
-    }
-
-    public function addSections()
-    {
-        $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
-        $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
-        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -336,6 +332,8 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             return __('Current Institution');
         } else if ($field == 'previous_education_grade_id') {
             return __('Education Grade');
+        } else if ($field == 'previous_academic_period_id') {
+            return __('Academic Period');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -343,6 +341,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        // if the record changes institution_owner at least once, both institutions should be able to see the record
         if (!$entity->isNew() && $entity->dirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
@@ -353,6 +352,13 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 }
             }
         }
+    }
+
+    public function addSections()
+    {
+        $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
+        $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
     }
 
     public function getPendingTransferWorkflowStatuses()

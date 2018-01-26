@@ -38,6 +38,8 @@ class InstitutionsController extends AppController
         'Students',
         'StudentUser',
         'StudentAccount',
+        'StudentTransferIn',
+        'StudentTransferOut',
         // 'Textbooks',
         // 'StudentIndexes',
 
@@ -51,6 +53,8 @@ class InstitutionsController extends AppController
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
+        'StaffTransferIn',
+        'StaffTransferOut',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -120,7 +124,6 @@ class InstitutionsController extends AppController
 
         // misc
         // 'IndividualPromotion',
-        // 'TransferRequests',
         // 'CourseCatalogue',
     ];
 
@@ -264,14 +267,6 @@ class InstitutionsController extends AppController
     public function StaffUser()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffUser']);
-    }
-    public function TransferRequests()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']);
-    }
-    public function TransferApprovals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferApprovals']);
     }
     public function StaffTrainingResults()
     {
@@ -1183,7 +1178,7 @@ class InstitutionsController extends AppController
             $event = $model->eventManager()->dispatch($event);
 
             if ($model->hasField('institution_id')) {
-                if (!in_array($model->alias(), ['TransferRequests'])) {
+                if (!in_array($model->alias(), ['StudentTransferIn', 'StudentTransferOut'])) {
                     $model->fields['institution_id']['type'] = 'hidden';
                     $model->fields['institution_id']['value'] = $institutionId;
                 }
