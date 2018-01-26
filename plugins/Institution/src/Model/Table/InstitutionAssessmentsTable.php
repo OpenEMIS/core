@@ -179,7 +179,12 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
                     // If only class permission is available but no subject permission available
                     if ($classPermission && !$subjectPermission) {
-                        $query->where(['InstitutionClasses.staff_id' => $userId]);
+                          $query->where([
+                                'OR' => [
+                                    ['InstitutionClasses.staff_id' => $userId],
+                                    ['InstitutionClasses.secondary_staff_id' => $userId]
+                                ]
+                            ]);
                     } else {
                         $query
                             ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
@@ -195,6 +200,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                             $query->where([
                                 'OR' => [
                                     ['InstitutionClasses.staff_id' => $userId],
+                                    ['InstitutionClasses.secondary_staff_id' => $userId],
                                     ['InstitutionSubjectStaff.staff_id' => $userId]
                                 ]
                             ]);
