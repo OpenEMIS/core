@@ -143,11 +143,9 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
 
                            // Additional check for homeroom/secondary teacher
                             if(isHomeOrSecondary.total >0) {
-                                console.log('form teacher');
                                 assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
      
                             } else {
-                                console.log('subject teacher');
                                 assessmentSubjects = assessmentSubjects
                                     .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
                                     .ajax({success: success, defer: true});
