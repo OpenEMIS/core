@@ -35,10 +35,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
-            ->notEmpty('requested_date')
+            ->notEmpty(['requested_date', 'workflow_assignee_id'])
             ->add('requested_date', [
                 'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                    'rule' => ['inAcademicPeriod', 'previous_academic_period_id', []]
                 ],
                 'ruleCompareDate' => [
                     'rule' => ['compareDate', 'start_date', false],
@@ -67,6 +67,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'on' => 'create'
                 ]
             ]);
+    }
+
+    public function validationBulkTransfer(Validator $validator)
+    {
+        // requested_date is not relevent for transfer of promoted/graduated students
+        $validator = $this->validationDefault($validator);
+        return $validator->remove('requested_date');
     }
 
     public function implementedEvents()
@@ -211,13 +218,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->field('previous_institution_id', ['type' => 'hidden']);
+        $this->field('previous_academic_period_id', ['type' => 'hidden']);
         $this->field('previous_education_grade_id', ['type' => 'hidden']);
         $this->field('student_transfer_reason_id', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
 
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('institution_id', ['type' => 'integer', 'sort' => ['field' => 'Institutions.code']]);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'institution_id', 'requested_date', 'academic_period_id', 'education_grade_id']);
+        $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'institution_id', 'academic_period_id', 'education_grade_id', 'requested_date']);
 
         // back button
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -265,8 +273,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->addSections();
-        $this->field('institution_id', ['type' => 'integer']);
-
         if (empty($entity->start_date)) {
             $this->field('start_date', ['type' => 'hidden']);
             $this->field('end_date', ['type' => 'hidden']);
@@ -274,16 +280,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
         $this->setFieldOrder([
             'status_id', 'assignee_id',
-            'previous_information_header', 'student_id', 'previous_institution_id', 'previous_education_grade_id', 'requested_date',
-            'new_information_header', 'academic_period_id', 'institution_id', 'education_grade_id', 'start_date', 'end_date',
+            'previous_information_header', 'student_id', 'previous_institution_id', 'previous_academic_period_id', 'previous_education_grade_id', 'requested_date',
+            'new_information_header', 'academic_period_id', 'education_grade_id', 'institution_id', 'start_date', 'end_date',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
         $studentId = $this->getQueryString('student_id');
         $userId = $this->getQueryString('user_id');
 
@@ -292,9 +296,19 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             return $this->controller->redirect($this->url('index'));
         } else {
             // url to redirect to studentUser page
-            $studentUserUrl = $this->url('view');
-            $studentUserUrl['action'] = 'StudentUser';
-            $studentUserUrl[1] = $this->paramsEncode(['id' => $userId]);
+            $extra['redirect'] = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentUser',
+                '0' => 'view',
+                '1' => $this->paramsEncode(['id' => $userId])
+            ];
+            $extra['toolbarButtons']['back']['url'] = $extra['redirect'];
+
+            $Students = TableRegistry::get('Institution.Students');
+            $institutionStudentEntity = $Students->get($studentId, [
+                'contain' => ['Users', 'Institutions', 'EducationGrades', 'AcademicPeriods']
+            ]);
 
             // check pending transfers
             $doneStatus = self::DONE;
@@ -307,7 +321,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 })
                 ->where([
                     $this->aliasField('student_id') => $userId,
-                    $this->aliasField('previous_institution_id') => $institutionId
+                    $this->aliasField('previous_institution_id') => $institutionStudentEntity->institution_id
                 ])
                 ->first();
 
@@ -327,17 +341,46 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 } else {
                     $this->Alert->warning($this->aliasField('existingStudentTransfer'), ['reset' => true]);
                     $event->stopPropagation();
-                    return $this->controller->redirect($studentUserUrl);
+                    return $this->controller->redirect($extra['redirect']);
                 }
 
             } else {
-                // if no pending transfers
-                $Students = TableRegistry::get('Institution.Students');
-                $institutionStudentEntity = $Students->get($studentId, [
-                    'contain' => ['Users', 'Institutions', 'EducationGrades', 'AcademicPeriods']
-                ]);
-                $this->setupFields($institutionStudentEntity);
-                $extra['toolbarButtons']['back']['url'] = $studentUserUrl;
+                // check pending withdraw
+                $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
+                $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                $pendingWithdrawStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
+
+                $conditions = [
+                    'student_id' => $institutionStudentEntity->student_id,
+                    'status_id IN ' => $pendingWithdrawStatus,
+                    'education_grade_id' => $institutionStudentEntity->education_grade_id,
+                    'institution_id' => $institutionStudentEntity->institution_id,
+                    'academic_period_id' => $institutionStudentEntity->academic_period_id
+                ];
+
+                $withdrawCount = $StudentWithdrawTable->find()
+                    ->where($conditions)
+                    ->first();
+
+                if (!empty($withdrawCount)) {
+                    $this->Alert->error($this->aliasField('pendingStudentWithdraw'), ['reset' => true]);
+                    $event->stopPropagation();
+                    return $this->controller->redirect($extra['redirect']);
+                }
+            }
+
+            // if no pending transfer or withdraw
+            $this->setupFields($institutionStudentEntity);
+        }
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data->offsetExists('previous_academic_period_id') && $data->offsetExists('academic_period_id')) {
+            $previousAcademicPeriodId = $data->offsetGet('previous_academic_period_id');
+            $academicPeriodId = $data->offsetGet('academic_period_id');
+            if ($previousAcademicPeriodId != $academicPeriodId) {
+                $options['validate'] = 'bulkTransfer';
             }
         }
     }
@@ -376,16 +419,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-    {
-        // redirect to view page of record after save
-        $extra['redirect'][0] = 'view';
-        $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->id]);
-    }
-
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'EducationGrades', 'PreviousEducationGrades', 'AcademicPeriods']);
+        $query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'EducationGrades', 'PreviousEducationGrades', 'AcademicPeriods', 'PreviousAcademicPeriods']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -399,6 +435,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
         $this->field('student_id', ['entity' => $entity]);
         $this->field('previous_institution_id', ['entity' => $entity]);
+        $this->field('previous_academic_period_id', ['entity' => $entity]);
         $this->field('previous_education_grade_id', ['entity' => $entity]);
         $this->field('requested_date', ['entity' => $entity]);
         $this->field('academic_period_id', ['entity' => $entity]);
@@ -410,7 +447,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $this->field('student_transfer_reason_id', ['type' => 'select']);
 
         $this->setFieldOrder([
-            'previous_information_header', 'student_id', 'previous_institution_id', 'previous_education_grade_id', 'requested_date',
+            'previous_information_header', 'student_id', 'previous_institution_id', 'previous_academic_period_id', 'previous_education_grade_id', 'requested_date',
             'new_information_header', 'academic_period_id', 'education_grade_id', 'area_id', 'institution_id',  'start_date', 'end_date',
             'transfer_reasons_header', 'student_transfer_reason_id', 'comment'
         ]);
@@ -426,6 +463,24 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             } else {
                  $attr['value'] = $entity->student_id;
                 $attr['attr']['value'] = $entity->user->name_with_id;
+            }
+            $attr['type'] = 'readonly';
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldPreviousAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array($action, ['add', 'edit', 'approve'])) {
+            $entity = $attr['entity'];
+            if ($action == 'add') {
+                // using institution_student entity
+                $attr['value'] = $entity->academic_period_id;
+                $attr['attr']['value'] = $entity->academic_period->name;
+            } else {
+                // using institution_student_transfer entity
+                $attr['value'] = $entity->previous_academic_period_id;
+                $attr['attr']['value'] = $entity->previous_academic_period->name;
             }
             $attr['type'] = 'readonly';
             return $attr;
@@ -468,7 +523,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
@@ -478,40 +533,58 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $attr['value'] = $entity->requested_date->format('d-m-Y');
                 $attr['attr']['value'] = $this->formatDate($entity->requested_date);
             } else {
-                // using institution_student_transfer entity
-                $academicPeriodId = $entity->academic_period_id;
-                $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-                $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-
+                $enrolledStudent = false;
                 if ($action == 'add') {
                     // using institution_student entity
                     $studentStartDate = $entity->start_date;
                     $studentEndDate = $entity->end_date;
+                    $academicPeriodId = $entity->academic_period_id;
+                    $enrolledStudent = true;
                 } else {
+                    // using institution_student_transfer entity
                     $Students = TableRegistry::get('Institution.Students');
                     $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-                    $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+                    $statuses = $StudentStatuses->findCodeList();
+
                     $studentEntity = $Students->find()
                         ->where([
-                            $Students->aliasField('academic_period_id') => $entity->academic_period_id,
-                            $Students->aliasField('education_grade_id') => $entity->education_grade_id,
+                            $Students->aliasField('institution_id') => $entity->previous_institution_id,
+                            $Students->aliasField('academic_period_id') => $entity->previous_academic_period_id,
+                            $Students->aliasField('education_grade_id') => $entity->previous_education_grade_id,
                             $Students->aliasField('student_id') => $entity->student_id,
-                            $Students->aliasField('student_status_id') => $enrolledStatus
+                            $Students->aliasField('student_status_id') => $statuses['CURRENT']
                         ])
                         ->first();
-                    $studentStartDate = $studentEntity->start_date;
-                    $studentEndDate = $studentEntity->end_date;
+
+                    // if enrolled student cannot be found (perhaps is promoted/graduated)
+                    if (!empty($studentEntity)) {
+                        $studentStartDate = $studentEntity->start_date;
+                        $studentEndDate = $studentEntity->end_date;
+                        $academicPeriodId = $entity->previous_academic_period_id;
+                        $enrolledStudent = true;
+                    }
                 }
 
-                // for date options, date restriction
-                $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
-                $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate: $periodEndDate;
+                if ($enrolledStudent) {
+                    $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+                    $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
 
-                $attr['type'] = 'date';
-                $attr['date_options'] = [
-                    'startDate' => $startDate->format('d-m-Y'),
-                    'endDate' => $endDate->format('d-m-Y')
-                ];
+                    // for date options, date restriction
+                    $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate: $periodStartDate;
+                    $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate: $periodEndDate;
+
+                    $attr['type'] = 'date';
+                    $attr['date_options'] = [
+                        'startDate' => $startDate->format('d-m-Y'),
+                        'endDate' => $endDate->format('d-m-Y'),
+                        'todayBtn' => false
+                    ];
+                } else {
+                    $requestedDate = !empty($entity->requested_date) ? $entity->requested_date : (new Date());
+                    $attr['type'] = 'readonly';
+                    $attr['value'] = $requestedDate->format('Y-m-d');
+                    $attr['attr']['value'] = $this->formatDate($requestedDate);
+                }
             }
             return $attr;
         }
@@ -539,7 +612,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $Areas = TableRegistry::get('Area.Areas');
@@ -576,9 +649,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $attr['options'] = $areaOptions->toArray();
                 $attr['onChangeReload'] = true;
             } else {
-                // using institution_student_transfer entity
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $Areas->get($entity->institution_id)->code_name;
+                $attr['type'] = 'hidden';
             }
         }
 
@@ -747,7 +818,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
-                    $row['request_title'] = sprintf(__('%s to %s'), $row->user->name_with_id, $row->institution->code_name);
+                    $row['request_title'] = sprintf(__('Transfer of student %s to %s'), $row->user->name_with_id, $row->institution->code_name);
                     $row['institution'] = $row->previous_institution->code_name;
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
