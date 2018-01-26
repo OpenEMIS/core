@@ -475,7 +475,10 @@ class InstitutionClassesTable extends ControllerActionTable
             $query
                 ->where([
                     $this->aliasField('id') => $classId,
-                    'OR' => [[$this->aliasField('staff_id') => $staffId], [$this->aliasField('secondary_staff_id') => $staffId]],
+                    'OR' => [
+                        [$this->aliasField('staff_id') => $staffId], 
+                        [$this->aliasField('secondary_staff_id') => $staffId]
+                    ],
                  ]);
             
             return $query;
