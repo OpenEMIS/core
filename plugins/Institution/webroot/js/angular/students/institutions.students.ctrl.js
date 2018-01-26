@@ -913,11 +913,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function postTransferForm() {
-        var transferReasonId = (StudentController.transferReasonOptions.hasOwnProperty('selectedOption'))? StudentController.transferReasonOptions.selectedOption.id: '';
-        var classId = null;
-        if (StudentController.classOptions.hasOwnProperty('selectedOption')) {
-            classId = StudentController.classOptions.selectedOption.id;
-        }
+        var transferReasonId = (StudentController.transferReasonOptions.hasOwnProperty('selectedOption'))? StudentController.transferReasonOptions.selectedOption.id: null;
+        var classId = (StudentController.classOptions.hasOwnProperty('selectedOption'))? StudentController.classOptions.selectedOption.id: null;
         var startDate = StudentController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
@@ -938,6 +935,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             education_grade_id: StudentController.selectedStudentData.institution_students[0]['education_grade_id'],
             institution_class_id: classId,
             previous_institution_id: StudentController.selectedStudentData.institution_students[0]['institution_id'],
+            previous_academic_period_id: StudentController.selectedStudentData.institution_students[0]['academic_period_id'],
             previous_education_grade_id: StudentController.selectedStudentData.institution_students[0]['education_grade_id'],
             student_transfer_reason_id: transferReasonId,
             comment: StudentController.comment
