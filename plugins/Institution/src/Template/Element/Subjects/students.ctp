@@ -24,6 +24,7 @@
 					<tr>
 						<th><?= $this->Label->get('General.openemis_no'); ?></th>
 						<th><?= $this->Label->get('Users.name'); ?></th>
+						<th><?= __('Class') ?></th>
 						<th><?= $this->Label->get('Users.gender_id'); ?></th>
 						<th><?= __('Student Status') ?></th>
 						<?php
@@ -127,6 +128,7 @@
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
 						<td><?= $obj->student_name ?></td>
+						<td><?= __($obj->institution_class->name) ?></td>
 						<td><?= $obj->student_gender ?></td>
 						<td><?= __($obj->student_status->name) ?></td>
 					</tr>

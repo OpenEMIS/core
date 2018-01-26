@@ -41,11 +41,12 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.colDef = [
         {headerName: 'OpenEMIS ID', field: 'openemis_no'},
         {headerName: 'Name', field: 'name'},
+        {headerName: 'Class', field: 'institution_class'},
         {headerName: 'Gender', field: 'gender_name'},
         {headerName: 'Student Status', field: 'student_status_name'}
     ];
-    Controller.assignedStudents = {};
-    Controller.unassignedStudents = {};
+    Controller.assignedStudents = [];
+    Controller.unassignedStudents = [];
     Controller.educationSubjectName = '';
     Controller.teacherOptions = [];
     Controller.roomOptions = [];
@@ -66,6 +67,9 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.institutionClassIds = [];
     Controller.teachers = [];
     Controller.rooms = [];
+    Controller.classOptions = [];
+    Controller.classes = [];
+    Controller.toValidateClasses = false;
 
     // Function mapping
     Controller.setTop = setTop;
@@ -117,6 +121,12 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 }, rooms);
                 Controller.rooms = rooms;
 
+                var classes = [];
+                angular.forEach(response.class_subjects, function(value, key) {
+                    this.push(value.institution_class_id);
+                }, classes);
+                Controller.classes = classes;
+
                 var assignedStudents = [];
                 angular.forEach(response.subject_students, function(value, key) {
                     var toPush = {
@@ -125,6 +135,8 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                         student_status_name: value.student_status.name,
                         gender_name: value.user.gender.name,
                         student_id: value.student_id,
+                        institution_class: value.institution_class.name,
+                        institution_class_id: value.institution_class_id,
                         encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
                             {
                                 student_id: value.student_id,
@@ -147,6 +159,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(response.id, Controller.academicPeriodId, Controller.educationGradeId, Controller.institutionClassIds);
                 promises[1] = InstitutionSubjectStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                 promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.academic_period_id, Controller.institutionSubjectId);
+                promises[3] = InstitutionSubjectStudentsSvc.getClassOptions(response.institution_id, response.academic_period_id, Controller.educationGradeId, response.id);
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
@@ -160,6 +173,8 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                         student_status_name: value.student_status,
                         gender_name: value.gender,
                         student_id: value.student_id,
+                        institution_class: value.institution_class,
+                        institution_class_id: value.institution_class_id,
                         encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
                             {
                                 student_id: value.student_id,
@@ -179,6 +194,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 Controller.unassignedStudents = unassignedStudentsArr;
                 Controller.teacherOptions = promises[1];
                 Controller.roomOptions = promises[2];
+                Controller.classOptions = promises[3];
 
                 var toTranslate = [];
                 angular.forEach(Controller.colDef, function(value, key) {
@@ -199,9 +215,19 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             })
             .finally(function(){
                 Controller.dataReady = true;
+                Controller.toValidateClasses = true;
                 UtilsSvc.isAppendLoader(false);
             });
         }
+
+        $scope.$watch('InstitutionSubjectStudentsController.classes', function(_newVal, _oldVal) {
+            if (Controller.toValidateClasses) {
+                UtilsSvc.isAppendLoader(true);
+                validateClassUpdate(_newVal, _oldVal);
+            } else if (Controller.dataReady) {
+                Controller.toValidateClasses = true;
+            }
+        })
 
     });
 
@@ -268,6 +294,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
         postData.subject_staff = [];
+        postData.class_subjects = [];
         postData.rooms = Controller.rooms;
         postData.education_grade_id = Controller.educationGradeId;
         postData.education_subject_id = Controller.educationSubjectId;
@@ -280,6 +307,14 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 this.push(value);
             }
         }, postData.subject_staff);
+
+        angular.forEach(Controller.classes, function(value, key) {
+            this.push({
+                institution_class_id: value,
+                institution_subject_id: Controller.institutionSubjectId,
+                status: 1
+            });
+        }, postData.class_subjects);
 
         angular.forEach(Controller.teachers, function(value, key) {
             this.push({
@@ -322,5 +357,119 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
         else {
             return uri + separator + key + "=" + value;
         }
+    }
+
+    // updating of classes validation can be done on the frontend
+    function validateClassUpdate(newClass, oldClass) {
+        var classDiff = getClassesDifferent(newClass, oldClass);
+        var validateError = false;
+
+        // Controller.postError = {};
+        Controller.postError['classes'] = {};
+
+        // Remove classes to check on the assigned student if contains removed class student
+        if (classDiff.type === 'remove') {
+            for (var i = 0; i < Controller.assignedStudents.length; ++i) {
+                if (Controller.assignedStudents[i]['institution_class_id'] == classDiff.value) {
+                    validateError = true;
+                    break;
+                }
+            }
+
+            if (validateError) {
+                Controller.postError.class_subjects = {
+                    'error': 'Class cannot be removed due to existing student that is assigned to the subject.'
+                };
+                Controller.classes = classDiff.original;
+                Controller.toValidateClasses = false;
+            } else {
+                let tempUnassignedStudents = [];
+
+                for (var i = 0; i < Controller.unassignedStudents.length; ++i) {
+                    if (Controller.unassignedStudents[i]['institution_class_id'] != classDiff.value) {
+                        tempUnassignedStudents.push(Controller.unassignedStudents[i]);
+                    }
+                }
+
+                Controller.unassignedStudents = tempUnassignedStudents;
+                if (typeof Controller.gridOptionsTop.api !== 'undefined') {
+                    Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+                    Controller.gridOptionsTop.api.setRowData(Controller.unassignedStudents);
+                }
+            }
+            UtilsSvc.isAppendLoader(false);
+        } else {
+            InstitutionSubjectStudentsSvc.getUnassignedStudent(Controller.institutionSubjectId, Controller.academicPeriodId, Controller.educationGradeId, classDiff.value).then(function(response) {
+                var unassignedStudentsArr = [];
+                angular.forEach(response, function(value, key) {
+                    var toPush = {
+                        openemis_no: value.openemis_no,
+                        name: value.name,
+                        student_status_name: value.student_status,
+                        gender_name: value.gender,
+                        student_id: value.student_id,
+                        institution_class: value.institution_class,
+                        institution_class_id: value.institution_class_id,
+                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
+                            {
+                                student_id: value.student_id,
+                                institution_class_id: value.institution_class_id,
+                                institution_subject_id: Controller.institutionSubjectId,
+                                education_grade_id: value.education_grade_id,
+                                education_subject_id: Controller.educationSubjectId,
+                                academic_period_id: value.academic_period_id,
+                                institution_id: value.institution_id,
+                                student_status_id: value.student_status_id,
+                                gender_id: value.gender_id
+                            }
+                        ))
+                    };
+                    this.push(toPush);
+                }, unassignedStudentsArr);
+
+                Controller.unassignedStudents = Controller.unassignedStudents.concat(unassignedStudentsArr);
+                if (typeof Controller.gridOptionsTop.api !== 'undefined') {
+                    Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+                    Controller.gridOptionsTop.api.setRowData(Controller.unassignedStudents);
+                }
+                UtilsSvc.isAppendLoader(false);
+            })
+        }
+    }
+
+    // get the required data for validation check
+    function getClassesDifferent(newClass, oldClass) {
+        var classDiff = {
+            original: oldClass.slice()
+        };
+
+        if (newClass.length > oldClass.length) {
+            classDiff['type'] = 'add';
+        } else {
+            classDiff['type'] = 'remove';
+        }
+
+        var diff = {};
+        var diffArr = [];
+
+        // Finding the difference in classId
+        for (var i = 0; i < newClass.length; ++i) {
+            diff[newClass[i]] = newClass[i];
+        }
+
+        for (var j = 0; j < oldClass.length; ++j) {
+            if (diff.hasOwnProperty(oldClass[j])) {
+                delete diff[oldClass[j]];
+            } else {
+                diff[oldClass[j]] = oldClass[j];
+            }
+        }
+
+        for (var item in diff) {
+            diffArr.push(item);
+        }
+
+        classDiff['value'] = diffArr[0];
+        return classDiff;
     }
 }
