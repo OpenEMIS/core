@@ -1770,7 +1770,7 @@ class ValidationBehavior extends Behavior
         $data = $globalData['data'];
 
         $studentId = (array_key_exists('student_id', $data))? $data['student_id']: null;
-        $educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+        $educationGradeId = (array_key_exists('previous_education_grade_id', $data))? $data['previous_education_grade_id']: null;
         $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
 
         if (empty($studentId) || empty($educationGradeId) || empty($previousInstitutionId)) {
@@ -2254,16 +2254,16 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $registryAlias = $model->registryAlias();
         $data = $globalData['data'];
-        $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
+        $institutionId = (array_key_exists('institution_id', $data))? $data['institution_id']: null;
 
         if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
-                    ->find()
-                    ->where([
-                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
-                        $InstitutionGrades->aliasField('institution_id') => $previousInstitutionId
-                    ])
-                    ->first();
+                ->find()
+                ->where([
+                    $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                    $InstitutionGrades->aliasField('institution_id') => $institutionId
+                ])
+                ->first();
 
             if (!empty($query->end_date)) {
                 $programmeEndDate = $query->end_date;
@@ -2287,14 +2287,14 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
 
-        if (array_key_exists('new_education_grade_id', $data) && !empty($data['education_grade_id'])) {
+        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
-                    ->find()
-                    ->where([
-                        $InstitutionGrades->aliasField('education_grade_id') => $data['new_education_grade_id'],
-                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
-                    ])
-                    ->first();
+                ->find()
+                ->where([
+                    $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                    $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                ])
+                ->first();
 
             if (!empty($query->end_date)) {
                 $programmeEndDate = $query->end_date;
