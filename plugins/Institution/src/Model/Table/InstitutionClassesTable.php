@@ -415,7 +415,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'options' => [],
             'order' => 3
         ];
-        //POCOR-4380 - Add 'Class Name' column to be the first in Institutions > Academic > Class
+        //POCOR-4380 - Update 'Class Name' column to be the first in Institutions > Academic > Class
         //following are 'Home Room Teacher', 'Secondary Teacher' column...
         $this->setFieldOrder([
             'name','staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
