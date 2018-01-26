@@ -782,6 +782,7 @@ trait MessagesTrait
         ],
         'StudentTransferOut' => [
             'existingStudentTransfer' => 'There is an existing transfer record for this student',
+            'pendingStudentWithdraw' => 'There is a pending withdraw request for this student.',
             'unableToTransfer' => 'Unable to do student transfer due to associated records.'
         ],
 
@@ -1199,7 +1200,22 @@ trait MessagesTrait
             ],
             'StudentTransferIn' => [
                 'education_grade_id' => [
-                    'ruleCheckInstitutionOffersGrade' => 'This institution does not offer this Education Grade'
+                    'ruleCheckInstitutionOffersGrade' => 'This institution does not offer this Education Grade.',
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'Start Date should not be earlier than Requested Date.',
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'institution_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
+                ],
+                'institution_class_id' => [
+                    'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+                'student_id' => [
+                    'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
                 ]
             ],
             'StudentTransferOut' => [
@@ -1210,11 +1226,7 @@ trait MessagesTrait
                     'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s students.'
                 ],
                 'student_id' => [
-                    'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
-                    'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
-                        'inTargetSchool' => 'Student is already enrolled in this school.',
-                        'inAnotherSchool' => 'Student is already enrolled in another school.',
-                    ],
+                    'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student.',
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
                 ]
             ],
