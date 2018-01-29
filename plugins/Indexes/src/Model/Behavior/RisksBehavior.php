@@ -10,11 +10,11 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 
-class IndexesBehavior extends Behavior
+class RisksBehavior extends Behavior
 {
     public function initialize(array $config)
     {
-
+        $this->table('indexes');
     }
 
     public function implementedEvents()
