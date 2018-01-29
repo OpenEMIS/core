@@ -13,12 +13,14 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 
-class IndexesCriteriasTable extends ControllerActionTable
+class RisksCriteriasTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
+        $this->table('indexes');
+        
         parent::initialize($config);
-        $this->belongsTo('Indexes', ['className' => 'Indexes.Indexes', 'foreignKey' =>'index_id']);
+        $this->belongsTo('Indexes', ['className' => 'Indexes.Risks', 'foreignKey' =>'index_id']);
 
         $this->hasMany('StudentIndexesCriterias', ['className' => 'Indexes.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
