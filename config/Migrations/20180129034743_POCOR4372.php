@@ -38,7 +38,7 @@ class POCOR4372 extends AbstractMigration
         $this->execute($sql);
 
         $sql = "UPDATE `security_functions`
-                SET `_view` = 'Indexes.index|Risks.view',
+                SET `_view` = 'Indexes.index|Indexes.view',
                     `_edit` = 'Indexes.edit',
                     `_add` = 'Indexes.add',
                     `_delete` ='Indexes.remove'

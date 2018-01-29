@@ -339,9 +339,9 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
     }
-    public function Indexes()
+    public function Risks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Risks']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']);
     }
     public function StudentIndexes()
     {
