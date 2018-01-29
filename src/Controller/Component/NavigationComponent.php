@@ -1269,11 +1269,11 @@ class NavigationComponent extends Component
                     'parent' => 'SystemSetup',
                     'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit', 'Notices.delete']
                 ],
-                'Indexes.Risks' => [
+                'Risks.Risks' => [
                     'title' => 'Risks', 
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Indexes'],
-                    'selected' => ['Indexes.Risks']
+                    'selected' => ['Risks.Risks']
                 ],
             'Security' => [
                 'title' => 'Security',
