@@ -18,7 +18,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
 
 
-class IndexesTable extends ControllerActionTable
+class RisksTable extends ControllerActionTable
 {
     use HtmlTrait;
 
@@ -108,6 +108,7 @@ class IndexesTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+        $this->table('indexes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
