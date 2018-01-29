@@ -147,10 +147,25 @@ class CourseCatalogueTable extends ControllerActionTable
         if (!empty($staffData) && $staffData->has('position')) {
             $positionTitle = $staffData->position->staff_position_title_id;
 
-            // only show courses where user is in target population
+            $TargetPopulationTable = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
             $query
-                ->matching('TargetPopulations')
-                ->where(['TargetPopulations.id' => $positionTitle]);
+                ->leftJoin(
+                    [$TargetPopulationTable->alias() => $TargetPopulationTable->table()],
+                    [
+                        $TargetPopulationTable->aliasField('training_course_id = ') . $this->aliasField('id')
+                    ]
+                )
+                ->where([
+                    'OR' => [
+                        [$TargetPopulationTable->aliasField('target_population_id') => $positionTitle],
+                        [$TargetPopulationTable->aliasField('target_population_id') => -1]
+                    ]
+                ]);
+
+        // only show courses where user is in target population
+            // $query
+            //     ->matching('TargetPopulations')
+            //     ->where(['TargetPopulations.id' => $positionTitle]);
         } else {
             // To return no results
             $query->where(['1 = 0']);
