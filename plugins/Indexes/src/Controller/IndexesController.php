@@ -18,7 +18,11 @@ class IndexesController extends AppController
     }
 
     // CAv4
-    public function Indexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Indexes.Indexes']); }
+
+    public function Risks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Indexes.Indexes']);
+    }
     // End
 
     public function beforeFilter(Event $event)
