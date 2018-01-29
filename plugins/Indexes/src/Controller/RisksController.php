@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 use App\Controller\AppController;
 
-class IndexesController extends AppController
+class RisksController extends AppController
 {
     public function initialize()
     {
@@ -30,7 +30,7 @@ class IndexesController extends AppController
         parent::beforeFilter($event);
         
         $header = __('Risks');
-        $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Indexes']);
+        $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Risks']);
         $this->set('contentHeader', $header);
     }
 }
