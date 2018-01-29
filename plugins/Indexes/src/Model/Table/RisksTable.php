@@ -308,7 +308,7 @@ class RisksTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['criteriaOptions'] = $criteriaOptions;
 
-        return $event->subject()->renderElement('Indexes.Indexes/' . $fieldKey, ['attr' => $attr]);
+        return $event->subject()->renderElement('Indexes.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -366,11 +366,11 @@ class RisksTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'IndexesCriterias' => [
+            'RisksCriterias' => [
                 'sort' => [
-                    'IndexesCriterias.criteria' => 'ASC',
-                    'IndexesCriterias.operator' => 'ASC',
-                    'IndexesCriterias.threshold' => 'ASC'
+                    'RisksCriterias.criteria' => 'ASC',
+                    'RisksCriterias.operator' => 'ASC',
+                    'RisksCriterias.threshold' => 'ASC'
                 ]
             ]
         ]);
@@ -508,7 +508,7 @@ class RisksTable extends ControllerActionTable
         if (!empty($originalEntityList)) {
             foreach ($originalEntityList as $key => $obj) {
                 if (!array_key_exists($key, $undeletedList)) {
-                    $this->IndexesCriterias->delete($this->IndexesCriterias->get($key));
+                    $this->RisksCriterias->delete($this->RisksCriterias->get($key));
                 }
             }
         }
@@ -543,7 +543,7 @@ class RisksTable extends ControllerActionTable
 
         //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
         $options['associated'] = [
-            'IndexesCriterias' => ['validate' => false]
+            'RisksCriterias' => ['validate' => false]
         ];
     }
 
