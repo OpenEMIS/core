@@ -21,7 +21,7 @@ class RisksController extends AppController
 
     public function Risks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Indexes.Indexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Indexes.Risks']);
     }
     // End
 
