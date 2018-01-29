@@ -218,10 +218,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('multigrade');
 
-        //POCOR-4380 - Update 'Class Name' column to be the first in Institutions > Academic > Class
-        //following are 'Home Room Teacher', 'Secondary Teacher' column...
         $this->setFieldOrder([
-            'name', 'staff_id','secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects',
+            'name','staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
     }
 
