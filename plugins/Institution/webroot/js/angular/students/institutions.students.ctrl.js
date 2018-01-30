@@ -948,9 +948,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (counter == 0) {
                 AlertSvc.success($scope, 'Student transfer request is added successfully.');
                 $window.location.href = 'add?student_transfer_added=true';
-            } else if (counter == 1 && postResponse.data.error.hasOwnProperty('student_id') && postResponse.data.error.student_id.hasOwnProperty('ruleTransferRequestExists')) {
+            } else if (counter == 1 && postResponse.data.error.hasOwnProperty('student_transfer') && postResponse.data.error.student_transfer.hasOwnProperty('ruleTransferRequestExists')) {
                 AlertSvc.warning($scope, 'There is an existing transfer record for this student.');
-                $window.location.href = postResponse.data.error.student_id.ruleTransferRequestExists;
+                $window.location.href = postResponse.data.error.student_transfer.ruleTransferRequestExists;
             } else {
                 AlertSvc.error($scope, 'There is an error in adding student transfer request.');
             }
