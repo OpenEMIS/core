@@ -118,7 +118,7 @@ class IndividualPromotionTable extends ControllerActionTable
             $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
             $conditions = [
                 'student_id' => $studentEntity->student_id,
-                'status_id' => $pendingStatus,
+                'status_id IN' => $pendingStatus,
                 'education_grade_id' => $studentEntity->education_grade_id,
                 'institution_id' => $studentEntity->institution_id,
                 'academic_period_id' => $studentEntity->academic_period_id,
