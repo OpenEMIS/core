@@ -26,6 +26,14 @@ class SurveyFormsTable extends CustomFormsTable
                 'through' => 'Survey.SurveyFormsQuestions',
                 'dependent' => true
             ],
+            'filterClass' => [
+                'className' => 'Institution.Types',
+                'joinTable' => 'survey_forms_filters',
+                'foreignKey' => 'survey_forms_id',
+                'targetForeignKey' => 'survey_filter_id',
+                'through' => 'Infrastructure.SuveryFormsFilters',
+                'dependent' => true
+            ],
             'label' => [
                 'custom_fields' => 'Survey Questions',
                 'add_field' => 'Add Question',
@@ -126,7 +134,7 @@ class SurveyFormsTable extends CustomFormsTable
         $model = $customModule->model;
         if ($model == 'Institution.Institutions') {
             $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        } else if ($model == 'Student.Students') {
+        } elseif ($model == 'Student.Students') {
             $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         }
     }
