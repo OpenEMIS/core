@@ -243,7 +243,7 @@ class StudentTransferTable extends ControllerActionTable
 				->toArray();
 
 			$selectedGrade = $request->query('education_grade_id');
-            $pendingTransferStatuses = $this->StudentTransfers->getPendingTransferWorkflowStatuses();
+            $pendingTransferStatuses = $this->StudentTransfers->getStudentTransferWorkflowStatuses('PENDING');
 
 			$this->advancedSelectOptions($gradeOptions, $selectedGrade, [
 				'selectOption' => false,
@@ -612,7 +612,7 @@ class StudentTransferTable extends ControllerActionTable
     public function findByNoExistingTransferRequest(Query $query, array $options)
     {
     	$StudentTransfers = $this->StudentTransfers;
-        $pendingTransferStatuses = $this->StudentTransfers->getPendingTransferWorkflowStatuses();
+        $pendingTransferStatuses = $this->StudentTransfers->getStudentTransferWorkflowStatuses('PENDING');
 
     	$query->leftJoin(
 				[$StudentTransfers->alias() => $StudentTransfers->table()],

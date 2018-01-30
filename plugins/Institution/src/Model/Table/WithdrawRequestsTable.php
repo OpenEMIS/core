@@ -52,7 +52,7 @@ class WithdrawRequestsTable extends ControllerActionTable
     {
         $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
         $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
-        $pendingTransferStatuses = $StudentTransfersTable->getPendingTransferWorkflowStatuses();
+        $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
 
         $conditions = [
             'student_id' => $entity->student_id,
