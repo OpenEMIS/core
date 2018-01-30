@@ -29,26 +29,26 @@ class POCOR4235 extends AbstractMigration
     {
         $this->execute('INSERT INTO `config_items` 
             (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES 
-            (2000, "Identities", "GuardianIdentities", "Add New Guardian", "Identities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
+            (1006, "Identities", "GuardianIdentities", "Add New Guardian", "Identities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
 
         $this->execute('INSERT INTO `config_items`
             (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES
-            (2001, "Nationalities", "GuardianNationalities", "Add New Guardian", "Nationalities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
+            (1007, "Nationalities", "GuardianNationalities", "Add New Guardian", "Nationalities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
 
         $this->execute('INSERT INTO `config_items`
             (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES
-            (2002, "Identities", "OtherIdentities", "Add New Other", "Identities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
+            (1008, "Identities", "OtherIdentities", "Add New Other", "Identities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
 
         $this->execute('INSERT INTO `config_items`
             (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES
-            (2003, "Nationalities", "OtherNationalities", "Add New Other", "Nationalities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
+            (1009, "Nationalities", "OtherNationalities", "Add New Other", "Nationalities", "0", "0", 1, 1, "Dropdown", "wizard", 1, CURRENT_DATE())');
     }
 
     public function down()
     {
-        $this->execute('DELETE FROM `config_items` WHERE `id` = 2000');
-        $this->execute('DELETE FROM `config_items` WHERE `id` = 2001');
-        $this->execute('DELETE FROM `config_items` WHERE `id` = 2002');
-        $this->execute('DELETE FROM `config_items` WHERE `id` = 2003');
+        $this->execute('DELETE FROM `config_items` WHERE `id` = 1006');
+        $this->execute('DELETE FROM `config_items` WHERE `id` = 1007');
+        $this->execute('DELETE FROM `config_items` WHERE `id` = 1008');
+        $this->execute('DELETE FROM `config_items` WHERE `id` = 1009');
     }
 }
