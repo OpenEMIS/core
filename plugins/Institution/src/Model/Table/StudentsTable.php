@@ -817,6 +817,8 @@ class StudentsTable extends ControllerActionTable
     {
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
+            TableRegistry::get('Institution.StudentTransferIn'),
+            TableRegistry::get('Institution.StudentTransferOut'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
             TableRegistry::get('Institution.StudentUser'),

@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Controller\Component;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
+use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
@@ -77,7 +78,6 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $events['Workflow.setAutoAssignAssigneeFlag'] = 'setAutoAssignAssigneeFlag';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
@@ -367,6 +367,68 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $pendingTransferInStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferIn', 'PENDING');
         $pendingTransferOutStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferOut', 'PENDING');
         return $pendingTransferInStatus + $pendingTransferOutStatus;
+    }
+
+    public function rejectPendingTransferRequests($registryAlias, $student)
+    {
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+
+        if ($student->student_status_id == $enrolled) {
+            $educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
+            $educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
+
+            $workflowEntity = $this->getWorkflow($registryAlias);
+            $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $pendingStatuses = $WorkflowModelsTable->getWorkflowStatusSteps($registryAlias, 'PENDING');
+
+            // get the first step in 'REJECTED' workflow statuses
+            $rejectedStatuses = $WorkflowModelsTable->getWorkflowStatusSteps($registryAlias, 'REJECTED');
+            ksort($rejectedStatuses);
+            $rejectedStepId = key($rejectedStatuses);
+            $rejectedStepEntity = $this->Statuses->get($rejectedStepId);
+
+            if (!empty($rejectedStepEntity)) {
+                $doneStatus = self::DONE;
+                $pendingTransfers = $this->find()
+                    ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+                        return $q->where(['category <> ' => $doneStatus]);
+                    })
+                    ->where([
+                        $this->aliasField('student_id') => $student->student_id,
+                        $this->aliasField('education_grade_id IN') => $educationGradesToUpdate,
+                        $this->aliasField('status_id IN') => $pendingStatuses
+                    ])
+                    ->toArray();
+
+                foreach ($pendingTransfers as $entity) {
+                    $prevStep = $entity->status_id;
+
+                    // update status_id and assignee_id
+                    $entity->status_id = $rejectedStepEntity->id;
+                    $this->autoAssignAssignee($entity);
+
+                    if ($this->save($entity)) {
+                        // add workflow transition
+                        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                        $prevStepEntity = $this->Statuses->get($prevStep);
+
+                        $transition = [
+                            'comment' => __('On Student Transfer into another Institution'),
+                            'prev_workflow_step_name' => $prevStepEntity->name,
+                            'workflow_step_name' => $rejectedStepEntity->name,
+                            'workflow_action_name' => __('Administration - Reject Record'),
+                            'workflow_model_id' => $workflowEntity->workflow_model_id,
+                            'model_reference' => $entity->id,
+                            'created_user_id' => 1,
+                            'created' => new Time('NOW')
+                        ];
+                        $transitionEntity = $WorkflowTransitions->newEntity($transition);
+                        $WorkflowTransitions->save($transitionEntity);
+                    }
+                }
+            }
+        }
     }
 
     public function findInstitutionStudentTransferIn(Query $query, array $options)
