@@ -60,11 +60,11 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             ->add('institution_class_id', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit']
             ])
+            ->add('student_transfer', 'ruleTransferRequestExists', [
+                'rule' => ['checkPendingStudentTransfer'],
+                'on' => 'create'
+            ])
             ->add('student_id', [
-                'ruleTransferRequestExists' => [
-                    'rule' => ['checkPendingStudentTransfer'],
-                    'on' => 'create'
-                ],
                 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
                         'excludeInstitutions' => ['previous_institution_id']
