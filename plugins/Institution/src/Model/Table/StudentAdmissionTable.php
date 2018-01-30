@@ -65,52 +65,48 @@ class StudentAdmissionTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         $validator
-            ->add('start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'end_date', false]
+            ->add('start_date', [
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'end_date', false]
+                ],
+                'ruleCheckProgrammeEndDateAgainstStudentStartDate' => [
+                    'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
+                ]
             ])
-            ->add('end_date', [
-            ])
-            ->add('student_status_id', [
-            ])
-            ->add('academic_period_id', [
-            ])
-            ->allowEmpty('student_name')
-            ->add('student_name', 'ruleCheckPendingAdmissionExist', [
-                'rule' => ['checkPendingAdmissionExist'],
-                'on' => 'create'
-            ])
-            ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
-                'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
-                'on' => 'create',
-                'last' => true
-            ])
-            ->add('student_name', 'ruleStudentNotCompletedGrade', [
-                'rule' => ['studentNotCompletedGrade', []],
-                'on' => 'create',
-                'last' => true
-            ])
-            ->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
-                'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
-                'on' => 'create'
+            ->add('student_id', [
+                'ruleCheckPendingAdmissionExist' => [
+                    'rule' => ['checkPendingAdmissionExist'],
+                    'on' => 'create',
+                    'last' => true
+                ],
+                'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
+                    'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
+                    'on' => 'create',
+                    'last' => true
+                ],
+                'ruleStudentNotCompletedGrade' => [
+                    'rule' => ['studentNotCompletedGrade', []],
+                    'on' => 'create',
+                    'last' => true
+                ],
+                'ruleCheckAdmissionAgeWithEducationCycleGrade' => [
+                    'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+                    'on' => 'create',
+                    'last' => true
+                ]
             ])
             ->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
-                'rule' => ['compareStudentGenderWithInstitution']
-            ])
-            ->add('institution_id', 'ruleCompareStudentGenderWithInstitution', [
-                'rule' => ['compareStudentGenderWithInstitution']
-            ])
-            ->allowEmpty('class')
-            ->add('class', 'ruleClassMaxLimit', [
-                'rule' => ['checkInstitutionClassMaxLimit'],
+                'rule' => ['compareStudentGenderWithInstitution'],
                 'on' => 'create'
-            ])
-            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
-                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
             ])
             ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
                 'rule' => ['checkProgrammeEndDate', 'education_grade_id']
             ])
-            ;
+            ->allowEmpty('institution_class_id')
+            ->add('institution_class_id', 'ruleClassMaxLimit', [
+                'rule' => ['checkInstitutionClassMaxLimit']
+            ]);
+
         return $validator;
     }
 

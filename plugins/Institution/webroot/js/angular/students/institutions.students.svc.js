@@ -599,7 +599,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         data['end_date'] = this.formatDateForSaving(data['end_date']);
         data['status_id'] = 0;
         data['institution_id'] = institutionId;
-        data['institution_class_id'] = data['class'];
         return StudentRecords.save(data);
     };
 

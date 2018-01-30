@@ -564,14 +564,6 @@ trait MessagesTrait
         'EducationProgrammes' => [
             'add_next_programme' => 'Add Next Programme'
         ],
-        'StudentAdmission' => [
-            'noClass' => 'No Class Selected',
-            'existsInSchool' => 'Student is already exists in the school',
-            'enrolledInInstitution' => 'Student is already enrolled in another school.',
-            'existsInRecord' => 'Student has already been added to admission list',
-            'approve' => 'Student admission has been approved successfully.',
-            'reject' => 'Student admission has been rejected successfully.'
-        ],
         'WithdrawRequests' => [
             'request' => 'Withdraw request has been submitted successfully.',
             'configureWorkflowStatus' => 'Please configure the steps to the Approved and Pending statuses before adding any withdrawal record.',
@@ -1025,25 +1017,14 @@ trait MessagesTrait
                 ],
             ],
             'StudentAdmission' => [
-                'student_name' => [
-                    'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
-                        'inTargetSchool' => 'Student is already enrolled in this school.',
-                        'inAnotherSchool' => 'Student is already enrolled in another school.',
-                    ],
+                'student_id' => [
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
-                    'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',
-                    'ageHint' => 'The student should be %s years old',
-                    'ageRangeHint' => 'The student should be between %s to %s years old',
-                    'ruleStudentEnrolledInOthers' => 'Student has already been enrolled in another Institution.',
                     'ruleCheckPendingAdmissionExist' => 'Student has already been added to admission list'
                 ],
-                'class' => [
+                'institution_class_id' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
                 'gender_id' => [
-                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
-                ],
-                'institution_id' => [
                     'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
                 ],
                 'start_date' => [
