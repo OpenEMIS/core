@@ -287,7 +287,13 @@ class StudentCascadeDeleteBehavior extends Behavior {
 
 	private function deleteStudentAdmissionRecords(Entity $entity) {
 		$StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+        $doneStatus = $StudentAdmission::DONE;
+
+        // only pending admission records will be deleted
         $studentAdmissionData = $StudentAdmission->find()
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
             ->where([
                 $StudentAdmission->aliasField('institution_id') => $entity->institution_id,
                 $StudentAdmission->aliasField('academic_period_id') => $entity->academic_period_id,
