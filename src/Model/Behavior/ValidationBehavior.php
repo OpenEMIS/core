@@ -2319,11 +2319,7 @@ class ValidationBehavior extends Behavior
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
             // fixed workflow
-            $models = [
-                'Institution.TransferApprovals',
-                'Institution.StudentAdmission',
-                'Institution.StudentWithdraw'
-            ];
+            $models = [];
 
             foreach ($models as $model) {
                 $subject = TableRegistry::get($model);
