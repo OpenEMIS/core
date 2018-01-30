@@ -113,7 +113,7 @@ class StudentsTable extends ControllerActionTable
          */
         $this->addBehavior('ControllerAction.Image'); // To be verified
 
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
     }
 
     public function implementedEvents()

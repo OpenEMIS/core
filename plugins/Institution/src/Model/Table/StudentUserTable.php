@@ -60,7 +60,7 @@ class StudentUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('remove', false);
 
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
