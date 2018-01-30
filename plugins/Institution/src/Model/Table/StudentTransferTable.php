@@ -66,7 +66,6 @@ class StudentTransferTable extends ControllerActionTable
 	public function implementedEvents()
     {
     	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	$events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
     	return $events;
     }
