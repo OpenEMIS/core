@@ -15,7 +15,6 @@ use Institution\Model\Table\InstitutionStudentTransfersTable;
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
 {
-
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -80,6 +79,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         $events = parent::implementedEvents();
         $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';
+        $events['Model.Students.afterSave'] = 'studentsAfterSave';
         $events['ControllerAction.Model.associated'] = 'associated';
         return $events;
     }
@@ -90,6 +90,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $where[$this->aliasField('previous_institution_id')] = $entity->id;
         unset($where[$this->aliasField('institution_id')]);
         return $where;
+    }
+
+    public function studentsAfterSave(Event $event, $student)
+    {
+        if ($student->isNew()) {
+            // close other pending SENDING transfer applications (in same education system) if the student is successfully transferred in one school
+            $this->rejectPendingTransferRequests($this->registryAlias(), $student);
+        }
     }
 
     // POCOR-3649

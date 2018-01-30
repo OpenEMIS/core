@@ -98,6 +98,21 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         return $validator->remove('start_date', 'ruleCompareDateReverse');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        return $events;
+    }
+
+    public function studentsAfterSave(Event $event, $student)
+    {
+        if ($student->isNew()) {
+            // close other pending RECEIVING transfer applications (in same education system) if the student is successfully transferred in one school
+            $this->rejectPendingTransferRequests($this->registryAlias(), $student);
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('requested_date', ['type' => 'hidden']);
