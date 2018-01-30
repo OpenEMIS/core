@@ -334,9 +334,9 @@ class RisksTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name');
-        $this->field('modified_user_id',['visible' => true]);
-        $this->field('modified',['visible' => true]);
-        $this->field('academic_period_id',['visible' => false]);
+        $this->field('modified_user_id', ['visible' => true]);
+        $this->field('modified', ['visible' => true]);
+        $this->field('academic_period_id', ['visible' => false]);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -347,7 +347,7 @@ class RisksTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
-            'name' => 'Indexes/controls',
+            'name' => 'Risks/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId

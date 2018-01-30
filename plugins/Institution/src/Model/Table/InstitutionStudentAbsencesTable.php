@@ -55,7 +55,7 @@ class InstitutionStudentAbsencesTable extends AppTable
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
 
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
 
         $this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
         $this->absenceCodeList = $this->AbsenceTypes->getCodeList();

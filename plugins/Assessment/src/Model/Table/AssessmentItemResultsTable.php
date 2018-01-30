@@ -27,7 +27,7 @@ class AssessmentItemResultsTable extends AppTable
             'Results' => ['index', 'add'],
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
     }
 
     public function validationDefault(Validator $validator)
