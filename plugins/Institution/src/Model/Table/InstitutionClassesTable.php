@@ -77,7 +77,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'StudentCompetencyComments' => ['view'],
             'OpenEMIS_Classroom' => ['index', 'view'],
             'StudentOutcomes' => ['view'],
-            'SubjectStudents' => ['index']
+            'SubjectStudents' => ['index'],
+            'Results'=> ['index']
         ]);
 
         // POCOR-4047 to get staff profile data
@@ -460,6 +461,26 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
+
+    public function findHomeOrSecondary(Query $query, array $options)
+    {
+
+        if (isset($options['class_id']) && isset($options['staff_id'])) {
+            $classId = $options['class_id'];
+            $staffId = $options['staff_id'];
+            $query
+                ->where([
+                    $this->aliasField('id') => $classId,
+                    'OR' => [
+                        [$this->aliasField('staff_id') => $staffId], 
+                        [$this->aliasField('secondary_staff_id') => $staffId]
+                    ],
+                 ]);
+            
+            return $query;
+        }   
+
+    }
     public function findTranslateItem(Query $query, array $options)
     {
         return $query
