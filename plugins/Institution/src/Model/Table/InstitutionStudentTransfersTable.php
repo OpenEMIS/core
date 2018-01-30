@@ -361,12 +361,12 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
     }
 
-    public function getPendingTransferWorkflowStatuses()
+    public function getStudentTransferWorkflowStatuses($statusCode)
     {
         $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $pendingTransferInStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferIn', 'PENDING');
-        $pendingTransferOutStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferOut', 'PENDING');
-        return $pendingTransferInStatus + $pendingTransferOutStatus;
+        $transferInStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferIn', $statusCode);
+        $transferOutStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentTransferOut', $statusCode);
+        return $transferInStatus + $transferOutStatus;
     }
 
     public function rejectPendingTransferRequests($registryAlias, $student)
