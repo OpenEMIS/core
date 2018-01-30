@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Model\Table;
+namespace Risk\Model\Table;
 
 use ArrayObject;
 
@@ -16,7 +16,6 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
-
 
 class RisksTable extends ControllerActionTable
 {
@@ -113,7 +112,7 @@ class RisksTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
 
-        $this->hasMany('RisksCriterias', ['className' => 'Indexes.RisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RisksCriterias', ['className' => 'Risk.RisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStudentIndexes', ['className' => 'Institution.InstitutionStudentIndexes', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
@@ -128,7 +127,7 @@ class RisksTable extends ControllerActionTable
             ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'indexes_criterias') {
             return __('Risks Criterias');
@@ -204,10 +203,10 @@ class RisksTable extends ControllerActionTable
         return $options;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $criteriaData = $this->getCriteriasData();
-        $tableHeaders = $this->getMessage('Indexes.TableHeader');
+        $tableHeaders = $this->getMessage('Risk.TableHeader');
         $tableCells = [];
         $criteriaOptions = ['' => '-- '.__('Select Criteria').' --'] + $this->getCriteriasOptions();
 
@@ -240,7 +239,6 @@ class RisksTable extends ControllerActionTable
                     $tableCells[] = $rowData;
                 }
             }
-
         } else if ($action == 'add' || $action == 'edit') {
             $Form = $event->subject()->Form;
             $Form->unlockField($alias.".".$fieldKey);
@@ -279,7 +277,7 @@ class RisksTable extends ControllerActionTable
                     $threshold = $obj['threshold'];
                     $indexId = $obj['index_id'];
 
-                    if ($criteriaType == 'StatusRepeated' ) {
+                    if ($criteriaType == 'StatusRepeated') {
                         // for status the criteria name will be student status.
                         $cell = $criteriaData[$criteriaType]['name'];
                     } else {
@@ -308,7 +306,7 @@ class RisksTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['criteriaOptions'] = $criteriaOptions;
 
-        return $event->subject()->renderElement('Indexes.Risks/' . $fieldKey, ['attr' => $attr]);
+        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -384,7 +382,7 @@ class RisksTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
-        $this->field('academic_period_id',['before' => 'name']);
+        $this->field('academic_period_id', ['before' => 'name']);
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -518,7 +516,6 @@ class RisksTable extends ControllerActionTable
             ['modified_user_id' => $userId],
             ['id' => $entity->id]
         );
-
     }
 
     public function addEditOnAddCriteria(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -568,7 +565,7 @@ class RisksTable extends ControllerActionTable
         $criteria = [];
         foreach ($criteriaData as $criteriaKey => $criteriaObj) {
             if ($criteriaObj['model'] == $model) {
-                $indexesCriteriasData = $this->IndexesCriterias->find()
+                $indexesCriteriasData = $this->RisksCriterias->find()
                     ->where(['criteria' => $criteriaKey])
                     ->all();
 
@@ -600,7 +597,7 @@ class RisksTable extends ControllerActionTable
         return $this->operatorTypes[$operatorId];
     }
 
-    public function triggerUpdateIndexesShell($shellName, $institutionId=0, $userId=0, $indexId=0, $academicPeriodId=0)
+    public function triggerUpdateIndexesShell($shellName, $institutionId = 0, $userId = 0, $indexId = 0, $academicPeriodId = 0)
     {
         $args = '';
         $args .= !is_null($institutionId) ? ' '.$institutionId : '';

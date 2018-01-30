@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Model\Behavior;
+namespace Risk\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
@@ -14,7 +14,7 @@ class RisksBehavior extends Behavior
 {
     public function initialize(array $config)
     {
-        $this->table('indexes');
+        $this->table('risks');
     }
 
     public function implementedEvents()
