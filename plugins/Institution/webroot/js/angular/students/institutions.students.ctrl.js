@@ -627,16 +627,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         AlertSvc.reset($scope);
         var data = {
             student_id: studentId,
-            student_name: studentId,
             academic_period_id: academicPeriodId,
             education_grade_id: educationGradeId,
             start_date: startDate,
-            end_date: endDate
+            end_date: endDate,
+            institution_class_id: classId
         };
-
-        if (classId != null) {
-            data['class'] = classId;
-        }
 
         InstitutionsStudentsSvc.postEnrolledStudent(data)
         .then(function(postResponse) {
@@ -956,7 +952,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 AlertSvc.warning($scope, 'There is an existing transfer record for this student.');
                 $window.location.href = postResponse.data.error.student_id.ruleTransferRequestExists;
             } else {
-                console.log(postResponse.data.error);
                 AlertSvc.error($scope, 'There is an error in adding student transfer request.');
             }
         }, function(error) {
