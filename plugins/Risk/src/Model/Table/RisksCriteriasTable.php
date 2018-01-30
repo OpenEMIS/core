@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Model\Table;
+namespace Risk\Model\Table;
 
 use ArrayObject;
 
@@ -17,12 +17,12 @@ class RisksCriteriasTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('indexes');
+        $this->table('risks');
         
         parent::initialize($config);
-        $this->belongsTo('Indexes', ['className' => 'Indexes.Risks', 'foreignKey' =>'index_id']);
+        $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'index_id']);
 
-        $this->hasMany('StudentIndexesCriterias', ['className' => 'Indexes.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentIndexesCriterias', ['className' => 'Risk.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -68,10 +68,10 @@ class RisksCriteriasTable extends ControllerActionTable
             $activeIndexId [] = $activeIndexes->index_id;
         }
 
-        return $query->contain('Indexes')
+        return $query->contain('Risks')
             ->where([
                 'criteria' => $options['criteria_key'],
-                $this->Indexes->aliasField('id') . ' IN ' => $activeIndexId
+                $this->Risks->aliasField('id') . ' IN ' => $activeIndexId
             ])
             ->all();
     }

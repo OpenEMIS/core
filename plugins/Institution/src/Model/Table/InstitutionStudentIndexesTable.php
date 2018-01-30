@@ -20,7 +20,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
-        $this->belongsTo('Indexes', ['className' => 'Indexes.Indexes', 'foreignKey' =>'index_id']);
+        $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'index_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' =>'student_id']);
 
@@ -298,7 +298,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $criteriaModel = 'Institution.Students';
         }
 
-        $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
+        $RisksCriterias = TableRegistry::get('Risk.RisksCriterias');
         $criteriaTable = TableRegistry::get($criteriaModel);
 
         // to get studentId
@@ -330,7 +330,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
             foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
                 // to get the indexes criteria to get the value on the student_indexes_criterias
-                $indexesCriteriaResults = $IndexesCriterias->find('ActiveIndexesCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
+                $indexesCriteriaResults = $RisksCriterias->find('ActiveIndexesCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
 
                 if (!$indexesCriteriaResults->isEmpty()) {
                     foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
@@ -516,7 +516,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
         // $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
-        $tableHeaders = $this->getMessage('Indexes.TableHeader');
+        $tableHeaders = $this->getMessage('Risk.TableHeader');
         array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
         $tableHeaders[] = __('References');
         $tableCells = [];
@@ -531,7 +531,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         if ($action == 'view') {
             $studentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
-                ->contain(['IndexesCriterias'])
+                ->contain(['RisksCriterias'])
                 ->where([
                     $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
                     $this->StudentIndexesCriterias->aliasField('value') . ' IS NOT NULL'

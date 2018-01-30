@@ -285,7 +285,7 @@ Plugin::load('Report', ['routes' => true, 'autoload' => true]);
 Plugin::load('Rubric', ['routes' => true, 'autoload' => true]);
 Plugin::load('Workflow', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomField', ['routes' => true, 'autoload' => true]);
-Plugin::load('Indexes', ['routes' => true, 'autoload' => true]);
+Plugin::load('Risk', ['routes' => true, 'autoload' => true]);
 Plugin::load('InstitutionCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StudentCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StaffCustomField', ['routes' => true, 'autoload' => true]);
