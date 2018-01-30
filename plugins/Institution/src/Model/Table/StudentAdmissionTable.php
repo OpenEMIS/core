@@ -98,6 +98,10 @@ class StudentAdmissionTable extends ControllerActionTable
                     'last' => true
                 ]
             ])
+            ->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+                'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+                'on' => 'create'
+            ])
             ->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
                 'rule' => ['compareStudentGenderWithInstitution'],
                 'on' => 'create'

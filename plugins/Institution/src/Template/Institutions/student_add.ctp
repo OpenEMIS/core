@@ -314,6 +314,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
                     </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_name">{{ error }}</p>
+                    </div>
                     <div ng-if="InstitutionStudentController.postResponse.error.student_id" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_id">{{ error }}</p>
                     </div>
@@ -335,6 +338,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string">
                     <label><?= __('Date Of Birth') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.date_of_birth" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input string">
                     <label><?= __('Gender') ?></label>

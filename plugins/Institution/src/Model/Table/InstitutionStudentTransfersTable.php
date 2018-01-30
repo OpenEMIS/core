@@ -131,8 +131,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             if ($Students->save($newStudentEntity)) {
                 // end previous student record (if not promoted/graduated status)
                 if ($previousStudentRecord->student_status_id == $statuses['CURRENT']) {
-                    $newEndDate = (new Date($entity->start_date))->modify('-1 day');
-                    $previousStudentRecord->end_date = $newEndDate;
+                    $previousStudentRecord->end_date = $entity->requested_date;
                     $previousStudentRecord->student_status_id = $statuses['TRANSFERRED'];
                     $Students->save($previousStudentRecord);
                 }
