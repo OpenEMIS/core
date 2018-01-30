@@ -15,8 +15,6 @@ use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
-use App\Model\Traits\MessagesTrait;
-
 class StudentAdmissionTable extends ControllerActionTable
 {
     // Workflow Steps - category
@@ -24,14 +22,19 @@ class StudentAdmissionTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    use MessagesTrait;
-
     private $workflowEvents = [
         [
             'value' => 'Workflow.onApprove',
             'text' => 'Approval of Student Admission',
             'description' => 'Performing this action will enroll the student into the institution.',
             'method' => 'OnApprove',
+            'unique' => true
+        ],
+        [
+            'value' => 'Workflow.onCancel',
+            'text' => 'Cancellation of Student Admission',
+            'description' => 'Performing this action will remove the student from the institution.',
+            'method' => 'onCancel',
             'unique' => true
         ]
     ];
@@ -139,6 +142,29 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->addInstitutionStudent($entity);
     }
 
+    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $entity = $this->get($id);
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+
+        $newStudentRecord = $Students->find()
+            ->where([
+                $Students->aliasField('institution_id') => $entity->institution_id,
+                $Students->aliasField('student_id') => $entity->student_id,
+                $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                $Students->aliasField('education_grade_id') => $entity->education_grade_id,
+                $Students->aliasField('student_status_id') => $statuses['CURRENT']
+            ])
+            ->first();
+
+        if (!empty($newStudentRecord)) {
+            // delete student record in the new institution
+            $Students->delete($newStudentRecord);
+        }
+    }
+
     public function addInstitutionStudent(Entity $entity)
     {
         $Students = TableRegistry::get('Institution.Students');
@@ -177,20 +203,16 @@ class StudentAdmissionTable extends ControllerActionTable
                 $educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
                 $educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
 
-                $doneStatus = self::DONE;
+                // get the first step in 'REJECTED' workflow statuses
                 $workflowEntity = $this->getWorkflow($this->registryAlias());
-                $workflowId = $workflowEntity->id;
+                $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'REJECTED');
+                ksort($statuses);
+                $rejectedStatusId = key($statuses);
+                $rejectedStatusEntity = $this->Statuses->get($rejectedStatusId);
 
-                // get closed step based on done category and system defined
-                $closedStepEntity = $this->Statuses->find()
-                    ->where([
-                        $this->Statuses->aliasField('workflow_id') => $workflowId,
-                        $this->Statuses->aliasField('category') => $doneStatus,
-                        $this->Statuses->aliasField('is_system_defined') => 1
-                    ])
-                    ->first();
-
-                if (!empty($closedStepEntity)) {
+                if (!empty($rejectedStatusEntity)) {
+                    $doneStatus = self::DONE;
                     $pendingAdmissions = $this->find()
                         ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
                             return $q->where(['category <> ' => $doneStatus]);
@@ -205,7 +227,7 @@ class StudentAdmissionTable extends ControllerActionTable
                         $prevStep = $entity->status_id;
 
                         // update status_id and assignee_id
-                        $entity->status_id = $closedStepEntity->id;
+                        $entity->status_id = $rejectedStatusEntity->id;
                         $this->autoAssignAssignee($entity);
 
                         if ($this->save($entity)) {
@@ -216,8 +238,8 @@ class StudentAdmissionTable extends ControllerActionTable
                             $transition = [
                                 'comment' => __('On Student Admission into another Institution'),
                                 'prev_workflow_step_name' => $prevStepEntity->name,
-                                'workflow_step_name' => $closedStepEntity->name,
-                                'workflow_action_name' => __('Administration - Close Record'),
+                                'workflow_step_name' => $rejectedStatusEntity->name,
+                                'workflow_action_name' => __('Administration - Reject Record'),
                                 'workflow_model_id' => $workflowEntity->workflow_model_id,
                                 'model_reference' => $entity->id,
                                 'created_user_id' => 1,
@@ -358,11 +380,12 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
         $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
         $this->field('institution_class_id', ['entity' => $entity]);
+        $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
         $this->setFieldOrder(['student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
     }
@@ -374,6 +397,25 @@ class StudentAdmissionTable extends ControllerActionTable
             $value = $entity->user->name_with_id;
         }
         return $value;
+    }
+
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $academicPeriodId = $entity->academic_period_id;
+            $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+            $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+            $attr['type'] = 'date';
+            $attr['date_options'] = [
+                'startDate' => $periodStartDate->format('d-m-Y'),
+                'endDate' => $periodEndDate->format('d-m-Y'),
+                'todayBtn' => false
+            ];
+            return $attr;
+        }
     }
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
@@ -431,17 +473,13 @@ class StudentAdmissionTable extends ControllerActionTable
             // creator must be admin or have 'Student Admission -> Execute' permission
             if ($superAdmin || $executePermission) {
                 $workflowEntity = $this->getWorkflow($this->registryAlias());
-                $workflowId = $workflowEntity->id;
 
-                // get approved step based on workflow id and event_key 'Workflow.onApprove'
-                $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
-                $approvedStatusEntity = $this->Statuses->find()
-                    ->innerJoin([$WorkflowActions->alias() => $WorkflowActions->table()], [
-                        $WorkflowActions->aliasField('event_key') => $this->workflowEvents[0]['value'],
-                        $WorkflowActions->aliasField('next_workflow_step_id = ') . $this->Statuses->aliasField('id')
-                    ])
-                    ->where([$this->Statuses->aliasField('workflow_id') => $workflowId])
-                    ->first();
+                // get the first step in 'APPROVED' workflow statuses
+                $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
+                ksort($statuses);
+                $approvedStatusId = key($statuses);
+                $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
 
                 if (!empty($approvedStatusEntity)) {
                     $prevStepEntity = $this->Statuses->get($entity->status_id);
