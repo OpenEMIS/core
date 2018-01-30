@@ -1853,11 +1853,11 @@ class ValidationBehavior extends Behavior
         $studentId = $data['student_id'];
         $institutionId = $data['institution_id'];
         $academicPeriodId = $data['academic_period_id'];
-        $educationGradeId = $data['education_grade_id'];
 
         $AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
         $doneStatus = $AdmissionTable::DONE;
 
+        // student can only have one pending admission record regardless of education grade
         $studentExist = $AdmissionTable->find()
             ->matching('Statuses', function ($q) use ($doneStatus) {
                 return $q->where(['Statuses.category <>' => $doneStatus]);
@@ -1865,8 +1865,7 @@ class ValidationBehavior extends Behavior
             ->where([
                 $AdmissionTable->aliasField('student_id') => $studentId,
                 $AdmissionTable->aliasField('institution_id') => $institutionId,
-                $AdmissionTable->aliasField('academic_period_id') => $academicPeriodId,
-                $AdmissionTable->aliasField('education_grade_id') => $educationGradeId,
+                $AdmissionTable->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->count();
 
