@@ -74,7 +74,7 @@ class IndexesTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $requestQuery = $this->request->query;
         $params = $this->paramsDecode($requestQuery['queryString']);
 
@@ -182,7 +182,7 @@ class IndexesTable extends ControllerActionTable
 
     public function onGetStatus(Event $event, Entity $entity)
     {
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $indexId = $entity->id;
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
 
