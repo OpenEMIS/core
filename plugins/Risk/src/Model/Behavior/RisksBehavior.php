@@ -12,10 +12,6 @@ use Cake\Validation\Validator;
 
 class RisksBehavior extends Behavior
 {
-    public function initialize(array $config)
-    {
-        $this->table('risks');
-    }
 
     public function implementedEvents()
     {
