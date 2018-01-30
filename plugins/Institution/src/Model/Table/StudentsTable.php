@@ -894,12 +894,16 @@ class StudentsTable extends ControllerActionTable
             switch ($code) {
                 case 'TRANSFERRED':
                     $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                    $approvedStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('APPROVED');
+
                     $transferReason = $StudentTransfersTable->find()
                         ->matching('StudentTransferReasons')
                         ->where([
+                            $StudentTransfersTable->aliasField('student_id') => $studentId,
                             $StudentTransfersTable->aliasField('previous_institution_id') => $institutionId,
                             $StudentTransfersTable->aliasField('previous_education_grade_id') => $educationGradeId,
-                            $StudentTransfersTable->aliasField('previous_academic_period_id') => $academicPeriodId
+                            $StudentTransfersTable->aliasField('previous_academic_period_id') => $academicPeriodId,
+                            $StudentTransfersTable->aliasField('status_id IN ') => $approvedStatuses
                         ])
                         ->first();
 
