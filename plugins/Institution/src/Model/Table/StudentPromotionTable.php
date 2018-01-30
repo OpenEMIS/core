@@ -612,7 +612,7 @@ class StudentPromotionTable extends AppTable
 
                     $pendingAdmissionStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'PENDING');
                     $pendingWithdrawStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
-                    $pendingTransferStatuses = $StudentTransfersTable->getPendingTransferWorkflowStatuses();
+                    $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
 
                     // check if students have any pending requests
                     foreach ($students as $key => $value) {

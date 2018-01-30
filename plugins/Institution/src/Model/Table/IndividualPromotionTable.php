@@ -94,7 +94,7 @@ class IndividualPromotionTable extends ControllerActionTable
         // check transfer requests
         $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
         $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
-        $pendingTransferStatuses = $StudentTransfersTable->getPendingTransferWorkflowStatuses();
+        $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
 
         $conditions = [
             'student_id' => $studentEntity->student_id,
