@@ -29,7 +29,7 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
         $this->addBehavior('ControllerAction.Image');
     }
 

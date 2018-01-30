@@ -20,7 +20,7 @@ class StudentIndexesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
-        $this->belongsTo('Indexes', ['className' => 'Indexes.Indexes', 'foreignKey' =>'index_id']);
+        $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'index_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' =>'student_id']);
 
@@ -34,15 +34,15 @@ class StudentIndexesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('average_index',['visible' => false]);
-        $this->field('student_id',['visible' => false]);
-        $this->field('total_index',['after' => 'index_id']);
+        $this->field('average_index', ['visible' => false]);
+        $this->field('student_id', ['visible' => false]);
+        $this->field('total_index', ['after' => 'index_id']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('generated_by',['visible' => false]);
-        $this->field('generated_on',['visible' => false]);
+        $this->field('generated_by', ['visible' => false]);
+        $this->field('generated_on', ['visible' => false]);
         $this->field('institution', ['after' => 'academic_period_id']);
 
         // element control
@@ -54,7 +54,7 @@ class StudentIndexesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
-            'name' => 'Indexes/controls',
+            'name' => 'Risks/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
@@ -166,7 +166,7 @@ class StudentIndexesTable extends ControllerActionTable
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         // from indexes table
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $indexId = $entity->index->id;
         $generatedById = $Indexes->get($indexId)->generated_by;
 
@@ -181,7 +181,7 @@ class StudentIndexesTable extends ControllerActionTable
     public function onGetGeneratedOn(Event $event, Entity $entity)
     {
         // from indexes table
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $indexId = $entity->index->id;
         $indexesGeneratedOn = $Indexes->get($indexId)->generated_on;
 
@@ -193,10 +193,10 @@ class StudentIndexesTable extends ControllerActionTable
         return $generatedOn;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
     {
         // $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
-        $tableHeaders = $this->getMessage('Indexes.TableHeader');
+        $tableHeaders = $this->getMessage('Risk.TableHeader');
         array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
         $tableHeaders[] = __('References');
         $tableCells = [];
@@ -211,7 +211,7 @@ class StudentIndexesTable extends ControllerActionTable
 
         if ($action == 'view') {
             $studentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
-                ->contain(['IndexesCriterias'])
+                ->contain(['RisksCriterias'])
                 ->where([
                     $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
                     $this->StudentIndexesCriterias->aliasField('value') . ' IS NOT NULL'
@@ -292,6 +292,6 @@ class StudentIndexesTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Indexes.Indexes/' . $fieldKey, ['attr' => $attr]);
+        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 }

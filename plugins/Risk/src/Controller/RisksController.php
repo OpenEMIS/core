@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Controller;
+namespace Risk\Controller;
 
 use ArrayObject;
 
@@ -21,7 +21,7 @@ class RisksController extends AppController
 
     public function Risks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Indexes.Risks']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Risk.Risks']);
     }
     // End
 

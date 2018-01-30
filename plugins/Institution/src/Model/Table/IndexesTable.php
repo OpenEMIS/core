@@ -22,7 +22,7 @@ class IndexesTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
 
-        $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RisksCriterias', ['className' => 'Risk.RisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionIndexes', ['className' => 'Institution.InstitutionIndexes', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('add', false);
@@ -129,15 +129,15 @@ class IndexesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
-        $this->field('generated_by',['visible' => false]);
-        $this->field('status',['visible' => false]);
-        $this->field('pid',['visible' => false]);
+        $this->field('generated_by', ['visible' => false]);
+        $this->field('status', ['visible' => false]);
+        $this->field('pid', ['visible' => false]);
     }
 
     public function onGetNumberOfRiskIndex(Event $event, Entity $entity)
     {
         $indexId = $entity->id;
-        $indexTotal = $this->IndexesCriterias->getTotalIndex($indexId);
+        $indexTotal = $this->RisksCriterias->getTotalIndex($indexId);
 
         return $indexTotal;
     }

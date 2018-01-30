@@ -564,7 +564,7 @@ class NavigationComponent extends Component
                 'Institutions.Risks.index' => [
                 'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.Indexes','Institutions.InstitutionStudentIndexes'],
+                'selected' => ['Institutions.Risks','Institutions.InstitutionStudentIndexes'],
                 'params' => ['plugin' => 'Institution'],
                 ],
 
@@ -1272,9 +1272,10 @@ class NavigationComponent extends Component
                 'Risks.Risks' => [
                     'title' => 'Risks', 
                     'parent' => 'SystemSetup',
-                    'params' => ['plugin' => 'Indexes'],
+                    'params' => ['plugin' => 'Risk'],
                     'selected' => ['Risks.Risks']
                 ],
+
             'Security' => [
                 'title' => 'Security',
                 'parent' => 'Administration',
