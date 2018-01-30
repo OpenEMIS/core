@@ -10,8 +10,8 @@ class StudentTransferReasonsTable extends ControllerActionTable
         $this->table('student_transfer_reasons');
         parent::initialize($config);
 
-        $this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'foreignKey' => 'student_transfer_reason_id']);
-        $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'foreignKey' => 'student_transfer_reason_id']);
+        $this->hasMany('StudentTransferOut', ['className' => 'Institution.StudentTransferOut', 'foreignKey' => 'student_transfer_reason_id']);
+        $this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'foreignKey' => 'student_transfer_reason_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Restful.RestfulAccessControl', [
