@@ -16,8 +16,8 @@ class UpdateIndexesShell extends Shell
         $this->loadModel('Institution.InstitutionStudentIndexes');
         $this->loadModel('Institution.InstitutionIndexes');
         $this->loadModel('Institution.StudentIndexesCriterias');
-        $this->loadModel('Indexes.IndexesCriterias');
-        $this->loadModel('Indexes.Indexes');
+        $this->loadModel('Risk.RisksCriterias');
+        $this->loadModel('Risk.Risks');
         $this->loadModel('Institution.Students');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
     }
@@ -29,11 +29,11 @@ class UpdateIndexesShell extends Shell
         $indexesId = !empty($this->args[2]) ? $this->args[2] : 0;
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
-        $indexesCriteriaData = $this->IndexesCriterias->getCriteriaKey($indexesId);
+        $indexesCriteriaData = $this->RisksCriterias->getCriteriaKey($indexesId);
 
         if (!empty($indexesCriteriaData)) {
             foreach ($indexesCriteriaData as $key => $obj) {
-                $criteriaData = $this->Indexes->getCriteriasDetails($key);
+                $criteriaData = $this->Risks->getCriteriasDetails($key);
 
                 // for cli-debug.log to see still updating
                 Log::write('debug', 'Criteria: '. $key);

@@ -846,7 +846,7 @@ class InstitutionStudentAbsencesTable extends AppTable
         $studentId = $params['student_id'];
         $academicPeriodId = $params['academic_period_id'];
 
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
         $academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
@@ -877,7 +877,7 @@ class InstitutionStudentAbsencesTable extends AppTable
 
     public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $dateFormat = $ConfigItems->value('date_format');
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
