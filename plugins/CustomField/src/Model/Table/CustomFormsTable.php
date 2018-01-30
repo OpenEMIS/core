@@ -195,7 +195,8 @@ class CustomFormsTable extends ControllerActionTable
                 'section' => $CustomFormsFields->aliasField('section'),
                 'id' => $CustomFormsFields->aliasField('id')
             ])
-            ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+            ->innerJoin(
+                [$CustomFields->alias() => $CustomFields->table()],
                 [
                     $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                 ]
