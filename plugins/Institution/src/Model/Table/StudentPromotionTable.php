@@ -637,7 +637,7 @@ class StudentPromotionTable extends AppTable
                             'status_id IN ' => $pendingTransferStatuses,
                             'previous_education_grade_id' => $value->education_grade_id,
                             'previous_institution_id' => $value->institution_id,
-                            'academic_period_id' => $value->academic_period_id
+                            'previous_academic_period_id' => $value->academic_period_id
                         ];
                         $transferCount = $StudentTransfersTable->find()
                             ->where($conditions)

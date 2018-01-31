@@ -312,7 +312,7 @@ class StudentCascadeDeleteBehavior extends Behavior {
         $studentTransferData = $StudentTransfers->find()
             ->where([
                 $StudentTransfers->aliasField('previous_institution_id') => $entity->institution_id,
-                $StudentTransfers->aliasField('academic_period_id') => $entity->academic_period_id,
+                $StudentTransfers->aliasField('previous_academic_period_id') => $entity->academic_period_id,
                 $StudentTransfers->aliasField('previous_education_grade_id') => $entity->education_grade_id,
                 $StudentTransfers->aliasField('student_id') => $entity->student_id
             ])
