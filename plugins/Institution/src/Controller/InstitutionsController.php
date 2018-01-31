@@ -367,7 +367,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferOut']);
     }
-<<<<<<< HEAD
     public function StudentAdmission()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
@@ -384,8 +383,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransfer']);
     }
-=======
->>>>>>> c08f8b264367a9ae5f6a197503dcd30335df3693
     public function WithdrawRequests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.WithdrawRequests']);

@@ -119,11 +119,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
             $conditions = [
                 'student_id' => $studentEntity->student_id,
-<<<<<<< HEAD
                 'status_id IN ' => $pendingWithdrawStatus,
-=======
-                'status_id IN' => $pendingStatus,
->>>>>>> c08f8b264367a9ae5f6a197503dcd30335df3693
                 'education_grade_id' => $studentEntity->education_grade_id,
                 'institution_id' => $studentEntity->institution_id,
                 'academic_period_id' => $studentEntity->academic_period_id,
