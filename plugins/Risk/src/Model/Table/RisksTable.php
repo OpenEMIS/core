@@ -107,7 +107,7 @@ class RisksTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('indexes');
+        $this->table('risks');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
