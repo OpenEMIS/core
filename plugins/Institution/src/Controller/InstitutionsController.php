@@ -147,7 +147,6 @@ class InstitutionsController extends AppController
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
-            'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
             'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
@@ -368,6 +367,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferOut']);
     }
+<<<<<<< HEAD
     public function StudentAdmission()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
@@ -384,6 +384,8 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransfer']);
     }
+=======
+>>>>>>> c08f8b264367a9ae5f6a197503dcd30335df3693
     public function WithdrawRequests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.WithdrawRequests']);
@@ -391,6 +393,10 @@ class InstitutionsController extends AppController
     public function StudentWithdraw()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentWithdraw']);
+    }
+    public function StudentAbsences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsences']);
     }
     // End
 

@@ -318,7 +318,7 @@ class InstitutionClassStudentsTable extends AppTable
                     ]);
 
                 if ($myClassesPermission && !$mySubjectsPermission) {
-                        $query->where(['InstitutionClasses.staff_id' => $staffId]);
+                    $query->where(['InstitutionClasses.staff_id' => $staffId]);
                 } else {
                     $query
                         ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
@@ -355,6 +355,13 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        if ($entity->isNew()) { 
+            $id = $entity->institution_class_id;
+            $countMale = $this->getMaleCountByClass($id);
+            $countFemale = $this->getFemaleCountByClass($id);
+            $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+        }
+
         $listeners = [
             TableRegistry::get('Institution.InstitutionSubjectStudents')
         ];
@@ -391,7 +398,7 @@ class InstitutionClassStudentsTable extends AppTable
         if (!$allSubjectsPermission && !$mySubjectsPermission) {
             $printedResult = __('No Access');
             $renderResult = false;
-        } else if (!$allSubjectsPermission && $mySubjectsPermission) {
+        } elseif (!$allSubjectsPermission && $mySubjectsPermission) {
             $classId = $entity->institution_class_id;
 
             if ($this->lastQueriedClass != $classId) {
@@ -546,6 +553,11 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
+        $id = $entity->institution_class_id;
+        $countMale = $this->getMaleCountByClass($id);
+        $countFemale = $this->getFemaleCountByClass($id);
+        $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+
         $listeners = [
             TableRegistry::get('Institution.InstitutionCompetencyResults'),
             TableRegistry::get('Institution.InstitutionSubjectStudents')
@@ -558,9 +570,12 @@ class InstitutionClassStudentsTable extends AppTable
         $institutionSubjectId = $options['institution_subject_id'];
         $educationGradeId = $options['education_grade_id'];
         $academicPeriodId = $options['academic_period_id'];
-        $institutionClassIds = $options['institution_class_ids'];
+        // POCOR-4371 to encode the array of ids as comma separated values in restfulv2component is not support, will throw error
+        // $institutionClassIds = $options['institution_class_ids'];
+        $institutionClassIds = explode(',', $this->urlsafeB64Decode($options['institution_class_ids']));
 
         return $query
+            ->contain('InstitutionClasses')
             ->matching('Users.Genders')
             ->matching('StudentStatuses')
             ->leftJoinWith('SubjectStudents', function ($q) use ($institutionSubjectId, $academicPeriodId) {
@@ -596,8 +611,10 @@ class InstitutionClassStudentsTable extends AppTable
                         'academic_period_id' => $result->academic_period_id,
                         'institution_id' => $result->institution_id,
                         'student_status_id' => $result->student_status_id,
+                        'institution_class' => $result->institution_class->name
                     ];
                 }
+
                 return $resultArr;
             });
     }
@@ -718,7 +735,8 @@ class InstitutionClassStudentsTable extends AppTable
             ])
             ->matching('Users')
             ->contain('StudentStatuses')
-            ->leftJoin([$StudentReportCards->alias() => $StudentReportCards->table()],
+            ->leftJoin(
+                [$StudentReportCards->alias() => $StudentReportCards->table()],
                 [
                     $StudentReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $StudentReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -744,11 +762,9 @@ class InstitutionClassStudentsTable extends AppTable
 
         if ($type == 'PRINCIPAL') {
             $query->select(['comments' => $StudentReportCards->aliasfield('principal_comments')]);
-
-        } else if ($type == 'HOMEROOM_TEACHER') {
+        } elseif ($type == 'HOMEROOM_TEACHER') {
             $query->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')]);
-
-        } else if ($type == 'TEACHER') {
+        } elseif ($type == 'TEACHER') {
             $ReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
             $SubjectStudents = $this->SubjectStudents;
             $Staff = $ReportCardsComments->Staff;
