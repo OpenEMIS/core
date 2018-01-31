@@ -499,7 +499,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
                 $attr['options'] = $templateOptions;
-                $attr['default'] = $selectedPeriod;
                 $attr['onChangeReload'] = 'changeAssessmentID';
             } else {
                 $attr['type'] = 'readonly';
