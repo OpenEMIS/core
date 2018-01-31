@@ -1,3 +1,7 @@
+### [3.17.0] - 2018-01-26
+- The system now allow multiple classes to share the same subject
+- A new Student Attendances workflow rule (Absentee Intervention) has been added
+
 ### [3.16.0] - 2018-01-19
 - Implemented customisable workflow for Student Dropouts
 - Renamed Indexes to Risks

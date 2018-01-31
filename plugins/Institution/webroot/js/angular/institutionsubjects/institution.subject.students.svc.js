@@ -13,6 +13,7 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
         translate: translate,
         getTeacherOptions: getTeacherOptions,
         getRoomsOptions: getRoomsOptions,
+        getClassOptions: getClassOptions,
         saveInstitutionSubject: saveInstitutionSubject
     };
 
@@ -21,7 +22,8 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
         Users: 'User.Users',
         Rooms: 'Institution.InstitutionRooms',
         InstitutionSubjects: 'Institution.InstitutionSubjects',
-        InstitutionClassStudents: 'Institution.InstitutionClassStudents'
+        InstitutionClassStudents: 'Institution.InstitutionClassStudents',
+        InstitutionClasses: 'Institution.InstitutionClasses'
     };
 
     return service;
@@ -55,11 +57,18 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
+
+        var encode = function(textStr) {
+            let encoded = encodeURI(btoa(textStr)).replace(/=/gi, "");
+            return encoded;
+        }
+
         return InstitutionClassStudents.find('unassignedSubjectStudents', {
                 institution_subject_id: institutionSubjectId,
                 academic_period_id: academicPeriodId,
                 education_grade_id: educationGradeId,
-                institution_class_ids: institutionClassIds
+                // POCOR-4371 to encode the array of ids as comma separated values in restfulv2component is not support, will throw error
+                institution_class_ids: encode(institutionClassIds)
             }).ajax({success: success, defer: true});
     }
 
@@ -75,6 +84,19 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
             deferred.resolve(response.data.data);
         };
         return Rooms.find('subjectRoomOptions', {academic_period_id: academicPeriodId, institution_subject_id: institutionSubjectId}).ajax({success: success, defer: true});
+    }
+
+    function getClassOptions(institutionId, academicPeriodId, educationGradeId, institutionSubjectId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+
+        return InstitutionClasses.find('subjectClassOptions', {
+            institution_id: institutionId,
+            academic_period_id: academicPeriodId,
+            grade_id: educationGradeId,
+            institution_subject_id: institutionSubjectId
+        }).ajax({success: success, defer: true});
     }
 
     function saveInstitutionSubject(data) {
