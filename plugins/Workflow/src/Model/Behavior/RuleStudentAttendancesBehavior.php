@@ -5,19 +5,27 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Workflow\Model\Behavior\RuleBehavior;
 
-class RuleStaffBehavioursBehavior extends RuleBehavior
+class RuleStudentAttendancesBehavior extends RuleBehavior
 {
     protected $_defaultConfig = [
-        'feature' => 'StaffBehaviours',
+        'feature' => 'StudentAttendances',
         'rule' => [
-            'behaviour_classification_id' => [
+            'absence_type_id' => [
                 'type' => 'select',
                 'after' => 'workflow_id',
-                'lookupModel' => 'Student.BehaviourClassifications',
+                'lookupModel' => 'Institution.AbsenceTypes',
+                'attr' => [
+                    'required' => true
+                ]
+            ],
+            'days_absent' => [
+                'type' => 'string',
+                'after' => 'absence_type_id',
                 'attr' => [
                     'required' => true
                 ]
@@ -36,13 +44,30 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
                 $validator = $model->validator();
-                $validator->add('behaviour_classification_id', 'notBlank', ['rule' => 'notBlank']);
-                $validator->requirePresence('behaviour_classification_id');
+                $validator->add('absence_type_id', 'notBlank', ['rule' => 'notBlank']);
+                $validator->requirePresence('absence_type_id');
+                $validator->add('days_absent', 'notBlank', ['rule' => 'notBlank']);
+                $validator->requirePresence('days_absent');
+                $validator->add('days_absent', 'notWholeNumber', [
+                    'rule' => ['naturalNumber', false],
+                    'message' => __('Please enter a valid number more than 0.')
+                ]);
             }
         }
     }
 
-    public function onGetStaffBehavioursRule(Event $event, Entity $entity)
+    public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $lookupModel = $this->config('rule.absence_type_id.lookupModel');
+            $modelTable = TableRegistry::get($lookupModel);
+            $lateId = $modelTable->findByCode('LATE')->extract('id')->first();
+            unset($attr['options'][$lateId]);
+            return $attr;
+        }
+    }
+
+    public function onGetStudentAttendancesRule(Event $event, Entity $entity)
     {
         $model = $this->_table;
         if ($model->action == 'index' && $entity->has('rule')) {
@@ -69,8 +94,9 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
                         } catch (\Exception $e) {
                             Log::write('debug', $e->getMessage());
                         }
+                    } else {
+                        $value .= $fieldValue;
                     }
-
                     $list[] = $value;
                 }
             }
