@@ -59,7 +59,7 @@ class WithdrawRequestsTable extends ControllerActionTable
             'status_id IN ' => $pendingTransferStatuses,
             'previous_education_grade_id' => $entity->education_grade_id,
             'previous_institution_id' => $entity->institution_id,
-            'academic_period_id' => $entity->academic_period_id
+            'previous_academic_period_id' => $entity->academic_period_id
         ];
 
         $count = $StudentTransfersTable->find()
