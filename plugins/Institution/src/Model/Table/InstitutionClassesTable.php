@@ -76,7 +76,9 @@ class InstitutionClassesTable extends ControllerActionTable
             'StudentCompetencies' => ['view'],
             'StudentCompetencyComments' => ['view'],
             'OpenEMIS_Classroom' => ['index', 'view'],
-            'StudentOutcomes' => ['view']
+            'StudentOutcomes' => ['view'],
+            'SubjectStudents' => ['index'],
+            'Results'=> ['index']
         ]);
 
         // POCOR-4047 to get staff profile data
@@ -218,7 +220,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('multigrade');
 
         $this->setFieldOrder([
-            'name', 'staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects',
+            'name','staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
     }
 
@@ -276,16 +278,6 @@ class InstitutionClassesTable extends ControllerActionTable
                     ])
                     ->toArray();
 
-                $maleTotal = 0;
-                $femaleTotal = 0;
-                foreach ($newStudents as $key => $student) {
-                    if ($student['gender_id'] == 1) {
-                        $maleTotal++;
-                    } else {
-                        $femaleTotal++;
-                    }
-                }
-
                 foreach ($existingStudents as $key => $classStudentEntity) {
                     if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
                         $this->ClassStudents->delete($classStudentEntity);
@@ -298,18 +290,16 @@ class InstitutionClassesTable extends ControllerActionTable
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $this->ClassStudents->save($newClassStudentEntity);
                 }
-
-                $this->updateAll(['total_male_students' => $maleTotal, 'total_female_students' => $femaleTotal], ['id' => $entity->id]);
             }
         }
     }
 
 
-/******************************************************************************************************************
-**
-** delete action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** delete action methods
+    **
+    ******************************************************************************************************************/
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         // only show the student and the subject of the class.
@@ -343,11 +333,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** index action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** index action methods
+    **
+    ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $query = $this->request->query;
@@ -424,10 +414,6 @@ class InstitutionClassesTable extends ControllerActionTable
             'options' => [],
             'order' => 3
         ];
-
-        $this->setFieldOrder([
-            'staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
-        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -443,9 +429,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'name',
                 'class_number',
                 'staff_id',
+                'secondary_staff_id',
                 'total_male_students',
                 'total_female_students',
-                'secondary_staff_id',
                 'institution_shift_id',
                 'institution_id',
                 'academic_period_id',
@@ -475,6 +461,26 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
+
+    public function findHomeOrSecondary(Query $query, array $options)
+    {
+
+        if (isset($options['class_id']) && isset($options['staff_id'])) {
+            $classId = $options['class_id'];
+            $staffId = $options['staff_id'];
+            $query
+                ->where([
+                    $this->aliasField('id') => $classId,
+                    'OR' => [
+                        [$this->aliasField('staff_id') => $staffId], 
+                        [$this->aliasField('secondary_staff_id') => $staffId]
+                    ],
+                 ]);
+            
+            return $query;
+        }   
+
+    }
     public function findTranslateItem(Query $query, array $options)
     {
         return $query
@@ -544,11 +550,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** view action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** view action methods
+    **
+    ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($extra['selectedAcademicPeriodId'] == -1) {
@@ -613,7 +619,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (!empty($extra['sort'])) {
             if ($extra['sort'] == 'name') {
                 $sortConditions = 'Users.first_name ' .  $extra['direction'];
-            } else if ($extra['sort'] == 'openemis_no') {
+            } elseif ($extra['sort'] == 'openemis_no') {
                 $sortConditions = 'Users.openemis_no ' .  $extra['direction'];
             }
         }
@@ -778,11 +784,11 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** add action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** add action methods
+    **
+    ******************************************************************************************************************/
     // selected grade_type behavior's addBeforeAction will be called later
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -855,11 +861,11 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->controller->set('selectedAction', $extra['selectedGradeType']);
     }
 
-/******************************************************************************************************************
-**
-** field specific methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** field specific methods
+    **
+    ******************************************************************************************************************/
     public function onGetInstitutionShiftId(Event $event, Entity $entity)
     {
         if ($entity->institution_shift->institution_id != $entity->institution_id) { //if the current institution is not the owner of the shift.
@@ -941,11 +947,11 @@ class InstitutionClassesTable extends ControllerActionTable
             return __('No');
         }
     }
-/******************************************************************************************************************
-**
-** essential functions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** essential functions
+    **
+    ******************************************************************************************************************/
     public function getClassGradeOptions($institutionClassId)
     {
         $Grade = $this->ClassGrades;
@@ -1233,7 +1239,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'InstitutionClasses.institution_id' => $institutionId
             ]);
             if ($gradeId != false) {
-                $query->join([
+                $query->join(
+                    [
                         [
                             'table' => 'institution_class_grades',
                             'alias' => 'InstitutionClassGrades',
@@ -1250,6 +1257,42 @@ class InstitutionClassesTable extends ControllerActionTable
             // incomplete data return nothing
             $query->where([$this->aliasField('id') => -1]);
         }
+
+        return $query;
+    }
+
+    public function findSubjectClassOptions(Query $query, array $options)
+    {
+        $institutionId = array_key_exists('institution_id', $options)? $options['institution_id']: null;
+        $academicPeriodId = array_key_exists('academic_period_id', $options)? $options['academic_period_id']: null;
+        $gradeId = array_key_exists('grade_id', $options)? $options['grade_id']: null;
+        $institutionSubjectId = array_key_exists('institution_subject_id', $options)? $options['institution_subject_id']: null;
+
+        if (!is_null($academicPeriodId) && !is_null($institutionId) && !is_null($gradeId)) {
+            $query
+                ->select(['InstitutionClasses.id', 'InstitutionClasses.name'])
+                ->where([
+                    'InstitutionClasses.academic_period_id' => $academicPeriodId,
+                    'InstitutionClasses.institution_id' => $institutionId
+                ])
+                ->join(
+                    [
+                        [
+                            'table' => 'institution_class_grades',
+                            'alias' => 'InstitutionClassGrades',
+                            'conditions' => [
+                                'InstitutionClassGrades.institution_class_id = InstitutionClasses.id',
+                                'InstitutionClassGrades.education_grade_id = ' . $gradeId
+                            ]
+                        ]
+                    ]
+                )
+                ->group(['InstitutionClasses.id']);
+        } else {
+            // incomplete data return nothing
+            $query->where([$this->aliasField('id') => -1]);
+        }
+
         return $query;
     }
 
