@@ -395,35 +395,39 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        // get the data between requested date and today date (if its back date)
-        $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+        if (empty($entity->errors())) {
+            // get the data between requested date and today date (if its back date)
+            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
 
-        if (!empty($dataBetweenDate)) {
-            // redirect if have student data between date
-            $url = $this->url('associated');
-            $session = $this->Session;
-            $session->write($this->registryAlias().'.associated', $entity);
-            $session->write($this->registryAlias().'.associatedData', $dataBetweenDate);
-            $session->write($this->registryAlias().'.referralAction', $this->action);
-            $event->stopPropagation();
-            return $this->controller->redirect($url);
+            if (!empty($dataBetweenDate)) {
+                // redirect if have student data between date
+                $url = $this->url('associated');
+                $session = $this->Session;
+                $session->write($this->registryAlias().'.associated', $entity);
+                $session->write($this->registryAlias().'.associatedData', $dataBetweenDate);
+                $session->write($this->registryAlias().'.referralAction', $this->action);
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
         }
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        // get the data between requested date and today date (if its back date)
-        $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+        if (empty($entity->errors())) {
+            // get the data between requested date and today date (if its back date)
+            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
 
-        if (!empty($dataBetweenDate)) {
-            // redirect if have student data between date
-            $url = $this->url('associated');
-            $session = $this->Session;
-            $session->write($this->registryAlias().'.associated', $entity);
-            $session->write($this->registryAlias().'.associatedData', $dataBetweenDate);
-            $session->write($this->registryAlias().'.referralAction', $this->action);
-            $event->stopPropagation();
-            return $this->controller->redirect($url);
+            if (!empty($dataBetweenDate)) {
+                // redirect if have student data between date
+                $url = $this->url('associated');
+                $session = $this->Session;
+                $session->write($this->registryAlias().'.associated', $entity);
+                $session->write($this->registryAlias().'.associatedData', $dataBetweenDate);
+                $session->write($this->registryAlias().'.referralAction', $this->action);
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
         }
     }
 
