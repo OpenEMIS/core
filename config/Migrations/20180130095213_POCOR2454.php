@@ -1602,6 +1602,73 @@ class POCOR2454 extends AbstractMigration
             ]
         ];
         $this->insert('workflow_statuses_steps', $workflowStatusesStepsData);
+
+        // security_functions
+        $studentAdmissionSql = "UPDATE security_functions
+                                SET `name` = 'Student Admission',
+                                `_view` = 'StudentAdmission.index|StudentAdmission.view',
+                                `_edit` = 'StudentAdmission.edit',
+                                `_add` = null,
+                                `_delete` = 'StudentAdmission.remove',
+                                `_execute` = 'StudentAdmission.execute'
+                                WHERE `id` = 1028";
+
+        $studentTransferInSql = "UPDATE security_functions
+                                SET `name` = 'Student Transfer In',
+                                `_view` = 'StudentTransferIn.index|StudentTransferIn.view|StudentTransferIn.approve',
+                                `_edit` = 'StudentTransferIn.edit',
+                                `_add` = null,
+                                `_delete` = 'StudentTransferIn.remove',
+                                `_execute` = null
+                                WHERE `id` = 1022";
+
+        $studentTransferOutSql = "UPDATE security_functions
+                                SET `name` = 'Student Transfer Out',
+                                `_view` = 'StudentTransferOut.index|StudentTransferOut.view|StudentTransferOut.approve|StudentTransferOut.associated',
+                                `_edit` = 'StudentTransferOut.edit',
+                                `_add` = 'StudentTransferOut.add',
+                                `_delete` = 'StudentTransferOut.remove',
+                                `_execute` = 'Transfer.add'
+                                WHERE `id` = 1023";
+
+        $this->execute($studentAdmissionSql);
+        $this->execute($studentTransferInSql);
+        $this->execute($studentTransferOutSql);
+
+        // locale_contents
+        $localeContent = [
+            [
+                'en' => 'Student Transfer In',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Student Transfer Out',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Previous Institution',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Current Institution',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'New Institution',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Previous Education Grade',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ]
+        ];
+        $this->insert('locale_contents', $localeContent);
     }
 
     // rollback
@@ -1620,6 +1687,38 @@ class POCOR2454 extends AbstractMigration
         foreach ($workflowModelsToDelete as $modelId) {
             $this->cascadeDeleteWorkflowModel($modelId);
         }
+
+        // revert security_functions
+        $studentAdmissionSql = "UPDATE security_functions
+                                SET `name` = 'Student Admission',
+                                `_view` = 'StudentAdmission.index|StudentAdmission.view',
+                                `_edit` = null,
+                                `_add` = null,
+                                `_delete` = null,
+                                `_execute` = 'StudentAdmission.edit|StudentAdmission.view|StudentAdmission.execute'
+                                WHERE `id` = 1028";
+
+        $studentTransferInSql = "UPDATE security_functions
+                                SET `name` = 'Transfer Request',
+                                `_view` = 'TransferRequests.index|TransferRequests.view',
+                                `_edit` = null,
+                                `_add` = null,
+                                `_delete` = 'TransferRequests.remove',
+                                `_execute` = 'TransferRequests.add|TransferRequests.edit|Transfer.add'
+                                WHERE `id` = 1022";
+
+        $studentTransferOutSql = "UPDATE security_functions
+                                SET `name` = 'Transfer Approval',
+                                `_view` = 'TransferApprovals.view',
+                                `_edit` = null,
+                                `_add` = null,
+                                `_delete` = null,
+                                `_execute` = 'TransferApprovals.edit|TransferApprovals.view'
+                                WHERE `id` = 1023";
+
+        $this->execute($studentAdmissionSql);
+        $this->execute($studentTransferInSql);
+        $this->execute($studentTransferOutSql);
     }
 
     public function cascadeDeleteWorkflowModel($workflowModelId)
