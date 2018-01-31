@@ -187,7 +187,7 @@ class GuardiansTable extends ControllerActionTable
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-        } else if ($action == 'index') {
+        } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
         return $attr;
@@ -225,8 +225,12 @@ class GuardiansTable extends ControllerActionTable
 
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
             // only search for guardian
-            $query = $this->Users->find()
+            $query = $this->Users
+                ->find()
                 ->select([
                     $this->Users->aliasField('openemis_no'),
                     $this->Users->aliasField('first_name'),
@@ -236,11 +240,21 @@ class GuardiansTable extends ControllerActionTable
                     $this->Users->aliasField('preferred_name'),
                     $this->Users->aliasField('id')
                 ])
-                ->where([$this->Users->aliasField('is_guardian') => 1])->limit(100);
+                ->leftJoin(
+                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Users->aliasField('id')
+                    ]
+                )
+                ->where([
+                    $this->Users->aliasField('is_guardian') => 1
+                ])
+                ->limit(100);
 
             $term = trim($term);
+
             if (!empty($term)) {
-                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
+                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
             }
 
             $list = $query->all();
