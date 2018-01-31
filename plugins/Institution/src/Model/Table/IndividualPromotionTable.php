@@ -101,7 +101,7 @@ class IndividualPromotionTable extends ControllerActionTable
             'status_id IN ' => $pendingTransferStatuses,
             'previous_education_grade_id' => $studentEntity->education_grade_id,
             'previous_institution_id' => $studentEntity->institution_id,
-            'academic_period_id' => $studentEntity->academic_period_id
+            'previous_academic_period_id' => $studentEntity->academic_period_id
         ];
 
         $transferCount = $StudentTransfersTable->find()
