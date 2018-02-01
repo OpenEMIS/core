@@ -904,7 +904,7 @@ class InstitutionsController extends AppController
             } else {
                 $session->delete('Institution.Institutions.id');
             }
-        } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'view' && isset($this->request->pass[1])) {
+        } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']) && isset($this->request->pass[1])) {
             $this->request->params['institutionId'] = $this->request->pass[1];
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
