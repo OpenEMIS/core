@@ -157,15 +157,11 @@ class CourseCatalogueTable extends ControllerActionTable
                 )
                 ->where([
                     'OR' => [
+                        // showing the course based on position title or target population indicates is for all
                         [$TargetPopulationTable->aliasField('target_population_id') => $positionTitle],
                         [$TargetPopulationTable->aliasField('target_population_id') => -1]
                     ]
                 ]);
-
-        // only show courses where user is in target population
-            // $query
-            //     ->matching('TargetPopulations')
-            //     ->where(['TargetPopulations.id' => $positionTitle]);
         } else {
             // To return no results
             $query->where(['1 = 0']);
