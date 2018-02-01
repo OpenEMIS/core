@@ -53,9 +53,9 @@ class POCOR4372 extends AbstractMigration
         $institutionStudentRisks->renameColumn('index_id', 'risk_id');
         $institutionStudentRisks
             ->changeColumn('risk_id', 'integer', [
-                'limit'=>11,
-                'null' =>false,
-                'comment'=>'links to risks.id'
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to risks.id'
             ])
             ->save();
         //end
@@ -65,12 +65,17 @@ class POCOR4372 extends AbstractMigration
         $studentRisksCriterias->rename('student_risks_criterias');
 
         $studentRisksCriterias->renameColumn('indexes_criteria_id', 'risk_criteria_id');
+        $studentRisksCriterias->renameColumn('institution_student_index_id', 'institution_student_risk_id');
         $studentRisksCriterias
             ->changeColumn('risk_criteria_id', 'integer', [
-                'limit'=>11,
+                'limit' => 11,
                 'null' => false,
-                'comment'=>'links to indexes_criterias.id'
+                'comment' => 'links to indexes_criterias.id'
             ])
+            ->changeColumn('institution_student_risk_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to institution_student_risks.id'])
             ->save();
         //end
 
@@ -124,6 +129,7 @@ class POCOR4372 extends AbstractMigration
         $studentRisksCriterias = $this->table('student_risks_criterias');
         $studentRisksCriterias->rename('student_indexes_criterias');
         $studentRisksCriterias->renameColumn('risk_criteria_id', 'indexes_criteria_id');
+        $studentRisksCriterias->renameColumn('institution_student_risk_id', 'institution_student_index_id');
         // end
 
         // revert permission from indexes to risks
