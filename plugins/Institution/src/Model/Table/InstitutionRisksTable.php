@@ -16,7 +16,7 @@ class InstitutionRisksTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('Risks', ['className' => 'Institution.Risks', 'foreignKey' =>'risk_id']);
+        $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
     }
 
