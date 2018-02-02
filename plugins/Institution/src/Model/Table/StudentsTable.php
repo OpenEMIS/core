@@ -1007,14 +1007,14 @@ class StudentsTable extends ControllerActionTable
                         ->first();
 
                     $comment = '';
-                    $withdrawStatus = '';
+                    $studentWithdrawReason = '';
                     if (!empty($withdrawReason)) {
                         $comment = $withdrawReason->comment;
-                        $withdrawStatus = $withdrawReason->_matchingData['StudentWithdrawReasons']->name;
+                        $studentWithdrawReason = $withdrawReason->_matchingData['StudentWithdrawReasons']->name;
                     }
 
                     $entity->comment = $comment;
-                    return $withdrawStatus;
+                    return $studentWithdrawReason;
                     break;
             }
         }
