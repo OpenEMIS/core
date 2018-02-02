@@ -13,7 +13,7 @@ use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
 
-class IndexesTable extends ControllerActionTable
+class RisksTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -22,8 +22,8 @@ class IndexesTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
 
-        $this->hasMany('RisksCriterias', ['className' => 'Risk.RisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionIndexes', ['className' => 'Institution.InstitutionIndexes', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RiskCriterias', ['className' => 'Risk.RiskCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRisks', ['className' => 'Institution.InstitutionRisks', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -56,7 +56,7 @@ class IndexesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
-            'name' => 'Indexes/controls',
+            'name' => 'Risks/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
@@ -74,18 +74,18 @@ class IndexesTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
-        $Indexes = TableRegistry::get('Risk.Risks');
+        $Risks = TableRegistry::get('Risk.Risks');
         $requestQuery = $this->request->query;
         $params = $this->paramsDecode($requestQuery['queryString']);
 
         $institutionId = $params['institution_id'];
         $userId = $params['user_id'];
-        $indexId = $params['index_id'];
+        $riskd = $params['risk_id'];
         $academicPeriodId = $params['academic_period_id'];
 
         // update indexes pid and status
         $pid = getmypid();
-        $record = $this->getInstitutionIndexesRecords($indexId, $institutionId)->first();
+        $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
         // if processing id not null (process still running or process stuck)
         if (!empty($record->pid)) {
@@ -94,32 +94,32 @@ class IndexesTable extends ControllerActionTable
 
         if (!empty($record)) {
             // update the status to processing
-            $this->InstitutionIndexes->updateAll([
+            $this->InstitutionRisks->updateAll([
                 'pid' => $pid,
                 'status' => 2 // processing
             ],
             ['id' => $record->id]);
         } else {
-            $entity = $this->InstitutionIndexes->newEntity([
+            $entity = $this->InstitutionRisks->newEntity([
                 'status' => 2, // processing
                 'pid' => $pid,
                 'generated_on' => NULL,
                 'generated_by' => NULL,
-                'index_id' => $indexId,
+                'risk_id' => $riskId,
                 'institution_id' => $institutionId,
             ]);
-            $this->InstitutionIndexes->save($entity);
+            $this->InstitutionRisks->save($entity);
         }
 
         // trigger shell
-        $Indexes->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId, $academicPeriodId);
+        $Risks->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $riskId, $academicPeriodId);
 
         // redirect to index page
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'Indexes',
-            'index',
+            'action' => 'Risks',
+            'risk',
             'academic_period_id' => $params['academic_period_id']
         ];
 
@@ -136,23 +136,23 @@ class IndexesTable extends ControllerActionTable
 
     public function onGetNumberOfRiskIndex(Event $event, Entity $entity)
     {
-        $indexId = $entity->id;
-        $indexTotal = $this->RisksCriterias->getTotalIndex($indexId);
+        $riskId = $entity->id;
+        $riskTotal = $this->RiskCriterias->getTotalRisk($riskId);
 
-        return $indexTotal;
+        return $riskTotal;
     }
 
-    public function getInstitutionIndexesRecords($indexId, $institutionId)
+    public function getInstitutionIndexesRecords($riskId, $institutionId)
     {
-        return $this->InstitutionIndexes->find('Record', ['index_id' => $indexId, 'institution_id' => $institutionId]);
+        return $this->InstitutionRisks->find('Record', ['risk_id' => $riskId, 'institution_id' => $institutionId]);
     }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
-        $indexId = $entity->id;
+        $riskId = $entity->id;
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
 
-        $record = $this->getInstitutionIndexesRecords($indexId, $institutionId)->first();
+        $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
         $userName = '';
         if (isset($record->generated_by)) {
@@ -167,10 +167,10 @@ class IndexesTable extends ControllerActionTable
 
     public function onGetGeneratedOn(Event $event, Entity $entity)
     {
-        $indexId = $entity->id;
+        $riskId = $entity->id;
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
 
-        $record = $this->getInstitutionIndexesRecords($indexId, $institutionId)->first();
+        $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
         $generatedOn = '';
         if (isset($record->generated_on)) {
@@ -183,10 +183,10 @@ class IndexesTable extends ControllerActionTable
     public function onGetStatus(Event $event, Entity $entity)
     {
         $Indexes = TableRegistry::get('Risk.Risks');
-        $indexId = $entity->id;
+        $riskId = $entity->id;
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
 
-        $record = $this->getInstitutionIndexesRecords($indexId, $institutionId)->first();
+        $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
         $statusId = isset($record['status']) ? $record['status']: 1; // 1 = not generated
         return $Indexes->getIndexesStatus($statusId);
@@ -198,7 +198,7 @@ class IndexesTable extends ControllerActionTable
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $userId = $session->read('Auth.User.id');
-        $indexId = $entity->id;
+        $riskId = $entity->id;
 
         if (array_key_exists('view', $buttons)) {
             $url = [
@@ -226,7 +226,7 @@ class IndexesTable extends ControllerActionTable
                 $buttons['generate']['url'] = $this->setQueryString($url, [
                     'institution_id' => $institutionId,
                     'user_id' => $userId,
-                    'index_id' => $indexId,
+                    'risk_id' => $riskId,
                     'academic_period_id' => $entity->academic_period_id,
                     'action' => 'index'
                 ]);
