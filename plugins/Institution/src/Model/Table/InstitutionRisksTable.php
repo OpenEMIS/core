@@ -10,29 +10,29 @@ use Cake\Utility\Text;
 
 use App\Model\Table\ControllerActionTable;
 
-class InstitutionIndexesTable extends ControllerActionTable
+class InstitutionRisksTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
 
-        $this->belongsTo('Indexes', ['className' => 'Institution.Indexes', 'foreignKey' =>'index_id']);
+        $this->belongsTo('Risks', ['className' => 'Institution.Risks', 'foreignKey' =>'risk_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
     }
 
     public function findRecord(Query $query, array $options)
     {
         return $query->where([
-            'index_id' => $options['index_id'],
+            'risk_id' => $options['risk_id'],
             'institution_id' => $options['institution_id']
         ]);
     }
 
-    public function getStatus($indexId, $institutionId)
+    public function getStatus($riskId, $institutionId)
     {
         $record = $this->find()
             ->where([
-                'index_id' => $indexId,
+                'risk_id' => $riskId,
                 'institution_id' => $institutionId
             ])
             ->first();
