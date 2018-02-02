@@ -346,9 +346,9 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']);
     }
-    public function InstitutionStudentIndexes()
+    public function InstitutionStudentRisks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentRisks']);
     }
     public function Cases()
     {
@@ -1167,7 +1167,7 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'Indexes') {
                 $header .= ' - '. __('Risks'); 
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
-            } elseif ($model->alias() == 'InstitutionStudentIndexes') {
+            } elseif ($model->alias() == 'InstitutionStudentRisks') {
                 $header .= ' - '. __('Institution Student Risks'); 
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
             }else {
