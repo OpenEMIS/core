@@ -17,8 +17,6 @@ class RiskCriteriasTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('risk_criterias');
-        
         parent::initialize($config);
         $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
 

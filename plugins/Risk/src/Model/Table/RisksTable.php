@@ -395,14 +395,14 @@ class RisksTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // $entityRiskCriteriasData = $entity->risk_criterias;
-        // // list of criteria in the risk type
-        // $entityRiskCriterias = [];
-        // if (!empty($entityRiskCriteriasData)) {
-        //     foreach ($entityRiskCriteriasData as $key => $entityRiskCriteriasObj) {
-        //         $entityRiskCriterias[$entityRiskCriteriasObj->id] = $entityRiskCriteriasObj;
-        //     }
-        // }
+        $entityRiskCriteriasData = $entity->risk_criterias;
+        // list of criteria in the risk type
+        $entityRiskCriterias = [];
+        if (!empty($entityRiskCriteriasData)) {
+            foreach ($entityRiskCriteriasData as $key => $entityRiskCriteriasObj) {
+                $entityRiskCriterias[$entityRiskCriteriasObj->id] = $entityRiskCriteriasObj;
+            }
+        }
 
         $riskId = $entity->id;
         // get the list of student that using this risk type (student that will be affected)
@@ -471,10 +471,13 @@ class RisksTable extends ControllerActionTable
     {
         // delete the institution Risks records
         $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        // pr($InstitutionRisks);
         $riskId = $entity->id;
+        // pr($riskId);die;
+
         $InstitutionRisks->deleteAll(['risk_id' => $riskId]);
 
-        $this->$InstitutionRisks->deleteAll(['risk_id' => $riskId]);
+        $this->InstitutionStudentRisks->deleteAll(['risk_id' => $riskId]);
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
