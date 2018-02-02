@@ -50,6 +50,8 @@ class POCOR4372 extends AbstractMigration
         $institutionStudentRisks = $this->table('institution_student_indexes');
         $institutionStudentRisks->rename('institution_student_risks');
 
+        $institutionStudentRisks->renameColumn('average_index', 'average_risk');
+        $institutionStudentRisks->renameColumn('total_index', 'total_risk');
         $institutionStudentRisks->renameColumn('index_id', 'risk_id');
         $institutionStudentRisks
             ->changeColumn('risk_id', 'integer', [
@@ -138,6 +140,8 @@ class POCOR4372 extends AbstractMigration
         // restore institution_student_indexes and drop institution_student_risks
         $institutionStudentRisks = $this->table('institution_student_risks');
         $institutionStudentRisks->rename('institution_student_indexes');
+        $institutionStudentRisks->renameColumn('average_risk', 'average_index');
+        $institutionStudentRisks->renameColumn('total_risk', 'total_index');
         $institutionStudentRisks->renameColumn('risk_id', 'index_id');
 
         $institutionStudentRisks
