@@ -16,7 +16,7 @@ class StudentIndexesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('institution_student_indexes');
+        $this->table('institution_student_risks');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);

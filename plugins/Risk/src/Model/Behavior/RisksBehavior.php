@@ -25,7 +25,7 @@ class RisksBehavior extends Behavior
 
         $broadcaster = $this->_table;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Institution.InstitutionStudentIndexes');
+        $listeners[] = TableRegistry::get('Institution.InstitutionStudentRisks');
 
         if (!empty($listeners)) {
             $this->_table->dispatchEventToModels('Model.'. $alias .'.afterSave', [$entity], $broadcaster, $listeners);
@@ -38,7 +38,7 @@ class RisksBehavior extends Behavior
 
         $broadcaster = $this->_table;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Institution.InstitutionStudentIndexes');
+        $listeners[] = TableRegistry::get('Institution.InstitutionStudentRisks');
 
         if (!empty($listeners)) {
             $this->_table->dispatchEventToModels('Model.'. $alias .'.afterDelete', [$entity], $broadcaster, $listeners);
