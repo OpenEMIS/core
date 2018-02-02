@@ -211,7 +211,7 @@ class StudentIndexesTable extends ControllerActionTable
 
         if ($action == 'view') {
             $studentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
-                ->contain(['RisksCriterias'])
+                ->contain(['RiskCriterias'])
                 ->where([
                     $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
                     $this->StudentIndexesCriterias->aliasField('value') . ' IS NOT NULL'

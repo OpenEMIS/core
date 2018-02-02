@@ -112,7 +112,7 @@ class RisksTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
 
-        $this->hasMany('RisksCriterias', ['className' => 'Risk.RisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RiskCriterias', ['className' => 'Risk.RiskCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStudentRisks', ['className' => 'Institution.InstitutionStudentRisks', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
@@ -364,7 +364,7 @@ class RisksTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'RisksCriterias' => [
+            'RiskCriterias' => [
                 'sort' => [
                     'RiskCriterias.criteria' => 'ASC',
                     'RiskCriterias.operator' => 'ASC',
@@ -395,14 +395,14 @@ class RisksTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $entityRiskCriteriasData = $entity->risk_criterias;
-        // list of criteria in the risk type
-        $entityRiskCriterias = [];
-        if (!empty($entityRiskCriteriasData)) {
-            foreach ($entityRiskCriteriasData as $key => $entityRiskCriteriasObj) {
-                $entityRiskCriterias[$entityRiskCriteriasObj->id] = $entityRiskCriteriasObj;
-            }
-        }
+        // $entityRiskCriteriasData = $entity->risk_criterias;
+        // // list of criteria in the risk type
+        // $entityRiskCriterias = [];
+        // if (!empty($entityRiskCriteriasData)) {
+        //     foreach ($entityRiskCriteriasData as $key => $entityRiskCriteriasObj) {
+        //         $entityRiskCriterias[$entityRiskCriteriasObj->id] = $entityRiskCriteriasObj;
+        //     }
+        // }
 
         $riskId = $entity->id;
         // get the list of student that using this risk type (student that will be affected)
@@ -506,7 +506,7 @@ class RisksTable extends ControllerActionTable
         if (!empty($originalEntityList)) {
             foreach ($originalEntityList as $key => $obj) {
                 if (!array_key_exists($key, $undeletedList)) {
-                    $this->RisksCriterias->delete($this->RisksCriterias->get($key));
+                    $this->RiskCriterias->delete($this->RiskCriterias->get($key));
                 }
             }
         }
@@ -540,7 +540,7 @@ class RisksTable extends ControllerActionTable
 
         //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
         $options['associated'] = [
-            'RisksCriterias' => ['validate' => false]
+            'RiskCriterias' => ['validate' => false]
         ];
     }
 
@@ -565,12 +565,12 @@ class RisksTable extends ControllerActionTable
         $criteria = [];
         foreach ($criteriaData as $criteriaKey => $criteriaObj) {
             if ($criteriaObj['model'] == $model) {
-                $risksCriteriasData = $this->RisksCriterias->find()
+                $riskCriteriasData = $this->RiskCriterias->find()
                     ->where(['criteria' => $criteriaKey])
                     ->all();
 
-                foreach ($risksCriteriasData as $risksCriteriasDataObj) {
-                    $riskId = $risksCriteriasDataObj->risk_id;
+                foreach ($riskCriteriasData as $riskCriteriasDataObj) {
+                    $riskId = $riskCriteriasDataObj->risk_id;
 
                     if (!empty($riskId) && !empty($institutionId)) {
                         $status = $$InstitutionRisks->getStatus($riskId, $institutionId);
