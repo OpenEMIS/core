@@ -340,8 +340,7 @@ class StudentOutcomesTable extends ControllerActionTable
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
-            $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
-
+           
             $results = $ClassStudents->find()
                 ->select([
                     $ClassStudents->aliasField('student_id'),
@@ -350,9 +349,11 @@ class StudentOutcomesTable extends ControllerActionTable
                     $Users->aliasField('middle_name'),
                     $Users->aliasField('third_name'),
                     $Users->aliasField('last_name'),
-                    $Users->aliasField('preferred_name')
+                    $Users->aliasField('preferred_name'),
+                    $StudentStatuses->aliasField('name')
                 ])
                 ->matching('Users')
+                ->matching('StudentStatuses')
                 ->where([
                     $ClassStudents->aliasField('institution_class_id') => $this->classId
                 ])
@@ -364,6 +365,7 @@ class StudentOutcomesTable extends ControllerActionTable
                     $params['student_id'] = $student->student_id;
                     $studentOptions[$student->student_id] = [
                         'name' => $student->_matchingData['Users']->name_with_id,
+                        'status' => $student->_matchingData['StudentStatuses']->name,
                         'url' => $this->setQueryString($baseUrl, $params)
                     ];
                 }
@@ -375,6 +377,7 @@ class StudentOutcomesTable extends ControllerActionTable
             $params['student_id'] = -1;
             $studentOptions[-1] = [
                 'name' => __('No Options'),
+                'status' => (''),
                 'url' => $this->setQueryString($baseUrl, $params)
             ];
         } else {
