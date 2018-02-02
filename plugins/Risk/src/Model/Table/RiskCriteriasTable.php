@@ -17,12 +17,12 @@ class RiskCriteriasTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('risks');
+        $this->table('risk_criterias');
         
         parent::initialize($config);
         $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
 
-        $this->hasMany('StudentRisksCriterias', ['className' => 'Risk.StudentRisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentRisksCriterias', ['className' => 'Institution.StudentRisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
     }
