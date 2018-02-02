@@ -182,7 +182,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             },
             cellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
-                var studentStatusName = params.data.student_status_name;
+                var studentStatus = params.data.student_status;
                 
                 var gradingOptions = {
                     0 : {
@@ -197,7 +197,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                     });
                 }
 
-                if (periodEditable && studentStatusName == "Enrolled") {
+                if (periodEditable && studentStatus == "CURRENT") {
                     var oldValue = params.value;
 
                     var eCell = document.createElement('div');
@@ -268,9 +268,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             },
             pinnedRowCellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
-                var studentStatusName = params.data.student_status_name;
+                var studentStatus = params.data.student_status;
 
-                if (periodEditable && studentStatusName == "Enrolled") {
+                if (periodEditable && studentStatus == "CURRENT") {
                     var oldValue = params.value;
 
                     var eCell = document.createElement('div');
