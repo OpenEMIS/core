@@ -13,10 +13,10 @@ class UpdateIndexesShell extends Shell
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Institution.InstitutionStudentIndexes');
-        $this->loadModel('Institution.InstitutionIndexes');
-        $this->loadModel('Institution.StudentIndexesCriterias');
-        $this->loadModel('Risk.RisksCriterias');
+        $this->loadModel('Institution.InstitutionStudentRisks');
+        $this->loadModel('Institution.InstitutionRisks');
+        $this->loadModel('Institution.StudentRisksCriterias');
+        $this->loadModel('Risk.RiskCriterias');
         $this->loadModel('Risk.Risks');
         $this->loadModel('Institution.Students');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
@@ -29,7 +29,7 @@ class UpdateIndexesShell extends Shell
         $indexesId = !empty($this->args[2]) ? $this->args[2] : 0;
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
-        $indexesCriteriaData = $this->RisksCriterias->getCriteriaKey($indexesId);
+        $indexesCriteriaData = $this->RiskCriterias->getCriteriaKey($indexesId);
 
         if (!empty($indexesCriteriaData)) {
             foreach ($indexesCriteriaData as $key => $obj) {
@@ -149,7 +149,7 @@ class UpdateIndexesShell extends Shell
             $CriteriaModel->save($criteriaModelEntity);
 
             // update the institution student index
-            $this->InstitutionStudentIndexes->query()
+            $this->InstitutionStudentRisks->query()
                 ->update()
                 ->set([
                     'created_user_id' => $userId,
@@ -158,7 +158,7 @@ class UpdateIndexesShell extends Shell
                 ->execute();
 
             // update the student indexes criteria
-            $this->StudentIndexesCriterias->query()
+            $this->StudentRiskCriterias->query()
                 ->update()
                 ->set([
                     'created_user_id' => $userId,
