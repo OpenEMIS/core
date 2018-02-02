@@ -33,6 +33,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     Controller.selectedItem = null;
     Controller.studentOptions = [];
     Controller.selectedStudent = null;
+    Controller.selectedStudentStatusCode = null;
     Controller.selectedStudentStatus = null;
 
     // Function mapping
@@ -61,6 +62,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 Controller.studentOptions = classStudents;
                 if (Controller.studentOptions.length > 0) {
                     Controller.selectedStudent = Controller.studentOptions[0].student_id;  
+                    Controller.selectedStudentStatusCode = Controller.studentOptions[0].student_status.code;
                     Controller.selectedStudentStatus = Controller.studentOptions[0].student_status.name;   
                 } else {
                     AlertSvc.warning(Controller, "Please setup students for this class");
@@ -155,7 +157,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                                 }
                                 var row = {
                                     student_id: student,
-                                    student_status_name: studentStatusCode,
+                                    student_status: studentStatusCode,
                                     period_editable: selectedPeriodStatus,
                                     competency_period_id: period,
                                     competency_item_id: item,
@@ -203,7 +205,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                         }
                         var pinnedRowData = [{
                             student_id: student,
-                            student_status_name: studentStatusCode,
+                            student_status: studentStatusCode,
                             period_editable: selectedPeriodStatus,
                             competency_period_id: period,
                             competency_item_id: item,
@@ -267,7 +269,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         })
         .then(function (comments) {
             Controller.formatComments(comments);
-            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatus);
+            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatusCode);
         }, function (error) {
         });
     }
@@ -277,6 +279,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         if (studentChange) {
             angular.forEach(Controller.studentOptions, function(value, key) {
                 if (value.student_id == Controller.selectedStudent) {
+                    Controller.selectedStudentStatusCode = value.student_status.code;
                     Controller.selectedStudentStatus = value.student_status.name;
                     
                 }
@@ -292,7 +295,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         })
         .then(function (comments) {
             Controller.formatComments(comments);
-            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatus);
+            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatusCode);
         }, function (error) {
         });
     }
@@ -337,7 +340,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatus);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatusCode);
                 }
             };
         }, function(error){
@@ -378,7 +381,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatus);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem, Controller.selectedStudent, Controller.selectedStudentStatusCode);
                 }
             };
         });

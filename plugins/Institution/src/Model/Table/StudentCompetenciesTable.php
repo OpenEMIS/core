@@ -363,7 +363,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             $params['student_id'] = -1;
             $studentOptions[-1] = [
                 'name' => __('No Options'),
-                'status' => __(''),
+                'status' => (''),
                 'url' => $this->setQueryString($baseUrl, $params)
             ];
         } else {
