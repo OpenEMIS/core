@@ -377,7 +377,7 @@ class StudentOutcomesTable extends ControllerActionTable
             $params['student_id'] = -1;
             $studentOptions[-1] = [
                 'name' => __('No Options'),
-                'status' => (''),
+                'status' => '',
                 'url' => $this->setQueryString($baseUrl, $params)
             ];
         } else {
