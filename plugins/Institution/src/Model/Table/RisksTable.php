@@ -182,14 +182,14 @@ class RisksTable extends ControllerActionTable
 
     public function onGetStatus(Event $event, Entity $entity)
     {
-        $Indexes = TableRegistry::get('Risk.Risks');
+        $Risks = TableRegistry::get('Risk.Risks');
         $riskId = $entity->id;
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
         $statusId = isset($record['status']) ? $record['status']: 1; // 1 = not generated
-        return $Indexes->getIndexesStatus($statusId);
+        return $Risks->getIndexesStatus($statusId);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -204,20 +204,20 @@ class RisksTable extends ControllerActionTable
             $url = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
-                'action' => 'InstitutionStudentIndexes'
+                'action' => 'InstitutionStudentRisks'
             ];
 
             $buttons['view']['url'] = $this->setQueryString($url, [
-                'index_id' => $entity->id,
+                'risk_id' => $entity->id,
                 'academic_period_id' => $entity->academic_period_id
             ]);
 
             // generate button
-            if ($this->AccessControl->check(['Institutions', 'Indexes', 'generate'])) {
+            if ($this->AccessControl->check(['Institutions', 'Risks', 'generate'])) {
                 $url = [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
-                    'action' => 'Indexes',
+                    'action' => 'Risks',
                     'generate'
                 ];
 
@@ -228,7 +228,7 @@ class RisksTable extends ControllerActionTable
                     'user_id' => $userId,
                     'risk_id' => $riskId,
                     'academic_period_id' => $entity->academic_period_id,
-                    'action' => 'index'
+                    'action' => 'risk'
                 ]);
             }
             // end generate button
