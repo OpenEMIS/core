@@ -471,11 +471,11 @@ class AcademicPeriodsTable extends AppTable
     {
         $query
             ->find('visible')
+            ->find('years')
             ->find('editable', ['isEditable' => true])
             ->find('order')
             ->where([
                 $this->aliasField('parent_id') . ' <> ' => 0,
-                $this->aliasField('academic_period_level_id') . ' = ' => 1
             ]);
 
         return $query;
