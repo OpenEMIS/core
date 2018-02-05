@@ -62,11 +62,16 @@ $this->start('panelBody');
         <div class="select">
             <label><?= __('Student') ?>:</label>
             <div class="input-select-wrapper">
-                <select name="student" ng-options="student.student_id as student.user.name_with_id for student in InstitutionStudentOutcomesController.studentOptions" ng-model="InstitutionStudentOutcomesController.selectedStudent" ng-change="InstitutionStudentOutcomesController.changeOutcomeOptions(false);">
+                <select name="student" ng-options="student.student_id as student.user.name_with_id for student in InstitutionStudentOutcomesController.studentOptions" ng-model="InstitutionStudentOutcomesController.selectedStudent" ng-change="InstitutionStudentOutcomesController.changeStudentOptions(true);">
                     <option value="" ng-show="InstitutionStudentOutcomesController.studentOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
         </div>
+        <div class="text">
+            <label><?= __('Status') ?></label>
+            <input ng-model="InstitutionStudentOutcomesController.selectedStudentStatus" type="text" disabled="disabled">
+        </div>
+
     </div>
     <div id="institution-student-outcome-table" class="table-wrapper">
         <div ng-if="InstitutionStudentOutcomesController.dataReady" kd-ag-grid="InstitutionStudentOutcomesController.gridOptions"></div>
