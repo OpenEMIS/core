@@ -12,7 +12,7 @@ use Cake\Network\Request;
 
 use App\Model\Table\ControllerActionTable;
 
-class StudentIndexesTable extends ControllerActionTable
+class StudentRisksTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -20,11 +20,11 @@ class StudentIndexesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
-        $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'index_id']);
+        $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' =>'student_id']);
 
-        $this->hasMany('StudentIndexesCriterias', ['className' => 'Institution.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentRisksCriterias', ['className' => 'Institution.StudentRisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('add', false);
         $this->toggle('search', false);
@@ -34,9 +34,9 @@ class StudentIndexesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('average_index', ['visible' => false]);
+        $this->field('average_risk', ['visible' => false]);
         $this->field('student_id', ['visible' => false]);
-        $this->field('total_index', ['after' => 'index_id']);
+        $this->field('total_risk', ['after' => 'risk_id']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -70,7 +70,7 @@ class StudentIndexesTable extends ControllerActionTable
         $this->field('name');
         $this->field('grade');
         $this->field('class');
-        $this->field('indexes_criterias', ['type' => 'custom_criterias', 'after' => 'total_index']);
+        $this->field('risk_criterias', ['type' => 'custom_criterias', 'after' => 'total_risk']);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
     }
@@ -144,7 +144,7 @@ class StudentIndexesTable extends ControllerActionTable
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']
             ])
-            ->order(['index_id'])
+            ->order(['risk_id'])
             ;
 
         return $query;
@@ -166,9 +166,9 @@ class StudentIndexesTable extends ControllerActionTable
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         // from indexes table
-        $Indexes = TableRegistry::get('Risk.Risks');
-        $indexId = $entity->index->id;
-        $generatedById = $Indexes->get($indexId)->generated_by;
+        $Risks = TableRegistry::get('Risk.Risks');
+        $riskId = $entity->risk->id;
+        $generatedById = $Risks->get($riskId)->generated_by;
 
         $userName = '';
         if (!empty($generatedById)) {
@@ -181,13 +181,13 @@ class StudentIndexesTable extends ControllerActionTable
     public function onGetGeneratedOn(Event $event, Entity $entity)
     {
         // from indexes table
-        $Indexes = TableRegistry::get('Risk.Risks');
-        $indexId = $entity->index->id;
-        $indexesGeneratedOn = $Indexes->get($indexId)->generated_on;
+        $Risks = TableRegistry::get('Risk.Risks');
+        $riskId = $entity->risk->id;
+        $risksGeneratedOn = $Risks->get($riskId)->generated_on;
 
         $generatedOn = 0;
-        if (isset($indexesGeneratedOn)) {
-            $generatedOn = $indexesGeneratedOn->format('F d, Y - H:i:s');
+        if (isset($risksGeneratedOn)) {
+            $generatedOn = $risksGeneratedOn->format('F d, Y - H:i:s');
         }
 
         return $generatedOn;
@@ -200,37 +200,37 @@ class StudentIndexesTable extends ControllerActionTable
         array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
         $tableHeaders[] = __('References');
         $tableCells = [];
-        $fieldKey = 'indexes_criterias';
+        $fieldKey = 'risk_criterias';
 
-        $indexId = $entity->index->id;
+        $riskId = $entity->risk->id;
         $institutionId = $entity->institution->id;
         $studentId = $entity->user->id;
         $academicPeriodId = $entity->academic_period_id;
 
-        $institutionStudentIndexId = $this->paramsDecode($this->paramsPass(0))['id']; // paramsPass(0) after the hash of Id
+        $institutionStudentRiskId = $this->paramsDecode($this->paramsPass(0))['id']; // paramsPass(0) after the hash of Id
 
         if ($action == 'view') {
-            $studentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
+            $studentRisksCriteriasResults = $this->StudentRisksCriterias->find()
                 ->contain(['RiskCriterias'])
                 ->where([
-                    $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
-                    $this->StudentIndexesCriterias->aliasField('value') . ' IS NOT NULL'
+                    $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $institutionStudentRiskId,
+                    $this->StudentRisksCriterias->aliasField('value') . ' IS NOT NULL'
                 ])
                 ->order(['criteria','threshold'])
                 ->all();
 
-            foreach ($studentIndexesCriteriasResults as $key => $obj) {
-                if (isset($obj->indexes_criteria)) {
-                    $indexesCriteriasId = $obj->indexes_criteria->id;
+            foreach ($studentRisksCriteriasResults as $key => $obj) {
+                if (isset($obj->risk_criteria)) {
+                    $riskCriteriasId = $obj->risk_criteria->id;
 
-                    $criteriaName = $obj->indexes_criteria->criteria;
-                    $operatorId = $obj->indexes_criteria->operator;
-                    $operator = $this->Indexes->getOperatorDetails($operatorId);
-                    $threshold = $obj->indexes_criteria->threshold;
+                    $criteriaName = $obj->risk_criteria->criteria;
+                    $operatorId = $obj->risk_criteria->operator;
+                    $operator = $this->Risk->getOperatorDetails($operatorId);
+                    $threshold = $obj->risk_criteria->threshold;
 
-                    $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriasId);
+                    $value = $this->StudentRisksCriterias->getValue($institutionStudentRiskId, $riskCriteriasId);
 
-                    $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaName);
+                    $criteriaDetails = $this->Risk->getCriteriasDetails($criteriaName);
                     $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
 
                     if ($value == 'True') {
@@ -244,7 +244,7 @@ class StudentIndexesTable extends ControllerActionTable
                             $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
                         }
 
-                        $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . $quantity  .'</div>';
+                        $riskValue = '<div style="color : red">' . $obj->risk_criteria->risk_value . $quantity  .'</div>';
 
                         // for reference tooltip
                         $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
@@ -253,12 +253,12 @@ class StudentIndexesTable extends ControllerActionTable
                         $thresholdName = $LookupModel->get($threshold)->name;
                         $threshold = $thresholdName;
                         if ($thresholdName == 'Repeated') {
-                            $threshold = $this->Indexes->getCriteriasDetails($criteriaName)['threshold']['value']; // 'Yes'
+                            $threshold = $this->Risks->getCriteriasDetails($criteriaName)['threshold']['value']; // 'Yes'
                         }
                     } else {
                         // numeric value come here (absence quantity, results)
                         // for value
-                        $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
+                        $riskValue = '<div style="color : red">'.$obj->risk_criteria->risk_value.'</div>';
 
                         // for the reference tooltip
                         $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
@@ -277,11 +277,11 @@ class StudentIndexesTable extends ControllerActionTable
 
                     // to put in the table
                     $rowData = [];
-                    $rowData[] = __($this->Indexes->getCriteriasDetails($criteriaName)['name']);
+                    $rowData[] = __($this->Risks->getCriteriasDetails($criteriaName)['name']);
                     $rowData[] = __($operator);
                     $rowData[] = $threshold;
                     $rowData[] = $value;
-                    $rowData[] = $indexValue;
+                    $rowData[] = $riskValue;
                     $rowData[] = $tooltipReference;
 
                     $tableCells [] = $rowData;

@@ -571,7 +571,7 @@ class StudentUserTable extends ControllerActionTable
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'Indexes' => ['text' => __('Risks')]
+            'Risks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -582,7 +582,7 @@ class StudentUserTable extends ControllerActionTable
                 $type = (array_key_exists('type', $options))? $options['type']: null;
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
-            } elseif ($key == 'Indexes') {
+            } elseif ($key == 'Risks') {
                 $type = (array_key_exists('type', $options))? $options['type']: null;
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
