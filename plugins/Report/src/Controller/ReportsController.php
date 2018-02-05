@@ -153,13 +153,9 @@ class ReportsController extends AppController
                     foreach ($results as $key => $entity) {
                         if ($entity->total_records > 0) {
                             $data['percent'] = intval($entity->current_records / $entity->total_records * 100);
-                        } elseif ($entity->total_records == 0) {
+                        } elseif ($entity->total_records == 0 && $entity->status == 0) {
                             // if only the status is complete, than percent will be 100, total record can still be 0 if the shell excel generation is slow, and percent should not be 100.
-                            if ($entity->status == 0) {
-                                $data['percent'] = 100;
-                            } else {
-                                $data['percent'] = 0;
-                            }
+                            $data['percent'] = 100;
                         } else {
                             $data['percent'] = 0;
                         }
