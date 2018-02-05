@@ -135,7 +135,6 @@ class EditBehavior extends Behavior
                     if ($event->isStopped()) {
                         return $event->result;
                     }
-
                     if ($result) {
                         $mainEvent->stopPropagation();
                         return $model->controller->redirect($model->url('view'));
@@ -177,7 +176,6 @@ class EditBehavior extends Behavior
         if ($event->isStopped()) {
             return $event->result;
         }
-
         if (!$entity) {
             $mainEvent->stopPropagation();
             return $model->controller->redirect($model->url('index', 'QUERY'));
