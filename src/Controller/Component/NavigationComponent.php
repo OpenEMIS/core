@@ -560,9 +560,9 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.Assessments', 'Institutions.Results'],
                     'params' => ['plugin' => 'Institution'],
                 ],
-        
+
             'Institutions.Indexes.index' => [
-                'title' => 'Risks', 
+                'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Indexes','Institutions.InstitutionStudentIndexes'],
                 'params' => ['plugin' => 'Institution'],
@@ -1270,7 +1270,7 @@ class NavigationComponent extends Component
                     'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit', 'Notices.delete']
                 ],
                 'Indexes.Indexes' => [
-                    'title' => 'Risks', 
+                    'title' => 'Risks',
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Indexes'],
                     'selected' => ['Indexes.Indexes']
@@ -1402,6 +1402,13 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Assessment'],
                     'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
                 ],
+
+            'StaffAppraisals.criterias.index' => [
+                'title' => 'Appraisals',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'StaffAppraisal'],
+                'selected' => ['StaffAppraisals.criterias', 'StaffAppraisals.forms', 'StaffAppraisals.types']
+            ],
 
             'Administration.Examinations' => [
                     'title' => 'Examinations',
