@@ -246,6 +246,9 @@ class GuardiansTable extends ControllerActionTable
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Users->aliasField('id')
                     ]
                 )
+                ->group([
+                    $this->Users->aliasField('id')
+                ])
                 ->where([
                     $this->Users->aliasField('is_guardian') => 1
                 ])
