@@ -21,7 +21,8 @@ class AppraisalFormsTable extends ControllerActionTable
             'foreignKey' => 'appraisal_form_id',
             'targetForeignKey' => 'appraisal_criteria_id',
             'through' => 'StaffAppraisal.AppraisalFormsCriterias',
-            'dependent' => true
+            'dependent' => true,
+            'sort' => 'AppraisalFormsCriterias.order'
         ]);
         $this->setDeleteStrategy('restrict');
     }
@@ -55,8 +56,8 @@ class AppraisalFormsTable extends ControllerActionTable
             $sectionName = "";
             $printSection = false;
             foreach ($customFields as $key => $obj) {
-                if (!empty($obj['section']) && $obj['section'] != $sectionName) {
-                    $sectionName = $obj['section'];
+                if (!empty($obj['_joinData']['section']) && $obj['_joinData']['section'] != $sectionName) {
+                    $sectionName = $obj['_joinData']['section'];
                     $printSection = true;
                 }
                 if (!empty($sectionName) && ($printSection)) {
@@ -99,8 +100,8 @@ class AppraisalFormsTable extends ControllerActionTable
                         'appraisal_criteria_id' => $obj->id,
                         'appraisal_form_id' => $entity->id,
                         'field_type_id' => $obj->field_type_id,
-                        'section' => $obj->section,
-                        'id' => $obj->id
+                        'section' => $obj->_joinData->section,
+                        'id' => $obj->_joinData->id
                     ];
                 }
             } elseif ($this->request->is(['post', 'put'])) {
