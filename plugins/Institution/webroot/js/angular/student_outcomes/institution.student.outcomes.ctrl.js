@@ -29,6 +29,8 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     // Filters
     Controller.studentOptions = [];
     Controller.selectedStudent = null;
+    Controller.selectedStudentStatusCode = null;
+    Controller.selectedStudentStatus = null;
     Controller.periodOptions = [];
     Controller.selectedPeriod = null;
     Controller.selectedPeriodStatus = null;
@@ -40,6 +42,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     Controller.formatResults = formatResults;
     Controller.resetColumnDefs = resetColumnDefs;
     Controller.changeOutcomeOptions = changeOutcomeOptions;
+    Controller.changeStudentOptions = changeStudentOptions;
 
     angular.element(document).ready(function () {
         InstitutionStudentOutcomesSvc.init(angular.baseUrl);
@@ -52,14 +55,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.academicPeriodName = response.academic_period.name;
                 Controller.institutionId = response.institution_id;
-
-                return InstitutionStudentOutcomesSvc.getStudentStatusId("CURRENT");
-            }, function(error) {
-                console.log(error);
-            })
-            .then(function (response) {
-                var enrolledStatusId = response[0].id;
-                return InstitutionStudentOutcomesSvc.getClassStudents(Controller.classId, enrolledStatusId);
+                return InstitutionStudentOutcomesSvc.getClassStudents(Controller.classId);
             }, function(error) {
                 console.log(error);
             })
@@ -67,6 +63,8 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 Controller.studentOptions = classStudents;
                 if (Controller.studentOptions.length > 0) {
                     Controller.selectedStudent = Controller.studentOptions[0].student_id;
+                    Controller.selectedStudentStatusCode = Controller.studentOptions[0].student_status.code;
+                    Controller.selectedStudentStatus = Controller.studentOptions[0].student_status.name;  
                 } else {
                     AlertSvc.warning(Controller, "Please setup students for this class");
                 }
@@ -137,7 +135,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         Controller.studentResults = studentResults;
     }
 
-    function resetColumnDefs(criterias, gradingOptions, period, selectedPeriodStatus, subject, student) {
+    function resetColumnDefs(criterias, gradingOptions, period, selectedPeriodStatus, subject, student, studentStatusCode) {
         var response = InstitutionStudentOutcomesSvc.getColumnDefs(period, subject, student, Controller.periodOptions, Controller.subjectOptions, Controller.studentOptions);
 
         if (angular.isDefined(response.error)) {
@@ -166,6 +164,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                             if (value.education_subject_id == subject) {
                                 var row = {
                                     student_id: student,
+                                    student_status: studentStatusCode,
                                     outcome_period_id: period,
                                     period_editable: selectedPeriodStatus,
                                     education_subject_id: subject,
@@ -209,6 +208,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                         // subject comments (pinned row at bottom)
                         var pinnedRowData = [{
                             student_id: student,
+                            student_status: studentStatusCode,
                             outcome_period_id: period,
                             period_editable: selectedPeriodStatus,
                             education_subject_id: subject,
@@ -251,10 +251,35 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         })
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
-            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent);
+            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
         }, function (error) {
         });
     }
+
+    function changeStudentOptions(studentChange) {
+        if (studentChange) {
+            angular.forEach(Controller.studentOptions, function(value, key) {
+                if (value.student_id == Controller.selectedStudent) {
+                    Controller.selectedStudentStatusCode = value.student_status.code;
+                    Controller.selectedStudentStatus = value.student_status.name;
+                }
+            });
+        }
+
+        InstitutionStudentOutcomesSvc.getStudentOutcomeResults(
+            Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId)
+        .then(function (results) {
+            Controller.formatResults(results);
+            return InstitutionStudentOutcomesSvc.getStudentOutcomeComments(
+                Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+        }, function (error) {
+        })
+        .then(function (outcomeComments) {
+            Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
+            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+        }, function (error) {
+        });
+    }   
 
     function initGrid() {
         return AggridLocaleSvc.getTranslatedGridLocale()
@@ -293,7 +318,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
                 }
             };
         }, function(error){
@@ -331,7 +356,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent);
+                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
                 }
             };
         });
