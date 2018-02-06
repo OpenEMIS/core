@@ -176,6 +176,12 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
+
+    public function institutionStaffAppraisals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAppraisals']);
+    }
+
     public function Surveys()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSurveys']);
@@ -1122,7 +1128,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Risks') 
+                'StudentIndexes' => __('Risks')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1163,13 +1169,13 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
             } elseif ($model->alias() == 'StudentIndexes') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
             } elseif ($model->alias() == 'Indexes') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
             } elseif ($model->alias() == 'InstitutionStudentIndexes') {
-                $header .= ' - '. __('Institution Student Risks'); 
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
+                $header .= ' - '. __('Institution Student Risks');
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             }else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
@@ -1513,7 +1519,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentIndexes' => ['text' => __('Risks')] 
+            'StudentIndexes' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
