@@ -16,6 +16,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('FieldTypes', ['className' => 'FieldTypes', 'foreignKey' => 'field_type_id']);
         $this->hasOne('AppraisalSliders', ['className' => 'StaffAppraisal.AppraisalSliders', 'foreignKey' => 'appraisal_criteria_id']);
+        $this->hasMany('AppraisalFormsCriterias', ['className' => 'StaffAppraisal.AppraisalFormsCriterias', 'foreignKey' => 'appraisal_criteria_id']);
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra) : void
