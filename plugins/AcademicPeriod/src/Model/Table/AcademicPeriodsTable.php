@@ -213,7 +213,6 @@ class AcademicPeriodsTable extends AppTable
     public function editBeforeQuery(Event $event, Query $query)
     {
         $query->contain('Levels');
-        return $query;
     }
 
     public function editAfterAction(Event $event, Entity $entity)
@@ -223,7 +222,8 @@ class AcademicPeriodsTable extends AppTable
 
         // set academic_period_level_id to not editable to prevent any classes/subjects to not in Year level
         $this->fields['academic_period_level_id']['type'] = 'readonly';
-        $this->fields['academic_period_level_id']['attr']['value'] = $entity['level']['name'];
+        $this->fields['academic_period_level_id']['value'] = $entity->academic_period_level_id;
+        $this->fields['academic_period_level_id']['attr']['value'] = $entity->level->name;
     }
 
     public function indexBeforeAction(Event $event)
