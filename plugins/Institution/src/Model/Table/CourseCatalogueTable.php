@@ -147,10 +147,21 @@ class CourseCatalogueTable extends ControllerActionTable
         if (!empty($staffData) && $staffData->has('position')) {
             $positionTitle = $staffData->position->staff_position_title_id;
 
-            // only show courses where user is in target population
+            $TargetPopulationTable = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
             $query
-                ->matching('TargetPopulations')
-                ->where(['TargetPopulations.id' => $positionTitle]);
+                ->leftJoin(
+                    [$TargetPopulationTable->alias() => $TargetPopulationTable->table()],
+                    [
+                        $TargetPopulationTable->aliasField('training_course_id = ') . $this->aliasField('id')
+                    ]
+                )
+                ->where([
+                    'OR' => [
+                        // showing the course based on position title or target population indicates is for all
+                        [$TargetPopulationTable->aliasField('target_population_id') => $positionTitle],
+                        [$TargetPopulationTable->aliasField('target_population_id') => -1]
+                    ]
+                ]);
         } else {
             // To return no results
             $query->where(['1 = 0']);
@@ -247,7 +258,6 @@ class CourseCatalogueTable extends ControllerActionTable
                         $applyUrl = Router::url($url);
 
                         $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>".__('Apply')."</span></button>";
-
                     } else {
                         $rowData[] = $event->subject()->Html->link(__('Already Applied'), [
                             'plugin' => 'Institution',
