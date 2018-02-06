@@ -130,11 +130,11 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
-        } else if ($action == 'add' || $action == 'edit') {
+        } elseif ($action == 'add' || $action == 'edit') {
             $institutionId = $this->Session->read('Institution.Institutions.id');
             $Subjects = $this->Subjects;
 
-            $periodOptions = $this->AcademicPeriods->getList(['withSelect' => true, 'isEditable'=>true]);
+            $periodOptions = $this->AcademicPeriods->getYearList(['withSelect' => true, 'isEditable'=>true]);
             if (is_null($request->query('period'))) {
                 $this->request->query['period'] = '';
             }
@@ -162,13 +162,13 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
-        } else if ($action == 'add' || $action == 'edit') {
+        } elseif ($action == 'add' || $action == 'edit') {
             $institutionId = $this->Session->read('Institution.Institutions.id');
             $SubjectStaff = $this->SubjectStaff;
 
             if ($action == 'add') {
                 $selectedPeriod = $request->query('period');
-            } else if ($action == 'edit') {
+            } elseif ($action == 'edit') {
                 $selectedPeriod = $attr['entity']->academic_period_id;
             }
 
@@ -210,10 +210,10 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
-        } else if ($action == 'add' || $action == 'edit') {
+        } elseif ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
                 $selectedClass = $request->query('subject');
-            } else if ($action == 'edit') {
+            } elseif ($action == 'edit') {
                 $selectedClass = $attr['entity']->institution_subject_id;
             }
 
@@ -241,7 +241,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     public function onUpdateFieldEvaluator(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
-        } else if ($action == 'add') {
+        } elseif ($action == 'add') {
             // when add, is login user
             $firstName = $this->Auth->user('first_name');
             $lastName = $this->Auth->user('last_name');
@@ -250,7 +250,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             $attr['type'] = 'readonly';
             $attr['value'] = $evaluator;
             $attr['attr']['value'] = $evaluator;
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             // when edit, is created user
             $attr['type'] = 'readonly';
         }
