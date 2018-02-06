@@ -17,7 +17,7 @@ class RisksTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('risks');
+        // $this->table('risks');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
@@ -119,7 +119,7 @@ class RisksTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Risks',
-            'risk',
+            'index',
             'academic_period_id' => $params['academic_period_id']
         ];
 
@@ -228,7 +228,7 @@ class RisksTable extends ControllerActionTable
                     'user_id' => $userId,
                     'risk_id' => $riskId,
                     'academic_period_id' => $entity->academic_period_id,
-                    'action' => 'risk'
+                    'action' => 'index'
                 ]);
             }
             // end generate button
