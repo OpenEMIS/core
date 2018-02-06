@@ -210,10 +210,20 @@ class AcademicPeriodsTable extends AppTable
         $this->ControllerAction->setFieldOrder($this->_fieldOrder);
     }
 
+    public function editBeforeQuery(Event $event, Query $query)
+    {
+        $query->contain('Levels');
+        return $query;
+    }
+
     public function editAfterAction(Event $event, Entity $entity)
     {
         $this->request->data[$this->alias()]['current'] = $entity->current;
         $this->ControllerAction->field('visible');
+
+        // set academic_period_level_id to not editable to prevent any classes/subjects to not in Year level
+        $this->fields['academic_period_level_id']['type'] = 'readonly';
+        $this->fields['academic_period_level_id']['attr']['value'] = $entity['level']['name'];
     }
 
     public function indexBeforeAction(Event $event)
@@ -338,19 +348,19 @@ class AcademicPeriodsTable extends AppTable
             $levelId = $data->academic_period_level_id;
 
             $levelResults = $this->Levels
-                ->find()
-                ->select([$this->Levels->aliasField('level')])
-                ->where([$this->Levels->aliasField('id') => $levelId])
-                ->all();
+                        ->find()
+                        ->select([$this->Levels->aliasField('level')])
+                        ->where([$this->Levels->aliasField('id') => $levelId])
+                        ->all();
 
             if (!$levelResults->isEmpty()) {
                 $levelData = $levelResults->first();
                 $level = $levelData->level;
 
                 $levelOptions = $this->Levels
-                    ->find('list')
-                    ->where([$this->Levels->aliasField('level >') => $level])
-                    ->toArray();
+                            ->find('list')
+                            ->where([$this->Levels->aliasField('level >') => $level])
+                            ->toArray();
                 $attr['options'] = $levelOptions;
             }
         }
