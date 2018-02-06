@@ -59,6 +59,7 @@ class UsersTable extends AppTable
 	{
 		$events = parent::implementedEvents();
 		$events['Model.Students.afterSave'] = 'studentsAfterSave';
+		$events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
 		return $events;
 	}
 
@@ -160,6 +161,14 @@ class UsersTable extends AppTable
 	{
 		return $query->where([$this->aliasField('super_admin') => 0]);
 	}
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'username';
+        $searchableFields[] = 'name';
+        $searchableFields[] = 'identity_number';				 
+    }
 
 	public function viewBeforeAction(Event $event)
 	{

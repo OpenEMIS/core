@@ -975,7 +975,7 @@ class StudentsTable extends ControllerActionTable
             $code = array_search($studentStatusId, $statuses);
             $institutionId = $entity->institution_id;
             $educationGradeId = $entity->education_grade_id;
-            $studentId = $entity->student_id;
+            $studentId = $entity->getOriginal('student_id'); // student_id is changed in onGetStudentId
             $academicPeriodId = $entity->academic_period_id;
 
             switch ($code) {
@@ -1007,18 +1007,23 @@ class StudentsTable extends ControllerActionTable
                     $withdrawReason = $WithdrawRequestsTable->find()
                         ->matching('StudentWithdrawReasons')
                         ->where([
+                            $WithdrawRequestsTable->aliasField('student_id') => $studentId,
                             $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
                             $WithdrawRequestsTable->aliasField('institution_id') => $institutionId,
                             $WithdrawRequestsTable->aliasField('education_grade_id') => $educationGradeId,
-                            $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
-                            // Status = 1 is approved withdraw, in case student has a previous withdraw request that was undone
                             $WithdrawRequestsTable->aliasField('status_id').' IN ' => $approvedStatus,
                         ])
                         ->first();
 
-                    $entity->comment = $withdrawReason->comment;
+                    $comment = '';
+                    $studentWithdrawReason = '';
+                    if (!empty($withdrawReason)) {
+                        $comment = $withdrawReason->comment;
+                        $studentWithdrawReason = $withdrawReason->_matchingData['StudentWithdrawReasons']->name;
+                    }
 
-                    return $withdrawReason->_matchingData['StudentWithdrawReasons']->name;
+                    $entity->comment = $comment;
+                    return $studentWithdrawReason;
                     break;
             }
         }
