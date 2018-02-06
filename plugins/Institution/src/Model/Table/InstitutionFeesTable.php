@@ -328,7 +328,7 @@ class InstitutionFeesTable extends ControllerActionTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
     {
-        $this->_academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
+        $this->_academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $this->_selectedAcademicPeriodId = $this->postString('academic_period_id');
         if ($this->_selectedAcademicPeriodId == 0 || is_null($this->_selectedAcademicPeriodId)) {
             $this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();

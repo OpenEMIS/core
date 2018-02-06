@@ -134,7 +134,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             $institutionId = $this->Session->read('Institution.Institutions.id');
             $Subjects = $this->Subjects;
 
-            $periodOptions = $this->AcademicPeriods->getYearList(['withSelect' => true, 'isEditable'=>true]);
+            $periodOptions = $this->AcademicPeriods->getYearList(['withSelect' => true, 'isEditable' => true]);
             if (is_null($request->query('period'))) {
                 $this->request->query['period'] = '';
             }

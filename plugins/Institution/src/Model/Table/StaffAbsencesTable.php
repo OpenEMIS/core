@@ -554,7 +554,7 @@ class StaffAbsencesTable extends ControllerActionTable
             $Staff = TableRegistry::get('Institution.Staff');
 
             $institutionId = $this->Session->read('Institution.Institutions.id');
-            $periodOptions = $AcademicPeriodTable->getYearList(['isEditable'=>true]);
+            $periodOptions = $AcademicPeriodTable->getYearList(['isEditable' => true]);
             $selectedPeriod = $this->queryString('period', $periodOptions);
             $startDate = $AcademicPeriodTable->get($selectedPeriod)->start_date;
             $endDate = $AcademicPeriodTable->get($selectedPeriod)->end_date;
