@@ -485,7 +485,7 @@ class AcademicPeriodsTable extends AppTable
             ->find('editable', ['isEditable' => true])
             ->find('order')
             ->where([
-                $this->aliasField('parent_id') . ' <> ' => 0,
+                $this->aliasField('parent_id') . ' <> ' => 0
             ]);
 
         return $query;
@@ -545,7 +545,6 @@ class AcademicPeriodsTable extends AppTable
             $list = [];
 
             foreach ($data as $key => $obj) {
-
                 if ($levelName != $obj->level->name) {
                     $levelName = __($obj->level->name);
                 }
@@ -612,7 +611,6 @@ class AcademicPeriodsTable extends AppTable
             $firstDayOfWeek = $firstDayOfWeek % 7;
         }
         return $week;
-
     }
 
     public function getAttendanceWeeks($id)
