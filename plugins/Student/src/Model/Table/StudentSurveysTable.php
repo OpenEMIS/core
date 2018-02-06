@@ -72,7 +72,7 @@ class StudentSurveysTable extends ControllerActionTable
         // End
 
         // Academic Periods
-        $periodOptions = $this->AcademicPeriods->getList();
+        $periodOptions = $this->AcademicPeriods->getYearList();
         $selectedPeriod = $this->queryString('period', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSurveys')),
@@ -176,82 +176,82 @@ class StudentSurveysTable extends ControllerActionTable
     }
 
     /* Disabled auto-insert New Survey for Student until there is a better solution
-	public function _buildSurveyRecords($studentId=null, $institutionId=null) {
-		$session = $this->controller->request->session();
-		if ($session->check('Institution.Institutions.id')) {
-			$institutionId = $session->read('Institution.Institutions.id');
-		}
+    public function _buildSurveyRecords($studentId=null, $institutionId=null) {
+        $session = $this->controller->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
 
-		if (!is_null($studentId) && !is_null($institutionId)) {
-			$surveyForms = $this->getForms();
-			$todayDate = date("Y-m-d");
-			$SurveyStatuses = $this->SurveyForms->SurveyStatuses;
-			$SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
+        if (!is_null($studentId) && !is_null($institutionId)) {
+            $surveyForms = $this->getForms();
+            $todayDate = date("Y-m-d");
+            $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
+            $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
 
-			// Update all New Survey to Expired by Institution ID and Student ID
-			$this->updateAll(['status_id' => -1],
-				[
-					'institution_id' => $institutionId,
-					'student_id' => $studentId,
-					'status_id' => 0
-				]
-			);
+            // Update all New Survey to Expired by Institution ID and Student ID
+            $this->updateAll(['status_id' => -1],
+                [
+                    'institution_id' => $institutionId,
+                    'student_id' => $studentId,
+                    'status_id' => 0
+                ]
+            );
 
-			foreach ($surveyForms as $surveyFormId => $surveyForm) {
-				$surveyStatusIds = $SurveyStatuses
-					->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-					->where([
-						$SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
-						$SurveyStatuses->aliasField('date_disabled >=') => $todayDate
-					])
-					->toArray();
+            foreach ($surveyForms as $surveyFormId => $surveyForm) {
+                $surveyStatusIds = $SurveyStatuses
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                    ->where([
+                        $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
+                        $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
+                    ])
+                    ->toArray();
 
-				$academicPeriodIds = $SurveyStatusPeriods
-					->find('list', ['keyField' => 'academic_period_id', 'valueField' => 'academic_period_id'])
-					->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatusIds])
-					->toArray();
+                $academicPeriodIds = $SurveyStatusPeriods
+                    ->find('list', ['keyField' => 'academic_period_id', 'valueField' => 'academic_period_id'])
+                    ->where([$SurveyStatusPeriods->aliasField('survey_status_id IN') => $surveyStatusIds])
+                    ->toArray();
 
-				foreach ($academicPeriodIds as $key => $academicPeriodId) {
-					$results = $this
-						->find('all')
-						->where([
-							$this->aliasField('institution_id') => $institutionId,
-							$this->aliasField('student_id') => $studentId,
-							$this->aliasField('academic_period_id') => $academicPeriodId,
-							$this->aliasField('survey_form_id') => $surveyFormId
-						])
-						->all();
+                foreach ($academicPeriodIds as $key => $academicPeriodId) {
+                    $results = $this
+                        ->find('all')
+                        ->where([
+                            $this->aliasField('institution_id') => $institutionId,
+                            $this->aliasField('student_id') => $studentId,
+                            $this->aliasField('academic_period_id') => $academicPeriodId,
+                            $this->aliasField('survey_form_id') => $surveyFormId
+                        ])
+                        ->all();
 
-					if ($results->isEmpty()) {
-						// Insert New Survey if not found
-						$data = [
-							'institution_id' => $institutionId,
-							'student_id' => $studentId,
-							'academic_period_id' => $academicPeriodId,
-							'survey_form_id' => $surveyFormId
-						];
-						$entity = $this->newEntity($data);
-						if ($this->save($entity)) {
-						} else {
-							$this->log($entity->errors(), 'debug');
-						}
-					} else {
-						// Update Expired Survey back to New
-						$this->updateAll(['status_id' => 0],
-							[
-								'institution_id' => $institutionId,
-								'student_id' => $studentId,
-								'academic_period_id' => $academicPeriodId,
-								'survey_form_id' => $surveyFormId,
-								'status_id' => self::EXPIRED
-							]
-						);
-					}
-				}
-			}
-		}
-	}
-	*/
+                    if ($results->isEmpty()) {
+                        // Insert New Survey if not found
+                        $data = [
+                            'institution_id' => $institutionId,
+                            'student_id' => $studentId,
+                            'academic_period_id' => $academicPeriodId,
+                            'survey_form_id' => $surveyFormId
+                        ];
+                        $entity = $this->newEntity($data);
+                        if ($this->save($entity)) {
+                        } else {
+                            $this->log($entity->errors(), 'debug');
+                        }
+                    } else {
+                        // Update Expired Survey back to New
+                        $this->updateAll(['status_id' => 0],
+                            [
+                                'institution_id' => $institutionId,
+                                'student_id' => $studentId,
+                                'academic_period_id' => $academicPeriodId,
+                                'survey_form_id' => $surveyFormId,
+                                'status_id' => self::EXPIRED
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+    }
+    */
 
     public function _redirect($institutionId = null, $studentId = null, $periodId = 0, $formId = 0)
     {

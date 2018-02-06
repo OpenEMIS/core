@@ -452,7 +452,7 @@ class StaffAbsencesTable extends ControllerActionTable
             $this->fields['end_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
             $this->fields['end_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
 
-            // Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
+        // Malcolm discussed with Umairah and Thed - will revisit this when default date of htmlhelper is capable of setting 'defaultViewDate' ($entity->start_date = $todayDate; was: causing validation error to disappear)
             // $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             // $startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
             // $endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
@@ -472,7 +472,7 @@ class StaffAbsencesTable extends ControllerActionTable
             // 	$entity->start_date = $startDate->format('Y-m-d');
             // 	$entity->end_date = $startDate->format('Y-m-d');
             // }
-        } else if ($this->action == 'edit') {
+        } elseif ($this->action == 'edit') {
             $this->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
             $this->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
         }
@@ -540,7 +540,7 @@ class StaffAbsencesTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['select'] = false;
             $attr['onChangeReload'] = 'changePeriod';
-        } else if ($action == 'view' || $action == 'edit') {
+        } elseif ($action == 'view' || $action == 'edit') {
             $attr['visible'] = false;
         }
 
@@ -554,8 +554,7 @@ class StaffAbsencesTable extends ControllerActionTable
             $Staff = TableRegistry::get('Institution.Staff');
 
             $institutionId = $this->Session->read('Institution.Institutions.id');
-            $periodOptionsData = $AcademicPeriodTable->getList(['isEditable'=>true]);
-            $periodOptions = $periodOptionsData[key($periodOptionsData)];
+            $periodOptions = $AcademicPeriodTable->getYearList(['isEditable'=>true]);
             $selectedPeriod = $this->queryString('period', $periodOptions);
             $startDate = $AcademicPeriodTable->get($selectedPeriod)->start_date;
             $endDate = $AcademicPeriodTable->get($selectedPeriod)->end_date;
@@ -601,7 +600,7 @@ class StaffAbsencesTable extends ControllerActionTable
             $staffOptions = [__('Active Staff') => $newActiveStaffOptions, __('Inactive Staff') => $newInactiveStaffOptions];
             $attr['options'] = $staffOptions;
             $attr['onChangeReload'] = 'changeStaff';
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $Users = TableRegistry::get('User.Users');
             $selectedStaff = $request->query('staff');
 
