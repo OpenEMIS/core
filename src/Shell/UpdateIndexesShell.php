@@ -44,14 +44,14 @@ class UpdateIndexesShell extends Shell
         }
 
         // update the generated_by and generated_on in indexes table
-        $this->InstitutionIndexes->updateAll(
+        $this->InstitutionRisks->updateAll(
             [
                 'generated_by' => $userId,
                 'generated_on' => new Time(),
-                'pid' => NULL,
+                'pid' => null,
                 'status' => 3 // completed
             ],
-            ['index_id' => $indexesId, 'institution_id' => $institutionId]
+            ['risk_id' => $indexesId, 'institution_id' => $institutionId]
         );
     }
 
@@ -158,7 +158,7 @@ class UpdateIndexesShell extends Shell
                 ->execute();
 
             // update the student indexes criteria
-            $this->StudentRiskCriterias->query()
+            $this->StudentRisksCriterias->query()
                 ->update()
                 ->set([
                     'created_user_id' => $userId,
