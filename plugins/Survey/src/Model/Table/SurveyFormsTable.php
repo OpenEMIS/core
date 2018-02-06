@@ -29,9 +29,9 @@ class SurveyFormsTable extends CustomFormsTable
             'filterClass' => [
                 'className' => 'Institution.Types',
                 'joinTable' => 'survey_forms_filters',
-                'foreignKey' => 'survey_forms_id',
+                'foreignKey' => 'survey_form_id',
                 'targetForeignKey' => 'survey_filter_id',
-                'through' => 'Infrastructure.SuveryFormsFilters',
+                'through' => 'Survey.SurveyFormsFilters',
                 'dependent' => true
             ],
             'label' => [
@@ -118,8 +118,10 @@ class SurveyFormsTable extends CustomFormsTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         parent::addEditAfterAction($event, $entity, $extra);
-        unset($this->fields['apply_to_all']);
-        unset($this->fields['custom_filters']);
+        // pr($this->fields);
+        // die;
+        // unset($this->fields['apply_to_all']);
+    // unset($this->fields['custom_filters']);
     }
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
