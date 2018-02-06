@@ -248,7 +248,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $Classes = $this->Classes;
         $Subjects = $this;
 
-        $academicPeriodOptions = $this->AcademicPeriods->getList();
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $institutionId = $extra['institution_id'];
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
 
