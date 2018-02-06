@@ -576,7 +576,7 @@ class RisksTable extends ControllerActionTable
                     $riskId = $riskCriteriasDataObj->risk_id;
 
                     if (!empty($riskId) && !empty($institutionId)) {
-                        $status = $$InstitutionRisks->getStatus($riskId, $institutionId);
+                        $status = $InstitutionRisks->getStatus($riskId, $institutionId);
 
                         if ($status == 2 || $status == 3) { // Status processing and completed
                             $criteria[$criteriaKey] = $criteriaObj;
