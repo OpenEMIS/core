@@ -330,7 +330,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
             foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
                 // to get the risks criteria to get the value on the student_risk_criterias
-                $risksCriteriaResults = $RiskCriterias->find('ActiveRisksCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
+                $risksCriteriaResults = $RiskCriterias->find('ActiveIndexesCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
 
                 if (!$risksCriteriaResults->isEmpty()) {
                     foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
@@ -422,7 +422,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                                 $studentRisksCriteriaResults = $this->StudentRisksCriterias->find()
                                     ->where([
                                         $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
-                                        $this->StudentRisksCriterias->aliasField('risks_criteria_id') => $risksCriteriaData->id
+                                        $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
                                     ])
                                     ->all();
 
