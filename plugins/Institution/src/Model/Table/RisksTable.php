@@ -80,7 +80,7 @@ class RisksTable extends ControllerActionTable
 
         $institutionId = $params['institution_id'];
         $userId = $params['user_id'];
-        $riskd = $params['risk_id'];
+        $riskId = $params['risk_id'];
         $academicPeriodId = $params['academic_period_id'];
 
         // update indexes pid and status
