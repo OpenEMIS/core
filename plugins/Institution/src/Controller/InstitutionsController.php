@@ -340,7 +340,7 @@ class InstitutionsController extends AppController
     }
     public function Risks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Risks']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Risk.Risks']);
     }
     public function StudentRisks()
     {
