@@ -1081,7 +1081,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
 
         // Academic Period
-        $periodOptions = $AcademicPeriod->getYearList(['isEditable'=>true]);
+        $periodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         if (is_null($this->request->query('period'))) {
             $this->request->query['period'] = $AcademicPeriod->getCurrent();
         }
