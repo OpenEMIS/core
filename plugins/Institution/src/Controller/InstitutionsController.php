@@ -340,7 +340,7 @@ class InstitutionsController extends AppController
     }
     public function Risks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Risk.Risks']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Risks']);
     }
     public function StudentRisks()
     {
@@ -1122,7 +1122,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Risks') 
+                'StudentRisks' => __('Risks') 
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1162,7 +1162,7 @@ class InstitutionsController extends AppController
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
-            } elseif ($model->alias() == 'StudentIndexes') {
+            } elseif ($model->alias() == 'StudentRisks') {
                 $header .= ' - '. __('Risks'); 
             } elseif ($model->alias() == 'Indexes') {
                 $header .= ' - '. __('Risks'); 
