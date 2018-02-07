@@ -345,11 +345,11 @@ class StudentUserTable extends ControllerActionTable
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->name, 'StudentTransferOut', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
-            $TransferRequests = TableRegistry::get('Institution.TransferRequests');
+            $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
 
             $institutionStudentId = $extra['institutionStudentId'];
             $studentEntity = $StudentsTable->get($institutionStudentId);
@@ -358,7 +358,7 @@ class StudentUserTable extends ControllerActionTable
             $studentId = $studentEntity->student_id;
 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'TransferRequests', 'add'], $params);
+            $action = $this->setQueryString(['controller' => $this->controller->name, 'action' => 'StudentTransferOut', 'add'], $params);
 
             $checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
@@ -369,22 +369,6 @@ class StudentUserTable extends ControllerActionTable
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
                 $transferButton['url'] = $action;
-
-                // check if there is an existing transfer request
-                $transferRequest = $TransferRequests
-                    ->find()
-                    ->where([
-                        $TransferRequests->aliasField('previous_institution_id') => $institutionId,
-                        $TransferRequests->aliasField('student_id') => $studentId,
-                        $TransferRequests->aliasField('status') => 0
-                    ])
-                    ->first();
-
-                if (!empty($transferRequest)) {
-                    $transferButton['url'][0] = 'view';
-                    $transferButton['url'][1] = $this->paramsEncode(['id' => $transferRequest->id]);
-                }
-
                 $toolbarButtons['transfer'] = $transferButton;
             }
         }
@@ -667,7 +651,9 @@ class StudentUserTable extends ControllerActionTable
             'InstitutionStudents' => function ($q) {
                 return $q->where(['InstitutionStudents.student_status_id' => 1]);
             },
-            'InstitutionStudents.Institutions.Areas'
+            'InstitutionStudents.Institutions.Areas',
+            'InstitutionStudents.AcademicPeriods',
+            'InstitutionStudents.EducationGrades'
         ]);
         return $query;
     }
