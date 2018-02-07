@@ -9,6 +9,7 @@ use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 
 class SurveyFormsTable extends CustomFormsTable
@@ -73,12 +74,18 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['custom_module_id', 'code', 'name', 'description', 'custom_fields']);
+        $this->setFieldOrder(['custom_module_id', 'code', 'name', 'custom_filters', 'description', 'custom_fields']);
+        unset($this->fields['apply_to_all']);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('code');
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
     }
 
     public function onGetCustomModuleId(Event $event, Entity $entity)
@@ -89,7 +96,6 @@ class SurveyFormsTable extends CustomFormsTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         parent::viewAfterAction($event, $entity, $extra);
-        unset($this->fields['apply_to_all']);
         unset($this->fields['custom_filters']);
         if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
             $toolbarButtons = [];
@@ -113,15 +119,6 @@ class SurveyFormsTable extends CustomFormsTable
             ];
             $extra['toolbarButtons']['downloads'] = $toolbarButtons;
         }
-    }
-
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        parent::addEditAfterAction($event, $entity, $extra);
-        // pr($this->fields);
-        // die;
-        // unset($this->fields['apply_to_all']);
-    // unset($this->fields['custom_filters']);
     }
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
@@ -186,5 +183,66 @@ class SurveyFormsTable extends CustomFormsTable
                 $this->CustomModules->aliasField('parent_id') => 0,
                 $this->CustomModules->aliasField('code NOT IN') => $this->excludedCustomModules
             ]);
+    }
+
+    public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'view') {
+            parent::onUpdateFieldCustomFilters($event, $attr, $action, $request);
+        } elseif ($action == 'add' || $action == 'edit') {
+            $customModule = $attr['attr']['customModule'];
+            $selectedModule = $customModule->id;
+            $filter = $customModule->filter;
+
+            if (isset($filter)) {
+                $entity = $attr['attr']['entity'];
+                list($plugin, $modelAlias) = explode('.', $filter, 2);
+                $labelText = Inflector::underscore(Inflector::singularize($modelAlias));
+                $filterOptions = TableRegistry::get($filter)->getList()->toArray();
+
+                $attr['attr']['label'] = __(Inflector::humanize($labelText));
+                $attr['options'] = $filterOptions;
+                $attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
+            }
+        }
+
+        return $attr;
+    }
+
+    public function onGetCustomFilters(Event $event, Entity $entity)
+    {
+        if ($this->action == 'index') {
+            if (!is_null($entity->_matchingData['CustomModules']->filter)) {
+                if (sizeof($entity->custom_filters) > 0) {
+                    $chosenSelectList = [];
+                    foreach ($entity->custom_filters as $value) {
+                        $chosenSelectList[] = $value->name;
+                    }
+                    return implode(', ', $chosenSelectList);
+                }
+            }
+
+            return '<i class="fa fa-minus"></i>';
+        }
+    }
+
+    private function setupFields(Entity $entity)
+    {
+        $selectedModule = $this->request->query('module');
+        $customModule = $this->CustomModules->get($selectedModule);
+
+        $this->field('custom_module_id');
+
+        $this->field('custom_filters', [
+                    'type' => 'chosenSelect',
+                    'placeholder' => __('Select Filters'),
+                    'attr' => ['customModule' => $customModule, 'entity' => $entity]
+                ]);
+
+        $this->field('custom_fields', [
+            'type' => 'custom_order_field',
+            'valueClass' => 'table-full-width',
+            '' => 'description'
+        ]);
     }
 }

@@ -234,7 +234,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         foreach ($workflow->workflow_steps as $workflowStep) {
                             if ($workflowStep->category == 1) {     // To Do
                                 $this->openStatusId = $workflowStep->id;
-                            } else if ($workflowStep->category == 3) {  // Done
+                            } elseif ($workflowStep->category == 3) {  // Done
                                 $this->closedStatusId = $workflowStep->id;
                             }
                         }
@@ -256,7 +256,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->buildSurveyRecords();
                 $this->field('to_be_completed_by');
                 $fieldOrder[] = 'to_be_completed_by';
-            } else if ($selectedStatus == $this->closedStatusId) {  // Closed
+            } elseif ($selectedStatus == $this->closedStatusId) {  // Closed
                 $this->field('completed_on');
                 $fieldOrder[] = 'completed_on';
             } else {
@@ -347,7 +347,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $periodOptions = $this->AcademicPeriods->getList(['withLevels' => false]);
             $periodId = $attr['attr']['value'];
 
@@ -362,7 +362,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $formOptions = $this->getForms();
             $formId = $attr['attr']['value'];
 
@@ -400,6 +400,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $todayDate = date("Y-m-d");
         $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
         $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
+        $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
             $openStatusId = null;
@@ -412,10 +413,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                     }
                 }
 
-
-
                 // Update all New Survey to Expired by Institution Id
-                $this->updateAll(['status_id' => self::EXPIRED],
+                $this->updateAll(
+                    ['status_id' => self::EXPIRED],
                     [
                         'institution_id' => $institutionId,
                         'survey_form_id' => $surveyFormId,
@@ -433,6 +433,8 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
                             ]);
                     })
+                    ->innerJoinWith('SurveyStatuses.SurveyForms.CustomFilters')
+                    ->where(['CustomFilters.id' => $institutionTypeId ])
                     ->all();
 
                 foreach ($periodResults as $obj) {
@@ -467,7 +469,8 @@ class InstitutionSurveysTable extends ControllerActionTable
                             }
                         } else {
                             // Update Expired Survey back to Open
-                            $this->updateAll(['status_id' => $openStatusId],
+                            $this->updateAll(
+                                ['status_id' => $openStatusId],
                                 [
                                     'academic_period_id' => $periodId,
                                     'survey_form_id' => $surveyFormId,
