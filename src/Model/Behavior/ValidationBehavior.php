@@ -1094,8 +1094,8 @@ class ValidationBehavior extends Behavior
                             ->toArray();
                 }
 
-                $startDate = strtotime($globalData['data']['start_date']);
-                $endDate = strtotime($globalData['data']['end_date']);
+                $startDateObj = new Date($globalData['data']['start_date']);
+                $endDateObj = new Date($globalData['data']['end_date']);
 
                 if (!empty($periodObj)) {
                     $joinStartDateData=[];
@@ -1110,25 +1110,27 @@ class ValidationBehavior extends Behavior
                     if (in_array('', $joinStartDateData)) {
                         $joinStartDate = null;
                     } else {
-                        $joinStartDate = min($joinStartDateData)->toUnixString();
+                        $joinStartDate = min($joinStartDateData);
                     }
 
                     // will check if in the array have any null data, means no restriction on the end date of the staff
                     if (in_array('', $joinEndDateData)) {
                         $joinEndDate = null;
                     } else {
-                        $joinEndDate = max($joinEndDateData)->toUnixString();
+                        $joinEndDate = max($joinEndDateData);
                     }
 
-                    $joinRangeCheck = (($startDate >= $joinStartDate) && (is_null($joinEndDate))) || (($startDate >= $joinStartDate) && ($endDate <= $joinEndDate) );
+                    $joinStartDateObj = new Date($joinStartDate);
+                    $joinEndDateObj = new Date($joinEndDate);
 
+                    $joinRangeCheck = (($startDateObj->gte($joinStartDateObj)) && (is_null($joinEndDateObj))) || (($startDateObj->gte($joinStartDateObj)) && ($endDateObj->lte($joinEndDateObj)));
                     if (!$joinRangeCheck) {
-                        if (!is_null($joinEndDate)) {
-                            $startDate = __('Absence date must be within the assigned period, from') . ' ' . date('d-m-Y', $joinStartDate);
-                            $endDate = ' ' . __('to') . ' ' . date('d-m-Y', $joinEndDate);
+                        if (!is_null($joinEndDateObj)) {
+                            $startDate = __('Absence date must be within the assigned period, from') . ' ' . $joinStartDateObj->format('d-m-Y');
+                            $endDate = ' ' . __('to') . ' ' . $joinEndDateObj->format('d-m-Y');
                             return $startDate . $endDate;
                         } else {
-                            $startDate = __('Absence date must be within the assigned period, from') . ' ' . date('d-m-Y', $joinStartDate);
+                            $startDate = __('Absence date must be within the assigned period, from') . ' ' . $joinStartDateObj->format('d-m-Y');
                             return $startDate;
                         }
                     }
