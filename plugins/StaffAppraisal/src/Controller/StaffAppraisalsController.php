@@ -47,6 +47,10 @@ class StaffAppraisalsController extends AppController
                 'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'types'],
                 'text' => __('Types')
             ],
+            'statuses' => [
+                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'statuses'],
+                'text' => __('Statuses')
+            ]
         ];
 
         $this->set('tabElements', $this->TabPermission->checkTabPermission($tabElements));
@@ -66,5 +70,10 @@ class StaffAppraisalsController extends AppController
     public function types()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalTypes']);
+    }
+
+    public function statuses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalStatuses']);
     }
 }
