@@ -564,7 +564,7 @@ class NavigationComponent extends Component
                 'Institutions.Risks.index' => [
                 'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => ['Institutions.Risks','Institutions.InstitutionStudentIndexes'],
+                'selected' => ['Institutions.Risks','Institutions.InstitutionStudentRisks'],
                 'params' => ['plugin' => 'Institution'],
                 ],
 
