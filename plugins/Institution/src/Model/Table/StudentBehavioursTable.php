@@ -40,7 +40,7 @@ class StudentBehavioursTable extends AppTable
         $newEvent = [
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
         ];
-        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['Model.InstitutionStudentRisks.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
         $events = array_merge($events, $newEvent);
         return $events;
     }

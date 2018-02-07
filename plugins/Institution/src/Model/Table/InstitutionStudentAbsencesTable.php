@@ -68,7 +68,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['Model.InstitutionStudentRisks.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
         $events['InstitutionCase.onSetLinkedRecordsCheckCondition'] = 'onSetLinkedRecordsCheckCondition';
