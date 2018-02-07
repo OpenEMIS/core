@@ -353,41 +353,41 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                             return $event->result;
                         }
 
-                        $valueRiskData = $event->result;
+                        $valueIndexData = $event->result;
 
 
                         // if the condition fulfilled then the value will be saved as its value, if not saved as null
                         switch ($operator) {
                             case 1: // '<='
-                                if($valueRiskData <= $threshold){
-                                    $valueRisk = $valueRiskData;
+                                if($valueIndexData <= $threshold){
+                                    $valueIndex = $valueIndexData;
                                 } else {
-                                    $valueRisk = null;
+                                    $valueIndex = null;
                                 }
                                 break;
 
                             case 2: // '>='
-                                if($valueRiskData >= $threshold){
-                                    $valueRisk = $valueRiskData;
+                                if($valueIndexData >= $threshold){
+                                    $valueIndex = $valueIndexData;
                                 } else {
-                                    $valueRisk = null;
+                                    $valueIndex = null;
                                 }
                                 break;
 
                             case 3: // '='
                             case 11: // for status Repeated
                                 // value risk is an array (valueRisk[threshold] = value)
-                                if (array_key_exists($threshold, $valueRiskData)) {
-                                    $valueRisk = 'True';
+                                if ($threshold = $valueIndexData) {
+                                    $valueIndex = 'True';
                                 } else {
-                                    $valueRisk = null;
+                                    $valueIndex = null;
                                 }
                                 break;
                         }
 
                         // saving association to student_risks_criterias
                         $criteriaData = [
-                            'value' => $valueRisk,
+                            'value' => $valueIndex,
                             'risk_criteria_id' => $risksCriteriaData->id
                         ];
 
