@@ -885,7 +885,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
                 'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals'],
+                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.institutionStaffAppraisals'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1407,7 +1407,7 @@ class NavigationComponent extends Component
                 'title' => 'Appraisals',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'StaffAppraisal'],
-                'selected' => ['StaffAppraisals.criterias', 'StaffAppraisals.forms', 'StaffAppraisals.types']
+                'selected' => ['StaffAppraisals.criterias', 'StaffAppraisals.forms', 'StaffAppraisals.types', 'StaffAppraisals.statuses']
             ],
 
             'Administration.Examinations' => [
