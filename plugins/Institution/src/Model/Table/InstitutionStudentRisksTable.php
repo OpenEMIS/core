@@ -96,7 +96,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Risks',
-            'risk'
+            'index'
         ];
         $toolbarButtonsArray['back'] = $this->getButtonTemplate();
         $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
