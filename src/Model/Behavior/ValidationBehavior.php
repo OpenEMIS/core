@@ -1770,7 +1770,7 @@ class ValidationBehavior extends Behavior
         $data = $globalData['data'];
 
         $studentId = (array_key_exists('student_id', $data))? $data['student_id']: null;
-        $educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+        $educationGradeId = (array_key_exists('previous_education_grade_id', $data))? $data['previous_education_grade_id']: null;
         $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
 
         if (empty($studentId) || empty($educationGradeId) || empty($previousInstitutionId)) {
@@ -1853,17 +1853,20 @@ class ValidationBehavior extends Behavior
         $studentId = $data['student_id'];
         $institutionId = $data['institution_id'];
         $academicPeriodId = $data['academic_period_id'];
-        $educationGradeId = $data['education_grade_id'];
+
         $AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+        $doneStatus = $AdmissionTable::DONE;
+
+        // student can only have one pending admission record regardless of education grade
         $studentExist = $AdmissionTable->find()
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['Statuses.category <>' => $doneStatus]);
+            })
             ->where([
-                    $AdmissionTable->aliasField('status') => 0,
-                    $AdmissionTable->aliasField('student_id') => $studentId,
-                    $AdmissionTable->aliasField('institution_id') => $institutionId,
-                    $AdmissionTable->aliasField('academic_period_id') => $academicPeriodId,
-                    $AdmissionTable->aliasField('education_grade_id') => $educationGradeId,
-                    $AdmissionTable->aliasField('type') => 1
-                ])
+                $AdmissionTable->aliasField('student_id') => $studentId,
+                $AdmissionTable->aliasField('institution_id') => $institutionId,
+                $AdmissionTable->aliasField('academic_period_id') => $academicPeriodId
+            ])
             ->count();
 
         return $studentExist == 0;
@@ -2038,6 +2041,7 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    // only used for StaffTransferIn
     public static function checkPendingStaffTransfer($field, array $globalData)
     {
         $data = $globalData['data'];
@@ -2081,6 +2085,66 @@ class ValidationBehavior extends Behavior
                     'institutionId' => $InstitutionStaffTransfers->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
                     'action' => 'Staff',
+                    'add',
+                    'transfer_exists' => 'true'
+                ], true);
+            }
+            return $url;
+        }
+
+        return true;
+    }
+
+    // only used for StudentTransferIn
+    public static function checkPendingStudentTransfer($field, array $globalData)
+    {
+        $data = $globalData['data'];
+        $studentId = $data['student_id'];
+        $institutionId = $data['institution_id'];
+        $previousInstitutionId = $data['previous_institution_id'];
+
+        $InstitutionStudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $doneStatus = $InstitutionStudentTransfers::DONE;
+
+        $pendingTransfer = $InstitutionStudentTransfers->find()
+            ->matching('Statuses.WorkflowStepsParams', function ($q) use ($doneStatus) {
+                return $q->where([
+                    'Statuses.category <> ' => $doneStatus,
+                    'WorkflowStepsParams.name' => 'institution_owner'
+                ]);
+            })
+            ->where([
+                $InstitutionStudentTransfers->aliasField('student_id') => $studentId,
+                $InstitutionStudentTransfers->aliasField('previous_institution_id') => $previousInstitutionId
+            ])
+            ->first();
+
+        if (!empty($pendingTransfer)) {
+            // check if the incoming institution can view the transfer record
+            $visible = 0;
+            if ($pendingTransfer->institution_id == $institutionId) {
+                $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
+                if ($institutionOwner == $InstitutionStudentTransfers::INCOMING || $pendingTransfer->all_visible) {
+                    $visible = 1;
+                }
+            }
+
+            if ($visible) {
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'institutionId' => $InstitutionStudentTransfers->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StudentTransferIn',
+                    'view',
+                    $InstitutionStudentTransfers->paramsEncode(['id' => $pendingTransfer->id])
+                ], true);
+
+            } else {
+                $url = Router::url([
+                    'plugin' => 'Institution',
+                    'institutionId' => $InstitutionStudentTransfers->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'Students',
                     'add',
                     'transfer_exists' => 'true'
                 ], true);
@@ -2189,16 +2253,16 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $registryAlias = $model->registryAlias();
         $data = $globalData['data'];
-        $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
+        $institutionId = (array_key_exists('institution_id', $data))? $data['institution_id']: null;
 
         if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
-                    ->find()
-                    ->where([
-                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
-                        $InstitutionGrades->aliasField('institution_id') => $previousInstitutionId
-                    ])
-                    ->first();
+                ->find()
+                ->where([
+                    $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                    $InstitutionGrades->aliasField('institution_id') => $institutionId
+                ])
+                ->first();
 
             if (!empty($query->end_date)) {
                 $programmeEndDate = $query->end_date;
@@ -2222,14 +2286,14 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
 
-        if (array_key_exists('new_education_grade_id', $data) && !empty($data['education_grade_id'])) {
+        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
-                    ->find()
-                    ->where([
-                        $InstitutionGrades->aliasField('education_grade_id') => $data['new_education_grade_id'],
-                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
-                    ])
-                    ->first();
+                ->find()
+                ->where([
+                    $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                    $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                ])
+                ->first();
 
             if (!empty($query->end_date)) {
                 $programmeEndDate = $query->end_date;
@@ -2255,11 +2319,7 @@ class ValidationBehavior extends Behavior
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
             // fixed workflow
-            $models = [
-                'Institution.TransferApprovals',
-                'Institution.StudentAdmission',
-                'Institution.StudentWithdraw'
-            ];
+            $models = [];
 
             foreach ($models as $model) {
                 $subject = TableRegistry::get($model);
@@ -2416,5 +2476,25 @@ class ValidationBehavior extends Behavior
         }
 
         return true;
+    }
+
+    public static function checkInstitutionOffersGrade($field, array $globalData)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $institutionId = (array_key_exists('institution_id', $globalData['data']))? $globalData['data']['institution_id']: null;
+
+        if (!empty($institutionId)) {
+            $query = $InstitutionGrades->find()
+                ->where([
+                    $InstitutionGrades->aliasField('education_grade_id') => $field,
+                    $InstitutionGrades->aliasField('institution_id') => $institutionId
+                ])
+                ->first();
+
+            if (!empty($query)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
