@@ -85,6 +85,7 @@ class SurveyFormsTable extends CustomFormsTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $this->setAllCustomFilter($entity);
+        $this->removeCustomFilter($entity);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -129,8 +130,8 @@ class SurveyFormsTable extends CustomFormsTable
     {
         parent::editOnInitialize($event, $entity, $extra);
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-        $isAll = $SurveyFormsFilters->getIsAllFilterType($entity->id);
-        $entity->custom_filter_selection = ($isAll) ? self::ALL_CUSTOM_FILER : self::CUSTOM_FILTER;
+        $isAllFilterType = $SurveyFormsFilters->getIsAllFilterType($entity->id);
+        $entity->custom_filter_selection = ($isAllFilterType) ? self::ALL_CUSTOM_FILER : self::CUSTOM_FILTER;
     }
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
@@ -317,6 +318,29 @@ class SurveyFormsTable extends CustomFormsTable
             if ($SurveyFormsFilters->save($surveyFormFilterEntity)) {
             } else {
                 $SurveyFormsFilters->log($surveyFormFilterEntity->errors(), 'debug');
+            }
+        }
+    }
+
+    private function removeCustomFilter($entity)
+    {
+        $customModule = $this->CustomModules->get($entity->custom_module_id);
+        $moduleModel = $customModule->model;
+        
+        // pr($entity);
+        // die;
+
+        if ($moduleModel == 'Student.StudentSurveys' || $moduleModel == 'InstitutionRepeater.RepeaterSurveys') {
+            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+            $surveyFormId = $entity->id;
+
+            $resultSet = $SurveyFormsFilters
+                ->find()
+                ->where([$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId])
+                ->toArray();
+
+            foreach ($resultSet as $result) {
+                $SurveyFormsFilters->delete($result);
             }
         }
     }
