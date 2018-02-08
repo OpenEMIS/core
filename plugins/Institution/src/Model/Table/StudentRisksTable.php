@@ -240,9 +240,9 @@ class StudentRisksTable extends ControllerActionTable
                         // to get total number of behaviour
                         $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
                         $quantity = '';
-                        if ($getValueIndex[$threshold] > 1) {
-                            $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
-                        }
+                        // if ($getValueIndex[$threshold] > 1) {
+                        //     $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
+                        // }
 
                         $riskValue = '<div style="color : red">' . $obj->risk_criteria->risk_value . $quantity  .'</div>';
 
