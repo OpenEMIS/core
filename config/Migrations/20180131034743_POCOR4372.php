@@ -85,7 +85,7 @@ class POCOR4372 extends AbstractMigration
         $sql = "UPDATE `security_functions`
                 SET `_view` = 'Risks.index|Risks.view|InstitutionStudentIndexes.index|InstitutionStudentIndexes.view',
                     `_execute` = 'Risks.generate'
-                WHERE `id`=1055";
+                WHERE `id`= 1055";
 
         $this->execute($sql);
 
@@ -94,7 +94,13 @@ class POCOR4372 extends AbstractMigration
                     `_edit` = 'Risks.edit',
                     `_add` = 'Risks.add',
                     `_delete` ='Risks.remove'
-                WHERE `id`=5066";
+                WHERE `id`= 5066";
+
+        $this->execute($sql);
+
+        $sql = "UPDATE `security_functions`
+                SET `_view` = 'StudentRisks.index|StudentRisks.view'
+                WHERE `id` = 2032";
 
         $this->execute($sql);
         // end
@@ -187,6 +193,12 @@ class POCOR4372 extends AbstractMigration
                     `_add` = 'Indexes.add',
                     `_delete` ='Indexes.remove'
                 WHERE `id`=5066";
+
+        $this->execute($sql);
+
+        $sql = "UPDATE `security_functions`
+                SET `_view` = 'StudentIndexes.index|StudentIndexes.view'
+                WHERE `id`=2032";
 
         $this->execute($sql);
         // end
