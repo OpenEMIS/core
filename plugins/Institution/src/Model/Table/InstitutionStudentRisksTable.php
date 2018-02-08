@@ -119,7 +119,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $selectedClassId = $this->queryString('class_id', $classOptions);
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-            'callable' => function($id) use ($InstitutionClassStudents) {
+            'callable' => function ($id) use ($InstitutionClassStudents) {
                 return $InstitutionClassStudents
                     ->find()
                     ->where([
@@ -131,7 +131,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $extra['selectedClass'] = $selectedClassId;
 
         $extra['elements']['control'] = [
-            'name' => 'StudentIndexes/controls',
+            'name' => 'StudentRisks/controls',
             'data' => [
                 'classOptions'=>$classOptions,
                 'selectedClass'=>$selectedClassId,
