@@ -477,7 +477,7 @@ class CustomFormsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->query['module'] = $entity->custom_module_id;
         $this->request->query['apply_all'] = $this->getApplyToAll($entity);
