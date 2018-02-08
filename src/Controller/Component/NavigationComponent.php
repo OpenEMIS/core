@@ -1407,7 +1407,7 @@ class NavigationComponent extends Component
                 'title' => 'Appraisals',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'StaffAppraisal'],
-                'selected' => ['StaffAppraisals.criterias', 'StaffAppraisals.forms', 'StaffAppraisals.types', 'StaffAppraisals.statuses']
+                'selected' => ['StaffAppraisals.criterias', 'StaffAppraisals.forms', 'StaffAppraisals.types', 'StaffAppraisals.periods']
             ],
 
             'Administration.Examinations' => [
