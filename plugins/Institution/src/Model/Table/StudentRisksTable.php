@@ -225,12 +225,12 @@ class StudentRisksTable extends ControllerActionTable
 
                     $criteriaName = $obj->risk_criteria->criteria;
                     $operatorId = $obj->risk_criteria->operator;
-                    $operator = $this->Risk->getOperatorDetails($operatorId);
+                    $operator = $this->Risks->getOperatorDetails($operatorId);
                     $threshold = $obj->risk_criteria->threshold;
 
                     $value = $this->StudentRisksCriterias->getValue($institutionStudentRiskId, $riskCriteriasId);
 
-                    $criteriaDetails = $this->Risk->getCriteriasDetails($criteriaName);
+                    $criteriaDetails = $this->Risks->getCriteriasDetails($criteriaName);
                     $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
 
                     if ($value == 'True') {

@@ -20,7 +20,7 @@ class StudentRisksCriteriasTable extends AppTable
         $this->belongsTo('RiskCriterias', ['className' => 'Risk.RiskCriterias', 'foreignKey' => 'risk_criteria_id']);
     }
 
-    public function getValue($institutionStudentRiskId, $RiskCriteriaId)
+    public function getValue($institutionStudentRiskId, $riskCriteriaId)
     {
         $valueData = $this->find()
             ->where([
