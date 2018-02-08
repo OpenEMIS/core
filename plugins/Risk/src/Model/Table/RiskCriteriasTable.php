@@ -47,7 +47,7 @@ class RiskCriteriasTable extends ControllerActionTable
         $this->StudentRisksCriterias->deleteAll(['risk_criteria_id' => $riskCriteriaId]);
     }
 
-    public function findActiveIndexesCriteria(Query $query, array $options)
+    public function findActiveRiskCriteria(Query $query, array $options)
     {
         $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
 

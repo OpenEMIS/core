@@ -51,7 +51,7 @@ class AssessmentItemResultsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentIndexCalculateRiskValue';
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         return $events;
     }
 

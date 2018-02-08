@@ -27,7 +27,7 @@ class SpecialNeedsTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentIndexCalculateRiskValue';
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         return $events;
     }
 
@@ -83,7 +83,7 @@ class SpecialNeedsTable extends ControllerActionTable
         $this->setFieldOrder(['special_need_date', 'special_need_type_id', 'special_need_difficulty_id', 'comment']);
     }
 
-    public function institutionStudentIndexCalculateRiskValue(Event $event, ArrayObject $params)
+    public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];
