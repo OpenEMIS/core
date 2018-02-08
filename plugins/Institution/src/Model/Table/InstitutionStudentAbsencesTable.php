@@ -68,7 +68,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentRisks.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentIndexCalculateRiskValue';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
         $events['InstitutionCase.onSetLinkedRecordsCheckCondition'] = 'onSetLinkedRecordsCheckCondition';
@@ -1135,7 +1135,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
     }
 
-    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    public function institutionStudentIndexCalculateRiskValue(Event $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];

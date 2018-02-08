@@ -40,7 +40,7 @@ class StudentBehavioursTable extends AppTable
         $newEvent = [
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
         ];
-        $events['Model.InstitutionStudentRisks.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentIndexCalculateRiskValue';
         $events = array_merge($events, $newEvent);
         return $events;
     }
@@ -458,7 +458,7 @@ class StudentBehavioursTable extends AppTable
         return $attr;
     }
 
-    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    public function institutionStudentIndexCalculateRiskValue(Event $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];
