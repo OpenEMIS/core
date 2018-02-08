@@ -558,11 +558,11 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
 
                         // to get total number of behaviour
-                        $getValueRisk = $CriteriaModel->getValueRisk($institutionId, $studentId, $academicPeriodId, $criteriaName);
+                        $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
                         $quantity = '';
-                        if ($getValueRisk[$threshold] > 1) {
-                            $quantity = ' ( x'. $getValueRisk[$threshold]. ' )';
+                        if ($getValueIndex[$threshold] > 1) {
+                            $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
                         }
 
                         $riskValue = '<div style="color : red">' . $obj->risk_criteria->risk_value . $quantity  .'</div>';

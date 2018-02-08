@@ -69,7 +69,7 @@ class StudentRisksCriteriasTable extends AppTable
                     $criteriaDetails = $Risks->getCriteriasDetails($criteriaName);
                     $criteriaModel = TableRegistry::get($criteriaDetails['model']);
 
-                    $valueRisk = $criteriaModel->getValueRisk($institutionId, $studentId, $academicPeriodId, $criteriaName);
+                    $valueRisk = $criteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
                     if (array_key_exists($threshold, $valueRisk)) {
                         $riskValue = 0;
