@@ -18,4 +18,17 @@ class SurveyFormsFiltersTable extends AppTable
             'foreignKey' => 'survey_filter_id'
         ]);
     }
+
+    public function getIsAllFilterType($id)
+    {
+        $count = $this
+            ->find()
+            ->where([
+                $this->aliasField('survey_form_id') => $id,
+                $this->aliasField('survey_filter_id') => 0
+            ])
+            ->count();
+
+        return $count > 0;
+    }
 }
