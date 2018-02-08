@@ -48,12 +48,12 @@ class AssessmentItemResultsTable extends AppTable
             ]);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
-        return $events;
-    }
+    // public function implementedEvents()
+    // {
+    //     $events = parent::implementedEvents();
+    //     $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
+    //     return $events;
+    // }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
