@@ -1223,7 +1223,7 @@ class StudentAttendancesTable extends AppTable
         $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
         $url = array_merge($url, $this->request->query, $this->request->pass);
         $url[0] = 'index';
-        if (isset($url['mode']) && !$error) {
+        if (isset($url['mode'])) {
             unset($url['mode']);
         }
 
