@@ -32,6 +32,7 @@ class InstitutionsController extends AppController
         'InstitutionClasses',
         'InstitutionSubjects',
         'InstitutionTextbooks',
+        'InstitutionAttachments',
 
         // students
         'Programmes',
@@ -136,7 +137,8 @@ class InstitutionsController extends AppController
         $version = \Cake\Core\Configure::version();
         if (strpos($version, '3.4') !== false) {
             $msg = 'To change ResultsExport $response->type to $response->withType and $response->download to $response->withDownload';
-            pr($msg);die;
+            pr($msg);
+            die;
         }
         // End
 
@@ -496,7 +498,7 @@ class InstitutionsController extends AppController
         $filePath = $results['path'] . $fileName;
 
         $response = $this->response;
-        $response->body(function() use ($filePath) {
+        $response->body(function () use ($filePath) {
             $content = file_get_contents($filePath);
             if (file_exists($filePath)) {
                 unlink($filePath);
@@ -1131,7 +1133,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Risks') 
+                'StudentIndexes' => __('Risks')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1172,14 +1174,14 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
             } elseif ($model->alias() == 'StudentIndexes') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
             } elseif ($model->alias() == 'Indexes') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
             } elseif ($model->alias() == 'InstitutionStudentIndexes') {
-                $header .= ' - '. __('Institution Student Risks'); 
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
-            }else {
+                $header .= ' - '. __('Institution Student Risks');
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+            } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1522,7 +1524,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentIndexes' => ['text' => __('Risks')] 
+            'StudentIndexes' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
