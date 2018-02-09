@@ -10,8 +10,8 @@ class StudentWithdrawReasonsTable extends ControllerActionTable
         $this->table('student_withdraw_reasons');
         parent::initialize($config);
 
-        $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'foreignKey' => 'student_withdraw_reason_id']);
-        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'foreignKey' => 'student_withdraw_reason_id']);
+        $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'foreignKey' => 'student_withdraw_reason_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'foreignKey' => 'student_withdraw_reason_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
