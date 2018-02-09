@@ -658,7 +658,7 @@ class StudentsTable extends ControllerActionTable
         $statusOptions = $statusOptions + $pendingStatus;
 
         // Academic Periods
-        $academicPeriodOptions = $this->AcademicPeriods->getList(['restrictLevel' => ['1'], 'withLevels' => false]);
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
         // Education Grades
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
