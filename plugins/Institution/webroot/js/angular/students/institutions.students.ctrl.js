@@ -697,16 +697,20 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function onTransferStudentClick() {
         // setup transfer student input fields
         var studentData = StudentController.selectedStudentData;
-        var periodStartDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['start_date']);
         var periodEndDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['end_date']);
 
-        StudentController.startDate = periodStartDate;
+        // only allow transfer start date to be one day after the student's current start date
+        var studentStartDate = new Date(studentData['institution_students'][0]['start_date']);
+        studentStartDate.setDate(studentStartDate.getDate() + 1);
+        var studentStartDateFormatted = $filter('date')(studentStartDate, 'dd-MM-yyyy');
+
+        StudentController.startDate = studentStartDateFormatted;
         $scope.endDate = periodEndDate;
 
         var startDatePicker = angular.element(document.getElementById('Students_transfer_start_date'));
-        startDatePicker.datepicker("setStartDate", periodStartDate);
+        startDatePicker.datepicker("setStartDate", studentStartDateFormatted);
         startDatePicker.datepicker("setEndDate", periodEndDate);
-        startDatePicker.datepicker("setDate", periodStartDate);
+        startDatePicker.datepicker("setDate", studentStartDateFormatted);
 
         StudentController.classOptions = {};
         StudentController.transferReasonOptions = {};
