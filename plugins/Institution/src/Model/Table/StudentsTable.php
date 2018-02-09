@@ -19,7 +19,8 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentsTable extends ControllerActionTable
 {
-    const PENDING_TRANSFER = -2;
+    const PENDING_TRANSFERIN = -1;
+    const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
     const PENDING_WITHDRAW = -4;
 
@@ -565,6 +566,9 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('class', ['after' => 'education_grade_id']);
         $this->field('student_status_id', ['after' => 'class']);
@@ -581,13 +585,14 @@ class StudentsTable extends ControllerActionTable
 
         // To redirect to Pending statuses page
         $pendingStatuses = [
-            $StudentStatusesTable->PENDING_ADMISSION => 'StudentAdmission',
-            $StudentStatusesTable->PENDING_TRANSFER => 'TransferRequests',
-            $StudentStatusesTable->PENDING_WITHDRAW => 'StudentWithdraw'
+            self::PENDING_ADMISSION => 'StudentAdmission',
+            self::PENDING_TRANSFERIN => 'StudentTransferIn',
+            self::PENDING_TRANSFEROUT => 'StudentTransferOut',
+            self::PENDING_WITHDRAW => 'StudentWithdraw'
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
-            $url = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
             return $this->controller->redirect($url);
@@ -650,9 +655,10 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
         $StudentStatusesTable = $this->StudentStatuses;
         $pendingStatus = [
-            $StudentStatusesTable->PENDING_TRANSFER => __('Pending Transfer'),
-            $StudentStatusesTable->PENDING_ADMISSION => __('Pending Admission'),
-            $StudentStatusesTable->PENDING_WITHDRAW => __('Pending Withdraw'),
+            self::PENDING_TRANSFERIN => __('Pending Transfer In'),
+            self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
+            self::PENDING_ADMISSION => __('Pending Admission'),
+            self::PENDING_WITHDRAW => __('Pending Withdraw'),
         ];
 
         $statusOptions = $statusOptions + $pendingStatus;
@@ -898,6 +904,8 @@ class StudentsTable extends ControllerActionTable
     {
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
+            TableRegistry::get('Institution.StudentTransferIn'),
+            TableRegistry::get('Institution.StudentTransferOut'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
             TableRegistry::get('Institution.StudentUser'),
@@ -972,16 +980,17 @@ class StudentsTable extends ControllerActionTable
 
             switch ($code) {
                 case 'TRANSFERRED':
-                    $TransferApprovalsTable = TableRegistry::get('Institution.TransferApprovals');
-                    $transferReason = $TransferApprovalsTable->find()
+                    $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                    $approvedStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('APPROVED');
+
+                    $transferReason = $StudentTransfersTable->find()
                         ->matching('StudentTransferReasons')
                         ->where([
-                            // Type = 2 is transfer type
-                            $TransferApprovalsTable->aliasField('type') => 2,
-                            $TransferApprovalsTable->aliasField('academic_period_id') => $academicPeriodId,
-                            $TransferApprovalsTable->aliasField('previous_institution_id') => $institutionId,
-                            $TransferApprovalsTable->aliasField('education_grade_id') => $educationGradeId,
-                            $TransferApprovalsTable->aliasField('academic_period_id') => $academicPeriodId
+                            $StudentTransfersTable->aliasField('student_id') => $studentId,
+                            $StudentTransfersTable->aliasField('previous_institution_id') => $institutionId,
+                            $StudentTransfersTable->aliasField('previous_education_grade_id') => $educationGradeId,
+                            $StudentTransfersTable->aliasField('previous_academic_period_id') => $academicPeriodId,
+                            $StudentTransfersTable->aliasField('status_id IN ') => $approvedStatuses
                         ])
                         ->first();
 
