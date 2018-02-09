@@ -43,8 +43,8 @@ class AcademicPeriodsTable extends AppTable
         // $this->hasMany('ReportInstitutionSubjects', ['className' => 'Report.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentTransferOut', ['className' => 'Institution.StudentTransferOut', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -106,7 +106,7 @@ class AcademicPeriodsTable extends AppTable
             $entity->editable = 1;
             $entity->visible = 1;
 
-             // Adding condition on updateAll(), only change the one which is not the current academic period.
+            // Adding condition on updateAll(), only change the one which is not the current academic period.
             $where = [];
             if (!$entity->isNew()) {
                 $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
@@ -210,10 +210,20 @@ class AcademicPeriodsTable extends AppTable
         $this->ControllerAction->setFieldOrder($this->_fieldOrder);
     }
 
+    public function editBeforeQuery(Event $event, Query $query)
+    {
+        $query->contain('Levels');
+    }
+
     public function editAfterAction(Event $event, Entity $entity)
     {
         $this->request->data[$this->alias()]['current'] = $entity->current;
         $this->ControllerAction->field('visible');
+
+        // set academic_period_level_id to not editable to prevent any classes/subjects to not in Year level
+        $this->fields['academic_period_level_id']['type'] = 'readonly';
+        $this->fields['academic_period_level_id']['value'] = $entity->academic_period_level_id;
+        $this->fields['academic_period_level_id']['attr']['value'] = $entity->level->name;
     }
 
     public function indexBeforeAction(Event $event)
@@ -338,19 +348,19 @@ class AcademicPeriodsTable extends AppTable
             $levelId = $data->academic_period_level_id;
 
             $levelResults = $this->Levels
-                ->find()
-                ->select([$this->Levels->aliasField('level')])
-                ->where([$this->Levels->aliasField('id') => $levelId])
-                ->all();
+                        ->find()
+                        ->select([$this->Levels->aliasField('level')])
+                        ->where([$this->Levels->aliasField('id') => $levelId])
+                        ->all();
 
             if (!$levelResults->isEmpty()) {
                 $levelData = $levelResults->first();
                 $level = $levelData->level;
 
                 $levelOptions = $this->Levels
-                    ->find('list')
-                    ->where([$this->Levels->aliasField('level >') => $level])
-                    ->toArray();
+                            ->find('list')
+                            ->where([$this->Levels->aliasField('level >') => $level])
+                            ->toArray();
                 $attr['options'] = $levelOptions;
             }
         }
@@ -458,7 +468,7 @@ class AcademicPeriodsTable extends AppTable
             ->where($conditions)
             ->toArray();
 
-        if ( !$withLevels ) {
+        if (!$withLevels) {
             $list = $data;
         } else {
             $list[$level->name] = $data;
@@ -471,9 +481,14 @@ class AcademicPeriodsTable extends AppTable
     {
         $query
             ->find('visible')
+            ->find('years')
             ->find('editable', ['isEditable' => true])
             ->find('order')
-            ->where([$this->aliasField('parent_id') . ' <> ' => 0]);
+            ->where([
+                $this->aliasField('parent_id') . ' <> ' => 0
+            ]);
+
+        return $query;
     }
 
     public function getList($params=[])
@@ -483,7 +498,7 @@ class AcademicPeriodsTable extends AppTable
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
         $restrictLevel = array_key_exists('restrictLevel', $params) ? $params['restrictLevel'] : null;
 
-        if ( !$withLevels ) {
+        if (!$withLevels) {
             $where = [
                 $this->aliasField('current') => 1,
                 $this->aliasField('parent_id') . ' <> ' => 0
@@ -530,7 +545,6 @@ class AcademicPeriodsTable extends AppTable
             $list = [];
 
             foreach ($data as $key => $obj) {
-
                 if ($levelName != $obj->level->name) {
                     $levelName = __($obj->level->name);
                 }
@@ -541,7 +555,7 @@ class AcademicPeriodsTable extends AppTable
             $data = $list;
         }
 
-        if ( $withSelect ) {
+        if ($withSelect) {
             $data = ['' => '-- ' . __('Select Period') .' --'] + $data;
         }
 
@@ -597,7 +611,6 @@ class AcademicPeriodsTable extends AppTable
             $firstDayOfWeek = $firstDayOfWeek % 7;
         }
         return $week;
-
     }
 
     public function getAttendanceWeeks($id)
@@ -659,7 +672,7 @@ class AcademicPeriodsTable extends AppTable
 
     public function getAvailableAcademicPeriods($list = true, $order='DESC')
     {
-        if($list) {
+        if ($list) {
             $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
         } else {
             $query = $this->find();
@@ -689,7 +702,7 @@ class AcademicPeriodsTable extends AppTable
                     ])
                     ->order(['start_date DESC']);
         $countQuery = $query->count();
-        if($countQuery > 0) {
+        if ($countQuery > 0) {
             $result = $query->first();
             return $result->id;
         } else {
@@ -702,7 +715,7 @@ class AcademicPeriodsTable extends AppTable
                     ])
                     ->order(['start_date DESC']);
             $countQuery = $query->count();
-            if($countQuery > 0) {
+            if ($countQuery > 0) {
                 $result = $query->first();
                 return $result->id;
             } else {
@@ -720,7 +733,7 @@ class AcademicPeriodsTable extends AppTable
 
         $stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
         // while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
-        while($stampFirstDayOfMonth <= $stampEndDay){
+        while ($stampFirstDayOfMonth <= $stampEndDay) {
             $monthString = date('F', $stampFirstDayOfMonth);
             $monthNumber = date('m', $stampFirstDayOfMonth);
             $year = date('Y', $stampFirstDayOfMonth);
@@ -746,14 +759,14 @@ class AcademicPeriodsTable extends AppTable
         $stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
         $stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);
 
-        if($stampFirstDayOfMonth <= $stampStartDay){
+        if ($stampFirstDayOfMonth <= $stampStartDay) {
             $tempStamp = $stampStartDay;
-        }else{
+        } else {
             $tempStamp = $stampFirstDayOfMonth;
         }
 
         // while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
-        while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth){
+        while ($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth) {
             $weekDay = date('l', $tempStamp);
             $date = date('Y-m-d', $tempStamp);
             $day = date('d', $tempStamp);
@@ -861,7 +874,7 @@ class AcademicPeriodsTable extends AppTable
                 ])
                 ->order(['start_date DESC']);
         $countQuery = $query->count();
-        if($countQuery > 0) {
+        if ($countQuery > 0) {
             $result = $query->first();
             return $result->id;
         } else {

@@ -100,15 +100,17 @@ class InstitutionStudentsTable extends AppTable  {
 
                     switch ($statusCode) {
                         case 'TRANSFERRED':
-                            $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-                            $query = $StudentAdmission->find()
+                            $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                            $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
+
+                            $query = $StudentTransfers->find()
                                     ->contain(['StudentTransferReasons', 'Institutions.Areas', 'Institutions.AreaAdministratives'])
                                     ->where([
-                                        $StudentAdmission->aliasField('student_id') => $studentId,
-                                        $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
-                                        $StudentAdmission->aliasField('education_grade_id') => $educationGradeId,
-                                        $StudentAdmission->aliasField('academic_period_id') => $academicPeriodId,
-                                        $StudentAdmission->aliasField('status') => 1 //approved
+                                        $StudentTransfers->aliasField('student_id') => $studentId,
+                                        $StudentTransfers->aliasField('previous_institution_id') => $institutionId,
+                                        $StudentTransfers->aliasField('previous_education_grade_id') => $educationGradeId,
+                                        $StudentTransfers->aliasField('previous_academic_period_id') => $academicPeriodId,
+                                        $StudentTransfers->aliasField('status_id IN ') => $approvedStatuses
                                     ])
                                     ->first();
                             
