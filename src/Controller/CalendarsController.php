@@ -27,7 +27,7 @@ class CalendarsController extends PageController
         $this->Page->loadElementsFromTable($this->Calendars);
         $this->Page->disable(['search']); // to disable the search function
 
-        //POCOR-4347 Disable CRUD once the instituion is inactive
+        // POCOR-4347 Disable CRUD once the institution is inactive
         $this->loadComponent('Institution.InstitutionInactive');
     }
 

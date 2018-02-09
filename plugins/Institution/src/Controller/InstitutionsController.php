@@ -116,12 +116,15 @@ class InstitutionsController extends AppController
 
         // outcomes
         'StudentOutcomes',
-        'ImportOutcomeResults'
+        'ImportOutcomeResults',
 
         // misc
         // 'IndividualPromotion',
         // 'TransferRequests',
         // 'CourseCatalogue',
+
+        //Attachments
+        'InstitutionAttachments',
     ];
 
     public function initialize()
@@ -137,13 +140,12 @@ class InstitutionsController extends AppController
         parent::initialize();
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
-            'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],
-
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
             'Staff'             => ['className' => 'Institution.Staff'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
+            'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
             'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
@@ -176,6 +178,10 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
+    public function Attachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAttachments']);
+    }
     public function Surveys()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSurveys']);
