@@ -73,10 +73,13 @@ class AppraisalPeriodsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('appraisal_types');
-        $this->setFieldOrder(['appraisal_form_id', 'academic_period_id', 'appraisal_types', 'start_date', 'end_date']);
+        // $this->field('appraisal_types');
+        $this->setFieldOrder(['appraisal_form_id', 'academic_period_id',
+            // 'appraisal_types',
+            'start_date', 'end_date']);
     }
 
+    // To implement table to show the number of types that are tagged
     // public function onGetCustomTypesElement(Event $event, $action, $entity, $attr, $options = [])
     // {
     //     if ($action == 'view') {
