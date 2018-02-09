@@ -39,8 +39,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         );
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('AppraisalStatuses', ['className' => 'StaffAppraisal.AppraisalStatuses']);
-        $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
+        $this->belongsTo('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods']);
         $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);
     }
 
@@ -58,7 +57,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
-        $this->field('appraisal_status_id', ['visible' => false]);
+        $this->field('appraisal_period_id', ['visible' => false]);
         $this->setFieldOrder(['appraisal_type_id', 'title', 'to', 'from', 'appraisal_form_id']);
         $this->setupTabElements();
     }
@@ -69,8 +68,8 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
-        $this->field('appraisal_form_id', ['type' => 'select', 'options' => []]);
-        $this->field('appraisal_status_id', ['type' => 'hidden']);
+        $this->field('appraisal_form_id');
+        $this->field('appraisal_period_id', ['type' => 'select']);
     }
 
     public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, Request $request)
@@ -79,7 +78,6 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             $attr['onChangeReload'] = true;
             if ($request->data($this->aliasField('appraisal_type_id'))) {
                 $appraisalTypeId = $request->data($this->aliasField('appraisal_type_id'));
-
             }
             return $attr;
         }
