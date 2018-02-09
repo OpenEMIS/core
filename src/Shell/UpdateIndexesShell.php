@@ -26,20 +26,20 @@ class UpdateIndexesShell extends Shell
     {
         $institutionId = !empty($this->args[0]) ? $this->args[0] : 0;
         $userId = !empty($this->args[1]) ? $this->args[1] : 0;
-        $indexesId = !empty($this->args[2]) ? $this->args[2] : 0;
+        $riskId = !empty($this->args[2]) ? $this->args[2] : 0;
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
-        $indexesCriteriaData = $this->RiskCriterias->getCriteriaKey($indexesId);
+        $riskCriteriaData = $this->RiskCriterias->getCriteriaKey($riskId);
 
-        if (!empty($indexesCriteriaData)) {
-            foreach ($indexesCriteriaData as $key => $obj) {
+        if (!empty($riskCriteriaData)) {
+            foreach ($riskCriteriaData as $key => $obj) {
                 $criteriaData = $this->Risks->getCriteriasDetails($key);
 
                 // for cli-debug.log to see still updating
                 Log::write('debug', 'Criteria: '. $key);
                 // end debug
 
-                $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId, $indexesId);
+                $this->autoUpdateRisks($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId);
             }
         }
 
@@ -51,11 +51,11 @@ class UpdateIndexesShell extends Shell
                 'pid' => null,
                 'status' => 3 // completed
             ],
-            ['risk_id' => $indexesId, 'institution_id' => $institutionId]
+            ['risk_id' => $riskId, 'institution_id' => $institutionId]
         );
     }
 
-    public function autoUpdateIndexes($key, $model, $institutionId, $userId, $academicPeriodId, $indexesId)
+    public function autoUpdateRisks($key, $model, $institutionId, $userId, $academicPeriodId)
     {
         $today = Time::now();
         $CriteriaModel = TableRegistry::get($model);
