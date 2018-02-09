@@ -348,7 +348,6 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $Classes = $this;
-        //$academicPeriodOptions = $this->AcademicPeriods->getList();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
         $institutionId = $extra['institution_id'];
@@ -464,7 +463,6 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function findHomeOrSecondary(Query $query, array $options)
     {
-
         if (isset($options['class_id']) && isset($options['staff_id'])) {
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
@@ -472,14 +470,13 @@ class InstitutionClassesTable extends ControllerActionTable
                 ->where([
                     $this->aliasField('id') => $classId,
                     'OR' => [
-                        [$this->aliasField('staff_id') => $staffId], 
+                        [$this->aliasField('staff_id') => $staffId],
                         [$this->aliasField('secondary_staff_id') => $staffId]
                     ],
                  ]);
             
             return $query;
-        }   
-
+        }
     }
     public function findTranslateItem(Query $query, array $options)
     {
