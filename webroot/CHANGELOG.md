@@ -1,3 +1,8 @@
+### [3.18.0] - 2018-02-02
+- Identity Number, Identity Type, and Nationality fields have been added for Guardian and Others user types
+- Fixed a bug where some courses are not displayed in Institutions > Staff > Training
+- Fixed a 404 error when performing individual promotion
+
 ### [3.17.0] - 2018-01-26
 - The system now allow multiple classes to share the same subject
 - A new Student Attendances workflow rule (Absentee Intervention) has been added
