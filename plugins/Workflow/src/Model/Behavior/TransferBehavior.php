@@ -5,11 +5,12 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\Behavior;
 use Institution\Model\Table\InstitutionStaffTransfersTable as InstitutionStaffTransfers;
 
-class StaffTransferBehavior extends Behavior
+class TransferBehavior extends Behavior
 {
     private $transferWorkflowIds = [];
     private $institutionTypeOptions = [];
@@ -18,9 +19,17 @@ class StaffTransferBehavior extends Behavior
     {
         parent::initialize($config);
 
+        $transferWorkflowModels = [
+            'Institution.StaffTransferIn',
+            'Institution.StaffTransferOut',
+            'Institution.StudentTransferIn',
+            'Institution.StudentTransferOut'
+        ];
+
         $this->transferWorkflowIds = $this->_table->Workflows->find()
-                ->matching('WorkflowModels')
-                ->where(['WorkflowModels.model IN ' => ['Institution.StaffTransferIn', 'Institution.StaffTransferOut']])
+                ->matching('WorkflowModels', function ($q) use ($transferWorkflowModels) {
+                    return $q->where(['model IN' => $transferWorkflowModels]);
+                })
                 ->extract('id')
                 ->toArray();
 
@@ -41,7 +50,7 @@ class StaffTransferBehavior extends Behavior
         return $events;
     }
 
-    public function validationStaffTransferWorkflow(Validator $validator)
+    public function validationTransferWorkflow(Validator $validator)
     {
         $validator = $this->_table->validationDefault($validator);
         return $validator->notEmpty('institution_owner');
@@ -103,7 +112,7 @@ class StaffTransferBehavior extends Behavior
 
     public function onGetInstitutionOwner(Event $event, Entity $entity)
     {
-        $value = '';
+        $value = ' ';
         if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
             $params = $entity->workflow_steps_params;
             $key = array_search('institution_owner', array_column($params, 'name'));
@@ -116,7 +125,7 @@ class StaffTransferBehavior extends Behavior
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
             if (in_array($data['workflow_id'], $this->transferWorkflowIds)) {
-                $options['validate'] = 'staffTransferWorkflow';
+                $options['validate'] = 'transferWorkflow';
 
                 // format params to save
                 $params = [];
