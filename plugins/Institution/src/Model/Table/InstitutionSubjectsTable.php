@@ -248,7 +248,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $Classes = $this->Classes;
         $Subjects = $this;
 
-        $academicPeriodOptions = $this->AcademicPeriods->getList();
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $institutionId = $extra['institution_id'];
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
 
@@ -547,7 +547,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $institutionId = $extra['institution_id'];
         $periodOption = ['' => '-- ' . __('Select Period') .' --'];
-        $academicPeriodOptions = $this->AcademicPeriods->getlist(['withLevels'=>false, 'isEditable'=>true]);
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['withLevels' => false, 'isEditable' => true]);
         $academicPeriodOptions = $periodOption + $academicPeriodOptions;
 
         if ($this->request->is(['post', 'put']) && $this->request->data($this->aliasField('academic_period_id'))) {

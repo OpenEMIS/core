@@ -40,6 +40,7 @@ class StudentBehavioursTable extends AppTable
         $newEvent = [
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
         ];
+
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         $events = array_merge($events, $newEvent);
         return $events;
@@ -124,7 +125,7 @@ class StudentBehavioursTable extends AppTable
 
         // Setup period options
         // $periodOptions = ['0' => __('All Periods')];
-        $periodOptions = $this->AcademicPeriods->getList();
+        $periodOptions = $this->AcademicPeriods->getYearList();
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
@@ -300,7 +301,8 @@ class StudentBehavioursTable extends AppTable
         if ($action == 'add') {
             $attr['select'] = false;
             $periodOptions = ['0' => __('-- Select --')];
-            $periodOptions = $periodOptions + $this->AcademicPeriods->getList(['isEditable'=>true]);
+
+            $periodOptions = $periodOptions + $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = 0;
             if ($request->is(['post', 'put'])) {
                 $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
@@ -441,7 +443,7 @@ class StudentBehavioursTable extends AppTable
             if ($request->is(['post', 'put'])) {
                 $selectedClass = $request->data($this->aliasField('class'));
             }
-            if (! $selectedClass==0     && ! empty($selectedClass)) {
+            if (! $selectedClass==0	&& ! empty($selectedClass)) {
                 $Students = TableRegistry::get('Institution.InstitutionClassStudents');
                 $studentOptions = $studentOptions + $Students
                 ->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
@@ -452,11 +454,12 @@ class StudentBehavioursTable extends AppTable
             }
 
             $attr['options'] = $studentOptions;
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
         }
         return $attr;
     }
+
 
     public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
     {

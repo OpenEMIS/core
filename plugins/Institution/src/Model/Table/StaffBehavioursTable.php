@@ -92,7 +92,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
         // Setup period options
         // $periodOptions = ['0' => __('All Periods')];
-        $periodOptions = $this->AcademicPeriods->getList();
+        $periodOptions = $this->AcademicPeriods->getYearList();
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
@@ -192,7 +192,7 @@ class StaffBehavioursTable extends ControllerActionTable
             $attr['value'] = $selectedPeriod;
             $attr['attr']['value'] = $selectedPeriod;
             $attr['onChangeReload'] = 'changePeriod';
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -263,7 +263,7 @@ class StaffBehavioursTable extends ControllerActionTable
             }
 
             $attr['options'] = $staffOptions;
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
