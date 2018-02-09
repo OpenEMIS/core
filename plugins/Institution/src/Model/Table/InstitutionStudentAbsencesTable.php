@@ -556,7 +556,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function onExcelGetAbsences(Event $event, Entity $entity)
     {
-
         $startDate = "";
         $endDate = "";
 
@@ -784,7 +783,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $this->fields['start_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
             $this->fields['end_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
             $this->fields['end_date']['date_options']['endDate'] = $endDate->format('d-m-Y');
-        } else if ($this->action == 'edit') {
+        } elseif ($this->action == 'edit') {
             $this->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
             $this->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
         }
@@ -966,19 +965,19 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     $request->query['class'] = $request->data[$this->alias()]['class'];
                     $classId = $data[$this->alias()]['class'];
 
-                        $InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-                        $shiftTime = $InstitutionShift
+                    $InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+                    $shiftTime = $InstitutionShift
                             ->find('shiftTime', ['institution_class_id' => $classId])
                             ->first();
 
-                        $startTime = $shiftTime->start_time;
-                        $endTime = $shiftTime->end_time;
+                    $startTime = $shiftTime->start_time;
+                    $endTime = $shiftTime->end_time;
 
-                        $entity->start_time = date('h:i A', strtotime($startTime));
-                        $entity->end_time = date('h:i A', strtotime($endTime));
+                    $entity->start_time = date('h:i A', strtotime($startTime));
+                    $entity->end_time = date('h:i A', strtotime($endTime));
 
-                        $data[$this->alias()]['start_time'] = $entity->start_time;
-                        $data[$this->alias()]['end_time'] = $entity->end_time;
+                    $data[$this->alias()]['start_time'] = $entity->start_time;
+                    $data[$this->alias()]['end_time'] = $entity->end_time;
                 }
             }
         }
@@ -999,19 +998,19 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     $request->query['class'] = $request->data[$this->alias()]['class'];
                     $classId = $data[$this->alias()]['class'];
 
-                        $InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-                        $shiftTime = $InstitutionShift
+                    $InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+                    $shiftTime = $InstitutionShift
                             ->find('shiftTime', ['institution_class_id' => $classId])
                             ->first();
 
-                        $startTime = $shiftTime->start_time;
-                        $endTime = $shiftTime->end_time;
+                    $startTime = $shiftTime->start_time;
+                    $endTime = $shiftTime->end_time;
 
-                        $entity->start_time = date('h:i A', strtotime($startTime));
-                        $entity->end_time = date('h:i A', strtotime($endTime));
+                    $entity->start_time = date('h:i A', strtotime($startTime));
+                    $entity->end_time = date('h:i A', strtotime($endTime));
 
-                        $data[$this->alias()]['start_time'] = $entity->start_time;
-                        $data[$this->alias()]['end_time'] = $entity->end_time;
+                    $data[$this->alias()]['start_time'] = $entity->start_time;
+                    $data[$this->alias()]['end_time'] = $entity->end_time;
                 }
             }
         }
@@ -1082,8 +1081,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
 
         // Academic Period
-        $periodOptionsData = $AcademicPeriod->getList(['isEditable'=>true]);
-        $periodOptions = $periodOptionsData[key($periodOptionsData)];
+        $periodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         if (is_null($this->request->query('period'))) {
             $this->request->query['period'] = $AcademicPeriod->getCurrent();
         }
