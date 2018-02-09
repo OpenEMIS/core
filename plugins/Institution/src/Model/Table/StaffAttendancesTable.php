@@ -356,7 +356,6 @@ class StaffAttendancesTable extends ControllerActionTable
                         $data['Present'] = 1;
                     }
                 } else {
-
                     if ($value['full_day'] == 0) {
                         if (isset($data['Present'])) {
                             $data['Present'] = ++$data['Present'];
@@ -687,9 +686,7 @@ class StaffAttendancesTable extends ControllerActionTable
     {
         // Setup period options
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $periodOptionsData = $AcademicPeriod->getList();
-        // only year options will appear
-        $periodOptions = $periodOptionsData[key($periodOptionsData)];
+        $periodOptions = $AcademicPeriod->getYearList();
 
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
