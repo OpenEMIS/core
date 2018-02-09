@@ -46,8 +46,6 @@
                                     <?php
                                             echo $this->Form->checkbox("$fieldPrefix.selected", $checkboxOptions);
                                             echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
-                                            echo $this->Form->hidden("$fieldPrefix.status", ['value' => $attr['attr']['status']]);
-                                            echo $this->Form->hidden("$fieldPrefix.type", ['value' => $attr['attr']['type']]);
                                     ?>
 									</td>
 									<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
