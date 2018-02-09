@@ -36,7 +36,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-        $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -280,7 +280,7 @@ class DirectoriesTable extends ControllerActionTable
                 $InstitutionStaffTable->aliasField('staff_id').' = '.$this->aliasField('id')
             ])
             ->bufferResults(false);
-            $query->where(['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1]);
+        $query->where(['NOT EXISTS ('.$allInstitutionStaff->sql().')', $this->aliasField('is_staff') => 1]);
         return $query;
     }
 
@@ -331,10 +331,16 @@ class DirectoriesTable extends ControllerActionTable
                         'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
                     ]);
                     break;
+                case self::GUARDIAN:
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Guardian', 'roleFields' =>['Identities', 'Nationalities']]);
+                    break;
+                case self::OTHER:
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Other', 'roleFields' =>['Identities', 'Nationalities']]);
+                    break;
             }
             $this->field('nationality_id', ['visible' => false]);
             $this->field('identity_type_id', ['visible' => false]);
-        } else if ($this->action == 'edit') {
+        } elseif ($this->action == 'edit') {
             $this->hideOtherInformationSection($this->controller->name, 'edit');
         }
     }
@@ -365,15 +371,6 @@ class DirectoriesTable extends ControllerActionTable
         $highestOrder = max($allOrderValues);
 
         $userType = $this->request->query('user_type');
-
-        switch ($userType) {
-            case self::STUDENT:
-            case self::STAFF:
-                break;
-            default:
-                $this->fields['identity_number']['type'] = 'hidden';
-                break;
-        }
 
         $openemisNo = $this->getUniqueOpenemisId();
 
