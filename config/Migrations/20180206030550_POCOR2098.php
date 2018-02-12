@@ -1,19 +1,50 @@
 <?php
 
+use Cake\Utility\Text;
 use Phinx\Migration\AbstractMigration;
 
 class POCOR2098 extends AbstractMigration
 {
     public function up()
     {
-        $this->execute("DROP TABLE IF EXISTS `survey_forms_filters`");
-        $this->execute("
-            CREATE TABLE `survey_forms_filters` (
-                `id` char(36) NOT NULL PRIMARY KEY,
-                `survey_form_id` int(11) NOT NULL COMMENT 'links to survey_forms.id',
-                `survey_filter_id` int(11) NOT NULL
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains groups of surveys by filter types' ROW_FORMAT=DYNAMIC;
-        ");
+        $SurveyFormsFilters = $this->table('survey_forms_filters', [
+            'id' => false,
+            'primary_key' => 'id',
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains groups of surveys by filter types'
+        ]);
+        $SurveyFormsFilters
+            ->addColumn('id', 'uuid', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('survey_form_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to survey_forms.id'
+            ])
+            ->addColumn('survey_filter_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->save();
+
+        $allFilterTypeId = 0;
+        $surveyRows = $this->fetchAll('SELECT * FROM survey_forms');
+
+        foreach ($surveyRows as $obj) {
+            $newRecord = [
+                'id' => Text::uuid(),
+                'survey_form_id' => $obj['id'],
+                'survey_filter_id' => $allFilterTypeId
+            ];
+
+            $SurveyFormsFilters
+                ->insert($newRecord)
+                ->save();
+        }
     }
 
     public function down()
