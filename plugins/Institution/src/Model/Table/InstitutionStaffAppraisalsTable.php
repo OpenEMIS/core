@@ -44,7 +44,12 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->belongsTo('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods']);
         $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);
         $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id']);
-        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id']);
+        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id']);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        return $validator->allowEmpty('file_content');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -118,10 +123,9 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             case 'TEXT':
                 $details['key'] = 'appraisal_text_answers';
                 $details[$fieldTypeCode] = null;
-                $this->field($details['key'].'.'.$key.'.answer', ['attr' => ['label' => $details['criteria_name']]]);
+                $this->field($details['key'].'.'.$key.'.answer', ['type' => 'text', 'attr' => ['label' => $details['criteria_name']]]);
                 break;
         }
-
         $this->field($details['key'].'.'.$key.'.appraisal_forms_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_forms_criteria_id']]);
     }
 
@@ -200,6 +204,6 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', 'institutionStaffAppraisals');
     }
 }
