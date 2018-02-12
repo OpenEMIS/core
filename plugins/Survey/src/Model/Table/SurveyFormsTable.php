@@ -319,46 +319,6 @@ class SurveyFormsTable extends CustomFormsTable
             }
         }
 
-        // if ($action == 'view') {
-        //     parent::onUpdateFieldCustomFilters($event, $attr, $action, $request);
-        // } elseif ($action == 'add' || $action == 'edit') {
-        //     $entity = $attr['attr']['entity'];
-
-        //     $selectionType = self::CUSTOM_FILTER;
-        //     if ($entity->has('custom_filter_selection')) {
-        //         $selectionType = $entity->custom_filter_selection;
-        //     }
-
-        //     if ($selectionType == self::CUSTOM_FILTER) {
-        //         $customModule = $attr['attr']['customModule'];
-        //         $selectedModule = $customModule->id;
-        //         $filter = $customModule->filter;
- 
-        //         if (isset($filter)) {
-        //             if ($action == 'add') {
-        //                 $filterOptions = TableRegistry::get($filter)->getList()->toArray();
-        //                 $attr['options'] = $filterOptions;
-        //                 $attr['type'] = 'chosenSelect';
-        //                 $attr['placeholder'] = __('Select Filters');
-        //             } else {
-        //                 $customFilterList = $entity->custom_filters;
-        //                 $selectedOptionsName = [];
-        //                 foreach ($customFilterList as $obj) {
-        //                     $selectedOptionsName[] = $obj->name;
-        //                 }
-
-        //                 // set this options to disabled so it won't post this data back
-        //                 $attr['type'] = 'disabled';
-        //                 $attr['attr']['value'] = implode(', ', $selectedOptionsName);
-        //             }
-        //         }
-        //     } else {
-        //         $attr['type'] = 'readonly';
-        //         $attr['value'] = self::ALL_CUSTOM_FILER;
-        //         $attr['attr']['value'] = __('All Custom Filters Selected');
-        //     }
-        // }
-
         return $attr;
     }
 
