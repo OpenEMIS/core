@@ -1,19 +1,17 @@
 <?php
-namespace User\Model\Entity;
+namespace StaffAppraisal\Model\Entity;
 
 use Cake\ORM\Entity;
-use Cake\Auth\DefaultPasswordHasher;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Query;
-use App\Model\Traits\UserTrait;
 
 class AppraisalPeriod extends Entity
 {
 
-    protected $_virtual = ['name'];
+    protected $_virtual = ['period_form_name'];
 
-    protected function _getName()
+    protected function _getPeriodFormName()
     {
-        return $this->academic_period->name . ' - ' . $this->appraisal_form->name;
+        $academicPeriodName = $this->offsetExists('academic_period') ? $this->academic_period->name : '';
+        $appraisalForm = $this->offsetExists('appraisal_form') ? $this->appraisal_form->name : '';
+        return $academicPeriodName . ' - ' . $appraisalForm;
     }
 }
