@@ -151,6 +151,59 @@ class InstitutionSurveysTable extends ControllerActionTable
                 return $q->where([$CustomModules->aliasField('model') => $module]);
             })
             ->toArray();
+        
+        // disable any filter options if don't have any existing surveys for the institution
+        $session = $this->controller->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        if (!is_null($institutionId)) {
+            $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
+            $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+            $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
+            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+            $AcademicPeriods = $this->AcademicPeriods;
+            $todayDate = date("Y-m-d");
+            $null = -1;
+
+            $this->advancedSelectOptions($list, $null, [
+                'message' => '{{label}} - ' . $this->getMessage('general.noSurveys'),
+                'callable' => function ($id) use ($SurveyFormsFilters, $institutionTypeId, $SurveyStatusPeriods, $SurveyStatuses, $AcademicPeriods, $todayDate) {
+                    $institutionFiltercount = $SurveyFormsFilters
+                        ->find()
+                        ->where([
+                            [$SurveyFormsFilters->aliasField('survey_form_id') => $id],
+                            [
+                                'OR' => [
+                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                                ]
+                            ]
+                        ])
+                        ->count();
+
+                    // has existing survey
+                    if ($institutionFiltercount > 0) {
+                        $count = $SurveyStatusPeriods
+                            ->find()
+                            ->matching($AcademicPeriods->alias())
+                            ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $id, $todayDate) {
+                                return $q
+                                    ->where([
+                                        $SurveyStatuses->aliasField('survey_form_id') => $id,
+                                        $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
+                                    ]);
+                            })
+                            ->count();
+
+                        return $count;
+                    }
+
+                    return 0;
+                }
+            ]);
+        }
 
         return $list;
     }
@@ -401,29 +454,46 @@ class InstitutionSurveysTable extends ControllerActionTable
         $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
         $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
         $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
+            // check if the institution type matches. only the match type or all type will try go in to check insertion of records
+            $filterTypeQuery = $SurveyFormsFilters
+                ->find()
+                ->where([
+                    [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
+                    [
+                        'OR' => [
+                            [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                            [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                        ]
+                    ]
+                ]);
+
+            $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
+
             $openStatusId = null;
             $workflow = $this->getWorkflow($this->registryAlias(), null, $surveyFormId);
-            if (!empty($workflow)) {
-                foreach ($workflow->workflow_steps as $workflowStep) {
-                    if ($workflowStep->category == 1) {
-                        $openStatusId = $workflowStep->id;
-                        break;
+            if ($isInstitutionTypeMatch) {
+                if (!empty($workflow)) {
+                    foreach ($workflow->workflow_steps as $workflowStep) {
+                        if ($workflowStep->category == 1) {
+                            $openStatusId = $workflowStep->id;
+                            break;
+                        }
                     }
-                }
 
-                // Update all New Survey to Expired by Institution Id
-                $this->updateAll(
-                    ['status_id' => self::EXPIRED],
-                    [
-                        'institution_id' => $institutionId,
-                        'survey_form_id' => $surveyFormId,
-                        'status_id' => $openStatusId
-                    ]
-                );
+                    // Update all New Survey to Expired by Institution Id
+                    $this->updateAll(
+                        ['status_id' => self::EXPIRED],
+                        [
+                            'institution_id' => $institutionId,
+                            'survey_form_id' => $surveyFormId,
+                            'status_id' => $openStatusId
+                        ]
+                    );
 
-                $periodResults = $SurveyStatusPeriods
+                    $periodResults = $SurveyStatusPeriods
                     ->find()
                     ->matching($this->AcademicPeriods->alias())
                     ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
@@ -433,27 +503,26 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
                             ]);
                     })
-                    ->innerJoinWith('SurveyStatuses.SurveyForms.CustomFilters')
-                    ->where(['CustomFilters.id' => $institutionTypeId ])
                     ->all();
 
-                foreach ($periodResults as $obj) {
-                    $periodId = $obj->academic_period_id;
-                    if (!is_null($institutionId)) {
-                        $where = [
+                    foreach ($periodResults as $obj) {
+                        if (!is_null($institutionId)) {
+                            $periodId = $obj->academic_period_id;
+
+                            $where = [
                             $this->aliasField('academic_period_id') => $periodId,
                             $this->aliasField('survey_form_id') => $surveyFormId,
                             $this->aliasField('institution_id') => $institutionId
                         ];
 
-                        $results = $this
+                            $results = $this
                             ->find('all')
                             ->where($where)
                             ->all();
 
-                        if ($results->isEmpty()) {
-                            // Insert New Survey if not found
-                            $surveyData = [
+                            if ($results->isEmpty()) {
+                                // Insert New Survey if not found
+                                $surveyData = [
                                 'status_id' => $openStatusId,
                                 'academic_period_id' => $periodId,
                                 'survey_form_id' => $surveyFormId,
@@ -462,22 +531,23 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 'created' => new Time('NOW')
                             ];
 
-                            $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
-                            if ($this->save($surveyEntity)) {
+                                $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
+                                if ($this->save($surveyEntity)) {
+                                } else {
+                                    $this->log($surveyEntity->errors(), 'debug');
+                                }
                             } else {
-                                $this->log($surveyEntity->errors(), 'debug');
+                                // Update Expired Survey back to Open
+                                $this->updateAll(
+                                    ['status_id' => $openStatusId],
+                                    [
+                                        'academic_period_id' => $periodId,
+                                        'survey_form_id' => $surveyFormId,
+                                        'institution_id' => $institutionId,
+                                        'status_id' => self::EXPIRED
+                                    ]
+                                );
                             }
-                        } else {
-                            // Update Expired Survey back to Open
-                            $this->updateAll(
-                                ['status_id' => $openStatusId],
-                                [
-                                    'academic_period_id' => $periodId,
-                                    'survey_form_id' => $surveyFormId,
-                                    'institution_id' => $institutionId,
-                                    'status_id' => self::EXPIRED
-                                ]
-                            );
                         }
                     }
                 }
