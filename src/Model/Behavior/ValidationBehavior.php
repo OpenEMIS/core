@@ -1574,7 +1574,7 @@ class ValidationBehavior extends Behavior
     public static function checkCriteriaThresholdRange($field, $globalData)
     {
         $model = $globalData['providers']['table'];
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
 
         // only for operator '1' (less than equal to) and '2' (greater than equal to)
         if ($globalData['data']['operator'] == '1' || $globalData['data']['operator'] == '2') {
@@ -1582,7 +1582,7 @@ class ValidationBehavior extends Behavior
             $criteriaMax = $Indexes->getThresholdParams($globalData['data']['criteria'])['max'];
 
             if ($field < $criteriaMin || $field > $criteriaMax) {
-                return $model->getMessage('Indexes.IndexesCriterias.threshold.criteriaThresholdRange', ['sprintf' => [$criteriaMin, $criteriaMax]]);
+                return $model->getMessage('Risk.RisksCriterias.threshold.criteriaThresholdRange', ['sprintf' => [$criteriaMin, $criteriaMax]]);
             } else {
                 return true;
             }
