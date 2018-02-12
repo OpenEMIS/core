@@ -145,7 +145,8 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $CustomModules = $this->SurveyForms->CustomModules;
         $module = $this->module;
-        $list = $this->SurveyForms
+        // $list = $this->SurveyForms
+        $tempList = $this->SurveyForms
             ->find('list')
             ->matching('CustomModules', function ($q) use ($CustomModules, $module) {
                 return $q->where([$CustomModules->aliasField('model') => $module]);
@@ -159,50 +160,52 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
 
         if (!is_null($institutionId)) {
-            $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
-            $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
-            $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
-            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+            $list = [];
+
             $AcademicPeriods = $this->AcademicPeriods;
+            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+            $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
+            $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
+            $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
             $todayDate = date("Y-m-d");
-            $null = -1;
 
-            $this->advancedSelectOptions($list, $null, [
-                'message' => '{{label}} - ' . $this->getMessage('general.noSurveys'),
-                'callable' => function ($id) use ($SurveyFormsFilters, $institutionTypeId, $SurveyStatusPeriods, $SurveyStatuses, $AcademicPeriods, $todayDate) {
-                    $institutionFiltercount = $SurveyFormsFilters
-                        ->find()
-                        ->where([
-                            [$SurveyFormsFilters->aliasField('survey_form_id') => $id],
-                            [
-                                'OR' => [
-                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
-                                ]
+            foreach ($tempList as $key => $value) {
+                $surveyFormId = $key;
+
+                $institutionFilterCount = $SurveyFormsFilters
+                    ->find()
+                    ->where(
+                        [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
+                        [
+                            'OR' => [
+                                [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                                [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
                             ]
-                        ])
+                        ]
+                    )
+                    ->count();
+
+                // has existing survey
+                if ($institutionFilterCount > 0) {
+                    $activeSurveyCount = $SurveyStatusPeriods
+                        ->find()
+                        ->matching($AcademicPeriods->alias())
+                        ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
+                            return $q
+                                ->where([
+                                    $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
+                                    $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
+                                ]);
+                        })
                         ->count();
-
-                    // has existing survey
-                    if ($institutionFiltercount > 0) {
-                        $count = $SurveyStatusPeriods
-                            ->find()
-                            ->matching($AcademicPeriods->alias())
-                            ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $id, $todayDate) {
-                                return $q
-                                    ->where([
-                                        $SurveyStatuses->aliasField('survey_form_id') => $id,
-                                        $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
-                                    ]);
-                            })
-                            ->count();
-
-                        return $count;
-                    }
-
-                    return 0;
+                } else {
+                    $activeSurveyCount = 0;
                 }
-            ]);
+
+                if ($activeSurveyCount > 0) {
+                    $list[$key] = $value;
+                }
+            }
         }
 
         return $list;
