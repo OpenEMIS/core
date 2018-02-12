@@ -141,6 +141,15 @@ class SurveyFormsTable extends CustomFormsTable
         $entity->custom_filter_selection = ($isAllFilterType) ? self::ALL_CUSTOM_FILER : self::CUSTOM_FILTER;
     }
 
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->CustomFields->alias(),
+            $this->CustomFilters->alias()
+        ];
+    }
+
+
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $customModule = $this->CustomModules
