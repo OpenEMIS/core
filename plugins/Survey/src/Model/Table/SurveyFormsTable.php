@@ -82,10 +82,16 @@ class SurveyFormsTable extends CustomFormsTable
         $this->setFieldOrder(['custom_module_id', 'code', 'name', 'custom_filters', 'description', 'custom_fields']);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew()) {
+            unset($entity->custom_filters);
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $this->setAllCustomFilter($entity);
-        $this->removeCustomFilter($entity);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -100,7 +106,8 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        parent::viewAfterAction($event, $entity, $extra);
+        $this->request->query['module'] = $entity->custom_module_id;
+        $this->setupFields($entity);
 
         if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
             $toolbarButtons = [];
@@ -159,19 +166,18 @@ class SurveyFormsTable extends CustomFormsTable
     public function onGetCustomFilters(Event $event, Entity $entity)
     {
         if ($this->action == 'index' || $this->action == 'view') {
-            if (is_null($entity->_matchingData['CustomModules'])) {
-                $entityObj = $this
+            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+            if ($SurveyFormsFilters->getIsAllFilterType($entity->id)) {
+                // to ensure that the matching data exist, for all type selection in view page.
+                if (is_null($entity->_matchingData['CustomModules'])) {
+                    $entityObj = $this
                     ->find()
                     ->where([$this->aliasField('id') => $entity->id])
                     ->matching('CustomModules')
                     ->first();
-            } else {
-                $entityObj = $entity;
-            }
-
-            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-
-            if ($SurveyFormsFilters->getIsAllFilterType($entityObj->id)) {
+                } else {
+                    $entityObj = $entity;
+                }
                 $filter = $entityObj->_matchingData['CustomModules']->filter;
                 $chosenSelectList = TableRegistry::get($filter)->getList()->toArray();
                 return implode(', ', $chosenSelectList);
@@ -179,12 +185,28 @@ class SurveyFormsTable extends CustomFormsTable
                 $chosenSelectList = [];
                 foreach ($entity->custom_filters as $value) {
                     $chosenSelectList[] = $value->name;
+                    sort($chosenSelectList);
                 }
                 return implode(', ', $chosenSelectList);
             }
 
             return '<i class="fa fa-minus"></i>';
         }
+    }
+
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $moduleQuery = $this->getModuleQuery();
+            $moduleOptions = $moduleQuery->toArray();
+
+            $attr['type'] = 'readonly';
+            $attr['options'] = $moduleOptions;
+
+            return $attr;
+        }
+
+        return parent::onUpdateFieldCustomModuleId($event, $attr, $action, $request);
     }
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
@@ -222,6 +244,25 @@ class SurveyFormsTable extends CustomFormsTable
 
         return $buttons;
     }
+    public function onUpdateFieldCustomFilterSelection(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $attr['type'] = 'hidden';
+        } else {
+            $filterSelectionOptions = [
+                self::CUSTOM_FILTER => __('Select Custom Filters'),
+                self::ALL_CUSTOM_FILER => __('Select All Custom Filters')
+            ];
+
+            $attr['type'] = 'select';
+            $attr['options'] = $filterSelectionOptions;
+            $attr['after'] = 'custom_module_id';
+            $attr['select'] = false;
+            $attr['onChangeReload'] = true;
+        }
+
+        return $attr;
+    }
 
     public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
     {
@@ -241,10 +282,22 @@ class SurveyFormsTable extends CustomFormsTable
                 $filter = $customModule->filter;
  
                 if (isset($filter)) {
-                    $filterOptions = TableRegistry::get($filter)->getList()->toArray();
-                    $attr['options'] = $filterOptions;
-                    $attr['type'] = 'chosenSelect';
-                    $attr['placeholder'] = __('Select Filters');
+                    if ($action == 'add') {
+                        $filterOptions = TableRegistry::get($filter)->getList()->toArray();
+                        $attr['options'] = $filterOptions;
+                        $attr['type'] = 'chosenSelect';
+                        $attr['placeholder'] = __('Select Filters');
+                    } else {
+                        $customFilterList = $entity->custom_filters;
+                        $selectedOptionsName = [];
+                        foreach ($customFilterList as $obj) {
+                            $selectedOptionsName[] = $obj->name;
+                        }
+
+                        // set this options to disabled so it won't post this data back
+                        $attr['type'] = 'disabled';
+                        $attr['attr']['value'] = implode(', ', $selectedOptionsName);
+                    }
                 }
             } else {
                 $attr['type'] = 'readonly';
@@ -276,20 +329,7 @@ class SurveyFormsTable extends CustomFormsTable
         $this->field('custom_module_id');
 
         if ($moduleModel == 'Institution.Institutions') {
-            $filterSelectionOptions = [
-                self::CUSTOM_FILTER => __('Select Custom Filters'),
-                self::ALL_CUSTOM_FILER => __('Select All Custom Filters')
-            ];
-
-            $inputOptions = [
-                'type' => 'select',
-                'options' => $filterSelectionOptions,
-                'after' => 'custom_module_id',
-                'select' => false,
-                'onChangeReload' => true
-            ];
-
-            $this->field('custom_filter_selection', $inputOptions);
+            $this->field('custom_filter_selection');
 
             $this->field('custom_filters', [
                 'attr' => ['customModule' => $customModule, 'entity' => $entity]
@@ -318,29 +358,6 @@ class SurveyFormsTable extends CustomFormsTable
             if ($SurveyFormsFilters->save($surveyFormFilterEntity)) {
             } else {
                 $SurveyFormsFilters->log($surveyFormFilterEntity->errors(), 'debug');
-            }
-        }
-    }
-
-    private function removeCustomFilter($entity)
-    {
-        $customModule = $this->CustomModules->get($entity->custom_module_id);
-        $moduleModel = $customModule->model;
-        
-        // pr($entity);
-        // die;
-
-        if ($moduleModel == 'Student.StudentSurveys' || $moduleModel == 'InstitutionRepeater.RepeaterSurveys') {
-            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-            $surveyFormId = $entity->id;
-
-            $resultSet = $SurveyFormsFilters
-                ->find()
-                ->where([$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId])
-                ->toArray();
-
-            foreach ($resultSet as $result) {
-                $SurveyFormsFilters->delete($result);
             }
         }
     }
