@@ -32,7 +32,12 @@ class POCOR2098 extends AbstractMigration
             ->save();
 
         $allFilterTypeId = 0;
-        $surveyRows = $this->fetchAll('SELECT * FROM survey_forms');
+        $surveyRows = $this->fetchAll('
+            SELECT `survey_forms`.`id` FROM `survey_forms`
+            INNER JOIN `custom_modules`
+            ON `survey_forms`.`custom_module_id` = `custom_modules`.`id`
+            WHERE `custom_modules`.`model` = "Institution.Institutions"
+        ');
 
         foreach ($surveyRows as $obj) {
             $newRecord = [
