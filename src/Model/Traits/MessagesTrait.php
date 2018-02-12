@@ -1940,19 +1940,19 @@ trait MessagesTrait
                 ]
             ]
         ],
-        'Indexes' => [
+        'Risk' => [
             'TableHeader' => [
                 'Criteria',
                 'Operator',
                 'Threshold',
-                'Index'
+                'Risk'
             ],
-            'IndexesCriterias' => [
+            'RiskCriterias' => [
                 'threshold' => [
                     'ruleRange' => 'Value must be within 1 to 99',
                     'criteriaThresholdRange' => 'Value must be within %s to %s'
                 ],
-                'index_value' => [
+                'risk_value' => [
                     'ruleRange' => 'Value must be within 1 to 99'
                 ]
             ]
