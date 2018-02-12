@@ -153,25 +153,24 @@ class InstitutionSurveysTable extends ControllerActionTable
             })
             ->toArray();
         
-        // disable any filter options if don't have any existing surveys for the institution
         $session = $this->controller->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
 
         if (!is_null($institutionId)) {
-            $list = [];
-
             $AcademicPeriods = $this->AcademicPeriods;
             $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
             $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
             $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
             $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
             $todayDate = date("Y-m-d");
+            $list = [];
 
             foreach ($tempList as $key => $value) {
                 $surveyFormId = $key;
 
+                // check if survey form filter type matches
                 $institutionFilterCount = $SurveyFormsFilters
                     ->find()
                     ->where(
@@ -185,7 +184,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     )
                     ->count();
 
-                // has existing survey
+                // if filter type matches, check if the status is active
                 if ($institutionFilterCount > 0) {
                     $activeSurveyCount = $SurveyStatusPeriods
                         ->find()
@@ -202,6 +201,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $activeSurveyCount = 0;
                 }
 
+                // update the filter list if their is existing active surveys for the institution by institution type
                 if ($activeSurveyCount > 0) {
                     $list[$key] = $value;
                 }
