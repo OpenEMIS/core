@@ -96,12 +96,11 @@ class StaffAppraisalsTable extends ControllerActionTable
         $session = $this->request->session();
         $staffId = $session->read('Staff.Staff.id');
 
-        $this->field('modified_user_id',    ['visible' => ['index' => true, 'view' => true], 'after' => 'final_rating']);
-        $this->field('modified',            ['visible' => ['index' => true, 'view' => true], 'after' => 'modified_user_id']);
-        $this->field('staff_id',            ['type' => 'hidden', 'value' => $staffId]);
+        $this->field('modified_user_id', ['visible' => ['index' => true, 'view' => true], 'after' => 'final_rating']);
+        $this->field('modified', ['visible' => ['index' => true, 'view' => true], 'after' => 'modified_user_id']);
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $staffId]);
 
         if (!empty($this->paramsPass(0))) {
-
             $staffAppraisalId = $this->paramsDecode($this->paramsPass(0));
 
             $loginUserId = $this->Auth->user('id');
@@ -153,7 +152,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
-        $showFunc = function() use ($entity) {
+        $showFunc = function () use ($entity) {
             $filename = $entity->file_content;
             return !empty($filename);
         };
@@ -223,7 +222,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     }
 
     // to rename the field header
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'staff_appraisal_type_id') {
             return __('Type');
@@ -369,7 +368,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 }
             }
 
-        return $attr;
+            return $attr;
         }
     }
 
@@ -404,7 +403,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetCustomRatingElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomRatingElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $staffAppraisalId = $entity->id;
 
@@ -558,7 +557,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 }
 
                 // angular to sum all the rating '{{rating_1+rating_2+.....}}'
-                for ($i=0; $i < count($ngModel) ; $i++) {
+                for ($i=0; $i < count($ngModel); $i++) {
                     if ($i < count($ngModel) - 1) {
                         $totalNgModel .= $ngModel[$i] . ' + ';
                     } else {
@@ -647,7 +646,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         $missingCompetency = [];
         foreach ($oldSetData as $key => $obj) {
-           if ((!empty($oldSetData)) && (!array_key_exists($obj['competency_id'], $newSet))) {
+            if ((!empty($oldSetData)) && (!array_key_exists($obj['competency_id'], $newSet))) {
                 $missingCompetency[$key] = $obj;
             }
         }
