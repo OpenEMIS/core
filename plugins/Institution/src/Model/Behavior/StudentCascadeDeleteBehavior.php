@@ -32,6 +32,7 @@ class StudentCascadeDeleteBehavior extends Behavior {
 			$this->deleteStudentSurveys($entity);
 			$this->deleteStudentWithdrawRecords($entity);
 			$this->deleteStudentAdmissionRecords($entity);
+            $this->deleteStudentTransferRecords($entity);
 		}
 
         $listeners = [
@@ -286,41 +287,41 @@ class StudentCascadeDeleteBehavior extends Behavior {
 
 	private function deleteStudentAdmissionRecords(Entity $entity) {
 		$StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+        $doneStatus = $StudentAdmission::DONE;
 
-		$institutionId = $entity->institution_id;
-		$periodId = $entity->academic_period_id;
-		$gradeId = $entity->education_grade_id;
-		$studentId = $entity->student_id;
-
-		// delete pending admission
-        $pendingAdmissionData = $StudentAdmission->find()
+        // only pending admission records will be deleted
+        $studentAdmissionData = $StudentAdmission->find()
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
             ->where([
-                $StudentAdmission->aliasField('institution_id') => $institutionId,
-                $StudentAdmission->aliasField('academic_period_id') => $periodId,
-                $StudentAdmission->aliasField('education_grade_id') => $gradeId,
-                $StudentAdmission->aliasField('student_id') => $studentId,
-                $StudentAdmission->aliasField('previous_institution_id') => 0
+                $StudentAdmission->aliasField('institution_id') => $entity->institution_id,
+                $StudentAdmission->aliasField('academic_period_id') => $entity->academic_period_id,
+                $StudentAdmission->aliasField('education_grade_id') => $entity->education_grade_id,
+                $StudentAdmission->aliasField('student_id') => $entity->student_id
             ])
-            ->toArray()
-            ;
-        foreach ($pendingAdmissionData as $key => $value) {
-            $StudentAdmission->delete($value);
-        }
+            ->toArray();
 
-		// delete transfer request
-        $transferRequestData = $StudentAdmission->find()
-            ->where([
-                $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
-                $StudentAdmission->aliasField('academic_period_id') => $periodId,
-                $StudentAdmission->aliasField('education_grade_id') => $gradeId,
-                $StudentAdmission->aliasField('student_id') => $studentId
-            ])
-            ->toArray()
-            ;
-        foreach ($transferRequestData as $key => $value) {
+        foreach ($studentAdmissionData as $key => $value) {
             $StudentAdmission->delete($value);
         }
 	}
+
+    private function deleteStudentTransferRecords(Entity $entity) {
+        $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $studentTransferData = $StudentTransfers->find()
+            ->where([
+                $StudentTransfers->aliasField('previous_institution_id') => $entity->institution_id,
+                $StudentTransfers->aliasField('previous_academic_period_id') => $entity->academic_period_id,
+                $StudentTransfers->aliasField('previous_education_grade_id') => $entity->education_grade_id,
+                $StudentTransfers->aliasField('student_id') => $entity->student_id
+            ])
+            ->toArray();
+
+        foreach ($studentTransferData as $key => $value) {
+            $StudentTransfers->delete($value);
+        }
+    }
 
 	private function noStudentRecords(Entity $entity , $includeGrade=false) {
 		$Students = $this->_table;
