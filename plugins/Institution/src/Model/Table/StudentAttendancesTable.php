@@ -345,7 +345,6 @@ class StudentAttendancesTable extends AppTable
                         $data['Present'] = 1;
                     }
                 } else {
-
                     if ($value['full_day'] == 0) {
                         if (isset($data['Present'])) {
                             $data['Present'] = ++$data['Present'];
@@ -734,9 +733,7 @@ class StudentAttendancesTable extends AppTable
         $query = $settings['query'];
         // Setup period options
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $periodOptionsData = $AcademicPeriod->getList();
-        // only year options will appear
-        $periodOptions = $periodOptionsData[key($periodOptionsData)];
+        $periodOptions = $AcademicPeriod->getYearList();
 
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
@@ -819,7 +816,8 @@ class StudentAttendancesTable extends AppTable
                     }
 
                     // POCOR-2377 adding the school closed text
-                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek) ? __('School Closed') : '';;
+                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek) ? __('School Closed') : '';
+                    ;
 
                     $dayOptions[$firstDayOfWeek->dayOfWeek] = [
                         'value' => $firstDayOfWeek->dayOfWeek,
@@ -1223,7 +1221,7 @@ class StudentAttendancesTable extends AppTable
         $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
         $url = array_merge($url, $this->request->query, $this->request->pass);
         $url[0] = 'index';
-        if (isset($url['mode']) && !$error) {
+        if (isset($url['mode'])) {
             unset($url['mode']);
         }
 
