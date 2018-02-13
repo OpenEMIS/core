@@ -13,11 +13,11 @@ class UpdateIndexesShell extends Shell
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Institution.InstitutionStudentIndexes');
-        $this->loadModel('Institution.InstitutionIndexes');
-        $this->loadModel('Institution.StudentIndexesCriterias');
-        $this->loadModel('Indexes.IndexesCriterias');
-        $this->loadModel('Indexes.Indexes');
+        $this->loadModel('Institution.InstitutionStudentRisks');
+        $this->loadModel('Institution.InstitutionRisks');
+        $this->loadModel('Institution.StudentRisksCriterias');
+        $this->loadModel('Risk.RiskCriterias');
+        $this->loadModel('Risk.Risks');
         $this->loadModel('Institution.Students');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
     }
@@ -26,36 +26,36 @@ class UpdateIndexesShell extends Shell
     {
         $institutionId = !empty($this->args[0]) ? $this->args[0] : 0;
         $userId = !empty($this->args[1]) ? $this->args[1] : 0;
-        $indexesId = !empty($this->args[2]) ? $this->args[2] : 0;
+        $riskId = !empty($this->args[2]) ? $this->args[2] : 0;
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
-        $indexesCriteriaData = $this->IndexesCriterias->getCriteriaKey($indexesId);
+        $riskCriteriaData = $this->RiskCriterias->getCriteriaKey($riskId);
 
-        if (!empty($indexesCriteriaData)) {
-            foreach ($indexesCriteriaData as $key => $obj) {
-                $criteriaData = $this->Indexes->getCriteriasDetails($key);
+        if (!empty($riskCriteriaData)) {
+            foreach ($riskCriteriaData as $key => $obj) {
+                $criteriaData = $this->Risks->getCriteriasDetails($key);
 
                 // for cli-debug.log to see still updating
                 Log::write('debug', 'Criteria: '. $key);
                 // end debug
 
-                $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId, $indexesId);
+                $this->autoUpdateRisks($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId);
             }
         }
 
         // update the generated_by and generated_on in indexes table
-        $this->InstitutionIndexes->updateAll(
+        $this->InstitutionRisks->updateAll(
             [
                 'generated_by' => $userId,
                 'generated_on' => new Time(),
-                'pid' => NULL,
+                'pid' => null,
                 'status' => 3 // completed
             ],
-            ['index_id' => $indexesId, 'institution_id' => $institutionId]
+            ['risk_id' => $riskId, 'institution_id' => $institutionId]
         );
     }
 
-    public function autoUpdateIndexes($key, $model, $institutionId, $userId, $academicPeriodId, $indexesId)
+    public function autoUpdateRisks($key, $model, $institutionId, $userId, $academicPeriodId)
     {
         $today = Time::now();
         $CriteriaModel = TableRegistry::get($model);
@@ -149,7 +149,7 @@ class UpdateIndexesShell extends Shell
             $CriteriaModel->save($criteriaModelEntity);
 
             // update the institution student index
-            $this->InstitutionStudentIndexes->query()
+            $this->InstitutionStudentRisks->query()
                 ->update()
                 ->set([
                     'created_user_id' => $userId,
@@ -158,7 +158,7 @@ class UpdateIndexesShell extends Shell
                 ->execute();
 
             // update the student indexes criteria
-            $this->StudentIndexesCriterias->query()
+            $this->StudentRisksCriterias->query()
                 ->update()
                 ->set([
                     'created_user_id' => $userId,

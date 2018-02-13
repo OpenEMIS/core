@@ -404,11 +404,11 @@ class InstitutionSurveysTable extends ControllerActionTable
         if ($action == 'view') {
             $attr['type'] = 'select';
         } elseif ($action == 'edit') {
-            $periodOptions = $this->AcademicPeriods->getList(['withLevels' => false]);
             $periodId = $attr['attr']['value'];
-
+            $periodObject = $this->AcademicPeriods->get($periodId);
+            
             $attr['type'] = 'readonly';
-            $attr['attr']['value'] = $periodOptions[$periodId];
+            $attr['attr']['value'] = $periodObject->name;
         }
 
         return $attr;
