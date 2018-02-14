@@ -279,9 +279,15 @@ class UsersTable extends AppTable
                 'gender_id' => 'Genders.id',
                 'gender_name' => 'Genders.name',
                 'education_grade_id' => 'InstitutionStudents.education_grade_id',
-                'education_grade_name' => 'EducationGrades.name'
+                'education_grade_name' => 'EducationGrades.name',
+                $this->aliasField('id'),
+                $this->aliasField('openemis_no'),
+                $this->aliasField('first_name'),
+                $this->aliasField('middle_name'),
+                $this->aliasField('third_name'),
+                $this->aliasField('last_name'),
+                $this->aliasField('preferred_name')
             ])
-            ->autoFields(true)
             ->group([$this->aliasField('id')])
             ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) use ($institutionClassId, $institutionId) {
