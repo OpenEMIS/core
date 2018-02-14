@@ -960,13 +960,13 @@ class StaffTable extends ControllerActionTable
             'Institution.StaffAbsences' => 'StaffAbsences',
             'Institution.StaffLeave' => 'StaffLeave',
             'Institution.InstitutionClasses' =>'InstitutionClasses',
-            'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects',
-            'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+            'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
         ];
 
         if (!Configure::read('schoolMode')) {    
             $coreAssociationArray = [
-                'Institution.InstitutionRubrics' => 'InstitutionRubrics'
+                'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+                'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
             ];
             $associationArray = array_merge($associationArray, $coreAssociationArray);
         }
