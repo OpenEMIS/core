@@ -82,6 +82,20 @@ class DirectoriesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        if ($primary) {
+            $schema = $this->schema();
+            $fields = $schema->columns();
+            foreach ($fields as $key => $field) {
+                if ($schema->column($field)['type'] == 'binary') {
+                    unset($fields[$key]);
+                }
+            }
+            return $query->select($fields);
+        }
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
