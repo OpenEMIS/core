@@ -1165,7 +1165,7 @@ class StudentAttendancesTable extends AppTable
                         if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
                             $obj['student_absence_reason_id'] = 0;
                         } elseif ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
-                            $obj['student_absence_reason_id'] = $obj['late_student_absence_reason_id'];
+                            $obj['student_absence_reason_id'] = array_key_exists('late_student_absence_reason_id',$obj) ? $obj['late_student_absence_reason_id'] : '';
                             $obj['full_day'] = 0;
 
                             $lateTime = strtotime($obj['late_time']);

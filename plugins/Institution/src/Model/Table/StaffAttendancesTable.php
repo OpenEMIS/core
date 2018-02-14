@@ -1090,7 +1090,7 @@ class StaffAttendancesTable extends ControllerActionTable
                         if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
                             $obj['staff_absence_reason_id'] = 0;
                         } elseif ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
-                            $obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
+                            $obj['staff_absence_reason_id'] = array_key_exists('late_staff_absence_reason_id',$obj) ? $obj['late_staff_absence_reason_id'] : '';
                             $obj['full_day'] = 0;
 
                             $lateTime = strtotime($obj['late_time']);
