@@ -355,7 +355,7 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) { 
+        if ($entity->isNew()) {
             $id = $entity->institution_class_id;
             $countMale = $this->getMaleCountByClass($id);
             $countFemale = $this->getFemaleCountByClass($id);
@@ -576,6 +576,14 @@ class InstitutionClassStudentsTable extends AppTable
 
         return $query
             ->contain('InstitutionClasses')
+            ->matching('Users', function ($q) {
+                return $q->select(['Users.openemis_no',
+                    'Users.first_name',
+                    'Users.middle_name',
+                    'Users.third_name',
+                    'Users.last_name',
+                    'Users.preferred_name']);
+            })
             ->matching('Users.Genders')
             ->matching('StudentStatuses')
             ->leftJoinWith('SubjectStudents', function ($q) use ($institutionSubjectId, $academicPeriodId) {
