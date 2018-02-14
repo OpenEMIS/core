@@ -164,7 +164,7 @@ class HtmlFieldHelper extends Helper
         $value = '';
         if ($action == 'index' || $action == 'view') {
             $data = Hash::flatten($data->toArray());
-            $value = $data[$attr['field']];
+            $value = isset($data[$attr['field']]) ? $data[$attr['field']] : null;
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
             if (array_key_exists('length', $attr)) {
@@ -380,7 +380,7 @@ class HtmlFieldHelper extends Helper
             }
             $attr['fieldName'] = $fieldName;
             $data = Hash::flatten($data->toArray());
-            $value = $data[$attr['field']];
+            $value = isset($data[$attr['field']]) ? $data[$attr['field']] : 0;
         } else {
             if (!isset($attr['min'])) {
                 $attr['min'] = 0;
@@ -407,7 +407,7 @@ class HtmlFieldHelper extends Helper
         $value = '';
         if ($action == 'index' || $action == 'view') {
             $data = Hash::flatten($data->toArray());
-            $value = nl2br($data[$attr['field']]);
+            $value = isset($data[$attr['field']]) ? nl2br($data[$attr['field']]) : '';
         } elseif ($action == 'edit') {
             $options['type'] = 'textarea';
             $fieldName = $attr['model'] . '.' . $attr['field'];
