@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Controller;
+namespace Risk\Controller;
 
 use ArrayObject;
 
@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 use App\Controller\AppController;
 
-class IndexesController extends AppController
+class RisksController extends AppController
 {
     public function initialize()
     {
@@ -18,7 +18,11 @@ class IndexesController extends AppController
     }
 
     // CAv4
-    public function Indexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Indexes.Indexes']); }
+
+    public function Risks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Risk.Risks']);
+    }
     // End
 
     public function beforeFilter(Event $event)
@@ -26,7 +30,7 @@ class IndexesController extends AppController
         parent::beforeFilter($event);
         
         $header = __('Risks');
-        $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Indexes']);
+        $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Risks']);
         $this->set('contentHeader', $header);
     }
 }

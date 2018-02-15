@@ -3,6 +3,7 @@ namespace Profile\Controller;
 
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Core\Configure;
 use App\Controller\PageController;
 
 class CommentsController extends PageController
@@ -298,6 +299,11 @@ class CommentsController extends PageController
         }
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        if (Configure::read('schoolMode')) {
+            if (isset($tabElements['StudentSurveys'])) {
+                unset($tabElements['StudentSurveys']);
+            }
+        }
 
         foreach ($tabElements as $action => $obj) {
             $page->addTab($action)
