@@ -50,17 +50,19 @@ class WithdrawRequestsTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-        $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
 
         $conditions = [
             'student_id' => $entity->student_id,
-            'status' => self::NEW_REQUEST,
-            'type' => 2,
-            'education_grade_id' => $entity->education_grade_id,
-            'previous_institution_id' => $entity->institution_id
+            'status_id IN ' => $pendingTransferStatuses,
+            'previous_education_grade_id' => $entity->education_grade_id,
+            'previous_institution_id' => $entity->institution_id,
+            'previous_academic_period_id' => $entity->academic_period_id
         ];
 
-        $count = $StudentAdmissionTable->find()
+        $count = $StudentTransfersTable->find()
             ->where($conditions)
             ->count();
 

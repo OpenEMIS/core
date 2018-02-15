@@ -120,6 +120,7 @@ class EditBehavior extends Behavior
 
                     $event = $model->dispatchEvent('ControllerAction.Model.edit.beforeSave', [$entity, $requestData, $extra], $this);
                     if ($event->isStopped()) {
+                        $mainEvent->stopPropagation();
                         return $event->result;
                     }
                     if (is_callable($event->result)) {

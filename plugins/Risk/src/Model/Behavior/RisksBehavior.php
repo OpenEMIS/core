@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Model\Behavior;
+namespace Risk\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
@@ -10,12 +10,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 
-class IndexesBehavior extends Behavior
+class RisksBehavior extends Behavior
 {
-    public function initialize(array $config)
-    {
-
-    }
 
     public function implementedEvents()
     {
@@ -29,7 +25,7 @@ class IndexesBehavior extends Behavior
 
         $broadcaster = $this->_table;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Institution.InstitutionStudentIndexes');
+        $listeners[] = TableRegistry::get('Institution.InstitutionStudentRisks');
 
         if (!empty($listeners)) {
             $this->_table->dispatchEventToModels('Model.'. $alias .'.afterSave', [$entity], $broadcaster, $listeners);
@@ -42,7 +38,7 @@ class IndexesBehavior extends Behavior
 
         $broadcaster = $this->_table;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Institution.InstitutionStudentIndexes');
+        $listeners[] = TableRegistry::get('Institution.InstitutionStudentRisks');
 
         if (!empty($listeners)) {
             $this->_table->dispatchEventToModels('Model.'. $alias .'.afterDelete', [$entity], $broadcaster, $listeners);

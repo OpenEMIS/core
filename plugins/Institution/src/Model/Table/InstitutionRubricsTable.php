@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
+use Cake\Core\Configure;
 
 class InstitutionRubricsTable extends AppTable
 {
@@ -33,7 +34,9 @@ class InstitutionRubricsTable extends AppTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->hasMany('InstitutionRubricAnswers', ['className' => 'Institution.InstitutionRubricAnswers', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Excel', ['excludes' => ['status', 'comment'], 'pages' => ['view']]);
-        $this->addBehavior('Report.RubricsReport');
+        if (!Configure::read('schoolMode')) {    
+            $this->addBehavior('Report.RubricsReport');
+        }
     }
 
     public function beforeAction(Event $event)

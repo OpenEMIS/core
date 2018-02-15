@@ -116,7 +116,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
         $this->field('new_information_header', ['type' => 'section', 'title' => __('Transfer To')]);
-        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('previous_effective_date', ['type' => 'hidden']);
 
         if (empty($entity->previous_end_date)) {
@@ -171,7 +171,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_institution_position_id', ['type' => 'select']);
         $this->field('new_staff_type_id', ['type' => 'select']);
 
-        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Details')]);
+        $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
     }
 
