@@ -38,6 +38,8 @@ class InstitutionsController extends AppController
         'Students',
         'StudentUser',
         'StudentAccount',
+        'StudentTransferIn',
+        'StudentTransferOut',
         // 'Textbooks',
         // 'StudentIndexes',
 
@@ -51,6 +53,8 @@ class InstitutionsController extends AppController
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
+        'StaffTransferIn',
+        'StaffTransferOut',
         // 'StaffPositionProfiles',
 
         // attendances
@@ -120,7 +124,6 @@ class InstitutionsController extends AppController
 
         // misc
         // 'IndividualPromotion',
-        // 'TransferRequests',
         // 'CourseCatalogue',
     ];
 
@@ -130,7 +133,8 @@ class InstitutionsController extends AppController
         $version = \Cake\Core\Configure::version();
         if (strpos($version, '3.4') !== false) {
             $msg = 'To change ResultsExport $response->type to $response->withType and $response->download to $response->withDownload';
-            pr($msg);die;
+            pr($msg);
+            die;
         }
         // End
 
@@ -148,8 +152,6 @@ class InstitutionsController extends AppController
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
             'Promotion'         => ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
-            'Transfer'          => ['className' => 'Institution.StudentTransfer', 'actions' => ['index', 'add']],
-            'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['index', 'edit', 'view', 'search']],
             'Undo'              => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
             'ClassStudents'     => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
 
@@ -272,14 +274,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffUser']);
     }
-    public function TransferRequests()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']);
-    }
-    public function TransferApprovals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferApprovals']);
-    }
     public function StaffTrainingResults()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']);
@@ -344,17 +338,17 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
     }
-    public function Indexes()
+    public function Risks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Risks']);
     }
-    public function StudentIndexes()
+    public function StudentRisks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentRisks']);
     }
-    public function InstitutionStudentIndexes()
+    public function InstitutionStudentRisks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentRisks']);
     }
     public function Cases()
     {
@@ -379,6 +373,22 @@ class InstitutionsController extends AppController
     public function StaffTransferOut()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferOut']);
+    }
+    public function StudentAdmission()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
+    }
+    public function StudentTransferIn()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
+    }
+    public function StudentTransferOut()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferOut']);
+    }
+    public function Transfer()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransfer']);
     }
     public function WithdrawRequests()
     {
@@ -487,7 +497,7 @@ class InstitutionsController extends AppController
         $filePath = $results['path'] . $fileName;
 
         $response = $this->response;
-        $response->body(function() use ($filePath) {
+        $response->body(function () use ($filePath) {
             $content = file_get_contents($filePath);
             if (file_exists($filePath)) {
                 unlink($filePath);
@@ -779,12 +789,6 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             $this->set('externalDataSource', $externalDataSource);
-
-            $admissionExecutePermission = true;
-            if (!$this->AccessControl->isAdmin()) {
-                $admissionExecutePermission = $session->read('Permissions.Institutions.StudentAdmission.execute');
-            }
-            $this->set('admissionExecutePermission', $admissionExecutePermission);
 
             $this->render('studentAdd');
         } else {
@@ -1128,7 +1132,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentIndexes' => __('Risks')
+                'StudentRisks' => __('Risks')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1168,15 +1172,15 @@ class InstitutionsController extends AppController
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
-            } elseif ($model->alias() == 'StudentIndexes') {
+            } elseif ($model->alias() == 'StudentRisks') {
                 $header .= ' - '. __('Risks');
             } elseif ($model->alias() == 'Indexes') {
                 $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
-            } elseif ($model->alias() == 'InstitutionStudentIndexes') {
+            } elseif ($model->alias() == 'InstitutionStudentRisks') {
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
-            }else {
+            } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1184,7 +1188,7 @@ class InstitutionsController extends AppController
             $event = $model->eventManager()->dispatch($event);
 
             if ($model->hasField('institution_id')) {
-                if (!in_array($model->alias(), ['TransferRequests'])) {
+                if (!in_array($model->alias(), ['StudentTransferIn', 'StudentTransferOut'])) {
                     $model->fields['institution_id']['type'] = 'hidden';
                     $model->fields['institution_id']['value'] = $institutionId;
                 }
@@ -1204,7 +1208,7 @@ class InstitutionsController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['TransferRequests', 'StaffTransferOut'])) {
+                    if (in_array($model->alias(), ['StaffTransferOut', 'StudentTransferOut'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
@@ -1262,7 +1266,7 @@ class InstitutionsController extends AppController
                     $this->Alert->error('general.notExists');
                 // should redirect
                 } else {
-                    if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut'])) {
+                    if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut', 'StudentTransferIn', 'StudentTransferOut'])) {
                         $institutionId = $this->request->param('institutionId');
                         try {
                             $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];
@@ -1519,7 +1523,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-            'StudentIndexes' => ['text' => __('Risks')]
+            'StudentRisks' => ['text' => __('Risks')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1529,12 +1533,12 @@ class InstitutionsController extends AppController
             if ($key == 'Programmes' || $key == 'Textbooks') {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
-            } elseif ($key == 'StudentIndexes') {
+            } elseif ($key == 'StudentRisks') {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
         return $this->TabPermission->checkTabPermission($tabElements);

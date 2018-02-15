@@ -398,8 +398,8 @@ class RegisteredStudentsBehavior extends Behavior {
     public function onGetTransferred(Event $event, Entity $entity)
     {
         //check whether there is transfer record for the current academic year that already approved.
-        $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-        
+        $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+
         if ($entity) {
             if ($entity->extractOriginal(['student_id'])) {
                 $studentId = $entity->extractOriginal(['student_id'])['student_id'];
@@ -415,26 +415,26 @@ class RegisteredStudentsBehavior extends Behavior {
             }
         }
 
-        $Admission = '';
+        $transferRecords = '';
         if ($studentId && $academicPeriod && $institutionId) {
+            $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
 
-            $Admission = $StudentAdmission
-                        ->find()
-                        ->where([
-                            $StudentAdmission->aliasField('student_id') => $studentId,
-                            $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
-                            $StudentAdmission->aliasField('academic_period_id') => $academicPeriod,
-                            $StudentAdmission->aliasField('type') => 2, //transfer type
-                            $StudentAdmission->aliasField('status') => 1 //status is approved
-                        ])
-                        ->contain('Institutions')
-                        ->order($StudentAdmission->aliasField('created DESC'))
-                        ->first();
+            $transferRecords = $StudentTransfers
+                ->find()
+                ->contain('Institutions')
+                ->where([
+                    $StudentTransfers->aliasField('student_id') => $studentId,
+                    $StudentTransfers->aliasField('previous_institution_id') => $institutionId,
+                    $StudentTransfers->aliasField('previous_academic_period_id') => $academicPeriod,
+                    $StudentTransfers->aliasField('status_id IN ') => $approvedStatuses
+                ])
+                ->order($StudentTransfers->aliasField('created DESC'))
+                ->first();
         }
 
         $this->transferred = [];
-        if (!empty($Admission)) {
-            $this->transferred = [true, $Admission->institution->code_name];
+        if (!empty($transferRecords)) {
+            $this->transferred = [true, $transferRecords->institution->code_name];
             return  __('Yes');
         } else {
             return __('No');
