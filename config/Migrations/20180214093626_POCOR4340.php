@@ -285,4 +285,19 @@ class POCOR4340 extends AbstractMigration
             ])
             ->save();
     }
+
+    public function down()
+    {
+        $this->dropTable('appraisal_criterias');
+        $this->dropTable('appraisal_forms');
+        $this->dropTable('appraisal_forms_criterias');
+        $this->dropTable('appraisal_periods');
+        $this->dropTable('appraisal_periods_types');
+        $this->dropTable('appraisal_slider_answers');
+        $this->dropTable('appraisal_text_answers');
+        $this->dropTable('appraisal_types');
+        $this->dropTable('institution_staff_appraisals');
+        $this->dropTable('field_types');
+        $this->dropTable('appraisal_sliders');
+    }
 }
