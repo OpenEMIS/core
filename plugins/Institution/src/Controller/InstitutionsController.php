@@ -891,6 +891,8 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $query['institution_id']);
+            } elseif (isset($this->request->pass[1])) {
+                $session->write('Institution.Institutions.id', $this->request->pass[1]);
             }
         } catch (SecurityException $ex) {
             return;
@@ -904,8 +906,6 @@ class InstitutionsController extends AppController
             } else {
                 $session->delete('Institution.Institutions.id');
             }
-        } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']) && isset($this->request->pass[1])) {
-            $this->request->params['institutionId'] = $this->request->pass[1];
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         } elseif ($action == 'StaffUser') {
@@ -931,7 +931,8 @@ class InstitutionsController extends AppController
                 // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $id);
             } elseif ($session->check('Institution.Institutions.id')) {
-                $id = $session->read('Institution.Institutions.id');
+                $id = $this->ControllerAction->paramsDecode($session->read('Institution.Institutions.id'))['id'];
+                $session->write('Institution.Institutions.id', $id);
             }
 
             $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
