@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Core\Configure;
 
 class StudentCascadeDeleteBehavior extends Behavior {
 	private $classIds = [];
@@ -29,10 +30,12 @@ class StudentCascadeDeleteBehavior extends Behavior {
 		if ($this->noStudentRecords($entity)) { // delete all other records if student no longer in school
 			$this->deleteStudentAbsences($entity);
 			$this->deleteStudentBehaviours($entity);
-			$this->deleteStudentSurveys($entity);
 			$this->deleteStudentWithdrawRecords($entity);
 			$this->deleteStudentAdmissionRecords($entity);
-		}
+            if (!Configure::read('schoolMode')) {
+                $this->deleteStudentSurveys($entity);
+            }
+        }
 
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
