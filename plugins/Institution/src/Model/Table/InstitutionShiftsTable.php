@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -313,11 +313,18 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldLocation(Event $event, array $attr, $action, $request)
     {
+
         $attr['options'] = ['CURRENT' => __('This Institution'), 'OTHER' => __('Other Institution')];
         if ($action == 'add') {
-            $attr['onChangeReload'] = 'changeLocation';
-            $attr['default'] = 'CURRENT'; //set the default selected location as Current Institution
-            $attr['select'] = false;
+            if (!Configure::read('schoolMode')) {
+                $attr['onChangeReload'] = 'changeLocation';
+                $attr['default'] = 'CURRENT'; //set the default selected location as Current Institution
+                $attr['select'] = false;
+            } else {
+                $attr['type'] = 'readonly';
+                $attr['attr']['value'] = $attr['options']['CURRENT'];
+                $attr['value'] = 'CURRENT';
+            }
         } elseif ($action == 'edit') {
             $attr['type'] = 'hidden';
             if ($attr['entity']->institution_id != $attr['entity']->location_institution_id) {

@@ -10,7 +10,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
         SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
-        StudentStatusesTable: 'Student.StudentStatuses'
+        StudentStatusesTable: 'Student.StudentStatuses',
+        InstitutionClassesTable: 'Institution.InstitutionClasses'
     };
 
     return {
@@ -56,6 +57,8 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             var subjectRoles = [];
             var subjects = [];
 
+            var vm = this;
+
             this.getPermissions()
             .then(function(response) {
                 isSuperAdmin = response[0];
@@ -74,14 +77,17 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
 
                 promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
                 promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
-
+                promises.push(vm.checkHomeOrStaff(classId,securityUserId));
+               
                 return $q.all(promises);
             }, function(error) {
 
             })
             .then(function(response) {
+
                 var allSubjectsPermission = response[0];
                 var mySubjectsPermission = response[1];
+                var isHomeOrSecondary = response[2];
 
                 // Only get assessment items that are available for the class
                 var assessmentSubjects = AssessmentItemsTable
@@ -133,11 +139,18 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
                     {
                         // If no all subjects permission, check if user has my subjects permisson
                         if (mySubjectsPermission)
-                        {
-                            // User has my subjects permission, display subjects relevant to user
-                            assessmentSubjects = assessmentSubjects
-                                .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
-                                .ajax({success: success, defer: true});
+                        {     
+
+                           // Additional check for homeroom/secondary teacher
+                            if(isHomeOrSecondary.total >0) {
+                                assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
+     
+                            } else {
+                                assessmentSubjects = assessmentSubjects
+                                    .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
+                                    .ajax({success: success, defer: true});
+                                  
+                            }
                         } else
                         {
                             // Display nothing
@@ -166,6 +179,19 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             });
 
             return deferred.promise;
+        },
+
+
+        checkHomeOrStaff: function(classId,securityUserId)
+        { 
+             return InstitutionClassesTable
+                    .select()
+                    .find('homeOrSecondary', {
+                        class_id: classId,
+                        staff_id: securityUserId
+                    })
+                    .ajax({defer: true});   
+
         },
 
         getAssessmentTerms: function(assessmentId)
