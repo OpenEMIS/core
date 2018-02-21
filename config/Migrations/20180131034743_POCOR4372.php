@@ -83,14 +83,15 @@ class POCOR4372 extends AbstractMigration
 
         // update permission from indexes to risks
         $sql = "UPDATE `security_functions`
-                SET `_view` = 'Risks.index|Risks.view|InstitutionStudentIndexes.index|InstitutionStudentIndexes.view',
+                SET `_view` = 'Risks.index|Risks.view|InstitutionStudentRisks.index|InstitutionStudentRisks.view',
                     `_execute` = 'Risks.generate'
                 WHERE `id`= 1055";
 
         $this->execute($sql);
 
         $sql = "UPDATE `security_functions`
-                SET `_view` = 'Risks.index|Risks.view',
+                SET `controller` = 'Risks',
+                    `_view` = 'Risks.index|Risks.view',
                     `_edit` = 'Risks.edit',
                     `_add` = 'Risks.add',
                     `_delete` ='Risks.remove'
@@ -188,7 +189,8 @@ class POCOR4372 extends AbstractMigration
         $this->execute($sql);
 
         $sql = "UPDATE `security_functions`
-                SET `_view` = 'Indexes.index|Indexes.view',
+                SET `controller` = 'Indexes',
+                    `_view` = 'Indexes.index|Indexes.view',
                     `_edit` = 'Indexes.edit',
                     `_add` = 'Indexes.add',
                     `_delete` ='Indexes.remove'
