@@ -285,10 +285,10 @@ class POCOR4340 extends AbstractMigration
             ])
             ->save();
 
-        $table->renameTable('staff_appraisals', 'z_4340_staff_appraisals');
-        $table->renameTable('staff_appraisals_competencies', 'z_4340_staff_appraisals_competencies');
-        $table->renameTable('staff_appraisal_types', 'z_4340_staff_appraisal_types');
-        $table->renameTable('compentencies', 'z_4340_compentencies');
+        $this->table('staff_appraisals')->rename('z_4340_staff_appraisals');
+        $this->table('staff_appraisals_competencies')->rename('z_4340_staff_appraisals_competencies');
+        $this->table('staff_appraisal_types')->rename('z_4340_staff_appraisal_types');
+        $this->table('competencies')->rename('z_4340_competencies');
     }
 
     public function down()
@@ -304,9 +304,9 @@ class POCOR4340 extends AbstractMigration
         $this->dropTable('institution_staff_appraisals');
         $this->dropTable('field_types');
         $this->dropTable('appraisal_sliders');
-        $table->renameTable('z_4340_staff_appraisals', 'staff_appraisals');
-        $table->renameTable('z_4340_staff_appraisals_competencies', 'staff_appraisals_competencies');
-        $table->renameTable('z_4340_staff_appraisal_types', 'staff_appraisal_types');
-        $table->renameTable('z_4340_compentencies', 'compentencies');
+        $this->table('z_4340_staff_appraisals')->rename('staff_appraisals');
+        $this->table('z_4340_staff_appraisals_competencies')->rename('staff_appraisals_competencies');
+        $this->table('z_4340_staff_appraisal_types')->rename('staff_appraisal_types');
+        $this->table('z_4340_competencies')->rename('competencies');
     }
 }
