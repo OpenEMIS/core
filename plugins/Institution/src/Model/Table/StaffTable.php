@@ -16,7 +16,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
-
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -960,10 +960,16 @@ class StaffTable extends ControllerActionTable
             'Institution.StaffAbsences' => 'StaffAbsences',
             'Institution.StaffLeave' => 'StaffLeave',
             'Institution.InstitutionClasses' =>'InstitutionClasses',
-            'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects',
-            'Institution.InstitutionRubrics' => 'InstitutionRubrics',
-            'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+            'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
         ];
+
+        if (!Configure::read('schoolMode')) {    
+            $coreAssociationArray = [
+                'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+                'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+            ];
+            $associationArray = array_merge($associationArray, $coreAssociationArray);
+        }
 
         foreach ($associationArray as $tableName => $model) {
             $Table = TableRegistry::get($tableName);
