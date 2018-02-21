@@ -56,7 +56,7 @@ class WorkflowStepsTable extends AppTable {
 			'dependent' => true
 		]);
 
-		$this->addBehavior('Workflow.StaffTransfer');
+		$this->addBehavior('Workflow.Transfer');
 	}
 
 	public function validationDefault(Validator $validator) {

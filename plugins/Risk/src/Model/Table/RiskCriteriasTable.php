@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Model\Table;
+namespace Risk\Model\Table;
 
 use ArrayObject;
 
@@ -13,14 +13,14 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 
-class IndexesCriteriasTable extends ControllerActionTable
+class RiskCriteriasTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Indexes', ['className' => 'Indexes.Indexes', 'foreignKey' =>'index_id']);
+        $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
 
-        $this->hasMany('StudentIndexesCriterias', ['className' => 'Indexes.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentRisksCriterias', ['className' => 'Institution.StudentRisksCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -30,7 +30,7 @@ class IndexesCriteriasTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('index_value', [
+            ->add('risk_value', [
                 'ruleRange' => [
                     'rule' => ['range', 1, 99]
                 ]
@@ -43,16 +43,16 @@ class IndexesCriteriasTable extends ControllerActionTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $indexesCriteriaId = $entity->id;
-        $this->StudentIndexesCriterias->deleteAll(['indexes_criteria_id' => $indexesCriteriaId]);
+        $riskCriteriaId = $entity->id;
+        $this->StudentRisksCriterias->deleteAll(['risk_criteria_id' => $riskCriteriaId]);
     }
 
-    public function findActiveIndexesCriteria(Query $query, array $options)
+    public function findActiveRiskCriteria(Query $query, array $options)
     {
-        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
+        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
 
-        $activeIndexId = [];
-        $activeIndexesData = $InstitutionIndexes->find()
+        $activeRiskId = [];
+        $activeRisksData = $InstitutionRisks->find()
             ->where([
                 'institution_id' => $options['institution_id'],
                 'OR' => [
@@ -62,39 +62,39 @@ class IndexesCriteriasTable extends ControllerActionTable
             ])
             ->all();
 
-        foreach ($activeIndexesData as $activeIndexes) {
-            $activeIndexId [] = $activeIndexes->index_id;
+        foreach ($activeRisksData as $activeRisks) {
+            $activeRiskId [] = $activeRisks->risk_id;
         }
 
-        return $query->contain('Indexes')
+        return $query->contain('Risks')
             ->where([
                 'criteria' => $options['criteria_key'],
-                $this->Indexes->aliasField('id') . ' IN ' => $activeIndexId
+                $this->Risks->aliasField('id') . ' IN ' => $activeRiskId
             ])
             ->all();
     }
 
-    public function getTotalIndex($indexId)
+    public function getTotalRisk($riskId)
     {
-        $indexCriteriasResults = $this->find()
-            ->where([$this->aliasField('index_id') => $indexId])
+        $riskCriteriasResults = $this->find()
+            ->where([$this->aliasField('risk_id') => $riskId])
             ->toArray();
 
-        $indexTotal = 0;
-        if (!empty($indexCriteriasResults)) {
-            foreach ($indexCriteriasResults as $key => $obj) {
-                $indexTotal = $indexTotal + $obj->index_value;
+        $riskTotal = 0;
+        if (!empty($riskCriteriasResults)) {
+            foreach ($riskCriteriasResults as $key => $obj) {
+                $riskTotal = $riskTotal + $obj->risk_value;
             }
         }
 
-        return !empty($indexTotal) ? $indexTotal : ' 0';
+        return !empty($riskTotal) ? $riskTotal : ' 0';
     }
 
-    public function getCriteriaKey($indexId)
+    public function getCriteriaKey($riskId)
     {
         $criteriaKeyResult = $this->find()
             ->distinct(['criteria'])
-            ->where([$this->aliasField('index_id') => $indexId])
+            ->where([$this->aliasField('risk_id') => $riskId])
             ->all();
 
         $criteriaKey = [];

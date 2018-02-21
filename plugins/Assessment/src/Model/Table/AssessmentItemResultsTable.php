@@ -27,7 +27,7 @@ class AssessmentItemResultsTable extends AppTable
             'Results' => ['index', 'add'],
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
     }
 
     public function validationDefault(Validator $validator)
@@ -48,12 +48,12 @@ class AssessmentItemResultsTable extends AppTable
             ]);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
-        return $events;
-    }
+    // public function implementedEvents()
+    // {
+    //     $events = parent::implementedEvents();
+    //     $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
+    //     return $events;
+    // }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
