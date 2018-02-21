@@ -7,6 +7,8 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
+use Cake\Cache\Cache;
+use Cake\ORM\TableRegistry;
 
 class LocalesTable extends AppTable
 {
@@ -53,6 +55,19 @@ class LocalesTable extends AppTable
     {
         // translations won't work with uppercase codes
         $data['iso'] = strtolower($data['iso']);
+    }
+
+    public function afterSave($event, $entity, $options)
+    {
+        Cache::delete('localesData');
+        $Locales = TableRegistry::get('Locales');
+        $localeDirections = $Locales
+                ->find('list', [
+                    'keyField' => 'iso',
+                    'valueField' => 'direction'
+                ])
+                ->toArray();
+        Cache::write('localesData', $localeDirections);
     }
 
     public function findAllEditableLocales(Query $query, array $options)
