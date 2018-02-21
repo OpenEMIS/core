@@ -752,10 +752,8 @@ class DirectoriesTable extends ControllerActionTable
                 ->where([
                     $InstitutionStudentTable->aliasField('student_id') => $userId,
                 ])
-                ->distinct(['id'])
                 ->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
-                ->order(['(CASE WHEN '.$InstitutionStudentTable->aliasField('modified').' IS NOT NULL THEN '.$InstitutionStudentTable->aliasField('modified').' ELSE '.
-                $InstitutionStudentTable->aliasField('created').' END) DESC'])
+                ->order([$InstitutionStudentTable->aliasField('start_date') => 'DESC'])
                 ->first();
 
             $value = '';

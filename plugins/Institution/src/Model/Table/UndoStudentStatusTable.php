@@ -42,9 +42,9 @@ class UndoStudentStatusTable extends AppTable
             'statuses' => $this->statuses
         ];
 
-        $this->addBehavior('Institution.UndoCurrent', $settings);
+        // $this->addBehavior('Institution.UndoCurrent', $settings);
         // $this->addBehavior('Institution.UndoWithdrawn', $settings);
-        $this->addBehavior('Institution.UndoTransferred', $settings);
+        // $this->addBehavior('Institution.UndoTransferred', $settings);
         $this->addBehavior('Institution.UndoGraduated', $settings);
         $this->addBehavior('Institution.UndoPromoted', $settings);
         $this->addBehavior('Institution.UndoRepeated', $settings);
@@ -254,13 +254,13 @@ class UndoStudentStatusTable extends AppTable
             $attr['type'] = 'readonly';
             $attr['attr']['value'] = $statusName;
         } else if ($action == 'add' || $action == 'edit') {
-            // pr($request->query);
             $statusOptions = [];
 
+            // Admission, Transfer and Withdraw undo features have been moved to the Submit for Cancellation step in the custom workflows
             $codes = [];
-            $codes[$this->statuses['CURRENT']] = $this->statuses['CURRENT'];
-            $codes[$this->statuses['TRANSFERRED']] = $this->statuses['TRANSFERRED'];
-            $codes[$this->statuses['WITHDRAWN']] = $this->statuses['WITHDRAWN'];
+            // $codes[$this->statuses['CURRENT']] = $this->statuses['CURRENT'];
+            // $codes[$this->statuses['TRANSFERRED']] = $this->statuses['TRANSFERRED'];
+            // $codes[$this->statuses['WITHDRAWN']] = $this->statuses['WITHDRAWN'];
             $codes[$this->statuses['GRADUATED']] = $this->statuses['GRADUATED'];
             $codes[$this->statuses['PROMOTED']] = $this->statuses['PROMOTED'];
             $codes[$this->statuses['REPEATED']] = $this->statuses['REPEATED'];
@@ -650,17 +650,7 @@ class UndoStudentStatusTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'select']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'select']);
         $this->ControllerAction->field('class', ['select' => false]);
-        $studentStatuses = $this->StudentStatuses
-            ->find('list')
-            ->toArray();
-        foreach ($studentStatuses as $key => &$value) {
-            if ($value == 'Withdrawn') {
-                unset($studentStatuses[$key]);
-            }
-            $value = __($value);
-        }
-        $studentStatuses = [null => __('-- Select --')] + $studentStatuses;
-        $this->ControllerAction->field('student_status_id', ['type' => 'select', 'attr' => ['options' => $studentStatuses]]);
+        $this->ControllerAction->field('student_status_id', ['type' => 'select']);
         $this->ControllerAction->field('students');
 
         $this->ControllerAction->setFieldOrder(['student_status_id', 'academic_period_id', 'education_grade_id', 'class', 'students']);
