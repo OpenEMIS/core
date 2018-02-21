@@ -16,7 +16,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
-
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -373,7 +373,7 @@ class StaffTable extends ControllerActionTable
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         // Academic Periods
-        $periodOptions = $AcademicPeriodTable->getList();
+        $periodOptions = $AcademicPeriodTable->getYearList();
 
         if (empty($request->query['academic_period_id'])) {
             $request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
@@ -657,7 +657,7 @@ class StaffTable extends ControllerActionTable
                 unset($entity->user);
                 $newEntity = $this->newEntity($entity->toArray(), ['validate' => 'AllowPositionType']);
                 $this->save($newEntity);
-                // if ($this->save($newEntity)) {
+            // if ($this->save($newEntity)) {
                 // 	$url = [
                 // 		'plugin' => 'Institution',
                 // 		'controller' => 'Institutions',
@@ -839,14 +839,18 @@ class StaffTable extends ControllerActionTable
             unset($institutionStaffQuery);
 
             // Get Gender
-            $InstitutionArray[__('Gender')] = $this->getDonutChart('institution_staff_gender',
-                ['query' => $this->dashboardQuery, 'key' => __('Gender')]);
+            $InstitutionArray[__('Gender')] = $this->getDonutChart(
+                'institution_staff_gender',
+                ['query' => $this->dashboardQuery, 'key' => __('Gender')]
+            );
 
             // Get Staff Licenses
             $table = TableRegistry::get('Staff.Licenses');
             // Revisit here in awhile
-            $InstitutionArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses',
-                ['query' => $this->dashboardQuery, 'table'=>$this, 'key' => __('Licenses')]);
+            $InstitutionArray[__('Licenses')] = $table->getDonutChart(
+                'institution_staff_licenses',
+                ['query' => $this->dashboardQuery, 'table'=>$this, 'key' => __('Licenses')]
+            );
 
             $indexElements = (isset($this->controller->viewVars['indexElements']))?$this->controller->viewVars['indexElements'] :[] ;
             $indexElements[] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
@@ -867,7 +871,7 @@ class StaffTable extends ControllerActionTable
             foreach ($indexElements as $key => $value) {
                 if ($value['name']=='OpenEmis.ControllerAction/index') {
                     $indexElements[$key]['order'] = 3;
-                } else if ($value['name']=='OpenEmis.pagination') {
+                } elseif ($value['name']=='OpenEmis.pagination') {
                     $indexElements[$key]['order'] = 4;
                 }
             }
@@ -956,10 +960,16 @@ class StaffTable extends ControllerActionTable
             'Institution.StaffAbsences' => 'StaffAbsences',
             'Institution.StaffLeave' => 'StaffLeave',
             'Institution.InstitutionClasses' =>'InstitutionClasses',
-            'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects',
-            'Institution.InstitutionRubrics' => 'InstitutionRubrics',
-            'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+            'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
         ];
+
+        if (!Configure::read('schoolMode')) {    
+            $coreAssociationArray = [
+                'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+                'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+            ];
+            $associationArray = array_merge($associationArray, $coreAssociationArray);
+        }
 
         foreach ($associationArray as $tableName => $model) {
             $Table = TableRegistry::get($tableName);
@@ -1340,7 +1350,7 @@ class StaffTable extends ControllerActionTable
 
                 $staffByYear = $this->find()
                     ->find('AcademicPeriod', ['academic_period_id'=> $periodId])
-                    ->find('list',[
+                    ->find('list', [
                         'keyField' => 'gender_name',
                         'valueField' => 'total'
                     ])
@@ -1365,12 +1375,12 @@ class StaffTable extends ControllerActionTable
         return $params;
     }
 
-// Functions that are migrated over
-/******************************************************************************************************************
-**
-** finders functions to be used with query
-**
-******************************************************************************************************************/
+    // Functions that are migrated over
+    /******************************************************************************************************************
+    **
+    ** finders functions to be used with query
+    **
+    ******************************************************************************************************************/
     /**
      * $options['type'] == 0 > non-teaching
      * $options['type'] == 1 > teaching

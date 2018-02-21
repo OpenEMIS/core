@@ -77,7 +77,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'StudentCompetencyComments' => ['view'],
             'OpenEMIS_Classroom' => ['index', 'view'],
             'StudentOutcomes' => ['view'],
-            'SubjectStudents' => ['index']
+            'SubjectStudents' => ['index'],
+            'Results'=> ['index']
         ]);
 
         // POCOR-4047 to get staff profile data
@@ -219,7 +220,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('multigrade');
 
         $this->setFieldOrder([
-            'name', 'staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects',
+            'name','staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
     }
 
@@ -347,7 +348,6 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $Classes = $this;
-        //$academicPeriodOptions = $this->AcademicPeriods->getList();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
         $institutionId = $extra['institution_id'];
@@ -413,10 +413,6 @@ class InstitutionClassesTable extends ControllerActionTable
             'options' => [],
             'order' => 3
         ];
-
-        $this->setFieldOrder([
-            'staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
-        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -432,9 +428,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'name',
                 'class_number',
                 'staff_id',
+                'secondary_staff_id',
                 'total_male_students',
                 'total_female_students',
-                'secondary_staff_id',
                 'institution_shift_id',
                 'institution_id',
                 'academic_period_id',
@@ -464,6 +460,24 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
+
+    public function findHomeOrSecondary(Query $query, array $options)
+    {
+        if (isset($options['class_id']) && isset($options['staff_id'])) {
+            $classId = $options['class_id'];
+            $staffId = $options['staff_id'];
+            $query
+                ->where([
+                    $this->aliasField('id') => $classId,
+                    'OR' => [
+                        [$this->aliasField('staff_id') => $staffId],
+                        [$this->aliasField('secondary_staff_id') => $staffId]
+                    ],
+                 ]);
+            
+            return $query;
+        }
+    }
     public function findTranslateItem(Query $query, array $options)
     {
         return $query
