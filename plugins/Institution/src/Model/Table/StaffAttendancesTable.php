@@ -955,11 +955,15 @@ class StaffAttendancesTable extends ControllerActionTable
 
                     // Save button, only can save if there is data
                     if ($dataCount > 0) {
-                        $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
-                        $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
-                        $extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
-                        $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
-                        $extra['toolbarButtons']['indexEdit']['url'] = '#';
+                        if(empty($this->reasonOptions)) {
+                            $this->Alert->warning('StaffAttendances.noReasons');
+                        } else {
+                            $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+                            $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
+                            $extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
+                            $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
+                            $extra['toolbarButtons']['indexEdit']['url'] = '#';  
+                        }
                     }
 
                     // unset export button
@@ -1090,7 +1094,7 @@ class StaffAttendancesTable extends ControllerActionTable
                         if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
                             $obj['staff_absence_reason_id'] = 0;
                         } elseif ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
-                            $obj['staff_absence_reason_id'] = array_key_exists('late_staff_absence_reason_id',$obj) ? $obj['late_staff_absence_reason_id'] : '';
+                            $obj['staff_absence_reason_id'] = $obj['late_staff_absence_reason_id'];
                             $obj['full_day'] = 0;
 
                             $lateTime = strtotime($obj['late_time']);
