@@ -14,10 +14,10 @@ class ApiSecuritiesController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('ApiSecuritiesCredentials');
-        $this->loadModel('ApiCredentials');
+        $this->loadModel('ApiSecuritiesScopes');
+        $this->loadModel('ApiScopes');
         $this->loadModel('ApiSecurities');
-        $this->Page->loadElementsFromTable($this->ApiSecuritiesCredentials);
+        $this->Page->loadElementsFromTable($this->ApiSecuritiesScopes);
     }
 
     public function beforeFilter(Event $event)
@@ -31,7 +31,7 @@ class ApiSecuritiesController extends PageController
             'action' => 'index'
         ]);
 
-        $page->get('api_credential_id')->setLabel(__('API Credentials'));
+        $page->get('api_scope_id')->setLabel(__('API Scopes'));
         $page->get('api_security_id')->setLabel(__('API Securities'));
 
         // set header
@@ -44,14 +44,14 @@ class ApiSecuritiesController extends PageController
 
         $page = $this->Page;
 
-        $allCredentials = $this->ApiCredentials
+        $allScopes = $this->ApiScopes
             ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
-        $credentialOptions = [null => 'All Credentials'] + $allCredentials;
+        $scopeOptions = [null => __('All Scopes')] + $allScopes;
         $page
-            ->addFilter('api_credential_id')
-            ->setOptions($credentialOptions);
+            ->addFilter('api_scope_id')
+            ->setOptions($scopeOptions);
     }
 
     public function add()
@@ -60,27 +60,17 @@ class ApiSecuritiesController extends PageController
         $page = $this->Page;
 
         $page
-            ->get('api_credential_id')
-            ->setId('api_credential_id')
+            ->get('api_scope_id')
+            ->setId('api_scope_id')
             ->setControlType('select');
 
         $page
             ->get('api_security_id')
             ->setControlType('select')
-            ->setDependentOn('api_credential_id')
+            ->setDependentOn('api_scope_id')
             ->setParams('ApiSecurities');
 
         $this->addEdit();
-
-        // if ($this->request->is('post')) {
-        //     $data = $page->getData();
-
-        //     // pr($data);
-        //     // die;
-        //     // if (!empty($data->errors('add'))) {
-        //     //     $this->Alert->success('general.edit.success');
-        //     // }
-        // }
     }
 
     public function edit($id)
@@ -89,7 +79,7 @@ class ApiSecuritiesController extends PageController
         //$entity = $page->getData();
 
         $page
-            ->get('api_credential_id')
+            ->get('api_scope_id')
             ->setControlType('string')
             ->setReadonly(true);
 
@@ -105,6 +95,7 @@ class ApiSecuritiesController extends PageController
     private function addEdit()
     {
         $page = $this->Page;
+        $page->move('api_scope_id')->first();
 
         $actions = ['add', 'view', 'edit', 'delete', 'list', 'execute'];
 

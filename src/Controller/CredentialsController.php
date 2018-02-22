@@ -11,6 +11,8 @@ class CredentialsController extends PageController
     {
         parent::initialize();
         $this->loadModel('ApiCredentials');
+        $this->loadModel('ApiScopes');
+        $this->loadModel('ApiCredentialsScopes');
         $this->Page->loadElementsFromTable($this->ApiCredentials);
     }
 
@@ -19,7 +21,7 @@ class CredentialsController extends PageController
         $page = $this->Page;
 
         parent::beforeFilter($event);
-        $page->exclude(['scope']);
+        // $page->exclude(['scope']);
         $page->addCrumb('Credentials', ['plugin' => false, 'controller' => 'Credentials', 'action' => 'index']);
     }
 
@@ -42,6 +44,16 @@ class CredentialsController extends PageController
         $page->addNew('client')->setControlType('string')->setLabel('Client ID')->setValue($clientId)->setDisabled(true);
         $page->move('client')->first();
         $page->get('client_id')->setControlType('hidden')->setValue($clientId);
+
+        $scopeOptions = $this->ApiScopes
+            ->find('optionList', ['defaultOption' => false])
+            ->toArray();
+
+        $page->addNew('api_scopes')
+            ->setControlType('select')
+            ->setLabel('API Scope')
+            ->setOptions($scopeOptions)
+            ->setRequired(true);
     }
 
     public function index()
@@ -52,11 +64,27 @@ class CredentialsController extends PageController
         parent::index();
     }
 
+    public function view($id)
+    {
+        parent::view($id);
+    }
+
     public function edit($id)
     {
         $page = $this->Page;
         $page->get('name')->setDisabled(true);
         $page->get('client_id')->setDisabled(true);
+
+        $scopeOptions = $this->ApiScopes
+            ->find('optionList', ['defaultOption' => false])
+            ->toArray();
+
+        $page->addNew('api_scopes')
+            ->setControlType('select')
+            ->setLabel('API Scope')
+            ->setOptions($scopeOptions)
+            ->setRequired(true);
+
         parent::edit($id);
     }
 }
