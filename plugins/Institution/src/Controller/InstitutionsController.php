@@ -891,8 +891,6 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $query['institution_id']);
-            } elseif (isset($this->request->pass[1])) {
-                $session->write('Institution.Institutions.id', $this->request->pass[1]);
             }
         } catch (SecurityException $ex) {
             return;
@@ -917,8 +915,16 @@ class InstitutionsController extends AppController
             || $action == 'dashboard'
             || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
-            if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
+            if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
                 $id = $this->request->pass[0];
+                $id = $this->ControllerAction->paramsDecode($id)['id'];
+                $this->checkInstitutionAccess($id, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $id);
+            } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && (in_array($this->request->pass[0], ['view', 'edit']))) {
+                $id = $this->request->pass[1];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {
@@ -931,8 +937,7 @@ class InstitutionsController extends AppController
                 // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $id);
             } elseif ($session->check('Institution.Institutions.id')) {
-                $id = $this->ControllerAction->paramsDecode($session->read('Institution.Institutions.id'))['id'];
-                $session->write('Institution.Institutions.id', $id);
+                $id = $session->read('Institution.Institutions.id');
             }
 
             $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
