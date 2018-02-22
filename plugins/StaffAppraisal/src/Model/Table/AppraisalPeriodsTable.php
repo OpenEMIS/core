@@ -24,9 +24,10 @@ class AppraisalPeriodsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms', 'foreignKey' => 'appraisal_form_id']);
-        $this->hasMany('InstitutionStaffAppraisals', ['className' => 'Institution.InstitutionStaffAppraisals', 'foreignKey' => 'appraisal_period_id']);
+        $this->hasMany('InstitutionStaffAppraisals', ['className' => 'Institution.InstitutionStaffAppraisals', 'foreignKey' => 'appraisal_period_id', 'dependent' => true]);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('AcademicPeriod.Period');
     }
 
     public function validationDefault(Validator $validator)
@@ -49,6 +50,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('name');
         $this->field('appraisal_form_id', ['type' => 'select']);
         $typeOptions = $this->AppraisalTypes->find('list')->toArray();
         $this->field('appraisal_types', ['type' => 'chosenSelect', 'options' => $typeOptions, 'attr' => ['required' => true]]);
@@ -67,6 +69,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('name');
         $this->field('appraisal_form_id', ['type' => 'readonly', 'value' => $entity->appraisal_form_id, 'attr' => ['value' => $entity->appraisal_form->name]]);
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->academic_period_id, 'attr' => ['value' => $entity->academic_period->name]]);
     }
@@ -78,14 +81,4 @@ class AppraisalPeriodsTable extends ControllerActionTable
             // 'appraisal_types',
             'start_date', 'end_date']);
     }
-
-    // To implement table to show the number of types that are tagged
-    // public function onGetCustomTypesElement(Event $event, $action, $entity, $attr, $options = [])
-    // {
-    //     if ($action == 'view') {
-
-    //     } elseif ($action == 'edit') {
-
-    //     }
-    // }
 }
