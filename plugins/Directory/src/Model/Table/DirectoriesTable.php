@@ -665,9 +665,24 @@ class DirectoriesTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'MainNationalities',
-            'MainIdentityTypes',
-            'Genders'
+            'MainNationalities' => [
+                'fields' => [
+                    'MainNationalities.id',
+                    'MainNationalities.name'
+                ]
+            ],
+            'MainIdentityTypes'  => [
+                'fields' => [
+                    'MainIdentityTypes.id',
+                    'MainIdentityTypes.name'
+                ]
+            ],
+            'Genders' => [
+                'fields' => [
+                    'Genders.id',
+                    'Genders.name'
+                ]
+            ]
         ]);
     }
 
