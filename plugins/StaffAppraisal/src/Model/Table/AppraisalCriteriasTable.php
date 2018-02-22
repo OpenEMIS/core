@@ -53,6 +53,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
                     case 'SLIDER':
                         $this->field('appraisal_slider.min', ['attr' => ['label' => __('Min'), 'required' => true]]);
                         $this->field('appraisal_slider.max', ['attr' => ['label' => __('Max'), 'required' => true]]);
+                        $this->field('appraisal_slider.step', ['attr' => ['label' => __('Step'), 'required' => true]]);
                         break;
                 }
             }

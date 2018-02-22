@@ -191,7 +191,8 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
                 $details[$fieldTypeCode] = $criteria->appraisal_slider->toArray();
                 $min = $criteria->appraisal_slider->min;
                 $max = $criteria->appraisal_slider->max;
-                $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'slider', 'max' => $max, 'min' => $min, 'attr' => ['label' => $details['criteria_name']]]);
+                $step = $criteria->appraisal_slider->step;
+                $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'slider', 'max' => $max, 'min' => $min, 'step' => $step, 'attr' => ['label' => $details['criteria_name']]]);
                 break;
             case 'TEXT':
                 $details['key'] = 'appraisal_text_answers';
@@ -236,7 +237,6 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
                 $academicPeriodId = $request->data($this->aliasField('academic_period_id'));
                 $this->periodList = $this->AppraisalPeriods->find('list')
                     ->innerJoinWith('AppraisalTypes')
-                    ->contain(['AppraisalForms'])
                     ->where([
                         'AppraisalTypes.id' => $appraisalTypeId,
                         $this->AppraisalPeriods->aliasField('academic_period_id') => $academicPeriodId,
