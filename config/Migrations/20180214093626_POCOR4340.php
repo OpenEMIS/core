@@ -94,6 +94,10 @@ class POCOR4340 extends AbstractMigration
 
         $table = $this->table('appraisal_periods');
         $table
+            ->addColumn('name', 'string', [
+                'null' => false,
+                'limit' => 250
+            ])
             ->addColumn('appraisal_form_id', 'integer', [
                 'null' => false
             ])
@@ -282,6 +286,19 @@ class POCOR4340 extends AbstractMigration
             ->addColumn('name', 'string', [
                 'null' => false,
                 'limit' => 45
+            ])
+            ->save();
+
+        $table
+            ->insert([
+                [
+                    'code' => 'TEXT',
+                    'name' => 'Multi-line Text Input'
+                ],
+                [
+                    'code' => 'SLIDER',
+                    'name' => 'Slider Range Input'
+                ]
             ])
             ->save();
 

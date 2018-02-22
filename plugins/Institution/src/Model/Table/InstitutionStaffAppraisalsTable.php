@@ -128,11 +128,21 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field('comment');
 
         $appraisalPeriodId = $this->request->data($this->aliasField('appraisal_period_id'));
-        $this->printAppraisalCustomField($entity->appraisal_period_id);
+        $this->printAppraisalCustomField($appraisalPeriodId);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // determine if download button is shown
+        $showFunc = function () use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
         $this->field('title');
         $this->field('appraisal_period.academic_period.name', ['attr' => ['label' => __('Academic Period')]]);
         $this->field('from');
@@ -141,7 +151,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field('appraisal_period.period_form_name', ['attr' => ['label' => __('Appraisal Period')]]);
         $this->field('appraisal_period.appraisal_form.name', ['attr' => ['label' => __('Appraisal Form')]]);
         $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
+        $this->field('file_content', ['visible' => false]);
         $this->field('comment');
         $this->printAppraisalCustomField($entity->appraisal_period_id);
     }
@@ -224,20 +234,15 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             if ($request->data($this->aliasField('academic_period_id')) && $request->data($this->aliasField('appraisal_type_id'))) {
                 $appraisalTypeId = $request->data($this->aliasField('appraisal_type_id'));
                 $academicPeriodId = $request->data($this->aliasField('academic_period_id'));
-                $this->periodList = $this->AppraisalPeriods->find()
+                $this->periodList = $this->AppraisalPeriods->find('list')
                     ->innerJoinWith('AppraisalTypes')
-                    ->contain(['AppraisalForms', 'AcademicPeriods'])
+                    ->contain(['AppraisalForms'])
                     ->where([
                         'AppraisalTypes.id' => $appraisalTypeId,
-                        'AcademicPeriods.id' => $academicPeriodId
+                        $this->AppraisalPeriods->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->AppraisalPeriods->aliasField('start_date').' >=' => new Date(),
+                        $this->AppraisalPeriods->aliasField('end_date').' <=' => new Date()
                     ])
-                    ->formatResults(function ($results) {
-                        $list = [];
-                        foreach ($results as $r) {
-                            $list[$r->id] = $r->period_form_name;
-                        }
-                        return $list;
-                    })
                     ->toArray();
             }
             return $attr;
