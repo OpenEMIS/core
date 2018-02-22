@@ -20,23 +20,23 @@ class ApiSecuritiesTable extends AppTable
 
     public function findOptionList(Query $query, array $options)
     {
-        $ApiSecuritiesCredentials = TableRegistry::get('ApiSecuritiesCredentials');
+        $ApiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
 
         if (!empty($options['querystring'])) {
-            $apiCredentialId = $options['querystring']['api_credential_id'];
+            $apiScopeId = $options['querystring']['api_scope_id'];
         }
 
-        if (!empty($apiCredentialId)) {
+        if (!empty($apiScopeId)) {
             $query
                 ->leftJoin(
-                    [$ApiSecuritiesCredentials->alias() => $ApiSecuritiesCredentials->table()],
+                    [$ApiSecuritiesScopes->alias() => $ApiSecuritiesScopes->table()],
                     [
-                        [$this->aliasField('id = ') . $ApiSecuritiesCredentials->aliasField('api_security_id')],
-                        [$ApiSecuritiesCredentials->aliasField('api_credential_id = ') . $apiCredentialId]
+                        [$this->aliasField('id = ') . $ApiSecuritiesScopes->aliasField('api_security_id')],
+                        [$ApiSecuritiesScopes->aliasField('api_scope_id = ') . $apiScopeId]
                     ]
                 )
                 ->where(
-                    [$ApiSecuritiesCredentials->aliasField('api_security_id') . ' IS NULL']
+                    [$ApiSecuritiesScopes->aliasField('api_security_id') . ' IS NULL']
                 );
         } else {
             $query
