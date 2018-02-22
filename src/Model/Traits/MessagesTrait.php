@@ -392,7 +392,7 @@ trait MessagesTrait
         ],
         'StudentAttendances' => [
             'noClasses' => 'No Available Classes',
-            'noReasons' => 'No Available Reasons',
+            'noReasons' => 'You need to configure Student Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'InstitutionStudentAbsences' => [
@@ -402,7 +402,7 @@ trait MessagesTrait
         ],
         'StaffAttendances' => [
             'noStaff' => 'No Available Staff',
-            'noReasons' => 'No Available Reasons',
+            'noReasons' => 'You need to configure Staff Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'StaffAbsences' => [
