@@ -1262,15 +1262,15 @@ class NavigationComponent extends Component
                     'parent' => 'SystemSetup',
                     'link' => false
                 ],
-                'Credentials.index' => [
-                    'title' => 'Credentials',
-                    'parent' => 'API',
-                    'selected' => ['Credentials.view', 'Credentials.add', 'Credentials.edit', 'Credentials.delete']
-                ],
                 'ApiSecurities.index' => [
                     'title' => 'Securities',
                     'parent' => 'API',
                     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
+                ],
+                'Credentials.index' => [
+                    'title' => 'Credentials',
+                    'parent' => 'API',
+                    'selected' => ['Credentials.view', 'Credentials.add', 'Credentials.edit', 'Credentials.delete']
                 ],
                 'Notices.index' => [
                     'title' => 'Notices',

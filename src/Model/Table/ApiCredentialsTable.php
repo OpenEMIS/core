@@ -18,6 +18,19 @@ class ApiCredentialsTable extends AppTable
     public function initialize(array $config)
     {
         parent::initialize($config);
+
+        $this->belongsToMany('ApiScopes', [
+            'className' => 'ApiScopes',
+            'joinTable' => 'api_credentials_scopes',
+            'foreignKey' => 'api_credential_id',
+            'targetForeignKey' => 'api_scope_id',
+            'through' => 'ApiCredentialsScopes'
+        ]);
+
+        // $this->hasMany('ApiCredentialsScopes', [
+        //     'className' => 'ApiCredentialsScopes',
+        //     'foreignKey' => 'api_credential_id'
+        // ]);
     }
 
     /**
@@ -54,6 +67,9 @@ class ApiCredentialsTable extends AppTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $data['scope'] = 'API';
+        $data['api_scopes'] = [
+            '_ids' => array($data['api_scopes'])
+        ];
+        // $data['scope'] = 'API';
     }
 }
