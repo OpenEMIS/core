@@ -16,6 +16,7 @@ class AppraisalSlidersTable extends AppTable
     {
         return $validator
             ->notEmpty('min')
-            ->notEmpty('max');
+            ->notEmpty('max')
+            ->notEmpty('step');
     }
 }

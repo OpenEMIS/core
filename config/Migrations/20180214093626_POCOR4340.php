@@ -182,6 +182,11 @@ class POCOR4340 extends AbstractMigration
                 'scale' => 2,
                 'null' => false
             ])
+            ->addColumn('step', 'decimal', [
+                'precision' => 3,
+                'scale' => 2,
+                'null' => false
+            ])
             ->addIndex(['appraisal_criteria_id'])
             ->save();
 

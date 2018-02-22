@@ -388,6 +388,9 @@ class HtmlFieldHelper extends Helper
             if (!isset($attr['max'])) {
                 $attr['max'] = 10;
             }
+            if (!isset($attr['step'])) {
+                $attr['step'] = 0.5;
+            }
             $fieldName = $attr['model'] . '.' . $attr['field'];
             if (array_key_exists('fieldName', $attr)) {
                 $fieldName = $attr['fieldName'];
