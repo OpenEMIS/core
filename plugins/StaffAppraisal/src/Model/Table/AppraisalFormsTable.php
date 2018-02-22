@@ -92,7 +92,7 @@ class AppraisalFormsTable extends ControllerActionTable
             $criteriaList = ['' => '-- '. __($attr['customElementLabel']) .' --'] + $criteriaList;
 
             if ($this->request->is('get')) {
-                $customFields = $entity->appraisal_criterias;
+                $customFields = $entity->appraisal_criterias ? $entity->appraisal_criterias : [];
                 foreach ($customFields as $key => $obj) {
                     $arrayFields[] = [
                         'name' => $obj->name,
