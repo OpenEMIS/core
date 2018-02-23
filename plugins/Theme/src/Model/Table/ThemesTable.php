@@ -25,6 +25,8 @@ class ThemesTable extends AppTable
         parent::initialize($config);
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['value' => 'content', 'default_value' => 'default_content'],
+            'type' => 'image',
+            'compression' => 100,
             'size' => '2MB',
             'allowable_file_types' => ['jpeg', 'jpg', 'gif', 'png']
         ]);
