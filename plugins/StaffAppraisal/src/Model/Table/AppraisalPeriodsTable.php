@@ -42,9 +42,9 @@ class AppraisalPeriodsTable extends ControllerActionTable
                     'message' => __('This field cannot be left empty')
                 ]
             ])
-            ->add('end_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'start_date', true],
-                'message' => __('End Date should not be earlier than Start Date')
+            ->add('date_disabled', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_enabled', true],
+                'message' => __('Date Disabled should not be earlier than Date Enabled')
             ]);
     }
 
@@ -79,6 +79,6 @@ class AppraisalPeriodsTable extends ControllerActionTable
         // $this->field('appraisal_types');
         $this->setFieldOrder(['appraisal_form_id', 'academic_period_id',
             // 'appraisal_types',
-            'start_date', 'end_date']);
+            'date_enabled', 'date_disabled']);
     }
 }
