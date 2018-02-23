@@ -240,8 +240,8 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
                     ->where([
                         'AppraisalTypes.id' => $appraisalTypeId,
                         $this->AppraisalPeriods->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->AppraisalPeriods->aliasField('start_date').' >=' => new Date(),
-                        $this->AppraisalPeriods->aliasField('end_date').' <=' => new Date()
+                        $this->AppraisalPeriods->aliasField('start_date').' <=' => new Date(),
+                        $this->AppraisalPeriods->aliasField('end_date').' >=' => new Date()
                     ])
                     ->toArray();
             }
