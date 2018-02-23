@@ -260,9 +260,13 @@ class StudentAttendancesTable extends AppTable
     {
         if (!is_null($this->request->query('mode'))) {
             if ($this->dataCount > 0) {
-                $config['formButtons'] = true;
-                $config['url'] = $config['buttons']['index']['url'];
-                $config['url'][0] = 'indexEdit';
+                if(empty($this->reasonOptions)) {
+                    $this->Alert->warning('StudentAttendances.noReasons');
+                } else {
+                    $config['formButtons'] = true;
+                    $config['url'] = $config['buttons']['index']['url'];
+                    $config['url'][0] = 'indexEdit';   
+                }
             }
         }
         $this->ControllerAction->setFieldOrder($this->_fieldOrder);
@@ -1221,7 +1225,7 @@ class StudentAttendancesTable extends AppTable
         $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => $this->alias];
         $url = array_merge($url, $this->request->query, $this->request->pass);
         $url[0] = 'index';
-        if (isset($url['mode']) && !$error) {
+        if (isset($url['mode'])) {
             unset($url['mode']);
         }
 

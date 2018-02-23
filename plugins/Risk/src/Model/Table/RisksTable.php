@@ -1,5 +1,5 @@
 <?php
-namespace Indexes\Model\Table;
+namespace Risk\Model\Table;
 
 use ArrayObject;
 
@@ -17,8 +17,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
 
-
-class IndexesTable extends ControllerActionTable
+class RisksTable extends ControllerActionTable
 {
     use HtmlTrait;
 
@@ -108,12 +107,13 @@ class IndexesTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+        $this->table('risks');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
 
-        $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionStudentIndexes', ['className' => 'Institution.InstitutionStudentIndexes', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RiskCriterias', ['className' => 'Risk.RiskCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentRisks', ['className' => 'Institution.InstitutionStudentRisks', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
     public function validationDefault(Validator $validator)
@@ -127,10 +127,10 @@ class IndexesTable extends ControllerActionTable
             ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'indexes_criterias') {
-            return __('Risks Criterias');
+        if ($field == 'risk_criterias') {
+            return __('Risk Criterias');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -203,15 +203,15 @@ class IndexesTable extends ControllerActionTable
         return $options;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $criteriaData = $this->getCriteriasData();
-        $tableHeaders = $this->getMessage('Indexes.TableHeader');
+        $tableHeaders = $this->getMessage('Risk.TableHeader');
         $tableCells = [];
         $criteriaOptions = ['' => '-- '.__('Select Criteria').' --'] + $this->getCriteriasOptions();
 
         $alias = $this->alias();
-        $fieldKey = 'indexes_criterias';
+        $fieldKey = 'risk_criterias';
 
         if ($action == 'view') {
             $associated = $entity->extractOriginal([$fieldKey]);
@@ -234,12 +234,11 @@ class IndexesTable extends ControllerActionTable
                     $rowData[] = __($criteriaData[$obj['criteria']]['name']);
                     $rowData[] = __($this->operatorTypes[$obj->operator]);
                     $rowData[] = $thresholdData; // will get form the FO or from the model related
-                    $rowData[] = __($obj['index_value']);
+                    $rowData[] = __($obj['risk_value']);
 
                     $tableCells[] = $rowData;
                 }
             }
-
         } else if ($action == 'add' || $action == 'edit') {
             $Form = $event->subject()->Form;
             $Form->unlockField($alias.".".$fieldKey);
@@ -261,8 +260,8 @@ class IndexesTable extends ControllerActionTable
                             'criteria' => $obj->criteria,
                             'operator' => $obj->operator,
                             'threshold' => $obj->threshold,
-                            'index_value' => $obj->index_value,
-                            'index_id' => $obj->index_id
+                            'risk_value' => $obj->risk_value,
+                            'risk_id' => $obj->risk_id
                         ];
                     }
                 }
@@ -276,9 +275,9 @@ class IndexesTable extends ControllerActionTable
                     $criteriaType = $obj['criteria'];
                     $operator = $obj['operator'];
                     $threshold = $obj['threshold'];
-                    $indexId = $obj['index_id'];
+                    $riskId = $obj['risk_id'];
 
-                    if ($criteriaType == 'StatusRepeated' ) {
+                    if ($criteriaType == 'StatusRepeated') {
                         // for status the criteria name will be student status.
                         $cell = $criteriaData[$criteriaType]['name'];
                     } else {
@@ -291,12 +290,12 @@ class IndexesTable extends ControllerActionTable
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.criteria", ['value' => $criteriaType]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.operator", ['value' => $operator]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.threshold", ['value' => $threshold]);
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.index_id", ['value' => $indexId]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.risk_id", ['value' => $riskId]);
 
                     $rowData[] = $cell;
                     $rowData[] = $this->operatorTypes[$operator];
                     $rowData[] = $Form->input("$alias.$fieldKey.$key.threshold", $this->getThresholdParams($criteriaType));
-                    $rowData[] = $Form->input("$alias.$fieldKey.$key.index_value", ['type' => 'number', 'label' => false, 'min' => 1, 'max' => 99]);
+                    $rowData[] = $Form->input("$alias.$fieldKey.$key.risk_value", ['type' => 'number', 'label' => false, 'min' => 1, 'max' => 99]);
                     $rowData[] = $this->getDeleteButton();
                     $tableCells[] = $rowData;
                 }
@@ -307,7 +306,7 @@ class IndexesTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['criteriaOptions'] = $criteriaOptions;
 
-        return $event->subject()->renderElement('Indexes.Indexes/' . $fieldKey, ['attr' => $attr]);
+        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -333,9 +332,9 @@ class IndexesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name');
-        $this->field('modified_user_id',['visible' => true]);
-        $this->field('modified',['visible' => true]);
-        $this->field('academic_period_id',['visible' => false]);
+        $this->field('modified_user_id', ['visible' => true]);
+        $this->field('modified', ['visible' => true]);
+        $this->field('academic_period_id', ['visible' => false]);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -346,7 +345,7 @@ class IndexesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
-            'name' => 'Indexes/controls',
+            'name' => 'Risks/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
@@ -365,11 +364,11 @@ class IndexesTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'IndexesCriterias' => [
+            'RiskCriterias' => [
                 'sort' => [
-                    'IndexesCriterias.criteria' => 'ASC',
-                    'IndexesCriterias.operator' => 'ASC',
-                    'IndexesCriterias.threshold' => 'ASC'
+                    'RiskCriterias.criteria' => 'ASC',
+                    'RiskCriterias.operator' => 'ASC',
+                    'RiskCriterias.threshold' => 'ASC'
                 ]
             ]
         ]);
@@ -383,60 +382,60 @@ class IndexesTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
-        $this->field('academic_period_id',['before' => 'name']);
+        $this->field('academic_period_id', ['before' => 'name']);
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        // to clear the indexes criteria when delete all the criteria
-        if (!isset($data[$this->alias()]['indexes_criterias'])) {
-            $data[$this->alias()]['indexes_criterias'] = [];
+        // to clear the risk criteria when delete all the criteria
+        if (!isset($data[$this->alias()]['risk_criterias'])) {
+            $data[$this->alias()]['risk_criterias'] = [];
         }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $entityIndexesCriteriasData = $entity->indexes_criterias;
-        // list of criteria in the index type
-        $entityIndexesCriterias = [];
-        if (!empty($entityIndexesCriteriasData)) {
-            foreach ($entityIndexesCriteriasData as $key => $entityIndexesCriteriasObj) {
-                $entityIndexesCriterias[$entityIndexesCriteriasObj->id] = $entityIndexesCriteriasObj;
+        $entityRiskCriteriasData = $entity->risk_criterias;
+        // list of criteria in the risk type
+        $entityRiskCriterias = [];
+        if (!empty($entityRiskCriteriasData)) {
+            foreach ($entityRiskCriteriasData as $key => $entityRiskCriteriasObj) {
+                $entityRiskCriterias[$entityRiskCriteriasObj->id] = $entityRiskCriteriasObj;
             }
         }
 
-        $indexId = $entity->id;
-        // get the list of student that using this index type (student that will be affected)
-        $institutionStudentIndexesResults = $this->InstitutionStudentIndexes->find()
-            ->where(['index_id' => $indexId])
+        $riskId = $entity->id;
+        // get the list of student that using this risk type (student that will be affected)
+        $institutionStudentRisksResults = $this->InstitutionStudentRisks->find()
+            ->where(['risk_id' => $riskId])
             ->all();
 
-        $indexTotal = [];
-        foreach ($institutionStudentIndexesResults as $key => $obj) {
-            $institutionStudentIndexesId = $obj->id;
+        $riskTotal = [];
+        foreach ($institutionStudentRisksResults as $key => $obj) {
+            $institutionStudentRisksId = $obj->id;
             $institutionId = $obj->institution_id;
             $studentId = $obj->student_id;
             $academicPeriodId = $obj->academic_period_id;
 
-            if (!empty($entityIndexesCriterias)) {
-                foreach ($entityIndexesCriterias as $entityIndexesCriteriasKey => $entityIndexesCriteriasObj) {
-                    $StudentIndexesCriterias = TableRegistry::get('Institution.StudentIndexesCriterias');
-                    $value = $StudentIndexesCriterias->getValue($institutionStudentIndexesId, $entityIndexesCriteriasKey);
-                    $indexValue = $StudentIndexesCriterias->getIndexValue($value, $entityIndexesCriteriasKey, $institutionId, $studentId, $academicPeriodId);
+            if (!empty($entityRiskCriterias)) {
+                foreach ($entityRiskCriterias as $entityRiskCriteriasKey => $entityRiskCriteriasObj) {
+                    $StudentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias');
+                    $value = $StudentRisksCriterias->getValue($institutionStudentRisksId, $entityRiskCriteriasKey);
+                    $riskValue = $StudentRisksCriterias->getRiskValue($value, $entityRiskCriteriasKey, $institutionId, $studentId, $academicPeriodId);
 
-                    $indexTotal[$institutionStudentIndexesId] = !empty($indexTotal[$institutionStudentIndexesId]) ? $indexTotal[$institutionStudentIndexesId] : 0;
-                    $indexTotal[$institutionStudentIndexesId] = $indexTotal[$institutionStudentIndexesId] + $indexValue;
+                    $riskTotal[$institutionStudentRisksId] = !empty($riskTotal[$institutionStudentRisksId]) ? $riskTotal[$institutionStudentRisksId] : 0;
+                    $riskTotal[$institutionStudentRisksId] = $riskTotal[$institutionStudentRisksId] + $riskValue;
                 }
             } else {
-                // if the indexes doesnt have anymore criteria
-                $indexTotal[$institutionStudentIndexesId] = 0;
+                // if the risks doesnt have anymore criteria
+                $riskTotal[$institutionStudentRisksId] = 0;
             }
 
-            // update the total index on the student indexes.
-            foreach ($indexTotal as $key => $obj) {
-                $this->InstitutionStudentIndexes->query()
+            // update the total risk on the student risks.
+            foreach ($riskTotal as $key => $obj) {
+                $this->InstitutionStudentRisks->query()
                     ->update()
-                    ->set(['total_index' => $obj])
+                    ->set(['total_risk' => $obj])
                     ->where([
                         'id' => $key
                     ])
@@ -447,13 +446,13 @@ class IndexesTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity)
     {
-        // stop the processing before delete the indexes.
-        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
-        $indexId = $entity->id;
+        // stop the processing before delete the risks
+        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        $riskId = $entity->id;
 
-        $records = $InstitutionIndexes->find()
+        $records = $InstitutionRisks->find()
             ->where([
-                'index_id' => $indexId,
+                'risk_id' => $riskId,
                 'status' => 2 // processing
             ])
             ->all();
@@ -470,17 +469,20 @@ class IndexesTable extends ControllerActionTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        // delete the institution Indexes records
-        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
-        $indexId = $entity->id;
-        $InstitutionIndexes->deleteAll(['index_id' => $indexId]);
+        // delete the institution Risks records
+        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        // pr($InstitutionRisks);
+        $riskId = $entity->id;
+        // pr($riskId);die;
 
-        $this->InstitutionStudentIndexes->deleteAll(['index_id' => $indexId]);
+        $InstitutionRisks->deleteAll(['risk_id' => $riskId]);
+
+        $this->InstitutionStudentRisks->deleteAll(['risk_id' => $riskId]);
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $fieldKey = 'indexes_criterias';
+        $fieldKey = 'risk_criterias';
         $userId = $this->request->session()->read('Auth.User.id');
         $undeletedList = [];
         $originalEntityList = [];
@@ -507,7 +509,7 @@ class IndexesTable extends ControllerActionTable
         if (!empty($originalEntityList)) {
             foreach ($originalEntityList as $key => $obj) {
                 if (!array_key_exists($key, $undeletedList)) {
-                    $this->IndexesCriterias->delete($this->IndexesCriterias->get($key));
+                    $this->RiskCriterias->delete($this->RiskCriterias->get($key));
                 }
             }
         }
@@ -517,13 +519,12 @@ class IndexesTable extends ControllerActionTable
             ['modified_user_id' => $userId],
             ['id' => $entity->id]
         );
-
     }
 
     public function addEditOnAddCriteria(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->alias();
-        $fieldKey = 'indexes_criterias';
+        $fieldKey = 'risk_criterias';
 
         if (array_key_exists($alias, $data) && array_key_exists('criteria_type', $data[$alias])) {
             $criteriaType = $data[$alias]['criteria_type'];
@@ -533,8 +534,8 @@ class IndexesTable extends ControllerActionTable
                 'criteria' => $criteriaType,
                 'operator' => $operator,
                 'threshold' => '',
-                'index_value' => '',
-                'index_id' => 0
+                'risk_value' => '',
+                'risk_id' => 0
             ];
 
             unset($data[$alias]['criteria_type']);
@@ -542,15 +543,15 @@ class IndexesTable extends ControllerActionTable
 
         //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
         $options['associated'] = [
-            'IndexesCriterias' => ['validate' => false]
+            'RiskCriterias' => ['validate' => false]
         ];
     }
 
     public function setupFields(Event $event, Entity $entity)
     {
-        $this->field('indexes_criterias', ['type' => 'custom_criterias']);
+        $this->field('risk_criterias', ['type' => 'custom_criterias']);
 
-        $this->setFieldOrder(['name', 'indexes_criterias']);
+        $this->setFieldOrder(['name', 'risk_criterias']);
     }
 
     public function getCriteriasDetails($criteriaKey)
@@ -561,21 +562,21 @@ class IndexesTable extends ControllerActionTable
 
     public function getCriteriaByModel($model, $institutionId)
     {
-        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
+        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
         $criteriaData = $this->getCriteriasData();
 
         $criteria = [];
         foreach ($criteriaData as $criteriaKey => $criteriaObj) {
             if ($criteriaObj['model'] == $model) {
-                $indexesCriteriasData = $this->IndexesCriterias->find()
+                $riskCriteriasData = $this->RiskCriterias->find()
                     ->where(['criteria' => $criteriaKey])
                     ->all();
 
-                foreach ($indexesCriteriasData as $indexesCriteriasDataObj) {
-                    $indexesId = $indexesCriteriasDataObj->index_id;
+                foreach ($riskCriteriasData as $riskCriteriasDataObj) {
+                    $riskId = $riskCriteriasDataObj->risk_id;
 
-                    if (!empty($indexesId) && !empty($institutionId)) {
-                        $status = $InstitutionIndexes->getStatus($indexesId, $institutionId);
+                    if (!empty($riskId) && !empty($institutionId)) {
+                        $status = $InstitutionRisks->getStatus($riskId, $institutionId);
 
                         if ($status == 2 || $status == 3) { // Status processing and completed
                             $criteria[$criteriaKey] = $criteriaObj;
@@ -599,12 +600,12 @@ class IndexesTable extends ControllerActionTable
         return $this->operatorTypes[$operatorId];
     }
 
-    public function triggerUpdateIndexesShell($shellName, $institutionId=0, $userId=0, $indexId=0, $academicPeriodId=0)
+    public function triggerUpdateIndexesShell($shellName, $institutionId = 0, $userId = 0, $riskId = 0, $academicPeriodId = 0)
     {
         $args = '';
         $args .= !is_null($institutionId) ? ' '.$institutionId : '';
         $args .= !is_null($userId) ? ' '.$userId : '';
-        $args .= !is_null($indexId) ? ' '.$indexId : '';
+        $args .= !is_null($riskId) ? ' '.$riskId : '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
