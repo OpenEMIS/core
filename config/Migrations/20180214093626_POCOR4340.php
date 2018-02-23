@@ -104,10 +104,10 @@ class POCOR4340 extends AbstractMigration
             ->addColumn('academic_period_id', 'integer', [
                 'null' => false
             ])
-            ->addColumn('start_date', 'date', [
+            ->addColumn('date_enabled', 'date', [
                 'null' => false
             ])
-            ->addColumn('end_date', 'date', [
+            ->addColumn('date_disabled', 'date', [
                 'null' => false
             ])
             ->addColumn('modified', 'datetime', [
