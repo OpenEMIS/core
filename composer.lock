@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "40c973c91520439796451048e442d574",
+    "content-hash": "c32924e26e495bf3aad492f2f3d6267d",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -431,11 +431,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
-            "version": "1.1.x-dev",
+            "version": "1.1.6",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "742037629875de54e30481e8fe70146fd6f6ac8f"
+                "reference": "f00a67306a24841423eb7b49efcf251cb1096974"
             },
             "require": {
                 "admad/cakephp-jwt-auth": "^2.0",
@@ -482,7 +482,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2017-10-05T09:11:36+00:00"
+            "time": "2017-10-10T07:18:05+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
@@ -3925,7 +3925,6 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "phpoffice/phpexcel": 20,
-        "korditpteltd/kd-cakephp-restful": 20,
         "korditpteltd/kd-cakephp-sso": 20,
         "psy/psysh": 0
     },
