@@ -21,5 +21,13 @@ class ApiScopesTable extends AppTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
+        $this->belongsToMany('ApiSecurities', [
+            'className' => 'ApiSecurities',
+            'joinTable' => 'api_securities_scopes',
+            'foreignKey' => 'api_scope_id',
+            'targetForeignKey' => 'api_security_id',
+            'through' => 'ApiSecuritiesScopes'
+        ]);
     }
 }

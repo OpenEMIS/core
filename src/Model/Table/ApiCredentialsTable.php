@@ -26,11 +26,6 @@ class ApiCredentialsTable extends AppTable
             'targetForeignKey' => 'api_scope_id',
             'through' => 'ApiCredentialsScopes'
         ]);
-
-        // $this->hasMany('ApiCredentialsScopes', [
-        //     'className' => 'ApiCredentialsScopes',
-        //     'foreignKey' => 'api_credential_id'
-        // ]);
     }
 
     /**
@@ -63,13 +58,5 @@ class ApiCredentialsTable extends AppTable
         $rules->add($rules->isUnique(['client_id']));
 
         return $rules;
-    }
-
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        $data['api_scopes'] = [
-            '_ids' => array($data['api_scopes'])
-        ];
-        // $data['scope'] = 'API';
     }
 }

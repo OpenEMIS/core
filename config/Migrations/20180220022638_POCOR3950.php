@@ -67,7 +67,7 @@ class POCOR3950 extends AbstractMigration
             ->addColumn('model', 'string', [
                 'null' => false
             ])
-            ->addColumn('list', 'integer', [
+            ->addColumn('index', 'integer', [
                 'limit' => 1,
                 'null' => false
             ])
@@ -98,7 +98,7 @@ class POCOR3950 extends AbstractMigration
                 'id' => 1000,
                 'name' => 'Institutions',
                 'model' => 'Institution.Institutions',
-                'list' => 1,
+                'index' => 1,
                 'view' => 1,
                 'add' => 0,
                 'edit' => 0,
@@ -109,7 +109,7 @@ class POCOR3950 extends AbstractMigration
                 'id' => 1001,
                 'name' => 'Users',
                 'model' => 'User.Users',
-                'list' => 1,
+                'index' => 1,
                 'view' => 1,
                 'add' => 0,
                 'edit' => 0,
@@ -179,7 +179,7 @@ class POCOR3950 extends AbstractMigration
                 'null' => false,
                 'comment' => 'link to api_scopes.id'
             ])
-            ->addColumn('list', 'integer', [
+            ->addColumn('index', 'integer', [
                 'limit' => 1,
                 'null' => false
             ])
