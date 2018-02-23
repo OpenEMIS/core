@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Exception;
 
 class WebhooksTable extends Table
 {
@@ -34,7 +35,8 @@ class WebhooksTable extends Table
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
         $userId = null;
         if (isset($options['extra']['user'])) {
             $userId = $options['extra']['user']['id'];
@@ -83,7 +85,7 @@ class WebhooksTable extends Table
             $shellCmd = $cmd . ' >> ' . $logs;
             try {
                 $pid = exec($shellCmd);
-            } catch(\Exception $ex) {
+            } catch (Exception $ex) {
                 Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
             }
         }
