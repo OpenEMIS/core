@@ -531,11 +531,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
-            "version": "v1.0.8",
+            "version": "1.0.9",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
-                "reference": "7ceeb16332bc4d936e244972d9729c0cc3d026f3"
+                "reference": "55ea0f36a55cf4a9d962668f1b594f3614d64206"
             },
             "require": {
                 "cakephp/cakephp": ">3.1.0"
@@ -565,7 +565,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
             },
-            "time": "2017-03-21T08:52:27+00:00"
+            "time": "2017-08-04T02:04:41+00:00"
         },
         {
             "name": "mk-j/php_xlsxwriter",
