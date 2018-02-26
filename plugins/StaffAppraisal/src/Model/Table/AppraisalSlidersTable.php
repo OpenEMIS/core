@@ -17,6 +17,34 @@ class AppraisalSlidersTable extends AppTable
         return $validator
             ->notEmpty('min')
             ->notEmpty('max')
-            ->notEmpty('step');
+            ->notEmpty('step')
+            ->add('min', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 100],
+                    'message' => __('Value must be within 0 to 100')
+                ]
+            ])
+            ->add('max', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 100],
+                    'message' => __('Value must be within 0 to 100')
+                ],
+                'ruleCompare' => [
+                    'rule' => ['compareValues', 'min'],
+                    'message' => __('Max value must be more than min value'),
+                    'last' => true
+                ],
+                'ruleCompare' => [
+                    'rule' => ['compareValues', 'step'],
+                    'message' => __('Max value must be more than step value'),
+                    'last' => true
+                ]
+            ])
+            ->add('step', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 100],
+                    'message' => __('Value must be within 0 to 100')
+                ]
+            ]);
     }
 }
