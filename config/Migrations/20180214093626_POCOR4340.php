@@ -5,7 +5,10 @@ class POCOR4340 extends AbstractMigration
 {
     public function up()
     {
-        $table = $this->table('appraisal_criterias');
+        $table = $this->table('appraisal_criterias', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of staff appraisal criterias'
+        ]);
         $table
             ->addColumn('code', 'string', [
                 'null' => false,
@@ -16,23 +19,28 @@ class POCOR4340 extends AbstractMigration
                 'limit' => 250
             ])
             ->addColumn('field_type_id', 'integer', [
-                'null' => false
-            ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
+                'null' => false,
+                'comment' => 'links to field_types.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'null' => true
             ])
-            ->addColumn('created', 'datetime', [
-                'null' => false
+            ->addColumn('modified', 'datetime', [
+                'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
                 'null' => false
             ])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('field_type_id')
             ->save();
 
-        $table = $this->table('appraisal_forms');
+        $table = $this->table('appraisal_forms', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of staff appraisal forms'
+        ]);
         $table
             ->addColumn('code', 'string', [
                 'null' => false,
@@ -42,21 +50,26 @@ class POCOR4340 extends AbstractMigration
                 'null' => false,
                 'limit' => 250
             ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
-            ])
             ->addColumn('modified_user_id', 'integer', [
                 'null' => true
             ])
-            ->addColumn('created', 'datetime', [
-                'null' => false
+            ->addColumn('modified', 'datetime', [
+                'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
                 'null' => false
             ])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
             ->save();
 
-        $table = $this->table('appraisal_forms_criterias', ['id' => false, 'primary_key' => ['id']]);
+        $table = $this->table('appraisal_forms_criterias', [
+            'id' => false,
+            'primary_key' => ['id'],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of criterias linked to a specific staff appraisal form'
+        ]);
         $table
             ->addColumn('id', 'biginteger', [
                 'identity' => true,
@@ -64,10 +77,12 @@ class POCOR4340 extends AbstractMigration
                 'null' => false
             ])
             ->addColumn('appraisal_form_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_forms.id'
             ])
             ->addColumn('appraisal_criteria_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_criterias.id'
             ])
             ->addColumn('section', 'string', [
                 'null' => true,
@@ -76,33 +91,38 @@ class POCOR4340 extends AbstractMigration
             ->addColumn('order', 'integer', [
                 'null' => false
             ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
-            ])
             ->addColumn('modified_user_id', 'integer', [
                 'null' => true
             ])
-            ->addColumn('created', 'datetime', [
-                'null' => false
+            ->addColumn('modified', 'datetime', [
+                'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
                 'null' => false
             ])
-            ->addIndex(['appraisal_form_id'])
-            ->addIndex(['appraisal_criteria_id'])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('appraisal_form_id')
+            ->addIndex('appraisal_criteria_id')
             ->save();
 
-        $table = $this->table('appraisal_periods');
+        $table = $this->table('appraisal_periods', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of periods for a specific staff appraisal form'
+        ]);
         $table
             ->addColumn('name', 'string', [
                 'null' => false,
                 'limit' => 250
             ])
             ->addColumn('appraisal_form_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_forms.id'
             ])
             ->addColumn('academic_period_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to academic_periods.id'
             ])
             ->addColumn('date_enabled', 'date', [
                 'null' => false
@@ -110,67 +130,87 @@ class POCOR4340 extends AbstractMigration
             ->addColumn('date_disabled', 'date', [
                 'null' => false
             ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
-            ])
             ->addColumn('modified_user_id', 'integer', [
                 'null' => true
             ])
-            ->addColumn('created', 'datetime', [
-                'null' => false
+            ->addColumn('modified', 'datetime', [
+                'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
                 'null' => false
             ])
-            ->addIndex(['appraisal_form_id'])
-            ->addIndex(['academic_period_id'])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('appraisal_form_id')
+            ->addIndex('academic_period_id')
             ->save();
 
-        $table = $this->table('appraisal_periods_types', ['id' => false, 'primary_key' => ['appraisal_period_id', 'appraisal_type_id']]);
+        $table = $this->table('appraisal_periods_types', [
+            'id' => false,
+            'primary_key' => ['appraisal_period_id', 'appraisal_type_id'],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of appraisal types linked to a specific staff appraisal period'
+        ]);
         $table
             ->addColumn('appraisal_period_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_periods.id'
             ])
             ->addColumn('appraisal_type_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_types.id'
             ])
-            ->addIndex(['appraisal_period_id'])
-            ->addIndex(['appraisal_type_id'])
+            ->addIndex('appraisal_period_id')
+            ->addIndex('appraisal_type_id')
             ->save();
 
-        $table = $this->table('appraisal_slider_answers', ['id' => false, 'primary_key' => ['appraisal_forms_criteria_id', 'institution_staff_appraisal_id']]);
+        $table = $this->table('appraisal_slider_answers', [
+            'id' => false,
+            'primary_key' => ['appraisal_forms_criteria_id', 'institution_staff_appraisal_id'],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the slider answers recorded for a specific institution staff appraisal'
+        ]);
         $table
             ->addColumn('appraisal_forms_criteria_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_forms_criterias.id'
             ])
             ->addColumn('institution_staff_appraisal_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to institution_staff_appraisals.id'
             ])
             ->addColumn('answer', 'decimal', [
                 'precision' => 5,
                 'scale' => 2,
                 'null' => false
             ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
-            ])
             ->addColumn('modified_user_id', 'integer', [
                 'null' => true
             ])
-            ->addColumn('created', 'datetime', [
-                'null' => false
+            ->addColumn('modified', 'datetime', [
+                'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
                 'null' => false
             ])
-            ->addIndex(['appraisal_forms_criteria_id'])
-            ->addIndex(['institution_staff_appraisal_id'])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('appraisal_forms_criteria_id')
+            ->addIndex('institution_staff_appraisal_id')
             ->save();
 
-        $table = $this->table('appraisal_sliders', ['id' => false, 'primary_key' => ['appraisal_criteria_id']]);
+        $table = $this->table('appraisal_sliders', [
+            'id' => false,
+            'primary_key' => ['appraisal_criteria_id'],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the slider configurations set for a specific staff appraisal criteria'
+        ]);
         $table
             ->addColumn('appraisal_criteria_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_criterias.id'
             ])
             ->addColumn('min', 'decimal', [
                 'null' => false,
@@ -187,49 +227,62 @@ class POCOR4340 extends AbstractMigration
                 'scale' => 2,
                 'null' => false
             ])
-            ->addIndex(['appraisal_criteria_id'])
+            ->addIndex('appraisal_criteria_id')
             ->save();
 
-        $table = $this->table('appraisal_text_answers', ['id' => false, 'primary_key' => ['appraisal_forms_criteria_id', 'institution_staff_appraisal_id']]);
+        $table = $this->table('appraisal_text_answers', [
+            'id' => false,
+            'primary_key' => ['appraisal_forms_criteria_id', 'institution_staff_appraisal_id'],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the text answers recorded for a specific institution staff appraisal'
+        ]);
         $table
             ->addColumn('appraisal_forms_criteria_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_forms_criterias.id'
             ])
             ->addColumn('institution_staff_appraisal_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to institution_staff_appraisals.id'
             ])
             ->addColumn('answer', 'text', [
                 'null' => false
             ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
-            ])
             ->addColumn('modified_user_id', 'integer', [
                 'null' => true
             ])
-            ->addColumn('created', 'datetime', [
-                'null' => false
+            ->addColumn('modified', 'datetime', [
+                'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
                 'null' => false
             ])
-            ->addIndex(['appraisal_forms_criteria_id'])
-            ->addIndex(['institution_staff_appraisal_id'])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('appraisal_forms_criteria_id')
+            ->addIndex('institution_staff_appraisal_id')
             ->save();
 
-        $table = $this->table('appraisal_types');
+        $table = $this->table('appraisal_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of staff appraisal types'
+        ]);
         $table
             ->addColumn('code', 'string', [
                 'null' => false,
-                'limit' => 45
+                'limit' => 100
             ])
             ->addColumn('name', 'string', [
                 'null' => false,
-                'limit' => 45
+                'limit' => 250
             ])
             ->save();
 
-        $table = $this->table('institution_staff_appraisals');
+        $table = $this->table('institution_staff_appraisals', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of appraisals for a specific staff'
+        ]);
         $table
             ->addColumn('title', 'string', [
                 'null' => false,
@@ -253,36 +306,43 @@ class POCOR4340 extends AbstractMigration
                 'null' => true
             ])
             ->addColumn('institution_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('staff_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to security_users.id'
             ])
             ->addColumn('appraisal_type_id', 'integer', [
-                'null' => false
+                'null' => false,
+                'comment' => 'links to appraisal_types.id'
             ])
             ->addColumn('appraisal_period_id', 'integer', [
-                'null' => false
-            ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
+                'null' => false,
+                'comment' => 'links to appraisal_periods.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'null' => true
             ])
-            ->addColumn('created', 'datetime', [
-                'null' => false
+            ->addColumn('modified', 'datetime', [
+                'null' => true
             ])
             ->addColumn('created_user_id', 'integer', [
                 'null' => false
             ])
-            ->addIndex(['staff_id'])
-            ->addIndex(['institution_id'])
-            ->addIndex(['appraisal_period_id'])
-            ->addIndex(['appraisal_type_id'])
+            ->addColumn('created', 'datetime', [
+                'null' => false
+            ])
+            ->addIndex('institution_id')
+            ->addIndex('staff_id')
+            ->addIndex('appraisal_type_id')
+            ->addIndex('appraisal_period_id')
             ->save();
 
-        $table = $this->table('field_types');
+        $table = $this->table('field_types', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of available custom field types that are used in the system'
+        ]);
         $table
             ->addColumn('code', 'string', [
                 'null' => false,
@@ -307,10 +367,12 @@ class POCOR4340 extends AbstractMigration
             ])
             ->save();
 
+        $this->table('competency_sets')->rename('z_4340_competency_sets');
+        $this->table('competencies')->rename('z_4340_competencies');
+        $this->table('competency_sets_competencies')->rename('z_4340_competency_sets_competencies');
         $this->table('staff_appraisals')->rename('z_4340_staff_appraisals');
         $this->table('staff_appraisals_competencies')->rename('z_4340_staff_appraisals_competencies');
         $this->table('staff_appraisal_types')->rename('z_4340_staff_appraisal_types');
-        $this->table('competencies')->rename('z_4340_competencies');
     }
 
     public function down()
@@ -326,9 +388,12 @@ class POCOR4340 extends AbstractMigration
         $this->dropTable('institution_staff_appraisals');
         $this->dropTable('field_types');
         $this->dropTable('appraisal_sliders');
+
+        $this->table('z_4340_competency_sets')->rename('competency_sets');
+        $this->table('z_4340_competencies')->rename('competencies');
+        $this->table('z_4340_competency_sets_competencies')->rename('competency_sets_competencies');
         $this->table('z_4340_staff_appraisals')->rename('staff_appraisals');
         $this->table('z_4340_staff_appraisals_competencies')->rename('staff_appraisals_competencies');
         $this->table('z_4340_staff_appraisal_types')->rename('staff_appraisal_types');
-        $this->table('z_4340_competencies')->rename('competencies');
     }
 }
