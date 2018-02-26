@@ -373,6 +373,145 @@ class POCOR4340 extends AbstractMigration
         $this->table('staff_appraisals')->rename('z_4340_staff_appraisals');
         $this->table('staff_appraisals_competencies')->rename('z_4340_staff_appraisals_competencies');
         $this->table('staff_appraisal_types')->rename('z_4340_staff_appraisal_types');
+
+        // appraisal_forms
+        $this->execute("INSERT INTO `appraisal_forms`
+                            (`id`, `code`, `name`, `modified_user_id`, `modified`,  `created_user_id`, `created`)
+                        SELECT
+                            `id`, `id`, `name`, `modified_user_id`, `modified`,  `created_user_id`, `created`
+                        FROM `z_4340_competency_sets`"
+                    );
+
+        // appraisal_criterias
+        $this->execute("INSERT INTO `appraisal_criterias`
+                            (`id`, `code`, `name`, `field_type_id`,
+                            `modified_user_id`, `modified`,  `created_user_id`, `created`)
+                        SELECT
+                            `id`, `id`, `name`, (SELECT `id` FROM field_types WHERE `code` = 'SLIDER'),
+                            `modified_user_id`, `modified`,  `created_user_id`, `created`
+                        FROM `z_4340_competencies`"
+                    );
+
+        // appraisal_forms_criterias
+        $this->execute("INSERT INTO `appraisal_forms_criterias`
+                            (`appraisal_form_id`, `appraisal_criteria_id`, `order`, `created_user_id`, `created`)
+                        SELECT
+                            z_comp_sets_comp.`competency_set_id`,
+                            z_comp_sets_comp.`competency_id`,
+                            z_comp.`order`,
+                            1,
+                            NOW()
+                        FROM `z_4340_competency_sets_competencies` z_comp_sets_comp
+                        INNER JOIN `z_4340_competencies` z_comp ON z_comp_sets_comp.`competency_id` = z_comp.`id`");
+
+        // appraisal_sliders
+        $this->execute("INSERT INTO `appraisal_sliders`
+                            (`appraisal_criteria_id`, `min`, `max`, `step`)
+                        SELECT
+                            `id`, `min`, `max`, '0.5'
+                        FROM `z_4340_competencies`");
+
+        // appraisal_types
+        $this->execute("INSERT INTO `appraisal_types` SELECT * FROM `z_4340_staff_appraisal_types`");
+
+        // appraisal_periods
+        $this->execute("INSERT INTO `appraisal_periods` (
+                            `name`,
+                            `appraisal_form_id`,
+                            `academic_period_id`,
+                            `date_enabled`,
+                            `date_disabled`,
+                            `modified_user_id`,
+                            `modified`,
+                            `created_user_id`,
+                            `created`
+                        )
+                        SELECT
+                            CONCAT(acad_periods.`name`, ' - ', z_comp_sets.`name`),
+                            z_staff_appr.`competency_set_id`,
+                            z_staff_appr.`academic_period_id`,
+                            acad_periods.`start_date`,
+                            acad_periods.`end_date`,
+                            z_staff_appr.`modified_user_id`,
+                            z_staff_appr.`modified`,
+                            z_staff_appr.`created_user_id`,
+                            z_staff_appr.`created`
+                        FROM `z_4340_staff_appraisals` z_staff_appr
+                        INNER JOIN `academic_periods` acad_periods ON z_staff_appr.`academic_period_id` = acad_periods.`id`
+                        INNER JOIN `z_4340_competency_sets` z_comp_sets ON z_staff_appr.`competency_set_id` = z_comp_sets.`id`
+                        GROUP BY z_staff_appr.`competency_set_id`, z_staff_appr.`academic_period_id`
+                    ");
+
+        // appraisal_periods_types
+        $this->execute("INSERT INTO `appraisal_periods_types`
+                            (`appraisal_period_id`, `appraisal_type_id`)
+                        SELECT
+                            appr_periods.`id`, z_staff_appr.`staff_appraisal_type_id`
+                        FROM `z_4340_staff_appraisals` z_staff_appr
+                        INNER JOIN `appraisal_periods` appr_periods
+                            ON z_staff_appr.`competency_set_id` = appr_periods.`appraisal_form_id`
+                            AND z_staff_appr.`academic_period_id` = appr_periods.`academic_period_id`
+                        GROUP BY appr_periods.`id`, z_staff_appr.`staff_appraisal_type_id`
+                    ");
+
+        // institution_staff_appraisals
+        $this->execute("INSERT INTO `institution_staff_appraisals` (
+                            `id`,
+                            `title`,
+                            `from`,
+                            `to`,
+                            `file_name`,
+                            `file_content`,
+                            `comment`,
+                            `institution_id`,
+                            `staff_id`,
+                            `appraisal_type_id`,
+                            `appraisal_period_id`,
+                            `modified_user_id`,
+                            `modified`,
+                            `created_user_id`,
+                            `created`
+                        )
+                        SELECT
+                            z_staff_appr.`id`,
+                            z_staff_appr.`title`,
+                            z_staff_appr.`from`,
+                            z_staff_appr.`to`,
+                            z_staff_appr.`file_name`,
+                            z_staff_appr.`file_content`,
+                            z_staff_appr.`comment`,
+                            staff.`institution_id`,
+                            z_staff_appr.`staff_id`,
+                            z_staff_appr.`staff_appraisal_type_id`,
+                            appr_periods.`id`,
+                            z_staff_appr.`modified_user_id`,
+                            z_staff_appr.`modified`,
+                            z_staff_appr.`created_user_id`,
+                            z_staff_appr.`created`
+                        FROM `z_4340_staff_appraisals` z_staff_appr
+                        INNER JOIN `appraisal_periods` appr_periods
+                            ON z_staff_appr.`competency_set_id` = appr_periods.`appraisal_form_id`
+                            AND z_staff_appr.`academic_period_id`=  appr_periods.`academic_period_id`
+                        INNER JOIN `institution_staff` staff ON z_staff_appr.`staff_id` = staff.`staff_id`
+                        INNER JOIN `staff_statuses` statuses ON staff.`staff_status_id` = statuses.`id`
+                        WHERE statuses.`code` = 'ASSIGNED'
+                    ");
+
+        // appraisal_slider_answers
+        $this->execute("INSERT INTO `appraisal_slider_answers`
+                        (`appraisal_forms_criteria_id`, `institution_staff_appraisal_id`, `answer`, `created_user_id`, `created`)
+                        SELECT
+                            form_criterias.`id`,
+                            z_results.`staff_appraisal_id`,
+                            z_results.`rating`,
+                            1,
+                            NOW()
+                        FROM `z_4340_staff_appraisals_competencies` z_results
+                        INNER JOIN `z_4340_staff_appraisals` z_staff_appr ON z_results.`staff_appraisal_id` = z_staff_appr.`id`
+                        INNER JOIN `appraisal_forms_criterias` form_criterias
+                            ON z_staff_appr.`competency_set_id` = form_criterias.`appraisal_form_id`
+                            AND z_results.`competency_id` = form_criterias.`appraisal_criteria_id`
+                    ");
     }
 
     public function down()
