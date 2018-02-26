@@ -4,6 +4,7 @@ namespace StaffAppraisal\Controller;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 use App\Controller\AppController;
 
 class StaffAppraisalsController extends AppController
@@ -18,7 +19,7 @@ class StaffAppraisalsController extends AppController
         parent::beforeFilter($event);
         $header = 'Appraisals';
         $this->Navigation->addCrumb($header, ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Criterias']);
-        $this->Navigation->addCrumb($this->request->action);
+        $this->Navigation->addCrumb(Inflector::humanize($this->request->action));
         $this->getAppraisalsTabElements();
         $this->set('contentHeader', __($header));
     }
