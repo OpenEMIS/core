@@ -34,7 +34,8 @@ class ApiSecuritiesController extends PageController
         $event['Controller.Page.onRenderEdit'] = 'onRenderIcon';
         $event['Controller.Page.onRenderDelete'] = 'onRenderIcon';
         $event['Controller.Page.onRenderExecute'] = 'onRenderIcon';
-
+        $event['Controller.Page.onRenderApiScopeId'] = 'onRenderApiScopeId';
+ 
         return $event;
     }
 
@@ -85,17 +86,8 @@ class ApiSecuritiesController extends PageController
         $page = $this->Page;
         parent::view($id);
 
-        $entity = $page->getData();
-        $scopeEntity = $this->getScopeEntity();
-        $scopeName = is_null($scopeEntity) ? '' : $scopeEntity->name;
-
-        $page->addNew('api_scope')->setLabel(__('API Scope'))->setValue($scopeName);
-        $page->move('api_scope')->after('name');
-
-        // $page->addNew('modified_user_id')->setValue($scopeData->modified_user_id);
-        // $page->addNew('modified')->setValue($scopeData->modified);
-        // $page->addNew('created_user_id')->setValue($scopeData->created_user_id);
-        // $page->addNew('created')->setValue($scopeData->created);
+        $page->addNew('api_scope_id')->setLabel(__('API Scope'));
+        $page->move('api_scope_id')->after('name');
     }
 
     public function edit($id)
@@ -111,12 +103,11 @@ class ApiSecuritiesController extends PageController
         $page->addNew('api_scope_id')
             ->setLabel(__('API Scope'))
             ->setDisabled(true)
-            ->setRequired(true)
-            ->setValue($apiScopeName);
-
+            ->setRequired(true);
         $page->move('api_scope_id')->after('name');
+
         $page->get('name')
-            // ->setDisabled(true)
+            ->setDisabled(true)
             ->setRequired(true);
 
         $tempScopeName = 'scopes';
@@ -125,7 +116,7 @@ class ApiSecuritiesController extends PageController
             $scopeEntity = $this->getScopeEntity();
             $entityData = empty($scopeEntity) ? $entity : $scopeEntity->_joinData;
 
-            $entityData->{$tempScopeName} = [
+            $entity->{$tempScopeName} = [
                 'index' => $entityData->index,
                 'view' => $entityData->view,
                 'add' => $entityData->add,
@@ -170,15 +161,29 @@ class ApiSecuritiesController extends PageController
         }
     }
 
+    public function onRenderApiScopeId(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+        
+        if ($page->is(['view', 'edit'])) {
+            $apiScopeId = $this->getApiScopeId();
+            $apiScopeName = $this->ApiScopes->get($apiScopeId)->name;
+            
+            return $apiScopeName;
+        }
+    }
+
     public function onRenderIcon(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
-        $key = $element->getKey();
-        // entity will be used from the renderering function passed in as index page will page an array
-        $scopeEntity = $this->getScopeEntity($entity);
-        $entityData = empty($scopeEntity) ? $entity : $scopeEntity->_joinData;
 
         if ($page->is(['index', 'view'])) {
+            $key = $element->getKey();
+
+            // entity will be used from the renderering function passed in as index page will page an array
+            $scopeEntity = $this->getScopeEntity($entity);
+            $entityData = empty($scopeEntity) ? $entity : $scopeEntity->_joinData;
+
             if ($entityData->{$key} == 0) {
                 return "<i class='fa fa-close'></i>";
             }
