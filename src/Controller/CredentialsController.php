@@ -31,7 +31,6 @@ class CredentialsController extends PageController
         $page = $this->Page;
 
         parent::beforeFilter($event);
-        // $page->exclude(['scope']);
         $page->addCrumb('Credentials', ['plugin' => false, 'controller' => 'Credentials', 'action' => 'index']);
     }
 
@@ -58,7 +57,6 @@ class CredentialsController extends PageController
             ->setLabel('API Scopes')
             ->setControlType('select')
             ->setAttributes('multiple', true);
-
         $page->move('api_scopes')->after('public_key');
     }
 
@@ -107,18 +105,15 @@ class CredentialsController extends PageController
         $page = $this->Page;
 
         if ($page->is(['index', 'view'])) {
-            $entityObj = $this->ApiCredentials
-                ->find()
-                ->contain('ApiScopes')
-                ->where([$this->ApiCredentials->aliasField('id') => $entity->id])
-                ->first();
+            $scopeList = [];
 
-            $list = [];
-            foreach ($entityObj->api_scopes as $obj) {
-                $list[] = $obj->name;
+            if (!is_null($entity->api_scopes)) {
+                foreach ($entity->api_scopes as $obj) {
+                    $scopeList[] = $obj->name;
+                }
             }
 
-            $value = implode(', ', $list);
+            $value = implode(', ', $scopeList);
             return $value;
         }
     }
@@ -127,6 +122,13 @@ class CredentialsController extends PageController
     {
         $page = $this->Page;
         $entity = $page->getData();
+        
+        $scopeIds = [];
+        if (!is_null($entity->api_scopes)) {
+            foreach ($entity->api_scopes as $obj) {
+                $scopeIds[] = $obj->id;
+            }
+        }
 
         $scopeOptions = $this->ApiScopes
             ->find('optionList', ['defaultOption' => false])
@@ -134,29 +136,10 @@ class CredentialsController extends PageController
 
         $page->addNew('api_scopes')
             ->setControlType('select')
-            ->setLabel('API Scopes')
+            ->setLabel(__('API Scopes'))
             ->setOptions($scopeOptions, false)
             ->setAttributes('multiple', true)
-            ->setRequired(true);
-
-        $this->setApiScopesValue($entity);
-    }
-
-    private function setApiScopesValue(Entity $entity)
-    {
-        if ($this->request->is(['get'])) {
-            if ($entity->has('id')) {
-                $entityObj = $this->ApiCredentials
-                ->get($entity->id, [
-                    'contain' => 'ApiScopes'
-                ]);
-
-                $list = [];
-                foreach ($entityObj->api_scopes as $obj) {
-                    $list[] = $obj->id;
-                }
-                $entity->api_scopes = $list;
-            }
-        }
+            ->setValue($scopeIds);
+        // ->setValue($entity->api_scopes);
     }
 }
