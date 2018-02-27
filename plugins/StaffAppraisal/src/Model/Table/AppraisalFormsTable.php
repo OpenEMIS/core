@@ -14,16 +14,17 @@ class AppraisalFormsTable extends ControllerActionTable
     public function initialize(array $config) : void
     {
         parent::initialize($config);
-        $this->hasMany('AppraisalFormsCriterias', ['className' => 'StaffAppraisal.AppraisalFormsCriterias', 'foreignKey' => 'appraisal_form_id']);
         $this->belongsToMany('AppraisalCriterias', [
             'className' => 'StaffAppraisal.AppraisalCriterias',
-            'joinTable' => 'appraisal_forms_criterias',
             'foreignKey' => 'appraisal_form_id',
             'targetForeignKey' => 'appraisal_criteria_id',
+            'joinTable' => 'appraisal_forms_criterias',
             'through' => 'StaffAppraisal.AppraisalFormsCriterias',
             'dependent' => true,
+            'cascadeCallbacks' => true,
             'sort' => 'AppraisalFormsCriterias.order'
         ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
@@ -51,7 +52,6 @@ class AppraisalFormsTable extends ControllerActionTable
             $tableCells = [];
             $customFormId = $entity->id;
             $customFields = $entity->appraisal_criterias;
-            // $customFields = $this->getCustomFormsFields($customFormId);
 
             $sectionName = "";
             $printSection = false;
@@ -78,11 +78,9 @@ class AppraisalFormsTable extends ControllerActionTable
             $form = $event->subject()->Form;
             $form->unlockField($this->alias() . '.appraisal_criterias');
             $attr = [];
-            // $arrayFields = [];
-            // Showing the list of the questions that are already added
-            $AppraisalCriteriasTable = TableRegistry::get('StaffAppraisal.AppraisalCriterias');
 
-            $criteriaList = $AppraisalCriteriasTable
+            // Showing the list of the questions that are already added
+            $criteriaList = $this->AppraisalCriterias
                 ->find('list')
                 ->toArray();
 
@@ -127,7 +125,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 if (array_key_exists('selected_custom_field', $requestData[$this->alias()])) {
                     $fieldId = $requestData[$this->alias()]['selected_custom_field'];
                     if (!empty($fieldId)) {
-                        $fieldObj = $AppraisalCriteriasTable->get($fieldId, ['contain' => ['FieldTypes']]);
+                        $fieldObj = $this->AppraisalCriterias->get($fieldId, ['contain' => ['FieldTypes']]);
                         $sectionName = $entity->section;
                         $arrayFields[] = [
                             'name' => $fieldObj->name,
@@ -179,7 +177,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 if (isset($obj['id'])) {
                     $cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
                 }
-                if (! empty($sectionName) && ($printSection)) {
+                if (!empty($sectionName) && ($printSection)) {
                     $rowData = [];
                     $rowData[] = '<div class="section-header">'.$sectionName.'</div>';
                     $rowData[] = ''; // Field Type
@@ -214,15 +212,5 @@ class AppraisalFormsTable extends ControllerActionTable
         }
 
         return $event->subject()->renderElement('StaffAppraisal.form_criterias', ['attr' => $attr]);
-    }
-
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        // pr($entity);die;
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        // pr($this->request->data);die;
     }
 }
