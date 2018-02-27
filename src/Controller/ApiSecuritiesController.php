@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
@@ -11,6 +12,7 @@ class ApiSecuritiesController extends PageController
 {
     const DENY = 0;
     const ALLOW = 1;
+    const ACTION_LIST = ['index', 'view', 'add', 'edit', 'delete', 'execute'];
 
     public function initialize()
     {
@@ -19,18 +21,19 @@ class ApiSecuritiesController extends PageController
         $this->loadModel('ApiSecuritiesScopes');
         $this->loadModel('ApiScopes');
         $this->loadModel('ApiSecurities');
-        $this->Page->loadElementsFromTable($this->ApiSecuritiesScopes);
+
+        $this->Page->disable(['add', 'delete']);
     }
 
     public function implementedEvents()
     {
         $event = parent::implementedEvents();
-        $event['Controller.Page.onRenderIndex'] = 'onRenderIndex';
-        $event['Controller.Page.onRenderView'] = 'onRenderView';
-        $event['Controller.Page.onRenderAdd'] = 'onRenderAdd';
-        $event['Controller.Page.onRenderEdit'] = 'onRenderEdit';
-        $event['Controller.Page.onRenderDelete'] = 'onRenderDelete';
-        $event['Controller.Page.onRenderExecute'] = 'onRenderExecute';
+        $event['Controller.Page.onRenderIndex'] = 'onRenderIcon';
+        $event['Controller.Page.onRenderView'] = 'onRenderIcon';
+        $event['Controller.Page.onRenderAdd'] = 'onRenderIcon';
+        $event['Controller.Page.onRenderEdit'] = 'onRenderIcon';
+        $event['Controller.Page.onRenderDelete'] = 'onRenderIcon';
+        $event['Controller.Page.onRenderExecute'] = 'onRenderIcon';
 
         return $event;
     }
@@ -45,160 +48,178 @@ class ApiSecuritiesController extends PageController
             'controller' => 'ApiSecurities',
             'action' => 'index'
         ]);
-
-        $page->get('index')->setLabel(__('List'));
-        $page->get('api_scope_id')->setLabel(__('API Scopes'));
-        $page->get('api_security_id')->setLabel(__('API Securities'));
-
+        
         // set header
         $page->setHeader(__('API Securities'));
+
+        $page->get('index')->setLabel(__('List'));
+        $page->exclude('model');
     }
 
     public function index()
     {
-        parent::index();
-
         $page = $this->Page;
 
-        $allScopes = $this->ApiScopes
+        // disable sorting for all actions
+        foreach (self::ACTION_LIST as $action) {
+            $page->get($action)->setSortable(false);
+        }
+
+        $scopeOptions = $this->ApiScopes
             ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
-        $scopeOptions = [null => __('All Scopes')] + $allScopes;
-        $page
-            ->addFilter('api_scope_id')
-            ->setOptions($scopeOptions);
+        $queryString = $page->getQueryString();
+        if (!array_key_exists('api_scope_id', $queryString)) {
+            $firstScopeOption = $scopeOptions[0]['value'];
+            $page->setQueryString('api_scope_id', $firstScopeOption);
+        }
 
-        $this->disableSort();
+        $page->addFilter('api_scope_id')->setOptions($scopeOptions);
+
+        parent::index();
     }
 
-    public function add()
+    public function view($id)
     {
-        parent::add();
         $page = $this->Page;
+        $apiScopeId = $this->getApiScopeId();
+        
+        $page->addNew('api_scope')->setLabel('API Scope');
+        $page->move('api_scope')->after('name');
 
-        $page
-            ->get('api_scope_id')
-            ->setId('api_scope_id')
-            ->setControlType('select');
+        $scopeEntity = $this->ApiScopes->get($apiScopeId);
+        $scopeName = $scopeEntity->name;
 
-        $page
-            ->get('api_security_id')
-            ->setControlType('select')
-            ->setDependentOn('api_scope_id')
-            ->setParams('ApiSecurities');
+        $page->get('api_scope')->setValue($scopeName);
 
-        $this->addEdit();
+        parent::view($id);
     }
 
     public function edit($id)
     {
         $page = $this->Page;
-
-        $page
-            ->get('api_scope_id')
-            ->setControlType('string')
-            ->setReadonly(true);
-
-        $page
-            ->get('api_security_id')
-            ->setControlType('string')
-            ->setReadonly(true);
-           
-        $this->addEdit();
         parent::edit($id);
-    }
 
-    public function delete($id)
-    {
-        $page = $this->Page;
-        parent::delete($id);
+        $entity = $page->getData();
+        $apiSecurityId = $entity->id;
+        $apiScopeId = $this->getApiScopeId();
 
-        // $this->setDelete();
-    }
+        $apiScopeName = $this->ApiScopes->get($apiScopeId)->name;
+        $page->addNew('api_scope_id')
+            ->setLabel(__('API Scope'))
+            ->setDisabled(true)
+            ->setRequired(true)
+            ->setValue($apiScopeName);
 
-    public function onRenderIndex(Event $event, Entity $entity, PageElement $element)
-    {
-        return $this->renderCheckCross($entity->index);
-    }
+        $page->move('api_scope_id')->after('name');
+        $page->get('name')
+            ->setDisabled(true)
+            ->setRequired(true);
 
-    public function onRenderView(Event $event, Entity $entity, PageElement $element)
-    {
-        return $this->renderCheckCross($entity->view);
-    }
+        $tempScopeName = 'scopes';
+        if ($this->request->is(['get'])) {
+            // default value retrieving is from the default action
+            $scopeData = $entity;
 
-    public function onRenderAdd(Event $event, Entity $entity, PageElement $element)
-    {
-        return $this->renderCheckCross($entity->add);
-    }
-
-    public function onRenderEdit(Event $event, Entity $entity, PageElement $element)
-    {
-        return $this->renderCheckCross($entity->edit);
-    }
-
-    public function onRenderDelete(Event $event, Entity $entity, PageElement $element)
-    {
-        return $this->renderCheckCross($entity->delete);
-    }
-
-    public function onRenderExecute(Event $event, Entity $entity, PageElement $element)
-    {
-        return $this->renderCheckCross($entity->execute);
-    }
-
-    private function renderCheckCross($value)
-    {
-        $page = $this->Page;
-
-        if ($page->is(['index', 'view'])) {
-            if ($value == 1) {
-                return "<i class='fa fa-check'></i>";
+            if (!empty($entity->api_scopes)) {
+                foreach ($entity->api_scopes as $key => $value) {
+                    if ($value->id == $apiScopeId) {
+                        // if record for the security id and the scope id is found,
+                        // data will be used from the record
+                        $scopeData = $value->_joinData;
+                        break;
+                    }
+                }
             }
 
-            return "<i class='fa fa-close'></i>";
+            $entity->{$tempScopeName} = [
+                'index' => $scopeData->index,
+                'view' => $scopeData->view,
+                'add' => $scopeData->add,
+                'edit' => $scopeData->edit,
+                'delete' => $scopeData->delete,
+                'execute' => $scopeData->execute
+            ];
+        }
+
+        // scope id for api_securities_scopes id
+        $page->addNew("$tempScopeName.api_scope_id")
+            ->setControlType('hidden')
+            ->setValue($apiScopeId);
+
+        foreach (self::ACTION_LIST as $action) {
+            // set original actions as hidden
+            $page->get($action)->setControlType('hidden');
+
+            // create new action list to save to api_securities_scopes
+            $isEnabled = $entity->{$action};
+            $scopeName = "$tempScopeName.$action";
+
+            // set disabled and dropdown field based on default actions
+            if ($isEnabled) {
+                $page->addNew($scopeName)
+                    ->setLabel(Inflector::humanize($action))
+                    ->setControlType('select')
+                    ->setRequired(true)
+                    ->setOptions($this->getSelectOptions(), false);
+            } else {
+                $page->addNew($scopeName . '_view')
+                    ->setLabel(Inflector::humanize($action))
+                    ->setControlType('string')
+                    ->setDisabled(true)
+                    ->setRequired(true)
+                    ->setValue(__('Deny'));
+
+                $page->addNew($scopeName)
+                    ->setControlType('hidden')
+                    ->setValue($isEnabled);
+            }
         }
     }
 
-    private function disableSort()
+    public function onRenderIcon(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
-        $actions = ['add', 'view', 'edit', 'delete', 'index', 'execute'];
-        foreach ($actions as $action) {
-            $page
-                ->get($action)
-                ->setSortable(false);
+        $key = $element->getKey();
+        $keyValue = $entity->{$key};
+        $apiScopeId = $this->getApiScopeId();
+
+        if ($page->is(['index', 'view'])) {
+            if ($keyValue == 0) {
+                return "<i class='fa fa-close'></i>";
+            } else {
+                if (empty($entity->api_scopes)) {
+                    return "<i class='fa fa-check'></i>";
+                } else {
+                    foreach ($entity->api_scopes as $obj) {
+                        if ($obj->id == $apiScopeId) {
+                            $actionValue = $obj->_joinData->{$key};
+
+                            if ($actionValue == 0) {
+                                return "<i class='fa fa-close'></i>";
+                            }
+                        }
+                    }
+
+                    return "<i class='fa fa-check'></i>";
+                }
+            }
         }
     }
 
-    private function setDelete()
+    private function getApiScopeId()
     {
         $page = $this->Page;
+        $queryString = $page->getQueryString();
 
-        $actions = ['add', 'view', 'edit', 'delete', 'index', 'execute'];
-        foreach ($actions as $action) {
-            $page
-                ->get($action)
-                ->setControlType('select')
-                ->setOptions($this->getSelectOptions(), false)
-                ->setDisabled(true);
+        if (!array_key_exists('api_scope_id', $queryString)) {
+            pr('Query String Error');
+            die;
         }
-    }
 
-    private function addEdit()
-    {
-        $page = $this->Page;
-        $page->move('api_scope_id')->first();
-
-        $actions = ['add', 'view', 'edit', 'delete', 'index', 'execute'];
-
-        foreach ($actions as $action) {
-            $page
-                ->get($action)
-                ->setControlType('select')
-                ->setOptions($this->getSelectOptions(), false);
-        }
+        return $queryString['api_scope_id'];
     }
 
     private function getSelectOptions()
