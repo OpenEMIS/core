@@ -155,7 +155,7 @@ class RestfulV2Component extends Component implements RestfulInterface
                 ])
                 ->count();
 
-            // if the scope has no deny value, the restful call can return the result
+            // if the scope has no deny value, the restful call can return as authorized
             if ($denyActionCount == 0) {
                 return true;
             }
