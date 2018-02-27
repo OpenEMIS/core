@@ -10,10 +10,15 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Log\Log;
 
 class InstitutionCasesTable extends AppTable
 {
     // use OptionsTrait;
+     private $tableAlias = [
+        'StaffBehaviours' => 'Institution.StaffBehaviours',
+        'StudentAttendances' => 'Institution.InstitutionStudentAbsences'
+    ];
 
     public function initialize(array $config)
     {
@@ -30,7 +35,8 @@ class InstitutionCasesTable extends AppTable
         $this->addBehavior('AcademicPeriod.Period');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) 
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -42,13 +48,11 @@ class InstitutionCasesTable extends AppTable
 
         $module = $requestData->module;
 
-        if ($module == 'StaffBehaviours') {
-            $this->InstitutionCaseRecords->belongsTo('StaffBehaviours', [
-                'className' => 'Institution.StaffBehaviours',
-                'foreignKey' => 'record_id',
-                'conditions' => ['feature' => 'StaffBehaviours']
-            ]);
-        }
+        $this->InstitutionCaseRecords->belongsTo($module, [
+            'className' => $this->tableAlias[$module],
+            'foreignKey' => 'record_id',
+            'conditions' => ['feature' => $module]
+        ]);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -56,8 +60,16 @@ class InstitutionCasesTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
 
-        // module is hard coded to StaffBehaviours for now
-        // $module = $requestData->module;
+        $module = $requestData->module;
+        $listener = TableRegistry::get($this->tableAlias[$module]);
+        $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
+        
+        if ($event->isStopped()) {
+            return $event->result;
+        }
+        if (!empty($event->result)) {
+            $query = $event->result;
+        }
 
         $query
             ->select([
@@ -72,12 +84,6 @@ class InstitutionCasesTable extends AppTable
                 'comment' => 'WorkflowTransitions.comment',
                 'executed_by' => 'WorkflowTransitions.created_user_id',
                 'executed_date' => 'WorkflowTransitions.created',
-                'openemis_no' => 'Staff.openemis_no',
-                'Staff.first_name',
-                'Staff.middle_name',
-                'Staff.third_name',
-                'Staff.last_name',
-                'Staff.preferred_name',
                 'CreatedUser.first_name',
                 'CreatedUser.middle_name',
                 'CreatedUser.third_name',
@@ -91,13 +97,11 @@ class InstitutionCasesTable extends AppTable
                 'Institutions.Areas',
                 'Institutions.AreaAdministratives'
             ])
-            ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff')
             ->order([$this->aliasField('case_number')])
             ->formatResults(function ($results) {
                 $arrayRes = $results->toArray();
                 foreach ($arrayRes as &$arr) {
                     $this->log($arr, 'debug');
-                    $arr->staff_name = $arr['_matchingData']['Staff']['name'];
                     $arr->executed_by = $arr['_matchingData']['CreatedUser']['name'];
                 }
                 return $arrayRes;
@@ -110,6 +114,8 @@ class InstitutionCasesTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        $requestData = json_decode($settings['process']['params']);
+        $module = $requestData->module;
         $newFields = [];
 
         $newFields[] = [
@@ -210,20 +216,27 @@ class InstitutionCasesTable extends AppTable
             'label' => ''
         ];
 
-        $newFields[] = [
-            'key' => 'Users.openemis_no',
-            'field' => 'openemis_no',
-            'type' => 'string',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'Users.staff_name',
-            'field' => 'staff_name',
-            'type' => 'string',
-            'label' => ''
-        ];
+        $listener = TableRegistry::get($this->tableAlias[$module]);
+        $event = $listener->dispatchEvent('InstitutionCase.onIncludeCustomExcelFields', [$newFields], $listener);
+        
+        if ($event->isStopped()) {
+            return $event->result;
+        }
+        if (!empty($event->result)) {
+            $newFields = $event->result;
+        }
 
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetFullName(Event $event, Entity $entity)
+    {
+        $fullName = [];
+        ($entity->first_name) ? $fullName[] = $entity->first_name : '';
+        ($entity->middle_name) ? $fullName[] = $entity->middle_name : '';
+        ($entity->third_name) ? $fullName[] = $entity->third_name : '';
+        ($entity->last_name) ? $fullName[] = $entity->last_name : '';
+
+        return implode(' ', $fullName);
     }
 }
