@@ -81,20 +81,20 @@ class RestfulV1Component extends Component implements RestfulInterface
         // check if the scope is a stdObject, and converts to array
         // check if the scope is not a array, and converts to array
         if (is_object($scope)) {
-            $scope = get_object_vars($scope);
+            $scope = (array) $scope;
         } elseif (!is_array($scope)) {
             $scope = [$scope];
         }
 
         $scopeDenyValue = 0;
-
-        $securityEntity = $apiSecurities
+        $apiSecurityEntity = $apiSecurities
             ->find()
             ->where([$apiSecurities->aliasField('model') => $registryAlias])
             ->first();
 
         // default action for the table is not deny
-        if ($securityEntity->{$action} != $scopeDenyValue) {
+        // checking of null as other restful call is not using security entity other than API
+        if (!is_null($apiSecurityEntity) && $apiSecurityEntity->{$action} != $scopeDenyValue) {
             $denyActionCount = $apiSecuritiesScopes
                 ->find()
                 ->matching('ApiSecurities', function ($q) use ($registryAlias) {
@@ -119,7 +119,7 @@ class RestfulV1Component extends Component implements RestfulInterface
         }
 
         foreach ($scope as $value) {
-            $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
+            $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$value, $action, $extra], $this);
             if ($event->result) {
                 return $event->result;
             }
