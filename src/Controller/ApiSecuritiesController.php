@@ -99,7 +99,6 @@ class ApiSecuritiesController extends PageController
         $apiSecurityId = $entity->id;
         $apiScopeId = $this->getApiScopeId();
 
-        $apiScopeName = $this->ApiScopes->get($apiScopeId)->name;
         $page->addNew('api_scope_id')
             ->setLabel(__('API Scope'))
             ->setDisabled(true)
