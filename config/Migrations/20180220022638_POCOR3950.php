@@ -161,6 +161,21 @@ class POCOR3950 extends AbstractMigration
             ])
             ->save();
 
+        $credentialRows = $this->fetchAll('SELECT * FROM `api_credentials`');
+        $credentialScopeData = [];
+        foreach ($credentialRows as $row) {
+            $credentialScopeData[] = [
+                'api_credential_id' => $row['id'],
+                'api_scope_id' => 1,
+                'created_user_id' => 2,
+                'created' => '1990-01-01 00:00:00'
+            ];
+        }
+
+        $ApiCredentialsScopes
+            ->insert($credentialScopeData)
+            ->save();
+
         $ApiSecuritiesScopes = $this->table('api_securities_scopes', [
             'id' => false,
             'primary_key' => ['api_security_id', 'api_scope_id'],
@@ -229,8 +244,6 @@ class POCOR3950 extends AbstractMigration
         $ApiCredentials
             ->removeColumn('scope')
             ->save();
-
-        // $this->execute("UPDATE `api_credentials` SET `api_scope_id` = 1");
     }
 
     public function down()
