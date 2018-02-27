@@ -15,9 +15,29 @@ class AppraisalCriteriasTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->belongsTo('FieldTypes', ['className' => 'FieldTypes', 'foreignKey' => 'field_type_id']);
-        $this->hasOne('AppraisalSliders', ['className' => 'StaffAppraisal.AppraisalSliders', 'foreignKey' => 'appraisal_criteria_id']);
-        $this->hasOne('AppraisalComments', ['className' => 'StaffAppraisal.AppraisalComments', 'foreignKey' => 'appraisal_criteria_id']);
-        $this->hasMany('AppraisalFormsCriterias', ['className' => 'StaffAppraisal.AppraisalFormsCriterias', 'foreignKey' => 'appraisal_criteria_id']);
+        $this->hasOne('AppraisalSliders', ['className' => 'StaffAppraisal.AppraisalSliders', 'foreignKey' => 'appraisal_criteria_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('AppraisalForms', [
+            'className' => 'StaffAppraisal.AppraisalForms',
+            'foreignKey' => 'appraisal_criteria_id',
+            'targetForeignKey' => 'appraisal_form_id',
+            'joinTable' => 'appraisal_forms_criterias',
+            'through' => 'StaffAppraisal.AppraisalFormsCriterias',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+        $this->setDeleteStrategy('restrict');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        return $validator
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table',
+                'message' => __('Code must be unique')
+            ])
+            ->requirePresence('field_type_id', 'create');
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra) : void
@@ -27,15 +47,9 @@ class AppraisalCriteriasTable extends ControllerActionTable
         $this->field('field_type_id', ['type' => 'select']);
     }
 
-    public function validationDefault(Validator $validator)
-    {
-        return $validator->requirePresence('field_type_id', 'create');
-    }
-
     public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['onChangeReload'] = true;
             $fieldTypeOptions = $this->FieldTypes
                 ->find('list', [
                     'keyField' => 'id',
@@ -57,6 +71,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
                         break;
                 }
             }
+            $attr['onChangeReload'] = true;
             return $attr;
         }
     }
@@ -70,9 +85,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
     {
         $code = $entity->field_type->code;
         switch ($code) {
+            case 'TEXT':
+                // No implementation
+                break;
             case 'SLIDER':
                 $this->field('min', ['after' => 'field_type_id']);
                 $this->field('max', ['after' => 'min']);
+                $this->field('step', ['after' => 'max']);
                 break;
         }
     }
@@ -81,9 +100,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
     {
         $code = $entity->field_type->code;
         switch ($code) {
+            case 'TEXT':
+                // No implementation
+                break;
             case 'SLIDER':
                 $this->field('appraisal_slider.min', ['attr' => ['label' => __('Min'), 'required' => true]]);
                 $this->field('appraisal_slider.max', ['attr' => ['label' => __('Max'), 'required' => true]]);
+                $this->field('appraisal_slider.step', ['attr' => ['label' => __('Step'), 'required' => true]]);
                 break;
         }
     }
@@ -96,5 +119,10 @@ class AppraisalCriteriasTable extends ControllerActionTable
     public function onGetMax(Event $event, Entity $entity)
     {
         return strval($entity->appraisal_slider->max);
+    }
+
+    public function onGetStep(Event $event, Entity $entity)
+    {
+        return strval($entity->appraisal_slider->step);
     }
 }
