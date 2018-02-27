@@ -2,9 +2,9 @@
 namespace StaffAppraisal\Model\Table;
 
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class AppraisalSlidersTable extends AppTable
+class AppraisalSlidersTable extends ControllerActionTable
 {
     public function initialize(array $config) : void
     {
