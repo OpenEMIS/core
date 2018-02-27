@@ -84,9 +84,7 @@ class CredentialsController extends PageController
             ->setValue($clientId)
             ->setDisabled(true);
 
-        $page->move('client')
-            ->first();
-
+        $page->move('client')->first();
         $page->get('client_id')
             ->setControlType('hidden')
             ->setValue($clientId);
