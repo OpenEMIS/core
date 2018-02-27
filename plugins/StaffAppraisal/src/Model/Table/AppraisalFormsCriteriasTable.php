@@ -2,12 +2,12 @@
 namespace StaffAppraisal\Model\Table;
 
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use ArrayObject;
 use Cake\ORM\Entity;
+use App\Model\Table\ControllerActionTable;
 
-class AppraisalFormsCriteriasTable extends AppTable
+class AppraisalFormsCriteriasTable extends ControllerActionTable
 {
     public function initialize(array $config) : void
     {

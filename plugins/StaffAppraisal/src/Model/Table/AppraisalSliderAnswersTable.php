@@ -1,9 +1,9 @@
 <?php
 namespace StaffAppraisal\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class AppraisalSliderAnswersTable extends AppTable
+class AppraisalSliderAnswersTable extends ControllerActionTable
 {
     public function initialize(array $config) : void
     {
