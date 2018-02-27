@@ -31,19 +31,19 @@ class AppraisalSlidersTable extends AppTable
                 ],
                 'ruleCompare' => [
                     'rule' => ['compareValues', 'min'],
-                    'message' => __('Max value must be more than min value'),
+                    'message' => __('Max value must be greater than min value'),
                     'last' => true
                 ],
                 'ruleCompare' => [
                     'rule' => ['compareValues', 'step'],
-                    'message' => __('Max value must be more than step value'),
+                    'message' => __('Max value must be greater than step value'),
                     'last' => true
                 ]
             ])
             ->add('step', [
                 'ruleRange' => [
-                    'rule' => ['range', 0, 100],
-                    'message' => __('Value must be within 0 to 100')
+                    'rule' => ['range', 0, 9.99],
+                    'message' => __('Value must be within 0 to 9.99')
                 ]
             ]);
     }

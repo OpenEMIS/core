@@ -13,7 +13,8 @@ class AppraisalFormsCriteriasTable extends AppTable
     {
         parent::initialize($config);
         $this->belongsTo('AppraisalCriterias', ['className' => 'StaffAppraisal.AppraisalCriterias']);
-        $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalCriterias']);
+        $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
+
         if ($this->behaviors()->has('Reorder')) {
             $this->behaviors()->get('Reorder')->config([
                 'filter' => 'appraisal_form_id',
