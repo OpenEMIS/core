@@ -137,6 +137,8 @@ class AssessmentItemResultsTable extends AppTable
      */
     public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
     {
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+
         $query = $this
             ->find()
             ->select([
@@ -147,6 +149,13 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('marks')
             ])
             ->contain(['AssessmentGradingOptions'])
+            ->innerJoin([$SubjectStudents->alias() => $SubjectStudents->table()], [
+                $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                $SubjectStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $SubjectStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                $SubjectStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                $SubjectStudents->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
+            ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('assessment_id') => $assessmentId,
