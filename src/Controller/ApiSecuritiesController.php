@@ -87,11 +87,7 @@ class ApiSecuritiesController extends PageController
 
         $entity = $page->getData();
         $scopeEntity = $this->getScopeEntity();
-
-        $scopeName = '';
-        if (!is_null($scopeEntity)) {
-            $scopeName = $scopeEntity->name;
-        }
+        $scopeName = is_null($scopeEntity) ? '' : $scopeEntity->name;
 
         $page->addNew('api_scope')->setLabel(__('API Scope'))->setValue($scopeName);
         $page->move('api_scope')->after('name');
@@ -178,6 +174,7 @@ class ApiSecuritiesController extends PageController
     {
         $page = $this->Page;
         $key = $element->getKey();
+        // entity will be used from the renderering function passed in as index page will page an array
         $scopeEntity = $this->getScopeEntity($entity);
         $entityData = empty($scopeEntity) ? $entity : $scopeEntity->_joinData;
 
