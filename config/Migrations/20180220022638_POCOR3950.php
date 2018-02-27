@@ -259,6 +259,7 @@ class POCOR3950 extends AbstractMigration
                 'after' => 'public_key'
             ])
             ->save();
+            
         $this->execute("UPDATE `api_credentials` SET `scope` = 'API'");
     }
 }

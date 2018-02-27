@@ -27,7 +27,9 @@ class ApiScopesTable extends AppTable
             'joinTable' => 'api_securities_scopes',
             'foreignKey' => 'api_scope_id',
             'targetForeignKey' => 'api_security_id',
-            'through' => 'ApiSecuritiesScopes'
+            'through' => 'ApiSecuritiesScopes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
         ]);
     }
 }

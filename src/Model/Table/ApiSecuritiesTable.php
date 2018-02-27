@@ -15,9 +15,11 @@ class ApiSecuritiesTable extends AppTable
         parent::initialize($config);
 
         $this->belongsToMany('ApiScopes', [
-            'through' => 'ApiSecuritiesScopes',
+            'className' => 'ApiScopes',
+            'joinTable' => 'api_securities_scopes',
             'foreignKey' => 'api_security_id',
-            'targetForeignKey' => 'api_scope_id'
+            'targetForeignKey' => 'api_scope_id',
+            'through' => 'ApiSecuritiesScopes'
         ]);
     }
 

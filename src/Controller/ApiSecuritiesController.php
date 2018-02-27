@@ -164,7 +164,7 @@ class ApiSecuritiesController extends PageController
                     ->setRequired(true)
                     ->setOptions($this->getSelectOptions(), false);
             } else {
-                $page->addNew($scopeName . '_view')
+                $page->addNew($scopeName . '_name')
                     ->setLabel(Inflector::humanize($action))
                     ->setControlType('string')
                     ->setDisabled(true)
