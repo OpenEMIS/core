@@ -844,7 +844,8 @@ class PageComponent extends Component
                         Log::write('error', 'DisplayFrom: ' . $displayFrom . ' does not exists in $data');
                     } elseif ($displayFrom && array_key_exists($displayFrom, $data) && $callback) {
                         $value = $data[$displayFrom];
-                    } elseif ($entity->has($key)) {
+                    // } elseif ($entity->has($key)) {
+                    } elseif (array_key_exists($key, $data)) {
                         $value = $entity->{$key};
                         $selectOptions = $element->getOptions();
 

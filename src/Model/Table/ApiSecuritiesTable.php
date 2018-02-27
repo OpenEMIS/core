@@ -1,6 +1,9 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
@@ -11,39 +14,39 @@ class ApiSecuritiesTable extends AppTable
     {
         parent::initialize($config);
 
-        $this->belongsToMany('ApiCredentials', [
-            'through' => 'ApiSecuritiesCredentials',
+        $this->belongsToMany('ApiScopes', [
+            'through' => 'ApiSecuritiesScopes',
             'foreignKey' => 'api_security_id',
-            'targetForeignKey' => 'api_credential_id'
+            'targetForeignKey' => 'api_scope_id'
         ]);
     }
 
-    public function findOptionList(Query $query, array $options)
+    public function findIndex(Query $query, array $options)
     {
-        $ApiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+        $query->contain(['ApiScopes']);
+        return $query;
+    }
 
-        if (!empty($options['querystring'])) {
-            $apiScopeId = $options['querystring']['api_scope_id'];
-        }
+    public function findView(Query $query, array $options)
+    {
+        $query->contain(['ApiScopes']);
+        return $query;
+    }
 
-        if (!empty($apiScopeId)) {
-            $query
-                ->leftJoin(
-                    [$ApiSecuritiesScopes->alias() => $ApiSecuritiesScopes->table()],
-                    [
-                        [$this->aliasField('id = ') . $ApiSecuritiesScopes->aliasField('api_security_id')],
-                        [$ApiSecuritiesScopes->aliasField('api_scope_id = ') . $apiScopeId]
-                    ]
-                )
-                ->where(
-                    [$ApiSecuritiesScopes->aliasField('api_security_id') . ' IS NULL']
-                );
-        } else {
-            $query
-                ->where('1 = 0');
-        }
-        
+    public function findEdit(Query $query, array $options)
+    {
+        $query->contain(['ApiScopes']);
+        return $query;
+    }
 
-        return parent::findOptionList($query, $options);
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $tempScopeName = 'scopes';
+
+        $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+        $entity->{$tempScopeName}['api_security_id'] = $entity->id;
+
+        $scopeEntity = $apiSecuritiesScopes->newEntity($entity->{$tempScopeName});
+        $apiSecuritiesScopes->save($scopeEntity);
     }
 }

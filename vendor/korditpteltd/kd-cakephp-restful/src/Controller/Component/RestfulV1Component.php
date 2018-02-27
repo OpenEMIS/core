@@ -72,10 +72,59 @@ class RestfulV1Component extends Component implements RestfulInterface
 
         $request = $this->request;
         $extra = new ArrayObject(['request' => $request]);
-        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
-        if ($event->result) {
-            return $event->result;
+
+        // check if the scope has access to the action and the model
+        $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+        $apiSecurities = TableRegistry::get('ApiSecurities');
+        $registryAlias = $model->registryAlias();
+
+        // check if the scope is a stdObject, and converts to array
+        // check if the scope is not a array, and converts to array
+        if (is_object($scope)) {
+            $scope = get_object_vars($scope);
+        } elseif (!is_array($scope)) {
+            $scope = [$scope];
         }
+
+        $scopeDenyValue = 0;
+
+        $securityEntity = $apiSecurities
+            ->find()
+            ->where([$apiSecurities->aliasField('model') => $registryAlias])
+            ->first();
+
+        // default action for the table is not deny
+        if ($securityEntity->{$action} != $scopeDenyValue) {
+            $denyActionCount = $apiSecuritiesScopes
+                ->find()
+                ->matching('ApiSecurities', function ($q) use ($registryAlias) {
+                    return $q->where([
+                        'ApiSecurities.model' => $registryAlias
+                    ]);
+                })
+                ->matching('ApiScopes', function ($q) use ($scope) {
+                    return $q->where([
+                        'ApiScopes.name IN ' => $scope
+                    ]);
+                })
+                ->where([
+                    $apiSecuritiesScopes->aliasField($action) => $scopeDenyValue
+                ])
+                ->count();
+
+            // if the scope has no deny value, the restful call can return the result
+            if ($denyActionCount == 0) {
+                return true;
+            }
+        }
+
+        foreach ($scope as $value) {
+            $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
+            if ($event->result) {
+                return $event->result;
+            }
+        }
+        
         return false;
     }
 
