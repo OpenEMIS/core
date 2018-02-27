@@ -83,17 +83,23 @@ class ApiSecuritiesController extends PageController
     public function view($id)
     {
         $page = $this->Page;
-        $apiScopeId = $this->getApiScopeId();
-        
-        $page->addNew('api_scope')->setLabel('API Scope');
+        parent::view($id);
+
+        $entity = $page->getData();
+        $scopeEntity = $this->getScopeEntity();
+
+        $scopeName = '';
+        if (!is_null($scopeEntity)) {
+            $scopeName = $scopeEntity->name;
+        }
+
+        $page->addNew('api_scope')->setLabel(__('API Scope'))->setValue($scopeName);
         $page->move('api_scope')->after('name');
 
-        $scopeEntity = $this->ApiScopes->get($apiScopeId);
-        $scopeName = $scopeEntity->name;
-
-        $page->get('api_scope')->setValue($scopeName);
-
-        parent::view($id);
+        // $page->addNew('modified_user_id')->setValue($scopeData->modified_user_id);
+        // $page->addNew('modified')->setValue($scopeData->modified);
+        // $page->addNew('created_user_id')->setValue($scopeData->created_user_id);
+        // $page->addNew('created')->setValue($scopeData->created);
     }
 
     public function edit($id)
@@ -114,32 +120,22 @@ class ApiSecuritiesController extends PageController
 
         $page->move('api_scope_id')->after('name');
         $page->get('name')
-            ->setDisabled(true)
+            // ->setDisabled(true)
             ->setRequired(true);
 
         $tempScopeName = 'scopes';
         if ($this->request->is(['get'])) {
-            // default value retrieving is from the default action
-            $scopeData = $entity;
+            // if no scope data is found, will use the default action set in security table
+            $scopeEntity = $this->getScopeEntity();
+            $entityData = empty($scopeEntity) ? $entity : $scopeEntity->_joinData;
 
-            if (!empty($entity->api_scopes)) {
-                foreach ($entity->api_scopes as $key => $value) {
-                    if ($value->id == $apiScopeId) {
-                        // if record for the security id and the scope id is found,
-                        // data will be used from the record
-                        $scopeData = $value->_joinData;
-                        break;
-                    }
-                }
-            }
-
-            $entity->{$tempScopeName} = [
-                'index' => $scopeData->index,
-                'view' => $scopeData->view,
-                'add' => $scopeData->add,
-                'edit' => $scopeData->edit,
-                'delete' => $scopeData->delete,
-                'execute' => $scopeData->execute
+            $entityData->{$tempScopeName} = [
+                'index' => $entityData->index,
+                'view' => $entityData->view,
+                'add' => $entityData->add,
+                'edit' => $entityData->edit,
+                'delete' => $entityData->delete,
+                'execute' => $entityData->execute
             ];
         }
 
@@ -159,13 +155,13 @@ class ApiSecuritiesController extends PageController
             // set disabled and dropdown field based on default actions
             if ($isEnabled) {
                 $page->addNew($scopeName)
-                    ->setLabel(Inflector::humanize($action))
+                    ->setLabel(__(Inflector::humanize($action)))
                     ->setControlType('select')
                     ->setRequired(true)
                     ->setOptions($this->getSelectOptions(), false);
             } else {
                 $page->addNew($scopeName . '_name')
-                    ->setLabel(Inflector::humanize($action))
+                    ->setLabel(__(Inflector::humanize($action)))
                     ->setControlType('string')
                     ->setDisabled(true)
                     ->setRequired(true)
@@ -181,29 +177,28 @@ class ApiSecuritiesController extends PageController
     public function onRenderIcon(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
-
         $key = $element->getKey();
-        $keyValue = $entity->{$key};
-        $apiScopeId = $this->getApiScopeId();
+        $scopeEntity = $this->getScopeEntity($entity);
+        $entityData = empty($scopeEntity) ? $entity : $scopeEntity->_joinData;
 
         if ($page->is(['index', 'view'])) {
-            if ($keyValue == 0) {
+            if ($entityData->{$key} == 0) {
                 return "<i class='fa fa-close'></i>";
-            } else {
-                if (empty($entity->api_scopes)) {
-                    return "<i class='fa fa-check'></i>";
-                } else {
-                    foreach ($entity->api_scopes as $obj) {
-                        if ($obj->id == $apiScopeId) {
-                            $actionValue = $obj->_joinData->{$key};
+            }
+            return "<i class='fa fa-check'></i>";
+        }
+    }
 
-                            if ($actionValue == 0) {
-                                return "<i class='fa fa-close'></i>";
-                            }
-                        }
-                    }
-
-                    return "<i class='fa fa-check'></i>";
+    private function getScopeEntity($entity = null)
+    {
+        $page = $this->Page;
+        $entity = !is_null($entity) ? $entity : $page->getData();
+        $apiScopeId = $this->getApiScopeId();
+        
+        if (!empty($entity->api_scopes)) {
+            foreach ($entity->api_scopes as $obj) {
+                if ($obj->id == $apiScopeId) {
+                    return $obj;
                 }
             }
         }
