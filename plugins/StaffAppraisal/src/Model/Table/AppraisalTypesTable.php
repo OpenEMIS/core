@@ -13,6 +13,24 @@ class AppraisalTypesTable extends ControllerActionTable
     public function initialize(array $config) : void
     {
         parent::initialize($config);
+        $this->belongsToMany('AppraisalPeriods', [
+            'className' => 'StaffAppraisal.AppraisalPeriods',
+            'foreignKey' => 'appraisal_type_id',
+            'targetForeignKey' => 'appraisal_period_id',
+            'joinTable' => 'appraisal_periods_types',
+            'through' => 'StaffAppraisal.AppraisalPeriodsTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('InstitutionStaffAppraisals', ['className' => 'Institution.InstitutionStaffAppraisals', 'foreignKey' => 'appraisal_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->AppraisalPeriods->alias()
+        ];
     }
 }
