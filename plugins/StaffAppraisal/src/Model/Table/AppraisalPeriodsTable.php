@@ -95,7 +95,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
 
         $this->field('name');
         $this->field('appraisal_form_id', ['type' => 'readonly', 'value' => $entity->appraisal_form_id, 'attr' => ['value' => $entity->appraisal_form->name]]);
-        $this->field('appraisal_types', ['type' => 'readonly', 'value' => '', 'attr' => ['value' => $appraisalTypes]]);
+        $this->field('appraisal_types', ['type' => 'disabled', 'attr' => ['value' => $appraisalTypes]]);
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->academic_period_id, 'attr' => ['value' => $entity->academic_period->name]]);
     }
 
