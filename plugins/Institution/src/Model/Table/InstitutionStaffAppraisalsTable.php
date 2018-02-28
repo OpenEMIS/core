@@ -277,15 +277,6 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        // needed to save hasMany data
-        $options['associated'] = [
-            'AppraisalTextAnswers' => ['validate' => false],
-            'AppraisalSliderAnswers' => ['validate' => false]
-        ];
-    }
-
     private function setupTabElements()
     {
         $options['type'] = 'staff';
