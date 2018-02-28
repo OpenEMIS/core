@@ -512,6 +512,88 @@ class POCOR4340 extends AbstractMigration
                             ON z_staff_appr.`competency_set_id` = form_criterias.`appraisal_form_id`
                             AND z_results.`competency_id` = form_criterias.`appraisal_criteria_id`
                     ");
+
+        // security_functions
+        $securityFunctionsData = [
+            [
+                'id' => '5085',
+                'name' => 'Criterias',
+                'controller' => 'StaffAppraisals',
+                'module' => 'Administration',
+                'category' => 'Staff Appraisals',
+                'parent_id' => 5000,
+                '_view' => 'criterias.index|criterias.view',
+                '_edit' => 'criterias.edit',
+                '_add' => 'criterias.add',
+                '_delete' => 'criterias.remove',
+                'order' => '309',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '5086',
+                'name' => 'Forms',
+                'controller' => 'StaffAppraisals',
+                'module' => 'Administration',
+                'category' => 'Staff Appraisals',
+                'parent_id' => 5000,
+                '_view' => 'forms.index|forms.view',
+                '_edit' => 'forms.edit',
+                '_add' => 'forms.add',
+                '_delete' => 'forms.remove',
+                'order' => '310',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '5087',
+                'name' => 'Types',
+                'controller' => 'StaffAppraisals',
+                'module' => 'Administration',
+                'category' => 'Staff Appraisals',
+                'parent_id' => 5000,
+                '_view' => 'types.index|types.view',
+                '_edit' => 'types.edit',
+                '_add' => 'types.add',
+                '_delete' => 'types.remove',
+                'order' => '311',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'id' => '5088',
+                'name' => 'Periods',
+                'controller' => 'StaffAppraisals',
+                'module' => 'Administration',
+                'category' => 'Staff Appraisals',
+                'parent_id' => 5000,
+                '_view' => 'periods.index|periods.view',
+                '_edit' => 'periods.edit',
+                '_add' => 'periods.add',
+                '_delete' => 'periods.remove',
+                'order' => '312',
+                'visible' => 1,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+        ];
+        $this->insert('security_functions', $securityFunctionsData);
+
+        $institutionAppraisalsSql = "UPDATE security_functions
+                                SET `_view` = 'institutionStaffAppraisals.index|institutionStaffAppraisals.view|institutionStaffAppraisals.download',
+                                `_edit` = 'institutionStaffAppraisals.edit',
+                                `_add` = 'institutionStaffAppraisals.add',
+                                `_delete` = 'institutionStaffAppraisals.remove',
+                                `_execute` = null
+                                WHERE `id` = 3037";
+        $directoryAppraisalsSql = "UPDATE security_functions
+                                SET `_view` = 'StaffAppraisals.index|StaffAppraisals.view|StaffAppraisals.download'
+                                WHERE `id` = 7049";
+        $this->execute($institutionAppraisalsSql);
+        $this->execute($directoryAppraisalsSql);
     }
 
     public function down()
@@ -534,5 +616,20 @@ class POCOR4340 extends AbstractMigration
         $this->table('z_4340_staff_appraisals')->rename('staff_appraisals');
         $this->table('z_4340_staff_appraisals_competencies')->rename('staff_appraisals_competencies');
         $this->table('z_4340_staff_appraisal_types')->rename('staff_appraisal_types');
+
+        // security_functions
+        $this->execute("DELETE FROM `security_functions` WHERE `id` IN (5085,5086,5087,5088)");
+        $institutionAppraisalsSql = "UPDATE security_functions
+                                SET `_view` = 'StaffAppraisals.index|StaffAppraisals.view',
+                                `_edit` = 'StaffAppraisals.edit',
+                                `_add` = 'StaffAppraisals.add',
+                                `_delete` = 'StaffAppraisals.remove',
+                                `_execute` = 'StaffAppraisals.download'
+                                WHERE `id` = 3037";
+        $directoryAppraisalsSql = "UPDATE security_functions
+                                SET `_view` = 'StaffAppraisals.index|StaffAppraisals.view'
+                                WHERE `id` = 7049";
+        $this->execute($institutionAppraisalsSql);
+        $this->execute($directoryAppraisalsSql);
     }
 }
