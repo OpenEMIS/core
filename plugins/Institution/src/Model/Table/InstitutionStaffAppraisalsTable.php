@@ -21,8 +21,13 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('institution_staff_appraisals');
         parent::initialize($config);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);
+        $this->belongsTo('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods']);
+        $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -33,18 +38,13 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('OpenEmis.Section');
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
         $this->behaviors()->get('ControllerAction')->config(
             'actions.download.show',
             true
         );
-        $this->addBehavior('OpenEmis.Section');
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods']);
-        $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);
-        $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id']);
-        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id']);
     }
 
     public function validationDefault(Validator $validator)
@@ -52,18 +52,31 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         return $validator
             ->allowEmpty('file_content')
             ->add('from', [
-                    'ruleCompareDate' => [
-                        'rule' => ['compareDate', 'to', false]
-                    ]
-                ]);
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'message' => __('Date range is not within the academic period.')
+                ]
+            ])
+            ->add('to', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'message' => __('Date range is not within the academic period.')
+                ],
+                'ruleCompareDateReverse' => [
+                    'rule' => ['compareDateReverse', 'from', true],
+                    'message' => __('To Date should not be earlier than From Date')
+                ]
+            ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $userId = $this->request->query('user_id');
-        $staff = $this->Users->get($userId);
-        $this->staff = $staff;
-        $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
+        if ($this->action != 'download') {
+            $userId = $this->request->query('user_id');
+            $staff = $this->Users->get($userId);
+            $this->staff = $staff;
+            $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -75,6 +88,11 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field('appraisal_period_id', ['visible' => false]);
         $this->setFieldOrder(['appraisal_type_id', 'title', 'to', 'from', 'appraisal_form_id']);
         $this->setupTabElements();
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('staff_id') => $this->staff->id]);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -95,38 +113,33 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $entity->staff_id]);
         $this->field('title');
-        $this->field('academic_period_id', ['type' => 'disabled', 'attr' => ['value' => $entity->appraisal_period->academic_period->name]]);
+        $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period->academic_period_id, 'attr' => ['value' => $entity->appraisal_period->academic_period->name]]);
         $this->field('from');
         $this->field('to');
-        $this->field('staff_id', ['type' => 'hidden', 'value' => $entity->staff_id]);
-        $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
-        $this->field('appraisal_type_id', ['attr' => ['label' => __('Type'), 'value' => $entity->appraisal_type->name], 'value' => $entity->appraisal_type_id, 'type' => 'readonly']);
+        $this->field('appraisal_type_id', ['type' => 'readonly', 'value' => $entity->appraisal_type_id, 'attr' => ['label' => __('Type'), 'value' => $entity->appraisal_type->name]]);
         $this->field('appraisal_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period_id, 'attr' => ['value' => $entity->appraisal_period->period_form_name]]);
         $this->field('appraisal_form_id', ['type' => 'disabled', 'attr' => ['value' => $entity->appraisal_period->appraisal_form->name]]);
-
-        $this->field('file_content');
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $this->field('comment');
         $this->printAppraisalCustomField($entity->appraisal_period_id);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->staff->id]);
         $this->field('title');
         $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
         $this->field('from');
         $this->field('to');
-        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->staff->id]);
-        $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
         $this->field('appraisal_period_id', ['type' => 'select', 'options' => $this->periodList]);
         $this->field('appraisal_form_id', ['type' => 'disabled']);
-
-        $this->field('file_content');
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $this->field('comment');
-
         $appraisalPeriodId = $this->request->data($this->aliasField('appraisal_period_id'));
         $this->printAppraisalCustomField($appraisalPeriodId);
     }
@@ -143,12 +156,13 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             $showFunc
         );
         // End
+        $this->field('staff_id', ['visible' => false]);
         $this->field('title');
         $this->field('appraisal_period.academic_period.name', ['attr' => ['label' => __('Academic Period')]]);
         $this->field('from');
         $this->field('to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
-        $this->field('appraisal_period.period_form_name', ['attr' => ['label' => __('Appraisal Period')]]);
+        $this->field('appraisal_period_id');
         $this->field('appraisal_period.appraisal_form.name', ['attr' => ['label' => __('Appraisal Form')]]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -260,6 +274,15 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             }
             return $attr;
         }
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        // needed to save hasMany data
+        $options['associated'] = [
+            'AppraisalTextAnswers' => ['validate' => false],
+            'AppraisalSliderAnswers' => ['validate' => false]
+        ];
     }
 
     private function setupTabElements()
