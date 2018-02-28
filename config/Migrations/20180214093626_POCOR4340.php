@@ -594,6 +594,61 @@ class POCOR4340 extends AbstractMigration
                                 WHERE `id` = 7049";
         $this->execute($institutionAppraisalsSql);
         $this->execute($directoryAppraisalsSql);
+
+         // locale_contents
+        $localeContent = [
+            [
+                'en' => 'Code must be unique',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Value must be within 0 to 100',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Value must be within 0 to 9.99',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Max value must be greater than min value',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Max value must be greater than step value',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Please enter a unique name in the selected academic period',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Date Disabled should not be earlier than Date Enabled',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'To Date should not be earlier than From Date',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Slider Range Input',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+            [
+                'en' => 'Multi-line Text Input',
+                'created_user_id' => 1,
+                'created' => '2018-01-18 17:09:49'
+            ],
+        ];
+        $this->insert('locale_contents', $localeContent);
     }
 
     public function down()
