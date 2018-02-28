@@ -29,7 +29,7 @@ $this->start('panelBody');
 ?>
 <form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionSubjectStudentsCtrl as InstitutionSubjectStudentsController">
     <div class="alert {{InstitutionSubjectStudentsController.class}}" ng-hide="InstitutionSubjectStudentsController.message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionSubjectStudentsController.message}}s
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionSubjectStudentsController.message}}
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
