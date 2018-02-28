@@ -39,6 +39,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('Institution.StaffProfile'); // POCOR-4047 to get staff profile data
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
         $this->behaviors()->get('ControllerAction')->config(

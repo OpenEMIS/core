@@ -49,7 +49,7 @@ class InstitutionsController extends AppController
         'StaffUser',
         'StaffAccount',
         'StaffLeave',
-        'StaffAppraisals',
+        'institutionStaffAppraisals',
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
@@ -301,10 +301,6 @@ class InstitutionsController extends AppController
     public function Visits()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.InstitutionQualityVisits']);
-    }
-    public function StaffAppraisals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
     }
     public function Programmes()
     {
