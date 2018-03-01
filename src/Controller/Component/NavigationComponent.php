@@ -1404,11 +1404,11 @@ class NavigationComponent extends Component
                     'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
                 ],
 
-            'StaffAppraisals.criterias.index' => [
+            'StaffAppraisals.Criterias.index' => [
                 'title' => 'Appraisals',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'StaffAppraisal'],
-                'selected' => ['StaffAppraisals.criterias', 'StaffAppraisals.forms', 'StaffAppraisals.types', 'StaffAppraisals.periods']
+                'selected' => ['StaffAppraisals.Criterias', 'StaffAppraisals.Forms', 'StaffAppraisals.Types', 'StaffAppraisals.Periods']
             ],
 
             'Administration.Examinations' => [

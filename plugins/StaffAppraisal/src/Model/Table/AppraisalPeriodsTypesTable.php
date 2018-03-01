@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 
 class AppraisalPeriodsTypesTable extends AppTable
 {
-    public function initialize(array $config) : void
+    public function initialize(array $config)
     {
         parent::initialize($config);
         $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);

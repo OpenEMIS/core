@@ -10,7 +10,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config) : void
+    public function initialize(array $config)
     {
         parent::initialize($config);
         $this->belongsToMany('AppraisalPeriods', [
