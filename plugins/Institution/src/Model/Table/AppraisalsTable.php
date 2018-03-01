@@ -67,17 +67,10 @@ class AppraisalsTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'AppraisalTextAnswers' => function ($q) {
-                return $q
-                    ->innerJoinWith('AppraisalFormsCriterias')
-                    ->order(['AppraisalFormsCriterias.order']);
-            },
-            'AppraisalSliderAnswers' => function ($q) {
-                return $q
-                    ->innerJoinWith('AppraisalFormsCriterias')
-                    ->order(['AppraisalFormsCriterias.order']);
-            },
-            'AppraisalPeriods.AcademicPeriods', 'AppraisalPeriods.AppraisalForms', 'AppraisalTypes']);
+            'AppraisalTextAnswers', 'AppraisalSliderAnswers',
+            'AppraisalPeriods.AcademicPeriods', 'AppraisalPeriods.AppraisalForms',
+            'AppraisalTypes'
+        ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -116,7 +109,7 @@ class AppraisalsTable extends ControllerActionTable
             foreach ($appraisalCriterias as $key => $criteria) {
                 $details = new ArrayObject([
                     'appraisal_form_id' => $criteria->_joinData->appraisal_form_id,
-                    'appraisal_criteria_id' => $criteria->_joinData->,
+                    'appraisal_criteria_id' => $criteria->_joinData->appraisal_criteria_id,
                     'section' => $criteria->_joinData->section,
                     'field_type' => $criteria->code,
                     'criteria_name' => $criteria->name
