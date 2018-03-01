@@ -47,6 +47,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     ];
     Controller.assignedStudents = [];
     Controller.unassignedStudents = [];
+    Controller.originalAssignedStudents = [];
     Controller.educationSubjectName = '';
     Controller.teacherOptions = [];
     Controller.roomOptions = [];
@@ -154,6 +155,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                     this.push(toPush);
                 }, assignedStudents);
                 Controller.assignedStudents = assignedStudents;
+                Controller.originalAssignedStudents = assignedStudents.slice();
 
                 var promises = [];
                 promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(response.id, Controller.academicPeriodId, Controller.educationGradeId, Controller.institutionClassIds);
@@ -428,6 +430,17 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 }, unassignedStudentsArr);
 
                 Controller.unassignedStudents = Controller.unassignedStudents.concat(unassignedStudentsArr);
+
+                // if the class is removed but added back again in the same transaction
+                // recently unassigned students from that class will be added to the unassigned students list
+                var recentUnassignedStudentsArr = [];
+                for (var i = 0; i < Controller.originalAssignedStudents.length; ++i) {
+                    if (Controller.originalAssignedStudents[i]['institution_class_id'] == classDiff.value) {
+                        recentUnassignedStudentsArr.push(Controller.originalAssignedStudents[i]);
+                    }
+                }
+                Controller.unassignedStudents = Controller.unassignedStudents.concat(recentUnassignedStudentsArr);
+
                 if (typeof Controller.gridOptionsTop.api !== 'undefined') {
                     Controller.setTop(Controller.colDef, Controller.unassignedStudents);
                     Controller.gridOptionsTop.api.setRowData(Controller.unassignedStudents);

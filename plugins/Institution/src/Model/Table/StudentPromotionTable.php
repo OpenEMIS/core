@@ -604,56 +604,60 @@ class StudentPromotionTable extends AppTable
                     ->autoFields(true);
 
                 if ($students->count() > 0) {
-                    // have to see if these students have pending requests of any kind
+                    $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
                     $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+                    $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                    $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
                     $students = $students->toArray();
+
+                    $pendingAdmissionStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'PENDING');
+                    $pendingWithdrawStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
+                    $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
+
+                    // check if students have any pending requests
                     foreach ($students as $key => $value) {
-                        // at this point of time it is getting all requests - (admission requests)
+                        $totalCount = 0;
+
+                        // count pending admission requests
                         $conditions = [
                             'student_id' => $value->student_id,
-                            'status' => $StudentAdmissionTable::NEW_REQUEST,
+                            'status_id IN ' => $pendingAdmissionStatus,
                             'education_grade_id' => $value->education_grade_id,
                             'institution_id' => $value->institution_id,
-                            'type' => $StudentAdmissionTable::ADMISSION
+                            'academic_period_id' => $value->academic_period_id
                         ];
-
                         $admissionCount = $StudentAdmissionTable->find()
                             ->where($conditions)
                             ->count();
+                        $totalCount += $admissionCount;
 
-                        // at this point of time it is getting all requests - (transfer requests)
+                        // count pending transfer requests
                         $conditions = [
                             'student_id' => $value->student_id,
-                            'status' => $StudentAdmissionTable::NEW_REQUEST,
-                            'new_education_grade_id' => $value->education_grade_id,
+                            'status_id IN ' => $pendingTransferStatuses,
+                            'previous_education_grade_id' => $value->education_grade_id,
                             'previous_institution_id' => $value->institution_id,
-                            'type' => $StudentAdmissionTable::TRANSFER,
+                            'previous_academic_period_id' => $value->academic_period_id
                         ];
-
-                        $transferCount = $StudentAdmissionTable->find()
+                        $transferCount = $StudentTransfersTable->find()
                             ->where($conditions)
                             ->count();
+                        $totalCount += $transferCount;
 
-                        $students[$key]->admissionRequestCount = $admissionCount + $transferCount;
-                    }
-
-                    $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
-                    $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-                    $pendingStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
-                    foreach ($students as $key => $value) {
+                        // count pending withdraw requests
                         $conditions = [
                             'student_id' => $value->student_id,
-                            'status_id IN ' =>  $pendingStatus,
+                            'status_id IN ' =>  $pendingWithdrawStatus,
                             'education_grade_id' => $value->education_grade_id,
                             'institution_id' => $value->institution_id,
-                            'academic_period_id' => $value->academic_period_id,
+                            'academic_period_id' => $value->academic_period_id
                         ];
-
-                        $count = $StudentWithdrawTable->find()
+                        $withdrawCount = $StudentWithdrawTable->find()
                             ->where($conditions)
                             ->count();
+                        $totalCount += $withdrawCount;
 
-                        $students[$key]->withdrawRequestCount = $count;
+                        $students[$key]->pendingRequestsCount = $totalCount;
                     }
                 }
             }
