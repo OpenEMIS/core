@@ -97,6 +97,61 @@ class POCOR4410 extends AbstractMigration
                            WHERE `id` = 1047";
 
             $this->execute($contactsSql);
+
+            $records = [
+                [   'id' => '1010',
+                    'name' => 'Institution Contact Telephone',
+                    'code' => 'institution_contact_telephone',
+                    'type' => 'Custom Validation',
+                    'label' => 'Institution Contact Telephone',
+                    'value' => '',
+                    'default_value' => '',
+                    'editable' => '1',
+                    'visible' => '1',
+                    'field_type' => '',
+                    'option_type' => '',
+                    'modified_user_id' => '108',
+                    'modified' => '2014-04-02 16:48:24',
+                    'created_user_id' => '0',
+                    'created' => '1970-01-01 00:00:00'
+                ],
+                [
+                    'id' => '1011',
+                    'name' => 'Institution Contact Mobile',
+                    'code' => 'institution_contact_mobile',
+                    'type' => 'Custom Validation',
+                    'label' => 'Institution Contact Mobile',
+                    'value' => '',
+                    'default_value' => '',
+                    'editable' => '1',
+                    'visible' => '1',
+                    'field_type' => '',
+                    'option_type' => '',
+                    'modified_user_id' => '108',
+                    'modified' => '2014-04-02 16:48:24',
+                    'created_user_id' => '0',
+                    'created' => '1970-01-01 00:00:00'
+                ],
+                [
+                    'id' => '1012',
+                    'name' => 'Institution Contact Fax',
+                    'code' => 'institution_contact_fax',
+                    'type' => 'Custom Validation',
+                    'label' => 'Institution Contact Fax',
+                    'value' => '',
+                    'default_value' => '',
+                    'editable' => '1',
+                    'visible' => '1',
+                    'field_type' => '',
+                    'option_type' => '',
+                    'modified_user_id' => '108',
+                    'modified' => '2014-04-02 16:48:24',
+                    'created_user_id' => '0',
+                    'created' => '1970-01-01 00:00:00'
+                ],
+            ];
+
+            $this->insert('config_items', $records);
         }
  
 
@@ -114,6 +169,9 @@ class POCOR4410 extends AbstractMigration
                         `_delete` = NULL
                         WHERE `id` = 1047";
         
-        $this->execute($contactsSql);                
+        $this->execute($contactsSql);      
+        $this->execute('DELETE FROM `config_items` WHERE `id` = 1010');
+        $this->execute('DELETE FROM `config_items` WHERE `id` = 1011');
+        $this->execute('DELETE FROM `config_items` WHERE `id` = 1012');
     }
 }

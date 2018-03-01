@@ -14,7 +14,7 @@ class InstitutionContactsTable extends AppTable {
     {
         parent::initialize($config);
 
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
     }
 
     public function validationDefault(Validator $validator)
@@ -22,6 +22,26 @@ class InstitutionContactsTable extends AppTable {
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->allowEmpty('telephone')
+            ->add('telephone', 'ruleCustomTelephone', [
+                    'rule' => ['validateCustomPattern', 'institution_contact_telephone'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+
+            ->allowEmpty('mobile_number')
+            ->add('mobile_number', 'ruleCustomMobile', [
+                    'rule' => ['validateCustomPattern', 'institution_contact_mobile'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+
+            ->allowEmpty('fax')
+            ->add('fax', 'ruleCustomFax', [
+                    'rule' => ['validateCustomPattern', 'institution_contact_fax'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
             ->allowEmpty('email')
             ->add('email', [
                     'ruleValidEmail' => [
