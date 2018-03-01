@@ -38,8 +38,7 @@
 									<?php if ($action != 'reconfirm') { ?>
 									<td class="checkbox-column tooltip-orange">
 										<?php
-											$pendingRequestsCount = $obj->withdrawRequestCount + $obj->admissionRequestCount;
-											if ($pendingRequestsCount > 0) {
+											if ($obj->pendingRequestsCount > 0) {
 												echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$this->Label->get($ControllerAction['table']->alias().'.pendingRequest'). '"></i>';
 											} else {
 												$alias = $ControllerAction['table']->alias();

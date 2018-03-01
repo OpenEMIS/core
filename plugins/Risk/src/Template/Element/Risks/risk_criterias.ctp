@@ -42,7 +42,7 @@
                     <th><?= __('Criteria') ?></th>
                     <th><?= __('Operator') ?></th>
                     <th class="required"><label class="table-header-label"><?= __('Threshold') ?></label></th>
-                    <th class="required"><label class="table-header-label"><?= __('Index') ?></label></th>
+                    <th class="required"><label class="table-header-label"><?= __('Risk') ?></label></th>
                     <th></th>
                 </tr>
             </thead>
