@@ -76,8 +76,8 @@ class StaffProfileBehavior extends Behavior
                 ;
                 break;
 
-            case 'StaffAppraisals':
-                $query->contain(['AcademicPeriods'])
+            case 'InstitutionStaffAppraisals':
+                $query->contain(['AppraisalPeriods.AcademicPeriods'])
                     ->where([
                         $model->aliasField('created_user_id') => $staffId,
                         'AcademicPeriods.start_date <= ' => $newStartDate
