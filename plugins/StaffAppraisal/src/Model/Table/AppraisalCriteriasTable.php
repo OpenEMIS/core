@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalCriteriasTable extends ControllerActionTable
 {
-    public function initialize(array $config) : void
+    public function initialize(array $config)
     {
         parent::initialize($config);
         $this->belongsTo('FieldTypes', ['className' => 'FieldTypes', 'foreignKey' => 'field_type_id']);
@@ -40,48 +40,12 @@ class AppraisalCriteriasTable extends ControllerActionTable
             ->requirePresence('field_type_id', 'create');
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) : void
-    {
-        $this->field('code');
-        $this->field('name');
-        $this->field('field_type_id', ['type' => 'select']);
-    }
-
-    public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $fieldTypeOptions = $this->FieldTypes
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'code'
-                ])
-                ->order([$this->FieldTypes->aliasField('id')])
-                ->toArray();
-
-            $fieldTypeId = $request->data($this->aliasField('field_type_id'));
-            if (isset($fieldTypeOptions[$fieldTypeId])) {
-                switch ($fieldTypeOptions[$fieldTypeId]) {
-                    case 'TEXT':
-                        // No implementation
-                        break;
-                    case 'SLIDER':
-                        $this->field('appraisal_slider.min', ['attr' => ['label' => __('Min'), 'required' => true]]);
-                        $this->field('appraisal_slider.max', ['attr' => ['label' => __('Max'), 'required' => true]]);
-                        $this->field('appraisal_slider.step', ['attr' => ['label' => __('Step'), 'required' => true]]);
-                        break;
-                }
-            }
-            $attr['onChangeReload'] = true;
-            return $attr;
-        }
-    }
-
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) : void
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['FieldTypes', 'AppraisalSliders']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) : void
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $code = $entity->field_type->code;
         switch ($code) {
@@ -96,19 +60,64 @@ class AppraisalCriteriasTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) : void
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $code = $entity->field_type->code;
-        switch ($code) {
-            case 'TEXT':
-                // No implementation
-                break;
-            case 'SLIDER':
-                $this->field('appraisal_slider.min', ['attr' => ['label' => __('Min'), 'required' => true]]);
-                $this->field('appraisal_slider.max', ['attr' => ['label' => __('Max'), 'required' => true]]);
-                $this->field('appraisal_slider.step', ['attr' => ['label' => __('Step'), 'required' => true]]);
-                break;
+        $this->field('code');
+        $this->field('name');
+        $this->field('field_type_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+    }
+
+    public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $fieldTypeOptions = $this->FieldTypes
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code'
+                ])
+                ->order([$this->FieldTypes->aliasField('id')])
+                ->toArray();
+
+            $entity = $attr['entity'];
+            $fieldTypeId = $entity->field_type_id;
+
+            if (!$entity->isNew()) { // edit not allow to change field type
+                $attr['type'] = 'readonly';
+                $attr['value'] = $fieldTypeId;
+                $attr['attr']['value'] = $entity->field_type->name;
+            }
+
+            if (isset($fieldTypeOptions[$fieldTypeId])) {
+                switch ($fieldTypeOptions[$fieldTypeId]) {
+                    case 'TEXT':
+                        // No implementation
+                        break;
+                    case 'SLIDER':
+                        $this->field('appraisal_slider.min', [
+                            'type' => 'integer',
+                            'attr' => ['label' => __('Min'),
+                            'required' => true
+                        ]]);
+                        $this->field('appraisal_slider.max', [
+                            'type' => 'integer',
+                            'attr' => ['label' => __('Max'),
+                            'required' => true]
+                        ]);
+                        $this->field('appraisal_slider.step', [
+                            'type' => 'integer',
+                            'attr' => ['label' => __('Step'),
+                            'required' => true]
+                        ]);
+                        break;
+                }
+            }
+            $attr['onChangeReload'] = true;
         }
+
+        return $attr;
     }
 
     public function onGetMin(Event $event, Entity $entity)
