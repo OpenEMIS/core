@@ -74,6 +74,8 @@ class POCOR4410 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('institution_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
 
             // MIGRATE ALL THE OLD CONTACTS DETAILS OVER FROM INSTITUTION
