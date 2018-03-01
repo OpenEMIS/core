@@ -99,17 +99,10 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'AppraisalTextAnswers' => function ($q) {
-                return $q
-                    ->innerJoinWith('AppraisalFormsCriterias')
-                    ->order(['AppraisalFormsCriterias.order']);
-            },
-            'AppraisalSliderAnswers' => function ($q) {
-                return $q
-                    ->innerJoinWith('AppraisalFormsCriterias')
-                    ->order(['AppraisalFormsCriterias.order']);
-            },
-            'AppraisalPeriods.AcademicPeriods', 'AppraisalPeriods.AppraisalForms', 'AppraisalTypes']);
+            'AppraisalTextAnswers', 'AppraisalSliderAnswers',
+            'AppraisalPeriods.AcademicPeriods', 'AppraisalPeriods.AppraisalForms',
+            'AppraisalTypes'
+        ]);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -180,7 +173,8 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
             $criteriaCounter = new ArrayObject();
             foreach ($appraisalCriterias as $key => $criteria) {
                 $details = new ArrayObject([
-                    'appraisal_forms_criteria_id' => $criteria->_joinData->id,
+                    'appraisal_form_id' => $criteria->_joinData->appraisal_form_id,
+                    'appraisal_criteria_id' => $criteria->_joinData->appraisal_criteria_id,
                     'section' => $criteria->_joinData->section,
                     'field_type' => $criteria->code,
                     'criteria_name' => $criteria->name
@@ -215,7 +209,10 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
                 $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'text', 'attr' => ['label' => $details['criteria_name']]]);
                 break;
         }
-        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode]++.'.appraisal_forms_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_forms_criteria_id']]);
+        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
+        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
+
+        $criteriaCounter[$fieldTypeCode]++;
     }
 
     private function getAppraisalPeriods($academicPeriodId, $appraisalTypeId)
