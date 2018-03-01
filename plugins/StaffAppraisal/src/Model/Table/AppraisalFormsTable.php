@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalFormsTable extends ControllerActionTable
 {
-    public function initialize(array $config) : void
+    public function initialize(array $config)
     {
         parent::initialize($config);
         $this->belongsToMany('AppraisalCriterias', [
@@ -24,6 +24,7 @@ class AppraisalFormsTable extends ControllerActionTable
             'cascadeCallbacks' => true,
             'sort' => 'AppraisalFormsCriterias.order'
         ]);
+        $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
     }

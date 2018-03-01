@@ -31,25 +31,25 @@ class StaffAppraisalsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    private function getAppraisalsTabElements() : void
+    private function getAppraisalsTabElements()
     {
         $plugin = $this->plugin;
         $name = $this->name;
         $tabElements = [
-            'criterias' => [
-                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'criterias'],
+            'Criterias' => [
+                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Criterias'],
                 'text' => __('Criterias')
             ],
-            'forms' => [
-                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'forms'],
+            'Forms' => [
+                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Forms'],
                 'text' => __('Forms')
             ],
-            'types' => [
-                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'types'],
+            'Types' => [
+                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Types'],
                 'text' => __('Types')
             ],
-            'periods' => [
-                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'periods'],
+            'Periods' => [
+                'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Periods'],
                 'text' => __('Periods')
             ]
         ];
