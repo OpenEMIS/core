@@ -495,6 +495,7 @@ class POCOR4340 extends AbstractMigration
                         INNER JOIN `institution_staff` staff ON z_staff_appr.`staff_id` = staff.`staff_id`
                         INNER JOIN `staff_statuses` statuses ON staff.`staff_status_id` = statuses.`id`
                         WHERE statuses.`code` = 'ASSIGNED'
+                        GROUP BY z_staff_appr.`id`
                     ");
 
         // appraisal_slider_answers
