@@ -560,7 +560,7 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.Assessments', 'Institutions.Results'],
                     'params' => ['plugin' => 'Institution'],
                 ],
-        
+
                 'Institutions.Risks.index' => [
                 'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',
@@ -885,7 +885,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
                 'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals'],
+                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.InstitutionStaffAppraisals'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1270,7 +1270,7 @@ class NavigationComponent extends Component
                     'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit', 'Notices.delete']
                 ],
                 'Risks.Risks' => [
-                    'title' => 'Risks', 
+                    'title' => 'Risks',
                     'parent' => 'SystemSetup',
                     'params' => ['plugin' => 'Risk'],
                     'selected' => ['Risks.Risks']
@@ -1403,6 +1403,13 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Assessment'],
                     'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
                 ],
+
+            'StaffAppraisals.Criterias.index' => [
+                'title' => 'Appraisals',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'StaffAppraisal'],
+                'selected' => ['StaffAppraisals.Criterias', 'StaffAppraisals.Forms', 'StaffAppraisals.Types', 'StaffAppraisals.Periods']
+            ],
 
             'Administration.Examinations' => [
                     'title' => 'Examinations',
