@@ -287,6 +287,6 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'institutionStaffAppraisals');
+        $this->controller->set('selectedAction', 'InstitutionStaffAppraisals');
     }
 }

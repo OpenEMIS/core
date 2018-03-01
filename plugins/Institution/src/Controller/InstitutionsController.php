@@ -49,7 +49,7 @@ class InstitutionsController extends AppController
         'StaffUser',
         'StaffAccount',
         'StaffLeave',
-        'institutionStaffAppraisals',
+        'InstitutionStaffAppraisals',
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
@@ -179,7 +179,7 @@ class InstitutionsController extends AppController
 
     // CAv4
 
-    public function institutionStaffAppraisals()
+    public function InstitutionStaffAppraisals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAppraisals']);
     }

@@ -58,22 +58,22 @@ class StaffAppraisalsController extends AppController
         $this->set('selectedAction', $this->request->param('action'));
     }
 
-    public function criterias()
+    public function Criterias()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalCriterias']);
     }
 
-    public function forms()
+    public function Forms()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalForms']);
     }
 
-    public function types()
+    public function Types()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalTypes']);
     }
 
-    public function periods()
+    public function Periods()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalPeriods']);
     }
