@@ -46,14 +46,4 @@ class InstitutionContactsController extends PageController
         $page = $this->Page;
         $page->exclude(['institution_id']);
     }
-
-    public function add()
-    {
-        parent::add();
-    }
-
-    public function edit($id)
-    {
-        parent::edit($id);
-    }
 }
