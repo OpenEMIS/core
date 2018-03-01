@@ -218,7 +218,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode]++.'.appraisal_forms_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_forms_criteria_id']]);
     }
 
-    private function getAppraisalPeriods($academicPeriodId, $appraisalTypeId) : array
+    private function getAppraisalPeriods($academicPeriodId, $appraisalTypeId)
     {
         return $this->AppraisalPeriods->find()
             ->innerJoinWith('AppraisalTypes')
