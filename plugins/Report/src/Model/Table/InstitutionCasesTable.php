@@ -14,11 +14,7 @@ use Cake\Log\Log;
 
 class InstitutionCasesTable extends AppTable
 {
-    // use OptionsTrait;
-     private $tableAlias = [
-        'StaffBehaviours' => 'Institution.StaffBehaviours',
-        'StudentAttendances' => 'Institution.InstitutionStudentAbsences'
-    ];
+    private $features = [];
 
     public function initialize(array $config)
     {
@@ -33,9 +29,12 @@ class InstitutionCasesTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('AcademicPeriod.Period');
+
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) 
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->alias(),
@@ -49,7 +48,7 @@ class InstitutionCasesTable extends AppTable
         $module = $requestData->module;
 
         $this->InstitutionCaseRecords->belongsTo($module, [
-            'className' => $this->tableAlias[$module],
+            'className' => $this->features[$module],
             'foreignKey' => 'record_id',
             'conditions' => ['feature' => $module]
         ]);
@@ -61,7 +60,7 @@ class InstitutionCasesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
 
         $module = $requestData->module;
-        $listener = TableRegistry::get($this->tableAlias[$module]);
+        $listener = TableRegistry::get($this->features[$module]);
         $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
         
         if ($event->isStopped()) {
@@ -216,7 +215,7 @@ class InstitutionCasesTable extends AppTable
             'label' => ''
         ];
 
-        $listener = TableRegistry::get($this->tableAlias[$module]);
+        $listener = TableRegistry::get($this->features[$module]);
         $event = $listener->dispatchEvent('InstitutionCase.onIncludeCustomExcelFields', [$newFields], $listener);
         
         if ($event->isStopped()) {
