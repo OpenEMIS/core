@@ -115,7 +115,8 @@ class AppraisalsTable extends ControllerActionTable
             $criteriaCounter = new ArrayObject();
             foreach ($appraisalCriterias as $key => $criteria) {
                 $details = new ArrayObject([
-                    'appraisal_forms_criteria_id' => $criteria->_joinData->id,
+                    'appraisal_form_id' => $criteria->_joinData->appraisal_form_id,
+                    'appraisal_criteria_id' => $criteria->_joinData->,
                     'section' => $criteria->_joinData->section,
                     'field_type' => $criteria->code,
                     'criteria_name' => $criteria->name
@@ -150,6 +151,9 @@ class AppraisalsTable extends ControllerActionTable
                 $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'text', 'attr' => ['label' => $details['criteria_name']]]);
                 break;
         }
-        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode]++.'.appraisal_forms_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_forms_criteria_id']]);
+        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
+        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
+
+        $criteriaCounter[$fieldTypeCode]++;
     }
 }
