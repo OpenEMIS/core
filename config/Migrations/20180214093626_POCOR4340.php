@@ -66,14 +66,13 @@ class POCOR4340 extends AbstractMigration
 
         $table = $this->table('appraisal_forms_criterias', [
             'id' => false,
-            'primary_key' => ['id'],
+            'primary_key' => ['appraisal_form_id', 'appraisal_criteria_id'],
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the list of criterias linked to a specific staff appraisal form'
         ]);
         $table
-            ->addColumn('id', 'biginteger', [
-                'identity' => true,
-                'signed' => false,
+            ->addColumn('id', 'string', [
+                'limit' => 64,
                 'null' => false
             ])
             ->addColumn('appraisal_form_id', 'integer', [
@@ -89,18 +88,6 @@ class POCOR4340 extends AbstractMigration
                 'limit' => 250
             ])
             ->addColumn('order', 'integer', [
-                'null' => false
-            ])
-            ->addColumn('modified_user_id', 'integer', [
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
                 'null' => false
             ])
             ->addIndex('appraisal_form_id')
@@ -167,14 +154,18 @@ class POCOR4340 extends AbstractMigration
 
         $table = $this->table('appraisal_slider_answers', [
             'id' => false,
-            'primary_key' => ['appraisal_forms_criteria_id', 'institution_staff_appraisal_id'],
+            'primary_key' => ['appraisal_form_id', 'appraisal_criteria_id', 'institution_staff_appraisal_id'],
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the slider answers recorded for a specific institution staff appraisal'
         ]);
         $table
-            ->addColumn('appraisal_forms_criteria_id', 'integer', [
+            ->addColumn('appraisal_form_id', 'integer', [
                 'null' => false,
-                'comment' => 'links to appraisal_forms_criterias.id'
+                'comment' => 'links to appraisal_forms.id'
+            ])
+            ->addColumn('appraisal_criteria_id', 'integer', [
+                'null' => false,
+                'comment' => 'links to appraisal_criterias.id'
             ])
             ->addColumn('institution_staff_appraisal_id', 'integer', [
                 'null' => false,
@@ -197,7 +188,8 @@ class POCOR4340 extends AbstractMigration
             ->addColumn('created', 'datetime', [
                 'null' => false
             ])
-            ->addIndex('appraisal_forms_criteria_id')
+            ->addIndex('appraisal_form_id')
+            ->addIndex('appraisal_criteria_id')
             ->addIndex('institution_staff_appraisal_id')
             ->save();
 
@@ -232,14 +224,18 @@ class POCOR4340 extends AbstractMigration
 
         $table = $this->table('appraisal_text_answers', [
             'id' => false,
-            'primary_key' => ['appraisal_forms_criteria_id', 'institution_staff_appraisal_id'],
+            'primary_key' => ['appraisal_form_id', 'appraisal_criteria_id', 'institution_staff_appraisal_id'],
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the text answers recorded for a specific institution staff appraisal'
         ]);
         $table
-            ->addColumn('appraisal_forms_criteria_id', 'integer', [
+            ->addColumn('appraisal_form_id', 'integer', [
                 'null' => false,
-                'comment' => 'links to appraisal_forms_criterias.id'
+                'comment' => 'links to appraisal_forms.id'
+            ])
+            ->addColumn('appraisal_criteria_id', 'integer', [
+                'null' => false,
+                'comment' => 'links to appraisal_criterias.id'
             ])
             ->addColumn('institution_staff_appraisal_id', 'integer', [
                 'null' => false,
@@ -260,7 +256,8 @@ class POCOR4340 extends AbstractMigration
             ->addColumn('created', 'datetime', [
                 'null' => false
             ])
-            ->addIndex('appraisal_forms_criteria_id')
+            ->addIndex('appraisal_form_id')
+            ->addIndex('appraisal_criteria_id')
             ->addIndex('institution_staff_appraisal_id')
             ->save();
 
@@ -394,13 +391,12 @@ class POCOR4340 extends AbstractMigration
 
         // appraisal_forms_criterias
         $this->execute("INSERT INTO `appraisal_forms_criterias`
-                            (`appraisal_form_id`, `appraisal_criteria_id`, `order`, `created_user_id`, `created`)
+                            (`id`, `appraisal_form_id`, `appraisal_criteria_id`, `order`)
                         SELECT
+                            sha2(CONCAT(z_comp_sets_comp.`competency_set_id`, ',', z_comp_sets_comp.`competency_id`), '256'),
                             z_comp_sets_comp.`competency_set_id`,
                             z_comp_sets_comp.`competency_id`,
-                            z_comp.`order`,
-                            1,
-                            NOW()
+                            z_comp.`order`
                         FROM `z_4340_competency_sets_competencies` z_comp_sets_comp
                         INNER JOIN `z_4340_competencies` z_comp ON z_comp_sets_comp.`competency_id` = z_comp.`id`");
 
@@ -500,9 +496,10 @@ class POCOR4340 extends AbstractMigration
 
         // appraisal_slider_answers
         $this->execute("INSERT INTO `appraisal_slider_answers`
-                        (`appraisal_forms_criteria_id`, `institution_staff_appraisal_id`, `answer`, `created_user_id`, `created`)
+                        (`appraisal_form_id`, `appraisal_criteria_id`, `institution_staff_appraisal_id`, `answer`, `created_user_id`, `created`)
                         SELECT
-                            form_criterias.`id`,
+                            form_criterias.`appraisal_form_id`,
+                            form_criterias.`appraisal_criteria_id`,
                             z_results.`staff_appraisal_id`,
                             z_results.`rating`,
                             1,
