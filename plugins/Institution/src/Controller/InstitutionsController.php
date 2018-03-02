@@ -910,8 +910,6 @@ class InstitutionsController extends AppController
             } else {
                 $session->delete('Institution.Institutions.id');
             }
-        } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'view' && isset($this->request->pass[1])) {
-            $this->request->params['institutionId'] = $this->request->pass[1];
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         } elseif ($action == 'StaffUser') {
@@ -923,8 +921,16 @@ class InstitutionsController extends AppController
             || $action == 'dashboard'
             || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
-            if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
+            if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
                 $id = $this->request->pass[0];
+                $id = $this->ControllerAction->paramsDecode($id)['id'];
+                $this->checkInstitutionAccess($id, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $id);
+            } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && (in_array($this->request->pass[0], ['view', 'edit']))) {
+                $id = $this->request->pass[1];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {

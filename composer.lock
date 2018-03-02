@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "40c973c91520439796451048e442d574",
+    "content-hash": "7e7259940602fe460fcbf60d678476af",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -389,14 +389,14 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-page",
-            "version": "1.3.5",
+            "version": "1.3.7",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git",
-                "reference": "3b065cdbf94ce6435cb500f121cceb889f342881"
+                "reference": "eb75952b188da28d76e2dedc1a40a8ac502806b1"
             },
             "require": {
-                "cakephp/cakephp": ">=3.3.0 <3.5"
+                "cakephp/cakephp": ">=3.3.0"
             },
             "require-dev": {
                 "cakephp/cakephp-codesniffer": "^2.3",
@@ -427,15 +427,15 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
             },
-            "time": "2017-10-28T06:14:42+00:00"
+            "time": "2018-02-23T05:26:16+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
-            "version": "1.1.x-dev",
+            "version": "1.1.6",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "742037629875de54e30481e8fe70146fd6f6ac8f"
+                "reference": "f00a67306a24841423eb7b49efcf251cb1096974"
             },
             "require": {
                 "admad/cakephp-jwt-auth": "^2.0",
@@ -482,15 +482,15 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2017-10-05T09:11:36+00:00"
+            "time": "2017-10-10T07:18:05+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "1.2.x-dev",
+            "version": "1.2.10",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "9ed8a58ce87fac1dd4f4c47666dced7324395988"
+                "reference": "ae6717d4e3f02371059598d0dfe6c8288830b2be"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -527,15 +527,15 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-07-11T07:25:42+00:00"
+            "time": "2017-09-26T07:12:55+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
-            "version": "v1.0.8",
+            "version": "1.0.9",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
-                "reference": "7ceeb16332bc4d936e244972d9729c0cc3d026f3"
+                "reference": "55ea0f36a55cf4a9d962668f1b594f3614d64206"
             },
             "require": {
                 "cakephp/cakephp": ">3.1.0"
@@ -565,7 +565,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
             },
-            "time": "2017-03-21T08:52:27+00:00"
+            "time": "2017-08-04T02:04:41+00:00"
         },
         {
             "name": "mk-j/php_xlsxwriter",
@@ -3925,8 +3925,6 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "phpoffice/phpexcel": 20,
-        "korditpteltd/kd-cakephp-restful": 20,
-        "korditpteltd/kd-cakephp-sso": 20,
         "psy/psysh": 0
     },
     "prefer-stable": true,
