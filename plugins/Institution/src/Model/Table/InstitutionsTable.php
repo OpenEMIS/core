@@ -489,6 +489,7 @@ class InstitutionsTable extends ControllerActionTable
         if ($this->action == 'edit') {
             // Moved to InstitutionContacts
             $this->field('contact_section', ['visible' => false]);
+            $this->field('contact_person', ['visible' => false]);
             $this->field('telephone', ['visible' => false]);
             $this->field('fax', ['visible' => false]);
             $this->field('email', ['visible' => false]);

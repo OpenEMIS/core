@@ -42,6 +42,7 @@ class InstitutionContactPersonsTable extends AppTable {
                     'provider' => 'table',
                     'last' => true
                 ])
+            ->notEmpty('preferred')
             ->allowEmpty('email')
             ->add('email', [
                     'ruleValidEmail' => [
@@ -49,4 +50,35 @@ class InstitutionContactPersonsTable extends AppTable {
                     ]
                 ]);
     }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->dirty('preferred')) {
+            if ($entity->preferred == 1) { 
+
+                $this->updateAll(
+                    ['preferred' => 0],
+                    ['id <> ' => $entity->id]
+                 );
+
+                $this->Institutions->updateAll(
+                    ['contact_person' => $entity->contact_person],
+                    ['id' => $entity->institution_id]
+                 );
+            } else {
+
+                $query = $this->find()
+                        ->where(['preferred' => 1])
+                        ->first();
+
+                if(!$query) {
+                    $this->Institutions->updateAll(
+                        ['contact_person' => null],
+                        ['id' => $entity->institution_id]
+                     );
+
+                }
+            }
+        }
+    } 
 }
