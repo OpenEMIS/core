@@ -234,7 +234,7 @@ class POCOR3950 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('api_security_id')
-            ->addIndex('api_credential_id')
+            ->addIndex('api_scope_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
