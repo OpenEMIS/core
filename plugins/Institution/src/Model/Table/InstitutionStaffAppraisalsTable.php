@@ -87,7 +87,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('appraisal_period_id', ['visible' => false]);
-        $this->setFieldOrder(['appraisal_type_id', 'title', 'to', 'from', 'appraisal_form_id']);
+        $this->setFieldOrder(['appraisal_type_id', 'title', 'from', 'to', 'appraisal_form_id']);
         $this->setupTabElements();
     }
 
@@ -203,7 +203,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
                 $step = $criteria->appraisal_slider->step;
                 $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'slider', 'max' => $max, 'min' => $min, 'step' => $step, 'attr' => ['label' => $details['criteria_name']]]);
                 break;
-            case 'TEXT':
+            case 'TEXTAREA':
                 $details['key'] = 'appraisal_text_answers';
                 $details[$fieldTypeCode] = null;
                 $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'text', 'attr' => ['label' => $details['criteria_name']]]);
