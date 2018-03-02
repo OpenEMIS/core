@@ -165,7 +165,7 @@ class POCOR4214 extends AbstractMigration
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 11');
 
         $this->insert('security_functions', [
-            'id' => 1063,
+            'id' => 1083,
             'name' => 'Infrastructure Need',
             'controller' => 'InfrastructureNeeds',
             'module' => 'Institutions',
