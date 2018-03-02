@@ -82,6 +82,20 @@ class DirectoriesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
+        if ($primary) {
+            $schema = $this->schema();
+            $fields = $schema->columns();
+            foreach ($fields as $key => $field) {
+                if ($schema->column($field)['type'] == 'binary') {
+                    unset($fields[$key]);
+                }
+            }
+            return $query->select($fields);
+        }
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -651,9 +665,24 @@ class DirectoriesTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'MainNationalities',
-            'MainIdentityTypes',
-            'Genders'
+            'MainNationalities' => [
+                'fields' => [
+                    'MainNationalities.id',
+                    'MainNationalities.name'
+                ]
+            ],
+            'MainIdentityTypes'  => [
+                'fields' => [
+                    'MainIdentityTypes.id',
+                    'MainIdentityTypes.name'
+                ]
+            ],
+            'Genders' => [
+                'fields' => [
+                    'Genders.id',
+                    'Genders.name'
+                ]
+            ]
         ]);
     }
 
@@ -738,10 +767,8 @@ class DirectoriesTable extends ControllerActionTable
                 ->where([
                     $InstitutionStudentTable->aliasField('student_id') => $userId,
                 ])
-                ->distinct(['id'])
                 ->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
-                ->order(['(CASE WHEN '.$InstitutionStudentTable->aliasField('modified').' IS NOT NULL THEN '.$InstitutionStudentTable->aliasField('modified').' ELSE '.
-                $InstitutionStudentTable->aliasField('created').' END) DESC'])
+                ->order([$InstitutionStudentTable->aliasField('start_date') => 'DESC'])
                 ->first();
 
             $value = '';

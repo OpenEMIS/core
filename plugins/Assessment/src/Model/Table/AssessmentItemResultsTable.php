@@ -27,7 +27,7 @@ class AssessmentItemResultsTable extends AppTable
             'Results' => ['index', 'add'],
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
     }
 
     public function validationDefault(Validator $validator)
@@ -48,12 +48,12 @@ class AssessmentItemResultsTable extends AppTable
             ]);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
-        return $events;
-    }
+    // public function implementedEvents()
+    // {
+    //     $events = parent::implementedEvents();
+    //     $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
+    //     return $events;
+    // }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -137,6 +137,8 @@ class AssessmentItemResultsTable extends AppTable
      */
     public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
     {
+        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+
         $query = $this
             ->find()
             ->select([
@@ -147,6 +149,13 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('marks')
             ])
             ->contain(['AssessmentGradingOptions'])
+            ->innerJoin([$SubjectStudents->alias() => $SubjectStudents->table()], [
+                $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                $SubjectStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $SubjectStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                $SubjectStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                $SubjectStudents->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
+            ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('assessment_id') => $assessmentId,
