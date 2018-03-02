@@ -50,6 +50,7 @@ return [
         'SSO' => $baseDir . '/vendor/korditpteltd/kd-cakephp-sso/',
         'Security' => $baseDir . '/plugins/Security/',
         'Staff' => $baseDir . '/plugins/Staff/',
+        'StaffAppraisal' => $baseDir . '/plugins/StaffAppraisal/',
         'StaffCustomField' => $baseDir . '/plugins/StaffCustomField/',
         'Student' => $baseDir . '/plugins/Student/',
         'StudentCustomField' => $baseDir . '/plugins/StudentCustomField/',

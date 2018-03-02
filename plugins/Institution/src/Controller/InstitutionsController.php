@@ -49,7 +49,7 @@ class InstitutionsController extends AppController
         'StaffUser',
         'StaffAccount',
         'StaffLeave',
-        'StaffAppraisals',
+        'InstitutionStaffAppraisals',
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
@@ -133,7 +133,8 @@ class InstitutionsController extends AppController
         $version = \Cake\Core\Configure::version();
         if (strpos($version, '3.4') !== false) {
             $msg = 'To change ResultsExport $response->type to $response->withType and $response->download to $response->withDownload';
-            pr($msg);die;
+            pr($msg);
+            die;
         }
         // End
 
@@ -177,6 +178,12 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
+
+    public function InstitutionStaffAppraisals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAppraisals']);
+    }
+
     public function Surveys()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSurveys']);
@@ -294,10 +301,6 @@ class InstitutionsController extends AppController
     public function Visits()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.InstitutionQualityVisits']);
-    }
-    public function StaffAppraisals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
     }
     public function Programmes()
     {
@@ -490,7 +493,7 @@ class InstitutionsController extends AppController
         $filePath = $results['path'] . $fileName;
 
         $response = $this->response;
-        $response->body(function() use ($filePath) {
+        $response->body(function () use ($filePath) {
             $content = file_get_contents($filePath);
             if (file_exists($filePath)) {
                 unlink($filePath);
@@ -1131,7 +1134,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentRisks' => __('Risks') 
+                'StudentRisks' => __('Risks')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1172,14 +1175,14 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
             } elseif ($model->alias() == 'StudentRisks') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
             } elseif ($model->alias() == 'Indexes') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
             } elseif ($model->alias() == 'InstitutionStudentRisks') {
-                $header .= ' - '. __('Institution Student Risks'); 
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
-            }else {
+                $header .= ' - '. __('Institution Student Risks');
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+            } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 

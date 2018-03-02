@@ -48,8 +48,6 @@ class FieldOptionComponent extends Component
         'StaffLeaveTypes' => ['className' => 'Staff.StaffLeaveTypes', 'parent' => 'Staff'],
         'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
         'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
-        'Competencies' => ['className' => 'Staff.Competencies', 'parent' => 'Staff'],
-        'CompetencySets' => ['className' => 'Staff.CompetencySets', 'parent' => 'Staff'],
 
     // Finance
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
