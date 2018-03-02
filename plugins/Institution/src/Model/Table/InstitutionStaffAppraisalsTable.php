@@ -113,7 +113,7 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         $this->field('from');
         $this->field('to');
         $this->field('appraisal_type_id', ['type' => 'readonly', 'value' => $entity->appraisal_type_id, 'attr' => ['label' => __('Type'), 'value' => $entity->appraisal_type->name]]);
-        $this->field('appraisal_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period_id, 'attr' => ['value' => $entity->appraisal_period->period_form_name]]);
+        $this->field('appraisal_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period_id, 'attr' => ['value' => $entity->appraisal_period->name]]);
         $this->field('appraisal_form_id', ['type' => 'disabled', 'attr' => ['value' => $entity->appraisal_period->appraisal_form->name]]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
@@ -152,12 +152,12 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
         // End
         $this->field('staff_id', ['visible' => false]);
         $this->field('title');
-        $this->field('appraisal_period.academic_period.name', ['attr' => ['label' => __('Academic Period')]]);
+        $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
         $this->field('from');
         $this->field('to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('appraisal_period_id');
-        $this->field('appraisal_period.appraisal_form.name', ['attr' => ['label' => __('Appraisal Form')]]);
+        $this->field('appraisal_form_id', ['fieldName' => 'appraisal_period.appraisal_form.name']);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment');
@@ -201,16 +201,35 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
                 $min = $criteria->appraisal_slider->min;
                 $max = $criteria->appraisal_slider->max;
                 $step = $criteria->appraisal_slider->step;
-                $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'slider', 'max' => $max, 'min' => $min, 'step' => $step, 'attr' => ['label' => $details['criteria_name']]]);
+                $this->field($details['key'].'_'.$criteriaCounter[$fieldTypeCode].'_answer', [
+                    'type' => 'slider',
+                    'fieldName' => $details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer',
+                    'max' => $max,
+                    'min' => $min,
+                    'step' => $step,
+                    'attr' => ['label' => $details['criteria_name']]
+                ]);
                 break;
             case 'TEXTAREA':
                 $details['key'] = 'appraisal_text_answers';
                 $details[$fieldTypeCode] = null;
-                $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'text', 'attr' => ['label' => $details['criteria_name']]]);
+                $this->field($details['key'].'_'.$criteriaCounter[$fieldTypeCode].'_answer', [
+                    'type' => 'text',
+                    'fieldName' => $details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer',
+                    'attr' => ['label' => $details['criteria_name']]
+                ]);
                 break;
         }
-        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
-        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
+        $this->field($details['key'].'_'.$criteriaCounter[$fieldTypeCode].'_appraisal_form_id', [
+            'type' => 'hidden',
+            'value' => $details['appraisal_form_id'],
+            'fieldName' => $details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_form_id'
+        ]);
+        $this->field($details['key'].'_'.$criteriaCounter[$fieldTypeCode].'_appraisal_criteria_id', [
+            'type' => 'hidden',
+            'value' => $details['appraisal_criteria_id'],
+            'fieldName' => $details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_criteria_id'
+        ]);
 
         $criteriaCounter[$fieldTypeCode]++;
     }

@@ -1,3 +1,7 @@
+### [3.19.0] - 2018-02-23
+- Implemented customisable workflow for Student Transfers and Admissions
+- Marks below "Pass Mark" will now be displayed in red
+
 ### [3.18.0] - 2018-02-02
 - Identity Number, Identity Type, and Nationality fields have been added for Guardian and Others user types
 - Fixed a bug where some courses are not displayed in Institutions > Staff > Training
