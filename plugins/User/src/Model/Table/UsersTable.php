@@ -68,8 +68,7 @@ class UsersTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index', 'add'],
             'ClassStudents' => ['index'],
-            'OpenEMIS_Classroom' => ['view', 'edit'],
-            'API' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
 
         $this->displayField('first_name');
@@ -210,7 +209,9 @@ class UsersTable extends AppTable
         $this->ControllerAction->field('address_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
         $this->ControllerAction->field('birthplace_area_id', ['type' => 'areapicker', 'source_model' => 'Area.AreaAdministratives']);
 
-        $this->ControllerAction->field('date_of_birth', [
+        $this->ControllerAction->field(
+            'date_of_birth',
+            [
                 'date_options' => [
                     'endDate' => date('d-m-Y', strtotime("-2 year"))
                 ],
@@ -1051,7 +1052,8 @@ class UsersTable extends AppTable
             SET
                 `SU`.`identity_type_id` = ?,
                 `SU`.`identity_number` = `UI`.`number`',
-            [$nationalityId,$identityTypeId,$identityTypeId], ['integer','integer','integer']
+            [$nationalityId,$identityTypeId,$identityTypeId],
+            ['integer','integer','integer']
         );
     }
 
