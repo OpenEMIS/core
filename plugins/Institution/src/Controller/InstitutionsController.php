@@ -339,17 +339,17 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
     }
-    public function Indexes()
+    public function Risks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Risks']);
     }
-    public function StudentIndexes()
+    public function StudentRisks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentRisks']);
     }
-    public function InstitutionStudentIndexes()
+    public function InstitutionStudentRisks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentRisks']);
     }
     public function Cases()
     {
@@ -915,8 +915,6 @@ class InstitutionsController extends AppController
             } else {
                 $session->delete('Institution.Institutions.id');
             }
-        } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'view' && isset($this->request->pass[1])) {
-            $this->request->params['institutionId'] = $this->request->pass[1];
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         } elseif ($action == 'StaffUser') {
@@ -928,8 +926,16 @@ class InstitutionsController extends AppController
             || $action == 'dashboard'
             || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
-            if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
+            if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
                 $id = $this->request->pass[0];
+                $id = $this->ControllerAction->paramsDecode($id)['id'];
+                $this->checkInstitutionAccess($id, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $id);
+            } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && (in_array($this->request->pass[0], ['view', 'edit']))) {
+                $id = $this->request->pass[1];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {
@@ -1133,7 +1139,11 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
+<<<<<<< HEAD
                 'StudentIndexes' => __('Risks')
+=======
+                'StudentRisks' => __('Risks') 
+>>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1173,15 +1183,27 @@ class InstitutionsController extends AppController
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
+<<<<<<< HEAD
             } elseif ($model->alias() == 'StudentIndexes') {
                 $header .= ' - '. __('Risks');
+=======
+            } elseif ($model->alias() == 'StudentRisks') {
+                $header .= ' - '. __('Risks'); 
+>>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
             } elseif ($model->alias() == 'Indexes') {
                 $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
+<<<<<<< HEAD
             } elseif ($model->alias() == 'InstitutionStudentIndexes') {
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             } else {
+=======
+            } elseif ($model->alias() == 'InstitutionStudentRisks') {
+                $header .= ' - '. __('Institution Student Risks'); 
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
+            }else {
+>>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1524,7 +1546,11 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
+<<<<<<< HEAD
             'StudentIndexes' => ['text' => __('Risks')]
+=======
+            'StudentRisks' => ['text' => __('Risks')]
+>>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1534,12 +1560,12 @@ class InstitutionsController extends AppController
             if ($key == 'Programmes' || $key == 'Textbooks') {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
-            } elseif ($key == 'StudentIndexes') {
+            } elseif ($key == 'StudentRisks') {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
         return $this->TabPermission->checkTabPermission($tabElements);

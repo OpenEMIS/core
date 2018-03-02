@@ -31,7 +31,7 @@ class StudentBehavioursTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index', 'view', 'add', 'edit', 'delete']
         ]);
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
     }
 
     public function implementedEvents()
@@ -40,7 +40,8 @@ class StudentBehavioursTable extends AppTable
         $newEvent = [
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
         ];
-        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         $events = array_merge($events, $newEvent);
         return $events;
     }
@@ -59,22 +60,22 @@ class StudentBehavioursTable extends AppTable
 
     // Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
     // public function validationDefault(Validator $validator) {
-    // get start and end date of selected academic period
-    // $selectedPeriod = $this->request->query('period');
-    // if($selectedPeriod) {
-    // 	$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
-    // 	$startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
-    // 	$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
+        // get start and end date of selected academic period
+        // $selectedPeriod = $this->request->query('period');
+        // if($selectedPeriod) {
+        // 	$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
+        // 	$startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
+        // 	$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
 
-    // 	$validator
-    // 	->add('date_of_behaviour',
-    // 			'ruleCheckInputWithinRange',
-    // 				['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
+        // 	$validator
+        // 	->add('date_of_behaviour',
+        // 			'ruleCheckInputWithinRange',
+        // 				['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
 
-    // 		)
-    // 	;
-    // 	return $validator;
-    // }
+        // 		)
+        // 	;
+        // 	return $validator;
+        // }
     // }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -300,6 +301,7 @@ class StudentBehavioursTable extends AppTable
         if ($action == 'add') {
             $attr['select'] = false;
             $periodOptions = ['0' => __('-- Select --')];
+
             $periodOptions = $periodOptions + $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = 0;
             if ($request->is(['post', 'put'])) {
@@ -458,7 +460,8 @@ class StudentBehavioursTable extends AppTable
         return $attr;
     }
 
-    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+
+    public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];

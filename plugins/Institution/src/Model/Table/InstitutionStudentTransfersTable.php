@@ -54,7 +54,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     private $workflowEvents = [
         [
             'value' => 'Workflow.onTransferStudent',
-            'text' => 'Transfer of Student',
+            'text' => 'Approval of Student Transfer',
             'description' => 'Performing this action will transfer the student to the receiving institution.',
             'method' => 'onTransferStudent',
             'unique' => true
