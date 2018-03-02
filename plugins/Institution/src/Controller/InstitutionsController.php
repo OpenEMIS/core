@@ -1139,11 +1139,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-<<<<<<< HEAD
-                'StudentIndexes' => __('Risks')
-=======
-                'StudentRisks' => __('Risks') 
->>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
+                'StudentRisks' => __('Risks')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1183,27 +1179,15 @@ class InstitutionsController extends AppController
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
-<<<<<<< HEAD
-            } elseif ($model->alias() == 'StudentIndexes') {
-                $header .= ' - '. __('Risks');
-=======
             } elseif ($model->alias() == 'StudentRisks') {
-                $header .= ' - '. __('Risks'); 
->>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
+                $header .= ' - '. __('Risks');
             } elseif ($model->alias() == 'Indexes') {
                 $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
-<<<<<<< HEAD
-            } elseif ($model->alias() == 'InstitutionStudentIndexes') {
-                $header .= ' - '. __('Institution Student Risks');
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
-            } else {
-=======
             } elseif ($model->alias() == 'InstitutionStudentRisks') {
                 $header .= ' - '. __('Institution Student Risks'); 
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
             }else {
->>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -1546,11 +1530,7 @@ class InstitutionsController extends AppController
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
-<<<<<<< HEAD
-            'StudentIndexes' => ['text' => __('Risks')]
-=======
             'StudentRisks' => ['text' => __('Risks')]
->>>>>>> 5f11141a557031048a4601b9c8e0960765063ad3
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
