@@ -67,7 +67,22 @@ class AppraisalsTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'AppraisalTextAnswers', 'AppraisalSliderAnswers',
+            'AppraisalTextAnswers' => function ($q) {
+                return $q
+                    ->innerJoin(['AppraisalFormsCriterias' => 'appraisal_forms_criterias'], [
+                        '`AppraisalFormsCriterias`.`appraisal_form_id` = `AppraisalTextAnswers`.`appraisal_form_id`',
+                        '`AppraisalFormsCriterias`.`appraisal_criteria_id` = `AppraisalTextAnswers`.`appraisal_criteria_id`'
+                    ])
+                    ->order(['AppraisalFormsCriterias.order']);
+            },
+            'AppraisalSliderAnswers' => function ($q) {
+                return $q
+                    ->innerJoin(['AppraisalFormsCriterias' => 'appraisal_forms_criterias'], [
+                        '`AppraisalFormsCriterias`.`appraisal_form_id` = `AppraisalSliderAnswers`.`appraisal_form_id`',
+                        '`AppraisalFormsCriterias`.`appraisal_criteria_id` = `AppraisalSliderAnswers`.`appraisal_criteria_id`'
+                    ])
+                    ->order(['AppraisalFormsCriterias.order']);
+            },
             'AppraisalPeriods.AcademicPeriods', 'AppraisalPeriods.AppraisalForms',
             'AppraisalTypes'
         ]);
