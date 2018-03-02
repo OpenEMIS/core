@@ -59,7 +59,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
 
-        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('Risk.Risks');
 
         $this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
         $this->absenceCodeList = $this->AbsenceTypes->getCodeList();
@@ -68,7 +68,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
         $events['InstitutionCase.onSetLinkedRecordsCheckCondition'] = 'onSetLinkedRecordsCheckCondition';
@@ -1188,13 +1188,13 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
     }
 
-    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];
         $academicPeriodId = $params['academic_period_id'];
 
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
         $academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
@@ -1225,7 +1225,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
-        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $Indexes = TableRegistry::get('Risk.Risks');
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $dateFormat = $ConfigItems->value('date_format');
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');

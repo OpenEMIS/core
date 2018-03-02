@@ -45,6 +45,12 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <span class="chevron"></span>
                 </div>
             </li>
+            <li data-step="5" data-name="transferStudent" ng-show="InstitutionStudentController.studentTransferable">
+                <div class="step-wrapper">
+                    <?= __('Transfer Student') ?>
+                    <span class="chevron"></span>
+                </div>
+            </li>
         </ul>
     </div>
     <div class="actions top">
@@ -68,10 +74,23 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-disabled="!InstitutionStudentController.selectedStudent"
             type="button" class="btn btn-default"><?= __('Add Student') ?>
         </button>
-        <button type="button" class="btn btn-default btn-next"
-            ng-disabled="InstitutionStudentController.completeDisabled"
-            ng-show="(InstitutionStudentController.step=='add_student' || InstitutionStudentController.step=='create_user')"
-            data-last="<?= __('Complete') ?>">
+        <button
+            type="button" class="btn btn-default"
+            ng-if="(InstitutionStudentController.step=='add_student' && InstitutionStudentController.studentTransferable)"
+            ng-click="InstitutionStudentController.onTransferStudentClick()">
+            <?= __('Transfer Student') ?>
+        </button>
+        <button
+            type="button" class="btn btn-default"
+            ng-if="(InstitutionStudentController.step=='add_student' && !InstitutionStudentController.studentTransferable)"
+            ng-disabled="InstitutionStudentController.existingStudent"
+            ng-click="InstitutionStudentController.onAddStudentCompleteClick()">
+            <?= __('Complete') ?>
+        </button>
+        <button
+            type="button" class="btn btn-default btn-next"
+            ng-show="(InstitutionStudentController.step=='create_user' || InstitutionStudentController.step=='transfer_student')"
+            data-last="<?= __('Save') ?>">
             <?= __('Next') ?>
         </button>
     </div>
@@ -122,6 +141,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </div>
         </div>
+
         <div class="step-pane sample-pane active" data-step="2" data-name="externalSearch">
             <div class="dropdown-filter">
                 <div class="filter-label">
@@ -156,6 +176,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </div>
         </div>
+
         <div class="step-pane sample-pane" data-step="3" data-name="createUser">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string required">
@@ -274,6 +295,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </form>
         </div>
+
         <div class="step-pane sample-pane" data-step="4" data-name="addStudent">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string required">
@@ -291,6 +313,12 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                     <div ng-if="InstitutionStudentController.postResponse.error.last_name" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_name">{{ error }}</p>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_id">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string" ng-show="InstitutionStudentController.StudentNationalities != 2 && StudentController.createNewStudent == true">
@@ -310,9 +338,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string">
                     <label><?= __('Date Of Birth') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.date_of_birth" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStudentController.postResponse.error.student_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_name">{{ error }}</p>
-                    </div>
                     <div ng-if="InstitutionStudentController.postResponse.error.date_of_birth" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
                     </div>
@@ -332,14 +357,14 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
 
-                <div class="input password required">
+                <div class="input password required" ng-show="!InstitutionStudentController.existingStudent">
                     <label><?= __('Password') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.password" type="string" disabled="disabled">
                     <div ng-if="InstitutionStudentController.postResponse.error.password" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.password">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input select required" ng-model="InstitutionStudentController.postResponse" ng-show="!InstitutionStudentController.completeDisabled">
+                <div class="input select required" ng-model="InstitutionStudentController.postResponse" ng-show="!InstitutionStudentController.existingStudent">
                     <label><?= __('Academic Period') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Students[academic_period_id]" id="students-academic-period-id"
@@ -353,7 +378,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.academic_period_id">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input select required error" ng-model="InstitutionStudentController.postResponse" ng-show="!InstitutionStudentController.completeDisabled">
+                <div class="input select required error" ng-model="InstitutionStudentController.postResponse" ng-show="!InstitutionStudentController.existingStudent">
                     <label><?= __('Education Grade') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Students[education_grade_id]" id="students-education-grade-id"
@@ -368,7 +393,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.education_grade_id">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input select" ng-show="!InstitutionStudentController.completeDisabled">
+                <div class="input select" ng-show="!InstitutionStudentController.existingStudent">
                     <label><?= __('Class') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Students[class]" id="students-class"
@@ -379,18 +404,15 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                             <option value="" >-- <?= __('No Class Assignment') ?> --</option>
                         </select>
                     </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.institution_class_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.institution_class_id">{{ error }}</p>
+                    </div>
                 </div>
-                <div class="input string" ng-show="!InstitutionStudentController.completeDisabled">
+                <div class="input string" ng-show="!InstitutionStudentController.existingStudent">
                     <label><?= __('Student Status') ?></label>
-                    <?php if ($admissionExecutePermission) { ?>
-                        <input type="string" value="<?= __('Enrolled') ?>" disabled="disabled">
-                    <?php } else { ?>
-                        <input type="string" value="<?= __('Pending Admission') ?>" disabled="disabled">
-                    <?php } ?>
+                    <input type="string" value="<?= __('Pending Admission') ?>" disabled="disabled">
                 </div>
-
-
-                <div class="input date required" ng-show="!InstitutionStudentController.completeDisabled">
+                <div class="input date required" ng-show="!InstitutionStudentController.existingStudent">
                     <label for="Students_start_date"><?= __('Start Date') ?></label>
                     <div class="input-group date " id="Students_start_date" style="">
                         <input type="text" class="form-control " name="Students[start_date]" ng-model="InstitutionStudentController.startDate">
@@ -400,31 +422,124 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.start_date">{{ error }}</p>
                     </div>
                 </div>
-
-
-                <div class="input text required" ng-show="!InstitutionStudentController.completeDisabled">
+                <div class="input text required" ng-show="!InstitutionStudentController.existingStudent">
                     <label for="students-end-date"><?= __('End Date') ?></label>
                     <input ng-model="InstitutionStudentController.endDateFormatted" type="text" disabled="disabled">
                 </div>
-                <div class="section-header" ng-show="InstitutionStudentController.completeDisabled"><?= __('Institution Information') ?></div>
-                <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
+
+                <div class="section-header" ng-show="InstitutionStudentController.existingStudent"><?= __('Student Information') ?></div>
+                <div class="input string" ng-show="InstitutionStudentController.existingStudent">
+                    <label><?= __('Academic Period') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['academic_period']['name']" disabled="disabled">
+                </div>
+                <div class="input string" ng-show="InstitutionStudentController.existingStudent">
+                    <label><?= __('Education Grade') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['education_grade']['name']" disabled="disabled">
+                </div>
+                <div class="input string" ng-show="InstitutionStudentController.existingStudent">
+                    <label><?= __('Student Status') ?></label>
+                    <input type="string" value="<?= __('Enrolled') ?>" disabled="disabled">
+                </div>
+
+                <div class="section-header" ng-show="InstitutionStudentController.existingStudent"><?= __('Institution Information') ?></div>
+                <div class="input string" ng-show="InstitutionStudentController.existingStudent">
                     <label><?= __('Institution') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['code_name']" disabled="disabled">
                 </div>
-
-                <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
+                <div class="input string" ng-show="InstitutionStudentController.existingStudent">
                     <label><?= __('Area') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['area']['code_name']" disabled="disabled">
                 </div>
-
-                <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
+                <div class="input string" ng-show="InstitutionStudentController.existingStudent">
                     <label><?= __('Contact Name') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['contact_person']" disabled="disabled">
                 </div>
-
-                <div class="input string" ng-show="InstitutionStudentController.completeDisabled">
+                <div class="input string" ng-show="InstitutionStudentController.existingStudent">
                     <label><?= __('Telephone') ?></label>
                     <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['telephone']" disabled="disabled">
+                </div>
+            </form>
+        </div>
+
+        <div class="step-pane sample-pane" data-step="5" data-name="transferStudent">
+            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
+                <div class="input string">
+                    <label><?= __('OpenEMIS ID') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['openemis_no']" disabled="disabled">
+                </div>
+                <div class="input string">
+                    <label><?= __('Student') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['name']" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label><?= __('Currently Allocated To') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['institution']['code_name']" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.institution_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.institution_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label><?= __('Academic Period') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['academic_period']['name']" disabled="disabled">
+                </div>
+                <div class="input string">
+                    <label><?= __('Education Grade') ?></label>
+                    <input type="string" ng-model="InstitutionStudentController['selectedStudentData']['institution_students'][0]['education_grade']['name']" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.education_grade_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.education_grade_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input select">
+                    <label><?= __('Class') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[class]" id="students-class"
+                            ng-options="option.name for option in InstitutionStudentController.classOptions.availableOptions track by option.id"
+                            ng-model="InstitutionStudentController.classOptions.selectedOption"
+                            ng-change="InstitutionStudentController.onChangeClass()">
+                            <option value="">-- <?= __('No Class Assignment') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.institution_class_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.institution_class_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label><?= __('Student Status') ?></label>
+                    <input type="string" value="<?= __('Pending Transfer') ?>" disabled="disabled">
+                </div>
+                <div class="input date required">
+                    <label for="Students_transfer_start_date"><?= __('Start Date') ?></label>
+                    <div class="input-group date" id="Students_transfer_start_date" style="">
+                        <input type="text" class="form-control " name="Students[transfer_start_date]" ng-model="InstitutionStudentController.startDate">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.start_date" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.start_date">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string">
+                    <label for="students-end-date"><?= __('End Date') ?></label>
+                    <input ng-model="InstitutionStudentController.endDateFormatted" type="text" disabled="disabled">
+                </div>
+                <div class="input select required error" ng-model="InstitutionStudentController.postResponse">
+                    <label><?= __('Student Transfer Reason') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[student_transfer_reason_id]" id="students-transfer-reason-id"
+                            ng-options="option.name for option in InstitutionStudentController.transferReasonOptions.availableOptions track by option.id"
+                            ng-model="InstitutionStudentController.transferReasonOptions.selectedOption">
+                            <option value="">-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.student_transfer_reason_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.student_transfer_reason_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input text">
+                    <label><?= __('Comment') ?></label>
+                    <textarea ng-model="InstitutionStudentController.comment" ng-init="InstitutionStudentController.comment=''"></textarea>
                 </div>
             </form>
         </div>
@@ -438,12 +553,14 @@ $(function () {
 var datepicker0 = $('#Students_start_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
 var datepicker1 = $('#Students_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
 var datepicker2 = $('#Student_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+var datepicker3 = $('#Students_transfer_start_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
 $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     window.clearTimeout( t );
     t = window.setTimeout( function(){
         datepicker0.datepicker('place');
         datepicker1.datepicker('place');
         datepicker2.datepicker('place');
+        datepicker3.datepicker('place');
     });
 });
 });
