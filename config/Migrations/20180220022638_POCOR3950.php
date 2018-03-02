@@ -33,6 +33,8 @@ class POCOR3950 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
 
         $scopeData = [
@@ -47,7 +49,6 @@ class POCOR3950 extends AbstractMigration
         $ApiScopes
             ->insert($scopeData)
             ->save();
-
 
         // API Securities
         $ApiSecurities = $this->table('api_securities', [
@@ -147,6 +148,8 @@ class POCOR3950 extends AbstractMigration
                 'null' => false,
                 'comment' => 'link to api_scopes.id'
             ])
+            ->addIndex('api_credential_id')
+            ->addIndex('api_scope_id')
             ->save();
 
         $credentialRows = $this->fetchAll('SELECT * FROM `api_credentials`');
@@ -230,6 +233,10 @@ class POCOR3950 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('api_security_id')
+            ->addIndex('api_credential_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
 
         // API Credentials
