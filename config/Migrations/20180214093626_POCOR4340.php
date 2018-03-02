@@ -354,12 +354,12 @@ class POCOR4340 extends AbstractMigration
         $table
             ->insert([
                 [
-                    'code' => 'TEXT',
-                    'name' => 'Multi-line Text Input'
+                    'code' => 'TEXTAREA',
+                    'name' => 'Textarea'
                 ],
                 [
                     'code' => 'SLIDER',
-                    'name' => 'Slider Range Input'
+                    'name' => 'Slider'
                 ]
             ])
             ->save();
