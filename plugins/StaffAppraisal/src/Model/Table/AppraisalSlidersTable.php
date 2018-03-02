@@ -21,7 +21,7 @@ class AppraisalSlidersTable extends AppTable
             ->add('min', [
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
-                    'message' => __('This field cannot be more than two decimal places'),
+                    'message' => __('Value cannot be more than two decimal places'),
                 ],
                 'ruleRange' => [
                     'rule' => ['range', 0, 100],
@@ -31,7 +31,7 @@ class AppraisalSlidersTable extends AppTable
             ->add('max', [
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
-                    'message' => __('This field cannot be more than two decimal places')
+                    'message' => __('Value cannot be more than two decimal places')
                 ],
                 'ruleRange' => [
                     'rule' => ['range', 0, 100],
@@ -51,7 +51,7 @@ class AppraisalSlidersTable extends AppTable
             ->add('step', [
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
-                    'message' => __('This field cannot be more than two decimal places')
+                    'message' => __('Value cannot be more than two decimal places')
                 ],
                 'ruleRange' => [
                     'rule' => ['range', 0, 9.99],
