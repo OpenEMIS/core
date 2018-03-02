@@ -7,12 +7,12 @@ class POCOR4410 extends AbstractMigration
      public function up()
     {
         // NEW TABLE FOR INSTITUTION POCs
-        $institutionContacts = $this->table('institution_contacts', [
+        $institutionContactPersons = $this->table('institution_contact_persons', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the contacts of the institutions'
+            'comment' => 'This table contains all the contact persons of the institutions'
         ]);
 
-        $institutionContacts
+        $institutionContactPersons
             ->addColumn('contact_person', 'string', [
                 'default' => null,
                 'limit' => 100,
@@ -79,7 +79,7 @@ class POCOR4410 extends AbstractMigration
             ->save();
 
             // MIGRATE ALL THE OLD CONTACTS DETAILS OVER FROM INSTITUTION
-            $this->execute('INSERT INTO `institution_contacts` (`contact_person`,`institution_id`,`created_user_id`,`created`) SELECT `contact_person`,`id`,`created_user_id`,`created` FROM `institutions` WHERE `contact_person` <> ""');
+            $this->execute('INSERT INTO `institution_contact_persons` (`contact_person`,`institution_id`,`created_user_id`,`created`) SELECT `contact_person`,`id`,`created_user_id`,`created` FROM `institutions` WHERE `contact_person` <> ""');
 
             $this->execute('CREATE TABLE `z_4410_institutions` LIKE `institutions`');
             $this->execute('INSERT INTO `z_4410_institutions` SELECT * FROM `institutions`');
@@ -90,90 +90,92 @@ class POCOR4410 extends AbstractMigration
                   ->save();
 
             // Security function permission
-            $contactsSql = "UPDATE security_functions
-                           SET `controller` = 'InstitutionContacts',
-                           `_view` = 'index|view',
-                           `_edit` = 'edit',
-                           `_add` = 'add',
-                           `_delete` = 'delete'
-                           WHERE `id` = 1047";
+            $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 2');
+          
+            $this->insert('security_functions', [
+                'id' => 1083,
+                'name' => 'Contact Persons',
+                'controller' => 'InstitutionContactPersons',
+                'module' => 'Institutions',
+                'category' => 'General',
+                'parent_id' => 8,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 3,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
 
-            $this->execute($contactsSql);
 
             $records = [
                 [   'id' => '1010',
-                    'name' => 'Institution Contact Telephone',
-                    'code' => 'institution_contact_telephone',
+                    'name' => 'Institution Contact Person Telephone',
+                    'code' => 'institution_contact_person_telephone',
                     'type' => 'Custom Validation',
-                    'label' => 'Institution Contact Telephone',
+                    'label' => 'Institution Contact Person Telephone',
                     'value' => '',
                     'default_value' => '',
                     'editable' => '1',
                     'visible' => '1',
                     'field_type' => '',
                     'option_type' => '',
-                    'modified_user_id' => '108',
-                    'modified' => '2014-04-02 16:48:24',
-                    'created_user_id' => '0',
-                    'created' => '1970-01-01 00:00:00'
+                    'modified_user_id' => null,
+                    'modified' => null,
+                    'created_user_id' => '1',
+                    'created' => date('Y-m-d H:i:s')
                 ],
                 [
                     'id' => '1011',
-                    'name' => 'Institution Contact Mobile',
-                    'code' => 'institution_contact_mobile',
+                    'name' => 'Institution Contact Person Mobile',
+                    'code' => 'institution_contact_person_mobile',
                     'type' => 'Custom Validation',
-                    'label' => 'Institution Contact Mobile',
+                    'label' => 'Institution Contact Person Mobile',
                     'value' => '',
                     'default_value' => '',
                     'editable' => '1',
                     'visible' => '1',
                     'field_type' => '',
                     'option_type' => '',
-                    'modified_user_id' => '108',
-                    'modified' => '2014-04-02 16:48:24',
-                    'created_user_id' => '0',
-                    'created' => '1970-01-01 00:00:00'
+                    'modified_user_id' => null,
+                    'modified' => null,
+                    'created_user_id' => '1',
+                    'created' => date('Y-m-d H:i:s')
                 ],
                 [
                     'id' => '1012',
-                    'name' => 'Institution Contact Fax',
-                    'code' => 'institution_contact_fax',
+                    'name' => 'Institution Contact Person Fax',
+                    'code' => 'institution_contact_person_fax',
                     'type' => 'Custom Validation',
-                    'label' => 'Institution Contact Fax',
+                    'label' => 'Institution Contact Person Fax',
                     'value' => '',
                     'default_value' => '',
                     'editable' => '1',
                     'visible' => '1',
                     'field_type' => '',
                     'option_type' => '',
-                    'modified_user_id' => '108',
-                    'modified' => '2014-04-02 16:48:24',
-                    'created_user_id' => '0',
-                    'created' => '1970-01-01 00:00:00'
+                    'modified_user_id' => null,
+                    'modified' => null,
+                    'created_user_id' => '1',
+                    'created' => date('Y-m-d H:i:s')
                 ],
             ];
 
             $this->insert('config_items', $records);
-        }
+    }
  
 
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `institutions`');
         $this->execute('RENAME TABLE `z_4410_institutions` TO `institutions`');
-        $this->execute('DROP TABLE IF EXISTS `institution_contacts`');
-
-        $contactsSql = "UPDATE security_functions
-                        SET `controller` = 'Institutions',
-                        `_view` = 'Contacts.index|Contacts.view',
-                        `_edit` = 'Contacts.edit',
-                        `_add` = NULL,
-                        `_delete` = NULL
-                        WHERE `id` = 1047";
-        
-        $this->execute($contactsSql);      
+        $this->execute('DROP TABLE IF EXISTS `institution_contact_persons`');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 2');
+        $this->execute('DELETE FROM security_functions WHERE id = 1083');    
         $this->execute('DELETE FROM `config_items` WHERE `id` = 1010');
         $this->execute('DELETE FROM `config_items` WHERE `id` = 1011');
         $this->execute('DELETE FROM `config_items` WHERE `id` = 1012');
     }
-}
+}   

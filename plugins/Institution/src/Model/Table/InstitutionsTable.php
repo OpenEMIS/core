@@ -486,6 +486,15 @@ class InstitutionsTable extends ControllerActionTable
             $this->Navigation->addCrumb($this->getHeader($this->action));
         }
 
+        if ($this->action == 'edit') {
+            // Moved to InstitutionContacts
+            $this->field('contact_section', ['visible' => false]);
+            $this->field('telephone', ['visible' => false]);
+            $this->field('fax', ['visible' => false]);
+            $this->field('email', ['visible' => false]);
+            $this->field('website', ['visible' => false]);
+        }
+
         $this->field('logo_name', ['visible' => false]);
         if ($this->action != 'index') {
             $this->field('logo_content', ['type' => 'image']);
