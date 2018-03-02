@@ -14,6 +14,7 @@ use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
 use Cake\Network\Session;
+use Cake\Utility\Hash;
 
 use Cake\Log\Log;
 
@@ -162,7 +163,11 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $data->{$attr['field']};
+            $fieldName = $attr['field'];
+            if (array_key_exists('fieldName', $attr)) {
+                $fieldName = $attr['fieldName'];
+            }
+            $value = Hash::get($data, $fieldName, '');
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
             if (array_key_exists('length', $attr)) {
@@ -368,11 +373,45 @@ class HtmlFieldHelper extends Helper
         return $value;
     }
 
+    public function slider($action, Entity $data, $attr, $options = [])
+    {
+        $value = '';
+        if ($action == 'index' || $action == 'view') {
+            $fieldName = $attr['field'];
+            if (array_key_exists('fieldName', $attr)) {
+                $fieldName = $attr['fieldName'];
+            }
+            $value = Hash::get($data, $fieldName, 0);
+        } else {
+            if (!isset($attr['min'])) {
+                $attr['min'] = 0;
+            }
+            if (!isset($attr['max'])) {
+                $attr['max'] = 10;
+            }
+            if (!isset($attr['step'])) {
+                $attr['step'] = 0.5;
+            }
+            $fieldName = $attr['model'] . '.' . $attr['field'];
+            if (array_key_exists('fieldName', $attr)) {
+                $fieldName = $attr['fieldName'];
+            }
+            $attr['fieldName'] = $fieldName;
+            $attr['rating'] = Hash::get($data, $fieldName, $attr['min']);
+            $value = $this->_View->element('ControllerAction.slider_input', ['attr' => $attr]);
+        }
+        return $value;
+    }
+
     public function text($action, Entity $data, $attr, $options = [])
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = nl2br($data->{$attr['field']});
+            $fieldName = $attr['field'];
+            if (array_key_exists('fieldName', $attr)) {
+                $fieldName = $attr['fieldName'];
+            }
+            $value = nl2br(Hash::get($data, $fieldName, ''));
         } elseif ($action == 'edit') {
             $options['type'] = 'textarea';
             $fieldName = $attr['model'] . '.' . $attr['field'];
