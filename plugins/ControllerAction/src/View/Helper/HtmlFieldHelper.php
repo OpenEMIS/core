@@ -411,7 +411,7 @@ class HtmlFieldHelper extends Helper
             if (array_key_exists('fieldName', $attr)) {
                 $fieldName = $attr['fieldName'];
             }
-            $value = Hash::get($data, $fieldName, '');
+            $value = nl2br(Hash::get($data, $fieldName, ''));
         } elseif ($action == 'edit') {
             $options['type'] = 'textarea';
             $fieldName = $attr['model'] . '.' . $attr['field'];
