@@ -392,6 +392,7 @@ trait MessagesTrait
         ],
         'StudentAttendances' => [
             'noClasses' => 'No Available Classes',
+            'noReasons' => 'You need to configure Student Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'InstitutionStudentAbsences' => [
@@ -401,6 +402,7 @@ trait MessagesTrait
         ],
         'StaffAttendances' => [
             'noStaff' => 'No Available Staff',
+            'noReasons' => 'You need to configure Staff Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'StaffAbsences' => [
@@ -1940,19 +1942,19 @@ trait MessagesTrait
                 ]
             ]
         ],
-        'Indexes' => [
+        'Risk' => [
             'TableHeader' => [
                 'Criteria',
                 'Operator',
                 'Threshold',
-                'Index'
+                'Risk'
             ],
-            'IndexesCriterias' => [
+            'RiskCriterias' => [
                 'threshold' => [
                     'ruleRange' => 'Value must be within 1 to 99',
                     'criteriaThresholdRange' => 'Value must be within %s to %s'
                 ],
-                'index_value' => [
+                'risk_value' => [
                     'ruleRange' => 'Value must be within 1 to 99'
                 ]
             ]

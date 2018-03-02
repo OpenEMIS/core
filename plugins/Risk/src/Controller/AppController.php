@@ -1,6 +1,6 @@
 <?php
 
-namespace Indexes\Controller;
+namespace Risk\Controller;
 
 use App\Controller\AppController as BaseController;
 
