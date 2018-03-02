@@ -53,7 +53,7 @@ class POCOR4410 extends AbstractMigration
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to institution.id'
+                'comment' => 'links to institutions.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
