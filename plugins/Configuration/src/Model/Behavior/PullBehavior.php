@@ -39,12 +39,8 @@ class PullBehavior extends Behavior
     {
         parent::initialize($config);
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $type = $ConfigItems->find()->where([
-                $ConfigItems->aliasField('code') => 'external_data_source_type',
-            ])
-            ->first()
-            ->value;
-
+        $type = $ConfigItems->value('external_data_source_type');
+      
         $this->type = $type;
 
         if ($this->type != 'None') {
