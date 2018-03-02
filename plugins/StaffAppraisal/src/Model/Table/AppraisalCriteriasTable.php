@@ -49,7 +49,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
     {
         $code = $entity->field_type->code;
         switch ($code) {
-            case 'TEXT':
+            case 'TEXTAREA':
                 // No implementation
                 break;
             case 'SLIDER':
@@ -92,7 +92,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
 
             if (isset($fieldTypeOptions[$fieldTypeId])) {
                 switch ($fieldTypeOptions[$fieldTypeId]) {
-                    case 'TEXT':
+                    case 'TEXTAREA':
                         // No implementation
                         break;
                     case 'SLIDER':
