@@ -158,9 +158,11 @@ class POCOR3950 extends AbstractMigration
             ];
         }
 
-        $ApiCredentialsScopes
-            ->insert($credentialScopeData)
-            ->save();
+        if (!empty($credentialScopeData)) {
+            $ApiCredentialsScopes
+                ->insert($credentialScopeData)
+                ->save();
+        }
 
         $ApiSecuritiesScopes = $this->table('api_securities_scopes', [
             'id' => false,
