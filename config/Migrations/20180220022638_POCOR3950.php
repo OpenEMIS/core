@@ -69,27 +69,33 @@ class POCOR3950 extends AbstractMigration
             ])
             ->addColumn('index', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('view', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('add', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('edit', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('delete', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('execute', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->save();
 
@@ -141,24 +147,6 @@ class POCOR3950 extends AbstractMigration
                 'null' => false,
                 'comment' => 'link to api_scopes.id'
             ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
             ->save();
 
         $credentialRows = $this->fetchAll('SELECT * FROM `api_credentials`');
@@ -196,27 +184,33 @@ class POCOR3950 extends AbstractMigration
             ])
             ->addColumn('index', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('view', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('add', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('edit', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('delete', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('execute', 'integer', [
                 'limit' => 1,
-                'null' => false
+                'null' => false,
+                'default' => 0
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
