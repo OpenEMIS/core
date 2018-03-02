@@ -598,52 +598,97 @@ class POCOR4340 extends AbstractMigration
             [
                 'en' => 'Code must be unique',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Value cannot be more than two decimal places',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'Value must be within 0 to 100',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'Value must be within 0 to 9.99',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'Max value must be greater than min value',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'Max value must be greater than step value',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'Please enter a unique name in the selected academic period',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'Date Disabled should not be earlier than Date Enabled',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
                 'en' => 'To Date should not be earlier than From Date',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Slider Range Input',
+                'en' => 'Text',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
             ],
             [
-                'en' => 'Multi-line Text Input',
+                'en' => 'Decimal',
                 'created_user_id' => 1,
-                'created' => '2018-01-18 17:09:49'
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Textarea',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Dropdown',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Checkbox',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Table',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Student List',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Coordinates',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Repeater',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Slider',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ],
         ];
         $this->insert('locale_contents', $localeContent);
