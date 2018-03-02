@@ -4,13 +4,13 @@ namespace Institution\Controller;
 use Cake\Event\Event;
 use App\Controller\PageController;
 
-class InstitutionContactsController extends PageController
+class InstitutionContactPersonsController extends PageController
 {
 
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Institution.InstitutionContacts');
+        $this->loadModel('Institution.InstitutionContactPersons');
     }
 
     public function beforeFilter(Event $event)
