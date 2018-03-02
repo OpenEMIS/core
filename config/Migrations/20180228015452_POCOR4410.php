@@ -49,6 +49,11 @@ class POCOR4410 extends AbstractMigration
                 'limit' => 100,
                 'null' => true
             ])
+            ->addColumn('preferred', 'integer', [
+                'default' => '0',
+                'limit' => 1,
+                'null' => false,
+            ])
             ->addColumn('institution_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -78,17 +83,10 @@ class POCOR4410 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-            // MIGRATE ALL THE OLD CONTACTS DETAILS OVER FROM INSTITUTION
+            // MIGRATE ALL THE OLD CONTACTS DETAILS OVER FROM INSTITUTION AND SET THEM AS PREFERRED
             $this->execute('INSERT INTO `institution_contact_persons` (`contact_person`,`institution_id`,`created_user_id`,`created`) SELECT `contact_person`,`id`,`created_user_id`,`created` FROM `institutions` WHERE `contact_person` <> ""');
-
-            $this->execute('CREATE TABLE `z_4410_institutions` LIKE `institutions`');
-            $this->execute('INSERT INTO `z_4410_institutions` SELECT * FROM `institutions`');
-
-            // DROP CONTACT PERSON COLUMN IN INSTITUTION
-            $table = $this->table('institutions');
-            $table->removeColumn('contact_person')
-                  ->save();
-
+            $this->execute('UPDATE institution_contact_persons SET `preferred` = 1');
+            
             // Security function permission
             $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 2');
           
@@ -169,8 +167,6 @@ class POCOR4410 extends AbstractMigration
 
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `institutions`');
-        $this->execute('RENAME TABLE `z_4410_institutions` TO `institutions`');
         $this->execute('DROP TABLE IF EXISTS `institution_contact_persons`');
         $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 2');
         $this->execute('DELETE FROM security_functions WHERE id = 1083');    
