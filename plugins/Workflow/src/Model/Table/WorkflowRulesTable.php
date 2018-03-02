@@ -304,6 +304,14 @@ class WorkflowRulesTable extends ControllerActionTable
         return $featureOptions;
     }
 
+    public function getFeatureOptionsWithClassName()
+    {
+        $features = $this->getSelectOptions($this->aliasField('features'));
+        $classNames = $this->array_column($features, 'className');
+        
+        return $classNames;
+    }
+
     public function getWorkflowOptions($selectedFeature)
     {
         $workflowOptions = [];
