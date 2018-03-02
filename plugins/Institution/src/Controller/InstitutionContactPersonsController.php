@@ -46,4 +46,25 @@ class InstitutionContactPersonsController extends PageController
         $page = $this->Page;
         $page->exclude(['institution_id']);
     }
+
+      public function add()
+    {
+        parent::add();
+        $this->addEdit();
+    }
+
+    public function edit($id)
+    {
+        parent::edit($id);
+        $this->addEdit();
+    }
+
+    private function addEdit()
+    {
+        $this->Page->get('preferred')
+            ->setControlType('select')
+            ->setOptions([
+                null => '-- Select --', '1' => __('Yes'), '0' => __('No')
+        ]);
+    }
 }
