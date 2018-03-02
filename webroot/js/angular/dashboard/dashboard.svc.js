@@ -17,15 +17,6 @@ function DashboardSvc($q, $filter, KdDataSvc) {
     };
 
     var configModels = {
-        // FIXED Workflow
-        StudentTransferApprovalTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.TransferApprovals'
-        },
-        StudentAdmissionTable: {
-            cols: workbenchItemTypes.FIXED,
-            model: 'Institution.StudentAdmission'
-        },
         // SCHOOL_BASED Workflow
         StudentWithdrawTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
@@ -66,6 +57,18 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         StaffTransferOut: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffTransferOut'
+        },
+        StudentAdmissionTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StudentAdmission'
+        },
+        StudentTransferInTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StudentTransferIn'
+        },
+        StudentTransferOutTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StudentTransferOut'
         },
         // NON_SCHOOL_BASED Workflow
         TrainingCoursesTable: {

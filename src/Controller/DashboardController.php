@@ -17,18 +17,10 @@ class DashboardController extends AppController
         // $this->ControllerAction->model('Notices');
         // $this->loadComponent('Paginator');
 
-        $this->ControllerAction->models = [
-            'StudentAdmission'  => ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']]
-        ];
         $this->attachAngularModules();
     }
 
     // CAv4
-    public function TransferApprovals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferApprovals']);
-    }
-
     public function StudentWithdraw()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentWithdraw']);
@@ -69,29 +61,6 @@ class DashboardController extends AppController
     {
         // set header
         $header = $model->getHeader($model->alias);
-
-        // breadcrumb
-        $alias = $model->alias;
-        $models = [
-            'TransferApprovals' => __('Transfer Approvals')
-        ];
-
-
-        if (array_key_exists($alias, $models)) {
-            if ($model->action == 'associated') {
-                $this->Navigation->addCrumb($models[$model->alias], [
-                    'plugin' => false,
-                    'controller' => 'Dashboard',
-                    'action' => 'TransferApprovals',
-                    'edit',
-                    $model->paramsPass(0)
-                ]);
-                $this->Navigation->addCrumb(Inflector::humanize($model->action));
-            }
-
-            $header = $model->getHeader() . ' - ' . Inflector::humanize($model->action);
-        }
-
         $this->set('contentHeader', $header);
     }
 

@@ -25,9 +25,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.academicPeriodOptions = {};
     StudentController.educationGradeOptions = {};
     StudentController.classOptions = {};
+    StudentController.transferReasonOptions = {};
     StudentController.step = 'internal_search';
     StudentController.showExternalSearchButton = false;
-    StudentController.completeDisabled = false;
+    StudentController.existingStudent = false;
+    StudentController.studentTransferable = false;
     StudentController.institutionId = null;
 
     // 0 - Non-mandatory, 1 - Mandatory, 2 - Excluded
@@ -71,6 +73,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.getStudentData = getStudentData;
     StudentController.selectStudent = selectStudent;
     StudentController.postForm = postForm;
+    StudentController.postTransferForm = postTransferForm;
     StudentController.addStudentUser = addStudentUser;
     StudentController.setStudentName = setStudentName;
     StudentController.appendName = appendName;
@@ -79,6 +82,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.onExternalSearchClick = onExternalSearchClick;
     StudentController.onAddNewStudentClick = onAddNewStudentClick;
     StudentController.onAddStudentClick = onAddStudentClick;
+    StudentController.onAddStudentCompleteClick = onAddStudentCompleteClick;
+    StudentController.onTransferStudentClick = onTransferStudentClick;
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StudentController.generatePassword = generatePassword;
     StudentController.reloadInternalDatasource = reloadInternalDatasource;
@@ -100,10 +105,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     angular.element(document).ready(function () {
         InstitutionsStudentsSvc.init(angular.baseUrl);
         InstitutionsStudentsSvc.setInstitutionId(StudentController.institutionId);
-
         UtilsSvc.isAppendLoader(true);
-        console.log(StudentController.newVar);
-        console.log(StudentController.selectedStudentData.first_name);
+
         InstitutionsStudentsSvc.getAcademicPeriods()
         .then(function(periods) {
             var promises = [];
@@ -207,6 +210,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             UtilsSvc.isAppendLoader(false);
             if ($location.search().student_added) {
                 AlertSvc.success($scope, 'The student is added successfully.');
+            } else if ($location.search().student_transfer_added) {
+                AlertSvc.success($scope, 'Student transfer request is added successfully.');
+            }  else if ($location.search().transfer_exists) {
+                AlertSvc.warning($scope, 'There is an existing transfer record for this student.');
             }
         });
 
@@ -620,16 +627,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         AlertSvc.reset($scope);
         var data = {
             student_id: studentId,
-            student_name: studentId,
             academic_period_id: academicPeriodId,
             education_grade_id: educationGradeId,
             start_date: startDate,
-            end_date: endDate
+            end_date: endDate,
+            institution_class_id: classId
         };
-
-        if (classId != null) {
-            data['class'] = classId;
-        }
 
         InstitutionsStudentsSvc.postEnrolledStudent(data)
         .then(function(postResponse) {
@@ -638,20 +641,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (postResponse.data.error.length === 0) {
                 AlertSvc.success($scope, 'The student is added successfully.');
                 $window.location.href = 'add?student_added=true';
-            } else {
-                if (userRecord.hasOwnProperty('institution_students')) {
-                    if (userRecord.institution_students.length > 0) {
-                        var schoolName = userRecord['institution_students'][0]['institution']['name'];
-                        AlertSvc.warning($scope, 'Student is already enrolled in %s', [schoolName]);
-                        userRecord.date_of_birth = InstitutionsStudentsSvc.formatDate(userRecord.date_of_birth);
-                        StudentController.selectedStudentData = userRecord;
-                        StudentController.completeDisabled = true;
-                    } else {
-                        AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                    }
+            } else if (userRecord.hasOwnProperty('institution_students') && userRecord.institution_students.length > 0) {
+                userRecord.date_of_birth = InstitutionsStudentsSvc.formatDate(userRecord.date_of_birth);
+                StudentController.selectedStudentData = userRecord;
+                StudentController.existingStudent = true;
+
+                var schoolId = userRecord['institution_students'][0]['institution_id'];
+                if (StudentController.institutionId != schoolId) {
+                    StudentController.studentTransferable = true;
+                    var schoolName = userRecord['institution_students'][0]['institution']['code_name'];
+                    AlertSvc.warning($scope, 'This student is already allocated to %s', [schoolName]);
                 } else {
-                    AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                    AlertSvc.warning($scope, 'This student is already allocated to the current institution');
                 }
+            } else {
+                AlertSvc.error($scope, 'The record is not added due to errors encountered.');
             }
         }, function(error) {
             console.log(error);
@@ -661,7 +665,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function onAddNewStudentClick() {
         StudentController.createNewStudent = true;
-        StudentController.completeDisabled = false;
+        StudentController.studentTransferable = false;
+        StudentController.existingStudent = false;
         StudentController.selectedStudentData = {};
         StudentController.selectedStudentData.first_name = '';
         StudentController.selectedStudentData.last_name = '';
@@ -679,9 +684,63 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
     }
 
+    function onAddStudentCompleteClick() {
+        StudentController.postForm();
+    }
+
     function onExternalSearchClick() {
         angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
             step: "externalSearch"
+        });
+    }
+
+    function onTransferStudentClick() {
+        // setup transfer student input fields
+        var studentData = StudentController.selectedStudentData;
+        var periodEndDate = InstitutionsStudentsSvc.formatDate(studentData['institution_students'][0]['academic_period']['end_date']);
+
+        // only allow transfer start date to be one day after the student's current start date
+        var studentStartDate = new Date(studentData['institution_students'][0]['start_date']);
+        studentStartDate.setDate(studentStartDate.getDate() + 1);
+        var studentStartDateFormatted = $filter('date')(studentStartDate, 'dd-MM-yyyy');
+
+        StudentController.startDate = studentStartDateFormatted;
+        $scope.endDate = periodEndDate;
+
+        var startDatePicker = angular.element(document.getElementById('Students_transfer_start_date'));
+        startDatePicker.datepicker("setStartDate", studentStartDateFormatted);
+        startDatePicker.datepicker("setEndDate", periodEndDate);
+        startDatePicker.datepicker("setDate", studentStartDateFormatted);
+
+        StudentController.classOptions = {};
+        StudentController.transferReasonOptions = {};
+
+        InstitutionsStudentsSvc.getClasses({
+            institutionId: StudentController.institutionId,
+            academicPeriodId: studentData['institution_students'][0]['academic_period_id'],
+            gradeId: studentData['institution_students'][0]['education_grade_id'],
+        })
+        .then(function(classes) {
+            StudentController.classOptions = {
+                availableOptions: classes,
+            };
+            return InstitutionsStudentsSvc.getStudentTransferReasons();
+        }, function(error) {
+            console.log(error);
+        })
+        .then(function(response) {
+            if (angular.isDefined(response) && response.hasOwnProperty('data')) {
+                StudentController.transferReasonOptions = {
+                    availableOptions: response.data
+                };
+            }
+        }, function(error) {
+            console.log(error);
+        })
+        .finally(function(result) {
+            angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                step: "transferStudent"
+            });
         });
     }
 
@@ -788,7 +847,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function postForm() {
-
         var academicPeriodId = (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StudentController.academicPeriodOptions.selectedOption.id: '';
         var educationGradeId = (StudentController.educationGradeOptions.hasOwnProperty('selectedOption'))? StudentController.educationGradeOptions.selectedOption.education_grade_id: '';
         if (educationGradeId == undefined) {
@@ -819,9 +877,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
             }
         } else {
-            console.log('postForm');
             if (StudentController.selectedStudentData != null) {
-                console.log('not null');
                 var studentData = {};
                 var log = [];
                 angular.forEach(StudentController.selectedStudentData, function(value, key) {
@@ -856,8 +912,59 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate) {
+    function postTransferForm() {
+        var transferReasonId = (StudentController.transferReasonOptions.hasOwnProperty('selectedOption'))? StudentController.transferReasonOptions.selectedOption.id: null;
+        var classId = (StudentController.classOptions.hasOwnProperty('selectedOption'))? StudentController.classOptions.selectedOption.id: null;
+        var startDate = StudentController.startDate;
+        var startDateArr = startDate.split("-");
+        startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
+        for(i = 0; i < startDateArr.length; i++) {
+            if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
+                startDate = undefined;
+            }
+        }
+        var endDate = $scope.endDate;
 
+        var data = {
+            start_date: startDate,
+            end_date: endDate,
+            student_id: StudentController.selectedStudent,
+            status_id: 0,
+            institution_id: StudentController.institutionId,
+            academic_period_id: StudentController.selectedStudentData.institution_students[0]['academic_period_id'],
+            education_grade_id: StudentController.selectedStudentData.institution_students[0]['education_grade_id'],
+            institution_class_id: classId,
+            previous_institution_id: StudentController.selectedStudentData.institution_students[0]['institution_id'],
+            previous_academic_period_id: StudentController.selectedStudentData.institution_students[0]['academic_period_id'],
+            previous_education_grade_id: StudentController.selectedStudentData.institution_students[0]['education_grade_id'],
+            student_transfer_reason_id: transferReasonId,
+            comment: StudentController.comment
+        };
+
+        InstitutionsStudentsSvc.addStudentTransferRequest(data)
+        .then(function(postResponse) {
+            StudentController.postResponse = postResponse.data;
+            var counter = 0;
+            angular.forEach(postResponse.data.error , function(value) {
+                counter++;
+            });
+
+            if (counter == 0) {
+                AlertSvc.success($scope, 'Student transfer request is added successfully.');
+                $window.location.href = 'add?student_transfer_added=true';
+            } else if (counter == 1 && postResponse.data.error.hasOwnProperty('student_transfer') && postResponse.data.error.student_transfer.hasOwnProperty('ruleTransferRequestExists')) {
+                AlertSvc.warning($scope, 'There is an existing transfer record for this student.');
+                $window.location.href = postResponse.data.error.student_transfer.ruleTransferRequestExists;
+            } else {
+                AlertSvc.error($scope, 'There is an error in adding student transfer request.');
+            }
+        }, function(error) {
+            console.log(error);
+            AlertSvc.error($scope, 'There is an error in adding student transfer request.');
+        });
+    }
+
+    function addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate) {
         var newStudentData = studentData;
         newStudentData['academic_period_id'] = academicPeriodId;
         newStudentData['education_grade_id'] = educationGradeId;
@@ -1000,7 +1107,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
-        StudentController.postForm();
+        // The last complete step is now transfer staff, add transfer staff logic function call here
+        StudentController.postTransferForm();
     });
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
@@ -1039,22 +1147,37 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             InstitutionsStudentsSvc.resetExternalVariable();
         }
         // Step 4 - Add Student
-        else {
+        else if (data.step == 4) {
             if (StudentController.externalSearch) {
                 StudentController.getUniqueOpenEmisId();
             }
-            studentData = StudentController.selectedStudentData;
-            StudentController.completeDisabled = false;
-            if (studentData.hasOwnProperty('institution_students')) {
-                if (studentData.institution_students.length > 0) {
-                    var schoolName = studentData['institution_students'][0]['institution']['name'];
+            var studentData = StudentController.selectedStudentData;
+            StudentController.existingStudent = false;
+            StudentController.studentTransferable = false;
+
+            if (studentData.hasOwnProperty('institution_students') && studentData.institution_students.length > 0) {
+                StudentController.existingStudent = true;
+
+                var schoolId = studentData['institution_students'][0]['institution_id'];
+                if (StudentController.institutionId != schoolId) {
+                    StudentController.studentTransferable = true;
+                    var schoolName = studentData['institution_students'][0]['institution']['code_name'];
                     AlertSvc.warning($scope, 'This student is already allocated to %s', [schoolName]);
-                    StudentController.completeDisabled = true;
+                } else {
+                    AlertSvc.warning($scope, 'This student is already allocated to the current institution');
                 }
             }
             StudentController.step = 'add_student';
         }
+        // Step 5 - Transfer Student
+        else {
+            AlertSvc.info($scope, 'By clicking save, a transfer workflow will be initiated for this student');
+            StudentController.step = 'transfer_student';
+        }
+
+        // to ensure that the StudentController.step is updated
+        setTimeout(function() {
+            $scope.$apply();
+        });
     });
-
-
 }
