@@ -12,7 +12,7 @@ class POCOR4424 extends AbstractMigration
         $this->execute('CREATE TABLE `z_4424_institution_subjects` LIKE `institution_subjects`');
         $this->execute('INSERT INTO `z_4424_institution_subjects` SELECT * FROM `institution_subjects`');
 
-        $this->execute('update `institution_classes`
+        $this->execute("update `institution_classes`
             SET `total_male_students` = (
                 select count(`institution_class_students`.`id`) as `male_cnt`
                 from `institution_class_students`
@@ -20,9 +20,9 @@ class POCOR4424 extends AbstractMigration
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_class_students`.`institution_class_id` = `institution_classes`.`id`
                 and `genders`.`code` = 'M'
-            )');
+            )");
 
-        $this->execute('update `institution_classes`
+        $this->execute("update `institution_classes`
             SET `total_female_students` = (
                 select count(`institution_class_students`.`id`) as `female_cnt`
                 from `institution_class_students`
@@ -30,9 +30,9 @@ class POCOR4424 extends AbstractMigration
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_class_students`.`institution_class_id` = `institution_classes`.`id`
                 and `genders`.`code` = 'F'
-            )');
+            )");
 
-        $this->execute('update `institution_subjects`
+        $this->execute("update `institution_subjects`
             SET `total_male_students` = (
                 select count(`institution_subject_students`.`id`) as `male_cnt`
                 from `institution_subject_students`
@@ -40,9 +40,9 @@ class POCOR4424 extends AbstractMigration
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_subject_students`.`institution_subject_id` = `institution_subjects`.`id`
                 and `genders`.`code` = 'M'
-            )');
+            )");
 
-        $this->execute('update `institution_subjects`
+        $this->execute("update `institution_subjects`
             SET `total_female_students` = (
                 select count(`institution_subject_students`.`id`) as `female_cnt`
                 from `institution_subject_students`
@@ -50,15 +50,15 @@ class POCOR4424 extends AbstractMigration
                 inner join `genders` on `genders`.`id` = `security_users`.`gender_id`
                 where `institution_subject_students`.`institution_subject_id` = `institution_subjects`.`id`
                 and `genders`.`code` = 'F'
-            )');
+            )");
     }
 
     public function down()
     {
-        $this->dropTable('institution_classes');
-        $this->table('z_4424_institution_classes')->rename('institution_classes');
+        $this->dropTable("institution_classes");
+        $this->table("z_4424_institution_classes")->rename("institution_classes");
 
-        $this->dropTable('institution_subjects');
-        $this->table('z_4424_institution_subjects')->rename('institution_subjects');
+        $this->dropTable("institution_subjects");
+        $this->table("z_4424_institution_subjects")->rename("institution_subjects");
     }
 }
