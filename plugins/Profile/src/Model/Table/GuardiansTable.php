@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\Core\Configure;
 
 class GuardiansTable extends ControllerActionTable
 {
@@ -29,7 +30,9 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
         $this->addBehavior('ControllerAction.Image');
     }
 

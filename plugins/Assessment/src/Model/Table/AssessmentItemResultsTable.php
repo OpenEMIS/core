@@ -9,12 +9,14 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Utility\Text;
+use Cake\Core\Configure;
 
 class AssessmentItemResultsTable extends AppTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
+
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -27,7 +29,9 @@ class AssessmentItemResultsTable extends AppTable
             'Results' => ['index', 'add'],
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function validationDefault(Validator $validator)
