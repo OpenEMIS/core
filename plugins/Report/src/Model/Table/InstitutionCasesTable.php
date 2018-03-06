@@ -61,15 +61,6 @@ class InstitutionCasesTable extends AppTable
 
         $module = $requestData->module;
         $listener = TableRegistry::get($this->features[$module]);
-        $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
-        
-        if ($event->isStopped()) {
-            return $event->result;
-        }
-        if (!empty($event->result)) {
-            $query = $event->result;
-        }
-
         $query
             ->select([
                 'area_code' => 'Areas.code',
@@ -105,6 +96,15 @@ class InstitutionCasesTable extends AppTable
                 }
                 return $arrayRes;
             });
+
+        $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
+        
+        if ($event->isStopped()) {
+            return $event->result;
+        }
+        if (!empty($event->result)) {
+            $query = $event->result;
+        }
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
             $query->find('inPeriod', ['field' => 'created', 'academic_period_id' => $academicPeriodId]);
