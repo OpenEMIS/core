@@ -168,8 +168,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
-            'Staff' => ['index', 'view'],
-            'API' => ['index', 'view']
+            'Staff' => ['index', 'view']
         ]);
 
         $this->addBehavior('ControllerAction.Image');
@@ -602,11 +601,11 @@ class InstitutionsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** index action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** index action methods
+    **
+    ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->Session->delete('Institutions.id');
@@ -756,11 +755,11 @@ class InstitutionsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** view action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** view action methods
+    **
+    ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
@@ -806,11 +805,11 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
-/******************************************************************************************************************
-**
-** add / addEdit action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** add / addEdit action methods
+    **
+    ******************************************************************************************************************/
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $userId = $this->Session->read('Auth.User.id');
@@ -898,11 +897,11 @@ class InstitutionsTable extends ControllerActionTable
         return $attr;
     }
 
-/******************************************************************************************************************
-**
-** essential methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** essential methods
+    **
+    ******************************************************************************************************************/
 
     // autocomplete used for UserGroups
     public function autocomplete($search, $params = [])
@@ -1005,11 +1004,11 @@ class InstitutionsTable extends ControllerActionTable
         return compact('typeOptions', 'selectedType');
     }
 
-/******************************************************************************************************************
-**
-** Security Functions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+    **
+    ** Security Functions
+    **
+    ******************************************************************************************************************/
 
     public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request)
     {
