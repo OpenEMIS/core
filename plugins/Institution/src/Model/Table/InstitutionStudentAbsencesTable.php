@@ -369,18 +369,19 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     {
         $query
             ->select([
-                'count' => $query->func()->count('InstitutionCaseRecords.id'),
+                'absent_days' => 'InstitutionStudentAbsenceDays.absent_days',
                 'absence_type' => 'AbsenceTypes.name',
                 'openemis_no' => 'Users.openemis_no',
                 'first_name' => 'Users.first_name',
-                'middle_name' =>'Users.middle_name',
-                'third_name' =>'Users.third_name',
-                'last_name' =>'Users.last_name',
-                'preferred_name' =>'Users.preferred_name'
+                'middle_name' => 'Users.middle_name',
+                'third_name' => 'Users.third_name',
+                'last_name' => 'Users.last_name',
+                'preferred_name' => 'Users.preferred_name'
              ])
             ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.Users')
             ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.AbsenceTypes')
-            ->group(['InstitutionCaseRecords.institution_case_id']);     
+            ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.InstitutionStudentAbsenceDays')
+            ->group(['WorkflowTransitions.id','InstitutionCaseRecords.institution_case_id']);
         
         return $query;
     }
@@ -402,8 +403,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         ];
   
         $newFields[] = [
-            'key' => 'InstitutionCaseRecords.id',
-            'field' => 'count',
+            'key' => 'InstitutionStudentAbsenceDays.absent_days',
+            'field' => 'absent_days',
             'type' => 'string',
             'label' => __('Number of Days')
         ];
