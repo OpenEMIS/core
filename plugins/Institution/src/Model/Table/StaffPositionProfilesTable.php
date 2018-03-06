@@ -55,7 +55,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         'Staff.StaffSubjects' => [
             'StaffTeachingSubject'
         ],
-        'Institution.StaffAppraisals' => [
+        'Institution.InstitutionStaffAppraisals' => [
             'AppraisalsByTheStaff'
         ],
         'Institution.StaffBehaviours' => [
