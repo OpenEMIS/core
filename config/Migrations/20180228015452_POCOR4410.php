@@ -84,8 +84,7 @@ class POCOR4410 extends AbstractMigration
             ->save();
 
             // MIGRATE ALL THE OLD CONTACTS DETAILS OVER FROM INSTITUTION AND SET THEM AS PREFERRED
-            $this->execute('INSERT INTO `institution_contact_persons` (`contact_person`,`institution_id`,`created_user_id`,`created`) SELECT `contact_person`,`id`,`created_user_id`,`created` FROM `institutions` WHERE `contact_person` <> ""');
-            $this->execute('UPDATE institution_contact_persons SET `preferred` = 1');
+            $this->execute('INSERT INTO `institution_contact_persons` (`contact_person`, `preferred`, `institution_id`, `created_user_id`, `created`) SELECT `contact_person`, 1, `id`, `created_user_id`, `created` FROM `institutions` WHERE `contact_person` <> ""');
             
             // Security function permission
             $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 2');

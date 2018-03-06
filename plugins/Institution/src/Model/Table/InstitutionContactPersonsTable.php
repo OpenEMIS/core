@@ -24,58 +24,59 @@ class InstitutionContactPersonsTable extends AppTable {
         return $validator
             ->allowEmpty('telephone')
             ->add('telephone', 'ruleCustomTelephone', [
-                    'rule' => ['validateCustomPattern', 'institution_contact_person_telephone'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
-
+                'rule' => ['validateCustomPattern', 'institution_contact_person_telephone'],
+                'provider' => 'table'
+            ])
             ->allowEmpty('mobile_number')
             ->add('mobile_number', 'ruleCustomMobile', [
-                    'rule' => ['validateCustomPattern', 'institution_contact_person_mobile'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
-
+                'rule' => ['validateCustomPattern', 'institution_contact_person_mobile'],
+                'provider' => 'table'
+            ])
             ->allowEmpty('fax')
             ->add('fax', 'ruleCustomFax', [
-                    'rule' => ['validateCustomPattern', 'institution_contact_person_fax'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
-            ->notEmpty('preferred')
+                'rule' => ['validateCustomPattern', 'institution_contact_person_fax'],
+                'provider' => 'table'
+            ])
             ->allowEmpty('email')
             ->add('email', [
-                    'ruleValidEmail' => [
-                        'rule' => 'email'
-                    ]
-                ]);
+                'ruleValidEmail' => [
+                    'rule' => 'email'
+                ]
+            ])
+            ->requirePresence('preferred');
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->dirty('preferred')) {
-            if ($entity->preferred == 1) { 
+            $institutionId = $entity->institution_id;
 
+            if ($entity->preferred == 1) {
                 $this->updateAll(
                     ['preferred' => 0],
-                    ['id <> ' => $entity->id]
+                    [
+                        'institution_id' => $institutionId,
+                        'id <> ' => $entity->id
+                    ]
                  );
 
                 $this->Institutions->updateAll(
                     ['contact_person' => $entity->contact_person],
-                    ['id' => $entity->institution_id]
-                 );
+                    ['id' => $institutionId]
+                );
             } else {
+                $results = $this->find()
+                    ->where([
+                        'institution_id' => $institutionId,
+                        'preferred' => 1
+                    ])
+                    ->all();
 
-                $query = $this->find()
-                        ->where(['preferred' => 1])
-                        ->first();
-
-                if(!$query) {
+                if ($results->isEmpty()) {
                     $this->Institutions->updateAll(
                         ['contact_person' => null],
-                        ['id' => $entity->institution_id]
-                     );
+                        ['id' => $institutionId]
+                    );
                 }
             }
         }
@@ -83,11 +84,7 @@ class InstitutionContactPersonsTable extends AppTable {
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $query = $this->find()
-                        ->where(['preferred' => 1])
-                        ->first();
-
-        if(!$query) {
+        if ($entity->preferred == 1) {
             $this->Institutions->updateAll(
                 ['contact_person' => null],
                 ['id' => $entity->institution_id]
