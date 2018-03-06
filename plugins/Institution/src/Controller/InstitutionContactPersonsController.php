@@ -2,6 +2,8 @@
 namespace Institution\Controller;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
 class InstitutionContactPersonsController extends PageController
@@ -11,6 +13,14 @@ class InstitutionContactPersonsController extends PageController
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionContactPersons');
+    }
+
+    public function implementedEvents()
+    {
+        $event = parent::implementedEvents();
+        $event['Controller.Page.onRenderPreferred'] = 'onRenderPreferred';
+
+        return $event;
     }
 
     public function beforeFilter(Event $event)
@@ -27,10 +37,10 @@ class InstitutionContactPersonsController extends PageController
 
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Contacts');
+        $page->addCrumb('Contact Persons');
 
         // set header
-        $page->setHeader(__('Contacts'));
+        $page->setHeader(__('Contact Persons'));
 
         $page->setQueryString('institution_id', $institutionId);
 
@@ -66,5 +76,14 @@ class InstitutionContactPersonsController extends PageController
             ->setOptions([
                 null => '-- Select --', '1' => __('Yes'), '0' => __('No')
         ]);
+    }
+
+    public function onRenderPreferred(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+        if ($page->is(['index', 'view', 'delete'])) {
+            ($entity->preferred) ? $return = __('Yes') : $return = __('No');
+            return $return;
+        }
     }
 }

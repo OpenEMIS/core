@@ -76,9 +76,22 @@ class InstitutionContactPersonsTable extends AppTable {
                         ['contact_person' => null],
                         ['id' => $entity->institution_id]
                      );
-
                 }
             }
         }
-    } 
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $query = $this->find()
+                        ->where(['preferred' => 1])
+                        ->first();
+
+        if(!$query) {
+            $this->Institutions->updateAll(
+                ['contact_person' => null],
+                ['id' => $entity->institution_id]
+            );
+        }
+    }
 }
