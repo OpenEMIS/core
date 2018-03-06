@@ -4,15 +4,22 @@ namespace Institution\Controller;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
+
 use App\Controller\PageController;
+use App\Model\Traits\OptionsTrait;
 
 class InstitutionContactPersonsController extends PageController
 {
+    use OptionsTrait;
+
+    private $preferredOptions = [];
 
     public function initialize()
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionContactPersons');
+
+        $this->preferredOptions = $this->getSelectOptions('general.yesno');
     }
 
     public function implementedEvents()
@@ -54,7 +61,7 @@ class InstitutionContactPersonsController extends PageController
     {
         parent::index();
         $page = $this->Page;
-        $page->exclude(['institution_id']);
+        $page->exclude(['telephone', 'mobile_number', 'fax', 'email', 'institution_id']);
     }
 
       public function add()
@@ -73,17 +80,16 @@ class InstitutionContactPersonsController extends PageController
     {
         $this->Page->get('preferred')
             ->setControlType('select')
-            ->setOptions([
-                null => '-- Select --', '1' => __('Yes'), '0' => __('No')
-        ]);
+            ->setOptions($this->preferredOptions);
     }
 
     public function onRenderPreferred(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
         if ($page->is(['index', 'view', 'delete'])) {
-            ($entity->preferred) ? $return = __('Yes') : $return = __('No');
-            return $return;
+            $value = $this->preferredOptions[$entity->preferred];
+
+            return $value;
         }
     }
 }
