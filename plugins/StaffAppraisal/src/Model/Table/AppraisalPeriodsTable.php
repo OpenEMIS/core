@@ -25,7 +25,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        $this->hasMany('InstitutionStaffAppraisals', ['className' => 'Institution.InstitutionStaffAppraisals', 'foreignKey' => 'appraisal_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'appraisal_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('AcademicPeriod.Period');
         $this->setDeleteStrategy('restrict');
