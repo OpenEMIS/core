@@ -76,7 +76,7 @@ class StaffProfileBehavior extends Behavior
                 ;
                 break;
 
-            case 'InstitutionStaffAppraisals':
+            case 'StaffAppraisals':
                 $query->contain(['AppraisalPeriods.AcademicPeriods'])
                     ->where([
                         $model->aliasField('created_user_id') => $staffId,

@@ -49,7 +49,7 @@ class InstitutionsController extends AppController
         'StaffUser',
         'StaffAccount',
         'StaffLeave',
-        'InstitutionStaffAppraisals',
+        'StaffAppraisals',
         'StaffTrainingNeeds',
         'StaffTrainingApplications',
         'StaffTrainingResults',
@@ -179,9 +179,9 @@ class InstitutionsController extends AppController
 
     // CAv4
 
-    public function InstitutionStaffAppraisals()
+    public function StaffAppraisals()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAppraisals']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
     }
 
     public function Surveys()
@@ -1161,9 +1161,6 @@ class InstitutionsController extends AppController
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
-                } elseif ($model->table() == 'staff_appraisals'  && !$isDownload) {
-                    $ids = array_key_exists('user_id', $requestQuery) ? $requestQuery['user_id']: $session->read('Staff.Staff.id');
-                    $persona = $model->Users->get($ids);
                 }
             } elseif (isset($requestQuery['user_id'][1])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
