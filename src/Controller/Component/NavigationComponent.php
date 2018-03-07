@@ -888,7 +888,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
                 'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.InstitutionStaffAppraisals'],
+                    'Institutions.StaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
