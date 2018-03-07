@@ -45,6 +45,10 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         return $validator
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ])
             ->add('is_main_country', 'ruleValidateAreaAdministrativeMainCountry', [
                 'rule' => ['validateAreaAdministrativeMainCountry'],
                 'on' => function ($context) {
