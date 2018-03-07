@@ -84,6 +84,14 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $this->Users->updateAll(
+            ['is_guardian' => 1],
+            ['id' => $entity->guardian_id]
+        );   
+    }
+
     public function afterAction(Event $event, $data)
     {
         if ($this->action != 'view') {
@@ -228,7 +236,6 @@ class GuardiansTable extends ControllerActionTable
 
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
-            // only search for guardian
             $query = $this->Users
                 ->find()
                 ->select([
@@ -248,9 +255,6 @@ class GuardiansTable extends ControllerActionTable
                 )
                 ->group([
                     $this->Users->aliasField('id')
-                ])
-                ->where([
-                    $this->Users->aliasField('is_guardian') => 1
                 ])
                 ->limit(100);
 
