@@ -13,6 +13,24 @@ use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Guardian.afterSave'] = 'guardianAfterSave';
+        return $events;
+    }
+
+    public function guardianAfterSave(Event $event, $guardian)
+    {
+        if ($guardian->isNew()) {
+            $this->updateAll(['is_guardian' => 1], ['id' => $guardian->guardian_id]);
+        }
+    }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {

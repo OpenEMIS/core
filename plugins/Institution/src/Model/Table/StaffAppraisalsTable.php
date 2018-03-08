@@ -15,12 +15,13 @@ use Cake\Network\Request;
 
 use App\Model\Table\ControllerActionTable;
 
-class InstitutionStaffAppraisalsTable extends ControllerActionTable
+class StaffAppraisalsTable extends ControllerActionTable
 {
     private $periodList = [];
 
     public function initialize(array $config)
     {
+        $this->table('institution_staff_appraisals');
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -318,6 +319,6 @@ class InstitutionStaffAppraisalsTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'InstitutionStaffAppraisals');
+        $this->controller->set('selectedAction', 'StaffAppraisals');
     }
 }

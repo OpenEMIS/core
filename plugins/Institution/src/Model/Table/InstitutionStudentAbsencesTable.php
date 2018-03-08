@@ -14,6 +14,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
@@ -54,12 +55,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ],
             'pages' => ['index']
         ]);
-        $this->addBehavior('Institution.Case');
+        if (!in_array('Cases', (array) Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Institution.Case');
+        }
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
-
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
 
         $this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
         $this->absenceCodeList = $this->AbsenceTypes->getCodeList();
