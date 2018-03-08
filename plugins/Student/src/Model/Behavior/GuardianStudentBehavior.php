@@ -107,7 +107,7 @@ class GuardianStudentBehavior extends Behavior {
 			$this->_table->ControllerAction->field('guardian_relation_id', ['fieldName' => $associationString.'guardian_relation_id']);
 			$this->_table->ControllerAction->field('guardian_education_level_id', ['fieldName' => $associationString.'guardian_education_level_id']);
 			$this->_table->ControllerAction->field('search',['type' => 'autocomplete',
-														     'placeholder' => 'openEMIS ID or Name',
+														     'placeholder' => 'OpenEMIS ID, Identity Number or Name',
 														     'url' => '/Students/Guardians/autoCompleteUserList',
 														     'length' => 3 ]);
 
