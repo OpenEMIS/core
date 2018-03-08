@@ -14,6 +14,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Core\Configure;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -113,8 +114,9 @@ class StudentsTable extends ControllerActionTable
          * End Advance Search Types
          */
         $this->addBehavior('ControllerAction.Image'); // To be verified
-
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function implementedEvents()
