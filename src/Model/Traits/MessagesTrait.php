@@ -2107,6 +2107,11 @@ trait MessagesTrait
             ],
         ],
         'Area' => [
+            'Areas' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
             'AreaAdministratives' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique'
