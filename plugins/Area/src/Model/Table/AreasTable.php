@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -52,6 +53,17 @@ class AreasTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.synchronize'] = 'synchronize';
         return $events;
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ]);
     }
 
     public function synchronize(Event $mainEvent, ArrayObject $extra)
