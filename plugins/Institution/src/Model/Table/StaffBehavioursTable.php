@@ -42,6 +42,8 @@ class StaffBehavioursTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
+        $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
+        $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
         return $events;
     }
 
@@ -319,5 +321,41 @@ class StaffBehavioursTable extends ControllerActionTable
         $summary .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
 
         return $summary;
+    }
+
+    public function onIncludeCustomExcelFields(Event $event, $newFields)
+    {
+        $newFields[] = [
+            'key' => 'Staff.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Staff.full_name',
+            'field' => 'full_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        return $newFields;
+    }
+
+    public function onBuildCustomQuery(Event $event, $query)
+    {
+        $query
+            ->select([
+                'openemis_no' => 'Staff.openemis_no',
+                'first_name' => 'Staff.first_name',
+                'middle_name' =>'Staff.middle_name',
+                'third_name' =>'Staff.third_name',
+                'last_name' =>'Staff.last_name',
+                'preferred_name' =>'Staff.preferred_name'
+         
+             ])
+            ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff');
+        
+        return $query;
     }
 }
