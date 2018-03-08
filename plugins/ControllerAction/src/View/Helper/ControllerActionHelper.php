@@ -569,7 +569,7 @@ class ControllerActionHelper extends Helper
                 // end attach event
 
                 $associatedFound = false;
-                if ($event->result || is_int($event->result) || is_string($event->result)) {
+                if ($event->result || is_int($event->result)) {
                     $data->{$_field} = $event->result;
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
