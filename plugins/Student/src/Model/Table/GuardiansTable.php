@@ -86,10 +86,10 @@ class GuardiansTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $this->Users->updateAll(
-            ['is_guardian' => 1],
-            ['id' => $entity->guardian_id]
-        );   
+        $listeners = [
+            TableRegistry::get('Student.GuardianUser')
+        ];
+        $this->dispatchEventToModels('Model.Guardian.afterSave', [$entity], $this, $listeners);
     }
 
     public function afterAction(Event $event, $data)
