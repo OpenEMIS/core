@@ -263,7 +263,7 @@ class NavigationComponent extends Component
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
-            'StudentHistories', 'StaffHistories', 'InstitutionCalendars'
+            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons'
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments'];
@@ -431,6 +431,13 @@ class NavigationComponent extends Component
                     'parent' => 'Institution.General',
                     'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
+                ],
+                   
+                'InstitutionContactPersons.index' => [
+                        'title' => 'Contact Persons',
+                        'parent' => 'Institution.General',
+                        'selected' => ['InstitutionContactPersons.view', 'InstitutionContactPersons.add', 'InstitutionContactPersons.edit', 'InstitutionContactPersons.delete'],
+                        'params' => ['plugin' => 'Institution', 0 => $institutionId]
                 ],
 
                 'Institutions.Attachments.index' => [
