@@ -13,7 +13,6 @@ class InstitutionContactsTable extends ControllerActionTable {
     {
         $this->table('institutions');
         parent::initialize($config);
-
         /**
          * fieldOption tables
          */
@@ -72,6 +71,7 @@ class InstitutionContactsTable extends ControllerActionTable {
             'contact_person', 'telephone', 'fax', 'email', 'website'
         ]);
 
+        $this->field('contact_person', ['type' => 'readonly']);
         // no index page
         if (isset($extra['toolbarButtons']['list'])) {
             unset($extra['toolbarButtons']['list']);
