@@ -236,7 +236,9 @@ class NavigationComponent extends Component
                 if (isset($element[$column_name])) {
                     return $element[$column_name];
                 }
-            }, $array);
+            },
+            $array
+        );
     }
 
     public function buildNavigation()
@@ -270,7 +272,8 @@ class NavigationComponent extends Component
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
             && $action != 'index'
-            && (!in_array($action, $institutionActions)))
+            && (!in_array($action, $institutionActions))
+        )
             ) {
             $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
             $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
@@ -301,7 +304,7 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                 $session->write('Directory.Directories.reload', true);
             }
-        } else if (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
+        } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
 
             $session = $this->request->session();
@@ -592,25 +595,25 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Institution']
                     ],
 
-			'Institutions.ReportCards' => [
-				'title' => 'Report Cards',
-				'parent' => 'Institutions.Institutions.index',
-				'link' => false,
-			],
+            'Institutions.ReportCards' => [
+                'title' => 'Report Cards',
+                'parent' => 'Institutions.Institutions.index',
+                'link' => false,
+            ],
 
-				'Institutions.ReportCardComments' => [
-					'title' => 'Comments',
-					'parent' => 'Institutions.ReportCards',
-					'params' => ['plugin' => 'Institution'],
-					'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
-				],
+                'Institutions.ReportCardComments' => [
+                    'title' => 'Comments',
+                    'parent' => 'Institutions.ReportCards',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
+                ],
 
-				'Institutions.ReportCardStatuses' => [
-					'title' => 'Statuses',
-					'parent' => 'Institutions.ReportCards',
-					'params' => ['plugin' => 'Institution'],
-					'selected' => ['Institutions.ReportCardStatuses'],
-				],
+                'Institutions.ReportCardStatuses' => [
+                    'title' => 'Statuses',
+                    'parent' => 'Institutions.ReportCards',
+                    'params' => ['plugin' => 'Institution'],
+                    'selected' => ['Institutions.ReportCardStatuses'],
+                ],
 
             'Institutions.Positions' => [
                 'title' => 'Positions',
@@ -1259,11 +1262,16 @@ class NavigationComponent extends Component
                     'parent' => 'SystemSetup',
                     'link' => false
                 ],
-                    'Credentials.index' => [
-                        'title' => 'Credentials',
-                        'parent' => 'API',
-                        'selected' => ['Credentials.view', 'Credentials.add', 'Credentials.edit', 'Credentials.delete']
-                    ],
+                'ApiSecurities.index' => [
+                    'title' => 'Securities',
+                    'parent' => 'API',
+                    'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
+                ],
+                'Credentials.index' => [
+                    'title' => 'Credentials',
+                    'parent' => 'API',
+                    'selected' => ['Credentials.view', 'Credentials.add', 'Credentials.edit', 'Credentials.delete']
+                ],
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
