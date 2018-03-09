@@ -939,8 +939,24 @@ class StudentAttendancesTable extends AppTable
             $present = '-';
             $absent = '-';
             $late = '-';
+            
+            $toUpdateDashboard = false;
+            if ($selectedDay == -1) {
+                $findDay = $this->selectedDate[0];
+                $endWeek = $this->selectedDate[1];
 
-            if ($selectedDay == -1 || $this->isDateMarked($selectedClass, $selectedPeriod, $this->selectedDate)) {
+                do {
+                    if ($this->isDateMarked($selectedClass, $selectedPeriod, $findDay)) {
+                        $toUpdateDashboard = true;
+                        break;
+                    }
+                    $findDay->addDay();
+                } while ($findDay->lte($endWeek));
+            } else {
+                $toUpdateDashboard = $this->isDateMarked($selectedClass, $selectedPeriod, $this->selectedDate);
+            }
+
+            if ($toUpdateDashboard) {
                 $dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
                 $present = $dataSet['Present'];
                 $absent = $dataSet['Absence'];
