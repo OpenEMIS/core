@@ -325,47 +325,31 @@ class StudentAttendancesTable extends AppTable
         }
         $studentAbsenceArray = $tempArr;
 
-        $data = [];
+        $data = [
+            'Present' => 0,
+            'Late' => 0,
+            'Absence' => 0
+        ];
 
         foreach ($studentAbsenceArray as $key => $value) {
             if (empty($value['absence_id'])) {
-                if (isset($data['Present'])) {
-                    $data['Present'] = ++$data['Present'];
-                } else {
-                    $data['Present'] = 1;
-                }
+                $data['Present']++;
             } else {
                 $typeCode = $this->absenceCodeList[$value['absence_type']];
 
                 if ($typeCode == 'LATE') {
-                    if (isset($data['Late'])) {
-                        $data['Late'] = ++$data['Late'];
-                    } else {
-                        $data['Late'] = 1;
-                    }
-                    if (isset($data['Present'])) {
-                        $data['Present'] = ++$data['Present'];
-                    } else {
-                        $data['Present'] = 1;
-                    }
+                    $data['Late']++;
+                    $data['Present']++;
                 } else {
                     if ($value['full_day'] == 0) {
-                        if (isset($data['Present'])) {
-                            $data['Present'] = ++$data['Present'];
-                        } else {
-                            $data['Present'] = 1;
-                        }
-                    }
-                    if ($value['full_day'] == 1) {
-                        if (isset($data['Absence'])) {
-                            $data['Absence'] = ++$data['Absence'];
-                        } else {
-                            $data['Absence'] = 1;
-                        }
+                        $data['Present']++;
+                    } elseif ($value['full_day'] == 1) {
+                        $data['Absence']++;
                     }
                 }
             }
         }
+
         unset($StudentAttendancesQuery);
         return $data;
     }
@@ -952,20 +936,15 @@ class StudentAttendancesTable extends AppTable
             $totalStudent = $queryClone->distinct(['InstitutionStudents.student_id'])->count();
 
             $indexDashboard = 'attendance';
+            $present = '-';
+            $absent = '-';
+            $late = '-';
 
-            $dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
-
-            $present = 0;
-            $absent = 0;
-            $late = 0;
-            foreach ($dataSet as $key => $data) {
-                if ($key == 'Present') {
-                    $present = $data;
-                } elseif ($key == 'Late') {
-                    $late = $data;
-                } else {
-                    $absent += $data;
-                }
+            if ($selectedDay == -1 || $this->isDateMarked($selectedClass, $selectedPeriod, $this->selectedDate)) {
+                $dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
+                $present = $dataSet['Present'];
+                $absent = $dataSet['Absence'];
+                $late = $dataSet['Late'];
             }
 
             $studentAttendanceArray = [];
