@@ -2112,7 +2112,15 @@ trait MessagesTrait
             ],
         ],
         'Area' => [
+            'Areas' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
             'AreaAdministratives' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
                 'is_main_country' => [
                     'ruleValidateAreaAdministrativeMainCountry' => 'There must be at least one Main Country'
                 ]
