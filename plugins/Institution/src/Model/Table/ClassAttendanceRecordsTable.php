@@ -31,23 +31,6 @@ class ClassAttendanceRecordsTable extends AppTable
         }
     }
 
-    public function getInvalidDaysForMonth($month, $year)
-    {
-        $invalidDays = [];
-        
-        if (in_array($month, [4, 6, 9, 11])) {
-            $invalidDays = [31];
-        } elseif ($month == 2) {
-            $invalidDays = [30, 31];
-            // check if the date is not a leap year
-            if (date('L', mktime(0, 0, 0, 1, 1, $year)) != '1') {
-                $invalidDays[] = 29;
-            }
-        }
-
-        return $invalidDays;
-    }
-
     public function isDateMarked($institutionClassId, $academicPeriodId, $date)
     {
         $year = date('Y', strtotime($date));
@@ -73,5 +56,22 @@ class ClassAttendanceRecordsTable extends AppTable
 
             return $classAttendanceRecord->{$dayColumn} == self::MARKED;
         }
+    }
+    
+    private function getInvalidDaysForMonth($month, $year)
+    {
+        $invalidDays = [];
+        
+        if (in_array($month, [4, 6, 9, 11])) {
+            $invalidDays = [31];
+        } elseif ($month == 2) {
+            $invalidDays = [30, 31];
+            // check if the date is not a leap year
+            if (date('L', mktime(0, 0, 0, 1, 1, $year)) != '1') {
+                $invalidDays[] = 29;
+            }
+        }
+
+        return $invalidDays;
     }
 }
