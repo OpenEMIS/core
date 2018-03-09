@@ -939,7 +939,7 @@ class StudentAttendancesTable extends AppTable
             $present = '-';
             $absent = '-';
             $late = '-';
-            
+
             $toUpdateDashboard = false;
             if ($selectedDay == -1) {
                 $findDay = $this->selectedDate[0];
@@ -1174,10 +1174,6 @@ class StudentAttendancesTable extends AppTable
                         $timeError = false;
                         $obj['academic_period_id'] = $requestQuery['academic_period_id'];
 
-                        if (!isset($recordDate)) {
-                            $recordDate = $obj['start_date'];
-                        }
-
                         if ($obj['absence_type_id'] == $codeAbsenceType['UNEXCUSED']) {
                             $obj['student_absence_reason_id'] = 0;
                         } elseif ($obj['absence_type_id'] == $codeAbsenceType['LATE']) {
@@ -1223,7 +1219,6 @@ class StudentAttendancesTable extends AppTable
                             if (!$timeError) {
                                 $entity = $StudentAbsences->newEntity($obj);
                                 if ($StudentAbsences->save($entity)) {
-                                    // $canInsert = true;
                                 } else {
                                     $this->log($entity->errors(), 'debug');
                                 }
