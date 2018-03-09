@@ -17,6 +17,8 @@ class ClassAttendanceRecordsTable extends AppTable
     {
         $this->table('institution_class_attendance_records');
         parent::initialize($config);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
