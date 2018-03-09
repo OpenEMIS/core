@@ -26,6 +26,9 @@ class ImportOutcomeResultsTable extends AppTable
 
         // register table once
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
         $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         $this->OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
         $this->OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
@@ -63,6 +66,7 @@ class ImportOutcomeResultsTable extends AppTable
     {
         $request = $this->request;
         unset($request->query['period']);
+        unset($request->query['class']);
         unset($request->query['template']);
         unset($request->query['outcome_period']);
     }
@@ -70,10 +74,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->ControllerAction->field('academic_period', ['type' => 'select']);
+        $this->ControllerAction->field('class', ['type' => 'select']);
         $this->ControllerAction->field('outcome_template', ['type' => 'select']);
         $this->ControllerAction->field('outcome_period', ['type' => 'select']);
         $this->ControllerAction->field('select_file', ['visible' => false]);
-        $this->ControllerAction->setFieldOrder(['academic_period', 'outcome_template', 'outcome_period', 'select_file']);
+        $this->ControllerAction->setFieldOrder(['academic_period', 'class', 'outcome_template', 'outcome_period', 'select_file']);
     }
 
     public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, Request $request)
@@ -91,6 +96,7 @@ class ImportOutcomeResultsTable extends AppTable
     {
         $request = $this->request;
         unset($request->query['period']);
+        unset($request->query['class']);
         unset($request->query['template']);
         unset($request->query['outcome_period']);
 
@@ -99,11 +105,52 @@ class ImportOutcomeResultsTable extends AppTable
                 if (array_key_exists('academic_period', $request->data[$this->alias()])) {
                     $request->query['period'] = $request->data[$this->alias()]['academic_period'];
                 }
+                if (array_key_exists('class', $request->data[$this->alias()])) {
+                    unset($request->data[$this->alias()]['class']);
+                }
                 if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
                     unset($request->data[$this->alias()]['outcome_template']);
                 }
                 if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
                     unset($request->data[$this->alias()]['outcome_period']);
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+
+        $userId = $this->Auth->user('id');
+        $AccessControl = $this->AccessControl;
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $classOptions = $InstitutionClasses
+                ->find('list')
+                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
+                ->where([
+                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionClasses->aliasField('institution_id') => $institutionId
+                ])
+                ->toArray();
+
+            $attr['options'] = $classOptions;
+            $attr['onChangeReload'] = 'changeClass';
+        }
+        return $attr;
+    }
+
+    public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->request;
+        unset($request->query['class']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('class', $request->data[$this->alias()])) {
+                    $request->query['class'] = $request->data[$this->alias()]['class'];
                 }
             }
         }
@@ -250,7 +297,50 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        unset($data[$columnOrder]);
+        $classId = $this->request->query('class');
+
+        if (is_null($classId)) {
+            unset($data[$columnOrder]);
+        } else {
+            $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+            $modelData = $this->InstitutionClassStudents->find('all')
+                ->select([
+                    $lookedUpTable->aliasField($lookupColumn),
+                    $lookedUpTable->aliasField('first_name'),
+                    $lookedUpTable->aliasField('middle_name'),
+                    $lookedUpTable->aliasField('third_name'),
+                    $lookedUpTable->aliasField('last_name'),
+                    $lookedUpTable->aliasField('preferred_name'),
+                    $lookedUpTable->aliasField('identity_number'),
+                    $this->InstitutionClasses->aliasField('name'),
+                    $this->EducationGrades->aliasField('name')
+                ])
+                ->matching($lookedUpTable->alias())
+                ->matching($this->InstitutionClasses->alias())
+                ->matching($this->EducationGrades->alias())
+                ->where([
+                    $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId
+                ])
+                ->order([
+                    $lookedUpTable->aliasField('first_name'),
+                    $lookedUpTable->aliasField('last_name')
+                ]);
+
+            $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+            $data[$columnOrder]['lookupColumn'] = 1;
+            $data[$columnOrder]['data'][] = [$translatedCol, $translatedReadableCol, __('Identity Number'), __('Class Name'), __('Education Grade')];
+            if (!empty($modelData)) {
+                foreach($modelData->toArray() as $row) {
+                    $data[$columnOrder]['data'][] = [
+                        $row->_matchingData[$lookedUpTable->alias()]->{$lookupColumn},
+                        $row->_matchingData[$lookedUpTable->alias()]->name,
+                        $row->_matchingData[$lookedUpTable->alias()]->identity_number,
+                        $row->_matchingData[$this->InstitutionClasses->alias()]->name,
+                        $row->_matchingData[$this->EducationGrades->alias()]->name
+                    ];
+                }
+            }
+        }
     }
 
     public function onImportPopulateOutcomeGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
