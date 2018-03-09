@@ -50,7 +50,7 @@ class ImportOutcomeResultsTable extends AppTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
-            ->notEmpty(['academic_period', 'class', 'outcome_template', 'outcome_period', 'select_file']);
+            ->notEmpty(['academic_period', 'outcome_template', 'outcome_period', 'select_file']);
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
@@ -146,19 +146,11 @@ class ImportOutcomeResultsTable extends AppTable
     {
         $request = $this->request;
         unset($request->query['class']);
-        unset($request->query['template']);
-        unset($request->query['outcome_period']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('class', $request->data[$this->alias()])) {
                     $request->query['class'] = $request->data[$this->alias()]['class'];
-                }
-                if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_template']);
-                }
-                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['outcome_period']);
                 }
             }
         }
@@ -307,42 +299,46 @@ class ImportOutcomeResultsTable extends AppTable
     {
         $classId = $this->request->query('class');
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $modelData = $this->InstitutionClassStudents->find('all')
-            ->select([
-                $lookedUpTable->aliasField($lookupColumn),
-                $lookedUpTable->aliasField('first_name'),
-                $lookedUpTable->aliasField('middle_name'),
-                $lookedUpTable->aliasField('third_name'),
-                $lookedUpTable->aliasField('last_name'),
-                $lookedUpTable->aliasField('preferred_name'),
-                $lookedUpTable->aliasField('identity_number'),
-                $this->InstitutionClasses->aliasField('name'),
-                $this->EducationGrades->aliasField('name')
-            ])
-            ->matching($lookedUpTable->alias())
-            ->matching($this->InstitutionClasses->alias())
-            ->matching($this->EducationGrades->alias())
-            ->where([
-                $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId
-            ])
-            ->order([
-                $lookedUpTable->aliasField('first_name'),
-                $lookedUpTable->aliasField('last_name')
-            ]);
+        if (is_null($classId)) {
+            unset($data[$columnOrder]);
+        } else {
+            $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+            $modelData = $this->InstitutionClassStudents->find('all')
+                ->select([
+                    $lookedUpTable->aliasField($lookupColumn),
+                    $lookedUpTable->aliasField('first_name'),
+                    $lookedUpTable->aliasField('middle_name'),
+                    $lookedUpTable->aliasField('third_name'),
+                    $lookedUpTable->aliasField('last_name'),
+                    $lookedUpTable->aliasField('preferred_name'),
+                    $lookedUpTable->aliasField('identity_number'),
+                    $this->InstitutionClasses->aliasField('name'),
+                    $this->EducationGrades->aliasField('name')
+                ])
+                ->matching($lookedUpTable->alias())
+                ->matching($this->InstitutionClasses->alias())
+                ->matching($this->EducationGrades->alias())
+                ->where([
+                    $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId
+                ])
+                ->order([
+                    $lookedUpTable->aliasField('first_name'),
+                    $lookedUpTable->aliasField('last_name')
+                ]);
 
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 1;
-        $data[$columnOrder]['data'][] = [$translatedCol, $translatedReadableCol, __('Identity Number'), __('Class Name'), __('Education Grade')];
-        if (!empty($modelData)) {
-            foreach($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->_matchingData[$lookedUpTable->alias()]->{$lookupColumn},
-                    $row->_matchingData[$lookedUpTable->alias()]->name,
-                    $row->_matchingData[$lookedUpTable->alias()]->identity_number,
-                    $row->_matchingData[$this->InstitutionClasses->alias()]->name,
-                    $row->_matchingData[$this->EducationGrades->alias()]->name
-                ];
+            $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+            $data[$columnOrder]['lookupColumn'] = 1;
+            $data[$columnOrder]['data'][] = [$translatedCol, $translatedReadableCol, __('Identity Number'), __('Class Name'), __('Education Grade')];
+            if (!empty($modelData)) {
+                foreach($modelData->toArray() as $row) {
+                    $data[$columnOrder]['data'][] = [
+                        $row->_matchingData[$lookedUpTable->alias()]->{$lookupColumn},
+                        $row->_matchingData[$lookedUpTable->alias()]->name,
+                        $row->_matchingData[$lookedUpTable->alias()]->identity_number,
+                        $row->_matchingData[$this->InstitutionClasses->alias()]->name,
+                        $row->_matchingData[$this->EducationGrades->alias()]->name
+                    ];
+                }
             }
         }
     }
