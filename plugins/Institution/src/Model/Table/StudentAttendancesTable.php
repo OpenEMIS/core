@@ -459,34 +459,34 @@ class StudentAttendancesTable extends AppTable
             $html .= $Form->hidden($fieldPrefix.".end_date", ['value' => $selectedDate]);
         } else {
             if ($this->isSchoolClosed($this->selectedDate)) {
-                $html = '<i class="fa fa-ban"></i>';
+                $html = '<i style="color: #999" class="fa fa-minus"></i>';
             } else {
                 $classId = $this->request->query['class_id'];
                 $academicPeriodId = $this->request->query['academic_period_id'];
 
                 if ($this->isDateMarked($classId, $academicPeriodId, $this->selectedDate)) {
                     $html = '<i class="fa fa-check"></i>';
-
-                    if (!empty($entity->StudentAbsences['id'])) {
-                        $absenceTypeList = $this->absenceList;
-                        $absenceCodeList = $this->absenceCodeList;
-                        $fullDay = '';
-
-                        $absenceTypeId = $entity->StudentAbsences['absence_type_id'];
-                        $type = __($absenceTypeList[$absenceTypeId]);
-
-                        if ($absenceCodeList[$absenceTypeId] != 'LATE') {
-                            if ($entity->StudentAbsences['full_day'] == 1) {
-                                $fullDay = ' ('. __('Full Day').')';
-                            } else {
-                                $fullDay = ' ('. __('Not Full Day').')';
-                            }
-                        }
-
-                        $html = $type . $fullDay;
-                    }
                 } else {
                     $html = '<i class="fa fa-minus"></i>';
+                }
+
+                if (!empty($entity->StudentAbsences['id'])) {
+                    $absenceTypeList = $this->absenceList;
+                    $absenceCodeList = $this->absenceCodeList;
+                    $fullDay = '';
+
+                    $absenceTypeId = $entity->StudentAbsences['absence_type_id'];
+                    $type = __($absenceTypeList[$absenceTypeId]);
+
+                    if ($absenceCodeList[$absenceTypeId] != 'LATE') {
+                        if ($entity->StudentAbsences['full_day'] == 1) {
+                            $fullDay = ' ('. __('Full Day').')';
+                        } else {
+                            $fullDay = ' ('. __('Not Full Day').')';
+                        }
+                    }
+
+                    $html = $type . $fullDay;
                 }
             }
         }
@@ -599,6 +599,41 @@ class StudentAttendancesTable extends AppTable
         return $html;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        $requestQuery = $this->request->query;
+        $selectedPeriod = $requestQuery['academic_period_id'];
+        $selectedWeek = $requestQuery['week'];
+
+        $label = Inflector::humanize(__($field));
+        if ($field == 'openemis_no') {
+            $label = __('OpenEMIS ID');
+        } elseif ($field == 'student_id') {
+            $label = __('Student');
+        }
+
+        if ($field == 'type') {
+            $selectedDay = $requestQuery['day'];
+            $date = $this->getSelectedDate($selectedPeriod, $selectedWeek, $selectedDay);
+            if ($this->isSchoolClosed($date)) {
+                return '<span style="color: #999">' . $label . '</span>';
+            }
+        } elseif ($field == 'monday' ||
+            $field == 'tuesday' ||
+            $field == 'wednesday' ||
+            $field == 'thursday' ||
+            $field == 'friday' ||
+            $field == 'saturday' ||
+            $field == 'sunday') {
+            $date = $this->getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, $label);
+            if ($this->isSchoolClosed($date)) {
+                return '<span style="color: #999">' . $label . '</span>';
+            }
+        }
+
+        return $label;
+    }
+
     public function onGetSunday(Event $event, Entity $entity)
     {
         $requestQuery = $this->request->query;
@@ -672,44 +707,44 @@ class StudentAttendancesTable extends AppTable
     public function getAbsenceData(Event $event, Entity $entity, $key, $date)
     {
         if ($this->isSchoolClosed($date)) {
-            $value = '<i class="fa fa-ban"></i>';
+            $value = '<i style="color: #999" class="fa fa-minus"></i>';
         } else {
             $classId = $this->request->query['class_id'];
             $academicPeriodId = $this->request->query['academic_period_id'];
 
             if ($this->isDateMarked($classId, $academicPeriodId, $date)) {
                 $value = '<i class="fa fa-check"></i>';
+            } else {
+                $value = '<i class="fa fa-minus"></i>';
+            }
 
-                if (isset($entity->StudentAbsences['id'])) {
-                    $startDate = $entity->StudentAbsences['start_date'];
-                    $endDate = $entity->StudentAbsences['end_date'];
-                    $currentDay = $this->allDayOptions[$key]['date'];
-                    if ($currentDay >= $startDate && $currentDay <= $endDate) {
-                        $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-                        $absenceQuery = $InstitutionStudentAbsences
+            if (isset($entity->StudentAbsences['id'])) {
+                $startDate = $entity->StudentAbsences['start_date'];
+                $endDate = $entity->StudentAbsences['end_date'];
+                $currentDay = $this->allDayOptions[$key]['date'];
+                if ($currentDay >= $startDate && $currentDay <= $endDate) {
+                    $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+                    $absenceQuery = $InstitutionStudentAbsences
                             ->findById($entity->StudentAbsences['id'])
                             ->contain('StudentAbsenceReasons');
-                        $absenceResult = $absenceQuery->first();
+                    $absenceResult = $absenceQuery->first();
 
-                        $absenceType = $this->absenceList[$entity->StudentAbsences['absence_type_id']];
-                        if ($absenceResult->full_day == 0) {
-                            $urlLink = sprintf(__($absenceType) . ' - (%s - %s)', $absenceResult->start_time, $absenceResult->end_time);
-                        } else {
-                            $urlLink = __($absenceType) . ' - ('.__('Full Day').')';
-                        }
+                    $absenceType = $this->absenceList[$entity->StudentAbsences['absence_type_id']];
+                    if ($absenceResult->full_day == 0) {
+                        $urlLink = sprintf(__($absenceType) . ' - (%s - %s)', $absenceResult->start_time, $absenceResult->end_time);
+                    } else {
+                        $urlLink = __($absenceType) . ' - ('.__('Full Day').')';
+                    }
 
-                        $StudentAbsences = TableRegistry::get('Institution.StudentAbsences');
-                        $value = $event->subject()->Html->link($urlLink, [
+                    $StudentAbsences = TableRegistry::get('Institution.StudentAbsences');
+                    $value = $event->subject()->Html->link($urlLink, [
                             'plugin' => $this->controller->plugin,
                             'controller' => $this->controller->name,
                             'action' => $StudentAbsences->alias(),
                             'view',
                             $this->paramsEncode(['id' => $entity->StudentAbsences['id']])
                         ]);
-                    }
                 }
-            } else {
-                $value = '<i class="fa fa-minus"></i>';
             }
         }
 
