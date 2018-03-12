@@ -174,13 +174,26 @@ class DirectoriesTable extends ControllerActionTable
 
     public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
     {
-
         $subqueryOne = $this->AddressAreas
             ->find()
             ->select(1)
             ->where(function ($exp, $q) {
                 return $exp->equalFields($this->AddressAreas->aliasField('id'), $this->aliasField('address_area_id'));
             });
+
+        $query = $this->find()
+            ->select('id')
+            ->where(function ($exp, $q) use ($subqueryOne) {
+                return $exp->notExists($subqueryOne);
+            });
+
+
+        foreach ($query as $row) {
+            $this->updateAll(
+                ['address_area_id' => null],
+                ['id' => $row->id]
+            );
+        }
 
         $subqueryTwo = $this->BirthplaceAreas
             ->find()
@@ -192,25 +205,18 @@ class DirectoriesTable extends ControllerActionTable
 
         $query = $this->find()
             ->select('id')
-            ->where(function ($exp, $q) use ($subqueryOne) {
-                return $exp->notExists($subqueryOne);
-            })
-            ->orWhere(function ($exp, $q) use ($subqueryTwo) {
+            ->where(function ($exp, $q) use ($subqueryTwo) {
                 return $exp->notExists($subqueryTwo);
             });
         
-  
+
         foreach ($query as $row) {
             $this->updateAll(
-                [
-                    'address_area_id' => null,
-                    'birthplace_area_id' => null
-                ],
-                [
-                    'id' => $row->id
-                ]
+                ['birthplace_area_id' => null],
+                ['id' => $row->id]
             );
         }
+  
     }
 
     public function getCustomFilter(Event $event)
