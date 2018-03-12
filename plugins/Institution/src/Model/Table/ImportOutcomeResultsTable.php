@@ -463,3 +463,4 @@ class ImportOutcomeResultsTable extends AppTable
         return true;
     }
 }
+
