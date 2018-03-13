@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\Core\Configure;
 
 class GuardiansTable extends ControllerActionTable
 {
@@ -29,7 +30,9 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
         $this->addBehavior('ControllerAction.Image');
     }
 
@@ -139,7 +142,7 @@ class GuardiansTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
             if ($this->controller->name == 'Profiles') {
                 $action = 'ProfileGuardians';

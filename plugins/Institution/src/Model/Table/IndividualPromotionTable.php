@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 
 class IndividualPromotionTable extends ControllerActionTable
@@ -26,12 +27,13 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->addBehavior('OpenEmis.Section');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
 
         $this->toggle('index', false);
         $this->toggle('view', false);
         $this->toggle('edit', false);
-
-        $this->addBehavior('Risk.Risks');
     }
 
     public function implementedEvents()

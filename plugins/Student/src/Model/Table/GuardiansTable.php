@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 
 class GuardiansTable extends ControllerActionTable
@@ -29,7 +30,9 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
         $this->addBehavior('ControllerAction.Image');
     }
 
@@ -82,6 +85,14 @@ class GuardiansTable extends ControllerActionTable
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->alias());
         }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Student.GuardianUser')
+        ];
+        $this->dispatchEventToModels('Model.Guardian.afterSave', [$entity], $this, $listeners);
     }
 
     public function afterAction(Event $event, $data)
@@ -168,7 +179,7 @@ class GuardiansTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
             if ($this->controller->name == 'Directories') {
                 $action = 'StudentGuardians';
@@ -228,7 +239,6 @@ class GuardiansTable extends ControllerActionTable
 
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
-            // only search for guardian
             $query = $this->Users
                 ->find()
                 ->select([
@@ -248,9 +258,6 @@ class GuardiansTable extends ControllerActionTable
                 )
                 ->group([
                     $this->Users->aliasField('id')
-                ])
-                ->where([
-                    $this->Users->aliasField('is_guardian') => 1
                 ])
                 ->limit(100);
 
