@@ -426,19 +426,25 @@ class NavigationComponent extends Component
                     'selected' => ['InstitutionCalendars.view', 'InstitutionCalendars.add', 'InstitutionCalendars.edit', 'InstitutionCalendars.delete']
                 ],
 
-                'Institutions.Contacts.view' => [
+                'Contacts' => [
                     'title' => 'Contacts',
                     'parent' => 'Institution.General',
-                    'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
-                    'params' => ['plugin' => 'Institution', 0 => $institutionId]
+                    'link' => false
                 ],
-                   
-                'InstitutionContactPersons.index' => [
-                        'title' => 'Contact Persons',
-                        'parent' => 'Institution.General',
-                        'selected' => ['InstitutionContactPersons.view', 'InstitutionContactPersons.add', 'InstitutionContactPersons.edit', 'InstitutionContactPersons.delete'],
+                
+                    'Institutions.Contacts.view' => [
+                        'title' => 'Institution',
+                        'parent' => 'Contacts',
+                        'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
                         'params' => ['plugin' => 'Institution', 0 => $institutionId]
-                ],
+                    ],
+                       
+                    'InstitutionContactPersons.index' => [
+                            'title' => 'People',
+                            'parent' => 'Contacts',
+                            'selected' => ['InstitutionContactPersons.view', 'InstitutionContactPersons.add', 'InstitutionContactPersons.edit', 'InstitutionContactPersons.delete'],
+                            'params' => ['plugin' => 'Institution', 0 => $institutionId]
+                    ],
 
                 'Institutions.Attachments.index' => [
                     'title' => 'Attachments',
