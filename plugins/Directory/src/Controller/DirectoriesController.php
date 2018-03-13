@@ -325,7 +325,7 @@ class DirectoriesController extends AppController
         }
 
         if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
-            $session->delete('Directory.Directories');
+            $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
             $session->delete('Staff.Staff.name');
             $session->delete('Student.Students.id');
