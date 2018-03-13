@@ -448,6 +448,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_status_id');
         $this->field('institution_sector_id', ['type' => 'select', 'onChangeReload' => true]);
         if ($this->action == 'index' || $this->action == 'view') {
+            $this->field('contact_person', ['visible' => false]); 
             $this->field('institution_provider_id', ['type' => 'select']);
         }
         $this->field('institution_type_id');

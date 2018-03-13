@@ -68,10 +68,9 @@ class InstitutionContactsTable extends ControllerActionTable {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldVisible(['view', 'edit'], [
-            'contact_person', 'telephone', 'fax', 'email', 'website'
+            'telephone', 'fax', 'email', 'website'
         ]);
 
-        $this->field('contact_person', ['type' => 'readonly']);
         // no index page
         if (isset($extra['toolbarButtons']['list'])) {
             unset($extra['toolbarButtons']['list']);
