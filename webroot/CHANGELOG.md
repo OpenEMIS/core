@@ -1,3 +1,8 @@
+### [3.20.0] - 2018-03-02
+- Implemented Staff Appraisals feature enhancements
+- Implemented security management API
+- Fixed a bug where pagination does not retain the selected value
+
 ### [3.19.0] - 2018-02-23
 - Implemented customisable workflow for Student Transfers and Admissions
 - Marks below "Pass Mark" will now be displayed in red
