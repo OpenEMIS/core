@@ -530,4 +530,15 @@ class AreaAdministrativesTable extends ControllerActionTable
             }
         }
     }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Institution.Institutions'),
+            TableRegistry::get('Directory.Directories')
+        ];
+
+        $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);    
+    }
+
 }
