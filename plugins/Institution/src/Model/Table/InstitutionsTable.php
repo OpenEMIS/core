@@ -293,7 +293,31 @@ class InstitutionsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
+        $events['Model.AreaAdministrative.afterDelete'] = 'areaAdminstrativeAfterDelete';
         return $events;
+    }
+
+    public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
+    {
+        $subquery = $this->AreaAdministratives
+            ->find()
+            ->select(1)
+            ->where(function ($exp, $q) {
+                return $exp->equalFields($this->AreaAdministratives->aliasField('id'), $this->aliasField('area_administrative_id'));
+            });
+
+        $query = $this->find()
+            ->select('id')
+            ->where(function ($exp, $q) use ($subquery) {
+                return $exp->notExists($subquery);
+            });
+        
+        foreach ($query as $row) {
+            $this->updateAll(
+                ['area_administrative_id' => null],
+                ['id' => $row->id]
+            );
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
