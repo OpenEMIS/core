@@ -465,6 +465,11 @@ class AreasTable extends ControllerActionTable
         }
     }
 
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['disableForceDelete'] = true;
+    }
+
     public function onGetName(Event $event, Entity $entity)
     {
         return $event->subject()->HtmlField->link($entity->name, [
