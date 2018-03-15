@@ -16,7 +16,7 @@ class RemoveBehavior extends Behavior
 {
     private $recordHasAssociatedRecords = false;
     private $showForceDeleteFields = false;
-    private $allowForceDelete = false;
+    private $selectedForceDelete = false;
 
     public function implementedEvents()
     {
@@ -123,7 +123,7 @@ class RemoveBehavior extends Behavior
                     'onChangeReload' => true
                 ]);
 
-                $passwordType = $this->allowForceDelete ? 'password' : 'hidden';
+                $passwordType = $this->selectedForceDelete ? 'password' : 'hidden';
                 $model->field('password', ['type' => $passwordType]);
 
                 $model->setFieldOrder(['to_be_deleted', 'associated_records', 'force_delete', 'password']);
@@ -148,9 +148,9 @@ class RemoveBehavior extends Behavior
         $passwordErrors = [];
         $forceDeleteRecord = false;
         if (isset($request->data['submit']) && isset($request->data[$model->alias()]['force_delete'])) {
-            $this->allowForceDelete = $request->data[$model->alias()]['force_delete'];
+            $this->selectedForceDelete = $request->data[$model->alias()]['force_delete'];
 
-            if ($this->allowForceDelete && $request->data['submit'] == 'save') {
+            if ($this->selectedForceDelete && $request->data['submit'] == 'save') {
                 $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
                 if (array_key_exists('password', $tempEntity->errors())) {
                     $passwordErrors = $tempEntity->errors('password');
@@ -221,14 +221,16 @@ class RemoveBehavior extends Behavior
                 $extra['cells'] = $cells;
 
                 // check if force delete fields should be displayed
-                // cannot force delete records where association is manually set in $extra['associatedRecords'] or where there are too many associated records
-                if ($model->AccessControl->isAdmin() && !$extra->offsetExists('associatedRecords') && $this->recordHasAssociatedRecords && !$exceedAssociatedRecordLimit) {
-                    $this->showForceDeleteFields = true;
+                // cannot force delete records where association is manually set in $extra['associatedRecords'] or where there are too many associated records or disableForceDelete is manually set in $extra['disableForceDelete']
+                if ($model->AccessControl->isAdmin() && $this->recordHasAssociatedRecords) {
+                    if (!$exceedAssociatedRecordLimit && !$extra->offsetExists('associatedRecords') && !$extra->offsetExists('disableForceDelete')) {
+                        $this->showForceDeleteFields = true;
 
-                    if ($this->allowForceDelete) {
-                        $model->Alert->warning('general.delete.cascadeDelete', ['reset' => true]);
-                        if (!empty($passwordErrors)) {
-                            $entity->errors('password', $passwordErrors); // set password errors
+                        if ($this->selectedForceDelete) {
+                            $model->Alert->warning('general.delete.cascadeDelete', ['reset' => true]);
+                            if (!empty($passwordErrors)) {
+                                $entity->errors('password', $passwordErrors); // set password errors
+                            }
                         }
                     }
                 }
@@ -302,7 +304,7 @@ class RemoveBehavior extends Behavior
     {
         $model = $this->_table;
         if ($model->action == 'remove' && $model->actions('remove') == 'restrict') {
-            if ($this->recordHasAssociatedRecords && !$this->allowForceDelete) {
+            if ($this->recordHasAssociatedRecords && !$this->selectedForceDelete) {
                 unset($buttons[0]);
                 unset($buttons[1]);
             }
