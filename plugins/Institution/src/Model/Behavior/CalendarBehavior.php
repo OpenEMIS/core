@@ -17,6 +17,12 @@ class CalendarBehavior extends Behavior
         return $CalendarEventDates->isSchoolClosed($date);
     }
 
+    public function getInstitutionClosedDates($startDate, $endDate, $institutionList)
+    {
+        $CalendarEventDates = TableRegistry::get('CalendarEventDates');
+        return $CalendarEventDates->getInstitutionClosedDates($startDate, $endDate, $institutionList);
+    }
+
     public function getDateFromPeriodWeekDay($selectedPeriod, $selectedWeek, $day)
     {
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
