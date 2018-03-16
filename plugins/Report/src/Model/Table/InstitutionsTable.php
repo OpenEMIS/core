@@ -364,6 +364,10 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
 
+                if ($feature == 'Report.ClassAttendanceNotMarkedRecords') {
+                    $attr['onChangeReload'] = true;
+                }
+
                 if (empty($request->data[$this->alias()]['academic_period_id'])) {
                     $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
                 }
@@ -404,9 +408,28 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $gradeOptions = $EducationGrades
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'name',
+                        'groupField' => 'education_programme_name'
+                    ])
+                    ->select([
+                        'id' => $EducationGrades->aliasField('id'),
+                        'name' => $EducationGrades->aliasField('name'),
+                        'education_programme_name' => 'EducationProgrammes.name'
+                    ])
+                    ->contain(['EducationProgrammes'])
+                    ->order([
+                        'EducationProgrammes.order' => 'ASC',
+                        $EducationGrades->aliasField('name') => 'ASC'
+                    ])
+                    ->toArray();
+
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                $attr['options'] = ['0' => __('All Grades')];
+                $attr['options'] = [__('All Grades') => [ '-1' => __('All Grades')]] + $gradeOptions;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -418,7 +441,10 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords']) && isset($this->request->data[$this->alias()]['academic_period_id'])) {
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
                 $attr['type'] = 'date';
             } else {
                 $attr['value'] = self::NO_FILTER;
