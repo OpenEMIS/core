@@ -25,6 +25,8 @@ class AreasTable extends ControllerActionTable
         $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
         $this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
+        $this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions']);
         $this->belongsToMany('SecurityGroups', [
             'className' => 'Security.UserGroups',
             'joinTable' => 'security_group_areas',
