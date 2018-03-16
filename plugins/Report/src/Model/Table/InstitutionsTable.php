@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
@@ -413,7 +414,7 @@ class InstitutionsTable extends AppTable
                     ->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'name',
-                        'groupField' => 'education_programme_name'
+                        // 'groupField' => 'education_programme_name'
                     ])
                     ->select([
                         'id' => $EducationGrades->aliasField('id'),
@@ -445,6 +446,8 @@ class InstitutionsTable extends AppTable
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+
+                $attr['value'] = $selectedPeriod->start_date;
                 $attr['type'] = 'date';
             } else {
                 $attr['value'] = self::NO_FILTER;
@@ -458,6 +461,15 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+
+                if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
+                    $attr['value'] = $selectedPeriod->end_date;
+                } else {
+                    $attr['value'] = Time::now();
+                }
                 $attr['type'] = 'date';
             } else {
                 $attr['value'] = self::NO_FILTER;

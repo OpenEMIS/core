@@ -130,15 +130,15 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'institution_id' => 'Institutions.id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
-                'area_name' => 'Areas.name',
-                'area_code' => 'Areas.code',
                 'institution_type' => 'Types.name',
-                'shift_name' => 'ShiftOptions.name',
-                'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name',
+                'academic_period_name' => 'AcademicPeriods.name',
                 'staff_id' => 'Staff.id',
                 'secondary_staff_id' => 'SecondaryStaff.id',
-                'academic_period_name' => 'AcademicPeriods.name',
+                'shift_name' => 'ShiftOptions.name',
+                'area_name' => 'Areas.name',
+                'area_code' => 'Areas.code',
+                'area_administrative_code' => 'AreaAdministratives.code',
+                'area_administrative_name' => 'AreaAdministratives.name',
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
             ->where([
