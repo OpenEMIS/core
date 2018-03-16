@@ -1,8 +1,6 @@
 <?php
 namespace App\Model\Table;
 
-use Cake\Utility\Hash;
-
 class CalendarEventDatesTable extends AppTable
 {
     public function initialize(array $config)
