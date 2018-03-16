@@ -29,6 +29,7 @@ class ImportOutcomeResultsTable extends AppTable
         $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $this->StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         $this->OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
         $this->OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
@@ -336,6 +337,7 @@ class ImportOutcomeResultsTable extends AppTable
         if (is_null($classId)) {
             unset($data[$columnOrder]);
         } else {
+            $StudentStatuses = $this->StudentStatuses;
             $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
             $modelData = $this->InstitutionClassStudents->find('all')
                 ->select([
@@ -352,6 +354,9 @@ class ImportOutcomeResultsTable extends AppTable
                 ->matching($lookedUpTable->alias())
                 ->matching($this->InstitutionClasses->alias())
                 ->matching($this->EducationGrades->alias())
+                ->matching($StudentStatuses->alias(), function ($q) use ($StudentStatuses) {
+                    return $q->where([$StudentStatuses->aliasField('code') => 'CURRENT']);
+                })
                 ->where([
                     $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId
                 ])
