@@ -82,9 +82,35 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'education_grade_id' => $educationGradesId,
             ])
             ->contain([
-                'Institutions.Areas',
-                'Institutions.AreaAdministratives',
-                'Institutions.Types',
+                'Institutions' => [
+                    'fields' => [
+                        'Institutions.id',
+                        'Institutions.code',
+                        'Institutions.name'
+                    ]
+                ],
+                'Institutions.Areas' => [
+                    'fields' => [
+                        'Areas.name',
+                        'Areas.code'
+                    ]
+                ],
+                'Institutions.AreaAdministratives' => [
+                    'fields' => [
+                        'AreaAdministratives.code',
+                        'AreaAdministratives.name'
+                    ]
+                ],
+                'Institutions.Types' => [
+                    'fields' => [
+                        'Types.name'
+                    ]
+                ],
+                'InstitutionShifts.ShiftOptions' => [
+                    'fields' => [
+                        'ShiftOptions.name'
+                    ]
+                ],
                 'EducationGrades' => [
                     'fields' => [
                         'InstitutionClassGrades.institution_class_id',
@@ -93,8 +119,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                         'EducationGrades.name'
                     ]
                 ],
-                'InstitutionShifts.ShiftOptions',
-                'AcademicPeriods',
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'AcademicPeriods.name'
+                    ]
+                ],
                 'Staff' => [
                     'fields' => [
                         'Staff.id',
@@ -117,11 +146,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 ],
                 'ClassAttendanceRecords' => function ($q) use ($academicPeriodId, $year, $month) {
                     return $q
-                    ->where([
-                        'ClassAttendanceRecords.academic_period_id' => $academicPeriodId,
-                        'ClassAttendanceRecords.year' => $year,
-                        'ClassAttendanceRecords.month' => $month
-                    ]);
+                        ->where([
+                            'ClassAttendanceRecords.academic_period_id' => $academicPeriodId,
+                            'ClassAttendanceRecords.year' => $year,
+                            'ClassAttendanceRecords.month' => $month
+                        ]);
                 }
             ])
             ->select([
@@ -269,7 +298,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
         $newFields[] = [
             'key' => 'InstitutionClasses.academic_period_id',
-            // 'field' => 'academic_period_id',
             'field' => 'academic_period_name',
             'type' => 'integer',
             'label' => ''
@@ -372,7 +400,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $query = $this->find();
 
         if (!$superAdmin) {
-            $query->find('ByAccess', [
+            $query->find('byAccess', [
                 'user_id' => $userId,
                 'institution_field_alias' => $this->aliasField($this->association('Institutions')->foreignKey())
             ]);

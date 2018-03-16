@@ -413,8 +413,7 @@ class InstitutionsTable extends AppTable
                 $gradeOptions = $EducationGrades
                     ->find('list', [
                         'keyField' => 'id',
-                        'valueField' => 'name',
-                        // 'groupField' => 'education_programme_name'
+                        'valueField' => 'name'
                     ])
                     ->select([
                         'id' => $EducationGrades->aliasField('id'),
@@ -430,7 +429,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                $attr['options'] = [__('All Grades') => [ '-1' => __('All Grades')]] + $gradeOptions;
+                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -447,8 +446,10 @@ class InstitutionsTable extends AppTable
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
 
-                $attr['value'] = $selectedPeriod->start_date;
                 $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $attr['value'] = $selectedPeriod->start_date;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -465,12 +466,14 @@ class InstitutionsTable extends AppTable
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
 
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
                 if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
                     $attr['value'] = $selectedPeriod->end_date;
                 } else {
                     $attr['value'] = Time::now();
                 }
-                $attr['type'] = 'date';
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -520,7 +523,7 @@ class InstitutionsTable extends AppTable
                 break;
         }
         if (!$superAdmin) {
-            $query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
         }
     }
 }
