@@ -2,19 +2,16 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use DateInterval;
+use DatePeriod;
+use DateTime;
+use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
-use App\Model\Traits\OptionsTrait;
-use Cake\Log\Log;
-use DateTime;
-use Cake\I18n\Date;
-use DateInterval;
-use DatePeriod;
-use Cake\Datasource\ResultSetInterface;
 
 class ClassAttendanceNotMarkedRecordsTable extends AppTable
 {
