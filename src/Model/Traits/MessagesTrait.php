@@ -825,6 +825,11 @@ trait MessagesTrait
                     'ruleValidEmail' => 'Please enter a valid Email'
                 ]
             ],
+            'InstitutionContactPersons' => [
+                'email' => [
+                    'ruleValidEmail' => 'Please enter a valid Email'
+                ]
+            ],
             'InstitutionClasses' => [
                 'noGrade' => 'There is no grade selected',
                 'emptyName' => 'Class name should not be empty',
@@ -2107,7 +2112,15 @@ trait MessagesTrait
             ],
         ],
         'Area' => [
+            'Areas' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
             'AreaAdministratives' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
                 'is_main_country' => [
                     'ruleValidateAreaAdministrativeMainCountry' => 'There must be at least one Main Country'
                 ]

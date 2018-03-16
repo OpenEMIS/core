@@ -263,7 +263,7 @@ class NavigationComponent extends Component
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
-            'StudentHistories', 'StaffHistories', 'InstitutionCalendars'
+            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons'
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments'];
@@ -426,12 +426,25 @@ class NavigationComponent extends Component
                     'selected' => ['InstitutionCalendars.view', 'InstitutionCalendars.add', 'InstitutionCalendars.edit', 'InstitutionCalendars.delete']
                 ],
 
-                'Institutions.Contacts.view' => [
+                'Contacts' => [
                     'title' => 'Contacts',
                     'parent' => 'Institution.General',
-                    'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
-                    'params' => ['plugin' => 'Institution', 0 => $institutionId]
+                    'link' => false
                 ],
+                
+                    'Institutions.Contacts.view' => [
+                        'title' => 'Institution',
+                        'parent' => 'Contacts',
+                        'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
+                        'params' => ['plugin' => 'Institution', 0 => $institutionId]
+                    ],
+                       
+                    'InstitutionContactPersons.index' => [
+                            'title' => 'People',
+                            'parent' => 'Contacts',
+                            'selected' => ['InstitutionContactPersons.view', 'InstitutionContactPersons.add', 'InstitutionContactPersons.edit', 'InstitutionContactPersons.delete'],
+                            'params' => ['plugin' => 'Institution', 0 => $institutionId]
+                    ],
 
                 'Institutions.Attachments.index' => [
                     'title' => 'Attachments',
