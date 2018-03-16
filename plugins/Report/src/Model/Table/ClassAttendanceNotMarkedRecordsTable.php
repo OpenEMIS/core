@@ -18,7 +18,6 @@ use Cake\Datasource\ResultSetInterface;
 
 class ClassAttendanceNotMarkedRecordsTable extends AppTable
 {
-    private $schoolHoliday = [];
     private $workingDays = [];
     private $schoolClosedDays = [];
 
@@ -47,7 +46,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
-            // 'autoFields' => true
+            'autoFields' => false,
             'excludes' => [
                 'class_number'
             ]
@@ -62,7 +61,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $sheetsData = $this->generateSheetsData($requestData);
         $sheets->exchangeArray($sheetsData);
-
         $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
     }
 
@@ -79,32 +77,57 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $endDay = $sheetData['endDay'];
         $schoolClosedDays = $this->schoolClosedDays;
 
-        // select * from institution_classes
-        // left join class_attendance_records
-        // on class_attendance_records.institution_class_id = institution_classes.id
-        // and class_attendance_records.academic_period_id = academic_period_id
-        // and class_attendance_records.year = '2018'
-        // and class_attendance_records.month = '2'
-        // }])
-        
         $query
+            ->find('byGrades', [
+                'education_grade_id' => $educationGradesId,
+            ])
             ->contain([
                 'Institutions.Areas',
                 'Institutions.AreaAdministratives',
                 'Institutions.Types',
-                'EducationGrades',
+                'EducationGrades' => [
+                    'fields' => [
+                        'InstitutionClassGrades.institution_class_id',
+                        'EducationGrades.id',
+                        'EducationGrades.code',
+                        'EducationGrades.name'
+                    ]
+                ],
                 'InstitutionShifts.ShiftOptions',
-                'AcademicPeriods'
-            ])
-            ->contain([ 'ClassAttendanceRecords' => function ($q) use ($academicPeriodId, $year, $month) {
-                return $q
+                'AcademicPeriods',
+                'Staff' => [
+                    'fields' => [
+                        'Staff.id',
+                        'Staff.first_name',
+                        'Staff.middle_name',
+                        'Staff.third_name',
+                        'Staff.last_name',
+                        'Staff.preferred_name'
+                    ]
+                ],
+                'SecondaryStaff' => [
+                    'fields' => [
+                        'SecondaryStaff.id',
+                        'SecondaryStaff.first_name',
+                        'SecondaryStaff.middle_name',
+                        'SecondaryStaff.third_name',
+                        'SecondaryStaff.last_name',
+                        'SecondaryStaff.preferred_name'
+                    ]
+                ],
+                'ClassAttendanceRecords' => function ($q) use ($academicPeriodId, $year, $month) {
+                    return $q
                     ->where([
                         'ClassAttendanceRecords.academic_period_id' => $academicPeriodId,
                         'ClassAttendanceRecords.year' => $year,
                         'ClassAttendanceRecords.month' => $month
                     ]);
-            }])
+                }
+            ])
             ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name'),
+                'institution_id' => 'Institutions.id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'area_name' => 'Areas.name',
@@ -112,20 +135,29 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'institution_type' => 'Types.name',
                 'shift_name' => 'ShiftOptions.name',
                 'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name'
+                'area_administrative_name' => 'AreaAdministratives.name',
+                'staff_id' => 'Staff.id',
+                'secondary_staff_id' => 'SecondaryStaff.id',
+                'academic_period_name' => 'AcademicPeriods.name',
+                'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
+            ->group([
+                $this->aliasField('id')
+            ])
             ->order([
-                'AcademicPeriods.order',
-                'Institutions.code'
+                'institution_name' => 'ASC',
+                'education_stage_order' => 'ASC',
+                $this->aliasField('name') => 'ASC'
             ])
             ->formatResults(function (ResultSetInterface $results) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                 return $results->map(function ($row) use ($schoolClosedDays, $year, $month, $startDay, $endDay) {
                     $institutionId = $row->institution_id;
-                    if (!empty($row['class_attendance_records'])) {
-                        $attendanceRecord = $row['class_attendance_records'][0];
+
+                    if (!empty($row->class_attendance_records)) {
+                        $attendanceRecord = $row->class_attendance_records[0];
                     }
 
                     for ($day = $startDay; $day <= $endDay; ++$day) {
@@ -137,13 +169,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                             isset($schoolClosedDays[$institutionId][$dayFormat]) &&
                             $schoolClosedDays[$institutionId][$dayFormat] == 0) {
                             $status = __('School Closed');
-                        } else {
-                            if (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
-                                $status = __('Marked');
-                            }
+                        } elseif (isset($attendanceRecord) && $attendanceRecord[$dayColumn] == 1) {
+                            $status = __('Marked');
                         }
 
-                        $row[$dayColumn] = $status;
+                        $row->{$dayColumn} = $status;
                     }
 
                     return $row;
@@ -195,7 +225,42 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             }
         }
 
-        return implode(', ', $classGrades); //display as comma seperated
+        return implode(', ', $classGrades);
+    }
+
+    public function findByGrades(Query $query, array $options)
+    {
+        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationStages = TableRegistry::get('Education.EducationStages');
+
+        $gradeId = $options['education_grade_id'];
+        $join = [
+            'table' => 'institution_class_grades',
+            'alias' => 'InstitutionClassGrades',
+            'conditions' => [
+                'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id')
+            ]
+        ];
+
+        if ($gradeId > 0) {
+            $join['conditions']['InstitutionClassGrades.education_grade_id'] = $gradeId;
+        }
+
+        $query = $query
+            ->join([$join])
+
+            ->innerJoin(
+                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
+            )
+            ->innerJoin(
+                [$EducationStages->alias() => $EducationStages->table()],
+                [$EducationStages->aliasField('id = ') . 'EducationGrades.education_stage_id']
+            );
+
+        return $query;
     }
 
     private function getClassFields()
@@ -204,7 +269,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
         $newFields[] = [
             'key' => 'InstitutionClasses.academic_period_id',
-            'field' => 'academic_period_id',
+            // 'field' => 'academic_period_id',
+            'field' => 'academic_period_name',
             'type' => 'integer',
             'label' => ''
         ];
@@ -345,7 +411,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
             if ($month == $reportStartDate->format('n')) {
                 $reportStartDay = $reportStartDate->format('j');
-            } elseif ($month == $reportEndDate->format('n')) {
+            }
+            if ($month == $reportEndDate->format('n')) {
                 $reportEndDay = $reportEndDate->format('j');
             }
 
@@ -361,79 +428,6 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'query' => $this->find()
             ];
         }
-
         return $sheets;
     }
- 
-    // public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    // {
-    //     $requestData = json_decode($settings['process']['params']);
-    //     $academicPeriodId = $requestData->academic_period_id;
-
-    //     if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
-    //         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-    //         $periodEntity = $AcademicPeriods->get($academicPeriodId);
-
-    //         $startDate = $periodEntity->start_date->format('Y-m-d');
-    //         $endDate = $periodEntity->end_date->format('Y-m-d');
-    //     }
-
-    //     $query
-    //         // ->select([
-    //         //     'institution_name' => 'Institutions.name',
-    //         //     'institution_code' => 'Institutions.code',
-    //         //     'academic_period' => 'AcademicPeriods.name',
-    //         //     'institution_class_name' => 'InstitutionClasses.name',
-    //         //     'homeroom_teacher_first_name' => 'Staff.first_name',
-    //         //     'homeroom_teacher_middle_name' => 'Staff.middle_name',
-    //         //     'homeroom_teacher_third_name' => 'Staff.third_name',
-    //         //     'homeroom_teacher_last_name' => 'Staff.last_name',
-    //         //     'secondary_homeroom_teacher_first_name' => 'SecondaryStaff.first_name',
-    //         //     'secondary_homeroom_teacher_middle_name' => 'SecondaryStaff.middle_name',
-    //         //     'secondary_homeroom_teacher_third_name' => 'SecondaryStaff.third_name',
-    //         //     'secondary_homeroom_teacher_last_name' => 'SecondaryStaff.last_name',
-    //         // ])
-    //         // ->contain([
-    //         //     'InstitutionClasses.Institutions',
-    //         //     'InstitutionClasses.Staff',
-    //         //     'InstitutionClasses.SecondaryStaff',
-    //         //     'AcademicPeriods',
-    //         // ])
-    //         ->contain(['InstitutionClasses' => function ($q) {
-    //             return $q->select([
-    //                 'InstitutionClasses.id',
-    //                 'InstitutionClasses.name'
-    //             ]);
-    //         }])
-    //         ->contain(['InstitutionClasses.Institutions' => function ($q) {
-    //             return $q->select([
-    //                 'Institutions.name',
-    //                 'Institutions.code'
-    //             ]);
-    //         }])
-    //         ->contain(['InstitutionClasses.Staff' => function ($q) {
-    //             return $q->select([
-    //                 'Staff.first_name',
-    //                 'Staff.middle_name',
-    //                 'Staff.third_name',
-    //                 'Staff.last_name'
-    //             ]);
-    //         }])
-    //         ->contain(['InstitutionClasses.SecondaryStaff' => function ($q) {
-    //             return $q->select([
-    //                 'SecondaryStaff.first_name',
-    //                 'SecondaryStaff.middle_name',
-    //                 'SecondaryStaff.third_name',
-    //                 'SecondaryStaff.last_name'
-    //             ]);
-    //         }])
-    //         ->contain(['AcademicPeriods' => function ($q) {
-    //             return $q->select(['AcademicPeriods.name']);
-    //         }])
-    //         ->contain(['InstitutionClasses.EducationGrades' => function ($q) {
-    //             return $q->select(['EducationGrades.name']);
-    //         }]);
-
-    //     // $result = $query->toArray();
-    // }
 }
