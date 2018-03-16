@@ -42,7 +42,6 @@ class CalendarEventDatesTable extends AppTable
 
     public function getInstitutionClosedDates($startDate, $endDate, $institutionList)
     {
-        //// REFACTOR
         $startDate = $startDate->format('Y-m-d');
         $endDate = $endDate->format('Y-m-d');
 
@@ -65,7 +64,6 @@ class CalendarEventDatesTable extends AppTable
             ->find()
             ->select([
                 'date' => $this->aliasField('date'),
-                'institution_id' => 'Calendars.institution_id',
                 'is_attendance_required' => 'CalendarTypes.is_attendance_required'
             ])
             ->contain(['Calendars', 'Calendars.CalendarTypes'])
@@ -81,45 +79,31 @@ class CalendarEventDatesTable extends AppTable
         foreach ($allInstitutionDateEvents as $dateEventObj) {
             $dateFormat = $dateEventObj->date->format('Y-m-d');
 
-            if (!isset($defaultDateList[$dateFormat])) {
+            // if is not set, or if is set, and the entity attendance is required
+            if (!isset($defaultDateList[$dateFormat]) || $dateEventObj->is_attendance_required == 1) {
                 $defaultDateList[$dateFormat] = $dateEventObj->is_attendance_required;
-            } else {
-                if ($dateEventObj->is_attendance_required == 1) {
-                    $defaultDateList[$dateFormat] = $dateEventObj->is_attendance_required;
-                }
             }
         }
 
+        // set the all institutions date list to all institutions
         $schoolClosedList = [];
         foreach ($institutionList as $institutionId) {
             $schoolClosedList[$institutionId] = [];
             $schoolClosedList[$institutionId] += $defaultDateList;
         }
 
+        // dates merged with individual institutions event dates
         foreach ($institutionDateEvents as $dateEventObj) {
             $institutionId = $dateEventObj->institution_id;
             $dateFormat = $dateEventObj->date->format('Y-m-d');
 
-            if (!isset($schoolClosedList[$institutionId][$dateFormat])) {
+            if (!isset($schoolClosedList[$institutionId][$dateFormat]) || $dateEventObj->is_attendance_required == 1) {
                 $schoolClosedList[$institutionId][$dateFormat] = $dateEventObj->is_attendance_required;
-            } else {
-                if ($dateEventObj->is_attendance_required == 1) {
-                    $schoolClosedList[$institutionId][$dateFormat] = $dateEventObj->is_attendance_required;
-                }
             }
         }
 
-        // foreach ($schoolClosedList as $schoolList) {
-        //     foreach ($schoolList as $date => $required) {
-
-        //     }
-        // }
-
-        // $schoolClosedList = Hash::remove($schoolClosedList, '{n}[{*}=1]');
-
-        // pr('jaja');
-        // pr($schoolClosedList);
-        // die;
+        pr($schoolClosedList);
+        die;
         
         return $schoolClosedList;
     }
