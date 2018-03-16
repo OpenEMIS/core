@@ -1,3 +1,10 @@
+### [3.21.0] - 2018-03-16
+- Developed Student Attendance Report to see classes that have not been marked
+- Default attendance is shown as not marked now
+- Enabled multiple contact details under Institutions > General > Contacts
+- Added Reports > Institutions > Cases - Student Attendances report
+- Updated the format for Institution > Performance > Outcomes - Import template
+
 ### [3.20.0] - 2018-03-02
 - Implemented Staff Appraisals feature enhancements
 - Implemented security management API
