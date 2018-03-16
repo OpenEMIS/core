@@ -29,6 +29,7 @@ class ImportOutcomeResultsTable extends AppTable
         $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $this->StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         $this->OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
         $this->OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
@@ -127,12 +128,28 @@ class ImportOutcomeResultsTable extends AppTable
         $userId = $this->Auth->user('id');
         $AccessControl = $this->AccessControl;
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $query = $InstitutionClasses->find();
             $classOptions = $InstitutionClasses
                 ->find('list')
+                ->find('byGrades', [
+                    'education_grade_id' => -1, // All Grades
+                ])
                 ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller]) // restrict user to see own class if permission is set
+                ->select([
+                    'id',
+                    'name',
+                    'education_stage_order' => $query->func()->min('EducationStages.order')
+                ])
                 ->where([
                     $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionClasses->aliasField('institution_id') => $institutionId
+                ])
+                ->order([
+                    'education_stage_order',
+                    $InstitutionClasses->aliasField('name') => 'ASC'
+                ])
+                ->group([
+                    $InstitutionClasses->aliasField('id')
                 ])
                 ->toArray();
 
@@ -146,11 +163,19 @@ class ImportOutcomeResultsTable extends AppTable
     {
         $request = $this->request;
         unset($request->query['class']);
+        unset($request->query['template']);
+        unset($request->query['outcome_period']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('class', $request->data[$this->alias()])) {
                     $request->query['class'] = $request->data[$this->alias()]['class'];
+                }
+                if (array_key_exists('outcome_template', $request->data[$this->alias()])) {
+                    unset($request->data[$this->alias()]['outcome_template']);
+                }
+                if (array_key_exists('outcome_period', $request->data[$this->alias()])) {
+                    unset($request->data[$this->alias()]['outcome_period']);
                 }
             }
         }
@@ -160,13 +185,23 @@ class ImportOutcomeResultsTable extends AppTable
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $classId = $request->query('class');
             $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $educationGrades = $InstitutionGrades->find()
-                ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
-                ->extract('education_grade_id')
-                ->toArray();
+            // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
+            if (!is_null($classId) && !empty($classId)) {
+                $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+                $educationGrades = $InstitutionClassGrades->find()
+                    ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+                    ->extract('education_grade_id')
+                    ->toArray();
+            } else {
+                $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                $educationGrades = $InstitutionGrades->find()
+                    ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+                    ->extract('education_grade_id')
+                    ->toArray();
+            }
 
             $templateOptions = [];
             if (!empty($educationGrades)) {
@@ -302,6 +337,7 @@ class ImportOutcomeResultsTable extends AppTable
         if (is_null($classId)) {
             unset($data[$columnOrder]);
         } else {
+            $StudentStatuses = $this->StudentStatuses;
             $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
             $modelData = $this->InstitutionClassStudents->find('all')
                 ->select([
@@ -318,6 +354,9 @@ class ImportOutcomeResultsTable extends AppTable
                 ->matching($lookedUpTable->alias())
                 ->matching($this->InstitutionClasses->alias())
                 ->matching($this->EducationGrades->alias())
+                ->matching($StudentStatuses->alias(), function ($q) use ($StudentStatuses) {
+                    return $q->where([$StudentStatuses->aliasField('code') => 'CURRENT']);
+                })
                 ->where([
                     $this->InstitutionClassStudents->aliasField('institution_class_id') => $classId
                 ])

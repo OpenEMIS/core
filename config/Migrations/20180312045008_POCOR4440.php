@@ -6,7 +6,9 @@ class POCOR4440 extends AbstractMigration
 {
     public function up()
     {   
-
+        $TrainingSessions = $this->table('training_sessions');
+        $TrainingSessions->addIndex('area_id')
+                         ->save();
         
         $this->execute('CREATE TABLE `z_4440_institutions` LIKE `institutions`');
         $this->execute('INSERT INTO `z_4440_institutions` SELECT * FROM `institutions`
@@ -83,7 +85,6 @@ class POCOR4440 extends AbstractMigration
 
 
         $this->execute('CREATE TABLE `z_4440_security_group_areas` LIKE `security_group_areas`');
-        
         $this->execute('INSERT INTO `z_4440_security_group_areas` SELECT * FROM `security_group_areas` 
                     WHERE NOT EXISTS(
                         SELECT 1 FROM `areas` 
@@ -98,6 +99,9 @@ class POCOR4440 extends AbstractMigration
 
     public function down()
     {
+        $TrainingSessions = $this->table('training_sessions');
+        $TrainingSessions->removeIndex('area_id');
+            
         $this->execute('UPDATE `institutions` 
                     INNER JOIN `z_4440_institutions` ON institutions.id = z_4440_institutions.id
                     SET institutions.area_id = z_4440_institutions.area_id , institutions.area_administrative_id = z_4440_institutions.area_administrative_id');
