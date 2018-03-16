@@ -101,9 +101,6 @@ class CalendarEventDatesTable extends AppTable
                 $schoolClosedList[$institutionId][$dateFormat] = $dateEventObj->is_attendance_required;
             }
         }
-
-        pr($schoolClosedList);
-        die;
         
         return $schoolClosedList;
     }
