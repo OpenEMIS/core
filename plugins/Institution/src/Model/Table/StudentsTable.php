@@ -14,6 +14,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Core\Configure;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -113,8 +114,9 @@ class StudentsTable extends ControllerActionTable
          * End Advance Search Types
          */
         $this->addBehavior('ControllerAction.Image'); // To be verified
-
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function implementedEvents()
@@ -194,6 +196,7 @@ class StudentsTable extends ControllerActionTable
 
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $periodId = $this->request->query['academic_period_id'];
 
         $query
             ->where([$this->aliasField('institution_id') => $institutionId])
@@ -241,19 +244,10 @@ class StudentsTable extends ControllerActionTable
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ]
             );
-        $periodId = $this->request->query['academic_period_id'];
+            
         if ($periodId > 0) {
             $query->where([$this->aliasField('academic_period_id') => $periodId]);
         }
-        $query->leftJoin(['ClassStudents' => 'institution_class_students'], [
-                'ClassStudents.student_id = '.$this->aliasField('student_id'),
-                'ClassStudents.education_grade_id = '.$this->aliasField('education_grade_id'),
-                'ClassStudents.student_status_id = '.$this->aliasField('student_status_id')
-            ])->leftJoin(['Classes' => 'institution_classes'], [
-                'Classes.id = ClassStudents.institution_class_id',
-                'Classes.institution_id = '.$this->aliasField('institution_id'),
-                'Classes.academic_period_id = '.$this->aliasField('academic_period_id')
-            ])->select(['institution_class_name' => 'Classes.name']);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

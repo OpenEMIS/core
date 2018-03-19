@@ -38,7 +38,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
-
+        $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('EducationGrades', [
             'className' => 'Education.EducationGrades',
             'through' => 'Institution.InstitutionClassGrades',

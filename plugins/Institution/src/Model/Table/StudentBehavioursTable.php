@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Core\Configure;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -31,7 +32,9 @@ class StudentBehavioursTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index', 'view', 'add', 'edit', 'delete']
         ]);
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function implementedEvents()
