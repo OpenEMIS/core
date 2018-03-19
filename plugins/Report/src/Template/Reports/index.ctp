@@ -64,7 +64,7 @@ $this->start('panelBody');
 								echo __('In Progress');
 							} else {
 								echo '<div class="progress progress-striped active" style="margin-bottom:0">';
-								echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '"></div>';
+								echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '" data-status="' . $status . '"></div>';
 								echo '</div>';
 							}
 						} else if ($status == -1) {
