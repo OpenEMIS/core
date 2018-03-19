@@ -4,13 +4,20 @@ $(document).ready(function() {
 
 var ids = [];
 var ReportList = {
-	init: function() {
+	init: function() { 
 		var selector = '.progress .progress-bar';
 
 		$(selector).progressbar({
 			display_text: 'center',
+			percent_format: function(percent) { 
+				if (percent != 100) {
+					return percent + '%'; 
+				} 
+				return 'Downloading...';
+			},
 			done: function(e) {
 				var current = $(e).attr('data-transitiongoal');
+				var status = $(e).attr('data-status');
 				var rowId = $(e).closest('tr').attr('row-id');
 
 				if (current < 100 || $(e).closest('tr').find('.modified').html() == '') {
@@ -22,11 +29,15 @@ var ReportList = {
 						ReportList.getProgress(ids);
 					}
 				} else {
-					$(e).closest('.progress').fadeOut(1000, function() {
-						$(e).closest('td').find('a.download').removeClass('none');
-						$(e).closest('.progress').remove();
-						ids.splice( $.inArray(rowId, ids), 1 );
-					});
+					if (status == 0) {
+						$(e).closest('.progress').fadeOut(1000, function() {
+							$(e).closest('td').find('a.download').removeClass('none');
+							$(e).closest('.progress').remove();
+							ids.splice( $.inArray(rowId, ids), 1 );
+						});
+					} else {
+						// lala
+					}
 				}
 			}
 		});
@@ -47,6 +58,7 @@ var ReportList = {
 					if (data['percent'] != undefined) {
 						var progressbar = $('[row-id="' + id + '"] [role="progressbar"]');
 						progressbar.attr('data-transitiongoal', data['percent']);
+						progressbar.attr('data-status', data['status']);
 
 						if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
 							$(selector).find('.modified').html(data['modified']);
