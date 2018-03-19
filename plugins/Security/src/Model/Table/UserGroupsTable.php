@@ -111,6 +111,15 @@ class UserGroupsTable extends ControllerActionTable
         return $buttons;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'areas') {
+            return __('Areas (Education)');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->data[$this->alias()]['security_group_id'] = $entity->id;
