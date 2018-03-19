@@ -1169,8 +1169,6 @@ class InstitutionsController extends AppController
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
-            } elseif ($model->alias() == 'InstitutionContacts') {
-                $header .= ' - '. __('Contacts (Institution)');
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
             } elseif ($model->alias() == 'StudentRisks') {
