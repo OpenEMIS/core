@@ -138,8 +138,8 @@ class ExcelBehavior extends Behavior
 
         $filepath = $_settings['path'] . $_settings['file'];
         $_settings['file_path'] = $filepath;
-        $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
         $writer->writeToFile($_settings['file_path']);
+        $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
 
         if ($_settings['download']) {
             $this->download($filepath);
@@ -217,7 +217,7 @@ class ExcelBehavior extends Behavior
             // This is set so that the containable data will still be in the array.
             $autoFields = $this->config('autoFields');
             
-            if (!isset($autoFields) || $autoFields == true){
+            if (!isset($autoFields) || $autoFields == true) {
                 $query->autoFields(true);
             }
 
@@ -443,7 +443,7 @@ class ExcelBehavior extends Behavior
                     } else {
                         $value = $returnedResult;
                     }
-                } else if ($entity->has($field)) {
+                } elseif ($entity->has($field)) {
                     if ($this->isForeignKey($table, $field)) {
                         $associatedField = $this->getAssociatedKey($table, $field);
                         if ($entity->has($associatedField)) {
@@ -601,7 +601,7 @@ class ExcelBehavior extends Behavior
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
-        } else if ($buttons->offsetExists('back')) {
+        } elseif ($buttons->offsetExists('back')) {
             $export = $buttons['back'];
             $export['type'] = 'button';
             $export['label'] = '<i class="fa kd-export"></i>';
