@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\Core\Configure;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -16,12 +17,13 @@ class SpecialNeedsTable extends ControllerActionTable
         parent::initialize($config);
         $this->behaviors()->get('ControllerAction')->config('actions.search', false);
 
-
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
         $this->belongsTo('SpecialNeedDifficulties', ['className' => 'FieldOption.SpecialNeedDifficulties']);
 
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
     }
 
     public function implementedEvents()

@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Network\Session;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use Cake\Database\Exception as DatabaseException;
 
@@ -27,22 +28,23 @@ class StudentUserTable extends ControllerActionTable
 
         // Behaviors
         $this->addBehavior('User.User');
-
-        $this->addBehavior('CustomField.Record', [
-            'model' => 'Student.Students',
-            'behavior' => 'Student',
-            'fieldKey' => 'student_custom_field_id',
-            'tableColumnKey' => 'student_custom_table_column_id',
-            'tableRowKey' => 'student_custom_table_row_id',
-            'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
-            'formKey' => 'student_custom_form_id',
-            'filterKey' => 'student_custom_filter_id',
-            'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-            'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-            'recordKey' => 'student_id',
-            'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
-        ]);
+        if (!in_array('Custom Fields', (array) Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('CustomField.Record', [
+                'model' => 'Student.Students',
+                'behavior' => 'Student',
+                'fieldKey' => 'student_custom_field_id',
+                'tableColumnKey' => 'student_custom_table_column_id',
+                'tableRowKey' => 'student_custom_table_row_id',
+                'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+                'formKey' => 'student_custom_form_id',
+                'filterKey' => 'student_custom_filter_id',
+                'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+                'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                'recordKey' => 'student_id',
+                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+                'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]
+            ]);
+        }
 
         $this->addBehavior('Excel', [
             'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
@@ -56,11 +58,12 @@ class StudentUserTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add', 'edit']
         ]);
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
 
         $this->toggle('index', false);
         $this->toggle('remove', false);
-
-        $this->addBehavior('Risk.Risks');
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -362,7 +365,7 @@ class StudentUserTable extends ControllerActionTable
 
             $checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
-            if ($checkIfCanTransfer) {
+            if ($checkIfCanTransfer && !Configure::read('schoolMode')) {
                 $transferButton = $toolbarButtons['back'];
                 $transferButton['type'] = 'button';
                 $transferButton['label'] = '<i class="fa kd-transfer"></i>';
@@ -573,6 +576,17 @@ class StudentUserTable extends ControllerActionTable
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+            }
+        }
+
+        if (Configure::read('schoolMode')) {
+            if (isset($tabElements['ExaminationResults'])) {
+                unset($tabElements['ExaminationResults']);
+            }
+        }
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            if (isset($tabElements['Risks'])) {
+                unset($tabElements['Risks']);
             }
         }
         return $tabElements;

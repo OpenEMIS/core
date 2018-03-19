@@ -13,7 +13,6 @@ class InstitutionContactsTable extends ControllerActionTable {
     {
         $this->table('institutions');
         parent::initialize($config);
-
         /**
          * fieldOption tables
          */
@@ -69,7 +68,7 @@ class InstitutionContactsTable extends ControllerActionTable {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldVisible(['view', 'edit'], [
-            'contact_person', 'telephone', 'fax', 'email', 'website'
+            'telephone', 'fax', 'email', 'website'
         ]);
 
         // no index page

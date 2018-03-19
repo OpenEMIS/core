@@ -133,7 +133,8 @@ class InstitutionsController extends AppController
         $version = \Cake\Core\Configure::version();
         if (strpos($version, '3.4') !== false) {
             $msg = 'To change ResultsExport $response->type to $response->withType and $response->download to $response->withDownload';
-            pr($msg);die;
+            pr($msg);
+            die;
         }
         // End
 
@@ -177,6 +178,12 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
+
+    public function StaffAppraisals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
+    }
+
     public function Surveys()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSurveys']);
@@ -294,10 +301,6 @@ class InstitutionsController extends AppController
     public function Visits()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Quality.InstitutionQualityVisits']);
-    }
-    public function StaffAppraisals()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
     }
     public function Programmes()
     {
@@ -490,7 +493,7 @@ class InstitutionsController extends AppController
         $filePath = $results['path'] . $fileName;
 
         $response = $this->response;
-        $response->body(function() use ($filePath) {
+        $response->body(function () use ($filePath) {
             $content = file_get_contents($filePath);
             if (file_exists($filePath)) {
                 unlink($filePath);
@@ -907,8 +910,6 @@ class InstitutionsController extends AppController
             } else {
                 $session->delete('Institution.Institutions.id');
             }
-        } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'view' && isset($this->request->pass[1])) {
-            $this->request->params['institutionId'] = $this->request->pass[1];
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         } elseif ($action == 'StaffUser') {
@@ -920,8 +921,16 @@ class InstitutionsController extends AppController
             || $action == 'dashboard'
             || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
-            if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
+            if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
                 $id = $this->request->pass[0];
+                $id = $this->ControllerAction->paramsDecode($id)['id'];
+                $this->checkInstitutionAccess($id, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+                $session->write('Institution.Institutions.id', $id);
+            } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && (in_array($this->request->pass[0], ['view', 'edit']))) {
+                $id = $this->request->pass[1];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {
@@ -1125,7 +1134,7 @@ class InstitutionsController extends AppController
 
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
-                'StudentRisks' => __('Risks') 
+                'StudentRisks' => __('Risks')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -1152,9 +1161,6 @@ class InstitutionsController extends AppController
                 if ($model->table() == 'security_users' && !$isDownload) {
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
-                } elseif ($model->table() == 'staff_appraisals'  && !$isDownload) {
-                    $ids = array_key_exists('user_id', $requestQuery) ? $requestQuery['user_id']: $session->read('Staff.Staff.id');
-                    $persona = $model->Users->get($ids);
                 }
             } elseif (isset($requestQuery['user_id'][1])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
@@ -1166,14 +1172,14 @@ class InstitutionsController extends AppController
             } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
             } elseif ($model->alias() == 'StudentRisks') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
             } elseif ($model->alias() == 'Indexes') {
-                $header .= ' - '. __('Risks'); 
+                $header .= ' - '. __('Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
             } elseif ($model->alias() == 'InstitutionStudentRisks') {
-                $header .= ' - '. __('Institution Student Risks'); 
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks')); 
-            }else {
+                $header .= ' - '. __('Institution Student Risks');
+                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+            } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
