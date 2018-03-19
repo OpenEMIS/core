@@ -53,6 +53,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->requirePresence('academic_period_id')
             ->requirePresence('code')
             ->requirePresence('name')
+            ->requirePresence('area_id')
             ->add('code', 'ruleUnique', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
