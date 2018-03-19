@@ -5,6 +5,8 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
@@ -63,6 +65,17 @@ class InstitutionContactsTable extends ControllerActionTable {
                 ])
             ;
         return $validator;
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+         $Navigation->substituteCrumb('Contacts', 'Contacts (Institution)');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
