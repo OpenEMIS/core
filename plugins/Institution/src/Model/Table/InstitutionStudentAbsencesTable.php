@@ -14,6 +14,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
@@ -54,12 +55,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ],
             'pages' => ['index']
         ]);
-        $this->addBehavior('Institution.Case');
+        if (!in_array('Cases', (array) Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Institution.Case');
+        }
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
-
-        $this->addBehavior('Risk.Risks');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
 
         $this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
         $this->absenceCodeList = $this->AbsenceTypes->getCodeList();
@@ -75,6 +79,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         $events['InstitutionCase.onSetCaseRecord'] = 'onSetCaseRecord';
         $events['Model.afterSaveCommit'] = ['callable' => 'afterSaveCommit', 'priority' => '9'];
+        $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
+        $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
         return $events;
     }
 
@@ -361,6 +367,60 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         return false;
+    }
+
+    public function onBuildCustomQuery(Event $event, $query)
+    {
+        $query
+            ->select([
+                'absent_days' => 'InstitutionStudentAbsenceDays.absent_days',
+                'absence_type' => 'AbsenceTypes.name',
+                'openemis_no' => 'Users.openemis_no',
+                'first_name' => 'Users.first_name',
+                'middle_name' => 'Users.middle_name',
+                'third_name' => 'Users.third_name',
+                'last_name' => 'Users.last_name',
+                'preferred_name' => 'Users.preferred_name'
+             ])
+            ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.Users')
+            ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.AbsenceTypes')
+            ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.InstitutionStudentAbsenceDays')
+            ->group(['WorkflowTransitions.id','InstitutionCaseRecords.institution_case_id']);
+        
+        return $query;
+    }
+
+    public function onIncludeCustomExcelFields(Event $event, $newFields)
+    {
+        $newFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.full_name',
+            'field' => 'full_name',
+            'type' => 'string',
+            'label' => ''
+        ];
+  
+        $newFields[] = [
+            'key' => 'InstitutionStudentAbsenceDays.absent_days',
+            'field' => 'absent_days',
+            'type' => 'string',
+            'label' => __('Number of Days')
+        ];
+
+        $newFields[] = [
+            'key' => 'AbsenceTypes.name',
+            'field' => 'absence_type',
+            'type' => 'string',
+            'label' => __('Absence Type')
+        ];
+
+        return $newFields;
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)

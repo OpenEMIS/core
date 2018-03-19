@@ -393,6 +393,7 @@ trait MessagesTrait
         ],
         'StudentAttendances' => [
             'noClasses' => 'No Available Classes',
+            'noReasons' => 'You need to configure Student Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'InstitutionStudentAbsences' => [
@@ -402,6 +403,7 @@ trait MessagesTrait
         ],
         'StaffAttendances' => [
             'noStaff' => 'No Available Staff',
+            'noReasons' => 'You need to configure Staff Absence Reasons first.',
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'StaffAbsences' => [
@@ -820,6 +822,11 @@ trait MessagesTrait
                 ]
             ],
             'InstitutionContacts' => [
+                'email' => [
+                    'ruleValidEmail' => 'Please enter a valid Email'
+                ]
+            ],
+            'InstitutionContactPersons' => [
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email'
                 ]
@@ -2106,7 +2113,15 @@ trait MessagesTrait
             ],
         ],
         'Area' => [
+            'Areas' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
             'AreaAdministratives' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
                 'is_main_country' => [
                     'ruleValidateAreaAdministrativeMainCountry' => 'There must be at least one Main Country'
                 ]

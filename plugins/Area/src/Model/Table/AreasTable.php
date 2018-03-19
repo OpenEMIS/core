@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -24,6 +25,8 @@ class AreasTable extends ControllerActionTable
         $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels', 'foreignKey' => 'area_level_id']);
         $this->hasMany('Areas', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
+        $this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions']);
         $this->belongsToMany('SecurityGroups', [
             'className' => 'Security.UserGroups',
             'joinTable' => 'security_group_areas',
@@ -52,6 +55,17 @@ class AreasTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.synchronize'] = 'synchronize';
         return $events;
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ]);
     }
 
     public function synchronize(Event $mainEvent, ArrayObject $extra)
@@ -463,6 +477,11 @@ class AreasTable extends ControllerActionTable
 
             //array_unshift($this->fieldsOrder, "parent");
         }
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['disableForceDelete'] = true;
     }
 
     public function onGetName(Event $event, Entity $entity)
