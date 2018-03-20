@@ -1,5 +1,5 @@
 var ids = [];
-var idIndex = {};
+var rowIdIndex = {};
 var downloadText = '';
 
 $(document).ready(function() {
@@ -12,12 +12,11 @@ var ReportList = {
 	init: function() {
 		var selector = '.progress .progress-bar';
 		ReportList.promises = [];
-		idIndex = {};
+		rowIdIndex = {};
 
 		$(selector).each(function(index, element) {
 			var rowId = $(element).closest('tr').attr('row-id');
-			idIndex[rowId] = index;
-			
+			rowIdIndex[rowId] = index;
 			ReportList.promises[index] = new $.Deferred();
 
 			$(element).progressbar({
@@ -42,7 +41,7 @@ var ReportList = {
 						});
 					}
 
-					var resolveIndex = idIndex[rowId];
+					var resolveIndex = rowIdIndex[rowId];
 					ReportList.promises[resolveIndex].resolve();
 				}	
 			});
