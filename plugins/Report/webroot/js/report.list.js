@@ -36,7 +36,7 @@ var ReportList = {
 							ids.splice($.inArray(rowId, ids), 1);
 						});
 					}
-					ReportList.promises[index].resolve(id);
+					ReportList.promises[index].resolve();
 				}	
 			});
 		});
