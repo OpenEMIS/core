@@ -56,7 +56,7 @@ var ReportList = {
 		});
 	},
 
-	getProgress: function($ids) {
+	getProgress: function(ids) {
 		var url = $('#ReportList').attr('url');
 
 		$.ajax({
