@@ -47,7 +47,7 @@ var ReportList = {
 			});
 		});
 
-		$.when.apply($, ReportList.promises).then(function() {
+		$.when.apply($, ReportList.promises).done(function() {
 			if (ids.length > 0) {
 				setTimeout(function() {
 					ReportList.getProgress(ids);
