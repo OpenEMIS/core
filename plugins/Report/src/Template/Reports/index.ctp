@@ -68,6 +68,7 @@ $this->start('panelBody');
 								echo '</div>';
 							}
 						} else if ($status == -1) {
+						// } else if ($status != 0) {
 							$downloadClass = 'none';
 							$errorClass = '';
 						}
