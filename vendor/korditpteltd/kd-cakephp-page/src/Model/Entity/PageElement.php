@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 class PageElement
 {
@@ -70,12 +71,6 @@ class PageElement
             $this->setRequired($attributes['null'] == false);
         }
 
-        $label = Inflector::humanize($fieldName);
-        if ($this->getForeignKey()) {
-            $label = substr($label, 0, strlen($label)-3); // to remove 'Id' from the label
-        }
-        $this->label = $label;
-
         if ($fieldName == 'password') {
             $this->controlType = 'password';
         } elseif ($this->type == 'text') {
@@ -86,9 +81,21 @@ class PageElement
             $this->controlType = $this->type;
         }
 
+        $label = false;
         if (array_key_exists('model', $attributes)) {
             $this->name = $attributes['model'] . '.' . $this->name;
+            
+            $Labels = TableRegistry::get('Labels');
+            $label = $Labels->getLabel($attributes['model'], $fieldName, []);
         }
+
+        if ($label === false) {
+            $label = Inflector::humanize($fieldName);
+            if ($this->getForeignKey()) {
+                $label = substr($label, 0, strlen($label)-3); // to remove 'Id' from the label
+            }
+        }
+        $this->label = $label;
     }
 
     public static function create($name, $attributes)
