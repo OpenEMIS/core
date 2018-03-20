@@ -1,7 +1,10 @@
 var ids = [];
+var downloadText = '';
 var refreshSpeed = 1000; //interval to update the progress
 
 $(document).ready(function() {
+	downloadText = $('#ReportList').attr('data-downloadtext');
+
     setInterval(function() {
     	ReportList.init();
     	ReportList.getProgress(ids);
@@ -18,7 +21,7 @@ var ReportList = {
 				if (percent != 100) {
 					return percent + '%'; 
 				} 
-				return 'Downloading...';
+				return downloadText;
 			},
 			done: function(e) {
 				var current = $(e).attr('data-transitiongoal');
