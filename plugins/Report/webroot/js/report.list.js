@@ -1,4 +1,5 @@
 var ids = [];
+var idIndex = {};
 var downloadText = '';
 
 $(document).ready(function() {
@@ -11,8 +12,12 @@ var ReportList = {
 	init: function() {
 		var selector = '.progress .progress-bar';
 		ReportList.promises = [];
+		idIndex = {};
 
 		$(selector).each(function(index, element) {
+			var rowId = $(element).closest('tr').attr('row-id');
+			idIndex[rowId] = index;
+			
 			ReportList.promises[index] = new $.Deferred();
 
 			$(element).progressbar({
@@ -36,7 +41,9 @@ var ReportList = {
 							ids.splice($.inArray(rowId, ids), 1);
 						});
 					}
-					ReportList.promises[index].resolve();
+
+					var resolveIndex = idIndex[rowId];
+					ReportList.promises[resolveIndex].resolve();
 				}	
 			});
 		});
@@ -70,7 +77,6 @@ var ReportList = {
 						if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
 							$(selector).find('.modified').html(data['modified']);
 							$(selector).find('.expiryDate').html(data['expiry_date']);
-			    			ReportList.init();
 						} else if (data['status'] == -1) {
 							progressbar.closest('.progress').fadeOut(1000, function() {
 								$('[data-toggle="tooltip"]').removeClass('none').tooltip();
