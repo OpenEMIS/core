@@ -23,7 +23,6 @@ use XLSXWriter;
 
 class ExcelBehavior extends Behavior
 {
-
     use EventTrait;
 
     private $events = [];

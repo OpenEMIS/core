@@ -1,8 +1,13 @@
+var ids = [];
+var refreshSpeed = 1000; //interval to update the progress
+
 $(document).ready(function() {
-    ReportList.init();
+    setInterval(function() {
+    	ReportList.init();
+    	ReportList.getProgress(ids);
+    }, refreshSpeed);
 });
 
-var ids = [];
 var ReportList = {
 	init: function() { 
 		var selector = '.progress .progress-bar';
@@ -24,20 +29,12 @@ var ReportList = {
 					if ($.inArray(rowId, ids) == -1) {
 						ids.push(rowId);
 					}
-
-					if (ids.length > 0) {
-						ReportList.getProgress(ids);
-					}
-				} else {
-					if (status == 0) {
-						$(e).closest('.progress').fadeOut(1000, function() {
-							$(e).closest('td').find('a.download').removeClass('none');
-							$(e).closest('.progress').remove();
-							ids.splice( $.inArray(rowId, ids), 1 );
-						});
-					} else {
-						// lala
-					}
+				} else if (status == 0) {
+					$(e).closest('.progress').fadeOut(1000, function() {
+						$(e).closest('td').find('a.download').removeClass('none');
+						$(e).closest('.progress').remove();
+						ids.splice( $.inArray(rowId, ids), 1 );
+					});
 				}
 			}
 		});
@@ -72,11 +69,6 @@ var ReportList = {
 						}
 					}
 				});
-
-				// delay 5s before send another ajax request again
-				setTimeout(function() {
-					ReportList.init();
-				}, 5000);
 			}
 		});
 	}
