@@ -7,7 +7,7 @@ $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 
 <div class="clearfix"></div>
 <hr>
-<h3><?= __('Areas') ?></h3>
+<h3><?= __('Areas (Education)') ?></h3>
 <?php
 	$url = $this->Url->build([
 		'plugin' => $this->request->params['plugin'],
