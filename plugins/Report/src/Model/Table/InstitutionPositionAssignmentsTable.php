@@ -12,8 +12,17 @@ class InstitutionPositionAssignmentsTable extends AppTable
     /// InstitutionPositionAssignments
     public function initialize(array $config)
     {
+        $this->table('institution_staff');
+        parent::initialize($config);
+        
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
+        $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
+
         $this->addBehavior('Excel', [
-            'autoFields' => false
+            'autoFields' => true
         ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
