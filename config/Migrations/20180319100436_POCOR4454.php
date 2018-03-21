@@ -15,7 +15,8 @@ class POCOR4454 extends AbstractMigration
         ];
         $this->insert('field_types', $fieldTypesData);
 
-        $table = $this->table('appraisal_forms_criterias')
+        // appraisal_forms_criterias
+        $this->table('appraisal_forms_criterias')
             ->addColumn('is_mandatory', 'integer', [
                 'limit' => 1,
                 'null' => false,
@@ -24,12 +25,11 @@ class POCOR4454 extends AbstractMigration
             ])
             ->save();
 
-        // appraisal_dropdowns
-        $table = $this->table('appraisal_dropdowns', [
-            'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the dropdown options set for a specific staff appraisal criteria'
-        ]);
-        $table
+        // appraisal_dropdown_options
+        $this->table('appraisal_dropdown_options', [
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This table contains the dropdown options set for a specific staff appraisal criteria'
+            ])
             ->addColumn('name', 'string', [
                 'limit' => 250,
                 'null' => false
@@ -67,13 +67,12 @@ class POCOR4454 extends AbstractMigration
             ->save();
 
         // appraisal_dropdown_answers
-        $table = $this->table('appraisal_dropdown_answers', [
-            'id' => false,
-            'primary_key' => ['appraisal_form_id', 'appraisal_criteria_id', 'institution_staff_appraisal_id'],
-            'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the slider answers recorded for a specific institution staff appraisal'
-        ]);
-        $table
+        $this->table('appraisal_dropdown_answers', [
+                'id' => false,
+                'primary_key' => ['appraisal_form_id', 'appraisal_criteria_id', 'institution_staff_appraisal_id'],
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This table contains the dropdown answers recorded for a specific institution staff appraisal'
+            ])
             ->addColumn('appraisal_form_id', 'integer', [
                 'limit' => 11,
                 'null' => false,
@@ -89,10 +88,10 @@ class POCOR4454 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to institution_staff_appraisals.id'
             ])
-            ->addColumn('appraisal_dropdown_id', 'integer', [
+            ->addColumn('appraisal_dropdown_option_id', 'integer', [
                 'limit' => 11,
                 'null' => false,
-                'comment' => 'links to appraisal_dropdowns.id'
+                'comment' => 'links to appraisal_dropdown_options.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'limit' => 11,
@@ -111,16 +110,15 @@ class POCOR4454 extends AbstractMigration
             ->addIndex('appraisal_form_id')
             ->addIndex('appraisal_criteria_id')
             ->addIndex('institution_staff_appraisal_id')
-            ->addIndex('appraisal_dropdown_id')
+            ->addIndex('appraisal_dropdown_option_id')
             ->save();
     }
 
     public function down()
     {
         $this->execute("DELETE FROM `field_types` WHERE `code` = 'DROPDOWN'");
-
         $this->table('appraisal_forms_criterias')->removeColumn('is_mandatory');
-        $this->dropTable('appraisal_dropdowns');
+        $this->dropTable('appraisal_dropdown_options');
         $this->dropTable('appraisal_dropdown_answers');
     }
 }
