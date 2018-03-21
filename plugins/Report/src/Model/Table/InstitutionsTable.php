@@ -25,6 +25,10 @@ class InstitutionsTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
+    // position filter
+    const ALL_POSITION = 0;
+    const POSITION_WITH_STAFF = 1;
+
     public function initialize(array $config)
     {
         $this->table('institutions');
@@ -143,6 +147,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
         // $this->ControllerAction->field('license', ['type' => 'hidden']);
     }
 
@@ -474,6 +479,25 @@ class InstitutionsTable extends AppTable
                 } else {
                     $attr['value'] = Time::now();
                 }
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldPositionFilter(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.InstitutionPositions'])) {
+                $options = [
+                    self::ALL_POSITION => __('All Positions'),
+                    self::POSITION_WITH_STAFF => __('Positions with Staff')
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
