@@ -61,7 +61,6 @@ class ReportsController extends AppController
                 'Report.StaffTransfers' => __('Staff Transfer'),
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
-                'Report.InstitutionPositionAssignments' => __('Position Assignments')
             ];
         } elseif ($module == 'Students') {
             $options = [
