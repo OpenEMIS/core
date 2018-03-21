@@ -84,12 +84,10 @@ class AppraisalFormsTable extends ControllerActionTable
             $criteriaList = $this->AppraisalCriterias
                 ->find('list')
                 ->toArray();
-
-            $arrayFields = [];
-
             $attr['customElementLabel'] = 'Add Criterias';
             $criteriaList = ['' => '-- '. __($attr['customElementLabel']) .' --'] + $criteriaList;
 
+            $arrayFields = [];
             if ($this->request->is('get')) {
                 $customFields = $entity->appraisal_criterias ? $entity->appraisal_criterias : [];
                 foreach ($customFields as $key => $obj) {
@@ -99,13 +97,13 @@ class AppraisalFormsTable extends ControllerActionTable
                         'appraisal_criteria_id' => $obj->id,
                         'appraisal_form_id' => $entity->id,
                         'field_type_id' => $obj->field_type_id,
+                        'is_mandatory' => $obj->_joinData->is_mandatory,
                         'section' => $obj->_joinData->section,
                         'id' => $obj->_joinData->id
                     ];
                 }
             } elseif ($this->request->is(['post', 'put'])) {
                 $requestData = $this->request->data;
-                $arraySection = [];
                 if (array_key_exists('appraisal_criterias', $requestData[$this->alias()])) {
                     foreach ($requestData[$this->alias()]['appraisal_criterias'] as $key => $obj) {
                         $arrayData = [
@@ -114,39 +112,40 @@ class AppraisalFormsTable extends ControllerActionTable
                             'field_type_id' => $obj['_joinData']['field_type_id'],
                             'appraisal_criteria_id' => $obj['id'],
                             'appraisal_form_id' => $obj['_joinData']['appraisal_form_id'],
+                            'is_mandatory' => $obj['_joinData']['is_mandatory'],
                             'section' => $obj['_joinData']['section']
                         ];
                         if (!empty($obj['_joinData']['id'])) {
                             $arrayData['id'] = $obj['_joinData']['id'];
                         }
                         $arrayFields[] = $arrayData;
-                        $arraySection[] = $obj['_joinData']['section'];
                     }
                 }
                 if (array_key_exists('selected_custom_field', $requestData[$this->alias()])) {
                     $fieldId = $requestData[$this->alias()]['selected_custom_field'];
                     if (!empty($fieldId)) {
                         $fieldObj = $this->AppraisalCriterias->get($fieldId, ['contain' => ['FieldTypes']]);
-                        $sectionName = $entity->section;
                         $arrayFields[] = [
                             'name' => $fieldObj->name,
                             'field_type' => $fieldObj->field_type->name,
                             'field_type_id' => $fieldObj->field_type_id,
                             'appraisal_criteria_id' => $fieldObj->id,
                             'appraisal_form_id' => $entity->id,
-                            'section' => $sectionName
+                            'is_mandatory' => 0,
+                            'section' => $entity->section
                         ];
                     }
                 }
             }
 
-            $cellCount = 0;
-            $tableHeaders = [__('Criteria') , __('Field Type'), ''];
+            $tableHeaders = [__('Criteria') , __('Field Type'), __('Is Mandatory'), ''];
             $tableCells = [];
 
+            $cellCount = 0;
             $order = 0;
             $sectionName = "";
             $printSection = false;
+
             foreach ($arrayFields as $key => $obj) {
                 $fieldPrefix = $this->alias() . '.appraisal_criterias.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
@@ -182,6 +181,7 @@ class AppraisalFormsTable extends ControllerActionTable
                     $rowData = [];
                     $rowData[] = '<div class="section-header">'.$sectionName.'</div>';
                     $rowData[] = ''; // Field Type
+                    $rowData[] = ''; // Is Mandatory
                     $rowData[] = '<button onclick="jsTable.doRemove(this);CustomForm.updateSection();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
                     $rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
                     $printSection = false;
@@ -190,6 +190,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 $rowData = [];
                 $rowData[] = $customFieldName.$cellData;
                 $rowData[] = $customFieldType;
+                $rowData[] = $form->checkbox("$joinDataPrefix.is_mandatory", ['checked' => $obj['is_mandatory'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                 $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
                 $rowData[] = [$event->subject()->renderElement('OpenEmis.reorder', ['attr' => '']), ['class' => 'sorter rowlink-skip']];
                 $tableCells[] = $rowData;
