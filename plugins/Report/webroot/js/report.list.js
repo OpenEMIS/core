@@ -22,7 +22,7 @@ var ReportList = {
 			$(element).progressbar({
 				display_text: 'center',
 				percent_format: function(percent) { 
-					return (percent != 100) ? percent + '%' : downloadText; 
+					return (percent < 100) ? percent + '%' : downloadText; 
 				},
 				done: function(e) {
 					var current = $(e).attr('data-transitiongoal');
