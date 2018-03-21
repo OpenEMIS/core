@@ -55,7 +55,7 @@
 		</div>
 	<div class="table-wrapper">
 		<div class="table-responsive">
-			<table class="table table-curved table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
+			<table class="table table-curved table-input table-checkable" <?= $displayReorder ? 'id="sortable"' : '' ?>>
 				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 			</table>
