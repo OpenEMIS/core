@@ -46,10 +46,8 @@ class AppraisalFormsTable extends ControllerActionTable
 
     public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options = [])
     {
-        if ($action == 'index') {
-            // No implementation yet
-        } elseif ($action == 'view') {
-            $tableHeaders = [__('Criteria') , __('Field Type')];
+        if ($action == 'view') {
+            $tableHeaders = [__('Criteria'), __('Field Type'), __('Is Mandatory')];
             $tableCells = [];
             $customFormId = $entity->id;
             $customFields = $entity->appraisal_criterias;
@@ -61,16 +59,18 @@ class AppraisalFormsTable extends ControllerActionTable
                     $sectionName = $obj['_joinData']['section'];
                     $printSection = true;
                 }
-                if (!empty($sectionName) && ($printSection)) {
+                if (!empty($sectionName) && $printSection) {
                     $rowData = [];
                     $rowData[] = '<div class="section-header">'.$sectionName.'</div>';
                     $rowData[] = ''; // Field Type
+                    $rowData[] = ''; // Is Mandatory
                     $tableCells[] = $rowData;
                     $printSection = false;
                 }
                 $rowData = [];
                 $rowData[] = $obj['name'];
                 $rowData[] = $obj['field_type']['name'];
+                $rowData[] = $obj['_joinData']['is_mandatory'] ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
                 $tableCells[] = $rowData;
             }
             $attr['tableHeaders'] = $tableHeaders;
