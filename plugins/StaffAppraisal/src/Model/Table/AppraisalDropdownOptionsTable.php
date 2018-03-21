@@ -17,4 +17,9 @@ class AppraisalDropdownOptionsTable extends AppTable
             'cascadeCallbacks' => true
         ]);
     }
+
+    public function validationDefault(Validator $validator)
+    {
+        return $validator->notEmpty('name');
+    }
 }
