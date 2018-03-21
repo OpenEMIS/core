@@ -16,6 +16,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('FieldTypes', ['className' => 'FieldTypes', 'foreignKey' => 'field_type_id']);
         $this->hasOne('AppraisalSliders', ['className' => 'StaffAppraisal.AppraisalSliders', 'foreignKey' => 'appraisal_criteria_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalDropdownOptions', [
+            'className' => 'StaffAppraisal.AppraisalDropdownOptions',
+            'foreignKey' => 'appraisal_criteria_id',
+            'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
         $this->belongsToMany('AppraisalForms', [
             'className' => 'StaffAppraisal.AppraisalForms',
             'foreignKey' => 'appraisal_criteria_id',
