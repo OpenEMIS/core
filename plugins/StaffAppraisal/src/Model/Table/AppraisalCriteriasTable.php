@@ -49,7 +49,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['FieldTypes', 'AppraisalSliders']);
+        $query->contain(['FieldTypes', 'AppraisalSliders', 'AppraisalDropdownOptions.AppraisalDropdownAnswers']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -64,6 +64,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
                 $this->field('max', ['after' => 'min']);
                 $this->field('step', ['after' => 'max']);
                 break;
+            case 'DROPDOWN':
+                $this->field('options', [
+                    'type' => 'element',
+                    'element' => 'StaffAppraisal.dropdown_options',
+                    'after' => 'field_type_id'
+                ]);
+                break;
         }
     }
 
@@ -75,6 +82,21 @@ class AppraisalCriteriasTable extends ControllerActionTable
             'type' => 'select',
             'entity' => $entity
         ]);
+    }
+
+    public function onGetMin(Event $event, Entity $entity)
+    {
+        return strval($entity->appraisal_slider->min);
+    }
+
+    public function onGetMax(Event $event, Entity $entity)
+    {
+        return strval($entity->appraisal_slider->max);
+    }
+
+    public function onGetStep(Event $event, Entity $entity)
+    {
+        return strval($entity->appraisal_slider->step);
     }
 
     public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
@@ -119,6 +141,12 @@ class AppraisalCriteriasTable extends ControllerActionTable
                             'required' => true]
                         ]);
                         break;
+                    case 'DROPDOWN':
+                        $this->field('options', [
+                            'type' => 'element',
+                            'element' => 'StaffAppraisal.dropdown_options'
+                        ]);
+                        break;
                 }
             }
             $attr['onChangeReload'] = true;
@@ -127,18 +155,45 @@ class AppraisalCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetMin(Event $event, Entity $entity)
+    public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        return strval($entity->appraisal_slider->min);
+        if ($data->offsetExists($this->alias())) {
+            if (array_key_exists('appraisal_dropdown_options', $data[$this->alias()])) {
+                $dropdownOptions = $data[$this->alias()]['appraisal_dropdown_options'];
+                $data[$this->alias()]['appraisal_dropdown_options'] = array_values($dropdownOptions); // reindex array keys
+            }
+            $data[$this->alias()]['appraisal_dropdown_options'][] = [
+                'name' => '',
+                'is_default' => 0
+            ];
+        }
+
+        $options['associated'] = [
+            'AppraisalDropdownOptions' => ['validate' => false]
+        ];
     }
 
-    public function onGetMax(Event $event, Entity $entity)
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        return strval($entity->appraisal_slider->max);
+        if (array_key_exists('field_type_id', $data) && !empty($data['field_type_id'])) {
+            $fieldTypeCode = $this->FieldTypes->get($data['field_type_id'])->code;
+
+            if ($fieldTypeCode == 'DROPDOWN') {
+                if (!array_key_exists('appraisal_dropdown_options', $data)) {
+                    $data['appraisal_dropdown_options'] = []; // enables all options to be deleted
+                }
+                if (!empty($data['appraisal_dropdown_options']) && array_key_exists('is_default', $data)) {
+                    $defaultKey = $data['is_default'];
+                    $data['appraisal_dropdown_options'][$defaultKey]['is_default'] = 1; // set default option
+                }
+            }
+        }
     }
 
-    public function onGetStep(Event $event, Entity $entity)
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        return strval($entity->appraisal_slider->step);
+        $extra['excludedModels'] = [
+            $this->AppraisalDropdownOptions->alias()
+        ];
     }
 }
