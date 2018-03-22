@@ -756,7 +756,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-        if (empty($search)) {
+        if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
             $addAccess = $this->AccessControl->check(['Institutions', 'add']);
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
