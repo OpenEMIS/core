@@ -161,7 +161,7 @@ class SetupTextBehavior extends SetupBehavior
                 break;
             case 'input_mask':
                 $fieldType = strtolower($this->fieldTypeCode);
-                $model->addField('validation_reference', [
+                $model->field('validation_reference', [
                     'type' => 'element',
                     'element' => 'CustomField.Setup/' . $fieldType,
                     'valueClass' => 'table-full-width',
