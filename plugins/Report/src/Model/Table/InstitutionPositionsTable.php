@@ -2,11 +2,12 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\ORM\Entity;
-use Cake\ORM\Query;
-use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\Log\Log;
 
 class InstitutionPositionsTable extends AppTable
 {
@@ -26,7 +27,7 @@ class InstitutionPositionsTable extends AppTable
         $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-        // $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'institution_staff_id']);
+        $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff']);
 
         $this->addBehavior('Excel', [
             'autoFields' => false
@@ -39,7 +40,7 @@ class InstitutionPositionsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
-
+        
         $query
             ->select([
                 'workflow_steps_name' => 'Statuses.name',
@@ -50,7 +51,8 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_code' => 'AreaAdministratives.code',
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
-                'is_homeroom' => $this->aliasField('is_homeroom')
+                'is_homeroom' => $this->aliasField('is_homeroom'),
+                'institution_name' => 'Institutions.name'
             ])
             ->contain([
                 'Statuses' => [
@@ -94,13 +96,18 @@ class InstitutionPositionsTable extends AppTable
                         'Assignees.id',
                         'Assignees.first_name',
                         'Assignees.middle_name',
-                        'Assignees.last_name',
                         'Assignees.third_name',
+                        'Assignees.last_name',
                         'Assignees.preferred_name'
                     ]
                 ]
             ])
-        ;
+            ->order(['institution_name', 'position_no']);
+
+
+        if ($positionFilter == self::POSITION_WITH_STAFF) {
+            $query = $this->onExcelBeforePositionWithStaffQuery($query);
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -108,52 +115,6 @@ class InstitutionPositionsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
 
-        $newFields = $this->getPositionFields();
-
-        if ($positionFilter == self::POSITION_WITH_STAFF) {
-        }
-
-        // $newFields[] = [
-        //     'key' => '',
-        //     'field' => '',
-        //     'type' => '',
-        //     'label' => __('')
-        // ];
-
-        $fields->exchangeArray($newFields);
-    }
-
-    public function onExcelGetStaffPositionId(Event $event, Entity $entity)
-    {
-        $options = $this->getSelectOptions('Staff.position_types');
-        $staffPositionTitleType = '';
-
-        if ($entity->has('staff_position_title')) {
-            $staffPositionTitleType = $entity->staff_position_title->name;
-            $staffType = $entity->staff_position_title->type;
-            $type = array_key_exists($staffType, $options) ? $options[$staffType] : '';
-
-            if (!empty($type)) {
-                $staffPositionTitleType .= ' - ' . $type;
-            }
-        }
-
-        return $staffPositionTitleType;
-    }
-
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
-    {
-        return $entity->institution->code_name;
-    }
-
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
-    {
-        $options = $this->getSelectOptions('general.yesno');
-        return $options[$entity->is_homeroom];
-    }
-
-    private function getPositionFields()
-    {
         $newFields = [];
 
         $newFields[] = [
@@ -233,6 +194,138 @@ class InstitutionPositionsTable extends AppTable
             'label' => __('Homeroom Teacher')
         ];
 
+        if ($positionFilter == self::POSITION_WITH_STAFF) {
+            $staffFields = $this->onExcelUpdatePositionWithStaffFields();
+            $newFields = array_merge($newFields, $staffFields);
+        }
+
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetStaffPositionId(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('Staff.position_types');
+        $staffPositionTitleType = '';
+
+        if ($entity->has('staff_position_title')) {
+            $staffPositionTitleType = $entity->staff_position_title->name;
+            $staffType = $entity->staff_position_title->type;
+            $type = array_key_exists($staffType, $options) ? $options[$staffType] : '';
+
+            if (!empty($type)) {
+                $staffPositionTitleType .= ' - ' . $type;
+            }
+        } else {
+            Log::write('debug', $entity->name . ' has no staff_position_title...');
+        }
+
+        return $staffPositionTitleType;
+    }
+
+    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    {
+        return $entity->institution->code_name;
+    }
+
+    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+        return $options[$entity->is_homeroom];
+    }
+
+    public function onExcelGetStaffName(Event $event, Entity $entity)
+    {
+        if ($entity->has('_matchingData')) {
+            return $entity->_matchingData['Users']->name;
+        }
+        return '';
+    }
+
+    private function onExcelUpdatePositionWithStaffFields()
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.openemis_no',
+            'field' => 'staff_openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.name',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.start_date',
+            'field' => 'staff_start_date',
+            'type' => 'string',
+            'label' => __('Start Date')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.end_date',
+            'field' => 'staff_end_date',
+            'type' => 'string',
+            'label' => __('End Date')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.FTE',
+            'field' => 'staff_fte',
+            'type' => 'string',
+            'label' => __('FTE')
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.StaffPositionStatus',
+            'field' => 'staff_status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
         return $newFields;
+    }
+
+    private function onExcelBeforePositionWithStaffQuery($query)
+    {
+        $mainTable = $this;
+        $query
+            ->select([
+                'staff_openemis_no' => 'Users.openemis_no',
+                'staff_start_date' => 'InstitutionStaff.start_date',
+                'staff_end_date' => 'InstitutionStaff.end_date',
+                'staff_fte' => 'InstitutionStaff.FTE',
+                'staff_status' => 'StaffStatuses.name'
+            ])
+            ->leftJoinWith('InstitutionStaff', function ($q) use ($mainTable) {
+                return $q->select([
+                    'InstitutionStaff.id',
+                    'InstitutionStaff.start_date',
+                    'InstitutionStaff.end_date',
+                    'InstitutionStaff.FTE'
+                ])
+                ->where([$mainTable->aliasField('institution_id = ') . 'InstitutionStaff.institution_id']);
+            })
+            ->leftJoinWith('InstitutionStaff.Users', function ($q) {
+                return $q->select([
+                    'Users.openemis_no',
+                    'Users.first_name',
+                    'Users.middle_name',
+                    'Users.third_name',
+                    'Users.last_name',
+                    'Users.preferred_name'
+                ]);
+            })
+            ->leftJoinWith('InstitutionStaff.StaffStatuses', function ($q) {
+                return $q->select([
+                    'StaffStatuses.name'
+                ]);
+            });
+
+        return $query;
     }
 }
