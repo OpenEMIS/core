@@ -14,6 +14,7 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Institution\Model\Table\InstitutionsTable as Institutions;
+use Report\Model\Table\InstitutionPositionsTable as InstitutionPositions;
 
 class InstitutionsTable extends AppTable
 {
@@ -24,10 +25,6 @@ class InstitutionsTable extends AppTable
     const NO_FILTER = 0;
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
-
-    // position filter
-    const ALL_POSITION = 0;
-    const POSITION_WITH_STAFF = 1;
 
     public function initialize(array $config)
     {
@@ -492,8 +489,8 @@ class InstitutionsTable extends AppTable
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.InstitutionPositions'])) {
                 $options = [
-                    self::ALL_POSITION => __('All Positions'),
-                    self::POSITION_WITH_STAFF => __('Positions with Staff')
+                    InstitutionPositions::ALL_POSITION => __('All Positions'),
+                    InstitutionPositions::POSITION_WITH_STAFF => __('Positions with Staff')
                 ];
                 $attr['type'] = 'select';
                 $attr['select'] = false;
