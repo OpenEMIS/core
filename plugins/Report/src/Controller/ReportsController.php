@@ -60,7 +60,7 @@ class ReportsController extends AppController
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
                 'Report.InstitutionCases' => __('Cases'),
-                'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
+                'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked')
             ];
         } elseif ($module == 'Students') {
             $options = [
