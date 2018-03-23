@@ -47,7 +47,7 @@
 				]);
 			?>
 			<div class="form-buttons no-margin-top">
-				<div class="button-label"></div><button onclick="CustomForm.addSection('#sectionTxt');" type="button" class="btn btn-default btn-xs">
+				<div class="button-label"></div><button onclick="CustomForm.addSection('#sectionTxt', 2);" type="button" class="btn btn-default btn-xs">
 					<span><i class="fa fa-plus"></i><?=__('Add Section')?></span>
 				</button>
 			</div>
