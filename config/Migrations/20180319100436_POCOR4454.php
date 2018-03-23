@@ -88,9 +88,9 @@ class POCOR4454 extends AbstractMigration
                 'null' => false,
                 'comment' => 'links to institution_staff_appraisals.id'
             ])
-            ->addColumn('appraisal_dropdown_option_id', 'integer', [
+            ->addColumn('answer', 'integer', [
                 'limit' => 11,
-                'null' => false,
+                'null' => true,
                 'comment' => 'links to appraisal_dropdown_options.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
@@ -110,7 +110,23 @@ class POCOR4454 extends AbstractMigration
             ->addIndex('appraisal_form_id')
             ->addIndex('appraisal_criteria_id')
             ->addIndex('institution_staff_appraisal_id')
-            ->addIndex('appraisal_dropdown_option_id')
+            ->addIndex('answer')
+            ->save();
+
+        // appraisal_slider_answers
+        $this->table('appraisal_slider_answers')
+            ->changeColumn('answer', 'decimal', [
+                'precision' => 5,
+                'scale' => 2,
+                'null' => true
+            ])
+            ->save();
+
+        // appraisal_text_answers
+        $this->table('appraisal_text_answers')
+            ->changeColumn('answer', 'text', [
+                'null' => true
+            ])
             ->save();
     }
 
