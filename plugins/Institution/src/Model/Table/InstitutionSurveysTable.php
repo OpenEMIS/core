@@ -299,10 +299,13 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $this->field('academic_period_id');
         $this->field('survey_form_id');
+        $this->field('description');
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $surveyFormId = $entity->survey_form_id;
+        
         $this->field('status_id', [
             'attr' => ['value' => $entity->status_id]
         ]);
@@ -310,7 +313,10 @@ class InstitutionSurveysTable extends ControllerActionTable
             'attr' => ['value' => $entity->academic_period_id]
         ]);
         $this->field('survey_form_id', [
-            'attr' => ['value' => $entity->survey_form_id]
+            'attr' => ['value' => $surveyFormId]
+        ]);
+        $this->field('description', [
+            'attr' => ['value' => $this->SurveyForms->get($surveyFormId)->description]
         ]);
         // this extra field is use by repeater type to know user click add on which repeater question
         $this->field('repeater_question_id');
@@ -370,6 +376,16 @@ class InstitutionSurveysTable extends ControllerActionTable
             $attr['attr']['value'] = $formOptions[$formId];
         }
 
+        return $attr;
+    }
+
+    public function onUpdateFieldDescription(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'edit') {
+            if (isset($attr['attr']['value'])) {
+                $attr['type'] = 'readonly';
+            }
+        }
         return $attr;
     }
 
