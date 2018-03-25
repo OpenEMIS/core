@@ -753,7 +753,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'Users.first_name',
                 'Users.middle_name',
                 'Users.third_name',
-                'Users.last_name'
+                'Users.last_name',
+                'Users.preferred_name'
             ])
             ->find('byInstitution', ['Institutions.id' => $extra['institution_id']])
             ->find('byPositions', ['Institutions.id' => $extra['institution_id'], 'type' => 1]) // refer to OptionsTrait for type options
