@@ -166,8 +166,12 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function onGetDescription(Event $event, Entity $entity)
     {
-        $surveyFormId = $entity->survey_form->id;
-        return $this->SurveyForms->get($surveyFormId)->description;
+        $value = '';
+        if ($entity->has('survey_form') && $entity->survey_form->has('description')) {
+            $value = $entity->survey_form->description;
+        }
+
+        return $value;
     }
 
     public function onGetLastModified(Event $event, Entity $entity)
@@ -272,7 +276,32 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Do not show expired records
-        $query->where([
+        $extra['auto_contain'] = false;
+
+        $query
+            ->contain([
+                'Statuses' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'AcademicPeriods' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'SurveyForms' => [
+                    'fields' => [
+                        'name', 'description'
+                    ]
+                ],
+                'Assignees' => [
+                    'fields' => [
+                        'first_name', 'middle_name', 'third_name', 'last_name'
+                    ]
+                ]
+            ])
+            ->where([
             $this->aliasField('status_id <> ') => self::EXPIRED
         ]);
 
@@ -288,6 +317,13 @@ class InstitutionSurveysTable extends ControllerActionTable
         // end POCOR-4027
     }
 
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'SurveyForms'
+        ]);
+    }
+
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'survey_form_id';
@@ -297,12 +333,14 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id');
-        $this->field('survey_form_id');
+        $this->field('description');
+        $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $surveyFormId = $entity->survey_form_id;
+        
         $this->field('status_id', [
             'attr' => ['value' => $entity->status_id]
         ]);
@@ -310,7 +348,10 @@ class InstitutionSurveysTable extends ControllerActionTable
             'attr' => ['value' => $entity->academic_period_id]
         ]);
         $this->field('survey_form_id', [
-            'attr' => ['value' => $entity->survey_form_id]
+            'attr' => ['value' => $surveyFormId]
+        ]);
+        $this->field('description', [
+            'entity' => $entity
         ]);
         // this extra field is use by repeater type to know user click add on which repeater question
         $this->field('repeater_question_id');
@@ -368,6 +409,21 @@ class InstitutionSurveysTable extends ControllerActionTable
 
             $attr['type'] = 'readonly';
             $attr['attr']['value'] = $formOptions[$formId];
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldDescription(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            if (array_key_exists('entity', $attr)) {
+                $entity = $attr['entity'];
+
+                $surveyFormDescription = $entity->survey_form->description;
+                $attr['attr']['value'] = $surveyFormDescription;
+            }
         }
 
         return $attr;
