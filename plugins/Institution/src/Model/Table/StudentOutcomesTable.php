@@ -376,8 +376,8 @@ class StudentOutcomesTable extends ControllerActionTable
 
             if (!empty($subjectList)) {
                 foreach ($subjectList as $subject) {
-                    $params['education_subject_id'] = $subject->id;
-                    $subjectOptions[$subject->id] = [
+                    $params['education_subject_id'] = $subject->education_subject->id;
+                    $subjectOptions[$subject->education_subject->id] = [
                         'name' => $subject->education_subject->code_name,
                         'url' => $this->setQueryString($baseUrl, $params)
                     ];
