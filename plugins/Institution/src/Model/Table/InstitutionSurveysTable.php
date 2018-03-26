@@ -172,8 +172,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
 
         return $value;
-        // $surveyFormId = $entity->survey_form->id;
-        // return $this->SurveyForms->get($surveyFormId)->description;
     }
 
     public function onGetLastModified(Event $event, Entity $entity)
