@@ -5,7 +5,10 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionContactsTable extends ControllerActionTable {
@@ -65,8 +68,28 @@ class InstitutionContactsTable extends ControllerActionTable {
         return $validator;
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+         $Navigation->substituteCrumb('Contacts', 'Contacts (Institution)');
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $entity = $Institutions->get($institutionId);
+        $institutionName = $entity->name;
+
+        $this->controller->set('contentHeader', $institutionName. ' - ' .__('Contacts (Institution)'));
+
         $this->setFieldVisible(['view', 'edit'], [
             'telephone', 'fax', 'email', 'website'
         ]);
