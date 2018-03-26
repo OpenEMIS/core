@@ -247,7 +247,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             }
         }
 
-        $this->field('description');
+        $this->field('description', ['type' => 'text']);
         $fieldOrder = ['survey_form_id', 'description', 'academic_period_id'];
         $selectedStatus = $this->request->query('status');
 
@@ -416,8 +416,11 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function onUpdateFieldDescription(Event $event, array $attr, $action, $request)
     {
-        if ($action == 'edit') {
-            $attr['type'] = 'readonly';
+        if ($action == 'view') {
+            $attr['type'] = 'text';
+        } elseif ($action == 'edit') {
+            $attr['type'] = 'text';
+            $attr['attr']['disabled'] = 'disabled';
             if (array_key_exists('entity', $attr)) {
                 $entity = $attr['entity'];
 
