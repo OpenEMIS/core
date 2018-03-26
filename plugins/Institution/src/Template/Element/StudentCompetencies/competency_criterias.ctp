@@ -55,6 +55,7 @@
         <?php
             $studentOptions = $attr['student_options'];
             $selectedStudent = $attr['selected_student'];
+            $studentStatus = '';
             foreach ($studentOptions as $key => $value) {
                 if ($selectedStudent == $key) { 
                     $studentStatus = $value['status'];
