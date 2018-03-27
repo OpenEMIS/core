@@ -150,6 +150,61 @@ class StudentOutcomesTable extends ControllerActionTable
             $this->aliasField('name') => 'asc'
         ];
 
+        // For filtering all classes and my classes
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $AccessControl = $this->AccessControl;
+        $userId = $session->read('Auth.User.id');
+        $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+        if (!$AccessControl->isAdmin()) {
+            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
+                $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+                $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+                if (!$classPermission && !$subjectPermission) {
+                    $query->where(['1 = 0'], [], true);
+                } else {
+                    $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+                        'InstitutionClasses.id = '.$this->ClassGrades->aliasField('institution_class_id'),
+                        ])
+                        ;
+
+                    // If only class permission is available but no subject permission available
+                    if ($classPermission && !$subjectPermission) {
+                        $query->where([
+                                'OR' => [
+                                    ['InstitutionClasses.staff_id' => $userId],
+                                    ['InstitutionClasses.secondary_staff_id' => $userId]
+                                ]
+                            ]);
+                    } else {
+                        $query
+                            ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+                                'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
+                                'InstitutionClassSubjects.status = 1'
+                            ])
+                            ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+                                'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+                            ]);
+
+                        // If both class and subject permission is available
+                        if ($classPermission && $subjectPermission) {
+                            $query->where([
+                                'OR' => [
+                                    ['InstitutionClasses.staff_id' => $userId],
+                                    ['InstitutionClasses.secondary_staff_id' => $userId],
+                                    ['InstitutionSubjectStaff.staff_id' => $userId]
+                                ]
+                            ]);
+                        }
+                        // If only subject permission is available
+                        else {
+                            $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
+                        }
+                    }
+                }
+            }
+        }
+
         // Academic period filter
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
@@ -181,7 +236,7 @@ class StudentOutcomesTable extends ControllerActionTable
 
         $selectedOutcome = !is_null($this->request->query('outcome')) ? $this->request->query('outcome') : 0;
         $this->controller->set(compact('outcomeOptions', 'selectedOutcome'));
-        if (!empty($selectedOutcome)){
+        if (!empty($selectedOutcome)) {
             $query->where([$Outcomes->aliasField('id') => $selectedOutcome]);
         }
         // End
@@ -193,9 +248,9 @@ class StudentOutcomesTable extends ControllerActionTable
     {
         if ($field == 'name') {
             return __('Class Name');
-        } else if ($field == 'total_male_students') {
+        } elseif ($field == 'total_male_students') {
             return  __('Male Students');
-        } else if ($field == 'total_female_students') {
+        } elseif ($field == 'total_female_students') {
             return  __('Female Students');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -290,23 +345,40 @@ class StudentOutcomesTable extends ControllerActionTable
         $subjectOptions = [];
         $baseUrl = $this->url($this->action, false);
         $params = $this->getQueryString();
+        $session = $this->request->session();
+        $AccessControl = $this->AccessControl;
+        
+        $userId = $session->read('Auth.User.id');
+        $gradeId = $this->gradeId;
+        $academicPeriodId = $this->academicPeriodId;
+        $institutionId = $this->institutionId;
+        $classId = $this->classId;
 
-        if (!is_null($this->gradeId)) {
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $gradeId = $this->gradeId;
-
-            $results = $EducationSubjects->find()
-                ->innerJoinWith('EducationGrades', function ($q) use ($gradeId) {
-                    return $q->where(['EducationGrades.id' => $gradeId]);
+        if (!is_null($gradeId)) {
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $subjectList = $InstitutionSubjects
+                ->find()
+                ->find('byAccess', [
+                    'userId' => $userId,
+                    'accessControl' => $AccessControl,
+                    'controller' => $this->controller
+                ])
+                ->contain(['EducationGrades', 'EducationSubjects'])
+                ->matching('ClassSubjects', function ($q) use ($classId) {
+                    return $q->where(['ClassSubjects.institution_class_id' => $classId]);
                 })
-                ->order([$EducationSubjects->aliasField('order')])
+                ->where([
+                    'EducationGrades.id' => $gradeId,
+                    'InstitutionSubjects.institution_id' => $institutionId,
+                    'InstitutionSubjects.academic_period_id' => $academicPeriodId,
+                ])
                 ->toArray();
 
-            if (!empty($results)) {
-                foreach ($results as $subject) {
-                    $params['education_subject_id'] = $subject->id;
-                    $subjectOptions[$subject->id] = [
-                        'name' => $subject->code_name,
+            if (!empty($subjectList)) {
+                foreach ($subjectList as $subject) {
+                    $params['education_subject_id'] = $subject->education_subject->id;
+                    $subjectOptions[$subject->education_subject->id] = [
+                        'name' => $subject->education_subject->code_name,
                         'url' => $this->setQueryString($baseUrl, $params)
                     ];
                 }
@@ -486,7 +558,6 @@ class StudentOutcomesTable extends ControllerActionTable
             }
             $tableFooters[] = __('Comments');
             $tableFooters[] = $comments;
-
         } else {
             // table headers
             $tableHeaders[] = __('Outcome Criteria');

@@ -85,7 +85,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'SubjectStudents' => ['view', 'edit'],
-            'ReportCardComments' => ['index']
+            'ReportCardComments' => ['index'],
+            'StudentOutcomes' => ['index']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -348,6 +349,25 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
                 return $arrResults;
             });
+    }
+
+    public function findByStudentOutcomeSubjects(Query $query, array $options)
+    {
+        $classId = $options['institution_class_id'];
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $gradeId = $options['education_grade_id'];
+
+        return $query
+            ->matching('ClassSubjects', function ($q) use ($classId) {
+                return $q->where(['ClassSubjects.institution_class_id' => $classId]);
+            })
+            ->contain(['EducationSubjects'])
+            ->where([
+                $this->aliasField('institution_id')=> $institutionId,
+                $this->aliasField('education_grade_id') => $gradeId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ]);
     }
 
     public function findSubjectDetails(Query $query, array $options)
