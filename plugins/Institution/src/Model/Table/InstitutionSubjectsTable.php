@@ -1413,7 +1413,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
         }
-
+ 
         return $data;
     }
 }

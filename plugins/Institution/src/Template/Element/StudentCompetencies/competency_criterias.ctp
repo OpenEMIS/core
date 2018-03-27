@@ -83,7 +83,7 @@
             <input  value="<?= __($studentStatus) ?>" disabled="disabled">
         </div>
     </div>
-
+ 
     <div class="table-wrapper">
         <div class="table-in-view">
             <table class="table">

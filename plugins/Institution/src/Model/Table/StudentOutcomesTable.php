@@ -575,7 +575,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $event->stopPropagation();
         return $event->subject()->renderElement('Institution.StudentOutcomes/outcome_criterias', ['attr' => $attr]);
     }
-
+ 
     private function getOutcomeGradingTypes()
     {
         $OutcomeGradingTypes = TableRegistry::get('Outcome.OutcomeGradingTypes');
