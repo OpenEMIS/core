@@ -351,7 +351,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             });
     }
 
-    public function findByStudentOutcomeSubjects(Query $query, array $options)
+    public function findBySubjectsInClass(Query $query, array $options)
     {
         $classId = $options['institution_class_id'];
         $institutionId = $options['institution_id'];
@@ -364,7 +364,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             })
             ->contain(['EducationSubjects'])
             ->where([
-                $this->aliasField('institution_id')=> $institutionId,
+                $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('education_grade_id') => $gradeId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ]);
