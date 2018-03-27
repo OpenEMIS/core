@@ -12,7 +12,7 @@ class AppraisalDropdownOptionsTable extends AppTable
         $this->belongsTo('AppraisalCriterias', ['className' => 'StaffAppraisal.AppraisalCriterias']);
         $this->hasMany('AppraisalDropdownAnswers', [
             'className' => 'StaffAppraisal.AppraisalDropdownAnswers',
-            'foreignKey' => 'appraisal_dropdown_option_id',
+            'foreignKey' => 'answer',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
