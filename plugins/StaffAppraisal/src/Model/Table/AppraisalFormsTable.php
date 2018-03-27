@@ -215,4 +215,11 @@ class AppraisalFormsTable extends ControllerActionTable
 
         return $event->subject()->renderElement('StaffAppraisal.form_criterias', ['attr' => $attr]);
     }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->AppraisalCriterias->alias()
+        ];
+    }
 }
