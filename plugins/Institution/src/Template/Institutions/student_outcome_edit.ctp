@@ -77,6 +77,7 @@ $this->start('panelBody');
         <div ng-if="InstitutionStudentOutcomesController.dataReady" kd-ag-grid="InstitutionStudentOutcomesController.gridOptions"></div>
     </div>
 </form>
+
 <?php
 $this->end();
 ?>
