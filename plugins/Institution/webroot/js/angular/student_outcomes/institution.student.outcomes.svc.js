@@ -18,11 +18,13 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         getColumnDefs: getColumnDefs,
         renderInput: renderInput,
         saveOutcomeResults: saveOutcomeResults,
-        saveOutcomeComments: saveOutcomeComments
+        saveOutcomeComments: saveOutcomeComments,
+        getSubjectOptions: getSubjectOptions
     };
 
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
+        InstitutionSubjects: 'Institution.InstitutionSubjects',
         StudentStatuses: 'Student.StudentStatuses',
         InstitutionClassStudents: 'Institution.InstitutionClassStudents',
         OutcomeTemplates: 'Outcome.OutcomeTemplates',
@@ -69,6 +71,21 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .where({institution_class_id: classId})
             .order(['Users.first_name', 'Users.last_name'])
             .ajax({success: success, defer:true});
+    }
+
+    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+
+        return InstitutionSubjects
+            .find('bySubjectsInClass', {
+                institution_class_id: classId,
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId,
+                education_grade_id: gradeId
+            })
+            .ajax({success: success, defer: true});
     }
 
     function getOutcomeTemplate(academicPeriodId, outcomeTemplateId) {
