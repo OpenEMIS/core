@@ -459,7 +459,72 @@ class AssessmentResultsTable extends AppTable
             $entity = $this->find()
                 ->contain([
                     'Users' => [
-                        'BirthplaceAreas', 'MainNationalities'
+                        'fields' => [
+                            'id',
+                            'username',
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code',
+                            'address_area_id',
+                            'birthplace_area_id',
+                            'gender_id',
+                            'date_of_birth',
+                            'date_of_death',
+                            'nationality_id',
+                            'identity_type_id',
+                            'identity_number',
+                            'external_reference',
+                            'super_admin',
+                            'status',
+                            'last_login',
+                            'photo_name',
+                            'photo_content',
+                            'preferred_language',
+                            'is_student',
+                            'is_staff',
+                            'is_guardian'
+                        ],
+                        'Genders' => [
+                            'fields' => [
+                                'id',
+                                'name',
+                                'code',
+                                'order'
+                            ]
+                        ],
+                        'BirthplaceAreas' => [
+                            'fields' => [
+                                'id',
+                                'code',
+                                'name',
+                                'is_main_country',
+                                'parent_id',
+                                'lft',
+                                'rght',
+                                'area_administrative_level_id',
+                                'order',
+                                'visible'
+                            ]
+                        ],
+                        'MainNationalities' => [
+                            'fields' => [
+                                'id',
+                                'name',
+                                'order',
+                                'visible',
+                                'editable',
+                                'identity_type_id',
+                                'default',
+                                'international_code',
+                                'national_code'
+                            ]
+                        ]
                     ]
                 ])
                 ->where([$this->aliasField('institution_class_id') => $params['class_id']])
