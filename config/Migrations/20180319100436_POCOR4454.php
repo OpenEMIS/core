@@ -136,5 +136,17 @@ class POCOR4454 extends AbstractMigration
         $this->table('appraisal_forms_criterias')->removeColumn('is_mandatory');
         $this->dropTable('appraisal_dropdown_options');
         $this->dropTable('appraisal_dropdown_answers');
+        $this->table('appraisal_slider_answers')
+            ->changeColumn('answer', 'decimal', [
+                'precision' => 5,
+                'scale' => 2,
+                'null' => false
+            ])
+            ->save();
+        $this->table('appraisal_text_answers')
+            ->changeColumn('answer', 'text', [
+                'null' => false
+            ])
+            ->save();
     }
 }
