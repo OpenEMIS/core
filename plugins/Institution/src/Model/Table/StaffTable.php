@@ -1389,15 +1389,17 @@ class StaffTable extends ControllerActionTable
     public function findByPositions(Query $query, array $options)
     {
         if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
             $positions = $this->Positions->find('list')
-                        ->find('withBelongsTo')
-                        ->where([
-                            'Institutions.id' => $options['Institutions.id'],
-                            $StaffPositionTitles->aliasField('type') => $options['type']
-                        ])
-                        ->toArray()
-                        ;
+                ->select([
+                    $this->Positions->aliasField('id'),
+                    'StaffPositionTitles.type'
+                ])
+                ->contain(['StaffPositionTitles'])
+                ->where([
+                    $this->Positions->aliasField('institution_id') => $options['Institutions.id'],
+                    'StaffPositionTitles.type' => $options['type']
+                ])
+                ->toArray();
             $positions = array_keys($positions);
             if (!empty($positions)) {
                 return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
@@ -1460,12 +1462,6 @@ class StaffTable extends ControllerActionTable
         } else {
             return $query;
         }
-    }
-
-    public function findWithBelongsTo(Query $query, array $options)
-    {
-        return $query
-            ->contain(['Users', 'Institutions', 'Positions.StaffPositionTitles', 'StaffTypes', 'StaffStatuses']);
     }
 
     public function findStaffRecords(Query $query, array $options)
@@ -1558,26 +1554,37 @@ class StaffTable extends ControllerActionTable
         $academicPeriodId = $options['academic_period_id'];
 
         return $query
-                ->find('withBelongsTo')
-                ->find('byInstitution', ['Institutions.id' => $institutionId])
-                ->find('byPositions', ['Institutions.id' => $institutionId, 'type' => 1])
-                ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
-                ->where([
-                    $this->aliasField('institution_position_id'),
-                    'OR' => [ //check teacher end date
-                        [$this->aliasField('end_date').' > ' => Time::now()],
-                        [$this->aliasField('end_date').' IS NULL']
-                    ]
-                ])
-                ->formatResults(function ($results) {
-                    $returnArr = [];
-                    foreach ($results as $result) {
-                        if ($result->has('user')) {
-                            $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
-                        }
+            ->find('all')
+            ->select([
+                $this->aliasField('id'),
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name'
+            ])
+            ->find('byInstitution', ['Institutions.id' => $institutionId])
+            ->find('byPositions', ['Institutions.id' => $institutionId, 'type' => 1])
+            ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+            ->contain(['Users'])
+            ->where([
+                $this->aliasField('institution_position_id'),
+                'OR' => [ //check teacher end date
+                    [$this->aliasField('end_date').' > ' => Time::now()],
+                    [$this->aliasField('end_date').' IS NULL']
+                ]
+            ])
+            ->formatResults(function ($results) {
+                $returnArr = [];
+                foreach ($results as $result) {
+                    if ($result->has('user')) {
+                        $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
                     }
-                    return $returnArr;
-                });
+                }
+                return $returnArr;
+            });
     }
 
     // used for student report cards
