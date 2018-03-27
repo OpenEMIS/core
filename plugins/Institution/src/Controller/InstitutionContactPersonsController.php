@@ -44,10 +44,10 @@ class InstitutionContactPersonsController extends PageController
 
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Contact Persons');
+        $page->addCrumb('Contacts (People)');
 
         // set header
-        $page->setHeader(__('Contact Persons'));
+        $page->setHeader($institutionName . ' - ' . __('Contacts (People)'));
 
         $page->setQueryString('institution_id', $institutionId);
 

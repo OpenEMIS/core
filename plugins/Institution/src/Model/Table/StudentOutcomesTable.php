@@ -558,7 +558,6 @@ class StudentOutcomesTable extends ControllerActionTable
             }
             $tableFooters[] = __('Comments');
             $tableFooters[] = $comments;
-
         } else {
             // table headers
             $tableHeaders[] = __('Outcome Criteria');
