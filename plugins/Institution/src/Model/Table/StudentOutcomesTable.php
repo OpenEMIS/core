@@ -157,7 +157,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $userId = $session->read('Auth.User.id');
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin()) {
-            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
+            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
                 $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
                 $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
                 if (!$classPermission && !$subjectPermission) {
@@ -180,7 +180,7 @@ class StudentOutcomesTable extends ControllerActionTable
                         $query
                             ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
                                 'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
-                                'InstitutionClassSubjects.status =   1'
+                                'InstitutionClassSubjects.status = 1'
                             ])
                             ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                                 'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
