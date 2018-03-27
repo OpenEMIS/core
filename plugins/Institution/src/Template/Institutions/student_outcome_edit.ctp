@@ -47,7 +47,7 @@ $this->start('panelBody');
             <label><?= __('Outcome Period') ?>:</label>
             <div class="input-select-wrapper">
                 <select name="outcome_period" ng-options="period.id as period.code_name for period in InstitutionStudentOutcomesController.periodOptions" ng-model="InstitutionStudentOutcomesController.selectedPeriod" ng-change="InstitutionStudentOutcomesController.changeOutcomeOptions(true);">
-                    <option value="" ng-show="InstitutionStudentOutcomesController.periodOptions.length == 0"><?= __('No Options') ?></option>
+                    <option value="" ng-if="InstitutionStudentOutcomesController.periodOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
         </div>
@@ -55,7 +55,7 @@ $this->start('panelBody');
             <label><?= __('Subject') ?>:</label>
             <div class="input-select-wrapper">
                 <select name="education_subject" ng-options="subject.id as subject.code_name for subject in InstitutionStudentOutcomesController.subjectOptions" ng-model="InstitutionStudentOutcomesController.selectedSubject" ng-change="InstitutionStudentOutcomesController.changeOutcomeOptions(false);">
-                    <option value="" ng-show="InstitutionStudentOutcomesController.subjectOptions.length == 0"><?= __('No Options') ?></option>
+                    <option value="" ng-if="InstitutionStudentOutcomesController.subjectOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
         </div>
@@ -63,7 +63,7 @@ $this->start('panelBody');
             <label><?= __('Student') ?>:</label>
             <div class="input-select-wrapper">
                 <select name="student" ng-options="student.student_id as student.user.name_with_id for student in InstitutionStudentOutcomesController.studentOptions" ng-model="InstitutionStudentOutcomesController.selectedStudent" ng-change="InstitutionStudentOutcomesController.changeStudentOptions(true);">
-                    <option value="" ng-show="InstitutionStudentOutcomesController.studentOptions.length == 0"><?= __('No Options') ?></option>
+                    <option value="" ng-if="InstitutionStudentOutcomesController.studentOptions.length == 0"><?= __('No Options') ?></option>
                 </select>
             </div>
         </div>
