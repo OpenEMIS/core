@@ -142,6 +142,7 @@ class StudentUserTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        $events['ControllerAction.Model.pull.beforePatch'] = 'pullBeforePatch';
         return $events;
     }
 
@@ -485,6 +486,14 @@ class StudentUserTable extends ControllerActionTable
     {
         if ($student->isNew()) {
             $this->updateAll(['is_student' => 1], ['id' => $student->student_id]);
+        }
+    }
+
+    public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
+    {
+        if (!array_key_exists('institution_id', $queryString)) {
+            $session = $this->request->session();
+            $queryString['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         }
     }
 
