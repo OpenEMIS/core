@@ -356,7 +356,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
         return InstitutionOutcomeResults.save(saveObj);
     }
-
+ 
     function saveOutcomeComments(params) {
         var comments = params.data.result;
         var studentId = params.data.student_id;

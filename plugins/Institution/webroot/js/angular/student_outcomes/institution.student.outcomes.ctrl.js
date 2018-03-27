@@ -297,7 +297,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         }, function (error) {
         });
     }   
-
+ 
     function initGrid() {
         return AggridLocaleSvc.getTranslatedGridLocale()
         .then(function(localeText){
