@@ -79,7 +79,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
 
         return InstitutionSubjects
-            .find('byStudentOutcomeSubjects', {
+            .find('bySubjectsInClass', {
                 institution_class_id: classId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId,
