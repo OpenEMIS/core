@@ -57,7 +57,9 @@ class ReportCardsTable extends AppTable
                 'AssessmentPeriods',
                 'AssessmentItems',
                 'AssessmentItemsWithResults',
-                'AssessmentItemResults'
+                'AssessmentItemResults',
+                'GroupAssessmentPeriods',
+                'GroupAssessmentItemResults'
             ]
         ]);
     }
@@ -93,6 +95,8 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsWithResults'] = 'onExcelTemplateInitialiseAssessmentItemsWithResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemResults'] = 'onExcelTemplateInitialiseGroupAssessmentItemResults';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         return $events;
     }
@@ -483,11 +487,11 @@ class ReportCardsTable extends AppTable
             $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
             $absenceTypes = $AbsenceTypes->getCodeList();
 
-             $results = [];
-             foreach($absenceTypes as $key => $code) {
+            $results = [];
+            foreach ($absenceTypes as $key => $code) {
                 // initialize all types as 0
                 $results[$code]['number_of_days'] = 0;
-             }
+            }
 
             // sum all number_of_days a student absence in an academic period
             foreach ($studentAbsenceResults as $key => $obj) {
@@ -832,6 +836,98 @@ class ReportCardsTable extends AppTable
                     });
                 })
                 ->toArray();
+
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
+            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $query = $AssessmentItemResults->find();
+
+            $selectedColumns = [
+                $AssessmentItemResults->aliasField('education_subject_id'),
+                'marks' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)'),
+                'academic_term_value' => '(
+                    CASE
+                    WHEN AssessmentPeriods.academic_term <> \'\' THEN AssessmentPeriods.academic_term
+                        ELSE AssessmentPeriods.name
+                        END
+                    )',
+            ];
+
+            $entity = $query
+                ->select($selectedColumns)
+                ->contain(['AssessmentPeriods', 'EducationSubjects'])
+                ->where([
+                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
+                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
+                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id']
+                ])
+                ->group([
+                    $AssessmentItemResults->aliasField('education_subject_id'),
+                    'academic_term_value'
+                ])
+                ->hydrate(false)
+                ->toArray();
+
+            $averageResult = [];
+            foreach ($entity as $array) {
+                $educationSubjectId = $array['education_subject_id'];
+                if (array_key_exists($educationSubjectId, $averageResult)) {
+                    ++$averageResult[$educationSubjectId]['count'];
+                    $averageResult[$educationSubjectId]['total_marks'] += $array['marks'];
+                } else {
+                    $averageResult[$educationSubjectId] = [
+                        'count' => 1,
+                        'total_marks' => $array['marks']
+                    ];
+                }
+            }
+
+            foreach ($averageResult as $key => $value) {
+                $entity[] = [
+                    'education_subject_id' => $key,
+                    'academic_term_value' => __('Average'),
+                    'marks' => $value['total_marks'] / $value['count']
+                ];
+            }
+
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $extra)) {
+            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+
+            $selectedColumns = [
+                'academic_term_value' => '(
+                    CASE
+                    WHEN ' . $AssessmentPeriods->aliasField('academic_term <> \'\'') . ' THEN ' . $AssessmentPeriods->aliasField('academic_term') . '
+                        ELSE ' . $AssessmentPeriods->aliasField('name') . '
+                        END
+                    )'
+            ];
+
+            $entity = $AssessmentPeriods
+                ->find()
+                ->select($selectedColumns)
+                ->where([$AssessmentPeriods->aliasField('assessment_id') => $extra['assessment_id']])
+                ->group([('academic_term_value')])
+                ->order([$AssessmentPeriods->aliasField('start_date')])
+                ->hydrate(false)
+                ->toArray();
+
+            $entity[] = [
+                'academic_term_value' => __('Average')
+            ];
 
             return $entity;
         }
