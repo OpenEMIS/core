@@ -734,6 +734,7 @@ class RecordBehavior extends Behavior
                                 $fieldData['textarea_value'] = $obj->textarea_value;
                                 $fieldData['date_value'] = $obj->date_value;
                                 $fieldData['time_value'] = $obj->time_value;
+                                $fieldData['file'] = $obj->file;
 
                                 // logic for Initialize
                                 $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
