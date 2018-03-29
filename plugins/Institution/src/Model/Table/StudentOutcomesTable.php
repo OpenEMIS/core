@@ -372,6 +372,7 @@ class StudentOutcomesTable extends ControllerActionTable
                     'InstitutionSubjects.institution_id' => $institutionId,
                     'InstitutionSubjects.academic_period_id' => $academicPeriodId,
                 ])
+                ->order('EducationSubjects.order')
                 ->toArray();
 
             if (!empty($subjectList)) {
