@@ -6,6 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
+use Cake\Utility\Security;
 use App\Model\Table\AppTable;
 
 class ReportCardsTable extends AppTable
@@ -57,7 +58,13 @@ class ReportCardsTable extends AppTable
                 'AssessmentPeriods',
                 'AssessmentItems',
                 'AssessmentItemsWithResults',
-                'AssessmentItemResults'
+                'AssessmentItemResults',
+                'OutcomeTemplates',
+                'OutcomePeriods',
+                'OutcomeSubjects',
+                'StudentOutcomeSubjectComments',
+                'OutcomeCriterias',  
+                'StudentOutcomeResults'
             ]
         ]);
     }
@@ -94,6 +101,13 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsWithResults'] = 'onExcelTemplateInitialiseAssessmentItemsWithResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeTemplates'] = 'onExcelTemplateInitialiseOutcomeTemplates';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomePeriods'] = 'onExcelTemplateInitialiseOutcomePeriods';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeSubjects'] = 'onExcelTemplateInitialiseOutcomeSubjects';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeSubjectComments'] = 'onExcelTemplateInitialiseStudentOutcomeSubjectComments';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeCriterias'] = 'onExcelTemplateInitialiseOutcomeCriterias';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeResults'] = 'onExcelTemplateInitialiseStudentOutcomeResults';
+
         return $events;
     }
 
@@ -835,6 +849,155 @@ class ReportCardsTable extends AppTable
                 ->toArray();
 
             return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseOutcomeTemplates(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+            $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+
+            $entity = $OutcomeTemplates->find()
+                ->innerJoinWith('Periods')
+                ->where([
+                    $OutcomeTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $OutcomeTemplates->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    'Periods.start_date >= ' => $extra['report_card_start_date'],
+                    'Periods.end_date <= ' => $extra['report_card_end_date']
+                ])
+                ->group($OutcomeTemplates->aliasField('id')); 
+
+            if ($entity->count() > 0) {
+                $extra['outcome_templates_ids'] = $entity->extract('id')->toArray();
+            }
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseOutcomePeriods(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('academic_period_id', $params) && array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+
+            $entity = $OutcomePeriods->find()
+                ->where([
+                    $OutcomePeriods->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $OutcomePeriods->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids'],
+                    $OutcomePeriods->aliasField('start_date >= ') => $extra['report_card_start_date'],
+                    $OutcomePeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
+                ]);
+
+            if ($entity->count() > 0) {
+                $extra['outcome_periods_ids'] = $entity->extract('id')->toArray();
+            }
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseOutcomeSubjects(Event $event, array $params, ArrayObject $extra)
+    {
+
+       if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('institution_class_id', $params) &&array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])) {
+
+            $classId = $params['institution_class_id'];
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+            $mergeEntity = [];
+          
+            $entity = $EducationSubjects
+                ->find()
+                ->select([
+                    'outcome_template_id' => $OutcomePeriods->aliasField('outcome_template_id'),
+                    'outcome_period_id' => $OutcomePeriods->aliasField('id')
+                ])
+                ->innerJoinWith('InstitutionSubjects.ClassSubjects', function ($q) use ($classId) {
+                    return $q->where(['ClassSubjects.institution_class_id' => $classId]);
+                })
+                ->leftJoin([$OutcomePeriods->alias() => $OutcomePeriods->table()], [
+                    $OutcomePeriods->aliasField('id IN ') => $extra['outcome_periods_ids']
+                ])
+                ->where([
+                    'InstitutionSubjects.education_grade_id' => $params['education_grade_id'],
+                    'InstitutionSubjects.institution_id' => $params['institution_id'],
+                    'InstitutionSubjects.academic_period_id' => $params['academic_period_id'],
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $row->education_subject_id = $row->id;
+                        $hashString = [];
+                        $hashString[] = $row->outcome_template_id;
+                        $hashString[] = $row->education_subject_id;
+                        $row->id = Security::hash(implode(',', $hashString), 'sha256');
+                        return $row;
+                    });
+                })
+                ->autoFields(true);
+
+        return $entity->toArray();
+      }
+    }
+
+    public function onExcelTemplateInitialiseOutcomeCriterias(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('academic_period_id', $params) && array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids'])) {
+            $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+            
+            $entity = $OutcomeCriterias->find()
+                ->where([
+                    $OutcomeCriterias->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $OutcomeCriterias->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids']
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $hashString = [];
+                        $hashString[] = $row->outcome_template_id;
+                        $hashString[] = $row->education_subject_id;
+                        $row->outcome_subject_id = Security::hash(implode(',', $hashString), 'sha256');
+                        return $row;
+                    });
+                })
+                ->autoFields(true);
+
+            return $entity->toArray();
+       
+        }
+    }
+ 
+
+    public function onExcelTemplateInitialiseStudentOutcomeSubjectComments(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+
+            $OutcomeSubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+            $entity = $OutcomeSubjectComments->find()
+                ->where([
+                    $OutcomeSubjectComments->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids'],
+                    $OutcomeSubjectComments->aliasField('outcome_period_id IN ') => $extra['outcome_periods_ids'],
+                    $OutcomeSubjectComments->aliasField('student_id') => $params['student_id'],
+                    $OutcomeSubjectComments->aliasField('institution_id') => $params['institution_id'],
+                    $OutcomeSubjectComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                ]);
+
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseStudentOutcomeResults(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $StudentOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
+
+            $entity = $StudentOutcomeResults->find()
+                ->contain('OutcomeGradingOptions')
+                ->where([
+                    $StudentOutcomeResults->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids'],
+                    $StudentOutcomeResults->aliasField('outcome_period_id IN ') => $extra['outcome_periods_ids'],
+                    $StudentOutcomeResults->aliasField('student_id') => $params['student_id'],
+                    $StudentOutcomeResults->aliasField('institution_id') => $params['institution_id'],
+                    $StudentOutcomeResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                ]);
+
+            return $entity->toArray();  
         }
     }
 }
