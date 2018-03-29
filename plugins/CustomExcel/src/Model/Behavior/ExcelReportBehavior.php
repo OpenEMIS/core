@@ -981,19 +981,12 @@ class ExcelReportBehavior extends Behavior
         $matchFrom = array_key_exists('matchFrom', $rowsArray) ? $rowsArray['matchFrom'] : [];
         $matchTo = array_key_exists('matchTo', $rowsArray) ? $rowsArray['matchTo'] : [];
         $rowData = $this->getPlaceholderData($matchFrom, $extra);
-
-        $nestedRowsArray = isset($rowsArray['children']['rows']) ? $rowsArray['children']['rows'] : [];
-        $nestedfilter = array_key_exists('filter', $nestedRowsArray) ? $nestedRowsArray['filter'] : null;
-        $nestedMatchFrom = array_key_exists('matchFrom', $nestedRowsArray) ? $nestedRowsArray['matchFrom'] : [];
-        $nestedMatchTo = array_key_exists('matchTo', $nestedRowsArray) ? $nestedRowsArray['matchTo'] : [];
-        $nestedRowData = !empty($nestedMatchFrom) ? $this->getPlaceholderData($nestedMatchFrom, $extra) : [];
+        $nestedRow = isset($rowsArray['children']) ? $rowsArray['children'] : [];
 
         $filterStr = $this->formatFilter($matchTo);
-        if (!empty($nestedRowData)) {
-            $filterStr .= $this->formatFilter($nestedMatchTo);
-        }
         $attr['filterStr'] = array_key_exists('filterStr', $attr) ? $attr['filterStr'].$filterStr : $filterStr;
 
+        $columnIndex = $attr['columnIndex'];
         $rowValue = $attr['rowValue'];
 
         if (!empty($rowData)) {
@@ -1004,30 +997,9 @@ class ExcelReportBehavior extends Behavior
                     $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
                     $rowValue++;
                 } else {
-                    if (!empty($nestedRowsArray)) {
-                        if (!is_null($nestedfilter) && !empty($nestedMatchFrom)) {
-                            $nestedDataFilter = $this->formatFilter($nestedfilter);
-                            list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedMatchFrom);
-                            $dataPlaceholderFormat = $this->formatPlaceholder($placeholderPrefix).$nestedDataFilter.".".$placeholderSuffix;
-                            $dataPlaceholder = sprintf($dataPlaceholderFormat, $value);
-                            $nestedRowData = Hash::extract($extra['vars'], $dataPlaceholder);
-                        }
-
-                        foreach ($nestedRowData as $nestedKey => $nestedValue) {
-                            $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
-                            $placeholder = sprintf($placeholderFormat, $value, $nestedValue);
-
-                            $matchData = Hash::extract($extra['vars'], $placeholder);
-                            $matchValue = !empty($matchData) ? current($matchData) : '';
-
-                            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-                            $nestedCellCoordinate = $columnValue.$rowValue;
-
-                            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
-                            $rowValue++;
-                        }
-
+                    if (!empty($nestedRow)) {
+                        $printedMatchFilter = sprintf($attr['filterStr'], $key);
+                        $rowValue = $this->nestedMatchRow($nestedRow, $printedMatchFilter, $key, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
                     } else {
                         $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
                         $placeholder = sprintf($placeholderFormat, $value);
@@ -1051,6 +1023,63 @@ class ExcelReportBehavior extends Behavior
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
+    }
+
+    private function nestedMatchRow($nestedRow, $matchFilter, $parentKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    {
+        if (array_key_exists('rows', $nestedRow)) {
+            $nestedAttr = $nestedRow['rows'];
+            $nestedFilter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null; // used to filter nested match row data
+            $nestedMatchFrom = array_key_exists('matchFrom', $nestedAttr) ? $nestedAttr['matchFrom'] : [];
+            $nestedMatchTo = array_key_exists('matchTo', $nestedAttr) ? $nestedAttr['matchTo'] : [];
+            $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
+
+            $variableMatchFilter = $matchFilter.$this->formatFilter($nestedMatchTo); // used to filter matching results
+
+            $nestedData = [];
+            if (!empty($nestedMatchFrom)) {
+                if (!is_null($nestedFilter)) {
+                    list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedMatchFrom);
+                    $nestedDataFilter = $this->formatFilter($nestedFilter);
+                    $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$nestedDataFilter.".";
+
+                    $placeholder = sprintf($placeholderFormat.$placeholderSuffix, $parentKey);
+                    $placeholderId = sprintf($placeholderFormat.'id', $parentKey);
+                    $nestedData = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+                } else {
+                    $nestedData = $this->getPlaceholderData($nestedMatchFrom, $extra);
+                }
+            }
+
+            if (!empty($nestedData)) {
+                foreach ($nestedData as $nestedKey => $nestedValue) {
+                    $printedMatchFilter = sprintf($variableMatchFilter, $nestedValue);
+
+                    if (!empty($secondNestedRow)) {
+                        $rowValue = $this->nestedMatchRow($secondNestedRow, $printedMatchFilter, $nestedKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                    } else {
+                        // printedMatchFilter already contains all key values, no need for sprintf again
+                        $placeholder = $this->formatPlaceholder($attr['placeholderPrefix']).$printedMatchFilter.".".$attr['placeholderSuffix'];
+
+                        $matchData = Hash::extract($extra['vars'], $placeholder);
+                        $matchValue = !empty($matchData) ? current($matchData) : '';
+
+                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                        $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                        $nestedCellCoordinate = $columnValue.$rowValue;
+
+                        $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
+                        $rowValue++;
+                    }
+                }
+            } else {
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $nestedCellCoordinate = $columnValue.$rowValue;
+                $objWorksheet->setCellValue($nestedCellCoordinate, '');
+                $rowValue++;
+            }
+        }
+        return $rowValue;
     }
 
     private function matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
