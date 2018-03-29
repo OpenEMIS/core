@@ -59,17 +59,14 @@ class ReportCardsTable extends AppTable
                 'AssessmentItems',
                 'AssessmentItemsWithResults',
                 'AssessmentItemResults',
-<<<<<<< HEAD
                 'OutcomeTemplates',
                 'OutcomePeriods',
                 'OutcomeSubjects',
                 'StudentOutcomeSubjectComments',
                 'OutcomeCriterias',  
-                'StudentOutcomeResults'
-=======
+                'StudentOutcomeResults',
                 'GroupAssessmentPeriods',
                 'GroupAssessmentItemResults'
->>>>>>> 3e21663cc370b5339d5fe01d9b581811fa626790
             ]
         ]);
     }
@@ -859,7 +856,6 @@ class ReportCardsTable extends AppTable
         }
     }
 
-<<<<<<< HEAD
     public function onExcelTemplateInitialiseOutcomeTemplates(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
@@ -1006,7 +1002,9 @@ class ReportCardsTable extends AppTable
                 ]);
 
             return $entity->toArray();  
-=======
+        }
+    }
+    
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
@@ -1102,7 +1100,7 @@ class ReportCardsTable extends AppTable
             ];
 
             return $entity;
->>>>>>> 3e21663cc370b5339d5fe01d9b581811fa626790
+
         }
     }
 }
