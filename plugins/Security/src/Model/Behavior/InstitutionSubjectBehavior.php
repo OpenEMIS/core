@@ -64,6 +64,7 @@ class InstitutionSubjectBehavior extends Behavior
                                         "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
                                     ]
                                 ],
+                                'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id',
                                 'InstitutionSubjectStaff.staff_id' => $userId,
                                 'OR' => [
                                     'InstitutionSubjectStaff.end_date IS NULL',
