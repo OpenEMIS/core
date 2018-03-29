@@ -71,13 +71,13 @@ class InstitutionSubjectBehavior extends Behavior
                                 ]
                             ]
                         ], [
-                            'AND' => [ // Classes permissions
+                            'AND' => [
                                 [
                                     'OR' => [
                                         "SecurityFunctions.`_view` LIKE '%Classes.index%'",
                                         "SecurityFunctions.`_view` LIKE '%Classes.view%'"
                                     ]
-                                ],[
+                                ], [
                                     'EXISTS (
                                         SELECT 1
                                         FROM institution_class_subjects
