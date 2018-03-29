@@ -54,7 +54,7 @@ class InstitutionSubjectBehavior extends Behavior
                         [
                             'OR' => [ // AllSubjects permissions
                                 "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
-                                "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'",
+                                "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
                             ]
                         ], [
                             'AND' => [
@@ -76,7 +76,7 @@ class InstitutionSubjectBehavior extends Behavior
                                 [
                                     'OR' => [
                                         "SecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'",
+                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
                                     ]
                                 ], [
                                     'EXISTS (
