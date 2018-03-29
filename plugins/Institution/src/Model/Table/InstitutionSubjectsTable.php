@@ -367,7 +367,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('education_grade_id') => $gradeId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
-            ]);
+            ])
+            ->order('EducationSubjects.order');
     }
 
     public function findSubjectDetails(Query $query, array $options)
