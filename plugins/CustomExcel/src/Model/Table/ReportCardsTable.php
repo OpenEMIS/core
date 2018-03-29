@@ -148,7 +148,8 @@ class ReportCardsTable extends AppTable
             'action' => 'ReportCardStatuses',
             'index',
             'class_id' => $params['institution_class_id'],
-            'report_card_id' => $params['report_card_id']
+            'report_card_id' => $params['report_card_id'],
+            'academic_period_id' => $params['academic_period_id']
         ];
 
         $event->stopPropagation();
