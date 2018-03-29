@@ -84,13 +84,24 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 } else {
                     AlertSvc.warning(Controller, "Please setup outcome periods for the selected template");
                 }
+                
+                return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId);
+            }, function (error) {
+                console.log(error);
+            })
+            .then(function (subjectOptions) {
+                if (subjectOptions.length > 0) {
+                    var options = [];
+                    for (var i = 0; i < subjectOptions.length; ++i) {
+                        options.push(subjectOptions[i].education_subject);
+                    }
 
-                Controller.subjectOptions = outcomeTemplate.education_grade.education_subjects;
-                if (Controller.subjectOptions.length > 0) {
-                    Controller.selectedSubject = outcomeTemplate.education_grade.education_subjects[0].id;
+                    Controller.subjectOptions = options;
+                    Controller.selectedSubject = subjectOptions[0].education_subject.id;
                 } else {
                     AlertSvc.warning(Controller, "Please setup subjects for the selected template");
                 }
+
                 return InstitutionStudentOutcomesSvc.getOutcomeGradingTypes();
             }, function (error) {
                 console.log(error);
@@ -280,7 +291,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         }, function (error) {
         });
     }   
-
+ 
     function initGrid() {
         return AggridLocaleSvc.getTranslatedGridLocale()
         .then(function(localeText){
