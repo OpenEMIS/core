@@ -1100,7 +1100,6 @@ class ReportCardsTable extends AppTable
             ];
 
             return $entity;
-
         }
     }
 }
