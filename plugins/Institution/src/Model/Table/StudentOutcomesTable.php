@@ -157,7 +157,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $userId = $session->read('Auth.User.id');
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin()) {
-            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
+            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
                 $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
                 $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
                 if (!$classPermission && !$subjectPermission) {
