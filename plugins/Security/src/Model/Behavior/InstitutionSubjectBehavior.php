@@ -70,6 +70,25 @@ class InstitutionSubjectBehavior extends Behavior
                                     'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
                                 ]
                             ]
+                        ], [
+                            'AND' => [
+                                [
+                                    'OR' => [
+                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
+                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
+                                    ]
+                                ], [
+                                    'EXISTS (
+                                        SELECT 1
+                                        FROM institution_class_subjects
+                                        JOIN institution_classes
+                                        ON institution_classes.id = institution_class_subjects.institution_class_id
+                                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
+                                        WHERE institution_class_subjects.institution_subject_id = InstitutionSubjects.id
+                                        LIMIT 1
+                                    )'
+                                ]
+                            ]
                         ]
                     ]
                 ])
@@ -235,29 +254,48 @@ class InstitutionSubjectBehavior extends Behavior
                 }
             }
 
-            if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
-                $query->where([
-                    'OR' => [
-                        // first condition if the current user is a teacher for this subject
-                        'EXISTS (
-							SELECT 1
-							FROM institution_subject_staff
-							WHERE institution_subject_staff.institution_subject_id = ' . $this->_table->aliasField('id') . '
-							AND institution_subject_staff.staff_id = ' . $userId .
-                        '   LIMIT 1
-                        )',
+            $hasAllSubjectsPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles);
+            $hasMySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+            $hasAllClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles);
+            $hasMyClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
 
-                        // second condition if the current user is the homeroom teacher of the subject class
-                        'EXISTS (
-							SELECT 1
-							FROM institution_class_subjects
-							JOIN institution_classes
-							ON institution_classes.id = institution_class_subjects.institution_class_id
-							AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
-							WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') .
-                        '   LIMIT 1
-                        )'
-                    ]
+            $orConditions = [];
+
+            if ($hasAllSubjectsPermission) {
+                $orConditions[] = ['1 = 1', [], true];
+            }
+
+            if ($hasMySubjectsPermission) {
+                $orConditions[] = [
+                    'EXISTS (
+                        SELECT 1
+                        FROM institution_subject_staff
+                        WHERE institution_subject_staff.institution_subject_id = ' . $this->_table->aliasField('id') . '
+                        AND institution_subject_staff.staff_id = ' . $userId . '
+                        LIMIT 1
+                    )'
+                ];
+            }
+
+            if ($hasMyClassesPermission) {
+                $orConditions[] = [
+                    'EXISTS (
+                        SELECT 1
+                        FROM institution_class_subjects
+                        JOIN institution_classes
+                        ON institution_classes.id = institution_class_subjects.institution_class_id
+                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes.secondary_staff_id = ' . $userId . ')
+                        WHERE institution_class_subjects.institution_subject_id = InstitutionSubjects.id
+                        LIMIT 1
+                    )'
+                ];
+            }
+
+            if (!$hasAllSubjectsPermission && !$hasMySubjectsPermission && !$hasMyClassesPermission) {
+                $query->where(['1 = 0', [], true]);
+            } else {
+                $query->where([
+                    'OR' => $orConditions
                 ]);
             }
         }
