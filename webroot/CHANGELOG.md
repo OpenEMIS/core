@@ -4,6 +4,7 @@
 - Implemented Outcome features in the Report Card template
 - Added Positions with Staff report under Reports > Institutions > Positions
 - Added Description field under Institutions > Survey > Forms
+- Image file will now be displayed as thumbnail for "File" field type under Administration > System Setup > Custom Field
 
 ### [3.21.0] - 2018-03-16
 - Developed Student Attendance Report to see classes that have not been marked
