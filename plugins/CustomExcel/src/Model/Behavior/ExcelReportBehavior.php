@@ -1053,7 +1053,7 @@ class ExcelReportBehavior extends Behavior
 
             if (!empty($nestedData)) {
                 foreach ($nestedData as $nestedKey => $nestedValue) {
-                    $printedMatchFilter = sprintf($variableMatchFilter, $nestedKey);
+                    $printedMatchFilter = sprintf($variableMatchFilter, $nestedValue);
 
                     if (!empty($secondNestedRow)) {
                         $rowValue = $this->nestedMatchRow($secondNestedRow, $printedMatchFilter, $nestedKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
@@ -1073,6 +1073,9 @@ class ExcelReportBehavior extends Behavior
                     }
                 }
             } else {
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $nestedCellCoordinate = $columnValue.$rowValue;
+                $objWorksheet->setCellValue($nestedCellCoordinate, '');
                 $rowValue++;
             }
         }
