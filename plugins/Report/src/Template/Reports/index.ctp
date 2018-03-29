@@ -28,6 +28,7 @@ $this->start('panelBody');
 	$url = ['plugin' => $params['plugin'], 'controller' => $params['controller'], 'action' => 'ajaxGetReportProgress'];
 	$url = $this->Url->build($url);
 	$table = $ControllerAction['table'];
+	$downloadText = __('Downloading...');
 ?>
 
 <style type="text/css">
@@ -35,7 +36,7 @@ $this->start('panelBody');
 </style>
 <div class="table-wrapper">
 	<div class="table-responsive">
-		<table class="table table-curved" id="ReportList" url="<?= $url ?>">
+		<table class="table table-curved" id="ReportList" url="<?= $url ?>" data-downloadtext="<?= $downloadText ?>">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody>
 				<?php foreach ($data as $obj) : ?>
@@ -56,6 +57,7 @@ $this->start('panelBody');
 							$progress = 0;
 							$current = $obj->current_records;
 							$total = $obj->total_records;
+
 							if ($current > 0 && $total > 0) {
 								$progress = intval($current / $total * 100);
 							}
@@ -64,7 +66,7 @@ $this->start('panelBody');
 								echo __('In Progress');
 							} else {
 								echo '<div class="progress progress-striped active" style="margin-bottom:0">';
-								echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '"></div>';
+								echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '" data-status="' . $status . '"></div>';
 								echo '</div>';
 							}
 						} else if ($status == -1) {

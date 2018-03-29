@@ -784,6 +784,14 @@ class DirectoriesTable extends ControllerActionTable
         $this->setupTabElements($entity);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->dirty('gender_id')) {
+            $entity->errors('gender_id', __('Gender is not editable in Directories'));
+            return false;
+        }
+    }
+
     private function setupTabElements($entity)
     {
         $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
