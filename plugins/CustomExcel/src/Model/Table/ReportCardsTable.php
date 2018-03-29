@@ -873,6 +873,12 @@ class ReportCardsTable extends AppTable
                     $AssessmentItemResults->aliasField('education_subject_id'),
                     'academic_term_value'
                 ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $row['marks_formatted'] = number_format($row['marks'], 2);
+                        return $row;
+                    });
+                })
                 ->hydrate(false)
                 ->toArray();
 
@@ -894,7 +900,7 @@ class ReportCardsTable extends AppTable
                 $entity[] = [
                     'education_subject_id' => $key,
                     'academic_term_value' => __('Average'),
-                    'marks' => $value['total_marks'] / $value['count']
+                    'marks_formatted' => number_format($value['total_marks'] / $value['count'], 2)
                 ];
             }
 
