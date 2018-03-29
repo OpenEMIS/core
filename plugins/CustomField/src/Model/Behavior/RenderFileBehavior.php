@@ -34,6 +34,13 @@ class RenderFileBehavior extends RenderBehavior
         'zip'   => 'application/zip'
     ];
 
+    public $fileImagesMap = array(
+        'jpeg'  => 'image/jpeg',
+        'jpg'   => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'png'   => 'image/png'
+    );
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -56,8 +63,10 @@ class RenderFileBehavior extends RenderBehavior
         // for edit
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
+
         $savedId = null;
         $savedValue = null;
+        $savedFile = null;
         if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
             if (isset($fieldValues[$fieldId]['id'])) {
                 $savedId = $fieldValues[$fieldId]['id'];
@@ -65,18 +74,30 @@ class RenderFileBehavior extends RenderBehavior
             if (isset($fieldValues[$fieldId]['text_value'])) {
                 $savedValue = $fieldValues[$fieldId]['text_value'];
             }
+            if (isset($fieldValues[$fieldId]['file'])) {
+                $savedFile = $fieldValues[$fieldId]['file'];
+            }
         }
         // End
 
         if ($action == 'view') {
             if (!is_null($savedValue)) {
                 $value = $savedValue;
-                $url = $model->url('view');
-                $url['action'] = $model->request->param('action');
-                $url[0] = 'downloadFile';
-                $url[1] = $model->paramsEncode(['id' => $savedId]);
+                $mimeType = !is_null($savedFile) ? mime_content_type($savedFile) : '';
 
-                $value = $event->subject()->Html->link($savedValue, $url);
+                if (in_array($mimeType, $this->fileImagesMap) && is_resource($savedFile)) {
+                    $maxImageWidth = 60;
+                    $imgSrc = base64_encode(stream_get_contents($savedFile));
+                    if (base64_decode($imgSrc, true)) {
+                        $value = '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$imgSrc.'" style="max-width:'.$maxImageWidth.'px;" /></div>';
+                    }
+                } else {
+                    $url = $model->url('view');
+                    $url['action'] = $model->request->param('action');
+                    $url[0] = 'downloadFile';
+                    $url[1] = $model->paramsEncode(['id' => $savedId]);
+                    $value = $event->subject()->Html->link($savedValue, $url);
+                }
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
