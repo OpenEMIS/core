@@ -84,13 +84,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 } else {
                     AlertSvc.warning(Controller, "Please setup outcome periods for the selected template");
                 }
-
-                // Controller.subjectOptions = outcomeTemplate.education_grade.education_subjects;
-                // if (Controller.subjectOptions.length > 0) {
-                //     Controller.selectedSubject = outcomeTemplate.education_grade.education_subjects[0].id;
-                // } else {
-                //     AlertSvc.warning(Controller, "Please setup subjects for the selected template");
-                // }
+                
                 return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId);
             }, function (error) {
                 console.log(error);
