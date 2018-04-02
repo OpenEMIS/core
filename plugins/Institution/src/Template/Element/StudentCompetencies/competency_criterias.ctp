@@ -55,6 +55,7 @@
         <?php
             $studentOptions = $attr['student_options'];
             $selectedStudent = $attr['selected_student'];
+            $studentStatus = '';
             foreach ($studentOptions as $key => $value) {
                 if ($selectedStudent == $key) { 
                     $studentStatus = $value['status'];
@@ -82,7 +83,7 @@
             <input  value="<?= __($studentStatus) ?>" disabled="disabled">
         </div>
     </div>
-
+ 
     <div class="table-wrapper">
         <div class="table-in-view">
             <table class="table">
