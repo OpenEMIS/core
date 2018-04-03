@@ -7,170 +7,179 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 
-class ReportsController extends AppController {
-	public function initialize() {
-		parent::initialize();
-		$this->ControllerAction->models = [
-			'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
-			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
-			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
+class ReportsController extends AppController
+{
+    public function initialize()
+    {
+        parent::initialize();
+        $this->ControllerAction->models = [
+            'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
+            'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
+            'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
             'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
             'Trainings' 	=> ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
-			'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
-			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
-			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
-			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
-			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
-			'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
-		];
-		$this->loadComponent('Training.Training');
-	}
+            'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
+            'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
+            'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
+            'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
+            'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+            'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
+        ];
+        $this->loadComponent('Training.Training');
+    }
 
-	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
-		$header = 'Reports';
-		$this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-		$this->Navigation->addCrumb($this->request->action);
-	}
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $header = 'Reports';
+        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+        $this->Navigation->addCrumb($this->request->action);
+    }
 
-	public function onInitialize(Event $event, Table $table, ArrayObject $extra) {
-		$header = __('Reports') . ' - ' . __($table->alias());
-		$this->set('contentHeader', $header);
-	}
+    public function onInitialize(Event $event, Table $table, ArrayObject $extra)
+    {
+        $header = __('Reports') . ' - ' . __($table->alias());
+        $this->set('contentHeader', $header);
+    }
 
-	public function getFeatureOptions($module) {
-		$options = [];
-		if ($module == 'Institutions') {
-			$options = [
-				'Report.Institutions' => __('Institutions'),
-				'Report.InstitutionPositions' => __('Positions'),
-				'Report.InstitutionProgrammes' => __('Programmes'),
-				'Report.InstitutionClasses' => __('Classes'),
-				'Report.InstitutionSubjects' => __('Subjects'),
-				'Report.InstitutionStudents' => __('Students'),
-				// 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
-				'Report.InstitutionStaff' => __('Staff'),
-				'Report.StudentAbsences' => __('Student Absence'),
-				'Report.StaffAbsences' => __('Staff Absence'),
-				'Report.StaffLeave' => __('Staff Leave'),
-				'Report.StaffTransfers' => __('Staff Transfer'),
-				'Report.InstitutionCases' => __('Cases')
-			];
-		} else if ($module == 'Students') {
-			$options = [
-				'Report.Students' => __('Students'),
-				'Report.StudentIdentities' => __('Identities'),
-				'Report.StudentContacts' => __('Contacts'),
-				'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School')
-			];
-		} else if ($module == 'Staff') {
-			$options = [
-				'Report.Staff' => __('Staff'),
-				'Report.StaffIdentities' => __('Identities'),
-				'Report.StaffContacts' => __('Contacts'),
-				'Report.StaffQualifications' => __('Qualifications'),
-				'Report.StaffLicenses' => __('Licenses'),
-				'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
-				'Report.StaffSalaries' => __('Salaries'),
-				'Report.StaffSystemUsage' => __('System Usage')
-			];
-		} else if ($module == 'Textbooks') {
-			$options = [
-				'Report.Textbooks' => __('Textbooks'),
-				'Report.InstitutionTextbooks' => __('Institution Textbooks')
-			];
-		} else if ($module == 'Trainings') {
-			$options = [
-				'Report.TrainingNeeds' => __('Needs'),
-				'Report.TrainingCourses' => __('Courses'),
-				'Report.TrainingSessions' => __('Sessions'),
-				'Report.TrainingResults' => __('Results'),
+    public function getFeatureOptions($module)
+    {
+        $options = [];
+        if ($module == 'Institutions') {
+            $options = [
+                'Report.Institutions' => __('Institutions'),
+                'Report.InstitutionPositions' => __('Positions'),
+                'Report.InstitutionProgrammes' => __('Programmes'),
+                'Report.InstitutionClasses' => __('Classes'),
+                'Report.InstitutionSubjects' => __('Subjects'),
+                'Report.InstitutionStudents' => __('Students'),
+                // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
+                'Report.InstitutionStaff' => __('Staff'),
+                'Report.StudentAbsences' => __('Student Absence'),
+                'Report.StaffAbsences' => __('Staff Absence'),
+                'Report.StaffLeave' => __('Staff Leave'),
+                'Report.StaffTransfers' => __('Staff Transfer'),
+                'Report.InstitutionCases' => __('Cases'),
+                'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked')
+            ];
+        } elseif ($module == 'Students') {
+            $options = [
+                'Report.Students' => __('Students'),
+                'Report.StudentIdentities' => __('Identities'),
+                'Report.StudentContacts' => __('Contacts'),
+                'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School')
+            ];
+        } elseif ($module == 'Staff') {
+            $options = [
+                'Report.Staff' => __('Staff'),
+                'Report.StaffIdentities' => __('Identities'),
+                'Report.StaffContacts' => __('Contacts'),
+                'Report.StaffQualifications' => __('Qualifications'),
+                'Report.StaffLicenses' => __('Licenses'),
+                'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
+                'Report.StaffSalaries' => __('Salaries'),
+                'Report.StaffSystemUsage' => __('System Usage')
+            ];
+        } elseif ($module == 'Textbooks') {
+            $options = [
+                'Report.Textbooks' => __('Textbooks'),
+                'Report.InstitutionTextbooks' => __('Institution Textbooks')
+            ];
+        } elseif ($module == 'Trainings') {
+            $options = [
+                'Report.TrainingNeeds' => __('Needs'),
+                'Report.TrainingCourses' => __('Courses'),
+                'Report.TrainingSessions' => __('Sessions'),
+                'Report.TrainingResults' => __('Results'),
                 'Report.StaffTrainingApplications' => __('Applications'),
                 'Report.TrainingTrainers' => __('Trainers'),
                 'Report.TrainingSessionParticipants' => __('Session Participants')
-			];
-		} else if ($module == 'Surveys') {
-			$options = [
-				'Report.Surveys' => __('Institutions')
-			];
-		} else if ($module == 'InstitutionRubrics') {
-			$options = [
-				'Report.InstitutionRubrics' => __('Rubrics')
-			];
-		} else if ($module == 'DataQuality') {
-			$options = [
-				'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
-				'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
-			];
-		} else if ($module == 'Audit') {
-			$options = [
-				'Report.Audit' => __('Audit')
-			];
-		} else if ($module == 'Examinations') {
-			$options = [
-				'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
-				'Report.NotRegisteredStudents' => __('Not Registered Students'),
-				'Report.ExaminationResults' => __('Examination Results'),
-			];
-		}
-		return $options;
-	}
+            ];
+        } elseif ($module == 'Surveys') {
+            $options = [
+                'Report.Surveys' => __('Institutions')
+            ];
+        } elseif ($module == 'InstitutionRubrics') {
+            $options = [
+                'Report.InstitutionRubrics' => __('Rubrics')
+            ];
+        } elseif ($module == 'DataQuality') {
+            $options = [
+                'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
+                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
+            ];
+        } elseif ($module == 'Audit') {
+            $options = [
+                'Report.Audit' => __('Audit')
+            ];
+        } elseif ($module == 'Examinations') {
+            $options = [
+                'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
+                'Report.NotRegisteredStudents' => __('Not Registered Students'),
+                'Report.ExaminationResults' => __('Examination Results'),
+            ];
+        }
+        return $options;
+    }
 
-	public function index() {
-		return $this->redirect(['action' => 'Users']);
-	}
+    public function index()
+    {
+        return $this->redirect(['action' => 'Users']);
+    }
 
-	public function ajaxGetReportProgress() {
-		$this->autoRender = false;
+    public function ajaxGetReportProgress()
+    {
+        $this->autoRender = false;
 
-		$userId = $this->Auth->user('id');
-		$dataSet = [];
+        $userId = $this->Auth->user('id');
+        $dataSet = [];
 
-		if (isset($this->request->query['ids'])) {
-			$ids = $this->request->query['ids'];
+        if (isset($this->request->query['ids'])) {
+            $ids = $this->request->query['ids'];
 
-			$fields = array(
-				'ReportProgress.status',
-				'ReportProgress.modified',
-				'ReportProgress.current_records',
-				'ReportProgress.total_records'
-			);
-			$ReportProgress = TableRegistry::get('Report.ReportProgress');
-			if (!empty($ids)) {
-				$results = $ReportProgress
-					->find()
-					->where([$ReportProgress->aliasField('id IN ') => $ids])
-					->all();
+            $fields = array(
+                'ReportProgress.status',
+                'ReportProgress.modified',
+                'ReportProgress.current_records',
+                'ReportProgress.total_records'
+            );
+            $ReportProgress = TableRegistry::get('Report.ReportProgress');
+            if (!empty($ids)) {
+                $results = $ReportProgress
+                    ->find()
+                    ->where([$ReportProgress->aliasField('id IN ') => $ids])
+                    ->all();
 
-				if (!$results->isEmpty()) {
-					foreach ($results as $key => $entity) {
-						if ($entity->total_records > 0) {
-							$data['percent'] = intval($entity->current_records / $entity->total_records * 100);
-						} elseif ($entity->total_records == 0) {
-							$data['percent'] = 100;
-						} else {
-							$data['percent'] = 0;
-						}
-						if (is_null($entity->modified)) {
-							$data['modified'] = $ReportProgress->formatDateTime($entity->created);
-						} else {
-							$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
-						}
+                if (!$results->isEmpty()) {
+                    foreach ($results as $key => $entity) {
+                        if ($entity->total_records > 0) {
+                            $data['percent'] = intval($entity->current_records / $entity->total_records * 100);
+                        } elseif ($entity->total_records == 0 && $entity->status == 0) {
+                            // if only the status is complete, than percent will be 100, total record can still be 0 if the shell excel generation is slow, and percent should not be 100.
+                            $data['percent'] = 100;
+                        } else {
+                            $data['percent'] = 0;
+                        }
+                        if (is_null($entity->modified)) {
+                            $data['modified'] = $ReportProgress->formatDateTime($entity->created);
+                        } else {
+                            $data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+                        }
 
-						if (!is_null($entity->expiry_date)) {
-							$data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
-						} else {
-							$data['expiry_date'] = null;
-						}
-						$data['status'] = $entity->status;
+                        if (!is_null($entity->expiry_date)) {
+                            $data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
+                        } else {
+                            $data['expiry_date'] = null;
+                        }
+                        $data['status'] = $entity->status;
 
-						$dataSet[$entity->id] = $data;
-					}
-				}
-			}
-		}
+                        $dataSet[$entity->id] = $data;
+                    }
+                }
+            }
+        }
 
-		echo json_encode($dataSet);
-		die;
-	}
+        echo json_encode($dataSet);
+        die;
+    }
 }

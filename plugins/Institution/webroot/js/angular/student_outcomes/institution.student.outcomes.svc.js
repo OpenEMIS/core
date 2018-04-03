@@ -10,7 +10,6 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         init: init,
         translate: translate,
         getClassDetails: getClassDetails,
-        getStudentStatusId: getStudentStatusId,
         getClassStudents: getClassStudents,
         getOutcomeTemplate: getOutcomeTemplate,
         getOutcomeGradingTypes: getOutcomeGradingTypes,
@@ -19,11 +18,13 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         getColumnDefs: getColumnDefs,
         renderInput: renderInput,
         saveOutcomeResults: saveOutcomeResults,
-        saveOutcomeComments: saveOutcomeComments
+        saveOutcomeComments: saveOutcomeComments,
+        getSubjectOptions: getSubjectOptions
     };
 
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
+        InstitutionSubjects: 'Institution.InstitutionSubjects',
         StudentStatuses: 'Student.StudentStatuses',
         InstitutionClassStudents: 'Institution.InstitutionClassStudents',
         OutcomeTemplates: 'Outcome.OutcomeTemplates',
@@ -60,26 +61,31 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getStudentStatusId(statusCode) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return StudentStatuses
-            .select(['id'])
-            .where({code: statusCode})
-            .ajax({success: success, defer:true});
-    }
-
-    function getClassStudents(classId, enrolledStatusId) {
+    function getClassStudents(classId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
         return InstitutionClassStudents
             .select()
-            .contain(['Users'])
-            .where({institution_class_id: classId, student_status_id: enrolledStatusId})
+            .contain(['Users','StudentStatuses'])
+            .where({institution_class_id: classId})
             .order(['Users.first_name', 'Users.last_name'])
             .ajax({success: success, defer:true});
+    }
+
+    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+
+        return InstitutionSubjects
+            .find('bySubjectsInClass', {
+                institution_class_id: classId,
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId,
+                education_grade_id: gradeId
+            })
+            .ajax({success: success, defer: true});
     }
 
     function getOutcomeTemplate(academicPeriodId, outcomeTemplateId) {
@@ -190,6 +196,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             },
             cellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
+                var studentStatus = params.data.student_status;
                 var gradingOptions = {0 : '-- Select --'};
                 if (angular.isDefined(params.data.grading_options)) {
                     angular.forEach(params.data.grading_options, function(obj, key) {
@@ -197,7 +204,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                     });
                 }
 
-                if (periodEditable) {
+                if (periodEditable && studentStatus == "CURRENT") {
                     var oldValue = params.value;
 
                     var eCell = document.createElement('div');
@@ -260,8 +267,9 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             },
             pinnedRowCellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
+                var studentStatus = params.data.student_status;
 
-                if (periodEditable) {
+                if (periodEditable && studentStatus == "CURRENT") {
                     var oldValue = params.value;
 
                     var eCell = document.createElement('div');
@@ -348,7 +356,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
         return InstitutionOutcomeResults.save(saveObj);
     }
-
+ 
     function saveOutcomeComments(params) {
         var comments = params.data.result;
         var studentId = params.data.student_id;

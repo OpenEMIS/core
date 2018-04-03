@@ -39,12 +39,8 @@ class PullBehavior extends Behavior
     {
         parent::initialize($config);
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $type = $ConfigItems->find()->where([
-                $ConfigItems->aliasField('code') => 'external_data_source_type',
-            ])
-            ->first()
-            ->value;
-
+        $type = $ConfigItems->value('external_data_source_type');
+      
         $this->type = $type;
 
         if ($this->type != 'None') {
@@ -342,7 +338,7 @@ class PullBehavior extends Behavior
 	                // Getting access token
 	                $response = $http->post($this->authEndpoint, $data);
 	                if ($response->getStatusCode() != '200') {
-	                    throw new NotFoundException('Not a successful response');
+	                    throw new Exception('Not a successful response');
 	                }
 	                $body = json_decode($response->body(), true);
 	                if (!is_array($body) && !isset($body['access_token']) && !isset($body['token_type'])) {
@@ -359,10 +355,10 @@ class PullBehavior extends Behavior
 	                ]);
 	                $response = $http->get($url);
 	                if ($response->getStatusCode() != '200') {
-	                    throw new NotFoundException('Not a successful response');
+	                    throw new Exception('Not a successful response');
 	                }
 	                $body = json_decode($response->body(), true);
-	                if (!is_array($body) && !isset($body['data'])) {
+	                if (!is_array($body) || !isset($body['data'])) {
 	                    throw new NotFoundException('Response body is in wrong format');
 	                }
 
@@ -485,7 +481,7 @@ class PullBehavior extends Behavior
                     $this->_table->field('nationality_id');
                     $this->_table->setFieldOrder($fieldOrder);
                 } catch (NotFoundException $e) {
-                    $this->_table->Alert->error('general.failConnectToExternalSource');
+                    $this->_table->Alert->error('general.notExistsInExternalSource');
                 } catch (Exception $e) {
                     $this->_table->Alert->error('general.failConnectToExternalSource');
                 }

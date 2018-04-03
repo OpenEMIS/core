@@ -888,9 +888,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (data.error.length == 0) {
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
                 $window.location.href = 'add?staff_transfer_added=true';
-            } else if (data.error.hasOwnProperty('staff_id') && data.error.staff_id.hasOwnProperty('ruleTransferRequestExists')) {
+            } else if (data.error.hasOwnProperty('staff_assignment') && data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
                 AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
-                $window.location.href = data.error.staff_id.ruleTransferRequestExists;
+                $window.location.href = data.error.staff_assignment.ruleTransferRequestExists;
             } else {
                 console.log(response);
                 AlertSvc.error($scope, 'There is an error in adding staff transfer request.');

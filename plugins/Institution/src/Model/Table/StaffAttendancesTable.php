@@ -356,7 +356,6 @@ class StaffAttendancesTable extends ControllerActionTable
                         $data['Present'] = 1;
                     }
                 } else {
-
                     if ($value['full_day'] == 0) {
                         if (isset($data['Present'])) {
                             $data['Present'] = ++$data['Present'];
@@ -687,9 +686,7 @@ class StaffAttendancesTable extends ControllerActionTable
     {
         // Setup period options
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $periodOptionsData = $AcademicPeriod->getList();
-        // only year options will appear
-        $periodOptions = $periodOptionsData[key($periodOptionsData)];
+        $periodOptions = $AcademicPeriod->getYearList();
 
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
@@ -958,11 +955,15 @@ class StaffAttendancesTable extends ControllerActionTable
 
                     // Save button, only can save if there is data
                     if ($dataCount > 0) {
-                        $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
-                        $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
-                        $extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
-                        $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
-                        $extra['toolbarButtons']['indexEdit']['url'] = '#';
+                        if(empty($this->reasonOptions)) {
+                            $this->Alert->warning('StaffAttendances.noReasons');
+                        } else {
+                            $extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+                            $extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
+                            $extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
+                            $extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
+                            $extra['toolbarButtons']['indexEdit']['url'] = '#';  
+                        }
                     }
 
                     // unset export button

@@ -1,3 +1,36 @@
+### [3.22.0] - 2018-03-29
+- Implemented Institutions search by Code and Name under Institutions > Advanced Search
+- Implemented Placeholders for Total Marks & Average for each Academic Term in the Report Card template
+- Implemented Outcome features in the Report Card template
+- Added Positions with Staff report under Reports > Institutions > Positions
+- Added Description field under Institutions > Survey > Forms
+- Image file will now be displayed as thumbnail for "File" field type under Administration > System Setup > Custom Field
+
+### [3.21.0] - 2018-03-16
+- Developed Student Attendance Report to see classes that have not been marked
+- Default attendance is shown as not marked now
+- Enabled multiple contact details under Institutions > General > Contacts
+- Added Reports > Institutions > Cases - Student Attendances report
+- Updated the format for Institution > Performance > Outcomes - Import template
+
+### [3.20.0] - 2018-03-02
+- Implemented Staff Appraisals feature enhancements
+- Implemented security management API
+- Fixed a bug where pagination does not retain the selected value
+
+### [3.19.0] - 2018-02-23
+- Implemented customisable workflow for Student Transfers and Admissions
+- Marks below "Pass Mark" will now be displayed in red
+
+### [3.18.0] - 2018-02-02
+- Identity Number, Identity Type, and Nationality fields have been added for Guardian and Others user types
+- Fixed a bug where some courses are not displayed in Institutions > Staff > Training
+- Fixed a 404 error when performing individual promotion
+
+### [3.17.0] - 2018-01-26
+- The system now allow multiple classes to share the same subject
+- A new Student Attendances workflow rule (Absentee Intervention) has been added
+
 ### [3.16.0] - 2018-01-19
 - Implemented customisable workflow for Student Dropouts
 - Renamed Indexes to Risks
