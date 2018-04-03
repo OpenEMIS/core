@@ -1461,6 +1461,19 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Examination'],
                         'selected' => ['Examinations.ExamResults', 'Examinations.Results', 'Examinations.ImportResults']
                     ],
+
+            'Administration.Scholarships' => [
+                    'title' => 'Scholarships',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                    'Scholarships.index' => [
+                        'title' => 'Scholarships',
+                        'parent' => 'Administration.Scholarships',
+                        'params' => ['plugin' => 'Scholarship'],
+                        'selected' => ['Scholarships.index', 'Scholarships.view', 'Scholarships.add', 'Scholarships.edit', 'Scholarships.delete']
+                    ],
+                    
             'Textbooks.Textbooks' => [
                 'title' => 'Textbooks',
                 'parent' => 'Administration',
