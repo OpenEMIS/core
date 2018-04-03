@@ -29,7 +29,7 @@ $this->start('panelBody');
 ?>
 <form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionSubjectStudentsCtrl as InstitutionSubjectStudentsController">
     <div class="alert {{InstitutionSubjectStudentsController.class}}" ng-hide="InstitutionSubjectStudentsController.message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionSubjectStudentsController.message}}
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">Ã—</a>{{InstitutionSubjectStudentsController.message}}
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
@@ -45,6 +45,21 @@ $this->start('panelBody');
     <div class="input string required">
         <label><?= __('Subject Name') ?></label>
         <input ng-model="InstitutionSubjectStudentsController.educationSubjectName" type="text" disabled="disabled">
+    </div>
+    <div class="input select required">
+        <label><?= __('Classes') ?></label>
+        <select chosen
+            multiple="multiple"
+            data-placeholder="<?=__('Select Classes') ?>"
+            class="chosen-select"
+            options="InstitutionSubjectStudentsController.classOptions"
+            ng-model="InstitutionSubjectStudentsController.classes"
+            ng-options="item.id as item.name for item in InstitutionSubjectStudentsController.classOptions"
+            ng-init="InstitutionSubjectStudentsController.questionOptions = []">
+        </select>
+        <div ng-if="InstitutionSubjectStudentsController.postError.class_subjects" class="error-message">
+            <p ng-repeat="error in InstitutionSubjectStudentsController.postError.class_subjects">{{ error }}</p>
+        </div>
     </div>
     <div class="input select">
         <label><?= __('Teachers') ?></label>
@@ -96,11 +111,11 @@ $this->start('panelBody');
             ng-init="InstitutionSubjectStudentsController.rooms = []">
         </select>
     </div>
-	<div class="input select">
+    <div class="input select">
         <label><?= __('Add Student') ?></label>
         <div class="input-form-wrapper" ng-init="InstitutionSubjectStudentsController.institutionSubjectId=<?= $institutionSubjectId ?>; InstitutionSubjectStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionSubjectStudentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
-    		<kd-multi-select ng-if="InstitutionSubjectStudentsController.dataReady" grid-options-top="InstitutionSubjectStudentsController.gridOptionsTop" grid-options-bottom="InstitutionSubjectStudentsController.gridOptionsBottom"></kd-multi-select>
-    	</div>
+            <kd-multi-select ng-if="InstitutionSubjectStudentsController.dataReady" grid-options-top="InstitutionSubjectStudentsController.gridOptionsTop" grid-options-bottom="InstitutionSubjectStudentsController.gridOptionsBottom"></kd-multi-select>
+        </div>
 
         <div class="form-buttons">
             <div class="button-label"></div>

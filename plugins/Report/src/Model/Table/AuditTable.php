@@ -18,15 +18,19 @@ class AuditTable extends AppTable
         $this->table('security_users');
         parent::initialize($config);
 
-        $this->hasMany('Identities',        ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Nationalities',     ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('SpecialNeeds',      ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Contacts',          ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Attachments',       ['className' => 'User.Attachments',     'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('BankAccounts',      ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Comments',          ['className' => 'User.Comments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Languages',         ['className' => 'User.UserLanguages',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Awards',            ['className' => 'User.Awards',          'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Attachments', ['className' => 'User.Attachments',     'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('BankAccounts', ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Comments', ['className' => 'User.Comments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Languages', ['className' => 'User.UserLanguages',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Awards', ['className' => 'User.Awards',          'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Logins', ['className' => 'SSO.SecurityUserLogins', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Counsellings', ['className' => 'Counselling.Counsellings', 'foreignKey' => 'counselor_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('BodyMasses', ['className' => 'User.UserBodyMasses', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        
         $this->addBehavior('Excel', [
             'excludes' => ['username', 'address', 'postal_code',
                             'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'super_admin',
@@ -87,14 +91,24 @@ class AuditTable extends AppTable
                 'last_login' => 'Audit.last_login',
                 'preferred_language' => 'Audit.preferred_language'
             ])
-            ->contain(['MainNationalities', 'MainIdentityTypes'])
-            ->where([$this->aliasField('is_student') => 1]);
+            ->contain([
+                'MainNationalities' => [
+                    'fields' => [
+                        'MainNationalities.name'
+                    ]
+                ],
+                'MainIdentityTypes' => [
+                    'fields' => [
+                        'MainIdentityTypes.name'
+                    ]
+                ]
+            ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        foreach ($fields as $key => $field) { 
-            if ($field['field'] == 'identity_type_id') { 
+        foreach ($fields as $key => $field) {
+            if ($field['field'] == 'identity_type_id') {
                 $fields[$key] = [
                     'key' => 'MainIdentityTypes.name',
                     'field' => 'identity_type',
@@ -103,7 +117,7 @@ class AuditTable extends AppTable
                 ];
             }
 
-            if ($field['field'] == 'nationality_id') { 
+            if ($field['field'] == 'nationality_id') {
                 $fields[$key] = [
                     'key' => 'MainNationalities.name',
                     'field' => 'nationality_name',

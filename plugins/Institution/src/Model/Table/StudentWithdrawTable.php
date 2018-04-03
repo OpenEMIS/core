@@ -14,6 +14,11 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentWithdrawTable extends ControllerActionTable
 {
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
+
     private $workflowEvents = [
         [
             'value' => 'Workflow.onApproval',
@@ -39,11 +44,13 @@ class StudentWithdrawTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentWithdrawReasons', ['className' => 'Student.StudentWithdrawReasons', 'foreignKey' => 'student_withdraw_reason_id']);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+
+        $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->addBehavior('Workflow.Workflow');
+
         $this->toggle('add', false);
     }
 
@@ -271,35 +278,11 @@ class StudentWithdrawTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $controller->loadComponent('AccessControl');
-
         $session = $controller->request->session();
-        $AccessControl = $controller->AccessControl;
 
-        $isAdmin = $session->read('Auth.User.super_admin');
         $userId = $session->read('Auth.User.id');
-
-        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $pendingStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
-
-        $where = [$this->aliasField('status_id').' IN ' => $pendingStatus];
-
-        if (!$isAdmin) {
-            if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
-
-                if (empty($institutionIds)) {
-                    // return empty list if the user does not have access to any schools
-                    return $query->where([$this->aliasField('id') => -1]);
-                } else {
-                    $where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
-                }
-            } else {
-                // return empty list if the user does not permission to approve Student Admission
-                return $query->where([$this->aliasField('id') => -1]);
-            }
-        }
+        $Statuses = $this->Statuses;
+        $doneStatus = self::DONE;
 
         $query
             ->select([
@@ -307,6 +290,7 @@ class StudentWithdrawTable extends ControllerActionTable
                 $this->aliasField('institution_id'),
                 $this->aliasField('modified'),
                 $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
                 $this->Users->aliasField('openemis_no'),
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('middle_name'),
@@ -320,20 +304,23 @@ class StudentWithdrawTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('middle_name'),
                 $this->CreatedUser->aliasField('third_name'),
                 $this->CreatedUser->aliasField('last_name'),
-                $this->CreatedUser->aliasField('preferred_name'),
-                'Statuses.name'
+                $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(), 'Statuses'])
-            ->where($where)
+            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId])
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
                     $url = [
-                        'plugin' => false,
-                        'controller' => 'Dashboard',
-                        'action' => $this->alias(),
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StudentWithdraw',
                         'view',
-                        $this->paramsEncode(['id' => $row->id])
+                        $this->paramsEncode(['id' => $row->id]),
+                        'institution_id' => $row->institution_id
                     ];
 
                     if (is_null($row->modified)) {
@@ -342,7 +329,7 @@ class StudentWithdrawTable extends ControllerActionTable
                         $receivedDate = $this->formatDate($row->modified);
                     }
                     $row['url'] = $url;
-                    $row['status'] = __($row->status->name);
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
                     $row['request_title'] = sprintf(__('Withdraw request of %s'), $row->user->name_with_id);
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
