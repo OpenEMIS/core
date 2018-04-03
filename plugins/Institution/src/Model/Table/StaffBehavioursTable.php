@@ -78,6 +78,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('openemis_no');
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('description', ['visible' => false]);
         $this->field('action', ['visible' => false]);
