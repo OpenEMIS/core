@@ -30,6 +30,16 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->belongsToMany('Scholarships', [
+                'className' => 'Scholarship.Scholarships',
+                'joinTable' => 'scholarships_education_field_of_studies',
+                'foreignKey' => 'education_field_of_study_id', 
+                'targetForeignKey' => 'scholarship_id', 
+                'through' => 'Scholarship.ScholarshipsEducationFieldOfStudies',
+                'dependent' => true,
+                'cascadeCallbacks' => true
+            ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
