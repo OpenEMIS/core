@@ -752,7 +752,7 @@ a,
 /* verify and check to remove - kk */
 /* Temp fix for core error border for POCOR-3783 */
 
-.table .error input,
+.table .error input, 
 .table .error .input-select-wrapper,
 .table .error textarea {
     border-color: #CC5C5C !important;
@@ -893,7 +893,7 @@ a,
 .ag-rtl .ag-header-cell-resize {
     position: relative;
 }
-/* End of fix for radio */
+/* End of fix for radio */ 
 
 /* Temp fix for dropdown editing cell*/
 .rtl .sg-theme .oe-cell-editable.oe-select-wrapper:after {

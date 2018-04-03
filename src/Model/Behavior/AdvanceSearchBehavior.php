@@ -334,9 +334,11 @@ class AdvanceSearchBehavior extends Behavior
         }
         if (!empty($advancedSearchTableField)) { //condition that comes from its own field on the database table.
             foreach ($advancedSearchTableField as $key => $value) {
-                $query->where([
-                    $model->aliasField("$key LIKE ") => $value . '%'
-                ]);
+                if (strlen($value) > 0) {
+                    $query->where([
+                        $model->aliasField("$key LIKE ") => $value . '%'
+                    ]);
+                }
             }
         }
         return $query;

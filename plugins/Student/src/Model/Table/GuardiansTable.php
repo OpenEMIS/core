@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
+use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 
 class GuardiansTable extends ControllerActionTable
@@ -29,7 +30,9 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('Indexes.Indexes');
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
         $this->addBehavior('ControllerAction.Image');
     }
 
@@ -82,6 +85,14 @@ class GuardiansTable extends ControllerActionTable
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->alias());
         }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Student.GuardianUser')
+        ];
+        $this->dispatchEventToModels('Model.Guardian.afterSave', [$entity], $this, $listeners);
     }
 
     public function afterAction(Event $event, $data)
@@ -168,7 +179,7 @@ class GuardiansTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
             if ($this->controller->name == 'Directories') {
                 $action = 'StudentGuardians';
@@ -187,7 +198,7 @@ class GuardiansTable extends ControllerActionTable
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-        } else if ($action == 'index') {
+        } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
         return $attr;
@@ -225,8 +236,11 @@ class GuardiansTable extends ControllerActionTable
 
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
-            // only search for guardian
-            $query = $this->Users->find()
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $this->Users
+                ->find()
                 ->select([
                     $this->Users->aliasField('openemis_no'),
                     $this->Users->aliasField('first_name'),
@@ -236,11 +250,21 @@ class GuardiansTable extends ControllerActionTable
                     $this->Users->aliasField('preferred_name'),
                     $this->Users->aliasField('id')
                 ])
-                ->where([$this->Users->aliasField('is_guardian') => 1])->limit(100);
+                ->leftJoin(
+                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Users->aliasField('id')
+                    ]
+                )
+                ->group([
+                    $this->Users->aliasField('id')
+                ])
+                ->limit(100);
 
             $term = trim($term);
+
             if (!empty($term)) {
-                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
+                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
             }
 
             $list = $query->all();

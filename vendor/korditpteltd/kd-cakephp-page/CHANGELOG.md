@@ -1,3 +1,9 @@
+### [1.3.7] - 2018-01-21
+- Fixed issue with the RTL checking logic
+
+### [1.3.6] - 2018-01-21
+- Added image compression logic to the FileUploadBehavior
+
 ### [1.3.5] - 2017-10-25
 - Fixed an issue where the file is always overwritten when there is no file upload
 - Fixed an issue where select option is not displaying if the value is 0

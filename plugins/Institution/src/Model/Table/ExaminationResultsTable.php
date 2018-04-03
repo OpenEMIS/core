@@ -147,6 +147,9 @@ class ExaminationResultsTable extends ControllerActionTable
                     case 'MARKS':
                         $itemResult = number_format($obj->marks, 2);
                         $totalMark = number_format($obj->marks * $itemWeight, 2);
+                        if ($itemResult < $passMark) {
+                            $itemResult = '<span style="color:#CC5C5C;">' . $itemResult . '</span>';
+                        }
                         break;
                     case 'GRADES':
                         $itemResult = $gradingOptionObj->code_name;
@@ -316,6 +319,9 @@ class ExaminationResultsTable extends ControllerActionTable
                 switch ($resultType) {
                     case 'MARKS':
                         $itemResult = number_format($itemResultObj->marks, 2);
+                        if ($itemResult < $passMark) {
+                            $itemResult = '<span style="color:#CC5C5C;">' . $itemResult . '</span>';
+                        }
                         break;
                     case 'GRADES':
                         $itemResult = $gradingOptionObj->code_name;

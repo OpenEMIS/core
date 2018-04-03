@@ -17,8 +17,8 @@ class SecurityAccessBehavior extends Behavior
         return $events;
     }
 
-	public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
-	{
+    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    {
         // $options['user'] = ['id' => 4, 'super_admin' => 0]; // for testing purposes
         // This logic will only be triggered when the table is accessed by RestfulController
         if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
@@ -29,7 +29,7 @@ class SecurityAccessBehavior extends Behavior
                 $query->find('BySecurityAccess', ['userId' => $userId]);
             }
         }
-	}
+    }
 
     public function findBySecurityAccess(Query $query, array $options)
     {
@@ -102,7 +102,7 @@ class SecurityAccessBehavior extends Behavior
             // GROUP BY institutions.id, security_group_users.security_group_id, security_group_users.security_role_id
 
             $query->join([
-                'table' => '(' . $institutionQuery->sql() . ' UNION ' . $areaQuery->sql() . ')', // inner join subquery
+                'table' => '((' . $institutionQuery->sql() . ' ) UNION ( ' . $areaQuery->sql() . '))', // inner join subquery
                 'alias' => 'SecurityAccess',
                 'type' => 'inner',
                 'conditions' => ['SecurityAccess.institution_id = ' . $this->_table->aliasField('institution_id')]
