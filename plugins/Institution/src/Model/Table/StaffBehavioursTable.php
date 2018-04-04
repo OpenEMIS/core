@@ -257,7 +257,7 @@ class StaffBehavioursTable extends ControllerActionTable
                 $institutionId = $this->Session->read('Institution.Institutions.id');
                 $Staff = TableRegistry::get('Institution.Staff');
                 $staffOptions = $Staff
-                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'name'])
+                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
                 ->matching('Users')
                 ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
                 ->where([$Staff->aliasField('institution_id') => $institutionId])
