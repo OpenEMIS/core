@@ -23,7 +23,16 @@ class Staff extends Entity
 	}
 	
 	protected function _getStaffName() {
-		return ($this->has('user'))? $this->user->name_with_id : '';
+		$staffName = '';
+
+		if ($this->has('user')) {
+			$staffName = $this->user->name_with_id;
+		} else if ($this->has('_matchingData')) {
+			if (array_key_exists('Users', $this->_matchingData)) {
+				$staffName = $this->_matchingData['Users']->name_with_id;
+			}
+		}
+		return $staffName;
 	}
 
 	// protected function _getOpenemisNo() {
