@@ -103,7 +103,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'AppraisalPeriods.AcademicPeriods', 'AppraisalPeriods.AppraisalForms',
+            'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
             'AppraisalTypes'
         ]);
     }
@@ -117,11 +117,11 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('to');
         $this->field('appraisal_type_id', ['type' => 'readonly', 'value' => $entity->appraisal_type_id, 'attr' => ['label' => __('Type'), 'value' => $entity->appraisal_type->name]]);
         $this->field('appraisal_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period_id, 'attr' => ['value' => $entity->appraisal_period->name]]);
-        $this->field('appraisal_form_id', ['type' => 'disabled', 'attr' => ['value' => $entity->appraisal_period->appraisal_form->name]]);
+        $this->field('appraisal_form_id', ['type' => 'readonly', 'value' => $entity->appraisal_form_id, 'attr' => ['value' => $entity->appraisal_form->name]]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $this->field('comment');
-        $this->printAppraisalCustomField($entity->appraisal_period_id, $entity);
+        $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -132,15 +132,15 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('from');
         $this->field('to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
-        $this->field('appraisal_period_id', ['type' => 'select', 'options' => $this->periodList]);
-        $this->field('appraisal_form_id', ['type' => 'disabled']);
+        $this->field('appraisal_period_id', ['type' => 'select', 'options' => $this->periodList, 'onChangeReload' => true]);
+        $this->field('appraisal_form_id', ['type' => 'readonly']);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $this->field('comment');
 
         $entity = $this->newEntity();
-        $appraisalPeriodId = $this->request->data($this->aliasField('appraisal_period_id'));
-        $this->printAppraisalCustomField($appraisalPeriodId, $entity);
+        $appraisalFormId = $this->request->data($this->aliasField('appraisal_form_id'));
+        $this->printAppraisalCustomField($appraisalFormId, $entity);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -162,37 +162,45 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('appraisal_period_id');
-        $this->field('appraisal_form_id', ['fieldName' => 'appraisal_period.appraisal_form.name']);
+        $this->field('appraisal_form_id');
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment');
-        $this->printAppraisalCustomField($entity->appraisal_period_id, $entity);
+        $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
     }
 
-    private function printAppraisalCustomField($appraisalPeriodId, Entity $entity)
+    private function printAppraisalCustomField($appraisalFormId, Entity $entity)
     {
-        if ($appraisalPeriodId) {
+        if ($appraisalFormId) {
             $section = null;
             $sectionCount = 0;
             $criteriaCounter = new ArrayObject();
+            $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
 
-            $appraisalFormsCriterias = $this->AppraisalPeriods->get($appraisalPeriodId, [
-                'contain' => [
-                    'AppraisalForms.AppraisalFormsCriterias' => [
-                        'AppraisalCriterias' => [
-                            'FieldTypes',
-                            'AppraisalSliders',
-                            'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
-                        ],
-                        'AppraisalTextAnswers',
-                        'AppraisalSliderAnswers',
-                        'AppraisalDropdownAnswers'
-                    ]
-                ]])
-                ->appraisal_form
-                ->appraisal_forms_criterias;
+            // retrieve all form criterias containing results
+            $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+            $formsCriterias = $AppraisalFormsCriterias->find()
+                ->contain([
+                    'AppraisalCriterias' => [
+                        'FieldTypes',
+                        'AppraisalSliders',
+                        'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
+                    ],
+                    'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalTextAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalSliderAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalSliderAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    }
+                ])
+                ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
+                ->order($AppraisalFormsCriterias->aliasField('order'))
+                ->toArray();
 
-            foreach ($appraisalFormsCriterias as $key => $formCritieria) {
+            foreach ($formsCriterias as $key => $formCritieria) {
                 $details = new ArrayObject([
                     'appraisal_form_id' => $formCritieria->appraisal_form_id,
                     'appraisal_criteria_id' => $formCritieria->appraisal_criteria_id,
@@ -217,7 +225,10 @@ class StaffAppraisalsTable extends ControllerActionTable
             $criteriaCounter[$fieldTypeCode] = 0;
         }
 
+        $key = [];
+        $attr = [];
         $criteria = $formCritieria->appraisal_criteria;
+
         switch ($fieldTypeCode) {
             case 'SLIDER':
                 $key = 'appraisal_slider_answers';
@@ -238,7 +249,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 break;
         }
 
-        // set answer in entity
+        // set each answer in entity
         if (!$entity->offsetExists($key)) {
             $entity->{$key} = [];
         }
@@ -303,14 +314,15 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAppraisalPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['onChangeReload'] = true;
             if ($request->data($this->aliasField('appraisal_period_id'))) {
                 $appraisalPeriodId = $request->data($this->aliasField('appraisal_period_id'));
-                $appraisalPeriodEntity = $this->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AcademicPeriods', 'AppraisalForms']]);
-                $this->fields['appraisal_form_id']['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
+                $appraisalPeriodEntity = $this->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms']]);
+                $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
+                $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
+                $request->data[$this->alias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
             }
             return $attr;
         }

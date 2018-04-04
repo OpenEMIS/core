@@ -14,9 +14,24 @@ class AppraisalFormsCriteriasTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('AppraisalCriterias', ['className' => 'StaffAppraisal.AppraisalCriterias']);
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
-        $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => ['appraisal_form_id', 'appraisal_criteria_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => ['appraisal_form_id', 'appraisal_criteria_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => ['appraisal_form_id', 'appraisal_criteria_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalTextAnswers', [
+            'className' => 'StaffAppraisal.AppraisalTextAnswers',
+            'foreignKey' => ['appraisal_form_id', 'appraisal_criteria_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('AppraisalSliderAnswers', [
+            'className' => 'StaffAppraisal.AppraisalSliderAnswers',
+            'foreignKey' => ['appraisal_form_id', 'appraisal_criteria_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('AppraisalDropdownAnswers', [
+            'className' => 'StaffAppraisal.AppraisalDropdownAnswers',
+            'foreignKey' => ['appraisal_form_id', 'appraisal_criteria_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('CompositeKey');
         $this->removeBehavior('Reorder');
