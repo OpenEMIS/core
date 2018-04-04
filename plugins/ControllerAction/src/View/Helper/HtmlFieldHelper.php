@@ -388,12 +388,13 @@ class HtmlFieldHelper extends Helper
             if (!isset($attr['step'])) {
                 $attr['step'] = 0.5;
             }
+            $attr['rating'] = Hash::get($data, $attr['field'], $attr['min']);
+
             $fieldName = $attr['model'] . '.' . $attr['field'];
             if (array_key_exists('fieldName', $attr)) {
                 $fieldName = $attr['fieldName'];
             }
             $attr['fieldName'] = $fieldName;
-            $attr['rating'] = Hash::get($data, $fieldName, $attr['min']);
             $value = $this->_View->element('ControllerAction.slider_input', ['attr' => $attr]);
         }
         return $value;
