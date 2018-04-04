@@ -1,9 +1,10 @@
 <?php
 	$label = isset($attr['label']) ? $attr['label'] : $attr['field'];
 	$attr['field'] = str_replace('.', '_', $attr['field']);
+	$required = (isset($attr['attr']['required']) && $attr['attr']['required']) ? 'required' : '';
 ?>
 
-<div class="input">
+<div class="input <?= $required ?>">
 	<?php
 	$this->Form->unlockField($attr['fieldName']);
 	if ($label): ?>
