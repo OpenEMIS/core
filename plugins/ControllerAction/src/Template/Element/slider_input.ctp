@@ -4,12 +4,12 @@
 	$sliderField = str_replace('.', '_', $attr['field']);
 ?>
 
-<div class="input">
+<div class="input <?= $required ?>">
 	<?php $this->Form->unlockField($attr['fieldName']); ?>
 	<?php if ($label): ?>
 		<label for='sss'><?= $label ?></label>
 	<?php endif; ?>
-	<div class="slider-wrapper input-slider <?= $required ?>" style="display: inline-block; width: 100%;">
+	<div class="slider-wrapper input-slider" style="display: inline-block; width: 100%;">
 		<slider ng-model="<?= $sliderField ?>" value=" <?=$attr['rating']?>" min="<?=$attr['min']?>" step="<?=$attr['step'] ?>" max="<?= $attr['max']?>"></slider><span style="font-size: 12px">{{<?=$sliderField?> | number : 1}}</span>
 	    <?=
 			$this->Form->hidden($attr['fieldName'], [
