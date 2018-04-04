@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Hash;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -22,10 +23,12 @@ class AppraisalsTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
         $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);
         $this->belongsTo('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods']);
-        $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id']);
-        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id']);
+        $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('OpenEmis.Section');
 
@@ -67,23 +70,7 @@ class AppraisalsTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'AppraisalTextAnswers' => function ($q) {
-                return $q
-                    ->innerJoin(['AppraisalFormsCriterias' => 'appraisal_forms_criterias'], [
-                        '`AppraisalFormsCriterias`.`appraisal_form_id` = `AppraisalTextAnswers`.`appraisal_form_id`',
-                        '`AppraisalFormsCriterias`.`appraisal_criteria_id` = `AppraisalTextAnswers`.`appraisal_criteria_id`'
-                    ])
-                    ->order(['AppraisalFormsCriterias.order']);
-            },
-            'AppraisalSliderAnswers' => function ($q) {
-                return $q
-                    ->innerJoin(['AppraisalFormsCriterias' => 'appraisal_forms_criterias'], [
-                        '`AppraisalFormsCriterias`.`appraisal_form_id` = `AppraisalSliderAnswers`.`appraisal_form_id`',
-                        '`AppraisalFormsCriterias`.`appraisal_criteria_id` = `AppraisalSliderAnswers`.`appraisal_criteria_id`'
-                    ])
-                    ->order(['AppraisalFormsCriterias.order']);
-            },
-            'AppraisalPeriods.AcademicPeriods', 'AppraisalPeriods.AppraisalForms',
+            'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
             'AppraisalTypes'
         ]);
     }
@@ -102,65 +89,113 @@ class AppraisalsTable extends ControllerActionTable
         // End
         $this->field('staff_id', ['visible' => false]);
         $this->field('title');
-        $this->field('appraisal_period.academic_period.name', ['attr' => ['label' => __('Academic Period')]]);
+        $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
         $this->field('from');
         $this->field('to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('appraisal_period_id');
-        $this->field('appraisal_period.appraisal_form.name', ['attr' => ['label' => __('Appraisal Form')]]);
+        $this->field('appraisal_form_id');
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment');
-        $this->printAppraisalCustomField($entity->appraisal_period_id);
+        $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
     }
 
-    private function printAppraisalCustomField($appraisalPeriodId)
+    private function printAppraisalCustomField($appraisalFormId, Entity $entity)
     {
-        if ($appraisalPeriodId) {
-            $appraisalCriterias = $this->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms.AppraisalCriterias.AppraisalSliders', 'AppraisalForms.AppraisalCriterias.FieldTypes']])->appraisal_form->appraisal_criterias;
+        if ($appraisalFormId) {
             $section = null;
             $sectionCount = 0;
             $criteriaCounter = new ArrayObject();
-            foreach ($appraisalCriterias as $key => $criteria) {
+            $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
+
+            // retrieve all form criterias containing results
+            $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
+            $formsCriterias = $AppraisalFormsCriterias->find()
+                ->contain([
+                    'AppraisalCriterias' => [
+                        'FieldTypes',
+                        'AppraisalSliders',
+                        'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
+                    ],
+                    'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalTextAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalSliderAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalSliderAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    }
+                ])
+                ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
+                ->order($AppraisalFormsCriterias->aliasField('order'))
+                ->toArray();
+
+            foreach ($formsCriterias as $key => $formCritieria) {
                 $details = new ArrayObject([
-                    'appraisal_form_id' => $criteria->_joinData->appraisal_form_id,
-                    'appraisal_criteria_id' => $criteria->_joinData->appraisal_criteria_id,
-                    'section' => $criteria->_joinData->section,
-                    'field_type' => $criteria->code,
-                    'criteria_name' => $criteria->name
+                    'appraisal_form_id' => $formCritieria->appraisal_form_id,
+                    'appraisal_criteria_id' => $formCritieria->appraisal_criteria_id,
+                    'section' => $formCritieria->section,
+                    'field_type' => $formCritieria->appraisal_criteria->field_type->code,
+                    'criteria_name' => $formCritieria->appraisal_criteria->name,
+                    'is_mandatory' => $formCritieria->is_mandatory
                 ]);
                 if ($section != $details['section']) {
                     $section = $details['section'];
                     $this->field('section' . $sectionCount++, ['type' => 'section', 'title' => $details['section']]);
                 }
-                $this->appraisalCustomFieldExtra($details, $criteria, $criteriaCounter);
+                $this->appraisalCustomFieldExtra($details, $formCritieria, $criteriaCounter, $entity);
             }
         }
     }
 
-    private function appraisalCustomFieldExtra(ArrayObject $details, Entity $criteria, ArrayObject $criteriaCounter)
+    private function appraisalCustomFieldExtra(ArrayObject $details, Entity $formCritieria, ArrayObject $criteriaCounter, Entity $entity)
     {
-        $fieldTypeCode = $criteria['field_type']['code'];
+        $fieldTypeCode = $details['field_type'];
         if (!$criteriaCounter->offsetExists($fieldTypeCode)) {
             $criteriaCounter[$fieldTypeCode] = 0;
         }
+
+        $key = [];
+        $attr = [];
+        $criteria = $formCritieria->appraisal_criteria;
+
         switch ($fieldTypeCode) {
             case 'SLIDER':
-                $details['key'] = 'appraisal_slider_answers';
-                $details[$fieldTypeCode] = $criteria->appraisal_slider->toArray();
-                $min = $criteria->appraisal_slider->min;
-                $max = $criteria->appraisal_slider->max;
-                $step = $criteria->appraisal_slider->step;
-                $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'slider', 'max' => $max, 'min' => $min, 'step' => $step, 'attr' => ['label' => $details['criteria_name']]]);
+                $key = 'appraisal_slider_answers';
+                $attr['type'] = 'slider';
+                $attr['max'] = $criteria->appraisal_slider->max;
+                $attr['min'] = $criteria->appraisal_slider->min;
+                $attr['step'] = $criteria->appraisal_slider->step;
                 break;
             case 'TEXTAREA':
-                $details['key'] = 'appraisal_text_answers';
-                $details[$fieldTypeCode] = null;
-                $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.answer', ['type' => 'text', 'attr' => ['label' => $details['criteria_name']]]);
+                $key = 'appraisal_text_answers';
+                $attr['type'] = 'text';
+                break;
+            case 'DROPDOWN':
+                $key = 'appraisal_dropdown_answers';
+                $attr['type'] = 'select';
+                $attr['options'] = Hash::combine($criteria->appraisal_dropdown_options, '{n}.id', '{n}.name');
+                $attr['default'] = current(Hash::extract($criteria->appraisal_dropdown_options, '{n}[is_default=1].id'));
                 break;
         }
-        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
-        $this->field($details['key'].'.'.$criteriaCounter[$fieldTypeCode].'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
+
+        // set each answer in entity
+        if (!$entity->offsetExists($key)) {
+            $entity->{$key} = [];
+        }
+        $entity->{$key}[$criteriaCounter[$fieldTypeCode]] = !empty($formCritieria->{$key}) ? current($formCritieria->{$key}) : [];
+
+        // build custom fields
+        $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
+        $attr['attr']['label'] = $details['criteria_name'];
+        $attr['attr']['required'] = $details['is_mandatory'];
+
+        $this->field($fieldKey.'.answer', $attr);
+        $this->field($fieldKey.'.is_mandatory', ['type' => 'hidden', 'value' => $details['is_mandatory']]);
+        $this->field($fieldKey.'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
+        $this->field($fieldKey.'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
 
         $criteriaCounter[$fieldTypeCode]++;
     }
