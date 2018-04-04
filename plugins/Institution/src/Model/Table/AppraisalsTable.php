@@ -90,6 +90,7 @@ class AppraisalsTable extends ControllerActionTable
         $this->field('staff_id', ['visible' => false]);
         $this->field('title');
         $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
+        $this->field('institution_id');
         $this->field('from');
         $this->field('to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
