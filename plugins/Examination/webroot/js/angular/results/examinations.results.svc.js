@@ -285,57 +285,59 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             cols = angular.merge(cols, {
                 cellClass: 'oe-cell-highlight',
                 cellRenderer: function(params) {
-                    if (params.value.length == 0) {
-                        params.value = 0;
+                    if (angular.isDefined(params.value)) {
+                        if (params.value.length == 0) {
+                            params.value = 0;
+                        }
+
+                        var oldValue = params.value;
+                        var studentId = params.data.student_id;
+                        var institutionId = params.data.institution_id;
+
+                        var eCell = document.createElement('div');
+                        eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+
+                        var eSelect = document.createElement("select");
+
+                        var isAnswerValid = false;
+                        angular.forEach(gradingOptions, function(obj, key) {
+                            var eOption = document.createElement("option");
+                            var labelText = obj.name;
+                            if (obj.code.length > 0) {
+                                labelText = obj.code + ' - ' + labelText;
+                            }
+                            eOption.setAttribute("value", key);
+                            eOption.innerHTML = labelText;
+                            eSelect.appendChild(eOption);
+                            if (oldValue == obj.id) {
+                                isAnswerValid = true;
+                            }
+                        });
+
+                        // set selected value only when it is a valid option from gradingOptions list
+                        if (isAnswerValid) {
+                            eSelect.value = params.value;
+                        }
+
+                        eSelect.addEventListener('change', function () {
+                            var newValue = eSelect.value;
+                            params.data[params.colDef.field] = newValue;
+
+                            if (angular.isUndefined(_results[studentId])) {
+                                _results[studentId] = {};
+                            }
+
+                            if (angular.isUndefined(_results[studentId][institutionId])) {
+                                _results[studentId][institutionId] = {gradingOptionId: ''};
+                            }
+
+                            _results[studentId][institutionId]['gradingOptionId'] = newValue;
+                        });
+
+                        eCell.appendChild(eSelect);
+
+                        return eCell;
                     }
-
-                    var oldValue = params.value;
-                    var studentId = params.data.student_id;
-                    var institutionId = params.data.institution_id;
-
-                    var eCell = document.createElement('div');
-                    eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
-
-                    var eSelect = document.createElement("select");
-
-                    var isAnswerValid = false;
-                    angular.forEach(gradingOptions, function(obj, key) {
-                        var eOption = document.createElement("option");
-                        var labelText = obj.name;
-                        if (obj.code.length > 0) {
-                            labelText = obj.code + ' - ' + labelText;
-                        }
-                        eOption.setAttribute("value", key);
-                        eOption.innerHTML = labelText;
-                        eSelect.appendChild(eOption);
-                        if (oldValue == obj.id) {
-                            isAnswerValid = true;
-                        }
-                    });
-
-                    // set selected value only when it is a valid option from gradingOptions list
-                    if (isAnswerValid) {
-                        eSelect.value = params.value;
-                    }
-
-                    eSelect.addEventListener('change', function () {
-                        var newValue = eSelect.value;
-                        params.data[params.colDef.field] = newValue;
-
-                        if (angular.isUndefined(_results[studentId])) {
-                            _results[studentId] = {};
-                        }
-
-                        if (angular.isUndefined(_results[studentId][institutionId])) {
-                            _results[studentId][institutionId] = {gradingOptionId: ''};
-                        }
-
-                        _results[studentId][institutionId]['gradingOptionId'] = newValue;
-                    });
-
-                    eCell.appendChild(eSelect);
-
-                    return eCell;
                 },
                 suppressMenu: true
             });
@@ -343,23 +345,25 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             cols = angular.merge(cols, {
                 menuTabs: [ "filterMenuTab" ],
                 cellRenderer: function(params) {
-                    var cellValue = '';
-                    if (params.value.length != 0 && params.value != 0) {
-                        // show option code and name only when it is a valid option from gradingOptions list
-                        if (angular.isDefined(gradingOptions[params.value])) {
-                            cellValue = gradingOptions[params.value]['name'];
-                            if (gradingOptions[params.value]['code'].length > 0) {
-                                cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                    if (angular.isDefined(params.value)) {
+                        var cellValue = '';
+                        if (params.value.length != 0 && params.value != 0) {
+                            // show option code and name only when it is a valid option from gradingOptions list
+                            if (angular.isDefined(gradingOptions[params.value])) {
+                                cellValue = gradingOptions[params.value]['name'];
+                                if (gradingOptions[params.value]['code'].length > 0) {
+                                    cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                                }
                             }
                         }
+                        // var cellValue = (params.value.length != 0 && params.value != 0) ? gradingOptions[params.value]['name'] : '';
+
+                        var eCell = document.createElement('div');
+                        var eLabel = document.createTextNode(cellValue);
+                        eCell.appendChild(eLabel);
+
+                        return eCell;
                     }
-                    // var cellValue = (params.value.length != 0 && params.value != 0) ? gradingOptions[params.value]['name'] : '';
-
-                    var eCell = document.createElement('div');
-                    var eLabel = document.createTextNode(cellValue);
-                    eCell.appendChild(eLabel);
-
-                    return eCell;
                 },
                 suppressMenu: true
             });
