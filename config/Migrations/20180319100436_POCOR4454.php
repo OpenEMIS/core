@@ -128,6 +128,23 @@ class POCOR4454 extends AbstractMigration
                 'null' => true
             ])
             ->save();
+
+        // institution_staff_appraisals
+        $this->table('institution_staff_appraisals')
+            ->addColumn('appraisal_form_id', 'integer', [
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to appraisal_forms.id',
+                'after' => 'staff_id'
+            ])
+            ->addIndex('appraisal_form_id')
+            ->save();
+        $this->execute("UPDATE `institution_staff_appraisals`
+            SET `appraisal_form_id` = (
+                SELECT `appraisal_form_id`
+                FROM `appraisal_periods`
+                WHERE `appraisal_periods`.`id` = `institution_staff_appraisals`.`appraisal_period_id`
+            )");
     }
 
     public function down()
@@ -147,6 +164,9 @@ class POCOR4454 extends AbstractMigration
             ->changeColumn('answer', 'text', [
                 'null' => false
             ])
+            ->save();
+        $this->table('institution_staff_appraisals')
+            ->removeColumn('appraisal_form_id')
             ->save();
     }
 }

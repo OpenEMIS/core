@@ -25,6 +25,7 @@ class AppraisalFormsTable extends ControllerActionTable
             'sort' => 'AppraisalFormsCriterias.order'
         ]);
         $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalFormsCriterias', ['className' => 'StaffAppraisal.AppraisalFormsCriterias', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true, 'sort' => 'AppraisalFormsCriterias.order']);
 
         $this->setDeleteStrategy('restrict');
