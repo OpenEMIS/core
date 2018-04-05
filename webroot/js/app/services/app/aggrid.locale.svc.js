@@ -1,5 +1,5 @@
 angular.module('aggrid.locale.svc', ['kd.orm.svc'])
-.service('AggridLocaleSvc', function($q, KdOrmSvc) {
+.service('AggridLocaleSvc',['$q', 'KdOrmSvc', function($q, KdOrmSvc) {
 	var localeText = {
         // for filter panel
         page: 'Page',
@@ -86,4 +86,4 @@ angular.module('aggrid.locale.svc', ['kd.orm.svc'])
             return translation.translate(localeText, {success:success, defer: true});
 		}
 	}
-});
+}]);

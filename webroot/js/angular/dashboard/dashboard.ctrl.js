@@ -45,7 +45,12 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         UtilsSvc.isAppendSpinner(true, 'dashboard-notices-table');
         DashboardSvc.getNotices()
         .then(function(notices) {
-            vm.notices = notices;
+            
+            for(var key in notices){
+                vm.notices.push(notices[key]);
+            }
+
+            // vm.notices = notices;
             if (vm.notices.length == 0) {
                 vm.notices = false;
             }
