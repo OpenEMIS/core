@@ -30,10 +30,16 @@ class AppraisalDropdownAnswersTable extends AppTable
             });
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew() && is_null($entity->answer)) {
+            return $event->stopPropagation();
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $answer = $entity->answer;
-        if (is_null($answer)) {
+        if (is_null($entity->answer)) {
             $this->delete($entity);
         }
     }

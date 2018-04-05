@@ -29,10 +29,16 @@ class AppraisalTextAnswersTable extends AppTable
             });
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew() && $entity->answer === '') {
+            return $event->stopPropagation();
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $answer = $entity->answer;
-        if (is_null($answer)) {
+        if ($entity->answer === '') {
             $this->delete($entity);
         }
     }
