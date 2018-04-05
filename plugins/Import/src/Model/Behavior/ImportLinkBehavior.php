@@ -31,16 +31,27 @@ class ImportLinkBehavior extends Behavior
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1];
 
         if ($this->isCAv4()) {
-            $events['ControllerAction.Model.afterAction'] = ['callable' => 'afterActionImportv4'];
+            $events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterActionImportv4'];
+            $events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterActionImportv4'];
         }
 
         return $events;
     }
 
     //using after action for ordering of toolbar buttons (because export also using afteraction)
-    public function afterActionImportv4(Event $event, ArrayObject $extra)
+    public function indexAfterActionImportv4(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $attr = $this->_table->getButtonAttr();
+        // if (isset($extra['indexButtons']['view']) && $extra['indexButtons']['view']['url']['action'] != 'Surveys') {
+        if ($this->_table->request->action != 'Surveys') {
+            $attr = $this->_table->getButtonAttr();
+            $customButton = [];
+            
+            $customButton['url'] = $this->_table->url('index');
+            $customButton['url']['action'] = $this->config('import_model');
+            $customButton['url'][0] = 'add';
+            $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
+        }
+        /*
         $action = $this->_table->action;
         $customButton = [];
         switch ($action) {
@@ -68,6 +79,26 @@ class ImportLinkBehavior extends Behavior
                 $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
                 break;
         }
+        */
+    }
+
+    public function viewAfterActionImportv4(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // if (isset($this->_table->request->action) && $extra['indexButtons']['view']['url']['action'] == 'Surveys') {
+        if ($this->_table->request->action == 'Surveys') {
+            $attr = $this->_table->getButtonAttr();
+            $customButton = [];
+            
+            $customButton['url'] = $this->_table->url('view');
+            // $customButton['url'] = $extra['indexButtons']['view']['url'];
+            $customButton['url']['action'] = 'Import'.$this->_table->alias();
+
+            $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
+        }
+
+        // $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        // $toolbarButtonsArray = array_merge(array_slice($toolbarButtonsArray, 0, 3, true), array_slice($toolbarButtonsArray, -1, 1,true), array_slice($toolbarButtonsArray, 3, count($toolbarButtonsArray) -1,true));
+        // $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
