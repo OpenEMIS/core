@@ -73,7 +73,7 @@ class SecurityAccessBehavior extends Behavior
                 ])
                 ->innerJoin(['Areas' => 'areas'], ['Areas.id = ' . $Institutions->aliasField('area_id')])
                 ->innerJoin(['AreasAll' => 'areas'], [
-                    'AreasAll.lft <= Areas.lft', 
+                    'AreasAll.lft <= Areas.lft',
                     'AreasAll.rght >= Areas.rght'
                 ])
                 ->innerJoin(['SecurityGroupAreas' => 'security_group_areas'], [
