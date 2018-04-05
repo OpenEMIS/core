@@ -1,7 +1,5 @@
-<?php 
-
-echo $this->Html->script('OpenEmis.angular/kd-angular-splitter'); 
-
+<?php
+    echo $this->Html->script('OpenEmis.angular/kd-angular-splitter');
     echo $this->Html->script('OpenEmis.angular/ngx-adaptor/inline.bundle');
     echo $this->Html->script('OpenEmis.angular/ngx-adaptor/polyfills.bundle');
     echo $this->Html->script('OpenEmis.angular/ngx-adaptor/vendor.bundle');
