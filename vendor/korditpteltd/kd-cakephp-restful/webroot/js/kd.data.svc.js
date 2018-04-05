@@ -1,5 +1,5 @@
 angular.module('kd.data.svc', [])
-.service('KdDataSvc', function($q, $http) {
+.service('KdDataSvc', ['$q', '$http', function($q, $http) {
     var query = {
         responseType: 'json',
         version: 'v2',
@@ -393,4 +393,4 @@ angular.module('kd.data.svc', [])
             return newObject;
         }
     };
-});
+}]);
