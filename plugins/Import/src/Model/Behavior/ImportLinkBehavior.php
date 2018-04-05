@@ -31,14 +31,14 @@ class ImportLinkBehavior extends Behavior
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1];
 
         if ($this->isCAv4()) {
-            $events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterActionImportv4'];
+            $events['ControllerAction.Model.afterAction'] = ['callable' => 'afterActionImportv4'];
         }
 
         return $events;
     }
 
     //using after action for ordering of toolbar buttons (because export also using afteraction)
-    public function indexAfterActionImportv4(Event $event, Query $query, $data, ArrayObject $extra)
+    public function afterActionImportv4(Event $event, ArrayObject $extra)
     {
         $attr = $this->_table->getButtonAttr();
         $action = $this->_table->action;
@@ -55,13 +55,17 @@ class ImportLinkBehavior extends Behavior
                 break;
 
             case 'view':
-                if ($extra['indexButtons']['index']['url']['action']!='Surveys') {
+                if ($extra['indexButtons']['view']['url']['action']!='Surveys') {
                     break;
                 }
-                $customButton['url'] = $extra['indexButtons']['index']['url'];
+                $customButton['url'] = $extra['indexButtons']['view']['url'];
                 $customButton['url']['action'] = 'Import'.$this->_table->alias();
 
                 $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
+
+                $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+                $toolbarButtonsArray = array_merge(array_slice($toolbarButtonsArray, 0, 3, true), array_slice($toolbarButtonsArray, -1, 1,true), array_slice($toolbarButtonsArray, 3, count($toolbarButtonsArray) -1,true));
+                $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
                 break;
         }
     }

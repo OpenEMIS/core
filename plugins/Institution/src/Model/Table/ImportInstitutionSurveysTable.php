@@ -46,7 +46,7 @@ class ImportInstitutionSurveysTable extends AppTable {
         if ($this->action != 'downloadFailed' && $this->action != 'downloadPassed') {
             $session = $this->Session;
             if (!empty($this->request->pass) && isset($this->request->pass[1])) {
-                $this->institutionSurveyId = $this->request->pass[1];
+                $this->institutionSurveyId = $this->paramsDecode($this->request->pass[1])['id'];
             }
             $this->institutionSurvey = $this->InstitutionSurveys
                 ->find()
@@ -111,7 +111,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 
         $objPHPExcel = new \PHPExcel();
 
-        $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header );
+        $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, '');
         
         $this->setCodesDataTemplate( $objPHPExcel );
         
