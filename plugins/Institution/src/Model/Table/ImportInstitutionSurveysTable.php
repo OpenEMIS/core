@@ -111,9 +111,9 @@ class ImportInstitutionSurveysTable extends AppTable {
 
         $objPHPExcel = new \PHPExcel();
 
-        $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, '');
+        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
         
-        $this->setCodesDataTemplate( $objPHPExcel );
+        $this->setCodesDataTemplate($objPHPExcel);
         
         $objPHPExcel->setActiveSheetIndex(0);
         $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
