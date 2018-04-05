@@ -398,7 +398,7 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $entity = $Institutions->get($params['institution_id']);
+            $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives']]);
             return $entity;
         }
     }
@@ -507,11 +507,17 @@ class ReportCardsTable extends AppTable
                 // initialize all types as 0
                 $results[$code]['number_of_days'] = 0;
             }
+            $results['TOTAL_ABSENCE']['number_of_days'] = 0;
 
             // sum all number_of_days a student absence in an academic period
             foreach ($studentAbsenceResults as $key => $obj) {
                 $numberOfDays = $obj['number_of_days'];
                 $absenceType = $absenceTypes[$obj['absence_type_id']];
+
+                if (in_array($absenceType, ['EXCUSED', 'UNEXCUSED'])) {
+                    $results['TOTAL_ABSENCE']['number_of_days'] += $numberOfDays;
+                }
+
                 $results[$absenceType]['number_of_days'] += $numberOfDays;
             }
             return $results;
