@@ -1,15 +1,18 @@
-//Multi Select v.1.0.0
+//Multi Select v.1.0.1
+(function() {
+    'use strict';
 
-angular.module('kd-angular-multi-select', [])
-    .directive('kdMultiSelect', kdMultiSelect);
+    angular.module('kd-angular-multi-select', [])
+        .directive('kdMultiSelect', kdMultiSelect);
 
-function kdMultiSelect() {
 
-    var directive = {
-        restrict: 'E',
-        replace: true,
-        transclude: true,
-        template: "<div class='table-wrapper'>\
+    function kdMultiSelect() {
+
+        var directive = {
+            restrict: 'E',
+            replace: true,
+            transclude: true,
+            template: "<div class='table-wrapper'>\
                         <div class='table-top'>\
                             <div class='search-table-top'>\
                                 <i class='fa fa-search'></i>\
@@ -34,16 +37,17 @@ function kdMultiSelect() {
                             <div ag-grid='gridOptionsBottom' class='sg-theme' kd-elem-sizes kd-height='240px'></div>\
                         </div>\
                     </div>",
-        scope: {
-            gridOptionsTop: "=",
-            gridOptionsBottom: "=",
-            config: "="
-        },
-        controller: kdMultiSelectCtrl,
-        link: kdMultiSelectLink
-    };
-    return directive;
-
+            scope: {
+                gridOptionsTop: "=",
+                gridOptionsBottom: "=",
+                config: "="
+            },
+            controller: kdMultiSelectCtrl,
+            link: kdMultiSelectLink
+        };
+        return directive;
+    }
+    kdMultiSelectCtrl.$inject = ['$scope'];
 
     function kdMultiSelectCtrl($scope) {
         //Setting up the text config for the placeholder, checkbox label and buttons
@@ -190,12 +194,13 @@ function kdMultiSelect() {
                     }
                     return initCheckbox(params, _scope, _isTopElem);
                 }
-            } /*else {
-                _colDef[i]["cellRenderer"] = function(params) {
-                    if (params.value === undefined) return "";
-                    return params.value;
-                }
-            }*/
+            }
+            /*else {
+                           _colDef[i]["cellRenderer"] = function(params) {
+                               if (params.value === undefined) return "";
+                               return params.value;
+                           }
+                       }*/
 
             // AG-Grid version 9.0.3 issue - RTL pinned right and ensure index visible causing alignment issue when finishing assign/unassign - Remove pinned as workaround
             if (_colDef[i]["field"] === "checkbox") {
@@ -318,7 +323,7 @@ function kdMultiSelect() {
             var bodyContainer = angular.element(".table-" + _obj2.gridPosition + " .ag-body-container");
             scrollViewport[0].scrollTop = 0;
             setTimeout(function() {
-                scrollViewport[0].scrollTop = bodyContainer[0].getBoundingClientRect().height ;
+                scrollViewport[0].scrollTop = bodyContainer[0].getBoundingClientRect().height;
             });
 
 
@@ -394,11 +399,11 @@ function kdMultiSelect() {
 
     function updateAgGridRowCount(_agGridOptions) {
         //angular.element(document).ready(function() {
-            //console.log("ready",_agGridOptions.api.getModel().getRowCount());
-            var elem = angular.element(document.querySelector('.table-' + _agGridOptions.gridPosition + ' .ag-row-count'));
-            var rowCount = _agGridOptions.api.getModel().getRowCount();
+        //console.log("ready",_agGridOptions.api.getModel().getRowCount());
+        var elem = angular.element(document.querySelector('.table-' + _agGridOptions.gridPosition + ' .ag-row-count'));
+        var rowCount = _agGridOptions.api.getModel().getRowCount();
 
-            elem.html(rowCount);
+        elem.html(rowCount);
         //});
     }
 
@@ -449,13 +454,13 @@ function kdMultiSelect() {
         inputCheckbox.className = "ag-grid-checkbox";
         inputCheckbox.checked = (_params.node.isSelected());
 
-        inputCheckbox.addEventListener('click', function(event) { 
+        inputCheckbox.addEventListener('click', function(event) {
             var elementSelectAllCheckbox = angular.element(_isTopElem ? '.ag-select-all-top' : '.ag-select-all-bottom');
 
             _params.node.selectThisNode(inputCheckbox.checked);
 
             var modelCount = _isTopElem ? _scope.gridOptionsTop.api.getModel().getRowCount() : _scope.gridOptionsBottom.api.getModel().getRowCount();
-            var selectedCount = _isTopElem ? _scope.gridOptionsTop.api.getSelectedNodes().length  : _scope.gridOptionsBottom.api.getSelectedNodes().length;
+            var selectedCount = _isTopElem ? _scope.gridOptionsTop.api.getSelectedNodes().length : _scope.gridOptionsBottom.api.getSelectedNodes().length;
 
             elementSelectAllCheckbox[0].checked = (modelCount == selectedCount) ? true : false;
 
@@ -538,4 +543,5 @@ function kdMultiSelect() {
     }
 
     /*** ======== End of (Update Assign & Unassign Buttons) ======== ***/
-}
+    // }
+})();
