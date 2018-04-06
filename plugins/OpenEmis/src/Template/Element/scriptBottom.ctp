@@ -26,4 +26,9 @@ $(document).ready(function() {
 .error .chosen-choices {
     border-color: #CC5C5C !important;
 }
+
+/* POCOR-4359: temp added overwrites css styling for autocomplete as styles.bundle.css has .ui-autocomplete class that will cause the current autocomplete in core to not show - Added by KK*/
+body .ui-autocomplete {
+	position: absolute;
+}
 </style>
