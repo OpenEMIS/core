@@ -161,6 +161,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
 
     function getWorkbenchItems() {
         var order = 1;
+        var workbenchItems = [];// convert object to Array - Required by Angular
         angular.forEach(configModels, function(obj, key) {
             var modelObj = {
                 code: key,
@@ -171,9 +172,11 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             };
 
             properties.workbenchItems[modelObj.order] = modelObj;
+            workbenchItems.push(modelObj);
         });
 
-        return properties.workbenchItems;
+
+        return workbenchItems;
     };
 
     function getWorkbenchItemsCount() {
