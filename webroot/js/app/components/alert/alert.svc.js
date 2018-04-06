@@ -1,5 +1,5 @@
 angular.module('alert.svc', [])
-.service('AlertSvc', function($http) {
+.service('AlertSvc', ['$http', function($http) {
     return {
         getMessage: function(scope, message, args) {
             if (!angular.isString(message)) {
@@ -48,4 +48,4 @@ angular.module('alert.svc', [])
             scope.message = null;
         }
     }
-});
+}]);
