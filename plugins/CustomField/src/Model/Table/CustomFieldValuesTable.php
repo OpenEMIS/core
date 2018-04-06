@@ -48,8 +48,8 @@ class CustomFieldValuesTable extends AppTable {
 					}
 			    }
 			])
-			->add('text_value', 'ruleInvalidUrl', [
-				'rule' => 'url',
+			->add('text_value', 'invalidUrl', [
+				'rule' => ['url', true],
 				'message' => __('You have entered an invalid URL.'),
 				'on' => function ($context) {
 					if (array_key_exists('params', $context['data']) && !empty($context['data']['params'])) {
