@@ -446,22 +446,34 @@ class InstitutionPositionsTable extends ControllerActionTable
         // start Current Staff List field
         $Staff = $this->Institutions->Staff;
         $currentStaff = $Staff
-                        ->find('withBelongsTo')
-                        ->where([
-                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                            $Staff->aliasField('institution_position_id') => $id,
-                            'OR' => [
-                                $Staff->aliasField('end_date').' IS NULL',
-                                'AND' => [
-                                    $Staff->aliasField('end_date').' IS NOT NULL',
-                                    $Staff->aliasField('end_date').' >= DATE(NOW())'
-                                ]
-                            ]
-                        ])
-                        ->order([$Staff->aliasField('start_date')]);
+            ->find()
+            ->select([
+                $Staff->aliasField('FTE'),
+                $Staff->aliasField('start_date'),
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name'
+            ])
+            ->contain(['Users'])
+            ->where([
+                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_position_id') => $id,
+                'OR' => [
+                    $Staff->aliasField('end_date').' IS NULL',
+                    'AND' => [
+                        $Staff->aliasField('end_date').' IS NOT NULL',
+                        $Staff->aliasField('end_date').' >= DATE(NOW())'
+                    ]
+                ]
+            ])
+            ->order([$Staff->aliasField('start_date')]);
         $this->fields['current_staff_list']['data'] = $currentStaff;
         $totalCurrentFTE = '0.00';
-        if (count($currentStaff)>0) {
+        if (count($currentStaff) > 0) {
             foreach ($currentStaff as $cs) {
                 $totalCurrentFTE = number_format((floatVal($totalCurrentFTE) + floatVal($cs->FTE)), 2);
             }
@@ -471,14 +483,28 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         // start PAST Staff List field
         $pastStaff  = $Staff
-                    ->find('withBelongsTo')
-                    ->where([
-                        $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
-                        $Staff->aliasField('institution_position_id') => $id,
-                        $Staff->aliasField('end_date').' IS NOT NULL',
-                        $Staff->aliasField('end_date').' < DATE(NOW())'
-                    ])
-                    ->order([$Staff->aliasField('start_date')]);
+            ->find()
+            ->select([
+                $Staff->aliasField('FTE'),
+                $Staff->aliasField('start_date'),
+                $Staff->aliasField('end_date'),
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name',
+                'StaffStatuses.name'
+            ])
+            ->contain(['Users', 'StaffStatuses'])
+            ->where([
+                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_position_id') => $id,
+                $Staff->aliasField('end_date').' IS NOT NULL',
+                $Staff->aliasField('end_date').' < DATE(NOW())'
+            ])
+            ->order([$Staff->aliasField('start_date')]);
         $this->fields['past_staff_list']['data'] = $pastStaff;
         // end Current Staff List field
 
@@ -513,12 +539,6 @@ class InstitutionPositionsTable extends ControllerActionTable
 ** essential methods
 **
 ******************************************************************************************************************/
-    public function findWithBelongsTo(Query $query, array $options)
-    {
-        return $query
-            ->contain(['StaffPositionTitles', 'Institutions', 'StaffPositionGrades']);
-    }
-
     public function getInstitutionPositions($userId, $isAdmin, $activeStatusId = [], $institutionId, $fte, $startDate, $endDate = '')
     {
         $selectedFTE = empty($fte) ? 0 : $fte;
