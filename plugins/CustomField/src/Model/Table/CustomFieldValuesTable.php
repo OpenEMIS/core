@@ -56,7 +56,7 @@ class CustomFieldValuesTable extends AppTable {
 						$params = json_decode($context['data']['params'], true);
 						return array_key_exists('url', $params);
 					}
-			    }
+				}
 			])
 			// NUMBER validation
 			->allowEmpty('number_value', function ($context) {
