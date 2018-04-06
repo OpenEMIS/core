@@ -251,6 +251,18 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
         var extra = {};
 
+        if (isSubjectTab) {
+            var columnDef = {
+                headerName: "Total Mark",
+                field: "total_mark",
+                // filterParams: filterParams,
+                // filter: 'text',
+                menuTabs: menuTabs
+            };
+
+            columnDefs.push(columnDef);
+        }
+
         // comment code column
         if (isSubjectTab) {
             var selectOptions = {
@@ -277,6 +289,17 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 menuTabs: menuTabs,
             };
             columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
+            columnDefs.push(columnDef);
+        }
+
+        if (!isSubjectTab) {
+            var columnDef = {
+                headerName: "Overall Average",
+                field: "average_mark",
+                // filterParams: filterParams,
+                // filter: 'text',
+                menuTabs: menuTabs,
+            };
             columnDefs.push(columnDef);
         }
 
@@ -456,8 +479,18 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                 student_status: reportCardStudent.student_status.name,
                                 comments: '',
                                 comment_code: '',
-                                modified_by: ''
+                                modified_by: '',
+                                total_mark: '',
+                                average_mark: ''
                             };
+
+                            if (reportCardStudent.total_mark != null) {
+                                studentsData['total_mark'] = reportCardStudent.total_mark;
+                            }
+
+                            if (reportCardStudent.average_mark != null) {
+                                studentsData['average_mark'] = reportCardStudent.average_mark;
+                            }
 
                             if (reportCardStudent.comments != null) {
                                 studentsData['comments'] = reportCardStudent.comments;
