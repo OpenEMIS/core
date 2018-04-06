@@ -32,6 +32,7 @@ class ImportLinkBehavior extends Behavior
 
         if ($this->isCAv4()) {
             $events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterActionImportv4'];
+            $events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterActionImportv4'];
         }
 
         return $events;
@@ -40,29 +41,24 @@ class ImportLinkBehavior extends Behavior
     //using after action for ordering of toolbar buttons (because export also using afteraction)
     public function indexAfterActionImportv4(Event $event, Query $query, $data, ArrayObject $extra)
     {
-        $attr = $this->_table->getButtonAttr();
-        $action = $this->_table->action;
-        $customButton = [];
-        switch ($action) {
-            case 'index':
-                if (isset($extra['indexButtons']['view']) && $extra['indexButtons']['view']['url']['action']=='Surveys') {
-                    break;
-                }
-                $customButton['url'] = $this->_table->url('index');
-                $customButton['url']['action'] = $this->config('import_model');
-                $customButton['url'][0] = 'add';
-                $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
-                break;
+        if ($this->_table->request->action != 'Surveys') { 
+            $attr = $this->_table->getButtonAttr();
+            $customButton = [];
+            $customButton['url'] = $this->_table->url('index');
+            $customButton['url']['action'] = $this->config('import_model');
+            $customButton['url'][0] = 'add';
+            $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
+        }
+    }
 
-            case 'view':
-                if ($extra['indexButtons']['index']['url']['action']!='Surveys') {
-                    break;
-                }
-                $customButton['url'] = $extra['indexButtons']['index']['url'];
-                $customButton['url']['action'] = 'Import'.$this->_table->alias();
-
-                $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
-                break;
+    public function viewAfterActionImportv4(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($this->_table->request->action == 'Surveys') {
+            $attr = $this->_table->getButtonAttr();
+            $customButton = [];
+            $customButton['url'] = $this->_table->url('view');
+            $customButton['url']['action'] = 'Import'.$this->_table->alias();
+            $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
         }
     }
 

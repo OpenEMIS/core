@@ -78,6 +78,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('openemis_no');
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('description', ['visible' => false]);
         $this->field('action', ['visible' => false]);
@@ -256,7 +257,7 @@ class StaffBehavioursTable extends ControllerActionTable
                 $institutionId = $this->Session->read('Institution.Institutions.id');
                 $Staff = TableRegistry::get('Institution.Staff');
                 $staffOptions = $Staff
-                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'name'])
+                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
                 ->matching('Users')
                 ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
                 ->where([$Staff->aliasField('institution_id') => $institutionId])

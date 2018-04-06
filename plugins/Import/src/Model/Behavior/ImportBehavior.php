@@ -21,6 +21,7 @@ use PHPExcel_Worksheet;
 use PHPExcel_Style_NumberFormat;
 use PHPExcel_Shared_Date;
 use PHPExcel_IOFactory;
+use PHPExcel_Cell;
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -614,7 +615,7 @@ class ImportBehavior extends Behavior
 ** Import Functions
 **
 ******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $lastRowToAlign = 2, $title = '')
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
     {
         if (empty($title)) {
             $title = $dataSheetName;
@@ -638,19 +639,10 @@ class ImportBehavior extends Behavior
 
         ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : '';
 
-        $headerLastAlpha = $this->getExcelColumnAlpha('last');
-        $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
         $activeSheet->setCellValue("C1", $title);
-        $style = [
-            'alignment' => [
-                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
-            ]
-        ];
-        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
     }
 
-    public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $applyFillFontSetting = [], $applyCellBorder = [])
+    public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
             ($this->isCustomText()) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];
@@ -666,6 +658,15 @@ class ImportBehavior extends Behavior
         if (!in_array($headerLastAlpha, ['A','B','C'])) {
             $activeSheet->mergeCells('C1:'. $headerLastAlpha .'1');
         }
+
+        $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
+        $style = [
+            'alignment' => [
+                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
+            ]
+        ];
+        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
         $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
         $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
         $activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
@@ -701,7 +702,7 @@ class ImportBehavior extends Behavior
             $activeSheet->setCellValue("A2", $this->customText);
         }
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $lastRowToAlign, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
 
@@ -724,7 +725,7 @@ class ImportBehavior extends Behavior
         }
         $headerLastAlpha = $this->getExcelColumnAlpha(count($header)-1);
 
-        $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha);
+        $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign);
     }
 
     public function suggestRowHeight($stringLen, $currentRowHeight)
@@ -747,7 +748,7 @@ class ImportBehavior extends Behavior
         $objPHPExcel->createSheet(1);
         $objPHPExcel->setActiveSheetIndex(1);
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $sheetName, 3);
+        $this->beginExcelHeaderStyling($objPHPExcel, $sheetName);
 
         $objPHPExcel->getActiveSheet()->getRowDimension(3)->setRowHeight(25);
 
@@ -804,9 +805,9 @@ class ImportBehavior extends Behavior
         }
 
         if ($lastColumn > -1) { //if got no reference data.
-            $headerLastAlpha = $this->getExcelColumnAlpha( $lastColumn );
+            $headerLastAlpha = $this->getExcelColumnAlpha($lastColumn);
             $objPHPExcel->getActiveSheet()->getStyle( "A2:" . $headerLastAlpha . "2" )->getFont()->setBold(true)->setSize(12);
-            $this->endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
+            $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, 3, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
         }
     }
 
@@ -898,19 +899,7 @@ class ImportBehavior extends Behavior
      */
     public function getExcelColumnAlpha($column_number)
     {
-        $alpha = [
-            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-            'AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO','AP','AQ','AR','AS','AT','AU','AV','AW','AX','AY','AZ',
-            'BA','BB','BC','BD','BE','BF','BG','BH','BI','BJ','BK','BL','BM','BN','BO','BP','BQ','BR','BS','BT','BU','BV','BW','BX','BY','BZ',
-            'CA','CB','CC','CD','CE','CF','CG','CH','CI','CJ','CK','CL','CM','CN','CO','CP','CQ','CR','CS','CT','CU','CV','CW','CX','CY','CZ',
-            'DA','DB','DC','DD','DE','DF','DG','DH','DI','DJ','DK','DL','DM','DN','DO','DP','DQ','DR','DS','DT','DU','DV','DW','DX','DY','DZ',
-            'EA','EB','EC','ED','EE','EF','EG','EH','EI','EJ','EK','EL','EM','EN','EO','EP','EQ','ER','ES','ET','EU','EV','EW','EX','EY','EZ',
-            'FA','FB','FC','FD','FE','FF','FG','FH','FI','FJ','FK','FL','FM','FN','FO','FP','FQ','FR','FS','FT','FU','FV','FW','FX','FY','FZ'
-        ];
-        if ($column_number === 'last') {
-            $column_number = count($alpha) - 1;
-        }
-        return $alpha[$column_number];
+        return PHPExcel_Cell::stringFromColumnIndex($column_number);
     }
 
     /**

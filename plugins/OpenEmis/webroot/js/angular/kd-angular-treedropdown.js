@@ -1,15 +1,18 @@
 //Multi Select v.1.0.1
+(function() {
+    'use strict';
 
-angular.module('kd-angular-tree-dropdown', [])
-    .directive('kdTreeDropdownNg', kdTreeDropdown);
+    angular.module('kd-angular-tree-dropdown', [])
+        .directive('kdTreeDropdownNg', kdTreeDropdown);
+    var tree_dropdown_separator = "--";
 
-function kdTreeDropdown() {
-    var separator = "--";
-    var directive = {
-        restrict: 'E',
-        replace: true,
-        transclude: true,
-        template: "<div class='tree-dropdown'>\
+    function kdTreeDropdown() {
+
+        var directive = {
+            restrict: 'E',
+            replace: true,
+            transclude: true,
+            template: "<div class='tree-dropdown'>\
                         <multi-select-tree \
                         data-input-model='inputModel' \
                         multi-select='isMultiple' \
@@ -21,21 +24,23 @@ function kdTreeDropdown() {
                         ></multi-select-tree>\
                 </div>\
         ",
-        controller: kdTreeDropdownCtrl,
-        link: kdTreeDropdownLink,
-        scope: {
-            inputModel: '=?',
-            outputModel: '=?',
-            textConfig: '=?',
-            modelType: '@?',
-            onItemExpand: '&',
-            expandChild: '&',
-            getChildData: '&',
-            expandParent: '&'
-        }
-    };
-    return directive;
+            controller: kdTreeDropdownCtrl,
+            link: kdTreeDropdownLink,
+            scope: {
+                inputModel: '=?',
+                outputModel: '=?',
+                textConfig: '=?',
+                modelType: '@?',
+                onItemExpand: '&',
+                expandChild: '&',
+                getChildData: '&',
+                expandParent: '&'
+            }
+        };
+        return directive;
 
+    }
+    kdTreeDropdownCtrl.$inject = ["$scope"];
 
     function kdTreeDropdownCtrl($scope) {
         $scope.treePlaceholder = "%tree_no_of_item";
@@ -92,7 +97,7 @@ function kdTreeDropdown() {
 
         _scope.getChildData = function(_parentData, _childData) {
             //check if the child has been selected. if selected, add into outputModel and update selection text.
-            for (i = 0; i < _childData.length; i++) {
+            for (var i = 0; i < _childData.length; i++) {
                 if (typeof _childData[i].selected !== "undefined" && _childData[i].selected && $.inArray(_childData[i], _scope.outputModel) == -1) {
                     _scope.outputModel.push(_childData[i]);
                     updateSelectionText(generateSelectionText(_scope.outputModel, _scope.selectionText, _scope.treePlaceholder), _scope.elementId);
@@ -125,7 +130,7 @@ function kdTreeDropdown() {
 
         var isExpandNeeded = true;
 
-        for (i = 0; i < _pData.length; i++) {
+        for (var i = 0; i < _pData.length; i++) {
             //if children = number > do expand to load
             if (typeof _pData[i].children == "number") {
                 if (_pData[i].children > 0) {
@@ -145,12 +150,12 @@ function kdTreeDropdown() {
 
         var output = getFlattenData(_parentData, "");
 
-        for (i = 0; i < output.length; i++) {
+        for (var i = 0; i < output.length; i++) {
 
-            var data = output[i].split(separator);
+            var data = output[i].split(tree_dropdown_separator);
             var parent = null;
 
-            for (x = 0; x < data.length; x++) {
+            for (var x = 0; x < data.length; x++) {
                 if (data[x] !== "") {
                     if (parent == null) {
                         parent = _parentData[data[x]];
@@ -176,7 +181,7 @@ function kdTreeDropdown() {
                 result[_rPropString] = _rObj; // --0--id : 41
             } else if (Array.isArray(_rObj)) { // true for child data: [{name:child1, id:41}]
                 for (var i = 0, len = _rObj.length; i < len; i++) {
-                    processFlatten(_rObj[i], _rPropString + separator + i); // {id:41, name:parent3, children:[{...}]}, '' + -- + 0
+                    processFlatten(_rObj[i], _rPropString + tree_dropdown_separator + i); // {id:41, name:parent3, children:[{...}]}, '' + -- + 0
                 }
                 if (len == 0) { //end of the array
                     result[_rPropString] = [];
@@ -189,7 +194,7 @@ function kdTreeDropdown() {
                     if (key == "selected" && _rObj[key]) {
                         output.push(_rPropString); // --0
                     }
-                    processFlatten(_rObj[key], _rPropString ? _rPropString + separator + key : key); // id, '' + -- + 0
+                    processFlatten(_rObj[key], _rPropString ? _rPropString + tree_dropdown_separator + key : key); // id, '' + -- + 0
                 }
                 if (isEmpty) //end of the _rObj
                     result[_rPropString] = {};
@@ -255,4 +260,4 @@ function kdTreeDropdown() {
         return selectionText;
     }
 
-}
+})();
