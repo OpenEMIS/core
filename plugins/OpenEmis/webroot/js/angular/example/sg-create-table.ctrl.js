@@ -1,7 +1,7 @@
 //Create Table v.1.0.0
 
 angular.module('OE_Styleguide')
-    .controller('SgCreateTableCtrl', function($scope) {
+    .controller('SgCreateTableCtrl', ['$scope', function($scope) {
 
         function copy(_obj) {
             if (angular.isArray(_obj)) {
@@ -368,4 +368,4 @@ angular.module('OE_Styleguide')
             }
         }
 
-    });
+    }]);

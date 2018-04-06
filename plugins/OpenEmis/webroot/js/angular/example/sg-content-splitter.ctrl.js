@@ -1,7 +1,7 @@
 //Content Splitter v.1.0.0
 
 angular.module('OE_Styleguide')
-    .controller('SgContentSplitterCtrl', function($scope, $window) {
+    .controller('SgContentSplitterCtrl', ['$scope', '$window', function($scope, $window) {
 
         //to access the splitter elements 
         $scope.getSplitterElements = function (_response){
@@ -23,4 +23,4 @@ angular.module('OE_Styleguide')
         $scope.removeSplitContentResponsive = function() {
             $scope.collapse = "true";
         }
-    });
+    }]);

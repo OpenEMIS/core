@@ -17,6 +17,7 @@ class SetupTextBehavior extends SetupBehavior
 
         $this->ruleOptions = [
             'length' => __('Length Validation'),
+            'url' => __('URL Validation'),
             'input_mask' => __('Custom Validation')
         ];
     }
@@ -206,6 +207,9 @@ class SetupTextBehavior extends SetupBehavior
                                     'upper' => $maxLength
                                 ];
                             }
+                            break;
+                        case 'url':
+                            $params['url'] = 1;
                             break;
                         case 'input_mask':
                             if (array_key_exists('validation_format', $data) && !empty($data['validation_format'])) {
