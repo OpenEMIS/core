@@ -1,5 +1,10 @@
-angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.results.svc'])
-.controller('InstitutionsResultsCtrl', function($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsResultsSvc) {
+angular
+    .module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.results.svc'])
+    .controller('InstitutionsResultsCtrl', InstitutionsResultsController);
+
+InstitutionsResultsController.$inject = ['$q', '$scope', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsResultsSvc'];
+
+function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
     $scope.gradingTypes = null;
@@ -343,4 +348,4 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
         $scope.onChangeSubject($scope.subject);
         AlertSvc.reset($scope);
     };
-});
+}
