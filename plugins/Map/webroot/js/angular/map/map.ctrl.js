@@ -8,6 +8,9 @@ function MapController($scope, $q, UtilsSvc, MapSvc) {
     $scope.mapReady = false;
 
     // Functions
+    $scope.textConfig = {
+        institutionTypes: 'Institution Types'
+    };
     $scope.initMap = initMap;
 
     // Initialisation
@@ -15,7 +18,15 @@ function MapController($scope, $q, UtilsSvc, MapSvc) {
         MapSvc.init(angular.baseUrl);
 
         UtilsSvc.isAppendSpinner(true, 'map-group-cluster');
-        MapSvc.getMapConfig()
+        MapSvc.translate($scope.textConfig)
+        .then(function(response) {
+            $scope.textConfig = response;
+            
+            return MapSvc.getMapConfig();
+        }, function(error) {
+            // No translation data
+            console.log(error);
+        })
         .then(function(response) {
             $scope.initMap(response);
             $scope.mapReady = true;
@@ -41,6 +52,8 @@ function MapController($scope, $q, UtilsSvc, MapSvc) {
         var centerLongitude = response[1];
         var centerLatitude = response[2];
 
+        var legendTitle = $scope.textConfig['institutionTypes'];
+
         $scope.mapConfig = {
             zoom: {
                 value: zoomValue,
@@ -52,7 +65,7 @@ function MapController($scope, $q, UtilsSvc, MapSvc) {
             type: 'group-cluster',
             legend: {
                 title: {
-                    text: 'Institution Types'
+                    text: legendTitle
                 }
             }
         };
