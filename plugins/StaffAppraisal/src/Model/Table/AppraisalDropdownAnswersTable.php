@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
-class AppraisalSliderAnswersTable extends AppTable
+class AppraisalDropdownAnswersTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -15,6 +15,7 @@ class AppraisalSliderAnswersTable extends AppTable
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms', 'foreignKey' => 'appraisal_form_id']);
         $this->belongsTo('AppraisalCriterias', ['className' => 'StaffAppraisal.AppraisalCriterias', 'foreignKey' => 'appraisal_criteria_id']);
         $this->belongsTo('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'institution_staff_appraisal_id', 'joinType' => 'INNER']);
+        $this->belongsTo('AppraisalDropdownOptions', ['className' => 'StaffAppraisal.AppraisalDropdownOptions', 'foreignKey' => 'answer']);
     }
 
     // this will be moved to a behaviour when revamping the custom fields
