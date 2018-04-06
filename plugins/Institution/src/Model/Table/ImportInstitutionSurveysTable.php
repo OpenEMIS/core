@@ -551,7 +551,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 
             $objPHPExcel = new \PHPExcel();
 
-            $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $newHeader );
+            $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader, '');
             $activeSheet = $objPHPExcel->getActiveSheet();
             foreach($data as $index => $record) {
                 if ($type == 'failed') {
