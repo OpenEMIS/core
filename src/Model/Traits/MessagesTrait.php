@@ -59,6 +59,7 @@ trait MessagesTrait
             'noRecords' => 'No Record',
             'noFile' => 'File does not exist.',
             'failConnectToExternalSource' => 'There is an issue establishing connection to the External Datasource. Please contact the administrator for assistance.',
+            'notExistsInExternalSource' => 'The record does not exist in the External Datasource. Please contact the administrator for assistance.',
             'select' => [
                 'noOptions' => 'No options'
             ],
