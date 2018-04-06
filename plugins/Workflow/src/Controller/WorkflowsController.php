@@ -6,6 +6,7 @@ use App\Controller\AppController;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Event\Event;
+use Cake\Core\Configure;
 use Cake\Log\Log;
 
 class WorkflowsController extends AppController
@@ -102,6 +103,13 @@ class WorkflowsController extends AppController
         } else if (!$hasWorkflowsAccess) {
             $selectedAction = 'Steps';
         }
+
+        if (in_array('Cases', (array) Configure::read('School.excludedPlugins'))) {
+            if (isset($tabElements['Rules'])) {
+                unset($tabElements['Rules']);
+            }
+        }
+
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
