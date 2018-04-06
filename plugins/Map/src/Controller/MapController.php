@@ -20,7 +20,7 @@ class MapController extends AppController
 	{
 		parent::beforeFilter($event);
 
-		$header = __('Map');
+		$header = __('Maps');
 		$this->set('contentHeader', $header);
 	}
 
