@@ -143,8 +143,19 @@ class InstitutionsTable extends ControllerActionTable
         ]);
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
+
+        // specify order of advanced search fields
+        $advancedSearchFieldOrder = [
+            'shift_type', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
+            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes',
+            'code', 'name',
+        ];
         $this->addBehavior('AdvanceSearch', [
-            'display_country' => false
+            'display_country' => false,
+            'include' =>[
+                'code', 'name'
+            ],
+            'order' => $advancedSearchFieldOrder
         ]);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
@@ -745,7 +756,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-        if (empty($search)) {
+        if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
             $addAccess = $this->AccessControl->check(['Institutions', 'add']);
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
