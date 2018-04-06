@@ -48,6 +48,16 @@ class CustomFieldValuesTable extends AppTable {
 					}
 			    }
 			])
+			->add('text_value', 'ruleInvalidUrl', [
+				'rule' => 'url',
+				'message' => __('You have entered an invalid URL.'),
+				'on' => function ($context) {
+					if (array_key_exists('params', $context['data']) && !empty($context['data']['params'])) {
+						$params = json_decode($context['data']['params'], true);
+						return array_key_exists('url', $params);
+					}
+				}
+			])
 			// NUMBER validation
 			->allowEmpty('number_value', function ($context) {
 				if (array_key_exists('mandatory', $context['data'])) {
