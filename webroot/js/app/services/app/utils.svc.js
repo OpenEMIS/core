@@ -1,5 +1,5 @@
 angular.module('utils.svc', [])
-.service('UtilsSvc', function($location) {
+.service('UtilsSvc', ['$location',function($location) {
 	return {
 		requestQuery: function(key) {
             return parseInt($location.search()[key]);
@@ -52,4 +52,4 @@ angular.module('utils.svc', [])
 	    	return encodeURI(btoa(jsonString)).replace(/=/gi, "");
 	    }
 	}
-});
+}]);

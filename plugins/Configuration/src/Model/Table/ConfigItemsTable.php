@@ -34,7 +34,8 @@ class ConfigItemsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index'],
-            'OpenEMIS_Classroom' => ['index']
+            'OpenEMIS_Classroom' => ['index'],
+            'Map' => ['index']
         ]);
     }
 
