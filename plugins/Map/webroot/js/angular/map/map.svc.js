@@ -7,6 +7,7 @@ MapSvc.$inject = ['$q', 'KdDataSvc', 'KdSessionSvc'];
 function MapSvc($q, KdDataSvc, KdSessionSvc) {
     var service = {
         init: init,
+        translate: translate,
         getMapConfig: getMapConfig,
         getMapData: getMapData,
         getConfigItemValue: getConfigItemValue
@@ -19,6 +20,15 @@ function MapSvc($q, KdDataSvc, KdSessionSvc) {
         KdDataSvc.controllerAction('Map');
         KdDataSvc.init({ConfigItemsTable: 'Configuration.ConfigItems'});
         KdDataSvc.init({InstitutionsTable: 'Institution.Institutions'});
+    };
+
+    function translate(data) {
+        KdDataSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
     };
 
     function getMapConfig() {
