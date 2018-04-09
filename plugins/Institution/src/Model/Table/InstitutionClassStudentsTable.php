@@ -780,8 +780,7 @@ class InstitutionClassStudentsTable extends AppTable
                         // get the subjects and the total marks by the students 
                         $subjectOverallResult = $query
                             ->select([
-                                'total_subject' => $query->func()->count('*'),
-                                'total_mark' => $query->func()->sum('total_mark')
+                                'average_mark' => $query->func()->avg('total_mark')
                             ])
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,
@@ -796,10 +795,9 @@ class InstitutionClassStudentsTable extends AppTable
                             ->first();
 
                         $row->average_mark = NULL;
-                        if (!is_null($subjectOverallResult->total_mark) && !is_null($subjectOverallResult->total_subject)) {
-                            $averageMark = $subjectOverallResult->total_mark / $subjectOverallResult->total_subject;
-                            $row->average_mark = number_format($averageMark, 2);
-                        }   
+                        if (!is_null($subjectOverallResult->average_mark)) {
+                            $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
+                        }
 
                         return $row;
                     });
@@ -815,8 +813,7 @@ class InstitutionClassStudentsTable extends AppTable
                         // get the subjects and the total marks by the students 
                         $subjectOverallResult = $query
                             ->select([
-                                'total_subject' => $query->func()->count('*'),
-                                'total_mark' => $query->func()->sum('total_mark')
+                                'average_mark' => $query->func()->avg('total_mark')
                             ])
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,
@@ -831,10 +828,9 @@ class InstitutionClassStudentsTable extends AppTable
                             ->first();
 
                         $row->average_mark = NULL;
-                        if (!is_null($subjectOverallResult->total_mark) && !is_null($subjectOverallResult->total_subject)) {
-                            $averageMark = $subjectOverallResult->total_mark / $subjectOverallResult->total_subject;
-                            $row->average_mark = number_format($averageMark, 2);
-                        }   
+                        if (!is_null($subjectOverallResult->average_mark)) {
+                            $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
+                        }
 
                         return $row;
                     });
