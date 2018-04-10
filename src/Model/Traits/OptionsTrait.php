@@ -48,6 +48,9 @@ trait OptionsTrait
             'TrainingSessions' => [
                 'trainer_types' => ['Staff' => __('Staff'), 'Others' => __('Others')]
             ],
+            'StaffPositionTitles' => [
+                'position_grade_selection' => [1 => __('Select Position Grades'), '-1' => __('Select All Position Grades')]
+            ],
             'StaffTrainingNeeds' => [
                 'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
             ],

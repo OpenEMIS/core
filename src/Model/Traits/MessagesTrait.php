@@ -2042,7 +2042,12 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This name already exists in the system',
                 ]
-            ]
+            ],
+            'StaffPositionTitles' => [
+               'position_grades' => [
+                    'ruleCheckPositionGrades' => 'Please include the following in-use grades: ',
+                ]
+            ] 
         ],
         'Configuration' => [
             'ConfigProductLists' => [

@@ -12,6 +12,16 @@ class StaffPositionGradesTable extends ControllerActionTable
         parent::initialize($config);
         $this->hasMany('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_grade_id']);
 
+        $this->belongsToMany('StaffPositionTitles', [
+			'className' => 'Institution.StaffPositionTitles',
+			'joinTable' => 'staff_position_titles_grades',
+			'foreignKey' => 'staff_position_grade_id',  
+			'targetForeignKey' => 'staff_position_title_id', 
+			'through' => 'Institution.StaffPositionTitlesGrades',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+		]);
+
         $this->addBehavior('FieldOption.FieldOption');
     }
 }

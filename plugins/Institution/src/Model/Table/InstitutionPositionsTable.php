@@ -166,10 +166,6 @@ class InstitutionPositionsTable extends ControllerActionTable
             'visible' => true,
             'type' => 'select'
         ]);
-        $this->field('staff_position_grade_id', [
-            'visible' => true,
-            'type' => 'select'
-        ]);
         $this->field('current_staff_list', [
             'label' => '',
             'override' => true,
@@ -193,6 +189,43 @@ class InstitutionPositionsTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request) 
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $requestData = $request->data;
+            $StaffPositionGradesTitles = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+            $positionTitleId = null;
+            $availablePositionGradesOption = [];
+
+            if ($action == 'add') { 
+                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
+                        $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
+                    } 
+            } else if ($action == 'edit') {
+                $entity = $attr['entity'];
+                $positionTitleId = $entity->staff_position_title_id;
+            }
+
+            if($positionTitleId) {
+                $availablePositionGradesOption = $this->StaffPositionGrades
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->matching('StaffPositionTitles', function ($q) use ($positionTitleId) {
+                         return $q->where(['StaffPositionTitles.id' => $positionTitleId]);
+                    })
+                    ->toArray();
+
+                if (empty($availablePositionGradesOption)) {
+                    $availablePositionGradesOption = $this->StaffPositionGrades
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->toArray();
+                } 
+            }
+            $attr['options'] = $availablePositionGradesOption;
+        }
+        return $attr;
+    }
+
 
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
     {
@@ -249,6 +282,12 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('staff_position_grade_id', [
+            'visible' => true,
+            'type' => 'select',
+            'entity' => $entity,
+            'after' => 'staff_position_title_id'
+        ]);
         $this->field('is_homeroom', ['entity' => $entity]);
 
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
@@ -351,6 +390,10 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('is_homeroom');
+        $this->field('staff_position_grade_id', [
+            'visible' => true,
+            'type' => 'select'
+        ]);
 
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
@@ -406,6 +449,10 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('staff_position_grade_id', [
+            'visible' => true,
+            'type' => 'select'
+        ]);
         $this->field('is_homeroom');
     }
 
@@ -417,6 +464,10 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event)
     {
+        $this->field('staff_position_grade_id', [
+            'visible' => true,
+            'type' => 'select'
+        ]);
         $this->field('is_homeroom');
 
         $this->setFieldOrder([
