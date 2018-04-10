@@ -2450,6 +2450,33 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function checkPositionGrades($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+
+        $institutionPositionGrades = $InstitutionPositions->find()
+                            ->distinct('staff_position_grade_id')
+                            ->where([
+                                $InstitutionPositions->aliasField('staff_position_title_id') => $globalData['data']['id']
+                            ])
+                            ->extract('staff_position_grade_id')
+                            ->toArray();
+
+        if(!empty($institutionPositionGrades)) {  // not empty means position title in use & there's associated grade
+            $postPositionGrades = $globalData['data']['position_grades']['_ids'];
+            if (array_intersect($institutionPositionGrades, $postPositionGrades) == $institutionPositionGrades) {
+                return true;
+            } else {
+                $arr = array_diff($institutionPositionGrades, $postPositionGrades);
+                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades');
+                return $errorMsg . implode(", ", $arr);
+            }
+        }
+
+        return true;
+    }
+
     //check whether position assigned to class(es)
     public static function checkHomeRoomTeacherAssignments($field, array $globalData)
     {
