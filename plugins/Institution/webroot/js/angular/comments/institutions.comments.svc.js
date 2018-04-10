@@ -361,87 +361,91 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             cols = angular.merge(cols, {
                 cellClass: 'oe-cell-highlight',
                 cellRenderer: function(params) {
-                    if (params.value.length == 0) {
-                        // set to default select
-                        params.value = 0;
-                    }
-
-                    var oldValue = params.value;
-                    var studentId = params.data.student_id;
-
-                    var eCell = document.createElement('div');
-                    eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
-
-                    var eSelect = document.createElement("select");
-
-                    var isAnswerValid = false;
-                    angular.forEach(options, function(obj, key) {
-                        var eOption = document.createElement("option");
-                        var labelText = obj.name;
-                        eOption.setAttribute("value", obj.id);
-                        eOption.innerHTML = labelText;
-                        eSelect.appendChild(eOption);
-                        if (oldValue == obj.id) {
-                            isAnswerValid = true;
-                        }
-                    });
-
-                    // set selected value only when it is a valid option from gradingOptions list
-                    if (isAnswerValid) {
-                        eSelect.value = params.value;
-                    }
-
-                    eSelect.addEventListener('change', function () {
-                        var newValue = eSelect.value;
-                        params.data[params.colDef.field] = newValue;
-
-                        // set last modified user name
-                        params.data.modified_by = currentUserName;
-
-                        if (angular.isUndefined(_comments[studentId])) {
-                            _comments[studentId] = {};
+                    if (angular.isDefined(params.data)) {
+                        if (params.value.length == 0) {
+                            // set to default select
+                            params.value = 0;
                         }
 
-                        if (angular.isUndefined(_comments[params.data.student_id][params.colDef.field])) {
-                            _comments[params.data.student_id][params.colDef.field] = {};
-                        }
+                        var oldValue = params.value;
+                        var studentId = params.data.student_id;
 
-                        _comments[params.data.student_id][params.colDef.field] = newValue;
+                        var eCell = document.createElement('div');
+                        eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
 
-                        saveSingleRecordData(params, extra.tab)
-                        .then(function(response) {
-                        }, function(error) {
-                            console.log(error);
+                        var eSelect = document.createElement("select");
+
+                        var isAnswerValid = false;
+                        angular.forEach(options, function(obj, key) {
+                            var eOption = document.createElement("option");
+                            var labelText = obj.name;
+                            eOption.setAttribute("value", obj.id);
+                            eOption.innerHTML = labelText;
+                            eSelect.appendChild(eOption);
+                            if (oldValue == obj.id) {
+                                isAnswerValid = true;
+                            }
                         });
 
-                        // Important: to refresh the grid after data is modified
-                        params.api.refreshView();
-                    });
+                        // set selected value only when it is a valid option from gradingOptions list
+                        if (isAnswerValid) {
+                            eSelect.value = params.value;
+                        }
 
-                    eCell.appendChild(eSelect);
+                        eSelect.addEventListener('change', function () {
+                            var newValue = eSelect.value;
+                            params.data[params.colDef.field] = newValue;
 
-                    return eCell;
+                            // set last modified user name
+                            params.data.modified_by = currentUserName;
+
+                            if (angular.isUndefined(_comments[studentId])) {
+                                _comments[studentId] = {};
+                            }
+
+                            if (angular.isUndefined(_comments[params.data.student_id][params.colDef.field])) {
+                                _comments[params.data.student_id][params.colDef.field] = {};
+                            }
+
+                            _comments[params.data.student_id][params.colDef.field] = newValue;
+
+                            saveSingleRecordData(params, extra.tab)
+                            .then(function(response) {
+                            }, function(error) {
+                                console.log(error);
+                            });
+
+                            // Important: to refresh the grid after data is modified
+                            params.api.refreshView();
+                        });
+
+                        eCell.appendChild(eSelect);
+
+                        return eCell;
+                    }
                 },
                 suppressMenu: true
             });
         } else {
             cols = angular.merge(cols, {
                 cellRenderer: function(params) {
-                    var cellValue = '';
-                    if (params.value.length != 0 && params.value != 0) {
-                        // show option name only when it is a valid option from options list
-                        angular.forEach(options, function(obj, key) {
-                            if (params.value == obj.id) {
-                                cellValue = options[key]['name'];
-                            }
-                        });
+                    if (angular.isDefined(params.data)) {
+                        var cellValue = '';
+                        if (params.value.length != 0 && params.value != 0) {
+                            // show option name only when it is a valid option from options list
+                            angular.forEach(options, function(obj, key) {
+                                if (params.value == obj.id) {
+                                    cellValue = options[key]['name'];
+                                }
+                            });
+                        }
+
+                        var eCell = document.createElement('div');
+                        var eLabel = document.createTextNode(cellValue);
+                        eCell.appendChild(eLabel);
+
+                        return eCell;
                     }
-
-                    var eCell = document.createElement('div');
-                    var eLabel = document.createTextNode(cellValue);
-                    eCell.appendChild(eLabel);
-
-                    return eCell;
                 },
                 suppressMenu: true
             });

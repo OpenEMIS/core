@@ -107,6 +107,15 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
+    public function validationStaff(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('type')
+            ->notEmpty('status');
+        return $validator;
+    }
+
     public function beforeAction(Event $event)
     {
         $this->fields = [];
@@ -152,6 +161,8 @@ class InstitutionsTable extends AppTable
     {
         if ($data[$this->alias()]['feature'] == 'Report.InstitutionStudents') {
             $options['validate'] = 'students';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionStaff') {
+            $options['validate'] = 'staff';
         }
     }
 
@@ -305,6 +316,7 @@ class InstitutionsTable extends AppTable
                 }
 
                 $attr['type'] = 'select';
+                $attr['select'] = false;
                 $attr['options'] = $typeOptions;
                 return $attr;
             } else {
