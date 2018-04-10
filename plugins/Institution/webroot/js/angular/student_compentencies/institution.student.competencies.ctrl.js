@@ -136,7 +136,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 angular.forEach(response.data, function(value, key) {
                     textToTranslate.push(value.headerName);
                 });
-                textToTranslate.push('Comments'); // translate comments title in pinned row
+                textToTranslate.push('Overall Comment'); // translate comments title in pinned row
 
                 InstitutionStudentCompetenciesSvc.translate(textToTranslate)
                 .then(function(res){
@@ -164,9 +164,10 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                                     competency_criteria_name: criteriaName,
                                     competency_criteria_id: value.id,
                                     grading_options: {},
-                                    result: 0,
+                                    result: '',
                                     save_error: {
-                                        result: false
+                                        result: false,
+                                        comments: false
                                     }
                                 };
 
@@ -174,8 +175,14 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                                     row['grading_options'] = gradingOptions[value.competency_grading_type_id];
                                 }
 
-                                if (angular.isDefined(Controller.studentResults[value.id])) {
-                                    row['result'] = Controller.studentResults[value.id];
+                                if (angular.isDefined(Controller.studentResults[value.id]) && 
+                                    angular.isDefined(Controller.studentResults[value.id]['grading_option'])) {
+                                    row['result'] = Controller.studentResults[value.id]['grading_option'];
+                                }
+
+                                if (angular.isDefined(Controller.studentResults[value.id]) && 
+                                    angular.isDefined(Controller.studentResults[value.id]['comments'])) {
+                                    row['comments'] = Controller.studentResults[value.id]['comments'];
                                 }
                                 this.push(row);
                             }
@@ -233,10 +240,17 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         var studentResults = {};
         angular.forEach(competencyResults, function (value, key) {
             // Format for the student criteria result will be criteria_id.grading_option_id
-            if (studentResults[value.competency_criteria_id] == undefined) {
+            if (angular.isUndefined(studentResults[value.competency_criteria_id])) {
                 studentResults[value.competency_criteria_id] = {};
             }
-            studentResults[value.competency_criteria_id] = value.competency_grading_option_id;
+
+            if (angular.isDefined(value.competency_grading_option_id) && value.competency_grading_option_id != null) {
+                studentResults[value.competency_criteria_id]['grading_option'] = value.competency_grading_option_id;
+            }
+
+            if (angular.isDefined(value.comments) && value.comments != null) {
+                studentResults[value.competency_criteria_id]['comments'] = value.comments;
+            }
         });
         Controller.studentResults = studentResults;
     }
