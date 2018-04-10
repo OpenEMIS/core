@@ -163,10 +163,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
-                $fieldName = $attr['fieldName'];
-            }
+            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, '');
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
@@ -254,14 +251,16 @@ class HtmlFieldHelper extends Helper
     public function select($action, Entity $data, $attr, $options = [])
     {
         $value = '';
-        $field = $attr['field'];
         if ($action == 'index' || $action == 'view') {
+            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $selectedOption = Hash::get($data, $fieldName, '');
+
             if (!empty($attr['options'])) {
-                if ($data->{$field} === '') {
+                if ($selectedOption === '') {
                     return '';
                 } else {
-                    if (array_key_exists($data->{$field}, $attr['options'])) {
-                        $value = $attr['options'][$data->{$field}];
+                    if (array_key_exists($selectedOption, $attr['options'])) {
+                        $value = $attr['options'][$selectedOption];
 
                         if (is_array($value)) {
                             $value = $value['text'];
@@ -273,7 +272,7 @@ class HtmlFieldHelper extends Helper
             }
 
             if (empty($value)) {
-                $value = $data->{$field};
+                $value = $selectedOption;
             }
 
             if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
@@ -377,10 +376,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
-                $fieldName = $attr['fieldName'];
-            }
+            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, 0);
         } else {
             if (!isset($attr['min'])) {
@@ -392,12 +388,13 @@ class HtmlFieldHelper extends Helper
             if (!isset($attr['step'])) {
                 $attr['step'] = 0.5;
             }
+            $attr['rating'] = Hash::get($data, $attr['field'], $attr['min']);
+
             $fieldName = $attr['model'] . '.' . $attr['field'];
             if (array_key_exists('fieldName', $attr)) {
                 $fieldName = $attr['fieldName'];
             }
             $attr['fieldName'] = $fieldName;
-            $attr['rating'] = Hash::get($data, $fieldName, $attr['min']);
             $value = $this->_View->element('ControllerAction.slider_input', ['attr' => $attr]);
         }
         return $value;
@@ -407,10 +404,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
-                $fieldName = $attr['fieldName'];
-            }
+            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
             $value = nl2br(Hash::get($data, $fieldName, ''));
         } elseif ($action == 'edit') {
             $options['type'] = 'textarea';

@@ -317,7 +317,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         } else {
             $titles = $this->StaffPositionTitles
                 ->find()
-                ->where([$this->StaffPositionTitles->aliasField('id').' >' => 1])
                 ->order([$this->StaffPositionTitles->aliasField('order')])
                 ->map(function ($row) use ($types) {
  // map() is a collection method, it executes the query
