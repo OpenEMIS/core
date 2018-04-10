@@ -510,7 +510,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $overallComment = $itemComment->comments;
             }
             $tableFooters[] = '';
-            $tableFooters[] = __('Overall Comment:');
+            $tableFooters[] = __('Overall Comment') . ':';
             $tableFooters[] = $overallComment;
 
         } else {
