@@ -46,7 +46,7 @@ class ImportInstitutionSurveysTable extends AppTable {
         if ($this->action != 'downloadFailed' && $this->action != 'downloadPassed') {
             $session = $this->Session;
             if (!empty($this->request->pass) && isset($this->request->pass[1])) {
-                $this->institutionSurveyId = $this->request->pass[1];
+                $this->institutionSurveyId = $this->paramsDecode($this->request->pass[1])['id'];
             }
             $this->institutionSurvey = $this->InstitutionSurveys
                 ->find()
@@ -111,9 +111,9 @@ class ImportInstitutionSurveysTable extends AppTable {
 
         $objPHPExcel = new \PHPExcel();
 
-        $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header );
+        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
         
-        $this->setCodesDataTemplate( $objPHPExcel );
+        $this->setCodesDataTemplate($objPHPExcel);
         
         $objPHPExcel->setActiveSheetIndex(0);
         $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
@@ -551,7 +551,7 @@ class ImportInstitutionSurveysTable extends AppTable {
 
             $objPHPExcel = new \PHPExcel();
 
-            $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $newHeader );
+            $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader, '');
             $activeSheet = $objPHPExcel->getActiveSheet();
             foreach($data as $index => $record) {
                 if ($type == 'failed') {

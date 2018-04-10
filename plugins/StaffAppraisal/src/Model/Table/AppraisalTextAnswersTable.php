@@ -4,7 +4,7 @@ namespace StaffAppraisal\Model\Table;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class AppraisalTextAnswersTable extends AppTable
@@ -17,10 +17,28 @@ class AppraisalTextAnswersTable extends AppTable
         $this->belongsTo('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'institution_staff_appraisal_id', 'joinType' => 'INNER']);
     }
 
+    // this will be moved to a behaviour when revamping the custom fields
+    public function validationDefault(Validator $validator)
+    {
+        return $validator
+            ->notEmpty('answer', __('This field cannot be left empty'), function ($context) {
+                if (array_key_exists('is_mandatory', $context['data'])) {
+                    return $context['data']['is_mandatory'];
+                }
+                return false;
+            });
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew() && $entity->answer === '') {
+            return $event->stopPropagation();
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $answer = $entity->answer;
-        if (empty($answer)) {
+        if ($entity->answer === '') {
             $this->delete($entity);
         }
     }

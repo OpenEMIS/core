@@ -17,6 +17,7 @@ use Cake\ORM\ResultSet;
 use Cake\Network\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
+use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -179,7 +180,8 @@ class InstitutionsTable extends ControllerActionTable
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
-            'Staff' => ['index', 'view']
+            'Staff' => ['index', 'view'],
+            'Map' => ['index']
         ]);
 
         $this->addBehavior('ControllerAction.Image');
@@ -1187,6 +1189,97 @@ class InstitutionsTable extends ControllerActionTable
                 ;
             return $query;
         }
+    }
+
+    public function findMap(Query $query, array $options)
+    {
+        $query
+            ->select([
+                'id',
+                'code',
+                'name',
+                'longitude',
+                'latitude'
+            ])
+            ->contain([
+                'Types' => [
+                    'fields' => [
+                        'Types.id',
+                        'Types.name',
+                        'Types.order'
+                    ],
+                    'sort' => ['Types.order' => 'ASC']
+                ]
+            ])
+            ->formatResults(function (ResultSetInterface $results) {
+                $formattedResults = [];
+                $institutionTypes = [];
+                foreach ($results as $institution) {
+                    $groupId = 'group_' . $institution->type->id;
+                    $institutionTypes[$groupId] = $institution->type->name;
+
+                    if (!array_key_exists($groupId, $formattedResults)) {
+                        $formattedResults[$groupId]['data'] = [];
+                    }
+
+                    $encodedId = $this->paramsEncode(['id' => $institution->id]);
+                    $url = Router::url([
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'Institutions',
+                        'view',
+                        'institutionId' => $encodedId,
+                        $encodedId
+                    ], true);
+                    $longitude = $institution->has('longitude') ? $institution->longitude : 0;
+                    $latitude = $institution->has('latitude') ? $institution->latitude : 0;
+
+                    $obj = [
+                        'id' => $encodedId,
+                        'lng' => $longitude,
+                        'lat' => $latitude,
+                        'content' => $institution->name."<br/>".$institution->code."<br/><br/><a href='".$url."' target='_blank'>".__('View Details')."</a>"
+                    ];
+
+                    $formattedResults[$groupId]['data'][] = $obj;
+                }
+
+                $colorIndex = 0;
+                foreach ($formattedResults as $key => &$obj) {
+                    $colors = $this->getMarkerColor();
+                    $markerColor = $colors[$colorIndex % sizeof($colors)];
+
+                    $numberOfRecords = sizeof($obj['data']);
+                    $title = $institutionTypes[$key] . ' ('.$numberOfRecords.')';
+
+                    $obj['marker'] = [
+                        'icon' => 'university',
+                        'markerColor' => $markerColor,
+                        'title' => $title,
+                        'id' => $key
+                    ];
+
+                    $colorIndex++;
+                }
+
+                return $formattedResults;
+            });
+
+        return $query;
+    }
+
+    private function getMarkerColor() {
+        $colors = [
+            'darkred',
+            'purple',
+            'orange',
+            'green',
+            'blue',
+            'darkgreen',
+            'darkblue'
+        ];
+
+        return $colors;
     }
 
     private function setInstitutionStatusId(ArrayObject $data)
