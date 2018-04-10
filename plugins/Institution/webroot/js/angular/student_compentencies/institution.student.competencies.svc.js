@@ -18,7 +18,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         getStudentCompetencyResults: getStudentCompetencyResults,
         getStudentCompetencyComments: getStudentCompetencyComments,
         getColumnDefs: getColumnDefs,
-        renderInput: renderInput
+        renderInput: renderInput,
+        renderCommentColumns: renderCommentColumns
     };
 
     var models = {
@@ -68,7 +69,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .contain(['Users','StudentStatuses'])
             .where({institution_class_id: classId})
             .order(['Users.first_name', 'Users.last_name'])
-            .ajax({success: success, defer:true});
+        .ajax({success: success, defer:true});
     }
 
     function getStudentCompetencyResults(templateId, periodId, itemId, studentId, institutionId, academicPeriodId) {
@@ -168,7 +169,93 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         columnDef = this.renderInput(columnDef, extra);
         columnDefs.push(columnDef);
 
+        var resultCommentsColumn = {
+            headerName: 'Comments',
+            field: 'comments'
+        }
+        resultCommentsColumn = this.renderCommentColumns(resultCommentsColumn);
+        columnDefs.push(resultCommentsColumn);
+
         return {data: columnDefs};
+    }
+
+    function renderCommentColumns(commentsColumn) {
+        var vm = this;
+
+        commentsColumn = angular.merge(commentsColumn, {
+            cellRenderer: function (params) {
+                if (angular.isDefined(params.data)) {
+                    var periodEditable = params.data.period_editable;
+                    var studentStatus = params.data.student_status;
+
+                    if (periodEditable && studentStatus == "CURRENT") {
+                    var oldValue = params.value;
+
+                    var eCell = document.createElement('div');
+                    var commentInput = document.createElement('input');
+                    commentInput.setAttribute("type", "text");
+                    commentInput.setAttribute("class", "oe-cell-editable");
+
+                    commentInput.value = '';
+                    if (angular.isDefined(params.value)) {
+                        commentInput.value = params.value;
+                    }
+
+                    eCell.appendChild(commentInput);
+
+                    // allow keyboard shortcuts
+                    commentInput.addEventListener('keydown', function(event) {
+                        event.stopPropagation();
+                    });
+
+                    commentInput.addEventListener('blur', function() {
+                        var newValue = commentInput.value;
+
+                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            params.data[params.colDef.field] = newValue;
+
+                            var controller = params.context._controller;
+                            vm.saveCompetencyResults(params)
+                            .then(function(response) {
+                                params.data.save_error[params.colDef.field] = false;
+                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+
+                            }, function(error) {
+                                params.data.save_error[params.colDef.field] = true;
+                                console.log(error);
+                                AlertSvc.error(controller, "There was an error when saving the results");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+                            });
+                        }
+                    });
+
+                } else {
+                    // don't allow input if period is not editable
+                    var cellValue = '';
+                    if (angular.isDefined(params.value) && params.value.length != 0) {
+                        cellValue = params.value;
+                    }
+
+                    var eCell = document.createElement('div');
+                    var eLabel = document.createTextNode(cellValue);
+                    eCell.appendChild(eLabel);
+                }
+                return eCell;
+                }
+            },
+            suppressMenu: true
+        });
+
+        return commentsColumn;
     }
 
     function renderInput(cols, extra) {
@@ -186,7 +273,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 
                 var gradingOptions = {
                     0 : {
-                        id: 0,
+                        id: '',
                         code: '',
                         name: '-- Select --'
                     }
@@ -211,7 +298,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                         if (obj.code.length > 0) {
                             labelText = obj.code + ' - ' + labelText;
                         }
-                        eOption.setAttribute("value", key);
+                        eOption.setAttribute("value", obj.id);
                         eOption.innerHTML = labelText;
                         eSelect.appendChild(eOption);
                     });
@@ -342,6 +429,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         var academicPeriodId = params.context.academic_period_id;
         var competencyGradingOptionId = params.data.result;
         var studentId = params.data.student_id;
+        var comments = params.data.comments;
 
         var saveObj = {
             competency_grading_option_id: parseInt(competencyGradingOptionId),
@@ -351,7 +439,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             competency_criteria_id: competencyCriteriaId,
             competency_period_id: competencyPeriodId,
             institution_id: institutionId,
-            academic_period_id: academicPeriodId
+            academic_period_id: academicPeriodId,
+            comments: comments
         };
         return InstitutionCompetencyResults.save(saveObj);
     }
