@@ -505,13 +505,13 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ->first();
 
             // table footers
-            $comments = '';
+            $overallComment = '';
             if (!empty($itemComment) && $itemComment->comments != '') {
-                $comments = $itemComment->comments;
+                $overallComment = $itemComment->comments;
             }
-            $tableFooters[] = __('Overall Comment');
             $tableFooters[] = '';
-            $tableFooters[] = $comments;
+            $tableFooters[] = __('Overall Comment:');
+            $tableFooters[] = $overallComment;
 
         } else {
             // table headers

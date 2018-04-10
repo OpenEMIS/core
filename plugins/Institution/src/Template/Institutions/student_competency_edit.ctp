@@ -16,11 +16,6 @@ $this->start('panelBody');
     .ag-body-container {
         max-height: 380px;
     }
-
-    .ag-floating-bottom-container div[col-id="comments"],
-    .ag-floating-bottom-container div[col-id="comments"] .oe-cell-editable {
-        display: none;
-    }
 </style>
 <form accept-charset="utf-8" id="content-main-form" class="ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
     <div class="form-horizontal">

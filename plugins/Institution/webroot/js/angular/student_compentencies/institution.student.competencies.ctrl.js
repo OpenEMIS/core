@@ -136,7 +136,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 angular.forEach(response.data, function(value, key) {
                     textToTranslate.push(value.headerName);
                 });
-                textToTranslate.push('Overall Comment'); // translate comments title in pinned row
+                textToTranslate.push('Overall Comment:'); // translate comments title in pinned row
 
                 InstitutionStudentCompetenciesSvc.translate(textToTranslate)
                 .then(function(res){
@@ -216,8 +216,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                             period_editable: selectedPeriodStatus,
                             competency_period_id: period,
                             competency_item_id: item,
-                            competency_criteria_name: commentTranslation,
-                            result: comments,
+                            result: commentTranslation,
+                            comments: comments,
                             save_error: {
                                 result: false
                             }
