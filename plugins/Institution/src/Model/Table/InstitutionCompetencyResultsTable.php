@@ -33,7 +33,7 @@ class InstitutionCompetencyResultsTable extends AppTable
         $gradingOption = $entity->competency_grading_option_id;
         $comments = $entity->comments;
 
-        if ($entity->isNew() && empty($gradingOption) && (is_null($comments) || $comments == '')) {
+        if ($entity->isNew() && empty($gradingOption) && $comments === '') {
             return false;
         }
     }
@@ -44,7 +44,8 @@ class InstitutionCompetencyResultsTable extends AppTable
         // AND comments is empty - update POCOR4466
         $gradingOption = $entity->competency_grading_option_id;
         $comments = $entity->comments;
-        if (empty($gradingOption) && (is_null($comments) || $comments == '')) {
+
+        if (empty($gradingOption) && $comments === ''){
             $this->delete($entity);
         }
     }

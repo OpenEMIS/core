@@ -183,6 +183,11 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         var vm = this;
 
         commentsColumn = angular.merge(commentsColumn, {
+            cellClassRules: {
+                'oe-cell-error': function(params) {
+                    return params.data.save_error[params.colDef.field];
+                }
+            },
             cellRenderer: function (params) {
                 if (angular.isDefined(params.data)) {
                     var periodEditable = params.data.period_editable;
@@ -252,6 +257,70 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 return eCell;
                 }
             },
+            pinnedRowCellRenderer: function(params) {
+                var periodEditable = params.data.period_editable;
+                var studentStatus = params.data.student_status;
+
+                if (periodEditable && studentStatus == "CURRENT") {
+                    var oldValue = params.value;
+
+                    var eCell = document.createElement('div');
+                    var textInput = document.createElement('input');
+                    textInput.setAttribute("type", "text");
+                    textInput.setAttribute("class", "oe-cell-editable");
+                    textInput.value = params.value;
+                    eCell.appendChild(textInput);
+
+                    // allow keyboard shortcuts
+                    textInput.addEventListener('keydown', function(event) {
+                        event.stopPropagation();
+                    });
+
+                    textInput.addEventListener('blur', function() {
+                        var newValue = textInput.value;
+
+                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            params.data[params.colDef.field] = newValue;
+
+                            var controller = params.context._controller;
+                            console.log('will save?', angular.copy(params.value));
+                            vm.saveCompetencyComments(params)
+                            .then(function(response) {
+                                console.log('save?', angular.copy(response));
+                                params.data.save_error[params.colDef.field] = false;
+                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+
+                            }, function(error) {
+                                params.data.save_error[params.colDef.field] = true;
+                                console.log(error);
+                                AlertSvc.error(controller, "There was an error when saving the comments");
+                                params.api.refreshCells({
+                                    rowNodes: [params.node],
+                                    columns: [params.colDef.field],
+                                    force: true
+                                });
+                            });
+                        }
+                    });
+
+                } else {
+                    // don't allow input if period is not editable
+                    var cellValue = '';
+                    if (angular.isDefined(params.value) && params.value.length != 0) {
+                        cellValue = params.value;
+                    }
+
+                    var eCell = document.createElement('div');
+                    var eLabel = document.createTextNode(cellValue);
+                    eCell.appendChild(eLabel);
+                }
+                return eCell;
+            },
             suppressMenu: true
         });
 
@@ -266,6 +335,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                 'oe-cell-error': function(params) {
                     return params.data.save_error[params.colDef.field];
                 }
+            },
+            pinnedRowCellRenderer: function(params) {
+                return params.value;
             },
             cellRenderer: function(params) {
                 var periodEditable = params.data.period_editable;
@@ -353,68 +425,6 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
 
                 return eCell;
             },
-            pinnedRowCellRenderer: function(params) {
-                var periodEditable = params.data.period_editable;
-                var studentStatus = params.data.student_status;
-
-                if (periodEditable && studentStatus == "CURRENT") {
-                    var oldValue = params.value;
-
-                    var eCell = document.createElement('div');
-                    var textInput = document.createElement('input');
-                    textInput.setAttribute("type", "text");
-                    textInput.setAttribute("class", "oe-cell-editable");
-                    textInput.value = params.value;
-                    eCell.appendChild(textInput);
-
-                    // allow keyboard shortcuts
-                    textInput.addEventListener('keydown', function(event) {
-                        event.stopPropagation();
-                    });
-
-                    textInput.addEventListener('blur', function() {
-                        var newValue = textInput.value;
-
-                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
-                            params.data[params.colDef.field] = newValue;
-
-                            var controller = params.context._controller;
-                            vm.saveCompetencyComments(params)
-                            .then(function(response) {
-                                params.data.save_error[params.colDef.field] = false;
-                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
-                                params.api.refreshCells({
-                                    rowNodes: [params.node],
-                                    columns: [params.colDef.field],
-                                    force: true
-                                });
-
-                            }, function(error) {
-                                params.data.save_error[params.colDef.field] = true;
-                                console.log(error);
-                                AlertSvc.error(controller, "There was an error when saving the comments");
-                                params.api.refreshCells({
-                                    rowNodes: [params.node],
-                                    columns: [params.colDef.field],
-                                    force: true
-                                });
-                            });
-                        }
-                    });
-
-                } else {
-                    // don't allow input if period is not editable
-                    var cellValue = '';
-                    if (angular.isDefined(params.value) && params.value.length != 0) {
-                        cellValue = params.value;
-                    }
-
-                    var eCell = document.createElement('div');
-                    var eLabel = document.createTextNode(cellValue);
-                    eCell.appendChild(eLabel);
-                }
-                return eCell;
-            },
             suppressMenu: true
         });
         return cols;
@@ -451,7 +461,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
         var competencyPeriodId = params.data.competency_period_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-        var itemComments = params.data.result;
+        var itemComments = params.data.comments;
         var studentId = params.data.student_id;
 
         var saveObj = {
