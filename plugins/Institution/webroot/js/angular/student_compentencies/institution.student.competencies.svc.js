@@ -283,10 +283,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
                             params.data[params.colDef.field] = newValue;
 
                             var controller = params.context._controller;
-                            console.log('will save?', angular.copy(params.value));
                             vm.saveCompetencyComments(params)
                             .then(function(response) {
-                                console.log('save?', angular.copy(response));
                                 params.data.save_error[params.colDef.field] = false;
                                 AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
                                 params.api.refreshCells({
