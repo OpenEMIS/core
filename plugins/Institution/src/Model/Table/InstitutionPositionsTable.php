@@ -194,7 +194,6 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $requestData = $request->data;
-            $StaffPositionGradesTitles = TableRegistry::get('Institution.StaffPositionTitlesGrades');
             $positionTitleId = null;
             $availablePositionGradesOption = [];
 

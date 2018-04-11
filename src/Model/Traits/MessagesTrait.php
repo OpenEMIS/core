@@ -2045,7 +2045,7 @@ trait MessagesTrait
             ],
             'StaffPositionTitles' => [
                'position_grades' => [
-                    'ruleCheckPositionGrades' => 'Please include the following in-use grades: ',
+                    'ruleCheckPositionGrades' => 'You are not allow to remove the following in-use grades: %s',
                 ]
             ] 
         ],
@@ -2160,6 +2160,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
+        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
     }
 }

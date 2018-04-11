@@ -13,10 +13,6 @@ class POCOR4502 extends AbstractMigration
             'comment' => 'This table contains the list of grade linked to a specific staff position title'
         ]);
         $table
-            ->addColumn('id', 'char', [
-                'limit' => 64,
-                'null' => false
-            ])
             ->addColumn('staff_position_title_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -33,12 +29,23 @@ class POCOR4502 extends AbstractMigration
             ->addIndex('staff_position_grade_id')
             ->save();
 
-        $this->execute("INSERT INTO `staff_position_titles_grades` (`id`, `staff_position_title_id`, `staff_position_grade_id`) SELECT sha2(CONCAT(`id`, ',', -1), '256'),`id`, -1
+        $this->execute("INSERT INTO `staff_position_titles_grades` (`staff_position_title_id`, `staff_position_grade_id`) SELECT `id`, -1
             FROM `staff_position_titles`");
+
+        $localeContent = [
+            [
+                'en' => 'You are not allow to remove the following in-use grades: %s',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        
+        $this->insert('locale_contents', $localeContent);
     }
 
     public function down()
     {
        $this->dropTable('staff_position_titles_grades');
+       $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'You are not allow to remove the following in-use grades: %s'");
     }
 }

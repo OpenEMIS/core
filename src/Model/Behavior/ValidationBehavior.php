@@ -2454,6 +2454,7 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
 
         $institutionPositionGrades = $InstitutionPositions->find()
                             ->distinct('staff_position_grade_id')
@@ -2469,8 +2470,14 @@ class ValidationBehavior extends Behavior
                 return true;
             } else {
                 $arr = array_diff($institutionPositionGrades, $postPositionGrades);
-                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades');
-                return $errorMsg . implode(", ", $arr);
+                $results = $StaffPositionGrades->find()
+                    ->where([$StaffPositionGrades->aliasField('id IN ') => $arr])
+                    ->extract('name')
+                    ->toArray();
+
+                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
+                
+                return $errorMsg;
             }
         }
 
