@@ -52,15 +52,15 @@ class StaffPositionTitlesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
-        			->requirePresence('position_grades')
-					->add('position_grades', 'ruleCheckPositionGrades', [
-						'rule' => ['checkPositionGrades'],
-						'provider' => 'table',
-						'on' => function ($context) {  
-							 //trigger validation only when position grade selection is set to 1	 and edit operation
-				            return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
-					   }
-				    ]);
+			->requirePresence('position_grades')
+			->add('position_grades', 'ruleCheckPositionGrades', [
+				'rule' => ['checkPositionGrades'],
+				'provider' => 'table',
+				'on' => function ($context) {  
+					 //trigger validation only when position grade selection is set to 1	 and edit operation
+		            return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
+			   }
+		    ]);
     }
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
