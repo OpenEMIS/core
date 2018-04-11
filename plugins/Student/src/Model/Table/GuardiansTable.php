@@ -122,7 +122,6 @@ class GuardiansTable extends ControllerActionTable
         }
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
         $this->field('guardian_id');
-        $this->field('guardian_relation_id', ['type' => 'select']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -141,6 +140,11 @@ class GuardiansTable extends ControllerActionTable
             $entity->unsetProperty('guardian_id');
             unset($data[$this->alias()]['guardian_id']);
         }
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('guardian_relation_id', ['type' => 'select']);
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -171,6 +175,10 @@ class GuardiansTable extends ControllerActionTable
             'order' => 10,
             'attr' => ['value' => $entity->user->name_with_id]
         ]);
+        $this->field('guardian_relation_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
     }
 
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
@@ -198,9 +206,42 @@ class GuardiansTable extends ControllerActionTable
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+            $attr['onSelect'] = "$('#reload').click();";
         } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            
+            $requestData = $this->request->data;
+            $guardianGender = null;
+            $availableGuardianRelationsOption = [];       
+            
+            if ($action == 'add') { 
+                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['guardian_id'])) {
+                        $guardianId = $requestData[$this->alias()]['guardian_id'];
+                        $guardianGender = $this->Users->get($guardianId)->gender_id;
+                    } 
+            } else if ($action == 'edit') {
+                $entity = $attr['entity'];
+                $guardianGender = $entity->user->gender_id;
+            }
+
+            if($guardianGender) {
+                $availableGuardianRelationsOption = $this->GuardianRelations
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->where([$this->GuardianRelations->aliasField('gender_id') => $guardianGender])
+                    ->orWhere([$this->GuardianRelations->aliasField('gender_id') . ' IS NULL'])
+                    ->toArray();
+            }
+            
+            $attr['options'] = $availableGuardianRelationsOption;
+        }
+
         return $attr;
     }
 

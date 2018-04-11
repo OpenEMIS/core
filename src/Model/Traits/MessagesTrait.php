@@ -2042,6 +2042,11 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This name already exists in the system',
                 ]
+            ],
+            'GuardianRelations' => [
+                'gender_id' => [
+                    'ruleCheckGuardianGender' => 'Gender mismatch. Please check against existing records',
+                ]
             ]
         ],
         'Configuration' => [
