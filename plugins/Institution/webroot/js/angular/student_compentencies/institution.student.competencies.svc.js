@@ -69,7 +69,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc, AlertS
             .contain(['Users','StudentStatuses'])
             .where({institution_class_id: classId})
             .order(['Users.first_name', 'Users.last_name'])
-        .ajax({success: success, defer:true});
+            .ajax({success: success, defer:true});
     }
 
     function getStudentCompetencyResults(templateId, periodId, itemId, studentId, institutionId, academicPeriodId) {
