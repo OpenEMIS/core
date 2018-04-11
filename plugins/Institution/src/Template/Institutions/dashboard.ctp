@@ -11,7 +11,7 @@ $this->start('panelBody');
 
 <div class="row institution-dashboard">
 	<?php foreach ($highChartDatas as $key => $highChartData) : ?>
-		<div class="highchart col-md-6" style="visiblity: hidden">
+		<div class="highchart col-md-6" style="visibility: hidden">
 			<?php echo $highChartData; ?>
 		</div>
 	<?php endforeach ?>
