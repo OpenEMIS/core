@@ -23,7 +23,7 @@
 					</li>
 					<li class="list-group-item" ng-if="DashboardController.notices && DashboardController.notices.length == 0">
 						<div class="notice-message">
-							<p><?= __('Loading'); ?> ...</p>
+							<p><?= __('Loading...'); ?> </p>
 						</div>
 					</li>
 				</ul>
