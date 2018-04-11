@@ -222,6 +222,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         });
         columnDefs.push({
             headerName: "Name",
@@ -230,6 +231,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         });
         columnDefs.push({
             headerName: "Status",
@@ -237,6 +239,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         });
         columnDefs.push({
             headerName: "student id",
@@ -256,6 +259,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 headerName: "Total Mark",
                 field: "total_mark",
                 menuTabs: menuTabs,
+                suppressMenu: true,
                 valueGetter: function(params) {
                     var marks = '';
                     if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
@@ -295,6 +299,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
+                suppressMenu: true
             };
             columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
             columnDefs.push(columnDef);
@@ -305,6 +310,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 headerName: "Overall Average",
                 field: "average_mark",
                 menuTabs: menuTabs,
+                suppressMenu: true,
                 valueGetter: function(params) {
                     var marks = '';
                     if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
@@ -327,6 +333,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
@@ -339,6 +346,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
+                suppressMenu: true
             });
         }
 
