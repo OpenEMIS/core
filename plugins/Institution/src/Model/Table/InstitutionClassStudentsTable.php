@@ -785,7 +785,8 @@ class InstitutionClassStudentsTable extends AppTable
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,
                                 $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
-                                $SubjectStudents->aliasField('institution_id') => $institutionId 
+                                $SubjectStudents->aliasField('institution_id') => $institutionId,
+                                $SubjectStudents->aliasField('total_mark IS NOT NULL') 
                             ])
                             ->group([
                                 $SubjectStudents->aliasField('student_id'),
@@ -818,7 +819,8 @@ class InstitutionClassStudentsTable extends AppTable
                             ->where([
                                 $SubjectStudents->aliasField('student_id') => $studentId,
                                 $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
-                                $SubjectStudents->aliasField('institution_id') => $institutionId 
+                                $SubjectStudents->aliasField('institution_id') => $institutionId,
+                                $SubjectStudents->aliasField('total_mark IS NOT NULL') 
                             ])
                             ->group([
                                 $SubjectStudents->aliasField('student_id'),
