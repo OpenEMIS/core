@@ -257,16 +257,14 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 field: "total_mark",
                 menuTabs: menuTabs,
                 valueGetter: function(params) {
+                    var marks = '';
                     if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
                         var value = params.data[params.colDef.field];
                         if (!isNaN(parseFloat(value))) {
-                            return $filter('number')(params.data[params.colDef.field], 2);
-                        } else {
-                            return '';
-                        }
-                    } else {
-                        return '';
-                    }
+                            marks =  $filter('number')(params.data[params.colDef.field], 2);
+                        } 
+                    } 
+                    return marks;
                 }
             };
 
@@ -308,16 +306,14 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 field: "average_mark",
                 menuTabs: menuTabs,
                 valueGetter: function(params) {
+                    var marks = '';
                     if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
                         var value = params.data[params.colDef.field];
                         if (!isNaN(parseFloat(value))) {
-                            return $filter('number')(params.data[params.colDef.field], 2);
-                        } else {
-                            return '';
-                        }
-                    } else {
-                        return '';
-                    }
+                            marks =  $filter('number')(params.data[params.colDef.field], 2);
+                        } 
+                    } 
+                    return marks;
                 }
             };
             columnDefs.push(columnDef);
