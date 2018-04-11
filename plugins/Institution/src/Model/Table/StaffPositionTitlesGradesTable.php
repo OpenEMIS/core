@@ -11,7 +11,5 @@ class StaffPositionTitlesGradesTable extends AppTable
 
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
-
-		$this->addBehavior('CompositeKey');
 	}
 }

@@ -51,16 +51,16 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        $validator->add('position_grades', 'ruleCheckPositionGrades', [
-				'rule' => ['checkPositionGrades'],
-				'provider' => 'table',
-				'on' => function ($context) {  
-					 //trigger validation only when position grade selection is set to 1	 and edit operation
-                    return ($context['data']['position_grade_selection'] == 1 && !$context['newRecord']);
-			   }
-            ]);
-
-        return $validator;
+        return $validator
+        			->requirePresence('position_grades')
+					->add('position_grades', 'ruleCheckPositionGrades', [
+						'rule' => ['checkPositionGrades'],
+						'provider' => 'table',
+						'on' => function ($context) {  
+							 //trigger validation only when position grade selection is set to 1	 and edit operation
+				            return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
+					   }
+				    ]);
     }
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -90,6 +90,15 @@ class StaffPositionTitlesTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
     {
         $this->setupFields($entity);
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        if (array_key_exists($this->alias(), $requestData)) {
+            if (array_key_exists('position_grades', $requestData[$this->alias()]) && array_key_exists('_ids', $requestData[$this->alias()]['position_grades']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
+                $requestData[$this->alias()]['position_grades'] = []; 
+            }
+        }
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
