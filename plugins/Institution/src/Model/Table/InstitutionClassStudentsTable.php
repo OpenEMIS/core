@@ -786,7 +786,7 @@ class InstitutionClassStudentsTable extends AppTable
                                 $SubjectStudents->aliasField('student_id') => $studentId,
                                 $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
                                 $SubjectStudents->aliasField('institution_id') => $institutionId,
-                                $SubjectStudents->aliasField('total_mark IS NOT NULL') 
+                                $SubjectStudents->aliasField('total_mark IS NOT NULL')
                             ])
                             ->group([
                                 $SubjectStudents->aliasField('student_id'),
@@ -796,7 +796,7 @@ class InstitutionClassStudentsTable extends AppTable
                             ->first();
 
                         $row->average_mark = NULL;
-                        if (!is_null($subjectOverallResult->average_mark)) {
+                        if (isset($subjectOverallResult->average_mark) && !is_null($subjectOverallResult->average_mark)) {
                             $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
                         }
 
@@ -830,7 +830,7 @@ class InstitutionClassStudentsTable extends AppTable
                             ->first();
 
                         $row->average_mark = NULL;
-                        if (!is_null($subjectOverallResult->average_mark)) {
+                        if (isset($subjectOverallResult->average_mark) && !is_null($subjectOverallResult->average_mark)) {
                             $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
                         }
 
