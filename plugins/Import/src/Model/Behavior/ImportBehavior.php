@@ -16,7 +16,10 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Cake\Utility\Hash;
+use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\EventTrait;
+use Cake\Log\Log;
 use PHPExcel_Worksheet;
 use PHPExcel_Style_NumberFormat;
 use PHPExcel_Shared_Date;
@@ -249,6 +252,29 @@ class ImportBehavior extends Behavior
         ]);
     }
 
+    public function validationImportFile(Validator $validator)
+    {
+        $validator = $this->_table->validationDefault($validator);
+        $supportedFormats = array_values(Hash::flatten($this->_fileTypesMap));
+        $maxSize = $this->config('max_size') < $this->file_upload_max_size() ? $this->config('max_size') : $this->file_upload_max_size();
+
+        return $validator
+            ->add('select_file', 'ruleUploadFileError', [
+                'rule' => 'uploadError',
+                'last' => true,
+                'message' => $this->getExcelLabel('Import', 'upload_error')
+            ])
+            ->add('select_file', 'ruleInvalidFileType', [
+                'rule' => ['mimeType', $supportedFormats],
+                'message' => $this->getExcelLabel('Import', 'not_supported_format'),
+                'last' => true
+            ])
+            ->add('select_file', 'ruleInvalidFileSize', [
+                'rule' => ['fileSize', '<=', $maxSize],
+                'message' => $this->getExcelLabel('Import', 'over_max')
+            ]);
+    }
+
     /**
      * addBeforePatch turns off the validation when patching entity with post data, and check the uploaded file size.
      * @param Event       $event   [description]
@@ -260,67 +286,7 @@ class ImportBehavior extends Behavior
      */
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $options['validate'] = false;
-        if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->config('max_size')) {
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-            $options['validate'] = true;
-        }
-        if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-            $options['validate'] = true;
-        }
-        if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-            $options['validate'] = true;
-        }
-        if (!array_key_exists($this->_table->alias(), $data)) {
-            $options['validate'] = true;
-        }
-        if (!array_key_exists('select_file', $data[$this->_table->alias()])) {
-            $options['validate'] = true;
-        }
-        if (empty($data[$this->_table->alias()]['select_file'])) {
-            $options['validate'] = true;
-        }
-        if ($data[$this->_table->alias()]['select_file']['error']==4) {
-            $options['validate'] = true;
-        } elseif ($data[$this->_table->alias()]['select_file']['error']>0) {
-            $options['validate'] = true;
-            $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
-        }
-
-        if ($options['validate']) {
-            return $event->response;
-        }
-
-        $fileObj = $data[$this->_table->alias()]['select_file'];
-        $supportedFormats = $this->_fileTypesMap;
-
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $fileFormat = finfo_file($finfo, $fileObj['tmp_name']);
-        finfo_close($finfo);
-        $formatFound = false;
-        foreach ($supportedFormats as $eachformat) {
-            if (in_array($fileFormat, $eachformat)) {
-                $formatFound = true;
-            }
-        }
-        if (!$formatFound) {
-            if (!empty($fileFormat)) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
-                $options['validate'] = true;
-            }
-        }
-
-        $fileExt = $fileObj['name'];
-        $fileExt = explode('.', $fileExt);
-        $fileExt = $fileExt[count($fileExt)-1];
-        if (!array_key_exists($fileExt, $supportedFormats)) {
-            if (!empty($fileFormat)) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
-                $options['validate'] = true;
-            }
-        }
+        $options['validate'] = 'importFile';
     }
 
     /**
@@ -344,6 +310,10 @@ class ImportBehavior extends Behavior
         return function ($model, $entity) {
             $errors = $entity->errors();
             if (!empty($errors)) {
+                $fileError = Hash::get($entity->invalid(), 'select_file.error');
+                if (!empty($fileError)) {
+                    Log::write('debug', 'Import File Error: '.$this->phpFileUploadErrors[$fileError]);
+                }
                 return false;
             }
 
