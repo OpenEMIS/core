@@ -262,7 +262,7 @@ class ImportBehavior extends Behavior
             ->add('select_file', 'ruleUploadFileError', [
                 'rule' => 'uploadError',
                 'last' => true,
-                'message' => $this->getExcelLabel('Import', 'the_file').' '.$this->getExcelLabel('Import', 'failed')
+                'message' => $this->getExcelLabel('Import', 'upload_error')
             ])
             ->add('select_file', 'ruleInvalidFileType', [
                 'rule' => ['mimeType', $supportedFormats],
