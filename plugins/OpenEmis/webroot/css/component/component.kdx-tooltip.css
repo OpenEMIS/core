@@ -1,0 +1,10 @@
+/* KDX-TOOLTIP v.1.0.0 */
+
+.ui-tooltip.kdx-tooltip-slider {
+    box-shadow: none !important;
+}
+
+.ui-tooltip.kdx-tooltip-slider .ui-tooltip-arrow {
+	border-width: 0.35em 0.35em 0 !important;
+	margin-left: -0.35em !important;
+}

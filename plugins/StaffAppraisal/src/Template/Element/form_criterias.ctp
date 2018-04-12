@@ -47,7 +47,7 @@
 				]);
 			?>
 			<div class="form-buttons no-margin-top">
-				<div class="button-label"></div><button onclick="CustomForm.addSection('#sectionTxt');" type="button" class="btn btn-default btn-xs">
+				<div class="button-label"></div><button onclick="CustomForm.addSection('#sectionTxt', 2);" type="button" class="btn btn-default btn-xs">
 					<span><i class="fa fa-plus"></i><?=__('Add Section')?></span>
 				</button>
 			</div>
@@ -55,7 +55,7 @@
 		</div>
 	<div class="table-wrapper">
 		<div class="table-responsive">
-			<table class="table table-curved table-input" <?= $displayReorder ? 'id="sortable"' : '' ?>>
+			<table class="table table-curved table-input table-checkable" <?= $displayReorder ? 'id="sortable"' : '' ?>>
 				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 			</table>
