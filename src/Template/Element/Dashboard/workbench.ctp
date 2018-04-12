@@ -5,7 +5,7 @@
 			<table class="table table-lined" ng-show="(DashboardController.workbenchItems && DashboardController.workbenchItems.length == 0) || (!DashboardController.workbenchItems)">
 				<tbody class="table_body">
 					<tr ng-if="!DashboardController.workbenchItems" ng-cloak><td><?= __('No Workbench Data'); ?></td></tr>
-					<tr ng-if="DashboardController.workbenchItems && DashboardController.workbenchItems.length == 0"><td><?= __('Loading...'); ?></td></tr>
+					<tr ng-if="DashboardController.workbenchItems && DashboardController.workbenchItems.length == 0"><td><?= __('Loading'); ?> ...</td></tr>
 				</tbody>
 			</table>
 			<div ng-if="DashboardController.workbenchItems && DashboardController.workbenchItems.length > 0" ng-cloak>
