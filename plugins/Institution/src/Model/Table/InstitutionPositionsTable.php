@@ -282,10 +282,10 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_position_grade_id', [
-        'visible' => true,
-        'type' => 'select',
-        'entity' => $entity,
-        'after' => 'staff_position_title_id'
+            'visible' => true,
+            'type' => 'select',
+            'entity' => $entity,
+            'after' => 'staff_position_title_id'
         ]);
         $this->field('is_homeroom', ['entity' => $entity]);
 
@@ -389,11 +389,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('is_homeroom');
-        $this->field('staff_position_grade_id', [
-            'visible' => true,
-            'type' => 'select'
-        ]);
-
+        
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
 
@@ -463,10 +459,6 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event)
     {
-        $this->field('staff_position_grade_id', [
-            'visible' => true,
-            'type' => 'select'
-        ]);
         $this->field('is_homeroom');
 
         $this->setFieldOrder([
