@@ -94,8 +94,10 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
+		// pr($requestData[$this->alias()]['position_grades']);die;
 		if (array_key_exists($this->alias(), $requestData)) {
-			if (array_key_exists('position_grades', $requestData[$this->alias()]) && array_key_exists('_ids', $requestData[$this->alias()]['position_grades']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
+			if (isset($requestData[$this->alias()]['position_grades']['_ids']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
+			// if (array_key_exists('position_grades', $requestData[$this->alias()]) && array_key_exists('_ids', $requestData[$this->alias()]['position_grades']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
 				$requestData[$this->alias()]['position_grades'] = []; 
 			}
 		}
@@ -248,7 +250,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-    private function checkIsSelectAll($entity) 
+    public function checkIsSelectAll($entity) 
     {
         $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
 

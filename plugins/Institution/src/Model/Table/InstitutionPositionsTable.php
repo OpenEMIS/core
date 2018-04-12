@@ -193,35 +193,16 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request) 
     {
         if ($action == 'add' || $action == 'edit') {
-            $requestData = $request->data;
-            $positionTitleId = null;
-            $availablePositionGradesOption = [];
+            $entity = $attr['entity'];
 
-            if ($action == 'add') { 
-                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
-                    $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
-                } 
-            } else if ($action == 'edit') {
-                $entity = $attr['entity'];
-                $positionTitleId = $entity->staff_position_title_id;
+            $positionGradeOptions = [];
+            if ($entity->has('staff_position_title_id')) {
+                $positionGradeOptions = $this->StaffPositionGrades->getAvailablePositionGrades($entity->staff_position_title_id);
             }
 
-            if($positionTitleId) {
-                $availablePositionGradesOption = $this->StaffPositionGrades
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                    ->matching('StaffPositionTitles', function ($q) use ($positionTitleId) {
-                    return $q->where(['StaffPositionTitles.id' => $positionTitleId]);
-                    })
-                    ->toArray();
-
-                if (empty($availablePositionGradesOption)) {
-                    $availablePositionGradesOption = $this->StaffPositionGrades
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                    ->toArray();
-                } 
-            }
-            $attr['options'] = $availablePositionGradesOption;
+            $attr['options'] = $positionGradeOptions;
         }
+
         return $attr;
     }
 
@@ -282,10 +263,8 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_position_grade_id', [
-            'visible' => true,
             'type' => 'select',
-            'entity' => $entity,
-            'after' => 'staff_position_title_id'
+            'entity' => $entity
         ]);
         $this->field('is_homeroom', ['entity' => $entity]);
 
@@ -389,7 +368,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('is_homeroom');
-        
+
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
 
@@ -411,7 +390,6 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // pr('model - indexBeforeQuery');
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
 
@@ -445,8 +423,8 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_position_grade_id', [
-            'visible' => true,
-            'type' => 'select'
+            'type' => 'select',
+            'entity' => $entity
         ]);
         $this->field('is_homeroom');
     }
@@ -811,6 +789,4 @@ class InstitutionPositionsTable extends ControllerActionTable
             return $UsersTable->get($entity->staff_id)->name;
         }
     }
-
-
 }
