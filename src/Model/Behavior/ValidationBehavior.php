@@ -2402,25 +2402,27 @@ class ValidationBehavior extends Behavior
         }
     }
 
-
     public static function checkGuardianGender($field, array $globalData)
     {
         $model = $globalData['providers']['table'];
     
-        $StudentGuardians = TableRegistry::get('Student.Guardians');  
-        $query = $StudentGuardians->find()
-                ->matching('Users')
-                ->where([
-                    $StudentGuardians->aliasField('guardian_relation_id') => $globalData['data']['id']
-                ]);
+        $StudentGuardians = TableRegistry::get('Student.Guardians');
+        $genderId = $globalData['data']['gender_id'];
 
-        if (!empty($query)) {
-            foreach($query as $entity) {
-                if($entity->_matchingData['Users']->gender_id != $globalData['data']['gender_id']) {
-                    return $model->getMessage('FieldOption.GuardianRelations.gender_id.ruleCheckGuardianGender');
-                }
-            }
+        $mismatchCount = $StudentGuardians
+            ->find()
+            ->matching('Users', function ($q) use ($genderId) {
+                return $q->where(['Users.gender_id <> ' => $genderId]);
+            })
+            ->where([
+                $StudentGuardians->aliasField('guardian_relation_id') => $globalData['data']['id']
+            ])
+            ->count();
+
+        if ($mismatchCount > 0) {
+            return $model->getMessage('FieldOption.GuardianRelations.gender_id.ruleCheckGuardianGender');
         }
+
         return true;
     }
 
