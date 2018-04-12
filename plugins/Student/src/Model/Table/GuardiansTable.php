@@ -142,14 +142,10 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('guardian_relation_id', ['type' => 'select']);
-    }
-
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->field('id', ['value' => Text::uuid()]);
+        $this->field('guardian_relation_id', ['type' => 'select']);
     }
 
     public function viewBeforeAction(Event $event)
