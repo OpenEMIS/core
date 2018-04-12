@@ -94,10 +94,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
-		// pr($requestData[$this->alias()]['position_grades']);die;
 		if (array_key_exists($this->alias(), $requestData)) {
 			if (isset($requestData[$this->alias()]['position_grades']['_ids']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
-			// if (array_key_exists('position_grades', $requestData[$this->alias()]) && array_key_exists('_ids', $requestData[$this->alias()]['position_grades']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
 				$requestData[$this->alias()]['position_grades'] = []; 
 			}
 		}
