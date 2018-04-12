@@ -13,7 +13,7 @@ $this->start('panelBody');
     <div id="dashboard-spinner" class="spinner-wrapper">
         <div class="spinner-text">
             <div class="spinner lt-ie9"></div>
-            <p><?= __('Loading...') ?></p>
+            <p><?= __('Loading'); ?> ...</p>
         </div>
     </div>
 

@@ -2,7 +2,7 @@
     <div id="spinner" class="spinner-wrapper" style="display: none;">
         <div class="spinner-text">
             <div class="spinner lt-ie9"></div>
-            <p>Loading...</p>
+            <p><?= __('Loading'); ?> ...</p>
         </div>
     </div>
     <div class="wizard startup-wizard" data-initialize="wizard" id="wizard">
