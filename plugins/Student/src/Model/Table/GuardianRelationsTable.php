@@ -15,8 +15,8 @@ class GuardianRelationsTable extends ControllerActionTable
         $this->table('guardian_relations');
         parent::initialize($config);
 
-        $this->hasMany('StudentGuardians', ['className' => 'Student.StudentGuardians']);
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
+        $this->hasMany('StudentGuardians', ['className' => 'Student.StudentGuardians']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
