@@ -33,7 +33,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
      
-        $this->belongsToMany('PositionGrades', [
+		$this->belongsToMany('PositionGrades', [
 			'className' => 'Institution.StaffPositionGrades',
 			'joinTable' => 'staff_position_titles_grades',
 			'foreignKey' => 'staff_position_title_id', 
@@ -49,19 +49,19 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 	public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
+	{
+		$validator = parent::validationDefault($validator);
 		return $validator
 			->requirePresence('position_grades')
 			->add('position_grades', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
 				'on' => function ($context) {  
-					//trigger validation only when position grade selection is set to 1	 and edit operation
-					return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
-				}
-			]);
-    }
+				//trigger validation only when position grade selection is set to 1	 and edit operation
+				return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
+			}
+		]);
+	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('type', [
@@ -86,20 +86,20 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	{
 		$entity->position_grade_selection = self::SELECT_POSITION_GRADES;
 	}
-    
+
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
 	{
 		$this->setupFields($entity);
 	}
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('position_grades', $requestData[$this->alias()]) && array_key_exists('_ids', $requestData[$this->alias()]['position_grades']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
-                $requestData[$this->alias()]['position_grades'] = []; 
-            }
-        }
-    }
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+	{
+		if (array_key_exists($this->alias(), $requestData)) {
+			if (array_key_exists('position_grades', $requestData[$this->alias()]) && array_key_exists('_ids', $requestData[$this->alias()]['position_grades']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
+				$requestData[$this->alias()]['position_grades'] = []; 
+			}
+		}
+	}
 
 	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
 	{
@@ -145,9 +145,9 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, Request $request) 
 	{
 		if ($action == 'add' || $action == 'edit') {
-		$attr['options'] = $this->positionGradeSelection;
-		$attr['select'] = false;
-		$attr['onChangeReload'] = true;
+			$attr['options'] = $this->positionGradeSelection;
+			$attr['select'] = false;
+			$attr['onChangeReload'] = true;
 		}
 		return $attr;
 	}
