@@ -106,21 +106,24 @@ class MapBehavior extends Behavior
         ];
 
         if (array_key_exists('latitude', $attr) && array_key_exists('longitude', $attr)) {
-            $attr['mapConfig'] = $mapConfig;
-            $attr['mapPosition'] = [
+            $mapPosition = [
                 'lng' => $attr['longitude'],
                 'lat' => $attr['latitude']
             ];
+            $attr['mapConfig'] = json_encode($mapConfig);
+            $attr['mapPosition'] = json_encode($mapPosition);
 
             return $event->subject()->renderElement('OpenEmis.map', ['attr' => $attr]);
         }
 
         if ($entity->latitude!='' && $entity->longitude!='') {
-            $attr['mapConfig'] = $mapConfig;
-            $attr['mapPosition'] = [
+            $mapPosition = [
                 'lng' => $entity->longitude,
                 'lat' => $entity->latitude
             ];
+            $attr['mapConfig'] = json_encode($mapConfig);
+            $attr['mapPosition'] = json_encode($mapPosition);
+                
             return $event->subject()->renderElement('OpenEmis.map', ['attr' => $attr]);
         }
 
