@@ -86,10 +86,9 @@ class RenderFileBehavior extends RenderBehavior
                 $mimeType = !is_null($savedFile) ? mime_content_type($savedFile) : '';
 
                 if (in_array($mimeType, $this->fileImagesMap) && is_resource($savedFile)) {
-                    $maxImageWidth = 60;
                     $imgSrc = base64_encode(stream_get_contents($savedFile));
                     if (base64_decode($imgSrc, true)) {
-                        $value = '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$imgSrc.'" style="max-width:'.$maxImageWidth.'px;" /></div>';
+                        $value = $event->subject()->renderElement('ControllerAction.thumbnail', ['attr' => ['src' => "data:image/jpeg;base64,$imgSrc", 'title' => $savedValue]]);
                     }
                 } else {
                     $url = $model->url('view');
