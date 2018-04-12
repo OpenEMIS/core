@@ -190,40 +190,40 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-        public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request) 
-        {
-            if ($action == 'add' || $action == 'edit') {
-                $requestData = $request->data;
-                $positionTitleId = null;
-                $availablePositionGradesOption = [];
+    public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request) 
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $requestData = $request->data;
+            $positionTitleId = null;
+            $availablePositionGradesOption = [];
 
-                if ($action == 'add') { 
-                    if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
-                        $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
-                    } 
-                } else if ($action == 'edit') {
-                    $entity = $attr['entity'];
-                    $positionTitleId = $entity->staff_position_title_id;
-                }
-
-                if($positionTitleId) {
-                    $availablePositionGradesOption = $this->StaffPositionGrades
-                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                        ->matching('StaffPositionTitles', function ($q) use ($positionTitleId) {
-                        return $q->where(['StaffPositionTitles.id' => $positionTitleId]);
-                        })
-                        ->toArray();
-
-                    if (empty($availablePositionGradesOption)) {
-                        $availablePositionGradesOption = $this->StaffPositionGrades
-                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                        ->toArray();
-                    } 
-                }
-                $attr['options'] = $availablePositionGradesOption;
+            if ($action == 'add') { 
+                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
+                    $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
+                } 
+            } else if ($action == 'edit') {
+                $entity = $attr['entity'];
+                $positionTitleId = $entity->staff_position_title_id;
             }
-            return $attr;
+
+            if($positionTitleId) {
+                $availablePositionGradesOption = $this->StaffPositionGrades
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->matching('StaffPositionTitles', function ($q) use ($positionTitleId) {
+                    return $q->where(['StaffPositionTitles.id' => $positionTitleId]);
+                    })
+                    ->toArray();
+
+                if (empty($availablePositionGradesOption)) {
+                    $availablePositionGradesOption = $this->StaffPositionGrades
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->toArray();
+                } 
+            }
+            $attr['options'] = $availablePositionGradesOption;
         }
+        return $attr;
+    }
 
 
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
