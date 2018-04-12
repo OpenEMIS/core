@@ -1,8 +1,10 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+
+use App\Model\Table\ControllerActionTable;
 
 class StaffPositionGradesTable extends ControllerActionTable
 {
@@ -23,5 +25,28 @@ class StaffPositionGradesTable extends ControllerActionTable
 		]);
 
         $this->addBehavior('FieldOption.FieldOption');
+    }
+
+    public function getAvailablePositionGrades($positionTitleId = 0)
+    {
+        $list = [];
+
+        if (!is_null($positionTitleId)) {
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $positionTitleEntity = $StaffPositionTitles->get($positionTitleId);
+            $isSelectAll = $StaffPositionTitles->checkIsSelectAll($positionTitleEntity);
+
+            if ($isSelectAll) {
+                $list = $this->find('list')->toArray();
+            } else {
+                $list = $this->find('list')
+                    ->matching('StaffPositionTitles', function ($q) use ($positionTitleId) {
+                        return $q->where(['StaffPositionTitles.id' => $positionTitleId]);
+                    })
+                    ->toArray();
+            }
+        }
+
+        return $list;
     }
 }
