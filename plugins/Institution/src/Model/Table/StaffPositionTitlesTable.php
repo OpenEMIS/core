@@ -21,9 +21,9 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	use OptionsTrait;
 
 	CONST SELECT_POSITION_GRADES = 1;
-    CONST SELECT_ALL_POSITION_GRADES = '-1';
+	CONST SELECT_ALL_POSITION_GRADES = '-1';
 
-    private $positionGradeSelection = [];
+	private $positionGradeSelection = [];
 
 	public function initialize(array $config)
 	{
@@ -51,16 +51,16 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        return $validator
+		return $validator
 			->requirePresence('position_grades')
 			->add('position_grades', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
 				'on' => function ($context) {  
-					 //trigger validation only when position grade selection is set to 1	 and edit operation
-		            return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
-			   }
-		    ]);
+					//trigger validation only when position grade selection is set to 1	 and edit operation
+					return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
+				}
+			]);
     }
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -82,15 +82,15 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$this->field('security_role_id', ['after' => 'type']);
 	}
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
-    {
-        $entity->position_grade_selection = self::SELECT_POSITION_GRADES;
-    }
+	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
+	{
+		$entity->position_grade_selection = self::SELECT_POSITION_GRADES;
+	}
     
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
-    {
-        $this->setupFields($entity);
-    }
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	{
+		$this->setupFields($entity);
+	}
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
@@ -101,18 +101,18 @@ class StaffPositionTitlesTable extends ControllerActionTable
         }
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
-    {
-        $isSelectAll = $this->checkIsSelectAll($entity);
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
+	{
+		$isSelectAll = $this->checkIsSelectAll($entity);
 
-        if ($isSelectAll) {
-            $entity->position_grade_selection = self::SELECT_ALL_POSITION_GRADES;
-        } else {
-            $entity->position_grade_selection = self::SELECT_POSITION_GRADES;
-        }
-    }
+		if ($isSelectAll) {
+			$entity->position_grade_selection = self::SELECT_ALL_POSITION_GRADES;
+		} else {
+			$entity->position_grade_selection = self::SELECT_POSITION_GRADES;
+		}
+	}
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 
 		$this->setupFields($entity);
 
@@ -132,67 +132,67 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 	}
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
-    {
-        $this->setupFields($entity);
-    }
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	{
+		$this->setupFields($entity);
+	}
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
-    {
-        $query->contain(['PositionGrades']);
-    }
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
+	{
+		$query->contain(['PositionGrades']);
+	}
 
 	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, Request $request) 
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = $this->positionGradeSelection;
-            $attr['select'] = false;
-            $attr['onChangeReload'] = true;
-        }
-        return $attr;
-    }
+	{
+		if ($action == 'add' || $action == 'edit') {
+		$attr['options'] = $this->positionGradeSelection;
+		$attr['select'] = false;
+		$attr['onChangeReload'] = true;
+		}
+		return $attr;
+	}
 
-    public function onUpdateFieldPositionGrades(Event $event, array $attr, $action, Request $request) 
-    {
-        $requestData = $request->data;
-        $entity = $attr['entity'];
-        $staffPositionGradeOptions = TableRegistry::get('Institution.StaffPositionGrades')->getList()->toArray();
+	public function onUpdateFieldPositionGrades(Event $event, array $attr, $action, Request $request) 
+	{
+		$requestData = $request->data;
+		$entity = $attr['entity'];
+		$staffPositionGradeOptions = TableRegistry::get('Institution.StaffPositionGrades')->getList()->toArray();
 
-        $positionGradeSelection = null;
-        if (isset($requestData[$this->alias()]['position_grade_selection'])) {
-            $positionGradeSelection = $requestData[$this->alias()]['position_grade_selection'];
-        } else {
-            $positionGradeSelection = $entity->position_grade_selection; 
-        }
+		$positionGradeSelection = null;
+		if (isset($requestData[$this->alias()]['position_grade_selection'])) {
+			$positionGradeSelection = $requestData[$this->alias()]['position_grade_selection'];
+		} else {
+			$positionGradeSelection = $entity->position_grade_selection; 
+		}
 
-        if ($positionGradeSelection == self::SELECT_ALL_POSITION_GRADES) {
-            $attr['value'] = self::SELECT_ALL_POSITION_GRADES;
-            $attr['attr']['value'] = __('All Position Grades Selected');
-            $attr['type'] = 'readonly';
-        } else {
-            $attr['options'] = $staffPositionGradeOptions;
-        }
+		if ($positionGradeSelection == self::SELECT_ALL_POSITION_GRADES) {
+			$attr['value'] = self::SELECT_ALL_POSITION_GRADES;
+			$attr['attr']['value'] = __('All Position Grades Selected');
+			$attr['type'] = 'readonly';
+		} else {
+			$attr['options'] = $staffPositionGradeOptions;
+		}
 
-        return $attr;
-    }
+		return $attr;
+	}
 
-    public function setupFields(Entity $entity) 
-    {
-        $this->field('position_grade_selection', [
-            'type' => 'select',
-            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
-            'entity' => $entity,
-            'after' => 'security_role_id'
-        ]);
-        $this->field('position_grades', [
-            'type' => 'chosenSelect',
-            'placeholder' => __('Select Position Grades'),
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
-            'attr' => ['required' => true], // to add red asterisk
-            'entity' => $entity,
-            'after' => 'position_grade_selection'
-        ]);
-    }
+	public function setupFields(Entity $entity) 
+	{
+		$this->field('position_grade_selection', [
+			'type' => 'select',
+			'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
+			'entity' => $entity,
+			'after' => 'security_role_id'
+		]);
+		$this->field('position_grades', [
+			'type' => 'chosenSelect',
+			'placeholder' => __('Select Position Grades'),
+			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
+			'attr' => ['required' => true], // to add red asterisk
+			'entity' => $entity,
+			'after' => 'position_grade_selection'
+		]);
+	}
 
     public function onGetPositionGrades(Event $event, Entity $entity) 
     {
@@ -229,24 +229,24 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 	private function setAllPositionGrades($entity) 
-    {
-        if ($entity->has('position_grade_selection') && $entity->position_grade_selection == self::SELECT_ALL_POSITION_GRADES) {
-            $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
-            $entityId = $entity->id;
+	{
+		if ($entity->has('position_grade_selection') && $entity->position_grade_selection == self::SELECT_ALL_POSITION_GRADES) {
+			$StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+			$entityId = $entity->id;
 
-            $data = [
-                'staff_position_title_id' => $entityId,
-                'staff_position_grade_id' => self::SELECT_ALL_POSITION_GRADES
-            ];
+			$data = [
+				'staff_position_title_id' => $entityId,
+				'staff_position_grade_id' => self::SELECT_ALL_POSITION_GRADES
+			];
 
-            $staffPositionTitlesGradesEntity = $StaffPositionTitlesGrades->newEntity($data);
+			$staffPositionTitlesGradesEntity = $StaffPositionTitlesGrades->newEntity($data);
 
-            if ($StaffPositionTitlesGrades->save($staffPositionTitlesGradesEntity)) {
-            } else {
-                $StaffPositionTitlesGrades->log($staffPositionTitlesGradesEntity->errors(), 'debug');
-            }
-        }
-    }
+			if ($StaffPositionTitlesGrades->save($staffPositionTitlesGradesEntity)) {
+			} else {
+				$StaffPositionTitlesGrades->log($staffPositionTitlesGradesEntity->errors(), 'debug');
+			}
+		}
+	}
 
     private function checkIsSelectAll($entity) 
     {
