@@ -45,24 +45,24 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         UtilsSvc.isAppendSpinner(true, 'dashboard-notices-table');
         DashboardSvc.getNotices()
         .then(function(notices) {
-            
             for(var key in notices){
                 vm.notices.push(notices[key]);
             }
 
             // vm.notices = notices;
             if (vm.notices.length == 0) {
-                vm.notices = false;
+                vm.notices = null;
             }
         }, function(error) {
             // No Notices
             console.log(error);
-            vm.notices = false;
+            vm.notices = null;
             AlertSvc.warning($scope, error);
         })
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'dashboard-notices-table');
         });
+
     }
 
     function initWorkbenchItems() {
