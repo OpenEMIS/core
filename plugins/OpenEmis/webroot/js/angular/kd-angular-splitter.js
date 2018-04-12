@@ -18,15 +18,16 @@
         return style.sheet;
     })();
 
+ sheet.insertRule("#vincent{background:green;}",sheet.cssRules.length);
     var subPanesWidth = 0;
-    var appName = document.body.getAttribute("ng-app");
+    var appName = APP_CONFIGS.ngApp;//.document.body.getAttribute("ng-app");
     var sessionName = appName + '_handlerID_';
     var matchCase = new RegExp(sessionName);
     var matchBodyCase = new RegExp(sessionName + 'body');
     var matchPanelBodyCase = new RegExp(sessionName + 'div\.panel-body');
     var bodyDir = getComputedStyle(document.body).direction;
     var affectedDir = (bodyDir == 'ltr') ? 'left' : 'right';
-
+// console.log(sessionName);
     var panesObj = {
         'wrapper': 'pane-wrapper',
         'left': 'left-pane',
@@ -663,10 +664,11 @@
 
         //insert default
         if (loadDefaultPanes.layoutPane) {
-            // console.log('load sub main default');
+            // console.log('load sub main default layoutPane');
+            // console.log(elemNode,panesObj,layoutPaneObj.current);
             insertCSSRules(getParentClassName(elemNode), panesObj, layoutPaneObj.current);
             if (loadDefaultPanes.contentPane && elemSubNode != undefined) {
-                // console.log('load sub main default');
+                // console.log('load sub main default contentPane');
                 var mainPaneObj = getPanesObjFromDOM(elemSubNode.childNodes, 'localName', 'bg-pane', rightPaneWidth);
                 insertCSSRules(getParentClassName(elemSubNode), subPanesObj, mainPaneObj.current);
             }
@@ -687,14 +689,15 @@
         // console.log(prependClassName + ' .' + _panesObj.right + '{' + affectedDir + ':' + _pos + 'px;' + oppDir + ':0px;}');
         // console.log(prependClassName + ' .' + _panesObj.left + ' + .split-handler{' + affectedDir + ':' + _pos + 'px;}');
         if (window.innerWidth <= 1024) {
-            sheet.insertRule(prependClassName + ' .' + _panesObj.right + '{left: 0px;right:0px;}', 0);
-            sheet.insertRule(prependClassName + ' .' + _panesObj.left + '{left: 0px;right:0px;}', 0);
+            sheet.insertRule(prependClassName + ' .' + _panesObj.right + '{left: 0px;right:0px;}', sheet.cssRules.length);
+            sheet.insertRule(prependClassName + ' .' + _panesObj.left + '{left: 0px;right:0px;}', sheet.cssRules.length);
         } else {
-            sheet.insertRule(prependClassName + ' .' + _panesObj.left + '{width:' + _pos + 'px; ' + affectedDir + ':0px;' + oppDir + ':auto; opacity: 1;}', 0);
-            sheet.insertRule(prependClassName + ' .' + _panesObj.right + '{' + affectedDir + ':' + _pos + 'px;' + oppDir + ':0px;}', 0);
-            sheet.insertRule(prependClassName + ' .' + _panesObj.left + ' + .split-handler{' + affectedDir + ':' + _pos + 'px;}', 0);
+            sheet.insertRule(prependClassName + ' .' + _panesObj.left + '{width:' + _pos + 'px; ' + affectedDir + ':0px;' + oppDir + ':auto; opacity: 1;}', sheet.cssRules.length);
+            sheet.insertRule(prependClassName + ' .' + _panesObj.right + '{' + affectedDir + ':' + _pos + 'px;' + oppDir + ':0px;}', sheet.cssRules.length);
+            sheet.insertRule(prependClassName + ' .' + _panesObj.left + ' + .split-handler{' + affectedDir + ':' + _pos + 'px;}', sheet.cssRules.length);
         }
-
+        // console.log(sheet);
+        // console.log(sheet.cssRules.length);
     }
 
     function getPanesObjFromDOM(_childNodes, _type, _strMatch, _boundSize) {
