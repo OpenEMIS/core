@@ -18,7 +18,6 @@
         return style.sheet;
     })();
 
- sheet.insertRule("#vincent{background:green;}",sheet.cssRules.length);
     var subPanesWidth = 0;
     var appName = APP_CONFIGS.ngApp;//.document.body.getAttribute("ng-app");
     var sessionName = appName + '_handlerID_';
