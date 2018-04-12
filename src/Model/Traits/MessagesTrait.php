@@ -2043,7 +2043,12 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This name already exists in the system',
                 ]
-            ]
+            ],
+            'StaffPositionTitles' => [
+               'position_grades' => [
+                    'ruleCheckPositionGrades' => 'You are not allow to remove the following in-use grades: %s',
+                ]
+            ] 
         ],
         'Configuration' => [
             'ConfigProductLists' => [
@@ -2156,6 +2161,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
+        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
     }
 }
