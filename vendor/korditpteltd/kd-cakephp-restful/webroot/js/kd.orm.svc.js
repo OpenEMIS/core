@@ -1,5 +1,5 @@
 angular.module('kd.orm.svc', [])
-.service('KdOrmSvc', function($q, $http) {
+.service('KdOrmSvc', ['$q', '$http', function($q, $http) {
     var query = {
         responseType: 'json',
         _base: '',
@@ -343,4 +343,4 @@ angular.module('kd.orm.svc', [])
             return newObject;
         }
     };
-});
+}]);

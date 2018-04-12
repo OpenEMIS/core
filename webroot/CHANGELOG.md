@@ -1,3 +1,11 @@
+### [3.23.0] - 2018-04-06
+- Implemented a non-mandatory field called 'Position' under Institutions > Students > Academic > Extracurriculars
+- Updated placeholders for Competency sheets in the Report Card template
+- Implemented import function in Institutions > Survey > Forms
+- Developed 'Dropdown' field type under Administration > Appraisals > Criterias
+- Implemented 'URL Validation' as a new Validation Rule for 'Text' field type under Administration > System Setup > Custom Field
+- Replaced the map in Reports > Map from Google Maps to OpenStreetMap
+
 ### [3.22.0] - 2018-03-29
 - Implemented Institutions search by Code and Name under Institutions > Advanced Search
 - Implemented Placeholders for Total Marks & Average for each Academic Term in the Report Card template

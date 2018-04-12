@@ -1,5 +1,10 @@
-angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd.access.svc', 'alert.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdDataSvc, KdSessionSvc, KdAccessSvc, AlertSvc) {
+angular
+    .module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd.access.svc', 'alert.svc'])
+    .service('InstitutionsResultsSvc', InstitutionsResultsSvc);
+
+InstitutionsResultsSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'KdSessionSvc', 'KdAccessSvc', 'AlertSvc'];
+
+function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdAccessSvc, AlertSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
@@ -1029,4 +1034,4 @@ angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd
             return AssessmentItemResultsTable.save(data);
         }
     }
-});
+}
