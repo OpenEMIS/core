@@ -27,8 +27,8 @@ echo $this->Html->script('OpenEmis.jquery/jq.table');
 echo $this->Html->script('OpenEmis.jquery/jq.tabs');
 echo $this->Html->script('OpenEmis.jquery/jq.tooltip');
 echo $this->Html->script('OpenEmis.jquery/jq.header');
-echo $this->Html->script('OpenEmis.jquery/jq.multiple-image-uploader');
-echo $this->Html->script('OpenEmis.jquery/jq.gallery');
+// echo $this->Html->script('OpenEmis.jquery/jq.multiple-image-uploader');
+// echo $this->Html->script('OpenEmis.jquery/jq.gallery');
 
 //External Plugins
 echo $this->Html->script('OpenEmis.../plugins/bootstrap/js/bootstrap.min');
