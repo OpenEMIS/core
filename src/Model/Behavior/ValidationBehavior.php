@@ -2402,6 +2402,30 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    public static function checkGuardianGender($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+    
+        $StudentGuardians = TableRegistry::get('Student.Guardians');
+        $genderId = $globalData['data']['gender_id'];
+
+        $mismatchCount = $StudentGuardians
+            ->find()
+            ->matching('Users', function ($q) use ($genderId) {
+                return $q->where(['Users.gender_id <> ' => $genderId]);
+            })
+            ->where([
+                $StudentGuardians->aliasField('guardian_relation_id') => $globalData['data']['id']
+            ])
+            ->count();
+
+        if ($mismatchCount > 0) {
+            return $model->getMessage('FieldOption.GuardianRelations.gender_id.ruleCheckGuardianGender');
+        }
+
+        return true;
+    }
+
     public static function checkAssessmentMarks($field, array $globalData)
     {
         if (strlen($field) > 0) {
