@@ -90,7 +90,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $query
-            ->select(['code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name']) 
+            ->select(['code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
             ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
     }
 
