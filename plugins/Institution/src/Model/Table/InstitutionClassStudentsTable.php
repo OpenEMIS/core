@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface;
 
 class InstitutionClassStudentsTable extends AppTable
 {
@@ -727,6 +728,7 @@ class InstitutionClassStudentsTable extends AppTable
         $type = $options['type'];
 
         $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $SubjectStudents = $this->SubjectStudents;
         $StudentStatuses = $this->StudentStatuses;
         $Users = $this->Users;
 
@@ -767,14 +769,76 @@ class InstitutionClassStudentsTable extends AppTable
                 $Users->aliasField('first_name'), $Users->aliasField('last_name')
             ]);
 
-
         if ($type == 'PRINCIPAL') {
-            $query->select(['comments' => $StudentReportCards->aliasfield('principal_comments')]);
+            $query
+                ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents) {
+                        $studentId = $row->student_id;
+                        $query = $SubjectStudents->find();
+
+                        // get the subjects and the total marks by the students 
+                        $subjectOverallResult = $query
+                            ->select([
+                                'average_mark' => $query->func()->avg('total_mark')
+                            ])
+                            ->where([
+                                $SubjectStudents->aliasField('student_id') => $studentId,
+                                $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
+                                $SubjectStudents->aliasField('institution_id') => $institutionId,
+                                $SubjectStudents->aliasField('total_mark IS NOT NULL')
+                            ])
+                            ->group([
+                                $SubjectStudents->aliasField('student_id'),
+                                $SubjectStudents->aliasField('academic_period_id'),
+                                $SubjectStudents->aliasField('institution_id')
+                            ])
+                            ->first();
+
+                        $row->average_mark = NULL;
+                        if (isset($subjectOverallResult->average_mark) && !is_null($subjectOverallResult->average_mark)) {
+                            $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
+                        }
+
+                        return $row;
+                    });
+                });
         } elseif ($type == 'HOMEROOM_TEACHER') {
-            $query->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')]);
+            $query
+                ->select(['comments' => $StudentReportCards->aliasfield('homeroom_teacher_comments')])
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents) {
+                    return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents) {
+                        $studentId = $row->student_id;
+                        $query = $SubjectStudents->find();
+
+                        // get the subjects and the total marks by the students 
+                        $subjectOverallResult = $query
+                            ->select([
+                                'average_mark' => $query->func()->avg('total_mark')
+                            ])
+                            ->where([
+                                $SubjectStudents->aliasField('student_id') => $studentId,
+                                $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
+                                $SubjectStudents->aliasField('institution_id') => $institutionId,
+                                $SubjectStudents->aliasField('total_mark IS NOT NULL') 
+                            ])
+                            ->group([
+                                $SubjectStudents->aliasField('student_id'),
+                                $SubjectStudents->aliasField('academic_period_id'),
+                                $SubjectStudents->aliasField('institution_id')
+                            ])
+                            ->first();
+
+                        $row->average_mark = NULL;
+                        if (isset($subjectOverallResult->average_mark) && !is_null($subjectOverallResult->average_mark)) {
+                            $row->average_mark = number_format($subjectOverallResult->average_mark, 2);
+                        }
+
+                        return $row;
+                    });
+                });
         } elseif ($type == 'TEACHER') {
             $ReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
-            $SubjectStudents = $this->SubjectStudents;
             $Staff = $ReportCardsComments->Staff;
 
             // only show students taking the subject
@@ -782,6 +846,7 @@ class InstitutionClassStudentsTable extends AppTable
                 ->select([
                     'comments' => $ReportCardsComments->aliasField('comments'),
                     'comment_code' => $ReportCardsComments->aliasField('report_card_comment_code_id'),
+                    'total_mark' => $SubjectStudents->aliasField('total_mark'),
                     $Staff->aliasField('first_name'),
                     $Staff->aliasField('last_name')
                 ])
