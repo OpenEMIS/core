@@ -28,18 +28,22 @@ class InstitutionCompetencyResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // do not save new record if result is empty
+        // do not save new record if result is empty and comments is empty - update for POCOR4466
         $gradingOption = $entity->competency_grading_option_id;
-        if ($entity->isNew() && empty($gradingOption)) {
+        $comments = $entity->comments;
+
+        if ($entity->isNew() && empty($gradingOption) && $comments === '') {
             return false;
         }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // delete record if user removes result
+        // delete record if user removes result and comments is empty - update for POCOR4466
         $gradingOption = $entity->competency_grading_option_id;
-        if (empty($gradingOption)) {
+        $comments = $entity->comments;
+
+        if (empty($gradingOption) && $comments === ''){
             $this->delete($entity);
         }
     }
