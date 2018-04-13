@@ -2047,7 +2047,12 @@ trait MessagesTrait
                 'gender_id' => [
                     'ruleCheckGuardianGender' => 'Gender mismatch. Please check against existing records',
                 ]
-            ]
+            ],
+            'StaffPositionTitles' => [
+               'position_grades' => [
+                    'ruleCheckPositionGrades' => 'You are not allow to remove the following in-use grades: %s',
+                ]
+            ] 
         ],
         'Configuration' => [
             'ConfigProductLists' => [
@@ -2160,6 +2165,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
+        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
     }
 }
