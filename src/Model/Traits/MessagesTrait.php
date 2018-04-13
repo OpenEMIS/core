@@ -2044,6 +2044,11 @@ trait MessagesTrait
                     'ruleUnique' => 'This name already exists in the system',
                 ]
             ],
+            'GuardianRelations' => [
+                'gender_id' => [
+                    'ruleCheckGuardianGender' => 'Gender mismatch. Please check against existing records',
+                ]
+            ],
             'StaffPositionTitles' => [
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allow to remove the following in-use grades: %s',
