@@ -3,6 +3,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 
@@ -45,4 +46,18 @@ class GuardianRelationsTable extends ControllerActionTable
 	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['gender_id']['type'] = 'select';
 	}
+
+    public function getAvailableGuardianRelations($guardianGenderId)
+    {
+        $list = [];
+
+        if (!is_null($guardianGenderId)) {
+            $list = $this->find('list')  
+                ->where([$this->aliasField('gender_id') => $guardianGenderId])
+                ->orWhere([$this->aliasField('gender_id') . ' IS NULL'])
+                ->toArray();
+        }
+
+        return $list;
+    }
 }

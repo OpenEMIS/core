@@ -145,7 +145,10 @@ class GuardiansTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->field('id', ['value' => Text::uuid()]);
-        $this->field('guardian_relation_id', ['type' => 'select']);
+        $this->field('guardian_relation_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
     }
 
     public function viewBeforeAction(Event $event)
@@ -209,33 +212,18 @@ class GuardiansTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request) 
     {
         if ($action == 'add' || $action == 'edit') {
-            
-            $requestData = $this->request->data;
-            $guardianGender = null;
-            $availableGuardianRelationsOption = [];       
-            
-            if ($action == 'add') { 
-                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['guardian_id'])) {
-                        $guardianId = $requestData[$this->alias()]['guardian_id'];
-                        $guardianGender = $this->Users->get($guardianId)->gender_id;
-                    } 
-            } else if ($action == 'edit') {
-                $entity = $attr['entity'];
-                $guardianGender = $entity->user->gender_id;
+            $entity = $attr['entity'];
+    
+            $guardianRelationOptions = [];
+            if ($entity->has('guardian_id')) {
+                $guardianGenderId = $this->Users->get($entity->guardian_id)->gender_id;
+                $guardianRelationOptions = $this->GuardianRelations->getAvailableGuardianRelations($guardianGenderId);
             }
 
-            if($guardianGender) {
-                $availableGuardianRelationsOption = $this->GuardianRelations
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                    ->where([$this->GuardianRelations->aliasField('gender_id') => $guardianGender])
-                    ->orWhere([$this->GuardianRelations->aliasField('gender_id') . ' IS NULL'])
-                    ->toArray();
-            }
-            
-            $attr['options'] = $availableGuardianRelationsOption;
+            $attr['options'] = $guardianRelationOptions;
         }
 
         return $attr;
