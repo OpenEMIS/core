@@ -122,7 +122,6 @@ class GuardiansTable extends ControllerActionTable
         }
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
         $this->field('guardian_id');
-        $this->field('guardian_relation_id', ['type' => 'select']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -146,6 +145,10 @@ class GuardiansTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity)
     {
         $this->field('id', ['value' => Text::uuid()]);
+        $this->field('guardian_relation_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
     }
 
     public function viewBeforeAction(Event $event)
@@ -170,6 +173,10 @@ class GuardiansTable extends ControllerActionTable
             'type' => 'readonly',
             'order' => 10,
             'attr' => ['value' => $entity->user->name_with_id]
+        ]);
+        $this->field('guardian_relation_id', [
+            'type' => 'select',
+            'entity' => $entity
         ]);
     }
 
@@ -198,9 +205,27 @@ class GuardiansTable extends ControllerActionTable
             $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+            $attr['onSelect'] = "$('#reload').click();";
         } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request) 
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+    
+            $guardianRelationOptions = [];
+            if ($entity->has('guardian_id')) {
+                $guardianGenderId = $this->Users->get($entity->guardian_id)->gender_id;
+                $guardianRelationOptions = $this->GuardianRelations->getAvailableGuardianRelations($guardianGenderId);
+            }
+
+            $attr['options'] = $guardianRelationOptions;
+        }
+
         return $attr;
     }
 
