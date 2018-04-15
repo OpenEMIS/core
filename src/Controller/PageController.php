@@ -65,8 +65,7 @@ class PageController extends BaseController
     {
         $attributes = $element->getAttributes();
         $type = isset($attributes['type']) ? $attributes['type'] : 'binary';
-        $attributes = $element->getAttributes();
-        $fileNameField = $attributes['fileNameField'];
+        $fileNameField = isset($attributes['fileNameField']) ? $attributes['fileNameField'] : 'file_name';
         $fileContentField = $element->getKey();
         if ($type == 'image') {
             if ($this->request->param('_ext') == 'json') {
