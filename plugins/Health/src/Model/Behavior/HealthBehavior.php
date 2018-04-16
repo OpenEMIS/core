@@ -111,6 +111,36 @@ class HealthBehavior extends Behavior
                'text' => __('Body Mass')
             ];
         }
+
+        if ($name == 'Students' && $controller->AccessControl->check(['StudentUserInsurances', 'index'])) {
+            $session = $this->_table->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+            $params = $this->_table->paramsEncode(['id' => $institutionId]);
+
+            $tabElements['UserInsurances'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentUserInsurances', 'action' => 'index'],
+                'text' => __('Insurances')
+            ];
+        } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffUserInsurances', 'index'])) {
+            $session = $this->_table->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+            $params = $this->_table->paramsEncode(['id' => $institutionId]);
+
+            $tabElements['UserInsurances'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffUserInsurances', 'action' => 'index'],
+                'text' => __('Insurances')
+            ];
+        } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryUserInsurances', 'index'])) {
+            $tabElements['UserInsurances'] = [
+                'url' => ['plugin' => 'Directory', 'controller' => 'DirectoryUserInsurances', 'action' => 'index'],
+               'text' => __('Insurances')
+            ];
+         } elseif ($name == 'Profiles' && $controller->AccessControl->check(['ProfileUserInsurances', 'index'])) {
+            $tabElements['UserInsurances'] = [
+                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileUserInsurances', 'action' => 'index'],
+               'text' => __('Insurances')
+            ];
+        }
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
         $controller->set('selectedAction', $model->alias());
