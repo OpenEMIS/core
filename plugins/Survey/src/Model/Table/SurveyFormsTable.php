@@ -388,7 +388,6 @@ class SurveyFormsTable extends CustomFormsTable
     public function findSurveyListing(Query $query, array $options)
     {
         $user = $options['user'];
-        Log::write('debug', '----');
 
         if (!is_null($user)) {
             $todayDate = date('Y-m-d');
