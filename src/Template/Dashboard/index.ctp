@@ -24,7 +24,7 @@ $panelHeader = $this->fetch('panelHeader');
 
 		<!-- With Buttons -->
 		<bg-pane class="split-content splitter-slide-out split-with-btn" min-size-p="20" max-size-p="80" size-p="70">
-			<div class="split-content-header">
+			<div class="split-content-header" ng-cloak>
 				<h3>{{DashboardController.workbenchTitle}}</h3>
 				<div class="split-content-btn">
 					<button href="#" class="btn btn-outline" ng-click="DashboardController.removeSplitContentResponsive()">

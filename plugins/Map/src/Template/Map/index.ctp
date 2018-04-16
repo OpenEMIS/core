@@ -8,5 +8,5 @@ $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this-
 $this->start('contentBody');
 $panelHeader = $this->fetch('panelHeader');
 ?>
-    <kdx-map id="map-group-cluster" ng-if="mapReady" [config]="mapConfig" [position]="mapPosition" [data]="mapData"></kdx-map>
+    <kdx-map id="map-group-cluster" ng-if="mapReady" [config]="mapConfig" [position]="mapPosition" [data]="mapData" style="height:85%"></kdx-map>
 <?php $this->end() ?>
