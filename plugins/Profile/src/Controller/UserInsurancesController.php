@@ -5,14 +5,15 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
 
-class BodyMassesController extends PageController
+class UserInsurancesController extends PageController
 {
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('User.UserBodyMasses');
-        $this->Page->loadElementsFromTable($this->UserBodyMasses);
+        $this->loadModel('Health.InsuranceProviders');
+        $this->loadModel('Health.InsuranceTypes');
+        $this->loadModel('User.UserInsurances'); 
+        $this->Page->loadElementsFromTable($this->UserInsurances);
         $this->Page->disable(['search']); // to disable the search function
     }
 
@@ -26,7 +27,6 @@ class BodyMassesController extends PageController
             $page->setQueryOption('sort', $requestQuery['sort']);
             $page->setQueryOption('direction', $requestQuery['direction']);
         }
-
         parent::index();
     }
 
@@ -34,33 +34,46 @@ class BodyMassesController extends PageController
     {
         $page = $this->Page;
         parent::beforeFilter($event);
+
+        $page->get('insurance_provider_id')
+            ->setLabel('Provider');
+        $page->get('insurance_type_id')
+            ->setLabel('Type');
     }
 
     public function add()
     {
-        $page = $this->Page;
-        $page->get('body_mass_index')->setControlType('hidden');
-        $requestData = $this->request->data;
-
-        // Academic Period Field
-        $periodOptions = $this->AcademicPeriods->getYearList();
-
-        $page->get('academic_period_id')
-            ->setLabel('Academic Period')
-            ->setControlType('select')
-            ->setId('academic_period_id')
-            ->setOptions($periodOptions);
-        // end Academic Period Field
-
         parent::add();
+        $this->addEditInsurances();
     }
 
     public function edit($id)
     {
-        $page = $this->Page;
-        $page->get('body_mass_index')->setControlType('hidden');
-
         parent::edit($id);
+        $this->addEditInsurances();
+    }
+
+    private function addEditInsurances()
+    {
+        $page = $this->Page;
+        // Insurance Providers Field
+        $page->get('insurance_provider_id')
+            ->setLabel('Provider')
+            ->setControlType('select');
+        // end Insurance Providers Field
+
+        // Insurance Types Field    
+        $page->get('insurance_type_id')
+            ->setLabel('Type')
+            ->setControlType('select');
+        // end Insurance Types Field
+    }
+
+    public function delete($id)
+    {
+        $page = $this->Page;
+        $page->exclude(['file_content']);
+        parent::delete($id);
     }
 
     public function setBreadCrumb($options)
@@ -85,18 +98,16 @@ class BodyMassesController extends PageController
             $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
             $page->addCrumb($pluralUserRole, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $pluralUserRole, 'institutionId' => $encodedInstitutionId]);
             $page->addCrumb($userName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userRole.'User', 'view', $encodedUserId]);
-            $page->addCrumb('Body Mass');
-        } elseif ($plugin == 'Profile') {
-            $page->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $encodedUserId]);
-            $page->addCrumb($userName);
-            $page->addCrumb('Body Masses');
+            $page->addCrumb('Insurances');
         } elseif ($plugin == 'Directory') {
             $page->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
             $page->addCrumb($userName, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $encodedUserId]);
-            $page->addCrumb('Body Masses');
+            $page->addCrumb('Insurances');
+        }elseif ($plugin == 'Profile') {
+            $page->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $encodedUserId]);
+            $page->addCrumb($userName);
+            $page->addCrumb('Insurances');
         }
-
-        $page->move('academic_period_id')->first(); // move academic_period_id to be the first
     }
 
     // for Profiles & Directories
@@ -140,7 +151,6 @@ class BodyMassesController extends PageController
                 $obj['url'] = $url;
             }
         }
-
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $tab => $tabAttr) {
@@ -148,9 +158,8 @@ class BodyMassesController extends PageController
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
-
         // set active tab
-        $page->getTab('BodyMasses')->setActive('true');
+        $page->getTab('UserInsurances')->setActive('true');
     }
 
     // for Institution Staff and Institution Students
@@ -207,41 +216,7 @@ class BodyMassesController extends PageController
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
-
         // set active tab
-        $page->getTab('BodyMasses')->setActive('true');
-    }
-
-    public function setTooltip()
-    {
-        $page = $this->Page;
-        $action = ['add', 'edit', 'view'];
-        if (in_array($this->request->params['action'], $action)) {
-            $page->get('height')->setLabel([
-                'escape' => false,
-                'class' => 'tooltip-desc',
-                'text' => __('Height') . $this->tooltipMessage(__('Within 0 to 3 metre'))
-            ]);
-
-            $page->get('weight')->setLabel([
-                'escape' => false,
-                'class' => 'tooltip-desc',
-                'text' => __('Weight') . $this->tooltipMessage(__('Within 0 to 500 kilogram'))
-            ]);
-
-            $page->get('body_mass_index')->setLabel([
-                'escape' => false,
-                'class' => 'tooltip-desc',
-                'text' => __('Body Mass Index') . $this->tooltipMessage(__('Weight / Height<sup>2</sup>'))
-            ]);
-        }
-    }
-
-    // for info tooltip
-    protected function tooltipMessage($message)
-    {
-        $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
-
-        return $tooltipMessage;
+        $page->getTab('UserInsurances')->setActive('true');
     }
 }
