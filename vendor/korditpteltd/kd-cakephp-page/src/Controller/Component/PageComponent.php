@@ -66,7 +66,7 @@ class PageComponent extends Component
     private $breadcrumbs = [];
     private $elements;
     private $filters;
-    private $toolbar;
+    private $toolbars;
     private $tabs;
     private $viewVars;
     private $status;
@@ -88,7 +88,7 @@ class PageComponent extends Component
         $this->filters = new ArrayObject();
         $this->queryOptions = new ArrayObject();
         $this->paginateOptions = new ArrayObject(['limit' => 10]);
-        $this->toolbar = new ArrayObject();
+        $this->toolbars = new ArrayObject();
         $this->tabs = new ArrayObject();
         $this->viewVars = new ArrayObject();
         $this->status = new PageStatus();
@@ -210,8 +210,8 @@ class PageComponent extends Component
                 $this->setVar('filters', $this->filtersToJSON());
             }
 
-            if ($this->toolbar->count() > 0) {
-                $this->setVar('toolbar', $this->toolbar->getArrayCopy());
+            if ($this->toolbars->count() > 0) {
+                $this->setVar('toolbars', $this->toolbars->getArrayCopy());
             }
 
             if ($this->tabs->count() > 0) {
@@ -556,15 +556,15 @@ class PageComponent extends Component
         return $tab;
     }
 
-    public function addToToolbar($name, $attr)
+    public function addToolbar($name, $attr)
     {
-        $this->toolbar->offsetSet($name, $attr);
+        $this->toolbars->offsetSet($name, $attr);
         return $this;
     }
 
-    public function getToolbar()
+    public function getToolbars()
     {
-        return $this->toolbar;
+        return $this->toolbars;
     }
 
     public function attachPrimaryKey(Table $table, &$entity)
