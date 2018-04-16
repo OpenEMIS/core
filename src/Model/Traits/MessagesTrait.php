@@ -614,6 +614,9 @@ trait MessagesTrait
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.'
         ],
+        'ImportInstitutionSurveys' => [
+            'noImport' => 'The survey is closed'
+        ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
             'trainer' => 'Trainer'
