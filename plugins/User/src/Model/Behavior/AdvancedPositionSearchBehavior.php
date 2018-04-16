@@ -42,7 +42,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 				])->join([
 					[
 						'type' => 'LEFT',
-						'table' => 'field_option_values',
+						'table' => 'staff_position_titles',
 						'alias' => 'Positions',
 						'conditions' => [
 							'Positions.id = InstitutionPositions.staff_position_title_id'
