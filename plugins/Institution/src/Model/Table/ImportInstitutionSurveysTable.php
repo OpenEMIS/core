@@ -212,6 +212,19 @@ class ImportInstitutionSurveysTable extends AppTable {
      */
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
         return function ($model, $entity) {
+      
+            $surveyStatus = $this->institutionSurvey->status_id;
+            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $entity = $WorkflowSteps
+                ->find()
+                ->where([$WorkflowSteps->aliasField('id') => $surveyStatus])
+                ->first();
+
+            if($entity && $entity->category == 3) {
+                $model->Alert->warning($this->aliasField('noImport'), ['reset'=>true]);
+                return false;
+            }
+                
             $errors = $entity->errors();
             if (!empty($errors)) {
                 return false;
