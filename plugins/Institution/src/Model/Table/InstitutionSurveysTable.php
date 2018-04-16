@@ -180,15 +180,17 @@ class InstitutionSurveysTable extends ControllerActionTable
                 // check if survey form filter type matches
                 $institutionFilterCount = $SurveyFormsFilters
                     ->find()
-                    ->where(
-                        [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                        [
-                            'OR' => [
-                                [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                                [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                    ->where([
+                        'AND' => [
+                            [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
+                            [
+                                'OR' => [
+                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                                ]
                             ]
                         ]
-                    )
+                    ])
                     ->count();
 
                 // if filter type matches, check if the status is active
@@ -210,7 +212,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
                 // update the filter list if their is existing active surveys for the institution by institution type
                 if ($activeSurveyCount > 0) {
-                    $list[$key] = $value;
+                    $list[$key] = $value; 
                 }
             }
         }

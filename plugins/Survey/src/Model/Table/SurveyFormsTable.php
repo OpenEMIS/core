@@ -48,7 +48,8 @@ class SurveyFormsTable extends CustomFormsTable
         $this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
         // The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Rules' => ['index']
+            'Rules' => ['index'],
+            'OpenEMIS_Survey' => ['index']
         ]);
         $this->setDeleteStrategy('restrict');
     }
@@ -381,6 +382,82 @@ class SurveyFormsTable extends CustomFormsTable
             } else {
                 $SurveyFormsFilters->log($surveyFormFilterEntity->errors(), 'debug');
             }
+        }
+    }
+
+    public function findSurveyListing(Query $query, array $options)
+    {
+        $user = $options['user'];
+        Log::write('debug', '----');
+
+        if (!is_null($user)) {
+            $todayDate = date('Y-m-d');
+            $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
+
+            $SurveyStatuses = TableRegistry::get('Survey.SurveyStatuses');
+            $query
+                ->innerJoin(
+                    [$SurveyStatuses->alias() => $SurveyStatuses->table()],
+                    [
+                        $SurveyStatuses->aliasField('survey_form_id = ') . $this->aliasField('id'),
+                        $SurveyStatuses->aliasField('date_disabled >=') => $todayTimestamp
+                    ]
+                )
+                ->group($this->aliasField('id'));
+
+            $CustomModules = TableRegistry::get('CustomField.CustomModules');
+            $moduleOptions = $CustomModules
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'model'
+                ])
+                ->find('visible')
+                ->where([
+                    $CustomModules->aliasField('parent_id') => 0
+                ])
+                ->toArray();
+
+            $selectedModule = array_key_exists('module', $options) ? $options['module'] : key($moduleOptions);
+            $query->where([
+                $this->aliasField('custom_module_id') => $selectedModule
+            ]);
+
+            // institution type checking for forms of Institution.Institutions module
+            if (array_key_exists($selectedModule, $moduleOptions) && $moduleOptions[$selectedModule] == 'Institution.Institutions') {
+                // check the form filters table if the selected module is Institution.Institutions 
+                $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+                $Institutions = TableRegistry::get('Institution.Institutions');
+
+                // get the institution types that the user can access
+                $institutionTypesAccess = $Institutions
+                    ->find('byAccess', ['userId' => $user['id']])
+                    ->find('list', [
+                        'valueField' => 'type_id'
+                    ])
+                    ->select([
+                        'type_id' => 'Types.id',
+                        'type_name' => 'Types.name'
+                    ])
+                    ->contain(['Types'])
+                    ->group(['Types.id'])
+                    ->toArray();
+
+                $query
+                    ->innerJoin(
+                        [$SurveyFormsFilters->alias() => $SurveyFormsFilters->table()],
+                        [
+                            $SurveyFormsFilters->aliasField('survey_form_id = ') . $this->aliasField('id')
+                        ]
+                    )
+                    ->where([
+                        'OR' => [
+                            [$SurveyFormsFilters->aliasField('survey_filter_id IN ') => $institutionTypesAccess],
+                            [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                        ]
+                    ]);
+            }
+
+            return $query;
         }
     }
 }
