@@ -16,8 +16,8 @@ $(document).ready(function() {
 	Tooltip.init();
 	ScrollTabs.init();
 	Header.init();
-	ImageUploader.init();
-	Gallery.init();
+	// ImageUploader.init();
+	// Gallery.init();
 });
 
 </script>

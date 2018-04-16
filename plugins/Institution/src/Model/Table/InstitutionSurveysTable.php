@@ -289,6 +289,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             ->contain([
                 'Statuses' => [
                     'fields' => [
+                        'id',
                         'name'
                     ]
                 ],
