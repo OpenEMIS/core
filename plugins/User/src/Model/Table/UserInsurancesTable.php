@@ -17,8 +17,6 @@ class UserInsurancesTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('InsuranceProviders', ['className' => 'Health.InsuranceProviders', 'foreignKey' => 'insurance_provider_id']);
         $this->belongsTo('InsuranceTypes', ['className' => 'Health.InsuranceTypes', 'foreignKey' => 'insurance_type_id']);
-
-        $this->addBehavior('Health.Health');
     }
 
     public function validationDefault(Validator $validator)
