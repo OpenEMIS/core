@@ -56,6 +56,8 @@ class GuardianRelationsTable extends ControllerActionTable
                 ->where([$this->aliasField('gender_id') => $guardianGenderId])
                 ->orWhere([$this->aliasField('gender_id') . ' IS NULL'])
                 ->toArray();
+        } else {
+             $list = $this->find('list')->toArray();
         }
 
         return $list;

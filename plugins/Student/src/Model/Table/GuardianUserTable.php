@@ -32,6 +32,28 @@ class GuardianUserTable extends UserTable {
         }
     }
 
+    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $sessionKey = 'Student.Guardians.new';
+
+        if ($this->Session->check($sessionKey)) {
+            $guardianData = $this->Session->read($sessionKey);
+            $guardianRelationId = $guardianData['guardian_relation_id']; 
+
+            $GuardianRelationsTable = TableRegistry::get('Student.GuardianRelations');
+            $guardianRelationEntity = $GuardianRelationsTable
+                ->find()
+                ->matching('Genders')
+                ->where([$GuardianRelationsTable->aliasField('id') => $guardianRelationId])
+                ->first();
+
+            if($guardianRelationEntity) {
+                $entity->gender_id = $guardianRelationEntity->gender_id;
+                $this->field('gender_id', ['type' => 'readonly', 'attr' => ['value' => $guardianRelationEntity->_matchingData['Genders']->name]]);
+            }
+        }
+    }
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (!$entity->errors()) {
@@ -100,7 +122,6 @@ class GuardianUserTable extends UserTable {
         $tabElements = $this->controller->getStudentGuardianTabElements($options);
         $this->controller->set('tabElements', $tabElements);
 
-        // pr($this->fields);
         $this->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
         $this->field('nationality_id', ['visible' => 'false']);
         $this->field('identity_type_id', ['visible' => 'false']);
