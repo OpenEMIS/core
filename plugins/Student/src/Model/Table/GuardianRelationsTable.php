@@ -47,7 +47,7 @@ class GuardianRelationsTable extends ControllerActionTable
 		$this->fields['gender_id']['type'] = 'select';
 	}
 
-    public function getAvailableGuardianRelations($guardianGenderId)
+    public function getAvailableGuardianRelations($guardianGenderId = null)
     {
         $list = [];
 
@@ -56,6 +56,8 @@ class GuardianRelationsTable extends ControllerActionTable
                 ->where([$this->aliasField('gender_id') => $guardianGenderId])
                 ->orWhere([$this->aliasField('gender_id') . ' IS NULL'])
                 ->toArray();
+        } else {
+             $list = $this->find('list')->toArray();
         }
 
         return $list;
