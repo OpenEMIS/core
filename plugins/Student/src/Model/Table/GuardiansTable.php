@@ -216,13 +216,14 @@ class GuardiansTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-    
+            $guardianGenderId = null;
             $guardianRelationOptions = [];
+
             if ($entity->has('guardian_id')) {
                 $guardianGenderId = $this->Users->get($entity->guardian_id)->gender_id;
-                $guardianRelationOptions = $this->GuardianRelations->getAvailableGuardianRelations($guardianGenderId);
             }
 
+            $guardianRelationOptions = $this->GuardianRelations->getAvailableGuardianRelations($guardianGenderId);
             $attr['options'] = $guardianRelationOptions;
         }
 
