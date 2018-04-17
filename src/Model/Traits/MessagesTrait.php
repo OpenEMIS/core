@@ -1445,7 +1445,7 @@ trait MessagesTrait
             ],
             'Guardians' => [
                 'guardian_id' => [
-                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                    'ruleStudentGuardianId' => 'This guardian has already been added.'
                 ]
             ],
             'Students' => [
@@ -1478,7 +1478,7 @@ trait MessagesTrait
         'Profile' => [
             'Guardians' => [
                 'guardian_id' => [
-                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                    'ruleStudentGuardianId' => 'This guardian has already been added.'
                 ]
             ],
             'Accounts' => [
