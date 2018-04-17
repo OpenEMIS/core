@@ -47,7 +47,7 @@ class GuardianRelationsTable extends ControllerActionTable
 		$this->fields['gender_id']['type'] = 'select';
 	}
 
-    public function getAvailableGuardianRelations($guardianGenderId)
+    public function getAvailableGuardianRelations($guardianGenderId = null)
     {
         $list = [];
 

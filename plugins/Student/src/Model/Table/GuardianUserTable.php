@@ -38,18 +38,9 @@ class GuardianUserTable extends UserTable {
 
         if ($this->Session->check($sessionKey)) {
             $guardianData = $this->Session->read($sessionKey);
-            $guardianRelationId = $guardianData['guardian_relation_id']; 
 
-            $GuardianRelationsTable = TableRegistry::get('Student.GuardianRelations');
-            $guardianRelationEntity = $GuardianRelationsTable
-                ->find()
-                ->matching('Genders')
-                ->where([$GuardianRelationsTable->aliasField('id') => $guardianRelationId])
-                ->first();
-
-            if($guardianRelationEntity) {
-                $entity->gender_id = $guardianRelationEntity->gender_id;
-                $this->field('gender_id', ['type' => 'readonly', 'attr' => ['value' => $guardianRelationEntity->_matchingData['Genders']->name]]);
+            if (array_key_exists('guardian_relation_id', $guardianData)) {
+                $entity->guardian_relation_id = $guardianData['guardian_relation_id'];
             }
         }
     }
@@ -122,6 +113,8 @@ class GuardianUserTable extends UserTable {
         $tabElements = $this->controller->getStudentGuardianTabElements($options);
         $this->controller->set('tabElements', $tabElements);
 
+        $this->field('guardian_relation_id', ['type' => 'hidden']);
+        $this->field('gender_id', ['entity' => $entity]);
         $this->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
         $this->field('nationality_id', ['visible' => 'false']);
         $this->field('identity_type_id', ['visible' => 'false']);
@@ -177,6 +170,30 @@ class GuardianUserTable extends UserTable {
             $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
             $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
             $attr['attr']['label']['text'] = __(Inflector::humanize($attr['field'])) . $this->tooltipMessage($tooltipMessagePassword);
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldGenderId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $entity = $attr['entity'];
+
+            if ($entity->has('guardian_relation_id')) {
+                $GuardianRelationsTable = TableRegistry::get('Student.GuardianRelations');
+                $guardianRelationEntity = $GuardianRelationsTable
+                    ->find()
+                    ->matching('Genders')
+                    ->where([$GuardianRelationsTable->aliasField('id') => $entity->guardian_relation_id])
+                    ->first();
+
+                if ($guardianRelationEntity) {
+                    $attr['type'] = 'readonly';
+                    $attr['value'] = $guardianRelationEntity->gender_id;
+                    $attr['attr']['value'] = $guardianRelationEntity->_matchingData['Genders']->name;
+                }
+            }
         }
 
         return $attr;
