@@ -615,7 +615,7 @@ trait MessagesTrait
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.'
         ],
         'ImportInstitutionSurveys' => [
-            'noImport' => 'The survey is closed'
+            'restrictImport' => 'Import operation is not allowed as the record is already Done'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
