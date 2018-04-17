@@ -1032,7 +1032,7 @@ class ExcelReportBehavior extends Behavior
             $nestedFilter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null; // used to filter nested match row data
             $nestedMatchFrom = array_key_exists('matchFrom', $nestedAttr) ? $nestedAttr['matchFrom'] : [];
             $nestedMatchTo = array_key_exists('matchTo', $nestedAttr) ? $nestedAttr['matchTo'] : [];
-            $mergeBy = array_key_exists('mergeBy', $nestedAttr) ? $nestedAttr['mergeBy'] : [];
+            $nestedMergeBy = array_key_exists('mergeBy', $nestedAttr) ? $nestedAttr['mergeBy'] : [];
             $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
 
             $variableMatchFilter = $matchFilter.$this->formatFilter($nestedMatchTo); // used to filter matching results
@@ -1060,8 +1060,8 @@ class ExcelReportBehavior extends Behavior
                         $rowValue = $this->nestedMatchRow($secondNestedRow, $printedMatchFilter, $nestedKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
                     } else {
                         $mergeRowCount = 0;
-                        if (!empty($mergeBy)) {
-                            $mergeRowCount = $this->countMergeData($mergeBy, $nestedKey, $mergeRowCount, $extra);
+                        if (!empty($nestedMergeBy)) {
+                            $mergeRowCount = $this->countMergeData($nestedMergeBy, $nestedKey, $mergeRowCount, $extra);
                         }
 
                         // printedMatchFilter already contains all key values, no need for sprintf again
@@ -1122,6 +1122,7 @@ class ExcelReportBehavior extends Behavior
                 $data = $this->getPlaceholderData($mergeFrom, $extra);
             }
         }
+
         if (!empty($data)) {
             foreach ($data as $key => $value) {
                 if (!empty($nestedMergeBy)) {
