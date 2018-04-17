@@ -212,7 +212,7 @@ class POCOR4499 extends AbstractMigration
         $data = [
             'id' => 3042,
             'name' => 'Staff Insurance',
-            'controller' => 'StaffUserInsurances',
+            'controller' => 'StaffInsurances',
             'module' => 'Institutions',
             'category' => 'Staff - Health',
             'parent_id' => 3000,
@@ -230,8 +230,8 @@ class POCOR4499 extends AbstractMigration
         $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 305');
         $data = [
             'id' => 7057,
-            'name' => 'User Insurances',
-            'controller' => 'DirectoryUserInsurances',
+            'name' => 'Insurances',
+            'controller' => 'DirectoryInsurances',
             'module' => 'Directory',
             'category' => 'Health',
             'parent_id' => 7000,
@@ -250,7 +250,7 @@ class POCOR4499 extends AbstractMigration
         $data = [
             'id' => 2038,
             'name' => 'Student Insurance',
-            'controller' => 'StudentUserInsurances',
+            'controller' => 'StudentInsurances',
             'module' => 'Institutions',
             'category' => 'Students - Health',
             'parent_id' => 2000,

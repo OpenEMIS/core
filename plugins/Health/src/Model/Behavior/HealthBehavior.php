@@ -112,32 +112,32 @@ class HealthBehavior extends Behavior
             ];
         }
 
-        if ($name == 'Students' && $controller->AccessControl->check(['StudentUserInsurances', 'index'])) {
+        if ($name == 'Students' && $controller->AccessControl->check(['StudentInsurances', 'index'])) {
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
-            $tabElements['UserInsurances'] = [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentUserInsurances', 'action' => 'index'],
+            $tabElements['Insurances'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StudentInsurances', 'action' => 'index'],
                 'text' => __('Insurances')
             ];
-        } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffUserInsurances', 'index'])) {
+        } elseif ($name == 'Staff' && $controller->AccessControl->check(['StaffInsurances', 'index'])) {
             $session = $this->_table->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
-            $tabElements['UserInsurances'] = [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffUserInsurances', 'action' => 'index'],
+            $tabElements['Insurances'] = [
+                'url' => ['plugin' => 'Institution', 'institutionId' => $params, 'controller' => 'StaffInsurances', 'action' => 'index'],
                 'text' => __('Insurances')
             ];
-        } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryUserInsurances', 'index'])) {
-            $tabElements['UserInsurances'] = [
-                'url' => ['plugin' => 'Directory', 'controller' => 'DirectoryUserInsurances', 'action' => 'index'],
+        } elseif ($name == 'Directories' && $controller->AccessControl->check(['DirectoryInsurances', 'index'])) {
+            $tabElements['Insurances'] = [
+                'url' => ['plugin' => 'Directory', 'controller' => 'DirectoryInsurances', 'action' => 'index'],
                'text' => __('Insurances')
             ];
-         } elseif ($name == 'Profiles' && $controller->AccessControl->check(['ProfileUserInsurances', 'index'])) {
-            $tabElements['UserInsurances'] = [
-                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileUserInsurances', 'action' => 'index'],
+         } elseif ($name == 'Profiles' && $controller->AccessControl->check(['ProfileInsurances', 'index'])) {
+            $tabElements['Insurances'] = [
+                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileInsurances', 'action' => 'index'],
                'text' => __('Insurances')
             ];
         }
