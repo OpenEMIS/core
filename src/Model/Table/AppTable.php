@@ -63,14 +63,6 @@ class AppTable extends Table
 
         if (in_array('order', $columns)) {
             $this->addBehavior('Reorder');
-            // to be removed after field_option_values is dropped
-            if ($this->table() == 'field_option_values') {
-                if ($this->behaviors()->has('Reorder')) {
-                    $this->behaviors()->get('Reorder')->config([
-                        'filter' => 'field_option_id',
-                    ]);
-                }
-            }
         }
 
         $dateFields = [];
@@ -155,23 +147,14 @@ class AppTable extends Table
             }
         }
 
-        if ($this->hasBehavior('FieldOption') && $this->table() == 'field_option_values') {
-            $query->innerJoin(
-                ['FieldOption' => 'field_options'],
-                [
-                    'FieldOption.id = ' . $this->aliasField('field_option_id'),
-                    'FieldOption.code' => $this->alias()
-                ]
-            )->find('order')->find('visible');
-        } else {
-            if (in_array('order', $columns)) {
-                $query->find('order');
-            }
-
-            if (in_array('visible', $columns)) {
-                $query->find('visible');
-            }
+        if (in_array('order', $columns)) {
+            $query->find('order');
         }
+
+        if (in_array('visible', $columns)) {
+            $query->find('visible');
+        }
+        
         return $query;
     }
 
