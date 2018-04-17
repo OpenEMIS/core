@@ -5,7 +5,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
 
-class UserInsurancesController extends PageController
+class InsurancesController extends PageController
 {
     public function initialize()
     {
@@ -131,11 +131,11 @@ class UserInsurancesController extends PageController
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
             'BodyMasses' => ['text' => __('Body Masses')],
-            'UserInsurances' => ['text' => __('Insurances')]
+            'Insurances' => ['text' => __('Insurances')]
         ];
 
         foreach ($tabElements as $action => &$obj) {
-            if ($action == 'UserInsurances' || $action == 'BodyMasses') {
+            if ($action == 'Insurances' || $action == 'BodyMasses') {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $plugin.$action,
@@ -159,7 +159,7 @@ class UserInsurancesController extends PageController
                 ->setUrl($tabAttr['url']);
         }
         // set active tab
-        $page->getTab('UserInsurances')->setActive('true');
+        $page->getTab('Insurances')->setActive('true');
     }
 
     // for Institution Staff and Institution Students
@@ -187,11 +187,11 @@ class UserInsurancesController extends PageController
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
             'BodyMasses' => ['text' => __('Body Masses')],
-            'UserInsurances' => ['text' => __('Insurances')]
+            'Insurances' => ['text' => __('Insurances')]
         ];
 
         foreach ($tabElements as $action => &$obj) {
-            if ($action == 'UserInsurances' || $action == 'BodyMasses') {
+            if ($action == 'Insurances' || $action == 'BodyMasses') {
                 $url = [
                     'plugin' => 'Institution',
                     'institutionId' => $encodedInstitutionId,
@@ -217,6 +217,6 @@ class UserInsurancesController extends PageController
                 ->setUrl($tabAttr['url']);
         }
         // set active tab
-        $page->getTab('UserInsurances')->setActive('true');
+        $page->getTab('Insurances')->setActive('true');
     }
 }

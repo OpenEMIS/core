@@ -120,11 +120,11 @@ class BodyMassesController extends PageController
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
             'BodyMasses' => ['text' => __('Body Masses')],
-            'UserInsurances' => ['text' => __('Insurances')]
+            'Insurances' => ['text' => __('Insurances')]
         ];
 
         foreach ($tabElements as $action => &$obj) {
-            if ($action == 'UserInsurances' || $action == 'BodyMasses') {
+            if ($action == 'Insurances' || $action == 'BodyMasses') {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $plugin.$action,
@@ -178,11 +178,11 @@ class BodyMassesController extends PageController
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
             'BodyMasses' => ['text' => __('Body Masses')],
-            'UserInsurances' => ['text' => __('Insurances')]
+            'Insurances' => ['text' => __('Insurances')]
         ];
 
         foreach ($tabElements as $action => &$obj) {
-            if ($action == 'UserInsurances' || $action == 'BodyMasses') {
+            if ($action == 'Insurances' || $action == 'BodyMasses') {
                 $url = [
                     'plugin' => 'Institution',
                     'institutionId' => $encodedInstitutionId,

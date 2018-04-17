@@ -2,9 +2,9 @@
 namespace Directory\Controller;
 
 use Cake\Event\Event;
-use Profile\Controller\UserInsurancesController as BaseController;
+use Profile\Controller\InsurancesController as BaseController;
 
-class DirectoryUserInsurancesController extends BaseController
+class DirectoryInsurancesController extends BaseController
 {
     public function beforeFilter(Event $event)
     {

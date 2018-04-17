@@ -263,11 +263,11 @@ class NavigationComponent extends Component
             'InfrastructureProjects', 'InfrastructureWashWaters', 'InfrastructureWashSanitations', 'InfrastructureWashHygienes',
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
-            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentUserInsurances', 'StaffUserInsurances'
+            'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances'
         ];
 
-        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileUserInsurances'];
-        $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryUserInsurances'];
+        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances'];
+        $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
 
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -871,7 +871,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentUserInsurances.add', 'StudentUserInsurances.view', 'StudentUserInsurances.edit', 'StudentUserInsurances.delete', 'StudentUserInsurances.index']
+                'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
         ];
         foreach ($navigation as &$n) {
@@ -925,7 +925,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'StaffBodyMasses.index', 'StaffBodyMasses.add', 'StaffBodyMasses.edit', 'StaffBodyMasses.view', 'StaffBodyMasses.delete', 'StaffUserInsurances.index', 'StaffUserInsurances.add', 'StaffUserInsurances.edit', 'StaffUserInsurances.view', 'StaffUserInsurances.delete']
+                'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests', 'StaffBodyMasses.index', 'StaffBodyMasses.add', 'StaffBodyMasses.edit', 'StaffBodyMasses.view', 'StaffBodyMasses.delete', 'StaffInsurances.index', 'StaffInsurances.add', 'StaffInsurances.edit', 'StaffInsurances.view', 'StaffInsurances.delete']
             ],
         ];
         foreach ($navigation as &$n) {
@@ -949,7 +949,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests', 'ProfileBodyMasses.index', 'ProfileBodyMasses.add', 'ProfileBodyMasses.edit', 'ProfileBodyMasses.view', 'ProfileBodyMasses.delete', 'ProfileUserInsurances.index', 'ProfileUserInsurances.add', 'ProfileUserInsurances.edit', 'ProfileUserInsurances.view', 'ProfileUserInsurances.delete']
+                'selected' => ['Profiles.Healths', 'Profiles.HealthAllergies', 'Profiles.HealthConsultations', 'Profiles.HealthFamilies', 'Profiles.HealthHistories', 'Profiles.HealthImmunizations', 'Profiles.HealthMedications', 'Profiles.HealthTests', 'ProfileBodyMasses.index', 'ProfileBodyMasses.add', 'ProfileBodyMasses.edit', 'ProfileBodyMasses.view', 'ProfileBodyMasses.delete', 'ProfileInsurances.index', 'ProfileInsurances.add', 'ProfileInsurances.edit', 'ProfileInsurances.view', 'ProfileInsurances.delete']
             ],
             'Profiles.Employments' => [
                 'title' => 'Professional',
@@ -975,7 +975,7 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests', 'DirectoryBodyMasses.index', 'DirectoryBodyMasses.add', 'DirectoryBodyMasses.edit', 'DirectoryBodyMasses.view', 'DirectoryBodyMasses.delete', 'DirectoryUserInsurances.index', 'DirectoryUserInsurances.add', 'DirectoryUserInsurances.edit', 'DirectoryUserInsurances.delete','DirectoryUserInsurances.view']
+                'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests', 'DirectoryBodyMasses.index', 'DirectoryBodyMasses.add', 'DirectoryBodyMasses.edit', 'DirectoryBodyMasses.view', 'DirectoryBodyMasses.delete', 'DirectoryInsurances.index', 'DirectoryInsurances.add', 'DirectoryInsurances.edit', 'DirectoryInsurances.delete','DirectoryInsurances.view']
             ],
             'Directories.Employments' => [
                 'title' => 'Professional',
