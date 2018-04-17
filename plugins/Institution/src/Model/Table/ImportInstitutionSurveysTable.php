@@ -13,6 +13,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use PHPExcel_Worksheet;
 
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+
 class ImportInstitutionSurveysTable extends AppTable {
     const RECORD_QUESTION = 2;
     const FIRST_RECORD = 3;
@@ -220,8 +222,8 @@ class ImportInstitutionSurveysTable extends AppTable {
                 ->where([$WorkflowSteps->aliasField('id') => $surveyStatus])
                 ->first();
 
-            if($entity && $entity->category == 3) {
-                $model->Alert->warning($this->aliasField('noImport'), ['reset'=>true]);
+            if($entity && $entity->category == WorkflowSteps::DONE) {
+                $model->Alert->warning($this->aliasField('restrictImport'), ['reset'=>true]);
                 return false;
             }
                 
