@@ -26,6 +26,33 @@ class RenderTableBehavior extends RenderBehavior {
         $fieldPrefix = $attr['model'] . '.custom_table_cells.' . $fieldId;
         $unlockFields = [];
 
+        // validation rules
+        $valueColumn = 'text_value';
+        $cellAttr = [
+            'type' => 'string'
+        ];
+        if ($customField->has('params') && !empty($customField->params)) {
+            $params = json_decode($customField->params, true);
+
+            if (array_key_exists('text', $params)) {
+                $valueColumn = 'text_value';
+                $cellAttr['type'] = 'string';
+            } else if (array_key_exists('number', $params)) {
+                $valueColumn = 'number_value';
+                $cellAttr['type'] = 'number';
+            } else if (array_key_exists('decimal', $params)) {
+                $valueColumn = 'decimal_value';
+                $cellAttr['type'] = 'number';
+
+                $cellAttr['min'] = 0;
+                $step = $this->getStepFromParams($params['decimal']);
+                if (!is_null($step)) {
+                    $cellAttr['step'] = $step;
+                }
+            }
+        }
+        // end
+
         foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
             $rowData = [];
             $rowData[] = $rowObj->name;
@@ -46,14 +73,15 @@ class RenderTableBehavior extends RenderBehavior {
                 $cellValue = "";
                 $cellInput = "";
                 $cellOptions = ['label' => false];
+                $cellOptions = array_merge($cellOptions, $cellAttr);
 
                 if (isset($cellValues[$fieldId][$tableRowId][$tableColumnId])) {
                     $cellValue = $cellValues[$fieldId][$tableRowId][$tableColumnId];
                     $cellOptions['value'] = $cellValue;
                 }
 
-                $cellInput .= $form->input($cellPrefix.".text_value", $cellOptions);
-                $unlockFields[] = $cellPrefix.".text_value";
+                $cellInput .= $form->input("$cellPrefix.$valueColumn", $cellOptions);
+                $unlockFields[] = "$cellPrefix.$valueColumn";
 
                 if ($action == 'view') {
                     $rowData[$colKey] = $cellValue;
