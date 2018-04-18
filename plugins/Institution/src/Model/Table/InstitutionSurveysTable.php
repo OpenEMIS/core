@@ -143,11 +143,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         ];
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-        return $this->controller->redirect($this->url('edit'));
-    }
-
     public function getWorkflowFilterOptions(Event $event)
     {
         $CustomModules = $this->SurveyForms->CustomModules;
