@@ -2,16 +2,18 @@
 namespace Rest\Controller\Component;
 
 use ArrayObject;
+use Cake\Controller\Component;
+use Cake\Core\Configure;
+use Cake\Event\Event;
+use Cake\I18n\Time;
+use Cake\Log\Log;
 use Cake\Network\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;
-use Cake\Controller\Component;
-use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Utility\Xml;
 use Cake\Utility\Text;
-use Cake\Log\LogTrait;
-use Cake\I18n\Time;
-use Cake\Log\Log;
+use Firebase\JWT\JWT;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
@@ -21,14 +23,12 @@ define("NS_OE", "https://www.openemis.org");
 
 class RestSurveyComponent extends Component
 {
-    use LogTrait;
-
     public $controller;
     public $action;
 
     public $components = ['Paginator', 'Workflow'];
 
-    public $allowedActions = array('listing', 'schools', 'download');
+    public $allowedActions = array('listing', 'schools', 'download'. 'downloadUrl');
 
     public function initialize(array $config)
     {
@@ -50,6 +50,15 @@ class RestSurveyComponent extends Component
         }
     }
 
+    public function downloadUrl()
+    {
+        $url = '/' . $this->controller->name . '/survey/download/xform/';
+        $this->response->body(json_encode($url, JSON_UNESCAPED_UNICODE));
+        $this->response->type('json');
+        return $this->response;
+    }
+
+    // TO BE REMOVED
     public function listing()
     {
         $query = $this->Form->find('list');
@@ -116,16 +125,16 @@ class RestSurveyComponent extends Component
                 //$result['media_url'] = $media_url;
             }
         } catch (NotFoundException $e) {
-            $this->log($e->getMessage(), 'debug');
+            Log::write('debug', $e->getMessage());
             $result['list'] = [];
         }
 
         $this->response->body(json_encode($result, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
-
         return $this->response;
     }
 
+    // TO BE REMOVED
     public function schools()
     {
         $result = [];
@@ -229,12 +238,35 @@ class RestSurveyComponent extends Component
         }
     }
 
+    private function generateErrorResponse($msg)
+    {
+        $this->response->statusCode(500);
+        $this->response->body(json_encode(__($msg), JSON_UNESCAPED_UNICODE));
+        $this->response->type('json');
+        return $this->response;
+    }
+
     public function upload()
     {
         if ($this->request->is(['post', 'put'])) {
+            // check for valid authorization token to upload survey
+            $header = $this->request->header('authorization');
+            if ($header) {
+                $token = str_ireplace('bearer ', '', $header);
+                $payload = JWT::decode($token, Configure::read('Application.public.key'), ['RS256']);
+
+                // check userId in the token payload
+                if (empty($payload->sub)) {
+                    return $this->generateErrorResponse('No sub found in token');
+                }
+                $userId = $payload->sub;
+            } else {
+                return $this->generateErrorResponse('Do not have permission to access the server');
+            }
+
             $data = $this->request->data;
-            $this->log('Data:', 'debug');
-            $this->log($data, 'debug');
+            Log::write('debug', 'Data:');
+            Log::write('debug', $data);
 
             if (array_key_exists('response', $data)) {
                 $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
@@ -253,134 +285,151 @@ class RestSurveyComponent extends Component
                 $this->addResponse($xmlResponse);
                 // End
 
-                $this->log('XML Response', 'debug');
-                $this->log($xmlResponse, 'debug');
+                Log::write('debug', 'XML Response');
+                Log::write('debug', $xmlResponse);
                 $xmlResponse = str_replace("xf:", "", $xmlResponse);
                 $xmlResponse = str_replace("oe:", "", $xmlResponse);
 
                 $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse;
-                $this->log('XML String:', 'debug');
-                $this->log($xmlstr, 'debug');
+                Log::write('debug', 'XML String:');
+                Log::write('debug', $xmlstr);
                 $xml = Xml::build($xmlstr);
 
-                $formId = $xml->{$formAlias}->attributes()->id->__toString();
-                $institutionId = $xml->{$formAlias}->Institutions->__toString();
                 $periodId = $xml->{$formAlias}->AcademicPeriods->__toString();
-                $statusIds = $this->Workflow->getStepsByModelCode($CustomRecords->registryAlias(), 'COMPLETED');
-                $createdUserId = 1; // System Administrator
+                $formId = $xml->{$formAlias}->attributes()->id->__toString();
+                $institutionCode = $xml->{$formAlias}->Institutions->__toString();
 
-                $formData = [];
-                $formData = [
-                    'status_id' => 0,
-                    $this->formKey => $formId,
-                    'institution_id' => $institutionId,
-                    'academic_period_id' => $periodId,
-                    'created_user_id' => $createdUserId
-                ];
-
-                // Find existing record
-                $recordId = null;
-                $where = [
-                    $CustomRecords->aliasField($this->formKey) => $formId,
-                    $CustomRecords->aliasField('institution_id') => $institutionId,
-                    $CustomRecords->aliasField('academic_period_id') => $periodId
-                ];
-                $recordResults = $CustomRecords
+                // checking institutionId
+                $Institutions = TableRegistry::get('Institution.Institutions');
+                $institutionResult = $Institutions
                     ->find()
-                    ->where($where)
+                    ->where([
+                        $Institutions->aliasField('code') => $institutionCode
+                    ])
                     ->all();
 
-                if (!$recordResults->isEmpty()) {
-                    $record = $recordResults->first();
-                    $formData['id'] = $record->id;
-                    $formData['status_id'] = $record->status_id;
+                if ($institutionResult->isEmpty()) {
+                    $msg = __('Invalid institution code');
+                    return $this->generateErrorResponse('Invalid institution code');
                 }
-                // End
 
+                $institutionRecord = $institutionResult->first();
+                $institutionId = $institutionRecord->id;
+                // end of check for institutionId
+            
+                $SecurityUser = TableRegistry::get('User.Users');
+                $userEntity = $SecurityUser->get($userId);
+                
+                // checking of access only if the user is not super admin    
+                if ($userEntity->super_admin == 0) {
+                    $userHasAccess = $Institutions
+                        ->find('byAccess', ['userId' => $userId])
+                        ->where([
+                            $Institutions->aliasField('id') => $institutionId
+                        ])
+                        ->count();
 
-                if (!empty($statusIds)) {
-                    // Overwrite survey record only if is not completed
-                    $where[$CustomRecords->aliasField('status_id IN')] = $statusIds;
-                    $completedResults = $CustomRecords
-                        ->find()
-                        ->where($where)
-                        ->all();
+                    if ($userHasAccess == 0) {
+                        return $this->generateErrorResponse('You do not have the permission to upload this survey');
+                    }
+                }
 
-                    if ($completedResults->isEmpty()) {
-                        // Update record table
-                        $entity = $CustomRecords->newEntity($formData, ['validate' => false]);
-                        if ($CustomRecords->save($entity)) {
-                            // if($entity->status == 2) {
-                            $message = 'Survey record has been submitted successfully.';
-                            // } else {
-                            // $message = 'Survey record has been saved to draft successfully.';
-                            // }
-                            $this->log('Message:', 'debug');
-                            $this->log($message, 'debug');
-                        } else {
-                            $this->log($entity->errors(), 'debug');
+                // build survey records than check if the record don't exist, it is a invalid combination
+                $CustomRecords->buildSurveyRecords($institutionId, $formId, $periodId);
+
+                $institutionSurveyResults = $CustomRecords
+                    ->find()
+                    ->where([
+                        $CustomRecords->aliasField($this->formKey) => $formId,
+                        $CustomRecords->aliasField('institution_id') => $institutionId,
+                        $CustomRecords->aliasField('academic_period_id') => $periodId
+                    ])
+                    ->contain('Statuses')
+                    ->all();
+
+                if ($institutionSurveyResults->isEmpty()) {
+                    return $this->generateErrorResponse('No record found for institution for the form for the period');
+                }
+
+                $institutionSurveyEntity = $institutionSurveyResults->first();
+                $institutionSurveyId = $institutionSurveyEntity->id;
+                $institutionSurveyStatusId = $institutionSurveyEntity->status_id;
+
+                // if the survey is expired
+                if ($institutionSurveyStatusId == $CustomRecords::EXPIRED) {
+                    $message = 'Survey record is not saved.';
+                    Log::write('debug', 'Message:');
+                    Log::write('debug', $message);
+                    return $this->generateErrorResponse('Survey is already expired');
+                }
+
+                // if the survey is done
+                if (!is_null($institutionSurveyEntity->status) && $institutionSurveyEntity->status->category == WorkflowSteps::DONE) {
+                    $message = 'Survey record is not saved.';
+                    Log::write('debug', 'Message:');
+                    Log::write('debug', $message);
+                    return $this->generateErrorResponse('Survey is already completed');
+                }
+
+                // update modified user id to the entitiy
+                $institutionSurveyEntity = $CustomRecords->patchEntity($institutionSurveyEntity, ['modified_user_id' => $userId], ['validate' =>false]);     
+                if ($CustomRecords->save($institutionSurveyEntity)) {
+                   $message = 'Survey record has been submitted successfully.';
+                    Log::write('debug', 'Message:');
+                    Log::write('debug', $message);
+                } else {
+                    Log::write('debug', $institutionSurveyEntity->errors());
+                }
+
+                // Delete relevance questions
+                $this->deleteQuestionWithRules($formId, $institutionSurveyId);
+
+                // Rules
+                $RulesTable = TableRegistry::get('Survey.SurveyRules');
+                $rules = $RulesTable
+                    ->find('SurveyRulesList', [
+                        'survey_form_id' => $formId
+                    ])
+                    ->toArray();
+                // End Rules
+                
+                $answers = new ArrayObject();
+                $fields = $xml->{$formAlias}->{$fieldAlias};
+
+                foreach ($fields as $field) {
+                    $fieldId = $field->attributes()->id->__toString();
+                    $fieldType = $this->Field->get($fieldId)->field_type;
+                    $responseValue = urldecode($field->__toString());
+
+                    $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
+                    if (method_exists($this, $fieldTypeFunction)) {
+                        $responseData = [
+                            $this->recordKey => $institutionSurveyEntity->id,
+                            $this->fieldKey => $fieldId,
+                            'created_user_id' => $userId
+                        ];
+
+                        $extra = new ArrayObject([]);
+                        $extra['model'] = $this->FieldValue;
+                        $extra['cellModel'] = $this->TableCell;
+                        $extra['data'] = $responseData;
+                        $extra['value'] = trim($responseValue);
+                        $extra['recordKey'] = $this->recordKey;
+                        $extra['formKey'] = $this->formKey;
+                        $extra['fieldKey'] = $this->fieldKey;
+
+                        $questionId = $extra['data']['survey_question_id'];
+                        $show = $this->isRelevantQuestion($rules, $questionId, $answers, $responseValue);
+                        if ($show) {
+                            $this->$fieldTypeFunction($field, $institutionSurveyEntity, $extra);
                         }
-                        // End
-
-                        $recordId = $entity->id;
-
-                        // Delete relevance questions
-                        $this->deleteQuestionWithRules($entity->survey_form_id);
-
-                        // Rules
-                        $RulesTable = TableRegistry::get('Survey.SurveyRules');
-                        $rules = $RulesTable
-                            ->find('SurveyRulesList', [
-                                'survey_form_id' => $entity->survey_form_id
-                            ])
-                            ->toArray();
-                        // End Rules
-
-                        $answers = new ArrayObject();
-
-                        if (!is_null($recordId)) {
-                            $fields = $xml->{$formAlias}->{$fieldAlias};
-                            foreach ($fields as $field) {
-                                $fieldId = $field->attributes()->id->__toString();
-                                $fieldType = $this->Field->get($fieldId)->field_type;
-                                $responseValue = urldecode($field->__toString());
-
-                                $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
-                                if (method_exists($this, $fieldTypeFunction)) {
-                                    $responseData = [
-                                        $this->recordKey => $recordId,
-                                        $this->fieldKey => $fieldId,
-                                        'created_user_id' => $createdUserId
-                                    ];
-
-                                    $extra = new ArrayObject([]);
-                                    $extra['model'] = $this->FieldValue;
-                                    $extra['cellModel'] = $this->TableCell;
-                                    $extra['data'] = $responseData;
-                                    $extra['value'] = trim($responseValue);
-                                    $extra['recordKey'] = $this->recordKey;
-                                    $extra['formKey'] = $this->formKey;
-                                    $extra['fieldKey'] = $this->fieldKey;
-
-                                    $questionId = $extra['data']['survey_question_id'];
-                                    $show = $this->isRelevantQuestion($rules, $questionId, $answers);
-                                    if ($show) {
-                                        $this->$fieldTypeFunction($field, $entity, $extra);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        $message = 'Survey record is not saved.';
-                        $this->log('Message:', 'debug');
-                        $this->log($message, 'debug');
                     }
                 }
             }
         }
     }
 
-    private function isRelevantQuestion($rules, $questionId, ArrayObject $answers)
+    private function isRelevantQuestion($rules, $questionId, ArrayObject $answers, $responseValue)
     {
         $show = true;
         if (isset($rules[$questionId])) {
@@ -401,7 +450,7 @@ class RestSurveyComponent extends Component
         return $show;
     }
 
-    private function deleteQuestionWithRules($surveyFormId)
+    private function deleteQuestionWithRules($surveyFormId, $recordId)
     {
         $RulesTable = TableRegistry::get('Survey.SurveyRules');
         $questions = $RulesTable
@@ -445,7 +494,7 @@ class RestSurveyComponent extends Component
 
         $answerEntity = $model->newEntity($answerData);
         if (!$model->save($answerEntity)) {
-            $this->log($answerEntity->errors(), 'debug');
+            Log::write('debug', $answerEntity->errors());
         }
     }
 
@@ -467,7 +516,7 @@ class RestSurveyComponent extends Component
 
         $cellEntity = $cellModel->newEntity($cellData);
         if (!$cellModel->save($cellEntity)) {
-            $this->log($cellEntity->errors(), 'debug');
+            Log::write('debug', $cellEntity->errors());
         }
     }
 
@@ -575,7 +624,7 @@ class RestSurveyComponent extends Component
                 $data['text_value'] = $json;
                 $this->saveFieldValue($data, $extra);
             } else {
-                $this->log('COORDINATES type answer is invalid', 'debug');
+                Log::write('debug', 'COORDINATES type answer is invalid');
             }
         }
     }
@@ -666,11 +715,11 @@ class RestSurveyComponent extends Component
                         }
                     }
                 } else {
-                    $this->log($repeaterEntity->errors(), 'debug');
+                    Log::write('debug', $repeaterEntity->errors());
                 }
             }
         } else {
-            $this->log('Missing Survey Form ID id Repeater Type question #' . $fieldId, 'debug');
+            Log::write('debug', 'Missing Survey Form ID id Repeater Type question #' . $fieldId);
         }
     }
 
@@ -711,7 +760,7 @@ class RestSurveyComponent extends Component
         $formNode->addChild('Institutions', null, NS_OE);
         $fieldNode = $bodyNode->addChild("input", null, NS_XF);
         $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
-        $fieldNode->addAttribute("oe-type", "select");
+        $fieldNode->addAttribute("oe-type", "string");
         $fieldNode->addChild("label", "Institution", NS_XF);
 
         $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
@@ -721,13 +770,46 @@ class RestSurveyComponent extends Component
         $references = [$this->Form->alias(), 'AcademicPeriods'];
 
         $formNode->addChild('AcademicPeriods', null, NS_OE);
-        $fieldNode = $bodyNode->addChild("input", null, NS_XF);
+        $fieldNode = $bodyNode->addChild("select1", null, NS_XF);
         $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
-        $fieldNode->addAttribute("oe-type", "select");
+        $fieldNode->addAttribute("oe-type", "integer");
         $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->alias(), 'Institutions']));
         $fieldNode->addChild("label", "Academic Period", NS_XF);
+       
+        $SurveyForms = TableRegistry::get('Survey.SurveyForms');
+        $todayDate = date("Y-m-d");
 
-        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
+        $periodListResults = $SurveyForms
+            ->find('list', [
+                'keyField' => 'academic_period_id',
+                'valueField' => 'academic_period_name'
+            ])
+            ->select([
+                'academic_period_id' => 'AcademicPeriods.id',
+                'academic_period_name' => 'AcademicPeriods.name'
+            ])
+            ->matching('SurveyStatuses.AcademicPeriods')
+            ->group(['AcademicPeriods.id'])
+            ->where([
+                'AND' => [
+                    [$SurveyForms->aliasField('id') => $id],
+                    ['SurveyStatuses.date_disabled >= ' . $todayDate]
+                ]
+            ])
+            ->all();
+
+        if (!$periodListResults->isEmpty()) {
+            $periodOptions = $periodListResults->toArray();
+
+            foreach ($periodOptions as $periodId => $periodName) {
+                $itemNode = $fieldNode->addChild("item", null, NS_XF);
+                $itemNode->addChild("label", htmlspecialchars($periodName), NS_XF);
+                $itemNode->addChild("value", htmlspecialchars($periodId), NS_XF);
+            }
+        }
+
+
+        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'integer', 'required' => true]);
         // End
 
         // used to build validation rules
@@ -1174,7 +1256,7 @@ class RestSurveyComponent extends Component
             }
         } else {
             // Survey Form ID not found
-            $this->log('Repeater Survey Form ID is not configured.', 'debug');
+            Log::write('debug', 'Repeater Survey Form ID is not configured.');
         }
         // End
     }
@@ -1303,7 +1385,7 @@ class RestSurveyComponent extends Component
 
         $responseEntity = $SurveyResponses->newEntity($responseData);
         if (!$SurveyResponses->save($responseEntity)) {
-            $this->log($responseEntity->errors(), 'debug');
+            Log::write('debug', $responseEntity->errors());
         }
     }
 }
