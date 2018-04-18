@@ -511,7 +511,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $attr;
     }
 
-    public function buildSurveyRecords($institutionId = null)
+    public function buildSurveyRecords($institutionId = null, $surveyFormId = null, $academicPeriodId = null)
     {
         if (is_null($institutionId)) {
             $session = $this->controller->request->session();
@@ -520,7 +520,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             }
         }
 
-        $surveyForms = $this->getForms();
+        $surveyForms = !is_null($surveyFormId) ? $this->getForms($surveyFormId) : $this->getForms();
         $todayDate = date("Y-m-d");
         $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
         $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
@@ -566,7 +566,14 @@ class InstitutionSurveysTable extends ControllerActionTable
 
                     $periodResults = $SurveyStatusPeriods
                     ->find()
-                    ->matching($this->AcademicPeriods->alias())
+                    ->matching($this->AcademicPeriods->alias(), function ($q) use ($academicPeriodId) {
+                        if (!is_null($academicPeriodId)) {
+                            return $q->where([
+                                $this->AcademicPeriods->aliasField('id') => $academicPeriodId
+                            ]);
+                        }
+                        return $q;
+                    })
                     ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
                         return $q
                             ->where([
@@ -581,10 +588,10 @@ class InstitutionSurveysTable extends ControllerActionTable
                             $periodId = $obj->academic_period_id;
 
                             $where = [
-                            $this->aliasField('academic_period_id') => $periodId,
-                            $this->aliasField('survey_form_id') => $surveyFormId,
-                            $this->aliasField('institution_id') => $institutionId
-                        ];
+                                $this->aliasField('academic_period_id') => $periodId,
+                                $this->aliasField('survey_form_id') => $surveyFormId,
+                                $this->aliasField('institution_id') => $institutionId
+                            ];
 
                             $results = $this
                             ->find('all')
@@ -594,13 +601,13 @@ class InstitutionSurveysTable extends ControllerActionTable
                             if ($results->isEmpty()) {
                                 // Insert New Survey if not found
                                 $surveyData = [
-                                'status_id' => $openStatusId,
-                                'academic_period_id' => $periodId,
-                                'survey_form_id' => $surveyFormId,
-                                'institution_id' => $institutionId,
-                                'created_user_id' => 1,
-                                'created' => new Time('NOW')
-                            ];
+                                    'status_id' => $openStatusId,
+                                    'academic_period_id' => $periodId,
+                                    'survey_form_id' => $surveyFormId,
+                                    'institution_id' => $institutionId,
+                                    'created_user_id' => 1,
+                                    'created' => new Time('NOW')
+                                ];
 
                                 $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
                                 if ($this->save($surveyEntity)) {

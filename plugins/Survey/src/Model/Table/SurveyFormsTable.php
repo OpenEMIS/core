@@ -434,8 +434,7 @@ class SurveyFormsTable extends CustomFormsTable
                         'valueField' => 'type_id'
                     ])
                     ->select([
-                        'type_id' => 'Types.id',
-                        'type_name' => 'Types.name'
+                        'type_id' => 'Types.id'
                     ])
                     ->contain(['Types'])
                     ->group(['Types.id'])
