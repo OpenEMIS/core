@@ -419,6 +419,7 @@ class ImportOutcomeResultsTable extends AppTable
         $tempRow['academic_period_id'] = $requestData['academic_period'];
         $tempRow['outcome_template_id'] = $requestData['outcome_template'];
         $tempRow['outcome_period_id'] = $requestData['outcome_period'];
+        $tempRow['institution_class_id'] = $requestData['class'];
         $tempRow['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         if ($tempRow->offsetExists('outcome_criteria_id') && $tempRow->offsetExists('student_id')) {
@@ -442,20 +443,21 @@ class ImportOutcomeResultsTable extends AppTable
                     $tempRow['education_subject_id'] = $outcomeCriteriaEntity->education_subject_id;
                     $tempRow['education_grade_id'] = $outcomeCriteriaEntity->_matchingData['Templates']->education_grade_id;
 
-                    $Students = TableRegistry::get('Institution.Students');
+                    $Students = TableRegistry::get('Institution.InstitutionClassStudents');
                     $studentEntity = $Students->find()
                         ->where([
                             $Students->aliasField('student_id') => $tempRow['student_id'],
                             $Students->aliasField('academic_period_id') => $tempRow['academic_period_id'],
                             $Students->aliasField('education_grade_id') => $tempRow['education_grade_id'],
                             $Students->aliasField('institution_id') => $tempRow['institution_id'],
+                            $Students->aliasField('institution_class_id') => $tempRow['institution_class_id'],
                             $Students->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
                         ])
                         ->first();
 
                     if (empty($studentEntity)) {
                         // student is not in the education grade
-                        $rowInvalidCodeCols['student_id'] = __('Student does not belong to this Education Grade in this Institution');
+                        $rowInvalidCodeCols['student_id'] = __('Student does not belong to this Education Grade/Class in this Institution');
                         return false;
                     }
 
