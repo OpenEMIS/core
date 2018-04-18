@@ -166,10 +166,6 @@ class InstitutionPositionsTable extends ControllerActionTable
             'visible' => true,
             'type' => 'select'
         ]);
-        $this->field('staff_position_grade_id', [
-            'visible' => true,
-            'type' => 'select'
-        ]);
         $this->field('current_staff_list', [
             'label' => '',
             'override' => true,
@@ -193,6 +189,23 @@ class InstitutionPositionsTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request) 
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $positionGradeOptions = [];
+            if ($entity->has('staff_position_title_id')) {
+                $positionGradeOptions = $this->StaffPositionGrades->getAvailablePositionGrades($entity->staff_position_title_id);
+            }
+
+            $attr['options'] = $positionGradeOptions;
+        }
+
+        return $attr;
+    }
+
 
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
     {
@@ -249,6 +262,10 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('staff_position_grade_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('is_homeroom', ['entity' => $entity]);
 
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
@@ -373,7 +390,6 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // pr('model - indexBeforeQuery');
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
 
@@ -406,6 +422,10 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('staff_position_grade_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('is_homeroom');
     }
 
@@ -769,6 +789,4 @@ class InstitutionPositionsTable extends ControllerActionTable
             return $UsersTable->get($entity->staff_id)->name;
         }
     }
-
-
 }

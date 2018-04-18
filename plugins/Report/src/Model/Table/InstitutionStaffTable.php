@@ -201,8 +201,9 @@ class InstitutionStaffTable extends AppTable
         if ($entity->has('user')) {
             if ($entity->user->has('date_of_birth')) {
                 if (!empty($entity->user->date_of_birth)) {
-                    $yearOfBirth = $entity->user->date_of_birth->format('Y');
-                    $age = date("Y")-$yearOfBirth;
+                    $dateOfBirth = $entity->user->date_of_birth->format('Y-m-d');
+                    $today = date('Y-m-d');
+                    $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
                 }
             }
         }
