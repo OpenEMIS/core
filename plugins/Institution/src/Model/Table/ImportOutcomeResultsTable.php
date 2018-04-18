@@ -448,7 +448,8 @@ class ImportOutcomeResultsTable extends AppTable
                             $Students->aliasField('student_id') => $tempRow['student_id'],
                             $Students->aliasField('academic_period_id') => $tempRow['academic_period_id'],
                             $Students->aliasField('education_grade_id') => $tempRow['education_grade_id'],
-                            $Students->aliasField('institution_id') => $tempRow['institution_id']
+                            $Students->aliasField('institution_id') => $tempRow['institution_id'],
+                            $Students->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
                         ])
                         ->first();
 
