@@ -432,6 +432,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             // table headers
             $tableHeaders[] = $attr['item_options'][$this->competencyItemId]['name'] . ' ' . __('Criteria');
             $tableHeaders[] = $attr['student_options'][$this->studentId]['name'];
+            $tableHeaders[] = __('Comments');
 
             $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
             $CompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
@@ -442,7 +443,8 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $CompetencyCriterias->aliasField('code'),
                     $CompetencyCriterias->aliasField('name'),
                     $CompetencyCriterias->aliasField('competency_grading_type_id'),
-                    $CompetencyResults->aliasField('competency_grading_option_id')
+                    $CompetencyResults->aliasField('competency_grading_option_id'),
+                    $CompetencyResults->aliasField('comments')
                 ])
                 ->leftJoin([$CompetencyResults->alias() => $CompetencyResults->table()], [
                     $CompetencyResults->aliasField('academic_period_id = ') . $CompetencyCriterias->aliasField('academic_period_id'),
@@ -471,9 +473,15 @@ class StudentCompetenciesTable extends ControllerActionTable
                         $result = $gradingTypes[$gradingTypeId][$gradingOptionId];
                     }
 
+                    $comments = '';
+                    if (!is_null($criteriaObj->{$CompetencyResults->alias()}['comments'])) {
+                        $comments = $criteriaObj->{$CompetencyResults->alias()}['comments'];
+                    }
+
                     $rowData = [];
                     $rowData[] = $name;
                     $rowData[] = $result;
+                    $rowData[] = $comments;
 
                     // table cells
                     $tableCells[] = $rowData;
@@ -497,20 +505,23 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ->first();
 
             // table footers
-            $comments = '';
+            $overallComment = '';
             if (!empty($itemComment) && $itemComment->comments != '') {
-                $comments = $itemComment->comments;
+                $overallComment = $itemComment->comments;
             }
-            $tableFooters[] = __('Comments');
-            $tableFooters[] = $comments;
+            $tableFooters[] = '';
+            $tableFooters[] = __('Overall Comment') . ':';
+            $tableFooters[] = $overallComment;
 
         } else {
             // table headers
             $tableHeaders[] = __('Competency Criteria');
             $tableHeaders[] = __('Result');
+            $tableHeaders[] = __('Comments');
 
             // table cells
             $tableCells[] = __('No Competency Item or Student selected');
+            $tableCells[] = '';
             $tableCells[] = '';
         }
 
