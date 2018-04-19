@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Xml;
 use Cake\Utility\Text;
 use Firebase\JWT\JWT;
+use Firebase\JWT\ExpiredException;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
@@ -238,30 +239,33 @@ class RestSurveyComponent extends Component
         }
     }
 
-    private function generateErrorResponse($msg)
-    {
-        $this->response->statusCode(500);
-        $this->response->body(json_encode(__($msg), JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
-        return $this->response;
-    }
-
     public function upload()
     {
+        $generateErrorResponse = function ($params = [], $code = 500) {
+            $this->response->statusCode($code);
+            $this->response->body(json_encode(($params), JSON_UNESCAPED_UNICODE));
+            $this->response->type('json');
+            return $this->response;
+        };
+
         if ($this->request->is(['post', 'put'])) {
             // check for valid authorization token to upload survey
             $header = $this->request->header('authorization');
             if ($header) {
                 $token = str_ireplace('bearer ', '', $header);
-                $payload = JWT::decode($token, Configure::read('Application.public.key'), ['RS256']);
+                try {
+                    $payload = JWT::decode($token, Configure::read('Application.public.key'), ['RS256']);
+                } catch (ExpiredException $e) {
+                    return $generateErrorResponse(['message' => __('Expired token')], 500);
+                }
 
                 // check userId in the token payload
                 if (empty($payload->sub)) {
-                    return $this->generateErrorResponse('No sub found in token');
+                    return $generateErrorResponse(['message' => __('No userId found in token')], 500);
                 }
                 $userId = $payload->sub;
             } else {
-                return $this->generateErrorResponse('Do not have permission to access the server');
+                return $generateErrorResponse(['message' => __('Do not have permission to access the server')], 500);
             }
 
             $data = $this->request->data;
@@ -310,7 +314,7 @@ class RestSurveyComponent extends Component
 
                 if ($institutionResult->isEmpty()) {
                     $msg = __('Invalid institution code');
-                    return $this->generateErrorResponse('Invalid institution code');
+                    return $generateErrorResponse(['message' => __('Invalid institution code')], 500);
                 }
 
                 $institutionRecord = $institutionResult->first();
@@ -330,7 +334,7 @@ class RestSurveyComponent extends Component
                         ->count();
 
                     if ($userHasAccess == 0) {
-                        return $this->generateErrorResponse('You do not have the permission to upload this survey');
+                        return $generateErrorResponse(['message' => __('You do not have the permission to upload this survey')], 500);
                     }
                 }
 
@@ -348,7 +352,7 @@ class RestSurveyComponent extends Component
                     ->all();
 
                 if ($institutionSurveyResults->isEmpty()) {
-                    return $this->generateErrorResponse('No record found for institution for the form for the period');
+                    return $generateErrorResponse(['message' => __('No record found for institution for the form for the period')], 500);
                 }
 
                 $institutionSurveyEntity = $institutionSurveyResults->first();
@@ -360,7 +364,7 @@ class RestSurveyComponent extends Component
                     $message = 'Survey record is not saved.';
                     Log::write('debug', 'Message:');
                     Log::write('debug', $message);
-                    return $this->generateErrorResponse('Survey is already expired');
+                    return $generateErrorResponse(['message' => __('Survey is already expired')], 500);
                 }
 
                 // if the survey is done
@@ -368,7 +372,7 @@ class RestSurveyComponent extends Component
                     $message = 'Survey record is not saved.';
                     Log::write('debug', 'Message:');
                     Log::write('debug', $message);
-                    return $this->generateErrorResponse('Survey is already completed');
+                    return $generateErrorResponse(['message' => __('Survey is already completed')], 500);
                 }
 
                 // update modified user id to the entitiy
@@ -901,6 +905,59 @@ class RestSurveyComponent extends Component
                 $this->FormField->aliasField($this->formKey) => $id
             ])
             ->toArray();
+    }
+
+    private function decimal($field, $parentNode, $instanceId, $extra)
+    {
+        $constraint = null;
+        $validationType = null;
+        $validations = [];
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+
+            $length = $params['length'];
+            $precision = $params['precision'];
+
+            if ($precision == 0) {
+                $validationType = 'total_digits';
+                $validations['total_digits'] = $length;
+                $validationHint = $this->Field->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
+            } else {
+                $validationType = 'fraction_digits';
+                $validations['total_digits'] = $length + $precision;
+                $validations['fraction_digits'] = $precision;
+                $validationHint = $this->Field->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
+            }
+        }
+
+        if (!is_null($validationType)) {
+            $bindType = "decimial".Inflector::camelize($validationType).$extra['index'];
+
+            // introduce subIndex to handle question inside repeater has validation
+            $subIndex = $extra['subIndex'];
+            if (!empty($subIndex)) {
+                $bindType .= "_$subIndex";
+            }
+            // End
+
+            $schemaNode = $extra['schema'];
+            $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+            $simpleType->addAttribute("name", $bindType);
+
+            $restriction = $simpleType->addChild('restriction', null, NS_XSD);
+            $restriction->addAttribute("base", "xf:decimal");
+
+            foreach ($validations as $key => $value) {
+                $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                $condition->addAttribute("value", $value);
+            }
+        }
+
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = $bindType;
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
     private function text($field, $parentNode, $instanceId, $extra)
