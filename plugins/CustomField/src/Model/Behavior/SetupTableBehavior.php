@@ -18,7 +18,6 @@ class SetupTableBehavior extends SetupBehavior
         parent::initialize($config);
 
         $this->ruleOptions = [
-            'text' => __('Text Validation'),
             'number' => __('Number Validation'),
             'decimal' => __('Decimal Validation')
         ];
@@ -77,9 +76,7 @@ class SetupTableBehavior extends SetupBehavior
                 // view / edit
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('text', $params)) {
-                        $model->request->query['table_rule'] = 'text';
-                    } else if (array_key_exists('number', $params)) {
+                    if (array_key_exists('number', $params)) {
                         $model->request->query['table_rule'] = 'number';
                     } else if (array_key_exists('decimal', $params)) {
                         $model->request->query['table_rule'] = 'decimal';
@@ -132,8 +129,8 @@ class SetupTableBehavior extends SetupBehavior
                 $model->field('table_decimal_length');
                 $model->field('table_decimal_precision');
                 break;
-            case 'text':
             case 'number':
+                break;
             default:
                 break;
         }
@@ -277,9 +274,6 @@ class SetupTableBehavior extends SetupBehavior
                     $params = [];
 
                     switch ($selectedRule) {
-                        case 'text':
-                            $params['text'] = 1;
-                            break;
                         case 'number':
                             $params['number'] = 1;
                             break;
