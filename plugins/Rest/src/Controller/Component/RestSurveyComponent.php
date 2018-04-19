@@ -925,7 +925,7 @@ class RestSurveyComponent extends Component
                 $validationHint = $this->Field->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
             } else {
                 $validationType = 'fraction_digits';
-                $validations['total_digits'] = $length + $precision;
+                $validations['total_digits'] = $length;
                 $validations['fraction_digits'] = $precision;
                 $validationHint = $this->Field->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
             }
