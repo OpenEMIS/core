@@ -369,6 +369,11 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $this->field('is_homeroom');
 
+        $this->field('created', [
+            'visible' => true,
+            'after' => 'is_homeroom'
+        ]);
+
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
 
@@ -385,6 +390,10 @@ class InstitutionPositionsTable extends ControllerActionTable
             if (!empty($search)) {
                 $extra['OR'] = [$this->StaffPositionTitles->aliasField('name').' LIKE' => '%' . $search . '%'];
             }
+        }
+        if (is_null($this->request->query('sort'))) {
+            $this->request->query['sort'] = 'created';
+            $this->request->query['direction'] = 'desc';
         }
     }
 
