@@ -198,8 +198,8 @@ class StudentBehavioursTable extends AppTable
 
     public function addAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('academic_period_id');
-        $this->ControllerAction->field('class');
+        $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
+        $this->ControllerAction->field('class', ['entity' => $entity]);
         $this->ControllerAction->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
     }
 
@@ -302,14 +302,20 @@ class StudentBehavioursTable extends AppTable
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
 
         if ($action == 'add') {
-            $attr['select'] = false;
-            $periodOptions = ['0' => __('-- Select --')];
-
-            $periodOptions = $periodOptions + $this->AcademicPeriods->getYearList(['isEditable' => true]);
-            $selectedPeriod = 0;
-            if ($request->is(['post', 'put'])) {
-                $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
+            $entity = $attr['entity'];
+            $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+            
+            if ($entity->has('academic_period_id')) {
+                $selectedPeriod = $entity->academic_period_id;
+            } else {
+                if (is_null($request->query('academic_period_id'))) {
+                    $selectedPeriod = $this->AcademicPeriods->getCurrent();
+                } else {
+                    $selectedPeriod = $request->query('academic_period_id');
+                }
+                $entity->academic_period_id = $selectedPeriod;
             }
+
             $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
                 'callable' => function ($id) use ($Classes, $institutionId) {
@@ -323,7 +329,10 @@ class StudentBehavioursTable extends AppTable
                 }
             ]);
 
+            $attr['select'] = false;
             $attr['options'] = $periodOptions;
+            $attr['value'] = $selectedPeriod;
+            $attr['attr']['value'] = $selectedPeriod;
             $attr['onChangeReload'] = 'changePeriod';
 
             //set start and end dates for date of behaviour based on chosen academic period
@@ -352,15 +361,12 @@ class StudentBehavioursTable extends AppTable
     {
         if ($action == 'add') {
             $institutionId = $this->Session->read('Institution.Institutions.id');
-            $selectedPeriod = 0;
-            if ($request->is(['post', 'put'])) {
-                $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
-            }
+            $entity = $attr['entity'];
+            $selectedPeriod = $entity->academic_period_id;
 
-            $attr['select'] = false;
             $classOptions = ['0' => __('-- Select --')];
 
-            if ($selectedPeriod != 0) {
+            if (!empty($selectedPeriod)) {
                 $Classes = TableRegistry::get('Institution.InstitutionClasses');
                 $Students = TableRegistry::get('Institution.InstitutionClassStudents');
                 $classOptions = $classOptions + $Classes
@@ -389,6 +395,7 @@ class StudentBehavioursTable extends AppTable
                 ]);
             }
 
+            $attr['select'] = false;
             $attr['options'] = $classOptions;
             $attr['onChangeReload'] = 'changeClass';
         }
