@@ -496,7 +496,7 @@ class ExcelReportBehavior extends Behavior
         $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : null;
         $attr['showHeaders'] = array_key_exists('showHeaders', $settings) ? $settings['showHeaders'] : false;
         $attr['insertRows'] = array_key_exists('insertRows', $settings) ? $settings['insertRows'] : false;
-        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : null;
+        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : 1;
         $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
         $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $settings) ? $settings['imageMarginLeft'] : null;
         $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $settings) ? $settings['imageMarginTop'] : null;
@@ -727,12 +727,31 @@ class ExcelReportBehavior extends Behavior
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
     }
 
+    private function mergeRange($fromColumn, $fromRow, $toColumn, $toRow, $objWorksheet, $attr)
+    {
+        if (($fromColumn != $toColumn) || ($fromRow != $toRow)) {
+            $fromColumnValue = PHPExcel_Cell::stringFromColumnIndex($fromColumn-1);
+            $toColumnValue = PHPExcel_Cell::stringFromColumnIndex($toColumn-1);
+            $mergeRange = $fromColumnValue.$fromRow.":".$toColumnValue.$toRow;
+
+            $objWorksheet->mergeCells($mergeRange);
+
+            // fix border doesn't set after cell is merged
+            $cellStyle = $attr['style'];
+            $cellStyle->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+            $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
+        }
+    }
+
     private function row($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
     {
+        $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
         $columnValue = $attr['columnValue'];
-        $rowValue = $attr['rowValue'];
         $nestedRow = array_key_exists('children', $attr) ? $attr['children'] : [];
+
+        $mergeColumns = $attr['mergeColumns'];
+        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
 
         if (!empty($attr['data'])) {
             foreach ($attr['data'] as $key => $value) {
@@ -746,9 +765,13 @@ class ExcelReportBehavior extends Behavior
                 $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
                 if (!empty($nestedRow)) {
-                    $rowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                    $nestedRowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $mergeColumns, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
                 }
 
+                $mergeRowValue = isset($nestedRowValue) ? $nestedRowValue : $rowValue;
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+
+                $rowValue = $mergeRowValue;
                 $rowValue++;
             }
         } else {
@@ -758,22 +781,22 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function nestedRow($nestedRow, $parentKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    private function nestedRow($nestedRow, $parentKey, $parentRowValue, $parentColumnIndex, $parentMergeColumns, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
     {
-        $keyword = $this->advancedTypes['row'];
-        $nestedAttr = $this->extractPlaceholderAttr($nestedRow, $keyword, $extra);
+        $nestedAttr = $this->extractPlaceholderAttr($nestedRow, $this->advancedTypes['row'], $extra);
+        $filter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null;
         $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
 
-        $nestedRowValue = $rowValue;
-        // always output children to the immediate next column
-        $nestedColumnIndex = $columnIndex + 1;
-        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-        $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+        $nestedRowValue = $parentRowValue;
+        $nestedColumnIndex = $parentColumnIndex + ($parentMergeColumns - 1) + 1; // always output children to the immediate next column
+        $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1); // column index starts from 0
 
-        // set column width to width of next column
+        $nestedMergeColumns = $nestedAttr['mergeColumns'];
+        $mergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+
+        // set column width to width of first nested column
         $attr['columnWidth'] = $objWorksheet->getColumnDimension($nestedColumnValue)->getWidth();
 
-        $filter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null;
         if (!is_null($filter)) {
             list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedAttr['displayValue']);
             $filterStr = $this->formatFilter($filter);
@@ -786,38 +809,38 @@ class ExcelReportBehavior extends Behavior
             $nestedData = $nestedAttr['data'];
         }
 
-        foreach ($nestedData as $nestedKey => $nestedValue) {
-            if ($nestedRowValue != $rowValue) {
-                $objWorksheet->insertNewRowBefore($nestedRowValue);
-                $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
+        if (!empty($nestedData)) {
+            foreach ($nestedData as $nestedKey => $nestedValue) {
+                // skip first row don't need to auto insert new row
+                if ($nestedRowValue != $parentRowValue) {
+                    $objWorksheet->insertNewRowBefore($nestedRowValue);
+                    $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
+                }
+
+                $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
+                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+
+                if (!empty($secondNestedRow)) {
+                    $secondNestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                }
+
+                $mergeRowValue = isset($secondNestedRowValue) ? $secondNestedRowValue : $nestedRowValue;
+                $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+
+                $nestedRowValue = $mergeRowValue;
+                $nestedRowValue++;
             }
 
-            $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+            // -1 due to the last $nestedRowValue++
+            $nestedRowValue = $nestedRowValue - 1;
 
-            if (!empty($secondNestedRow)) {
-                $nestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
-            }
-
-            $nestedRowValue++;
+        } else {
+            // merge columns even if there is no data
+            $mergeRowValue = $nestedRowValue;
+            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
         }
 
-        // if nested row occupied more rows than the parent, then merge parent cell following number of rows occupied by children
-        if ($nestedRowValue > $rowValue) {
-            $rangeRowValue = $nestedRowValue-1;
-            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-            $mergeRange = $columnValue.$rowValue.":".$columnValue.$rangeRowValue;
-
-            $objWorksheet->mergeCells($mergeRange);
-            // fix border doesn't set after cell is merged
-            $cellStyle = $attr['style'];
-            $cellStyle->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
-            $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
-
-            $rowValue = $nestedRowValue-1;
-        }
-
-        return $rowValue;
+        return $nestedRowValue;
     }
 
     private function column($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
