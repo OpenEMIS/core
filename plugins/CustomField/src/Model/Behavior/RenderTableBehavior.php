@@ -34,10 +34,7 @@ class RenderTableBehavior extends RenderBehavior {
         if ($customField->has('params') && !empty($customField->params)) {
             $params = json_decode($customField->params, true);
 
-            if (array_key_exists('text', $params)) {
-                $valueColumn = 'text_value';
-                $cellAttr['type'] = 'string';
-            } else if (array_key_exists('number', $params)) {
+            if (array_key_exists('number', $params)) {
                 $valueColumn = 'number_value';
                 $cellAttr['type'] = 'number';
             } else if (array_key_exists('decimal', $params)) {
@@ -76,7 +73,7 @@ class RenderTableBehavior extends RenderBehavior {
                 $cellOptions = array_merge($cellOptions, $cellAttr);
 
                 if (isset($cellValues[$fieldId][$tableRowId][$tableColumnId])) {
-                    $cellValue = $cellValues[$fieldId][$tableRowId][$tableColumnId];
+                    $cellValue = $cellValues[$fieldId][$tableRowId][$tableColumnId][$valueColumn];
                     $cellOptions['value'] = $cellValue;
                 }
 
@@ -122,13 +119,27 @@ class RenderTableBehavior extends RenderBehavior {
             $settings['deleteFieldIds'][] = $fieldId;
             foreach ($rows as $rowId => $columns) {
                 foreach ($columns as $columnId => $obj) {
-                    $cellValue = $obj[$valueKey];
-                    if (strlen($cellValue) > 0) {
+                    $textValue = NULL;
+                    $numberValue = NULL;
+                    $decimalValue = NULL;
+                    if (array_key_exists('text_value', $obj)) {
+                        $textValue = $obj['text_value'];
+                    }
+                    if (array_key_exists('number_value', $obj)) {
+                        $numberValue = $obj['number_value'];
+                    }
+                    if (array_key_exists('decimal_value', $obj)) {
+                        $decimalValue = $obj['decimal_value'];
+                    }
+
+                    if (strlen($textValue) > 0 || strlen($numberValue) > 0 || strlen($decimalValue) > 0) {
                         $tableCells[] = [
                             $fieldKey => $fieldId,
                             $tableRowKey => $rowId,
                             $tableColumnKey => $columnId,
-                            $valueKey => $cellValue
+                            'text_value' => $textValue,
+                            'number_value' => $numberValue,
+                            'decimal_value' => $decimalValue
                         ];
                     }
                 }
