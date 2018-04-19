@@ -211,13 +211,9 @@ class ExcelReportBehavior extends Behavior
         $format = $attr['format'];
         $cellStyle = $attr['style'];
         $columnWidth = $attr['columnWidth'];
-        $mergeColumns = $attr['mergeColumns'];
 
         $targetCell = $objWorksheet->getCell($cellCoordinate);
         $targetColumnValue = $targetCell->getColumn();
-        $targetColumnIndex = PHPExcel_Cell::columnIndexFromString($targetColumnValue);
-        // by default will merge to the same row, but for nested row parent cell will merge until the last row of the children
-        $rangeRowValue = isset($attr['rangeRowValue']) && !empty($attr['rangeRowValue']) ? $attr['rangeRowValue'] : $targetCell->getRow();
 
         switch($type) {
             case 'number':
@@ -252,12 +248,6 @@ class ExcelReportBehavior extends Behavior
         // set column width to follow placeholder
         $objWorksheet->getColumnDimension($targetColumnValue)->setAutoSize(false);
         $objWorksheet->getColumnDimension($targetColumnValue)->setWidth($columnWidth);
-
-        if (!empty($mergeColumns)) {
-            $rangeColumnValue = $objCell->stringFromColumnIndex(($targetColumnIndex - 1) + ($mergeColumns - 1)); //merge need to be minus 1
-            $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rangeRowValue;
-            $objWorksheet->mergeCells($mergeRange);
-        }
     }
 
     public function renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
