@@ -99,7 +99,7 @@ class PageComponent extends Component
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 5];
+        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 7];
         return $events;
     }
 
