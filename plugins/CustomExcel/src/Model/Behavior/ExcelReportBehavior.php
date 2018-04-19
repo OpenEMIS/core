@@ -849,26 +849,31 @@ class ExcelReportBehavior extends Behavior
         $rowValue = $attr['rowValue'];
         $nestedColumn = array_key_exists('children', $attr) ? $attr['children'] : [];
 
+        $mergeColumns = $attr['mergeColumns'];
+        $mergeRowValue = $rowValue;
+
         if (!empty($attr['data'])) {
             foreach ($attr['data'] as $key => $value) {
-                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1); // column index starts from 0
+
+                // skip first column don't need to auto insert new column
                 if ($columnIndex != $attr['columnIndex']) {
                     $objWorksheet->insertNewColumnBefore($columnValue);
                     $this->updatePlaceholderCoordinate($columnValue, null, $extra);
                 }
+
                 $cellCoordinate = $columnValue.$rowValue;
                 $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
                 if (!empty($nestedColumn)) {
-                    $keyword = $this->advancedTypes[__FUNCTION__];
-                    $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $keyword, $extra);
-
+                    $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $this->advancedTypes[__FUNCTION__], $extra);
+                    $nestedRowValue = $rowValue + 1; // always output children to the immediate next row
                     $nestedColumnIndex = $columnIndex;
-                    // always output children to the immediate next row
-                    $nestedRowValue = $rowValue + 1;
+
+                    $nestedMergeColumns = $nestedAttr['mergeColumns'];
+                    $nestedMergeRowValue = $nestedRowValue;
+
                     foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
                         $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
                         if ($nestedColumnIndex != $columnIndex) {
                             $objWorksheet->insertNewColumnBefore($nestedColumnValue);
@@ -878,30 +883,27 @@ class ExcelReportBehavior extends Behavior
                         $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
                         $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
 
+                        $nestedMergeColumnIndex = $nestedColumnIndex + ($nestedMergeColumns - 1);
+                        $this->mergeRange($nestedColumnIndex, $nestedRowValue, $nestedMergeColumnIndex, $nestedMergeRowValue, $objWorksheet, $attr);
+
+                        $nestedColumnIndex = $nestedMergeColumnIndex;
                         $nestedColumnIndex++;
                     }
 
-                    // if nested column occupied more columns than the parent, then merge parent cell following number of columns occupied by children
-                    if ($nestedColumnIndex > $columnIndex) {
-                        $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
-
-                        $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rowValue;
-                        $objWorksheet->mergeCells($mergeRange);
-                        // fix border doesn't set after cell is merged
-                        $cellStyle = $attr['style'];
-                        $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
-
-                        $columnIndex = $nestedColumnIndex-1;
-                    }
+                    // -1 due to the last $nestedRowValue++
+                    $nestedColumnIndex = $nestedColumnIndex - 1;
                 }
 
+                // mergeColumn from parent will only be used if there is no nested column
+                $mergeColumnIndex = isset($nestedColumnIndex) ? $nestedColumnIndex : $columnIndex + ($mergeColumns - 1);
+                $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
+
+                $columnIndex = $mergeColumnIndex;
                 $columnIndex++;
             }
         } else {
-            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-
             // replace placeholder as blank if data is empty
+            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1); // column index starts from 0
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
