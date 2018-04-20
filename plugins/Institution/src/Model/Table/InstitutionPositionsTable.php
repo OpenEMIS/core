@@ -362,10 +362,11 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
         $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
+        $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
 
         $this->setFieldOrder([
             'position_no', 'staff_position_title_id',
-            'staff_position_grade_id',
+            'staff_position_grade_id'
         ]);
 
         if ($extra['auto_search']) {
@@ -385,10 +386,44 @@ class InstitutionPositionsTable extends ControllerActionTable
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
 
-        $query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'Assignees'])
-            ->autoFields(true);
+        $query
+            ->select([
+                $this->aliasField('position_no'),
+                $this->aliasField('is_homeroom'),
+                $this->aliasField('created'),
+                $this->aliasField('assignee_id')
+            ])
+            ->contain([
+                'Statuses' => [
+                    'fields' => [
+                        'Statuses.name'
+                    ]
+                ],
+                'StaffPositionTitles'=> [
+                    'fields' => [
+                        'StaffPositionTitles.id',
+                        'StaffPositionTitles.name',
+                        'StaffPositionTitles.order'
+                    ]
+                ],
+                'StaffPositionGrades'=> [
+                    'fields' => [
+                        'StaffPositionGrades.name',
+                        'StaffPositionGrades.order'
+                    ]
+                ],
+                'Assignees'=> [
+                    'fields' => [
+                        'Assignees.id',
+                        'Assignees.first_name',
+                        'Assignees.middle_name',
+                        'Assignees.third_name',
+                        'Assignees.last_name'
+                    ]
+                ]
+            ]);
 
-        $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order'];
+        $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order', 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
