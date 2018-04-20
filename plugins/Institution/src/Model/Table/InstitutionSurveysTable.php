@@ -152,7 +152,6 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $CustomModules = $this->SurveyForms->CustomModules;
         $module = $this->module;
-        // $list = $this->SurveyForms
         $tempList = $this->SurveyForms
             ->find('list')
             ->matching('CustomModules', function ($q) use ($CustomModules, $module) {
