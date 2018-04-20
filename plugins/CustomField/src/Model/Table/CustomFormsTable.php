@@ -195,7 +195,8 @@ class CustomFormsTable extends ControllerActionTable
                 'section' => $CustomFormsFields->aliasField('section'),
                 'id' => $CustomFormsFields->aliasField('id')
             ])
-            ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+            ->innerJoin(
+                [$CustomFields->alias() => $CustomFields->table()],
                 [
                     $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                 ]
@@ -476,7 +477,7 @@ class CustomFormsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->query['module'] = $entity->custom_module_id;
         $this->request->query['apply_all'] = $this->getApplyToAll($entity);
