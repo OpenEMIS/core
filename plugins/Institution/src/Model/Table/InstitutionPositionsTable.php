@@ -405,6 +405,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $query
             ->select([
+                $this->aliasField('id'),
                 $this->aliasField('position_no'),
                 $this->aliasField('is_homeroom'),
                 $this->aliasField('created'),
