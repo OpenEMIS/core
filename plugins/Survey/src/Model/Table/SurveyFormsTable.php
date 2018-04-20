@@ -59,6 +59,7 @@ class SurveyFormsTable extends CustomFormsTable
         $validator = parent::validationDefault($validator);
 
         $validator
+            ->requirePresence('custom_filters')
             ->add('name', [
                 'unique' => [
                     'rule' => ['validateUnique', ['scope' => 'custom_module_id']],
@@ -103,6 +104,18 @@ class SurveyFormsTable extends CustomFormsTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $keywords = ['custom_filters'];
+        foreach ($keywords as $key => $value) {
+            if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
+                if ($requestData[$this->alias()][$value] != self::ALL_CUSTOM_FILER && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
+                    $requestData[$this->alias()][$value] = [];
+                }
+            }
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -355,7 +368,11 @@ class SurveyFormsTable extends CustomFormsTable
             $this->field('custom_filter_selection');
 
             $this->field('custom_filters', [
-                'attr' => ['customModule' => $customModule, 'entity' => $entity]
+                'attr' => [
+                    'customModule' => $customModule,
+                    'entity' => $entity,
+                    'required' => true
+                ]
             ]);
         }
 
