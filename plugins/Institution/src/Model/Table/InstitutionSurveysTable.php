@@ -141,18 +141,19 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {   
+    {
         $errors = $entity->errors();
 
         $fileErrors = [];
         $session = $this->request->session();
         $sessionErrors = $this->registryAlias().'.parseFileError';
-      
+
         if ($session->check($sessionErrors)) {
             $fileErrors = $session->read($sessionErrors);
         }
 
         if (empty($errors) && empty($fileErrors)) {
+            // redirect only when no errors
             $event->stopPropagation();
             return $this->controller->redirect($this->url('edit'));
         }
