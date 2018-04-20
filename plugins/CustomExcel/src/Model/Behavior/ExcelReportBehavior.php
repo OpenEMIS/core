@@ -1032,6 +1032,7 @@ class ExcelReportBehavior extends Behavior
             $nestedFilter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null; // used to filter nested match row data
             $nestedMatchFrom = array_key_exists('matchFrom', $nestedAttr) ? $nestedAttr['matchFrom'] : [];
             $nestedMatchTo = array_key_exists('matchTo', $nestedAttr) ? $nestedAttr['matchTo'] : [];
+            $nestedMergeBy = array_key_exists('mergeBy', $nestedAttr) ? $nestedAttr['mergeBy'] : [];
             $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
 
             $variableMatchFilter = $matchFilter.$this->formatFilter($nestedMatchTo); // used to filter matching results
@@ -1058,6 +1059,11 @@ class ExcelReportBehavior extends Behavior
                     if (!empty($secondNestedRow)) {
                         $rowValue = $this->nestedMatchRow($secondNestedRow, $printedMatchFilter, $nestedKey, $rowValue, $columnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
                     } else {
+                        $mergeRowCount = 0;
+                        if (!empty($nestedMergeBy)) {
+                            $mergeRowCount = $this->countMergeData($nestedMergeBy, $nestedKey, $mergeRowCount, $extra);
+                        }
+
                         // printedMatchFilter already contains all key values, no need for sprintf again
                         $placeholder = $this->formatPlaceholder($attr['placeholderPrefix']).$printedMatchFilter.".".$attr['placeholderSuffix'];
 
@@ -1069,6 +1075,20 @@ class ExcelReportBehavior extends Behavior
                         $nestedCellCoordinate = $columnValue.$rowValue;
 
                         $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
+
+                        if ($mergeRowCount > 1) {
+                            $mergeRowValue = $rowValue + $mergeRowCount - 1;
+                            $mergeRange = $columnValue.$rowValue.":".$columnValue.$mergeRowValue;
+
+                            $objWorksheet->mergeCells($mergeRange);
+                            // fix border doesn't set after cell is merged
+                            $cellStyle = $attr['style'];
+                            $cellStyle->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                            $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
+
+                            $rowValue = $mergeRowValue;
+                        }
+
                         $rowValue++;
                     }
                 }
@@ -1080,6 +1100,42 @@ class ExcelReportBehavior extends Behavior
             }
         }
         return $rowValue;
+    }
+
+    private function countMergeData($mergeAttr, $parentKey, $mergeCount, $extra)
+    {
+        $mergeFrom = array_key_exists('mergeFrom', $mergeAttr) ? $mergeAttr['mergeFrom'] : [];
+        $filter = array_key_exists('filter', $mergeAttr) ? $mergeAttr['filter'] : null;
+        $nestedMergeBy = array_key_exists('mergeBy', $mergeAttr) ? $mergeAttr['mergeBy'] : [];
+
+        $data = [];
+        if (!empty($mergeFrom)) {
+            if (!is_null($filter)) {
+                list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($mergeFrom);
+                $formattedFilter = $this->formatFilter($filter);
+                $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$formattedFilter.".";
+
+                $placeholder = sprintf($placeholderFormat.$placeholderSuffix, $parentKey);
+                $placeholderId = sprintf($placeholderFormat.'id', $parentKey);
+                $data = Hash::combine($extra['vars'], $placeholderId, $placeholder);
+            } else {
+                $data = $this->getPlaceholderData($mergeFrom, $extra);
+            }
+        }
+
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                if (!empty($nestedMergeBy)) {
+                    $mergeCount = $this->countMergeData($nestedMergeBy, $key, $mergeCount, $extra);
+                } else {
+                    $mergeCount++;
+                }
+            }
+        } else {
+            $mergeCount++;
+        }
+        return $mergeCount;
+
     }
 
     private function matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)

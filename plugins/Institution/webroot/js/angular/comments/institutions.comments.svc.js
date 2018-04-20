@@ -222,6 +222,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         });
         columnDefs.push({
             headerName: "Name",
@@ -230,6 +231,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         });
         columnDefs.push({
             headerName: "Status",
@@ -237,6 +239,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         });
         columnDefs.push({
             headerName: "student id",
@@ -250,6 +253,27 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
         var extra = {};
+
+        if (isSubjectTab) {
+            var columnDef = {
+                headerName: "Total Mark",
+                field: "total_mark",
+                menuTabs: menuTabs,
+                suppressMenu: true,
+                valueGetter: function(params) {
+                    var marks = '';
+                    if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
+                        var value = params.data[params.colDef.field];
+                        if (!isNaN(parseFloat(value))) {
+                            marks =  $filter('number')(params.data[params.colDef.field], 2);
+                        } 
+                    } 
+                    return marks;
+                }
+            };
+
+            columnDefs.push(columnDef);
+        }
 
         // comment code column
         if (isSubjectTab) {
@@ -275,8 +299,29 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
+                suppressMenu: true
             };
             columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
+            columnDefs.push(columnDef);
+        }
+
+        if (!isSubjectTab) {
+            var columnDef = {
+                headerName: "Overall Average",
+                field: "average_mark",
+                menuTabs: menuTabs,
+                suppressMenu: true,
+                valueGetter: function(params) {
+                    var marks = '';
+                    if (angular.isDefined(params.data) && angular.isDefined(params.data[params.colDef.field])) {
+                        var value = params.data[params.colDef.field];
+                        if (!isNaN(parseFloat(value))) {
+                            marks =  $filter('number')(params.data[params.colDef.field], 2);
+                        } 
+                    } 
+                    return marks;
+                }
+            };
             columnDefs.push(columnDef);
         }
 
@@ -288,6 +333,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             filterParams: filterParams,
             filter: 'text',
             menuTabs: menuTabs,
+            suppressMenu: true
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
@@ -300,6 +346,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 menuTabs: menuTabs,
+                suppressMenu: true
             });
         }
 
@@ -460,8 +507,18 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                 student_status: reportCardStudent.student_status.name,
                                 comments: '',
                                 comment_code: '',
-                                modified_by: ''
+                                modified_by: '',
+                                total_mark: '',
+                                average_mark: ''
                             };
+
+                            if (reportCardStudent.total_mark != null) {
+                                studentsData['total_mark'] = reportCardStudent.total_mark;
+                            }
+
+                            if (reportCardStudent.average_mark != null) {
+                                studentsData['average_mark'] = reportCardStudent.average_mark;
+                            }
 
                             if (reportCardStudent.comments != null) {
                                 studentsData['comments'] = reportCardStudent.comments;
