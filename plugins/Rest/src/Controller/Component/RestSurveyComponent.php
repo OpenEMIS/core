@@ -907,59 +907,6 @@ class RestSurveyComponent extends Component
             ->toArray();
     }
 
-    private function decimal($field, $parentNode, $instanceId, $extra)
-    {
-        $constraint = null;
-        $validationType = null;
-        $validations = [];
-        $validationHint = '';
-        if ($field->has('params') && !empty($field->params)) {
-            $params = json_decode($field->params, true);
-
-            $length = $params['length'];
-            $precision = $params['precision'];
-
-            if ($precision == 0) {
-                $validationType = 'total_digits';
-                $validations['total_digits'] = $length;
-                $validationHint = $this->Field->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
-            } else {
-                $validationType = 'fraction_digits';
-                $validations['total_digits'] = $length;
-                $validations['fraction_digits'] = $precision;
-                $validationHint = $this->Field->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
-            }
-        }
-
-        if (!is_null($validationType)) {
-            $bindType = "decimial".Inflector::camelize($validationType).$extra['index'];
-
-            // introduce subIndex to handle question inside repeater has validation
-            $subIndex = $extra['subIndex'];
-            if (!empty($subIndex)) {
-                $bindType .= "_$subIndex";
-            }
-            // End
-
-            $schemaNode = $extra['schema'];
-            $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
-            $simpleType->addAttribute("name", $bindType);
-
-            $restriction = $simpleType->addChild('restriction', null, NS_XSD);
-            $restriction->addAttribute("base", "xf:decimal");
-
-            foreach ($validations as $key => $value) {
-                $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
-                $condition->addAttribute("value", $value);
-            }
-        }
-
-        $extra['tagName'] = 'input';
-        $extra['bindType'] = $bindType;
-        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
-        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
-    }
-
     private function text($field, $parentNode, $instanceId, $extra)
     {
         $bindType = 'string';
@@ -1025,35 +972,116 @@ class RestSurveyComponent extends Component
     private function number($field, $parentNode, $instanceId, $extra)
     {
         $constraint = null;
+        $validationType = null;
+        $validations = [];
         $validationHint = '';
+
         if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
 
             foreach ($params as $key => $value) {
                 switch ($key) {
                     case 'min_value':
-                        $constraint = ". >= $value";
+                        // minInclusive
+                        $validationType = $key;
+                        $validations['min_inclusive'] = $value;
                         $validationHint = $this->Field->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
                         break;
                     case 'max_value':
-                        $constraint = ". <= $value";
+                        // maxInclusive
+                        $validationType = $key;
+                        $validations['max_inclusive'] = $value;
                         $validationHint = $this->Field->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
                         break;
                     case 'range':
-                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
-                            $constraint = ". >= ".$value['lower']." && ".". <= ".$value['upper'];
-                            $validationHint = $this->Field->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
-                        }
+                        $validationType = $key;
+                        $validations['min_inclusive'] = $value['lower'];
+                        $validations['max_inclusive'] = $value['upper'];
+                        $validationHint = $this->Field->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
                         break;
                 }
             }
         }
 
-        $extra['tagName'] = 'input';
-        $extra['bindType'] = 'integer';
-        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
-        $extra['constraint'] = !empty($constraint) ? $constraint : null;
+        if (!is_null($validationType)) {
+            $bindType = "integer".Inflector::camelize($validationType).$extra['index'];
 
+            // introduce subIndex to handle question inside repeater has validation
+            $subIndex = $extra['subIndex'];
+            if (!empty($subIndex)) {
+                $bindType .= "_$subIndex";
+            }
+            // End
+
+            $schemaNode = $extra['schema'];
+            $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+            $simpleType->addAttribute("name", $bindType);
+
+            $restriction = $simpleType->addChild('restriction', null, NS_XSD);
+            $restriction->addAttribute("base", "xf:integer");
+
+            foreach ($validations as $key => $value) {
+                $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                $condition->addAttribute("value", $value);
+            }
+        }
+
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = $bindType;
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+
+    private function decimal($field, $parentNode, $instanceId, $extra)
+    {
+        $constraint = null;
+        $validationType = null;
+        $validations = [];
+        $validationHint = '';
+        if ($field->has('params') && !empty($field->params)) {
+            $params = json_decode($field->params, true);
+
+            $length = $params['length'];
+            $precision = $params['precision'];
+
+            if ($precision == 0) {
+                $validationType = 'total_digits';
+                $validations['total_digits'] = $length;
+                $validationHint = $this->Field->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
+            } else {
+                $validationType = 'fraction_digits';
+                $validations['total_digits'] = $length;
+                $validations['fraction_digits'] = $precision;
+                $validationHint = $this->Field->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
+            }
+        }
+
+        if (!is_null($validationType)) {
+            $bindType = "decimial".Inflector::camelize($validationType).$extra['index'];
+
+            // introduce subIndex to handle question inside repeater has validation
+            $subIndex = $extra['subIndex'];
+            if (!empty($subIndex)) {
+                $bindType .= "_$subIndex";
+            }
+            // End
+
+            $schemaNode = $extra['schema'];
+            $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+            $simpleType->addAttribute("name", $bindType);
+
+            $restriction = $simpleType->addChild('restriction', null, NS_XSD);
+            $restriction->addAttribute("base", "xf:decimal");
+
+            foreach ($validations as $key => $value) {
+                $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                $condition->addAttribute("value", $value);
+            }
+        }
+
+        $extra['tagName'] = 'input';
+        $extra['bindType'] = $bindType;
+        $extra['hint'] = !empty($validationHint) ? $validationHint : null;
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
