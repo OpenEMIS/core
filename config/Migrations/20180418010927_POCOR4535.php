@@ -17,14 +17,14 @@ class POCOR4535 extends AbstractMigration
         // custom_table_cells
         $this->table('custom_table_cells', [
                 'id' => false,
-                'primary_key' => ['id'],
+                'primary_key' => [
+                    'custom_field_id',
+                    'custom_table_column_id',
+                    'custom_table_row_id',
+                    'custom_record_id'
+                ],
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the values of a table-type question in a form'
-            ])
-            ->addColumn('id', 'char', [
-                'default' => null,
-                'limit' => 36,
-                'null' => false
             ])
             ->addColumn('text_value', 'string', [
                 'limit' => 250,
@@ -83,14 +83,14 @@ class POCOR4535 extends AbstractMigration
         // institution_custom_table_cells
         $this->table('institution_custom_table_cells', [
                 'id' => false,
-                'primary_key' => ['id'],
+                'primary_key' => [
+                    'institution_custom_field_id',
+                    'institution_custom_table_column_id',
+                    'institution_custom_table_row_id',
+                    'institution_id'
+                ],
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the values of a table-type question in a form'
-            ])
-            ->addColumn('id', 'char', [
-                'default' => null,
-                'limit' => 36,
-                'null' => false
             ])
             ->addColumn('text_value', 'string', [
                 'limit' => 250,
@@ -149,14 +149,14 @@ class POCOR4535 extends AbstractMigration
         // institution_repeater_survey_table_cells
         $this->table('institution_repeater_survey_table_cells', [
                 'id' => false,
-                'primary_key' => ['id'],
+                'primary_key' => [
+                    'survey_question_id',
+                    'survey_table_column_id',
+                    'survey_table_row_id',
+                    'institution_repeater_survey_id'
+                ],
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the values of a table-type question in a form'
-            ])
-            ->addColumn('id', 'char', [
-                'default' => null,
-                'limit' => 36,
-                'null' => false
             ])
             ->addColumn('text_value', 'string', [
                 'limit' => 250,
@@ -215,14 +215,14 @@ class POCOR4535 extends AbstractMigration
         // institution_student_survey_table_cells
         $this->table('institution_student_survey_table_cells', [
                 'id' => false,
-                'primary_key' => ['id'],
+                'primary_key' => [
+                    'survey_question_id',
+                    'survey_table_column_id',
+                    'survey_table_row_id',
+                    'institution_student_survey_id'
+                ],
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the values of a table-type question in a form'
-            ])
-            ->addColumn('id', 'char', [
-                'default' => null,
-                'limit' => 36,
-                'null' => false
             ])
             ->addColumn('text_value', 'string', [
                 'limit' => 250,
@@ -281,14 +281,14 @@ class POCOR4535 extends AbstractMigration
         // institution_survey_table_cells
         $this->table('institution_survey_table_cells', [
                 'id' => false,
-                'primary_key' => ['id'],
+                'primary_key' => [
+                    'survey_question_id',
+                    'survey_table_column_id',
+                    'survey_table_row_id',
+                    'institution_survey_id'
+                ],
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the values of a table-type question in a form'
-            ])
-            ->addColumn('id', 'char', [
-                'default' => null,
-                'limit' => 36,
-                'null' => false
             ])
             ->addColumn('text_value', 'string', [
                 'limit' => 250,
@@ -347,14 +347,14 @@ class POCOR4535 extends AbstractMigration
         // staff_custom_table_cells
         $this->table('staff_custom_table_cells', [
                 'id' => false,
-                'primary_key' => ['id'],
+                'primary_key' => [
+                    'staff_custom_field_id',
+                    'staff_custom_table_column_id',
+                    'staff_custom_table_row_id',
+                    'staff_id'
+                ],
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the values of a table-type question in a form'
-            ])
-            ->addColumn('id', 'char', [
-                'default' => null,
-                'limit' => 36,
-                'null' => false
             ])
             ->addColumn('text_value', 'string', [
                 'limit' => 250,
@@ -413,14 +413,14 @@ class POCOR4535 extends AbstractMigration
         // student_custom_table_cells
         $this->table('student_custom_table_cells', [
                 'id' => false,
-                'primary_key' => ['id'],
+                'primary_key' => [
+                    'student_custom_field_id',
+                    'student_custom_table_column_id',
+                    'student_custom_table_row_id',
+                    'student_id'
+                ],
                 'collation' => 'utf8mb4_unicode_ci',
                 'comment' => 'This table contains the values of a table-type question in a form'
-            ])
-            ->addColumn('id', 'char', [
-                'default' => null,
-                'limit' => 36,
-                'null' => false
             ])
             ->addColumn('text_value', 'string', [
                 'limit' => 250,
@@ -476,19 +476,19 @@ class POCOR4535 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-        $this->execute('INSERT INTO `custom_table_cells` (`id`, `text_value`, `number_value`, `decimal_value`, `custom_field_id`, `custom_table_column_id`, `custom_table_row_id`, `custom_record_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `text_value`, NULL, NULL, `custom_field_id`, `custom_table_column_id`, `custom_table_row_id`, `custom_record_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_custom_table_cells`');
+        $this->execute('INSERT IGNORE INTO `custom_table_cells` (`text_value`, `number_value`, `decimal_value`, `custom_field_id`, `custom_table_column_id`, `custom_table_row_id`, `custom_record_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `text_value`, NULL, NULL, `custom_field_id`, `custom_table_column_id`, `custom_table_row_id`, `custom_record_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_custom_table_cells`');
 
-        $this->execute('INSERT INTO `institution_custom_table_cells` (`id`, `text_value`, `number_value`, `decimal_value`, `institution_custom_field_id`, `institution_custom_table_column_id`, `institution_custom_table_row_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `text_value`, NULL, NULL, `institution_custom_field_id`, `institution_custom_table_column_id`, `institution_custom_table_row_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_custom_table_cells`');
+        $this->execute('INSERT IGNORE INTO `institution_custom_table_cells` (`text_value`, `number_value`, `decimal_value`, `institution_custom_field_id`, `institution_custom_table_column_id`, `institution_custom_table_row_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `text_value`, NULL, NULL, `institution_custom_field_id`, `institution_custom_table_column_id`, `institution_custom_table_row_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_custom_table_cells`');
 
-        $this->execute('INSERT INTO `institution_repeater_survey_table_cells` (`id`, `text_value`, `number_value`, `decimal_value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_repeater_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `text_value`, NULL, NULL, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_repeater_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_repeater_survey_table_cells`');
+        $this->execute('INSERT IGNORE INTO `institution_repeater_survey_table_cells` (`text_value`, `number_value`, `decimal_value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_repeater_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `text_value`, NULL, NULL, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_repeater_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_repeater_survey_table_cells`');
 
-        $this->execute('INSERT INTO `institution_student_survey_table_cells` (`id`, `text_value`, `number_value`, `decimal_value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `text_value`, NULL, NULL, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_student_survey_table_cells`');
+        $this->execute('INSERT IGNORE INTO `institution_student_survey_table_cells` (`text_value`, `number_value`, `decimal_value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `text_value`, NULL, NULL, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_student_survey_table_cells`');
 
-        $this->execute('INSERT INTO `institution_survey_table_cells` (`id`, `text_value`, `number_value`, `decimal_value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `text_value`, NULL, NULL, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_survey_table_cells`');
+        $this->execute('INSERT IGNORE INTO `institution_survey_table_cells` (`text_value`, `number_value`, `decimal_value`, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `text_value`, NULL, NULL, `survey_question_id`, `survey_table_column_id`, `survey_table_row_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_institution_survey_table_cells`');
 
-        $this->execute('INSERT INTO `staff_custom_table_cells` (`id`, `text_value`, `number_value`, `decimal_value`, `staff_custom_field_id`, `staff_custom_table_column_id`, `staff_custom_table_row_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `text_value`, NULL, NULL, `staff_custom_field_id`, `staff_custom_table_column_id`, `staff_custom_table_row_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_staff_custom_table_cells`');
+        $this->execute('INSERT IGNORE INTO `staff_custom_table_cells` (`text_value`, `number_value`, `decimal_value`, `staff_custom_field_id`, `staff_custom_table_column_id`, `staff_custom_table_row_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `text_value`, NULL, NULL, `staff_custom_field_id`, `staff_custom_table_column_id`, `staff_custom_table_row_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_staff_custom_table_cells`');
 
-        $this->execute('INSERT INTO `student_custom_table_cells` (`id`, `text_value`, `number_value`, `decimal_value`, `student_custom_field_id`, `student_custom_table_column_id`, `student_custom_table_row_id`, `student_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `text_value`, NULL, NULL, `student_custom_field_id`, `student_custom_table_column_id`, `student_custom_table_row_id`, `student_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_student_custom_table_cells`');
+        $this->execute('INSERT IGNORE INTO `student_custom_table_cells` (`text_value`, `number_value`, `decimal_value`, `student_custom_field_id`, `student_custom_table_column_id`, `student_custom_table_row_id`, `student_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `text_value`, NULL, NULL, `student_custom_field_id`, `student_custom_table_column_id`, `student_custom_table_row_id`, `student_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4535_student_custom_table_cells`');
     }
 
     public function down()
