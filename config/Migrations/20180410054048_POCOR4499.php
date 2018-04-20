@@ -230,9 +230,9 @@ class POCOR4499 extends AbstractMigration
         ];
         $table->insert($data);
 
-        $row2 = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7055');
-        $order2 = $row2['order'];
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= '. $order2);
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7055');
+        $order = $row['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= '. $order);
         $data = [
             'id' => 7057,
             'name' => 'Insurances',
@@ -244,16 +244,16 @@ class POCOR4499 extends AbstractMigration
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => $order2,
+            'order' => $order,
             'visible' => 1,
             'created_user_id' => '1',
             'created' => date('Y-m-d H:i:s')
         ];
         $table->insert($data);
 
-        $row3 = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 2035');
-        $order3 = $row3['order'];
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= '. $order3);
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 2035');
+        $order = $row['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= '. $order);
         $data = [
             'id' => 2038,
             'name' => 'Student Insurance',
@@ -265,7 +265,7 @@ class POCOR4499 extends AbstractMigration
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => $order3,
+            'order' => $order,
             'visible' => 1,
             'created_user_id' => '1',
             'created' => date('Y-m-d H:i:s')
@@ -282,14 +282,22 @@ class POCOR4499 extends AbstractMigration
         $this->execute('DROP TABLE `insurance_types`');
         $this->execute('DROP TABLE `user_insurances`');
 
+        
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3042');
+        $order = $row['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= ' . $order);
         $this->execute('DELETE FROM security_functions WHERE id = 3042');
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= '. $order);
 
+        
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7057');
+        $order = $row['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= ' . $order);
         $this->execute('DELETE FROM security_functions WHERE id = 7057');
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= ' . $order2);
 
-
+        
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 2038');
+        $order = $row['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= ' . $order);
         $this->execute('DELETE FROM security_functions WHERE id = 2038');
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= ' . $order3);
     }
 }
