@@ -80,6 +80,11 @@ class InstitutionCasesTable extends ControllerActionTable
             'visible' => true,
             'after' => 'linked_records'
         ]);
+
+        if (is_null($this->request->query('sort'))) {
+            $this->request->query['sort'] = 'created';
+            $this->request->query['direction'] = 'desc';
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
