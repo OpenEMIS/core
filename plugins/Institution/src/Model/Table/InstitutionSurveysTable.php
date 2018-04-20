@@ -14,6 +14,8 @@ use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use Survey\Model\Table\SurveyFormsTable as SurveyForms;
 
 class InstitutionSurveysTable extends ControllerActionTable
 {
@@ -22,11 +24,6 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     // Default Status
     const EXPIRED = -1;
-
-    // Workflow Steps - category
-    const TO_DO = 1;
-    const IN_PROGRESS = 2;
-    const DONE = 3;
 
     public $module = 'Institution.Institutions';
     public $attachWorkflow = true;  // indicate whether the model require workflow
@@ -185,7 +182,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             [
                                 'OR' => [
                                     [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
                                 ]
                             ]
                         ]
@@ -300,9 +297,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $workflow = $this->getWorkflow($this->registryAlias(), null, $selectedFilter);
                     if (!empty($workflow)) {
                         foreach ($workflow->workflow_steps as $workflowStep) {
-                            if ($workflowStep->category == 1) {     // To Do
+                            if ($workflowStep->category == WorkflowSteps::TO_DO) {
                                 $this->openStatusId = $workflowStep->id;
-                            } elseif ($workflowStep->category == 3) {  // Done
+                            } elseif ($workflowStep->category == WorkflowSteps::DONE) {
                                 $this->closedStatusId = $workflowStep->id;
                             }
                         }
@@ -535,7 +532,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     [
                         'OR' => [
                             [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                            [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                            [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
                         ]
                     ]
                 ]);
@@ -547,7 +544,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             if ($isInstitutionTypeMatch) {
                 if (!empty($workflow)) {
                     foreach ($workflow->workflow_steps as $workflowStep) {
-                        if ($workflowStep->category == 1) {
+                        if ($workflowStep->category == WorkflowSteps::TO_DO) {
                             $openStatusId = $workflowStep->id;
                             break;
                         }
@@ -611,7 +608,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
                                 if ($this->save($surveyEntity)) {
                                 } else {
-                                    $this->log($surveyEntity->errors(), 'debug');
+                                    Log::write('debug', $surveyEntity->errors());
                                 }
                             } else {
                                 // Update Expired Survey back to Open
@@ -639,7 +636,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
-        $doneStatus = self::DONE;
+        $doneStatus = WorkflowSteps::DONE;
 
         $query
             ->select([
