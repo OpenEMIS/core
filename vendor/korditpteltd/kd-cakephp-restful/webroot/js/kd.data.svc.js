@@ -1,5 +1,5 @@
 angular.module('kd.data.svc', [])
-.service('KdDataSvc', function($q, $http) {
+.service('KdDataSvc', ['$q', '$http', function($q, $http) {
     var query = {
         responseType: 'json',
         version: 'v2',
@@ -60,7 +60,7 @@ angular.module('kd.data.svc', [])
         },
 
         querystring: function(params) {
-            let json = JSON.stringify(params);
+            var json = JSON.stringify(params);
             this._querystring = this.urlsafeB64Encode(json);
             return this;
         },
@@ -309,15 +309,15 @@ angular.module('kd.data.svc', [])
             return this.ajax(settings);
         },
 
-        translate: function(data, options = undefined) {
+        translate: function(data, options) {
             this._className = 'translate';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
                 data: data,
                 method: 'POST'
             };
-            if (options != undefined) {
-                if (options.defer != undefined) {
+            if (options !== undefined) {
+                if (options.defer !== undefined) {
                     settings.defer = options.defer;
                     settings.success = options.success;
                     settings.error = options.error;
@@ -337,7 +337,7 @@ angular.module('kd.data.svc', [])
     };
 
     function urlsafeB64Encode(textStr) {
-        let encoded = encodeURI(btoa(textStr)).replace(/=/gi, "");
+        var encoded = encodeURI(btoa(textStr)).replace(/=/gi, "");
         return encoded;
     }
 
@@ -393,4 +393,4 @@ angular.module('kd.data.svc', [])
             return newObject;
         }
     };
-});
+}]);

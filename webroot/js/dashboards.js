@@ -25,5 +25,6 @@ var dashboards = {
 			$(group).highcharts(obj);
 			$(group).css({"visibility":"visible"});
 		});
+		$('#dashboard-spinner').css({"display":"none"});
 	}
 }

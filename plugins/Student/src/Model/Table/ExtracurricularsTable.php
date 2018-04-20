@@ -47,6 +47,7 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('hours', $order++);
 		$this->ControllerAction->setFieldOrder('points', $order++);
 		$this->ControllerAction->setFieldOrder('location', $order++);
+		$this->ControllerAction->setFieldOrder('position', $order++);
 		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 

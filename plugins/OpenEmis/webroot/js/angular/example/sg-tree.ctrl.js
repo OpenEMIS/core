@@ -1,7 +1,9 @@
-//Tree Dropdown v.1.0.0
+//Tree Dropdown v.1.0.1
+(function (){
+    'use strict';
 
 angular.module('OE_Styleguide')
-    .controller('SgTreeCtrl', function($scope, $window) {
+    .controller('SgTreeCtrl', ['$scope', function($scope, $window) {
 
         $scope.outputFlag = false;
 
@@ -18,7 +20,7 @@ angular.module('OE_Styleguide')
 
 
         $scope.expandChild = function(parentData, getChildData) {
-
+            var _child; 
             setTimeout(function(){
                 if (typeof parentData !== "undefined") {
                     if (parentData.id == 4) {
@@ -58,7 +60,7 @@ angular.module('OE_Styleguide')
                 var inputModelText = $scope.inputModelText_Single2;
                 refreshList(inputModelText);
             }, 3000);
-        }
+        };
 
 
         $scope.inputModelText_using = [{
@@ -253,4 +255,7 @@ angular.module('OE_Styleguide')
             { id: 1112, name: 'single child1112' }
         ];
 
-    });
+    }]);
+
+
+})();
