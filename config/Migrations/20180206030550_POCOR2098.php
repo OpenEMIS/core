@@ -39,17 +39,16 @@ class POCOR2098 extends AbstractMigration
             WHERE `custom_modules`.`model` = "Institution.Institutions"
         ');
 
+        $data = [];
         foreach ($surveyRows as $obj) {
-            $newRecord = [
+            $data[] = [
                 'id' => Text::uuid(),
                 'survey_form_id' => $obj['id'],
                 'survey_filter_id' => $allFilterTypeId
             ];
-
-            $SurveyFormsFilters
-                ->insert($newRecord)
-                ->save();
         }
+
+        $this->insert('survey_forms_filters', $data);
     }
 
     public function down()
