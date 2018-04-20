@@ -66,7 +66,6 @@ class RestfulController extends BaseController
             if (count($tks) == 3) {
                 list($headb64, $bodyb64, $cryptob64) = $tks;
                 $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($bodyb64));
-
                 if (property_exists($payload, 'iss')) {
                     $queryDatasource = false;
                     $this->Auth->config('storage', 'Memory');
@@ -80,7 +79,7 @@ class RestfulController extends BaseController
         $this->Auth->config('authenticate', [
             'ADmad/JwtAuth.Jwt' => [
                 'parameter' => 'token',
-                'userModel' => 'Security.Users',
+                'userModel' => 'User.Users',
                 'scope' => ['Users.status' => 1],
                 'fields' => [
                     'username' => 'id'
