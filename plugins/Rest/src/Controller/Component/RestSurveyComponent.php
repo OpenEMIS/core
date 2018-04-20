@@ -59,153 +59,6 @@ class RestSurveyComponent extends Component
         return $this->response;
     }
 
-    // TO BE REMOVED
-    public function listing()
-    {
-        $query = $this->Form->find('list');
-        $options = [];
-        $options['limit'] = !is_null($this->request->query('limit')) ? $this->request->query('limit') : 20;
-        $options['page'] = !is_null($this->request->query('page')) ? $this->request->query('page') : 1;
-
-        // Start of joining SurveyStatus table
-        $todayDate = date('Y-m-d');
-        $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
-        $SurveyStatuses = TableRegistry::get('Survey.SurveyStatuses');
-
-        $query->innerJoin(
-                [$SurveyStatuses->alias() => $SurveyStatuses->table()],
-                [
-                    $SurveyStatuses->aliasField($this->formKey . ' = ') . $this->Form->aliasField('id'),
-                    $SurveyStatuses->aliasField('date_disabled >=') => $todayTimestamp
-                ]
-            )
-            ->group($this->Form->aliasField('id'));
-        //End
-
-        $models = $this->config('models');
-        if (!is_null($models['Module'])) {
-            $moduleOptions = $this->Module
-                ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
-                ->find('visible')
-                ->where([
-                    $this->Module->aliasField('parent_id') => 0
-                ])
-                ->toArray();
-            $selectedModule = !is_null($this->request->query('module')) ? $this->request->query('module') : key($moduleOptions);
-
-            $query->where([
-                $this->Form->aliasField($this->moduleKey) => $selectedModule
-            ]);
-        }
-
-        $query->order([$this->Form->aliasField('name ASC')]);
-
-        try {
-            $data = $this->Paginator->paginate($query, $options);
-            $result = [];
-            if (!$data->isEmpty()) {
-                $forms = $data->toArray();
-
-                $url = '/' . $this->controller->name . '/survey/download/xform/';
-                //$media_url = '/' . $this->controller->params->controller . '/survey/downloadImage/';
-
-                $list = [];
-                foreach ($forms as $key => $form) {
-                    $list[] = [
-                        'id' => $key,
-                        'name' => htmlspecialchars($form, ENT_QUOTES)
-                    ];
-                }
-
-                $requestPaging = $this->controller->request['paging'][$this->Form->alias()];
-                $result['total'] = $requestPaging['count'];
-                $result['page'] = $requestPaging['page'];
-                $result['limit'] = $requestPaging['perPage'];   // limit
-                $result['list'] = $list;
-                $result['url'] = $url;
-                //$result['media_url'] = $media_url;
-            }
-        } catch (NotFoundException $e) {
-            Log::write('debug', $e->getMessage());
-            $result['list'] = [];
-        }
-
-        $this->response->body(json_encode($result, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
-        return $this->response;
-    }
-
-    // TO BE REMOVED
-    public function schools()
-    {
-        $result = [];
-
-        $ids = !is_null($this->request->query('ids')) ? $this->request->query('ids') : 0;
-        $limit = !is_null($this->request->query('limit')) ? $this->request->query('limit') : 10;
-        $page = !is_null($this->request->query('page')) ? $this->request->query('page') : 1;
-
-        if ($ids != 0 && $page > 0) {
-            $formIds = explode(",", $ids);
-            // Institutions
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $institutions = $Institutions
-                ->find('list')
-                ->limit($limit)
-                ->page($page)
-                ->toArray();
-            // End
-
-            // Academic Periods
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $periods = $AcademicPeriods->getYearList(['withLevels' => false]);
-            // End
-
-            $list = [];
-            $SurveyRecords = TableRegistry::get('Institution.InstitutionSurveys');
-            $statusIds = $this->Workflow->getStepsByModelCode($SurveyRecords->registryAlias(), 'NOT_COMPLETED');
-            if (!empty($statusIds)) {
-                foreach ($institutions as $institutionId => $institution) {
-                    $SurveyRecords->buildSurveyRecords($institutionId);
-
-                    $forms = [];
-                    $surveyResults = $SurveyRecords
-                        ->find()
-                        ->where([
-                            $SurveyRecords->aliasField('institution_id') => $institutionId,
-                            $SurveyRecords->aliasField($this->formKey . ' IN') => $formIds,
-                            $SurveyRecords->aliasField('status_id IN') => $statusIds    // Not Completed
-                        ])
-                        ->all();
-
-                    if (!$surveyResults->isEmpty()) {
-                        $records = $surveyResults->toArray();
-                        foreach ($records as $recordKey => $recordObj) {
-                            $formId = $recordObj->{$this->formKey};
-                            $forms[$formId]['id'] = $formId;
-                            $forms[$formId]['periods'][] = $recordObj->academic_period_id;
-                        }
-                    }
-
-                    if (!empty($forms)) {
-                        $list[] = array(
-                            'id' => $institutionId,
-                            'name' => $institution,
-                            'forms' => $forms
-                        );
-                    }
-                }
-            }
-
-            $result['list'] = $list;
-            $result['periods'] = $periods;
-        }
-
-        $this->response->body(json_encode($result, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
-
-        return $this->response;
-    }
-
     public function download($format="xform", $id=0, $output=true)
     {
         switch ($format) {
@@ -982,13 +835,11 @@ class RestSurveyComponent extends Component
             foreach ($params as $key => $value) {
                 switch ($key) {
                     case 'min_value':
-                        // minInclusive
                         $validationType = $key;
                         $validations['min_inclusive'] = $value;
                         $validationHint = $this->Field->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
                         break;
                     case 'max_value':
-                        // maxInclusive
                         $validationType = $key;
                         $validations['max_inclusive'] = $value;
                         $validationHint = $this->Field->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
@@ -1038,19 +889,30 @@ class RestSurveyComponent extends Component
         $validationType = null;
         $validations = [];
         $validationHint = '';
+
+        $generateRangeValues = function($length, $precision = 0) {
+            $range = str_repeat('9', $length);
+            if ($precision > 0) {
+                $range .= '.' . str_repeat('9', $precision);
+            }
+            return $range;
+        };
+
         if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
 
             $length = $params['length'];
             $precision = $params['precision'];
 
+            // for positive values
+            $validations['min_inclusive'] = 0;
+            $validations['max_inclusive'] = $generateRangeValues($length, $precision);
+
             if ($precision == 0) {
                 $validationType = 'total_digits';
-                $validations['total_digits'] = $length;
                 $validationHint = $this->Field->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
             } else {
                 $validationType = 'fraction_digits';
-                $validations['total_digits'] = $length;
                 $validations['fraction_digits'] = $precision;
                 $validationHint = $this->Field->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
             }
