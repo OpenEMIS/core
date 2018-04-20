@@ -38,12 +38,12 @@
 
 <?php echo $this->element('OpenEmis.analytics') ?>
 
-<body class='fuelux' ng-app="OE_Core" ng-controller="AppCtrl">
+<body class='fuelux' ng-controller="AppCtrl">
 
 	<?= $this->element('OpenEmis.header'); ?>
 
 	<bg-splitter orientation="horizontal" class="pane-wrapper" resize-callback="splitterDragCallback" elements="getSplitterElements">
-		<bg-pane id="leftPane" class="left-pane" min-size-p="30px" max-size-p="40">
+		<bg-pane id="leftPane" class="left-pane" max-size-p="30">
 			<div class="pane-container">
 				<?php
 	        		echo $this->element('OpenEmis.navigation');

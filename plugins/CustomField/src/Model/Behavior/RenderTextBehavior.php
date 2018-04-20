@@ -15,6 +15,7 @@ class RenderTextBehavior extends RenderBehavior {
         $value = '';
 
         // for edit
+        $customField = $attr['customField'];
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
         $savedId = null;
@@ -32,6 +33,15 @@ class RenderTextBehavior extends RenderBehavior {
         if ($action == 'view') {
             if (!is_null($savedValue)) {
                 $value = $savedValue;
+
+                // url
+                if ($customField->has('params') && !empty($customField->params)) {
+                    $params = json_decode($customField->params, true);
+                    if (array_key_exists('url', $params)) {
+                        $value = $event->subject()->Html->link($savedValue, $savedValue, ['target' => '_blank', 'escape' => false]);
+                    }
+                }
+                // End
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
@@ -43,7 +53,6 @@ class RenderTextBehavior extends RenderBehavior {
                 $options['value'] = $savedValue;
             }
             // input mask
-            $customField = $attr['customField'];
             if ($customField->has('params') && !empty($customField->params)) {
                 $params = json_decode($customField->params, true);
                 if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
