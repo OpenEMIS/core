@@ -1,3 +1,11 @@
+### [3.24.0] - 2018-04-20
+- Input type validation has been added for Table field type under Administration > Survey > Questions
+- Implemented links between Staff Position Titles and Staff Position Grades under Administration > Field Options > Staff Position Titles
+- Implemented Gender for Guardian Relations under Administration > Field Options > Guardian Relations
+- Health Insurances feature has been implemented under Institution > Student/Staff > Health
+- Average and Total Marks columns have been added under Institutions > Report Cards > Comments
+- Custom Filters field has been added under Administration > Survey > Forms
+
 ### [3.23.0] - 2018-04-06
 - Implemented a non-mandatory field called 'Position' under Institutions > Students > Academic > Extracurriculars
 - Updated placeholders for Competency sheets in the Report Card template
@@ -36,7 +44,7 @@
 - Fixed a 404 error when performing individual promotion
 
 ### [3.17.0] - 2018-01-26
-- The system now allow multiple classes to share the same subject
+- The system allows multiple classes to share the same subject now
 - A new Student Attendances workflow rule (Absentee Intervention) has been added
 
 ### [3.16.0] - 2018-01-19
