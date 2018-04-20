@@ -2,9 +2,9 @@
 namespace Profile\Controller;
 
 use Cake\Event\Event;
-use Profile\Controller\BodyMassesController as BaseController;
+use Profile\Controller\InsurancesController as BaseController;
 
-class ProfileBodyMassesController extends BaseController
+class ProfileInsurancesController extends BaseController
 {
     public function beforeFilter(Event $event)
     {
@@ -16,7 +16,7 @@ class ProfileBodyMassesController extends BaseController
         parent::beforeFilter($event);
 
         // set header
-        $page->setHeader($userName . ' - ' . __('Body Mass'));
+        $page->setHeader($userName . ' - ' . __('Insurances'));
 
         // set queryString
         $page->setQueryString('security_user_id', $userId);
@@ -26,9 +26,8 @@ class ProfileBodyMassesController extends BaseController
         // set Tabs
         $this->setupTabElements(['userId' => $userId, 'userName' => $userName]);
 
-        $page->get('security_user_id')->setControlType('hidden')->setValue($userId); // set value and hide the user_id
-
-        $this->setTooltip();
+        $page->get('security_user_id')->setControlType('hidden')->setValue($userId);
+        // set value and hide the user_id
 
         //disable add, edit and delete
         $page->disable(['add', 'edit', 'delete']);
