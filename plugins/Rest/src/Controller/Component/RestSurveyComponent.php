@@ -308,7 +308,7 @@ class RestSurveyComponent extends Component
                 $institutionResult = $Institutions
                     ->find()
                     ->where([
-                        $Institutions->aliasField('code') => $institutionCode
+                        'LOWER(Institutions.code) = ' => strtolower($institutionCode)
                     ])
                     ->all();
 
