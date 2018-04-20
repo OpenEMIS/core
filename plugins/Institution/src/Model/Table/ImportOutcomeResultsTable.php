@@ -443,19 +443,31 @@ class ImportOutcomeResultsTable extends AppTable
                     $tempRow['education_subject_id'] = $outcomeCriteriaEntity->education_subject_id;
                     $tempRow['education_grade_id'] = $outcomeCriteriaEntity->_matchingData['Templates']->education_grade_id;
 
-                    $Students = TableRegistry::get('Institution.InstitutionClassStudents');
+                    $Students = TableRegistry::get('Institution.Students');
                     $studentEntity = $Students->find()
                         ->where([
                             $Students->aliasField('student_id') => $tempRow['student_id'],
                             $Students->aliasField('academic_period_id') => $tempRow['academic_period_id'],
                             $Students->aliasField('education_grade_id') => $tempRow['education_grade_id'],
                             $Students->aliasField('institution_id') => $tempRow['institution_id'],
-                            $Students->aliasField('institution_class_id') => $tempRow['institution_class_id'],
                             $Students->aliasField('student_status_id') => $this->StudentStatuses->getIdByCode('CURRENT')
-                        ])
-                        ->first();
+                        ]);
 
-                    if (empty($studentEntity)) {
+                    if (!empty($tempRow['institution_class_id'])) {
+                        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                        
+                        $studentEntity
+                            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                                 $ClassStudents->aliasField('student_id = ') . $Students->aliasField('student_id'),
+                                 $ClassStudents->aliasField('academic_period_id = ') . $Students->aliasField('academic_period_id'),
+                                 $ClassStudents->aliasField('education_grade_id = ') . $Students->aliasField('education_grade_id'),
+                                 $ClassStudents->aliasField('institution_id = ') . $Students->aliasField('institution_id'),
+                                 $ClassStudents->aliasField('student_status_id = ') . $Students->aliasField('student_status_id'),
+                                 $ClassStudents->aliasField('institution_class_id') => $tempRow['institution_class_id']
+                            ]);
+                    }
+
+                    if (empty($studentEntity->first())) {
                         // student is not in the education grade
                         $rowInvalidCodeCols['student_id'] = __('Student does not belong to this Education Grade/Class in this Institution');
                         return false;
