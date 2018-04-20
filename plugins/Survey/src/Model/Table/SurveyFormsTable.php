@@ -446,11 +446,8 @@ class SurveyFormsTable extends CustomFormsTable
             // institution type checking for forms of Institution.Institutions module
             if (array_key_exists($selectedModule, $moduleOptions) && $moduleOptions[$selectedModule] == 'Institution.Institutions') {
                 // check the form filters table if the selected module is Institution.Institutions 
-                $SecurityUsers = TableRegistry::get('User.Users');
-                $userEntity = $SecurityUsers->get($user['id']);
-
                 // filter the survey_form if is not super_admin
-                if ($userEntity->super_admin != 0) {
+                if ($user['super_admin'] == 0) {
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
 
