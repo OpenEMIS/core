@@ -764,7 +764,11 @@ class RecordBehavior extends Behavior
                         $rowId = $obj->{$tableRowKey};
                         $columnId = $obj->{$tableColumnKey};
 
-                        $cells[$fieldId][$rowId][$columnId] = $obj['text_value'];
+                        $cells[$fieldId][$rowId][$columnId] = [
+                            'text_value' => $obj['text_value'],
+                            'number_value' => $obj['number_value'],
+                            'decimal_value' => $obj['decimal_value']
+                        ];
                     }
                 }
             }
