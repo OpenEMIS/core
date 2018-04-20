@@ -59,7 +59,12 @@ class SurveyFormsTable extends CustomFormsTable
         $validator = parent::validationDefault($validator);
 
         $validator
-            ->requirePresence('custom_filters')
+            ->requirePresence('custom_filters', function ($context) {
+                if (array_key_exists('id', $context['data'])) {
+                    return false;
+                }
+                return true;
+            })
             ->add('name', [
                 'unique' => [
                     'rule' => ['validateUnique', ['scope' => 'custom_module_id']],
@@ -441,35 +446,38 @@ class SurveyFormsTable extends CustomFormsTable
             // institution type checking for forms of Institution.Institutions module
             if (array_key_exists($selectedModule, $moduleOptions) && $moduleOptions[$selectedModule] == 'Institution.Institutions') {
                 // check the form filters table if the selected module is Institution.Institutions 
-                $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-                $Institutions = TableRegistry::get('Institution.Institutions');
+                // filter the survey_form if is not super_admin
+                if ($user['super_admin'] == 0) {
+                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
 
-                // get the institution types that the user can access
-                $institutionTypesAccess = $Institutions
-                    ->find('byAccess', ['userId' => $user['id']])
-                    ->find('list', [
-                        'valueField' => 'type_id'
-                    ])
-                    ->select([
-                        'type_id' => 'Types.id'
-                    ])
-                    ->contain(['Types'])
-                    ->group(['Types.id'])
-                    ->toArray();
+                    // get the institution types that the user can access
+                    $institutionTypesAccess = $Institutions
+                        ->find('byAccess', ['userId' => $user['id']])
+                        ->find('list', [
+                            'valueField' => 'type_id'
+                        ])
+                        ->select([
+                            'type_id' => 'Types.id'
+                        ])
+                        ->contain(['Types'])
+                        ->group(['Types.id'])
+                        ->toArray();
 
-                $query
-                    ->innerJoin(
-                        [$SurveyFormsFilters->alias() => $SurveyFormsFilters->table()],
-                        [
-                            $SurveyFormsFilters->aliasField('survey_form_id = ') . $this->aliasField('id')
-                        ]
-                    )
-                    ->where([
-                        'OR' => [
-                            [$SurveyFormsFilters->aliasField('survey_filter_id IN ') => $institutionTypesAccess],
-                            [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
-                        ]
-                    ]);
+                    $query
+                        ->innerJoin(
+                            [$SurveyFormsFilters->alias() => $SurveyFormsFilters->table()],
+                            [
+                                $SurveyFormsFilters->aliasField('survey_form_id = ') . $this->aliasField('id')
+                            ]
+                        )
+                        ->where([
+                            'OR' => [
+                                [$SurveyFormsFilters->aliasField('survey_filter_id IN ') => $institutionTypesAccess],
+                                [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
+                            ]
+                        ]);
+                } 
             }
 
             return $query;
