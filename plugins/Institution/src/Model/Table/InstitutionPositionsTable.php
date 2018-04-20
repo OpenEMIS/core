@@ -418,7 +418,8 @@ class InstitutionPositionsTable extends ControllerActionTable
                         'Assignees.first_name',
                         'Assignees.middle_name',
                         'Assignees.third_name',
-                        'Assignees.last_name'
+                        'Assignees.last_name',
+                        'Assignees.preferred_name'
                     ]
                 ]
             ]);
