@@ -211,7 +211,7 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $params)) {
+        if (array_key_exists('assessment_id', $params) && array_key_exists('class_id', $params)) {
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
             $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
