@@ -205,7 +205,10 @@ class POCOR4499 extends AbstractMigration
         //end user_insurances
 
         // security_functions
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 158');
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3041');
+        $order = $row['order'];
+
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= ' . $order);
 
         // insert permission for label
         $table = $this->table('security_functions');
@@ -220,14 +223,16 @@ class POCOR4499 extends AbstractMigration
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => 158,
+            'order' => $order,
             'visible' => 1,
             'created_user_id' => '1',
             'created' => date('Y-m-d H:i:s')
         ];
         $table->insert($data);
 
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 305');
+        $row2 = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 7055');
+        $order2 = $row2['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= '. $order2);
         $data = [
             'id' => 7057,
             'name' => 'Insurances',
@@ -239,14 +244,16 @@ class POCOR4499 extends AbstractMigration
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => 305,
+            'order' => $order2,
             'visible' => 1,
             'created_user_id' => '1',
             'created' => date('Y-m-d H:i:s')
         ];
         $table->insert($data);
 
-        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 115');
+        $row3 = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 2035');
+        $order3 = $row3['order'];
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= '. $order3);
         $data = [
             'id' => 2038,
             'name' => 'Student Insurance',
@@ -258,7 +265,7 @@ class POCOR4499 extends AbstractMigration
             '_edit' => 'edit',
             '_add' => 'add',
             '_delete' => 'delete',
-            'order' => 115,
+            'order' => $order3,
             'visible' => 1,
             'created_user_id' => '1',
             'created' => date('Y-m-d H:i:s')
@@ -276,13 +283,13 @@ class POCOR4499 extends AbstractMigration
         $this->execute('DROP TABLE `user_insurances`');
 
         $this->execute('DELETE FROM security_functions WHERE id = 3042');
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 158');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= '. $order);
 
         $this->execute('DELETE FROM security_functions WHERE id = 7057');
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 305');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= ' . $order2);
 
 
         $this->execute('DELETE FROM security_functions WHERE id = 2038');
-        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 115');
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= ' . $order3);
     }
 }

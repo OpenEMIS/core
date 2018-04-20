@@ -26,7 +26,10 @@ class ProfileInsurancesController extends BaseController
         // set Tabs
         $this->setupTabElements(['userId' => $userId, 'userName' => $userName]);
 
-        $page->get('security_user_id')->setControlType('hidden')->setValue($userId); // set value and hide the user_id
-        
+        $page->get('security_user_id')->setControlType('hidden')->setValue($userId);
+        // set value and hide the user_id
+
+        //disable add, edit and delete
+        $page->disable(['add', 'edit', 'delete']);
     }
-} 
+}

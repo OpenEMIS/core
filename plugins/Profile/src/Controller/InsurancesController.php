@@ -12,9 +12,8 @@ class InsurancesController extends PageController
         parent::initialize();
         $this->loadModel('Health.InsuranceProviders');
         $this->loadModel('Health.InsuranceTypes');
-        $this->loadModel('User.UserInsurances'); 
+        $this->loadModel('User.UserInsurances');
         $this->Page->loadElementsFromTable($this->UserInsurances);
-        $this->Page->disable(['search']); // to disable the search function
     }
 
     public function index()
