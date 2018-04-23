@@ -63,7 +63,7 @@ class ReportCardsTable extends AppTable
                 'OutcomePeriods',
                 'OutcomeSubjects',
                 'StudentOutcomeSubjectComments',
-                'OutcomeCriterias',  
+                'OutcomeCriterias',
                 'StudentOutcomeResults',
                 'GroupAssessmentPeriods',
                 'GroupAssessmentItemResults'
@@ -285,10 +285,10 @@ class ReportCardsTable extends AppTable
 
             $Extracurriculars = TableRegistry::get('Student.Extracurriculars');
             $entity = $Extracurriculars->find()
-                    ->contain('ExtracurricularTypes')
-                    ->where([
-                        $Extracurriculars->aliasField('security_user_id') => $params['student_id'],
-                        'OR' => [
+                ->contain('ExtracurricularTypes')
+                ->where([
+                    $Extracurriculars->aliasField('security_user_id') => $params['student_id'],
+                    'OR' => [
                         [
                             $Extracurriculars->aliasField('end_date') . ' IS NOT NULL',
                             $Extracurriculars->aliasField('start_date') . ' <=' => $extra['report_card_start_date'],
@@ -305,8 +305,8 @@ class ReportCardsTable extends AppTable
                             $Extracurriculars->aliasField('end_date') . ' <=' => $extra['report_card_end_date']
                         ]
                     ],
-                    ])
-                    ->toArray();
+                ])
+                ->toArray();
 
             return $entity;
         }
@@ -772,17 +772,6 @@ class ReportCardsTable extends AppTable
                 ->toArray();
             return $entity;
         }
-
-        // if (array_key_exists('assessment_id', $extra)) {
-        //     $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-
-        //     $entity = $AssessmentItems->find()
-        //         ->contain(['EducationSubjects'])
-        //         ->where([$AssessmentItems->aliasField('assessment_id') => $extra['assessment_id']])
-        //         ->order(['EducationSubjects.order'])
-        //         ->toArray();
-        //     return $entity;
-        // }
     }
 
     public function onExcelTemplateInitialiseAssessmentItemsWithResults(Event $event, array $params, ArrayObject $extra)
@@ -790,7 +779,6 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
 
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-
 
             $entity = $AssessmentItems->find()
                 ->find('assessmentItemsInClass', [
@@ -814,7 +802,6 @@ class ReportCardsTable extends AppTable
                     'AssessmentItemResults.assessment_period_id IN ' => $extra['assessment_period_ids'],
                     'AssessmentItemResults.institution_id = ' . $params['institution_id']
                 ])
-                ->order(['EducationSubjects.order'])
                 ->distinct()
                 ->toArray();
 
@@ -826,6 +813,18 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+
+            $subjectList = $AssessmentItems
+                ->find('list', [
+                    'keyField' => 'education_subject_id',
+                    'valueField' => 'education_subject_id'
+                ])
+                ->find('assessmentItemsInClass', [
+                    'assessment_id' => $extra['assessment_id'],
+                    'class_id' => $params['institution_class_id']
+                ])
+                ->toArray();
 
             $entity = $AssessmentItemResults->find()
                 ->innerJoin(
@@ -846,6 +845,7 @@ class ReportCardsTable extends AppTable
                     $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
                     $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
                     $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
                 ])
                 ->formatResults(function (ResultSetInterface $results) {
                     return $results->map(function ($row) {
@@ -875,10 +875,6 @@ class ReportCardsTable extends AppTable
                     });
                 })
                 ->toArray();
-
-            //     pr('heasre');
-            // pr($entity);
-            // die;
 
             return $entity;
         }
@@ -1109,9 +1105,6 @@ class ReportCardsTable extends AppTable
                 ];
             }
 
-            pr('ksks');
-            pr($entity);
-            die;
             return $entity;
         }
     }
