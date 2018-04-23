@@ -408,8 +408,6 @@ class ExcelReportBehavior extends Behavior
         }
 
         $variableValues = $variableValues->getArrayCopy();
-        pr($variableValues);
-        die;
         return $variableValues;
     }
 
