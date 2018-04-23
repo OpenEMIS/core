@@ -825,7 +825,7 @@ class ReportCardsTable extends AppTable
                 ->toArray();
 
             // to only process the query if the class has subjects
-            $conditions = ['1 = 0'];
+            $conditions = [];
             if (!empty($subjectList)) {
                 $conditions = [
                     $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
@@ -836,6 +836,8 @@ class ReportCardsTable extends AppTable
                     $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
                     $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
                 ];
+            } else {
+                $conditions = ['1 = 0'];
             }
 
             $entity = $AssessmentItemResults->find()
@@ -1063,7 +1065,7 @@ class ReportCardsTable extends AppTable
                 ->toArray();
 
             // to only process the query if the class has subjects
-            $conditions = ['1 = 0'];
+            $conditions = [];
             if (!empty($subjectList)) {
                 $conditions = [
                     $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
@@ -1074,6 +1076,8 @@ class ReportCardsTable extends AppTable
                     $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
                     $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
                 ];
+            } else {
+                $conditions = ['1 = 0'];
             }
 
             $entity = $query
