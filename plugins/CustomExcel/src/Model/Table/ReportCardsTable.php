@@ -785,7 +785,6 @@ class ReportCardsTable extends AppTable
                     'assessment_id' => $extra['assessment_id'],
                     'class_id' => $params['institution_class_id']
                 ])
-                ->contain(['EducationSubjects'])
                 ->innerJoin(
                     ['AssessmentItemResults' => 'assessment_item_results'],
                     [
@@ -796,7 +795,6 @@ class ReportCardsTable extends AppTable
                 ->where([
                     'AssessmentItemResults.marks IS NOT NULL',
                     'AssessmentItemResults.student_id = ' . $params['student_id'],
-                    $AssessmentItems->aliasField('assessment_id') => $extra['assessment_id'],
                     'AssessmentItemResults.education_grade_id = ' . $extra['report_card_education_grade_id'],
                     'AssessmentItemResults.academic_period_id = ' . $params['academic_period_id'],
                     'AssessmentItemResults.assessment_period_id IN ' => $extra['assessment_period_ids'],
