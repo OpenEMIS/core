@@ -219,7 +219,7 @@ class ExcelReportBehavior extends Behavior
         // by default will merge to the same row, but for nested row parent cell will merge until the last row of the children
         $rangeRowValue = isset($attr['rangeRowValue']) && !empty($attr['rangeRowValue']) ? $attr['rangeRowValue'] : $targetCell->getRow();
 
-        switch($type) {
+        switch ($type) {
             case 'number':
                 // set to two decimal places
                 if (!is_null($format) && is_numeric($cellValue)) {
@@ -342,10 +342,10 @@ class ExcelReportBehavior extends Behavior
             imageSaveAlpha($imageResource, true);
 
             $objDrawing->setImageResource($imageResource);
-            $objDrawing->setWidth($imageWidth); 
-            $objDrawing->setCoordinates($cellCoordinate); 
-            $objDrawing->setOffsetX($imageMarginLeft); 
-            $objDrawing->setOffsetY($imageMarginTop); 
+            $objDrawing->setWidth($imageWidth);
+            $objDrawing->setCoordinates($cellCoordinate);
+            $objDrawing->setOffsetX($imageMarginLeft);
+            $objDrawing->setOffsetY($imageMarginTop);
             $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
         }
     }
@@ -408,6 +408,8 @@ class ExcelReportBehavior extends Behavior
         }
 
         $variableValues = $variableValues->getArrayCopy();
+        pr($variableValues);
+        die;
         return $variableValues;
     }
 
