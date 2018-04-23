@@ -768,16 +768,25 @@ class ExcelReportBehavior extends Behavior
                     $nestedRowValue = $this->nestedRow($nestedRow, $key, $rowValue, $columnIndex, $mergeColumns, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
                 }
 
+                // merge range based on mergeColumns attr and nestedRowValue
                 $mergeRowValue = isset($nestedRowValue) ? $nestedRowValue : $rowValue;
                 $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
-
                 $rowValue = $mergeRowValue;
+
                 $rowValue++;
             }
         } else {
             // replace placeholder as blank if data is empty
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+
+            // mergeColumns even if there is no data
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+
+            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
+            if (!empty($nestedRow)) {
+                $this->nestedRow($nestedRow, -1, $rowValue, $columnIndex, $mergeColumns, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+            }
         }
     }
 
@@ -824,10 +833,11 @@ class ExcelReportBehavior extends Behavior
                     $secondNestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
                 }
 
+                // merge range based on mergeColumns attr and secondNestedRowValue
                 $mergeRowValue = isset($secondNestedRowValue) ? $secondNestedRowValue : $nestedRowValue;
                 $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
-
                 $nestedRowValue = $mergeRowValue;
+
                 $nestedRowValue++;
             }
 
@@ -835,11 +845,14 @@ class ExcelReportBehavior extends Behavior
             $nestedRowValue = $nestedRowValue - 1;
 
         } else {
-            // merge columns even if there is no data
-            $mergeRowValue = $nestedRowValue;
-            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $mergeRowValue, $objWorksheet, $attr);
-        }
+            // mergeColumns even if there is no data
+            $this->mergeRange($nestedColumnIndex, $nestedRowValue, $mergeColumnIndex, $nestedRowValue, $objWorksheet, $attr);
 
+            // set nestedRow parentKey = -1 to allow mergeColumns to apply even for empty nested cells
+            if (!empty($secondNestedRow)) {
+                $this->nestedRow($secondNestedRow, -1, $nestedRowValue, $nestedColumnIndex, $nestedMergeColumns, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+            }
+        }
         return $nestedRowValue;
     }
 
