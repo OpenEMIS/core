@@ -406,14 +406,18 @@ class InstitutionPositionsTable extends ControllerActionTable
         $query
             ->select([
                 $this->aliasField('id'),
+                $this->aliasField('status_id'),
                 $this->aliasField('position_no'),
+                $this->aliasField('staff_position_title_id'),
+                $this->aliasField('staff_position_grade_id'),
+                $this->aliasField('assignee_id'),
                 $this->aliasField('is_homeroom'),
-                $this->aliasField('created'),
-                $this->aliasField('assignee_id')
+                $this->aliasField('created')
             ])
             ->contain([
                 'Statuses' => [
                     'fields' => [
+                        'Statuses.id',
                         'Statuses.name'
                     ]
                 ],
@@ -426,6 +430,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 ],
                 'StaffPositionGrades'=> [
                     'fields' => [
+                        'StaffPositionGrades.id',
                         'StaffPositionGrades.name',
                         'StaffPositionGrades.order'
                     ]
