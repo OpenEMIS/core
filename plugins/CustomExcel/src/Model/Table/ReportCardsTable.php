@@ -824,6 +824,20 @@ class ReportCardsTable extends AppTable
                 ])
                 ->toArray();
 
+            // to only process the query if the class has subjects
+            $conditions = ['1 = 0'];
+            if (!empty($subjectList)) {
+                $conditions = [
+                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
+                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
+                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
+                ];
+            }
+
             $entity = $AssessmentItemResults->find()
                 ->innerJoin(
                     [$this->alias() => $this->table()],
@@ -836,15 +850,7 @@ class ReportCardsTable extends AppTable
                     ]
                 )
                 ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
-                ->where([
-                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
-                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
-                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
-                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
-                ])
+                ->where($conditions)
                 ->formatResults(function (ResultSetInterface $results) {
                     return $results->map(function ($row) {
                         $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
@@ -1056,10 +1062,10 @@ class ReportCardsTable extends AppTable
                 ])
                 ->toArray();
 
-            $entity = $query
-                ->select($selectedColumns)
-                ->contain(['AssessmentPeriods', 'EducationSubjects'])
-                ->where([
+            // to only process the query if the class has subjects
+            $conditions = ['1 = 0'];
+            if (!empty($subjectList)) {
+                $conditions = [
                     $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
                     $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
                     $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
@@ -1067,7 +1073,13 @@ class ReportCardsTable extends AppTable
                     $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
                     $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
                     $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
-                ])
+                ];
+            }
+
+            $entity = $query
+                ->select($selectedColumns)
+                ->contain(['AssessmentPeriods', 'EducationSubjects'])
+                ->where($conditions)
                 ->group([
                     $AssessmentItemResults->aliasField('education_subject_id'),
                     'academic_term_value'
