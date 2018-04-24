@@ -1010,7 +1010,6 @@ class ExcelReportBehavior extends Behavior
 
         $rowsArray = array_key_exists('rows', $attr) ? $attr['rows'] : [];
         $columnsArray = array_key_exists('columns', $attr) ? $attr['columns'] : [];
-        $data = array_key_exists('data', $attr) ? $attr['data'] : [];
 
         if (!empty($rowsArray)) {
             $this->matchRows($objPHPExcel, $objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
@@ -1033,6 +1032,8 @@ class ExcelReportBehavior extends Behavior
 
         $columnIndex = $attr['columnIndex'];
         $rowValue = $attr['rowValue'];
+        $mergeColumns = $attr['mergeColumns'];
+        $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
 
         if (!empty($rowData)) {
             foreach ($rowData as $key => $value) {
@@ -1052,11 +1053,11 @@ class ExcelReportBehavior extends Behavior
                         $matchData = Hash::extract($extra['vars'], $placeholder);
                         $matchValue = !empty($matchData) ? current($matchData) : '';
 
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                        $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                        $columnValue = $objCell->stringFromColumnIndex($columnIndex-1); // column index starts from 0
                         $cellCoordinate = $columnValue.$rowValue;
-
                         $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
+                        $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
+
                         $rowValue++;
                     }
                 }
@@ -1067,6 +1068,7 @@ class ExcelReportBehavior extends Behavior
             $columnValue = $attr['columnValue'];
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+            $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
         }
     }
 
