@@ -104,8 +104,9 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $age = '';
         if ($entity->has('date_of_birth')) {
             if (!empty($entity->date_of_birth)) {
-                $yearOfBirth = $entity->date_of_birth->format('Y');
-                $age = date("Y")-$yearOfBirth;
+                $dateOfBirth = $entity->date_of_birth->format('Y-m-d');
+                $today = date('Y-m-d');
+                $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
             }
         }
     
