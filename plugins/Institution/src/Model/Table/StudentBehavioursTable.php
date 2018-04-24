@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
+use Cake\I18n\Date;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -198,8 +199,9 @@ class StudentBehavioursTable extends AppTable
 
     public function addAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('academic_period_id');
-        $this->ControllerAction->field('class');
+        $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
+        $this->ControllerAction->field('class', ['entity' => $entity]);
+        $this->ControllerAction->field('date_of_behaviour', ['entity' => $entity]);
         $this->ControllerAction->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
     }
 
@@ -209,18 +211,6 @@ class StudentBehavioursTable extends AppTable
     // 	$this->request->data[$this->alias()]['date_of_behaviour'] = $entity->date_of_behaviour;
     // }
 
-    public function editOnInitialize(Event $event, Entity $entity)
-    {
-        $academicPeriodId = $entity->academic_period_id;
-        $periodEntity = $this->AcademicPeriods->get($academicPeriodId);
-        $dateOptions = [
-            'startDate' => $periodEntity->start_date->format('d-m-Y'),
-            'endDate' => $periodEntity->end_date->format('d-m-Y')
-        ];
-        $this->fields['date_of_behaviour']['date_options'] = $dateOptions;
-        $this->fields['date_of_behaviour']['date_options']['todayBtn'] = false;
-    }
-
     public function editBeforeQuery(Event $event, Query $query)
     {
         $query->contain(['Students']);
@@ -228,7 +218,8 @@ class StudentBehavioursTable extends AppTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('academic_period_id');
+        $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
+        $this->ControllerAction->field('date_of_behaviour', ['entity' => $entity]);
         $this->fields['student_id']['attr']['value'] = $entity->student->name_with_id;
 
         // PHPOE-1916
@@ -302,14 +293,20 @@ class StudentBehavioursTable extends AppTable
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
 
         if ($action == 'add') {
-            $attr['select'] = false;
-            $periodOptions = ['0' => __('-- Select --')];
-
-            $periodOptions = $periodOptions + $this->AcademicPeriods->getYearList(['isEditable' => true]);
-            $selectedPeriod = 0;
-            if ($request->is(['post', 'put'])) {
-                $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
+            $entity = $attr['entity'];
+            $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+            
+            if ($entity->has('academic_period_id')) {
+                $selectedPeriod = $entity->academic_period_id;
+            } else {
+                if (is_null($request->query('academic_period_id'))) {
+                    $selectedPeriod = $this->AcademicPeriods->getCurrent();
+                } else {
+                    $selectedPeriod = $request->query('academic_period_id');
+                }
+                $entity->academic_period_id = $selectedPeriod;
             }
+
             $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
                 'callable' => function ($id) use ($Classes, $institutionId) {
@@ -323,19 +320,12 @@ class StudentBehavioursTable extends AppTable
                 }
             ]);
 
+            $attr['select'] = false;
             $attr['options'] = $periodOptions;
+            $attr['value'] = $selectedPeriod;
+            $attr['attr']['value'] = $selectedPeriod;
             $attr['onChangeReload'] = 'changePeriod';
 
-            //set start and end dates for date of behaviour based on chosen academic period
-            if (!empty($selectedPeriod)) {
-                $periodEntity = $this->AcademicPeriods->get($selectedPeriod);
-                $dateOptions = [
-                    'startDate' => $periodEntity->start_date->format('d-m-Y'),
-                    'endDate' => $periodEntity->end_date->format('d-m-Y')
-                ];
-                $this->fields['date_of_behaviour']['date_options'] = $dateOptions;
-                $this->fields['date_of_behaviour']['date_options']['todayBtn'] = false;
-            }
         } elseif ($action == 'edit') {
             $attr['type'] = 'hidden';
         }
@@ -352,15 +342,12 @@ class StudentBehavioursTable extends AppTable
     {
         if ($action == 'add') {
             $institutionId = $this->Session->read('Institution.Institutions.id');
-            $selectedPeriod = 0;
-            if ($request->is(['post', 'put'])) {
-                $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
-            }
+            $entity = $attr['entity'];
+            $selectedPeriod = $entity->academic_period_id;
 
-            $attr['select'] = false;
             $classOptions = ['0' => __('-- Select --')];
 
-            if ($selectedPeriod != 0) {
+            if (!empty($selectedPeriod)) {
                 $Classes = TableRegistry::get('Institution.InstitutionClasses');
                 $Students = TableRegistry::get('Institution.InstitutionClassStudents');
                 $classOptions = $classOptions + $Classes
@@ -389,9 +376,52 @@ class StudentBehavioursTable extends AppTable
                 ]);
             }
 
+            $attr['select'] = false;
             $attr['options'] = $classOptions;
             $attr['onChangeReload'] = 'changeClass';
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $selectedPeriod = $entity->academic_period_id;
+            $academicPeriod = $this->AcademicPeriods->get($selectedPeriod);
+
+            $startDate = $academicPeriod->start_date;
+            $endDate = $academicPeriod->end_date;
+
+            if ($action == 'add') {
+                $todayDate = Date::now();
+                
+                if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
+                    $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
+
+                    // if today date is not within selected academic period, default date will be start of the year
+                    if ($inputDate < $startDate || $inputDate > $endDate) {
+                        $attr['value'] = $startDate->format('d-m-Y');
+
+                        // if today date is within selected academic period, default date will be current date
+                        if ($todayDate >= $startDate && $todayDate <= $endDate) {
+                            $attr['value'] = $todayDate->format('d-m-Y');
+                        }
+                    }
+                } else {
+                    if ($todayDate <= $startDate || $todayDate >= $endDate) {
+                        $attr['value'] = $startDate->format('d-m-Y');
+                    } else {
+                        $attr['value'] = $todayDate->format('d-m-Y');
+                    }
+                }
+            }
+
+            $attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+            $attr['date_options']['todayBtn'] = false;
+        }
+
         return $attr;
     }
 

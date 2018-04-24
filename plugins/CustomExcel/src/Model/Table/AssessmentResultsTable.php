@@ -211,9 +211,11 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $params)) {
+        if (array_key_exists('assessment_id', $params) && array_key_exists('class_id', $params)) {
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 
             $query = $AssessmentItems->find();
             $selectedColumns = [
@@ -230,6 +232,13 @@ class AssessmentResultsTable extends AppTable
             $results = $AssessmentItems->find()
                 ->select($selectedColumns)
                 ->contain([$EducationSubjects->alias()])
+                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                             $InstitutionSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
+                            ])
+                ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                            $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                            $ClassSubjects->aliasField('institution_class_id') => $params['class_id']
+                        ])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
                 ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
                 ->group(['subject_classification'])

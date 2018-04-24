@@ -91,6 +91,8 @@ class ReportCardCommentsTable extends ControllerActionTable
         $query
             ->select([
                 'name' => $this->aliasField('name'),
+                'total_male_students' => $this->aliasField('total_male_students'),
+                'total_female_students' => $this->aliasField('total_female_students'),
                 'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
                 'institution_id' => $this->aliasField('institution_id'),
                 'education_grade_id' => $ReportCards->aliasField('education_grade_id'),

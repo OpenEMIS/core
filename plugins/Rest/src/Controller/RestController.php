@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use App\Controller\AppController;
 use Cake\Utility\Security;
 use Firebase\JWT\JWT;
+use Firebase\JWT\ExpiredException;
 use Cake\Core\Configure;
 use Cake\Network\Exception\BadRequestException;
 
@@ -79,7 +80,14 @@ class RestController extends AppController
             $header = $this->request->header('authorization');
             if ($header) {
                 $token = str_ireplace('bearer ', '', $header);
-                $payload = JWT::decode($token, Configure::read('Application.public.key'), ['RS256']);
+                try {
+                    $payload = JWT::decode($token, Configure::read('Application.public.key'), ['RS256']);
+                } catch (ExpiredException $e) {
+                    $this->response->statusCode(500);
+                    $this->response->body(json_encode((['message' => __('Expired token')]), JSON_UNESCAPED_UNICODE));
+                    $this->response->type('json');
+                    return $this->response;
+                }
                 $currentTimeStamp = (new Time)->toUnixString();
                 $exp = $payload->exp;
                 if ($exp < $currentTimeStamp) {
