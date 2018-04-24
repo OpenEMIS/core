@@ -824,6 +824,7 @@ class RestSurveyComponent extends Component
 
     private function number($field, $parentNode, $instanceId, $extra)
     {
+        $bindType = 'integer';
         $constraint = null;
         $validationType = null;
         $validations = [];
@@ -885,6 +886,7 @@ class RestSurveyComponent extends Component
 
     private function decimal($field, $parentNode, $instanceId, $extra)
     {
+        $bindType = 'decimial';
         $constraint = null;
         $validationType = null;
         $validations = [];
