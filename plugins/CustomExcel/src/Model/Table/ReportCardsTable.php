@@ -132,8 +132,40 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
     {
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $studentReportCardData = $StudentsReportCards->find()
-            ->contain(['Institutions', 'ReportCards', 'Students'])
+        $studentReportCardData = $StudentsReportCards
+            ->find()
+            ->select([
+                $StudentsReportCards->aliasField('id'),
+                $StudentsReportCards->aliasField('academic_period_id'),
+                $StudentsReportCards->aliasField('institution_id'),
+                $StudentsReportCards->aliasField('institution_class_id'),
+                $StudentsReportCards->aliasField('student_id'),
+                $StudentsReportCards->aliasField('report_card_id')
+            ])
+            ->contain([
+                'Institutions' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'ReportCards' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Students' => [
+                    'fields' => [
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ]
+            ])
             ->where([
                 $StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
@@ -195,10 +227,68 @@ class ReportCardsTable extends AppTable
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $dateFormat = $ConfigItems->value('date_format');
 
-            $entity = $StudentsReportCards->find()
+            $entity = $StudentsReportCards
+                ->find()
+                ->select([
+                    $StudentsReportCards->aliasField('id'),
+                    $StudentsReportCards->aliasField('status'),
+                    $StudentsReportCards->aliasField('principal_comments'),
+                    $StudentsReportCards->aliasField('homeroom_teacher_comments'),
+                    $StudentsReportCards->aliasField('report_card_id'),
+                    $StudentsReportCards->aliasField('student_id'),
+                    $StudentsReportCards->aliasField('institution_id'),
+                    $StudentsReportCards->aliasField('academic_period_id'),
+                    $StudentsReportCards->aliasField('education_grade_id'),
+                    $StudentsReportCards->aliasField('institution_class_id')
+                ])
                 ->contain([
-                    'Students' => ['BirthplaceAreas', 'MainNationalities', 'AddressAreas'],
-                    'EducationGrades'
+                    'Students' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code',
+                            'address_area_id',
+                            'birthplace_area_id',
+                            'gender_id',
+                            'date_of_birth',
+                            'date_of_death',
+                            'nationality_id',
+                            'identity_type_id',
+                            'identity_number'
+                        ]
+                    ],
+                    'Students.MainNationalities' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ],
+                    'Students.AddressAreas' => [
+                        'fields' => [
+                            'code',
+                            'name'
+                        ]
+                    ],
+                    'Students.BirthplaceAreas' => [
+                        'fields' => [
+                            'code',
+                            'name'
+                        ]
+                    ],
+                    'EducationGrades' => [
+                        'fields' => [
+                            'code',
+                            'name',
+                            'admission_age',
+                            'education_stage_id',
+                            'education_programme_id'
+                        ]
+                    ]
                 ])
                 ->where([
                     $StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
@@ -247,8 +337,34 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('student_id', $params)) {
             $StudentGuardians = TableRegistry::get('Student.Guardians');
-            $entity = $StudentGuardians->find()
-                    ->contain(['Users', 'GuardianRelations'])
+            $entity = $StudentGuardians
+                    ->find()
+                    ->select([
+                        $StudentGuardians->aliasField('id'),
+                        $StudentGuardians->aliasField('student_id'),
+                        $StudentGuardians->aliasField('guardian_id'),
+                        $StudentGuardians->aliasField('guardian_relation_id')
+                    ])
+                    ->contain([
+                        'Users' => [
+                            'fields' => [
+                                'openemis_no',
+                                'first_name',
+                                'middle_name',
+                                'third_name',
+                                'last_name',
+                                'preferred_name',
+                                'email',
+                                'address',
+                                'postal_code'
+                            ]
+                        ],
+                        'GuardianRelations' => [
+                            'fields' => [
+                                'name'
+                            ]
+                        ]
+                    ])
                     ->where([
                         $StudentGuardians->aliasField('student_id') => $params['student_id']
                     ])
@@ -410,9 +526,34 @@ class ReportCardsTable extends AppTable
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $principalRoleId = $SecurityRoles->getPrincipalRoleId();
 
-            $entity = $Staff->find()
+            $entity = $Staff
+                ->find()
+                ->select([
+                    $Staff->aliasField('id'),
+                    $Staff->aliasField('FTE'),
+                    $Staff->aliasField('start_date'),
+                    $Staff->aliasField('start_year'),
+                    $Staff->aliasField('end_date'),
+                    $Staff->aliasField('end_year'),
+                    $Staff->aliasField('staff_id'),
+                    $Staff->aliasField('security_group_user_id')
+                ])
                 ->innerJoinWith('SecurityGroupUsers')
-                ->contain('Users')
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code'
+                        ]
+                    ]
+                ])
                 ->where([
                     $Staff->aliasField('institution_id') => $params['institution_id'],
                     'SecurityGroupUsers.security_role_id' => $principalRoleId
@@ -426,7 +567,23 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $entity = $InstitutionClasses->get($params['institution_class_id'], ['contain' => ['Staff']]);
+            $entity = $InstitutionClasses->get($params['institution_class_id'], [
+                'contain' => [
+                    'Staff' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code'
+                        ]
+                    ]
+                ]
+            ]);
             return $entity;
         }
     }
