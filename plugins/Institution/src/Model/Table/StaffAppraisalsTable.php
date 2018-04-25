@@ -24,6 +24,8 @@ class StaffAppraisalsTable extends ControllerActionTable
     {
         $this->table('institution_staff_appraisals');
         parent::initialize($config);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
@@ -42,6 +44,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Institution.StaffProfile'); // POCOR-4047 to get staff profile data
 
@@ -77,10 +80,22 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action != 'download') {
-            $userId = $this->request->query('user_id');
-            $staff = $this->Users->get($userId);
-            $this->staff = $staff;
-            $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
+            $userId = null;
+            
+            if (array_key_exists('user_id', $this->request->query)) {
+                $userId = $this->request->query('user_id');
+            } else {
+                $session = $this->request->session();
+                if ($session->check('Staff.Staff.id')) {
+                    $userId = $session->read('Staff.Staff.id');
+                }
+            }
+
+            if (!is_null($userId)) {
+                $staff = $this->Users->get($userId);
+                $this->staff = $staff;
+                $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
+            }
         }
     }
 
