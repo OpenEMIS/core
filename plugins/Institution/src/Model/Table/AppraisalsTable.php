@@ -63,6 +63,8 @@ class AppraisalsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('appraisal_period_id', ['visible' => false]);
+        $this->field('status_id', ['visible' => false]);
+        $this->field('assignee_id', ['visible' => false]);
         $this->setFieldOrder(['appraisal_type_id', 'title', 'from', 'to', 'appraisal_form_id']);
         $this->setupTabElements();
     }
@@ -99,6 +101,8 @@ class AppraisalsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment');
+        $this->field('status_id', ['visible' => false]);
+        $this->field('assignee_id', ['visible' => false]);
         $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
     }
 
