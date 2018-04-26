@@ -194,7 +194,7 @@ class StaffUserTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'MainNationalities', 'MainIdentityTypes'
+            'MainNationalities', 'MainIdentityTypes', 'Institutions'
         ]);
     }
 
@@ -208,7 +208,15 @@ class StaffUserTable extends ControllerActionTable
         $this->Session->write('Staff.Staff.name', $entity->name);
         $this->setupTabElements($entity);
 
-        $this->addTransferButton($entity, $extra);
+        $ConfigItems = TableRegistry::get('Configuration.ConfigStaffTransfers');
+        $enableStaffTransferConfig = $ConfigItems->getEnableStaffTransferConfig();
+        $enableStaffTransferConfigValue = explode(',', $enableStaffTransferConfig);
+
+        $institutionTypeId = $entity->institutions[0]['institution_type_id'];
+  
+        if ($enableStaffTransferConfigValue == -1 || (in_array($institutionTypeId, $enableStaffTransferConfigValue))) {
+            $this->addTransferButton($entity, $extra);
+        }
     }
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
@@ -338,7 +346,7 @@ class StaffUserTable extends ControllerActionTable
             $conditions['openemis_no LIKE'] = $openemisNo . '%';
         }
         if (!empty($dateOfBirth)) {
-            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');;
+            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');
         }
 
         $identityConditions = [];

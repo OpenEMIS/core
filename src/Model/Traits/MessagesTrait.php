@@ -117,7 +117,8 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
-            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.'
+            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
+            'restrictDiffSectorTransfer' => 'Transfer between different institution sectors is restricted.'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
