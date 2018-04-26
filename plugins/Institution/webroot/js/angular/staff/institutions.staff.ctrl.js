@@ -29,9 +29,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
     StaffController.institutionId = null;
+    StaffController.institutionSector = null; //new institution sector id (receiving school)
     StaffController.institutionName = '';
     StaffController.addStaffError = false;
     StaffController.transferStaffError = false;
+    StaffController.restrictStaffTransferBySectorValue = null; // value from config_items
 
     // 0 - Non-mandatory, 1 - Mandatory, 2 - Excluded
     StaffController.StaffContacts = 2;
@@ -137,9 +139,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.onChangeAcademicPeriod();
             }
             promises.push(InstitutionsStaffSvc.getAddNewStaffConfig());
+         
             promises.push(InstitutionsStaffSvc.getStaffTypes());
             promises.push(InstitutionsStaffSvc.getInstitution(StaffController.institutionId));
-            return $q.all(promises);
+            promises.push(InstitutionsStaffSvc.getStaffTransfersConfig());
+           return $q.all(promises);
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
@@ -150,8 +154,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             var addNewStaffConfig = promisesObj[0].data;
             var staffTypes = promisesObj[1].data;
             var institutionName = promisesObj[2].data[0]['code_name'];
+            var institutionSector = promisesObj[2].data[0]['institution_sector_id']; // new institution sector id
             StaffController.institutionName = institutionName;
             StaffController.staffTypeOptions = staffTypes;
+            StaffController.institutionSector = institutionSector; // to set to into controller for other functions to access the value
+            StaffController.restrictStaffTransferBySectorValue = promisesObj[3].data;
 
             for(i=0; i < addNewStaffConfig.length; i++) {
                 var code = addNewStaffConfig[i].code;
@@ -692,6 +699,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             end_date: endDate
         };
         var deferred = $q.defer();
+
         InstitutionsStaffSvc.postAssignedStaff(data)
         .then(function(postResponse) {
             StaffController.postResponse = postResponse.data;
@@ -719,8 +727,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.selectedStaffData['institution_staff'] = response.institution_staff;
                     var idName = StaffController.selectedStaffData.openemis_no + ' - ' + StaffController.selectedStaffData.name;
                     var institutionName = StaffController.selectedStaffData['institution_staff'][0]['institution']['code_name'];
-                    StaffController.transferStaffError = true;
-                    AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
+                    var currentInstitutionSector = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_sector_id'];
+                    var newInstitutionSector = StaffController.institutionSector;
+                    var restrictStaffTransferBySectorConfig = StaffController.restrictStaffTransferBySectorValue[0]['value'];
+                    
+
+                    if(restrictStaffTransferBySectorConfig == 1 && currentInstitutionSector!=newInstitutionSector){
+                        StaffController.addStaffError = true;
+                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different sector is restricted.');
+                    }else{
+                        StaffController.transferStaffError = true;
+                        AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
+                    }
                     deferred.resolve(StaffController.postResponse);
                 }, function(error) {
                     StaffController.transferStaffError = true;
