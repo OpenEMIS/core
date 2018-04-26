@@ -85,6 +85,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->field('education_subject_id', ['type' => 'integer']);
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('auto_allocation');
+         $this->fields['code']['sort'] = ['field' => 'EducationSubjects.code'];
         $this->setFieldOrder(['code', 'education_subject_id', 'hours_required', 'auto_allocation']);
     }
 
@@ -124,6 +125,12 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             $this->Alert->warning('EducationStructure.noProgrammesSetup');
             unset($extra['toolbarButtons']['add']);
         }
+
+        $sortList = ['EducationSubjects.code'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
