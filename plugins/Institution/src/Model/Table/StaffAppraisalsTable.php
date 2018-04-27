@@ -77,6 +77,12 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if (in_array($this->action, ['view', 'edit', 'delete'])) {
+            $modelAlias = 'Appraisals';
+            $userType = 'StaffUser';
+            $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        }
+
         if ($this->action != 'download') {
             if (!is_null($this->request->query('user_id'))) {
                 $userId = $this->request->query('user_id');
