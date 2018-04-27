@@ -91,6 +91,12 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if (in_array($this->action, ['view', 'edit', 'delete'])) {
+            $modelAlias = 'Leave';
+            $userType = 'StaffUser';
+            $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        }
+
         $this->field('number_of_days', [
             'visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]
         ]);
