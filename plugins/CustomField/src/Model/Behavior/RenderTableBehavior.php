@@ -139,7 +139,9 @@ class RenderTableBehavior extends RenderBehavior {
                             $tableColumnKey => $columnId,
                             'text_value' => $textValue,
                             'number_value' => $numberValue,
-                            'decimal_value' => $decimalValue
+                            'decimal_value' => $decimalValue,
+                            'field_type' => $obj['field_type'],
+                            'params' => $obj['params']
                         ];
                     }
                 }

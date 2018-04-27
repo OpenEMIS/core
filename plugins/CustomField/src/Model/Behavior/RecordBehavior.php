@@ -173,12 +173,14 @@ class RecordBehavior extends Behavior
         $alias = $model->alias();
 
         if (array_key_exists($alias, $data)) {
+            $CustomFields = TableRegistry::get($this->config('fieldClass.className'));
+
             if (array_key_exists('custom_field_values', $data[$alias])) {
                 $values = $data[$alias]['custom_field_values'];
                 $fieldValues = $model->array_column($values, $this->config('fieldKey'));
-
-                $CustomFields = TableRegistry::get($this->config('fieldClass.className'));
-                $fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
+                $fields = $CustomFields->find()
+                    ->where(['id IN' => $fieldValues])
+                    ->all();
 
                 foreach ($values as $key => $attr) {
                     foreach ($fields as $f) {
@@ -202,6 +204,32 @@ class RecordBehavior extends Behavior
                                 return $event->result;
                             }
                             // End
+                        }
+                    }
+                }
+            }
+
+            if (array_key_exists('custom_table_cells', $data[$alias])) {
+                $cells = $data[$alias]['custom_table_cells'];
+                $fieldValues = array_keys($cells);
+
+                $fieldResults = $CustomFields->find()
+                    ->where(['id IN' => $fieldValues])
+                    ->all();
+
+                $fields = [];
+                foreach ($fieldResults as $f) {
+                    $fields[$f->id] = $f;
+                }
+
+                foreach ($cells as $fieldId => $rows) {
+                    foreach ($rows as $rowId => $columns) {
+                        foreach ($columns as $columnId => $attr) {
+                            $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
+                            if (!is_null($thisField)) {
+                                $data[$alias]['custom_table_cells'][$fieldId][$rowId][$columnId]['field_type'] = $thisField->field_type;
+                                $data[$alias]['custom_table_cells'][$fieldId][$rowId][$columnId]['params'] = $thisField->params;
+                            }
                         }
                     }
                 }

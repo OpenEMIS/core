@@ -1528,17 +1528,30 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
-            foreach ($params as $key => $value) {
-                if ($key == 'min_value' && $field < $value) {
-                    return $model->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+
+            foreach ($params as $key => $obj) {
+                if ($key == 'number') {
+                    // table type
+                    $numberValidation = is_array($obj) ? key($obj) : null;
+                    $value = array_key_exists($numberValidation, $obj) ? $obj[$numberValidation] : null;
+                } else {
+                    // number type
+                    $numberValidation = $key;
+                    $value = $obj;
                 }
-                if ($key == 'max_value' && $field > $value) {
-                    return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
-                }
-                if ($key == 'range' && is_array($value)) {
-                    if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
-                        if ($field < $value['lower'] || $field > $value['upper']) {
-                            return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+
+                if (!is_null($numberValidation)) {
+                    if ($numberValidation == 'min_value' && $field < $value) {
+                        return $model->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+                    }
+                    if ($numberValidation == 'max_value' && $field > $value) {
+                        return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+                    }
+                    if ($numberValidation == 'range' && is_array($value)) {
+                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                            if ($field < $value['lower'] || $field > $value['upper']) {
+                                return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                            }
                         }
                     }
                 }
@@ -1554,8 +1567,15 @@ class ValidationBehavior extends Behavior
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
 
-            $length = $params['length'];
-            $precision = $params['precision'];
+            if (array_key_exists('decimal', $params)) {
+                // table type
+                $length = $params['decimal']['length'];
+                $precision = $params['decimal']['precision'];
+            } else {
+                // decimal type
+                $length = $params['length'];
+                $precision = $params['precision'];
+            }
 
             if ($precision == 0) {
                 $pattern = '/^[0-9]{1,'.$length.'}$/';
