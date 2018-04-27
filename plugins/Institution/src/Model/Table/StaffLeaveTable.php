@@ -92,7 +92,7 @@ class StaffLeaveTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if (in_array($this->action, ['view', 'edit', 'delete'])) {
-            $modelAlias = 'Leave';
+            $modelAlias = 'Staff Leave';
             $userType = 'StaffUser';
             $this->controller->changeUserHeader($this, $modelAlias, $userType);
         }
