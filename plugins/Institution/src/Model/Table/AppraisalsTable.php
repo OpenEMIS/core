@@ -33,16 +33,21 @@ class AppraisalsTable extends ControllerActionTable
         $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('Workflow.Workflow', [
+            'model' => 'Institution.StaffAppraisals',
+            'actions' => [
+                'add' => false,
+                'remove' => false,
+                'edit' => false
+            ],
+            'disableWorkflow' => true
+        ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
         $this->behaviors()->get('ControllerAction')->config(
             'actions.download.show',
             true
         );
-
-        $this->toggle('remove', false);
-        $this->toggle('edit', false);
-        $this->toggle('add', false);
     }
 
     private function setupTabElements()
@@ -65,8 +70,6 @@ class AppraisalsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('appraisal_period_id', ['visible' => false]);
-        $this->field('status_id', ['visible' => false]);
-        $this->field('assignee_id', ['visible' => false]);
         $this->setFieldOrder(['appraisal_type_id', 'title', 'from', 'to', 'appraisal_form_id']);
         $this->setupTabElements();
     }
@@ -103,8 +106,6 @@ class AppraisalsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment');
-        $this->field('status_id', ['visible' => false]);
-        $this->field('assignee_id', ['visible' => false]);
         $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
     }
 
