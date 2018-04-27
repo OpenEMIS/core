@@ -15,16 +15,13 @@ use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
 use Cake\Routing\Router;
+use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 class WorkflowBehavior extends Behavior
 {
     use OptionsTrait;
-
-    // Workflow Steps - category
-    const TO_DO = 1;
-    const IN_PROGRESS = 2;
-    const DONE = 3;
 
     protected $_defaultConfig = [
         'model' => null,
@@ -39,7 +36,14 @@ class WorkflowBehavior extends Behavior
             'WorkflowComments' => 'Workflow.WorkflowComments',
             'WorkflowTransitions' => 'Workflow.WorkflowTransitions',
             'WorkflowStepsParams' => 'Workflow.WorkflowStepsParams'
-        ]
+        ],
+        'actions' => [
+            'add' => true,
+            'edit' => true,
+            'remove' => true
+        ],
+        'disableWorkflow' => false
+
     ];
 
     private $workflowEvents = [
@@ -78,6 +82,24 @@ class WorkflowBehavior extends Behavior
                 $this->{$key} = null;
             }
         }
+
+        if ($this->isCAv4()) {
+            $actions = $this->config('actions');
+            $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+
+            foreach ($actions as $key => $value) {
+                $model->toggle($key, $value);
+            }
+        }
+    }
+
+    public function validationAssigneeId(Validator $validator)
+    {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $validator = $model->validationDefault($validator);
+
+        return $validator
+            ->notEmpty('assignee_id');
     }
 
     private function isCAv4()
@@ -105,6 +127,7 @@ class WorkflowBehavior extends Behavior
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
         $events['ControllerAction.Model.edit.beforePatch']      = ['callable' => 'editBeforePatch', 'priority' => 1];
+        $events['ControllerAction.Model.add.beforePatch']       = ['callable' => 'addBeforePatch', 'priority' => 1];
         $events['Model.custom.onUpdateToolbarButtons']          = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
         $events['Model.custom.onUpdateActionButtons']           = ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
         $events['Workflow.afterTransition'] = 'workflowAfterTransition';
@@ -266,9 +289,7 @@ class WorkflowBehavior extends Behavior
 
         $model = $this->_table;
         if ($model->hasField('assignee_id')) {
-            // directly modify type and visible to avoid additional trigger to onUpdateFieldAssigneeId event
-            $model->fields['assignee_id']['type'] = 'string';
-            $model->fields['assignee_id']['visible'] = ['index' => true, 'view' => true, 'add' => false, 'edit' => false];
+            $model->fields['assignee_id']['attr']['required'] = true;
         }
     }
 
@@ -542,6 +563,10 @@ class WorkflowBehavior extends Behavior
 
     public function addEditAfterAction(Event $event, Entity $entity)
     {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $model->field('assignee_id', [
+            'entity' => $entity
+        ]);
         $this->setFilterNotEditable($entity);
     }
 
@@ -712,6 +737,11 @@ class WorkflowBehavior extends Behavior
         }
     }
 
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $options['validate'] = 'assigneeId';
+    }
+
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);
@@ -764,14 +794,112 @@ class WorkflowBehavior extends Behavior
     {
         if ($action == 'view') {
             $attr['type'] = 'string';
-        } else if ($action == 'add') {
-            $attr['type'] = 'hidden';
-            $attr['value'] = 0;
-        } else if ($action == 'edit') {
-            $attr['type'] = 'hidden';
+        } elseif ($action == 'add') {
+            $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+            $entity = $attr['entity'];
+            $registryAlias = $model->registryAlias();
+            $workflowModelEntity = $this->getWorkflowSetup($registryAlias);
+            // find the filter type column key
+            $filterKey = null;
+            if (!empty($workflowModelEntity->filter)) {
+                list(, $base) = pluginSplit($workflowModelEntity->filter);
+                $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+            }
+
+            if (is_null($filterKey)) {
+                $assigneeOptions = $this->getAssigneeOptions($entity, $workflowModelEntity, $registryAlias, $request);
+
+                if (empty($assigneeOptions)) {
+                    // if no security roles is set to the workflow open status, it will auto assign to self set on beforeSave
+                    $attr['type'] = 'disabled';
+                    $attr['value'] = 0;
+                    $attr['attr']['value'] = $model->Auth->user('openemis_no') . ' - ' . $model->Auth->user('name');
+                } else {
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $assigneeOptions;
+                }
+            } else {
+                if ($entity->has($filterKey)) {
+                    $assigneeOptions = $this->getAssigneeOptions($entity, $workflowModelEntity, $registryAlias, $request);
+                    if (empty($assigneeOptions)) {
+                        // if no security roles is set to the workflow open status, it will auto assign to self set on beforeSave
+                        $attr['type'] = 'disabled';
+                        $attr['value'] = 0;
+                        $attr['attr']['value'] = $model->Auth->user('openemis_no') . ' - ' . $model->Auth->user('name');
+                    } else {
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = false;
+                        $attr['options'] = $assigneeOptions;
+                    }
+                } else {
+                    $assigneeOptions = ['' => '-- ' . __('No Option') . ' --'];
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $assigneeOptions;
+                }
+            }
+        } elseif ($action == 'edit') {
+            $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+            $entity = $attr['entity'];
+            $attr['type'] = 'readonly';
+
+            if (!is_null($entity->assignee_id)) {
+                $assigneeId = $entity->assignee_id;
+                $assigneeEntity = $model->Assignees->get($assigneeId);
+                $attr['attr']['value'] = $assigneeEntity->openemis_no . ' - ' . $assigneeEntity->name;
+            }
         }
 
         return $attr;
+    }
+
+    public function getAssigneeOptions(Entity $entity, Entity $workflowModelEntity, $registryAlias, Request $request)
+    {
+        $workflowEntity = $this->getWorkflow($registryAlias, $entity);
+        $workflowId = $workflowEntity->id;
+        $firstStepEntity = $this->getFirstWorkflowStep($workflowId);
+        
+        if (!empty($firstStepEntity->security_roles)) {
+            $firstStepId = $firstStepEntity->id;
+            $isSchoolBased = $workflowModelEntity->is_school_based;
+
+            $params = [
+                'is_school_based' => $isSchoolBased,
+                'workflow_step_id' => $firstStepId
+            ];
+
+            $session = $request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+                $params['institution_id'] = $institutionId;
+            }
+
+            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+            $assigneeOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+
+            return $assigneeOptions;
+        }
+     
+        return [];
+    }
+
+    public function getFirstWorkflowStep($workflowId)
+    {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $firstStepEntity = $model->Statuses
+            ->find()
+            ->matching('Workflows.WorkflowModels', function ($q) use ($workflowId) {
+                return $q->where(['Workflows.id' => $workflowId]);
+            })
+            ->contain(['SecurityRoles'])
+            ->where([
+                $model->Statuses->aliasField('category') => WorkflowSteps::TO_DO
+            ])
+            ->first();
+
+        return $firstStepEntity;
     }
 
     public function onUpdateFieldWorkflowAssigneeId(Event $event, array $attr, $action, $request)
@@ -1222,7 +1350,7 @@ class WorkflowBehavior extends Behavior
     private function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action)
     {
         // Unset edit buttons and add action buttons
-        if ($this->attachWorkflow) {
+        if ($this->attachWorkflow && !$this->config('disableWorkflow')) {
             if ($action == 'index') {
                 if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
                     unset($toolbarButtons['add']);
@@ -1346,7 +1474,7 @@ class WorkflowBehavior extends Behavior
 
                                     $approveButton['attr']['title'] = __($actionObj->name);
                                     $toolbarButtons['approve'] = $approveButton;
-                                } else if ($actionType == 1) { // Reject
+                                } elseif ($actionType == 1) { // Reject
                                     $rejectButton = [];
                                     $rejectButton['type'] = 'button';
                                     $rejectButton['label'] = '<i class="fa kd-reject"></i>';
@@ -1661,7 +1789,7 @@ class WorkflowBehavior extends Behavior
     {
         $institutionKey = $this->config('institution_key');
         $model = $this->_table;
-        $doneStatus = self::DONE;
+        $doneStatus = WorkflowSteps::DONE;
         $institutionId = $params['institution_id'];
 
         $count = $model
