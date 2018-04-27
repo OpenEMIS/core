@@ -1180,6 +1180,86 @@ class WorkflowBehavior extends Behavior
         return null;
     }
 
+    public function getReassignModalOptions(Entity $entity)
+    {
+        $model = $this->_table;
+        $step = $this->getWorkflowStep($entity);
+
+        $assigneeName = '';
+        if (!is_null($entity->assignee_id)) {
+            $assigneeName = $model->Assignees->get($entity->assignee_id)->name;
+        }
+
+        if (!is_null($step)) {
+            $workflow = $step->_matchingData['Workflows'];
+
+            $alias = $this->WorkflowTransitions->alias();
+
+            $contentFields = new ArrayObject(
+                [
+                    $alias.'.step_name' => [
+                        'label' => __('Action'),
+                        'type' => 'string',
+                        'readonly' => 'readonly',
+                        'disabled' => 'disabled',
+                        'class'=> 'workflowtransition-current-step-name',
+                        'value' => __('Change Assignee')
+                    ],
+                    $alias.'.old_assignee_id' => [
+                        'label' => __('Current Assignee'),
+                        'type' => 'string',
+                        'readonly' => 'readonly',
+                        'disabled' => 'disabled',
+                        'class'=> 'workflowtransition-old-assignee',
+                        'value' => $assigneeName
+                    ],
+                    $alias.'.new_assignee_id' => [
+                        'label' => __('New Assignee'),
+                        'type' => 'select',
+                        'class'=> 'workflowtransition-new-assignee required'
+                    ]
+                ]);
+
+            // $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
+
+            $content = '';
+            $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+            $content .= '<div class="input string"><span class="button-label"></span>';
+                $content .= '<div class="workflowtransition-assignee-loading">' . __('Loading') . '</div>';
+                $content .= '<div class="workflowtransition-assignee-no_options">' . __('No options') . '</div>';
+                $content .= '<div class="workflowtransition-assignee-error">' . __('This field cannot be left empty') . '</div>';
+            $content .= '</div>';
+            $content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
+            $content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message">' .$model->getMessage('general.error'). '</div></div>';
+            $content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
+            $buttons = [
+                '<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Reassign') . '</button>'
+            ];
+
+            $modal = [
+                'id' => 'workflowReassign',
+                'title' => __('Reassign'),
+                'content' => $content,
+                'contentFields' => $contentFields,
+                'form' => [
+                    'model' => $model,
+                    'formOptions' => [
+                        'class' => 'form-horizontal',
+                        // 'url' => $this->isCAv4() ? $model->url('processWorkflow') : $model->ControllerAction->url('processWorkflow'),
+                        'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
+                    ],
+                    // 'fields' => $fields
+                ],
+                'buttons' => $buttons,
+                'cancelButton' => true
+            ];
+
+            return $modal;
+        } else {
+            return [];
+        }
+    }
+
     public function getModalOptions(Entity $entity)
     {
         $model = $this->_table;
@@ -1350,6 +1430,7 @@ class WorkflowBehavior extends Behavior
     private function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action)
     {
         // Unset edit buttons and add action buttons
+        // POCOR-4529: Added disableWorkflow for view/index of features to view workflow pages without action buttons
         if ($this->attachWorkflow && !$this->config('disableWorkflow')) {
             if ($action == 'index') {
                 if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
@@ -1378,6 +1459,34 @@ class WorkflowBehavior extends Behavior
                     $canAddButtons = $this->checkIfCanAddButtons($isSchoolBased, $entity);
 
                     if ($canAddButtons) {
+                        // reassign button
+                        $reassignButtonAttr = [
+                            'escapeTitle' => false,
+                            'escape' => true,
+                            // 'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
+                            'data-toggle' => 'modal',
+                            'data-target' => '#workflowReassign'
+                        ];
+                        $reassignButtonAttr = array_merge($attr, $reassignButtonAttr);
+                        $reassignButton = [];
+                        $reassignButton['type'] = 'button';
+                        $reassignButton['label'] = '<i class="fa fa-tasks"></i>';
+                        $reassignButton['url'] = '#';
+                        $reassignButton['attr'] = $reassignButtonAttr;
+                        $reassignButton['attr']['title'] = __('Reassign');
+                        $toolbarButtons['reassign'] = $reassignButton;
+
+                        $modal = $this->getReassignModalOptions($entity);
+                        if (!empty($modal)) {
+                            if (!isset($this->_table->controller->viewVars['modals'])) {
+                                $this->_table->controller->set('modals', ['workflowReassign' => $modal]);
+                            } else {
+                                $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowReassign' => $modal]);
+                                $this->_table->controller->set('modals', $modals);
+                            }
+                        }
+                        // end
+                        
                         foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
                             $eventKeys = $actionObj->event_key;
                             $eventsObject = new ArrayObject();
