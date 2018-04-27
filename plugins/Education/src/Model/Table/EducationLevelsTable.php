@@ -31,7 +31,8 @@ class EducationLevelsTable extends ControllerActionTable
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
-
+		$this->fields['education_level_isced_id']['sort'] = ['field' => 'EducationLevelIsced.name'];
+		$this->fields['education_system_id']['sort'] = ['field' => 'EducationSystems.name'];
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -45,6 +46,12 @@ class EducationLevelsTable extends ControllerActionTable
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
 		$query->where([$this->aliasField('education_system_id') => $selectedSystem]);
+
+    $sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
+    if (array_key_exists('sortWhitelist', $extra['options'])) {
+        $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+    }
+    $extra['options']['sortWhitelist'] = $sortList;
 	}
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)

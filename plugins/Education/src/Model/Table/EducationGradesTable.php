@@ -210,6 +210,9 @@ class EducationGradesTable extends ControllerActionTable
         $this->field('admission_age', ['visible' => false]);
         $this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
         $this->field('education_stage_id');
+        $this->fields['education_programme_id']['sort'] = ['field' => 'EducationProgrammes.name'];
+        $this->fields['education_stage_id']['sort'] = ['field' => 'EducationStages.name'];
+
 
         $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'education_stage_id', 'subjects'];
     }
@@ -220,6 +223,12 @@ class EducationGradesTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
         $query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
+
+        $sortList = ['name', 'code', 'EducationProgrammes.name', 'EducationStages.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
