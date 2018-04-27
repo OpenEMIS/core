@@ -262,6 +262,9 @@ class ConfigItemsTable extends AppTable
                         $attr['type'] = 'element';
                         $attr['element'] = 'Configurations/with_prefix';
                         $attr['data'] = [];
+                    } else if ($entity->type == 'Student Settings') {
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 50];
                     }
                 }
             }
@@ -670,6 +673,18 @@ class ConfigItemsTable extends AppTable
         'bet' => [
             'rule'  => ['range', 6, 50],
             'message' => 'Numeric Value should be between 6 to 50',
+            'last' => true
+        ]
+    ];
+    private $validateStudentSettings = [
+        'num' => [
+            'rule'  => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 50',
+            'last' => true
+        ],
+        'bet' => [
+            'rule'  => ['range', 0, 100],
+            'message' => 'Numeric Value should be between 0 to 50',
             'last' => true
         ]
     ];
