@@ -95,7 +95,7 @@ class EducationProgrammesTable extends ControllerActionTable
 
 		$sortList = ['code', 'name', 'EducationFieldOfStudies.name', 'EducationCycles.name', 'EducationCertifications.name'];
 		if (array_key_exists('sortWhitelist', $extra['options'])) {
-		    $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
 		}
 		$extra['options']['sortWhitelist'] = $sortList;
 	}
