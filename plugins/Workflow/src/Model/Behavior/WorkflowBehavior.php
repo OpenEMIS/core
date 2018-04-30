@@ -119,6 +119,7 @@ class WorkflowBehavior extends Behavior
         if ($this->isCAv4()) {
             $events['ControllerAction.Model.index.beforeQuery']     = ['callable' => 'indexBeforeQuery', 'priority' => 1];
             $events['ControllerAction.Model.processWorkflow']       = ['callable' => 'processWorkflow', 'priority' => 5];
+            $events['ControllerAction.Model.processReassign']       = ['callable' => 'processReassign', 'priority' => 5];
         } else {
             $events['ControllerAction.Model.index.beforePaginate']  = ['callable' => 'indexBeforePaginate', 'priority' => 1];
         }
@@ -282,7 +283,7 @@ class WorkflowBehavior extends Behavior
         $this->model = $this->isCAv4() ? $this->_table : $this->controller->ControllerAction->model();
         $this->currentAction = $this->isCAv4() ? $this->_table->action : $this->controller->ControllerAction->action();
 
-        if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow'])) {
+        if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow', 'processReassign'])) {
             $this->attachWorkflow = true;
             $this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
         }
@@ -807,7 +808,7 @@ class WorkflowBehavior extends Behavior
             }
 
             if (is_null($filterKey)) {
-                $assigneeOptions = $this->getAssigneeOptions($entity, $workflowModelEntity, $registryAlias, $request);
+                $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $workflowModelEntity, $registryAlias, $request);
 
                 if (empty($assigneeOptions)) {
                     // if no security roles is set to the workflow open status, it will auto assign to self set on beforeSave
@@ -821,7 +822,7 @@ class WorkflowBehavior extends Behavior
                 }
             } else {
                 if ($entity->has($filterKey)) {
-                    $assigneeOptions = $this->getAssigneeOptions($entity, $workflowModelEntity, $registryAlias, $request);
+                    $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $workflowModelEntity, $registryAlias, $request);
                     if (empty($assigneeOptions)) {
                         // if no security roles is set to the workflow open status, it will auto assign to self set on beforeSave
                         $attr['type'] = 'disabled';
@@ -854,7 +855,7 @@ class WorkflowBehavior extends Behavior
         return $attr;
     }
 
-    public function getAssigneeOptions(Entity $entity, Entity $workflowModelEntity, $registryAlias, Request $request)
+    public function getFirstStepAssigneeOptions(Entity $entity, Entity $workflowModelEntity, $registryAlias, Request $request)
     {
         $workflowEntity = $this->getWorkflow($registryAlias, $entity);
         $workflowId = $workflowEntity->id;
@@ -1185,15 +1186,63 @@ class WorkflowBehavior extends Behavior
         $model = $this->_table;
         $step = $this->getWorkflowStep($entity);
 
+        $assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
+
         $assigneeName = '';
         if (!is_null($entity->assignee_id)) {
-            $assigneeName = $model->Assignees->get($entity->assignee_id)->name;
+            $assigneeEntity = $model->Assignees->get($entity->assignee_id);
+            $assigneeName = $assigneeEntity->name;
+            $assigneeId = $assigneeEntity->id;
         }
 
         if (!is_null($step)) {
             $workflow = $step->_matchingData['Workflows'];
-
             $alias = $this->WorkflowTransitions->alias();
+
+            $fields = [
+                $alias.'.prev_workflow_step_id' => [
+                    'type' => 'hidden',
+                    'value' => $step->id
+                ],
+                $alias.'.prev_workflow_step_name' => [
+                    'type' => 'hidden',
+                    'value' => $step->name
+                ],
+                $alias.'.workflow_step_id' => [
+                    'type' => 'hidden',
+                    'value' => $step->id
+                ],
+                $alias.'.workflow_step_name' => [
+                    'type' => 'hidden',
+                    'value' => $step->name
+                ],
+                $alias.'.old_assignee_id' => [
+                    'type' => 'hidden',
+                    'value' => $assigneeId,
+                    'class' => 'workflowtransition-action-id',
+                    'unlockField' => true
+                ],
+                $alias.'.workflow_action_name' => [
+                    'type' => 'hidden',
+                    'value' => 'Administration - Change Assignee',
+                    'class' => 'workflowtransition-action-name',
+                    'unlockField' => true
+                ],
+                $alias.'.comment' => [
+                    'type' => 'hidden',
+                    'value' => '',
+                    'class' => 'workflowtransition-action-name',
+                    'unlockField' => true
+                ],
+                $alias.'.workflow_model_id' => [
+                    'type' => 'hidden',
+                    'value' => $workflow->workflow_model_id
+                ],
+                $alias.'.model_reference' => [
+                    'type' => 'hidden',
+                    'value' => $entity->id
+                ]
+            ];
 
             $contentFields = new ArrayObject(
                 [
@@ -1202,38 +1251,46 @@ class WorkflowBehavior extends Behavior
                         'type' => 'string',
                         'readonly' => 'readonly',
                         'disabled' => 'disabled',
-                        'class'=> 'workflowtransition-current-step-name',
+                        'class'=> 'workflow-reassign-action',
                         'value' => __('Change Assignee')
+                    ],
+                    $alias.'.status_id' => [
+                        'label' => __('Status'),
+                        'type' => 'string',
+                        'readonly' => 'readonly',
+                        'disabled' => 'disabled',
+                        'class'=> 'workflow-reassign-status',
+                        'value' => $entity->status->name
                     ],
                     $alias.'.old_assignee_id' => [
                         'label' => __('Current Assignee'),
                         'type' => 'string',
                         'readonly' => 'readonly',
                         'disabled' => 'disabled',
-                        'class'=> 'workflowtransition-old-assignee',
+                        'class'=> 'workflow-reassign-old-assignee',
                         'value' => $assigneeName
                     ],
-                    $alias.'.new_assignee_id' => [
+                    $alias.'.assignee_id' => [
                         'label' => __('New Assignee'),
                         'type' => 'select',
-                        'class'=> 'workflowtransition-new-assignee required'
+                        'class'=> 'workflow-reassign-new-assignee required',
+                        'assignee-url' => $assigneeUrl
                     ]
-                ]);
+                ]
+            );
 
             // $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
 
             $content = '';
             $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
             $content .= '<div class="input string"><span class="button-label"></span>';
-                $content .= '<div class="workflowtransition-assignee-loading">' . __('Loading') . '</div>';
-                $content .= '<div class="workflowtransition-assignee-no_options">' . __('No options') . '</div>';
-                $content .= '<div class="workflowtransition-assignee-error">' . __('This field cannot be left empty') . '</div>';
+                $content .= '<div class="workflow-reassign-assignee-loading">' . __('Loading') . '</div>';
+                $content .= '<div class="workflow-reassign-assignee-no_options">' . __('No options') . '</div>';
+                $content .= '<div class="workflow-reassign-assignee-error">' . __('This field cannot be left empty') . '</div>';
             $content .= '</div>';
-            $content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-comment-error error-message">' . __('This field cannot be left empty') . '</div></div>';
-            $content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-assignee-sql-error error-message">' .$model->getMessage('general.error'). '</div></div>';
-            $content .= '<div class="input string"><span class="button-label"></span><div class="workflowtransition-event-description error-message"></div></div>';
+            $content .= '<div class="input string"><span class="button-label"></span><div class="workflow-reassign-assignee-sql-error error-message">' .$model->getMessage('general.error'). '</div></div>';
             $buttons = [
-                '<button id="workflow-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit();">' . __('Reassign') . '</button>'
+                '<button id="reassign-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit(\'reassign\');">' . __('Reassign') . '</button>'
             ];
 
             $modal = [
@@ -1245,10 +1302,10 @@ class WorkflowBehavior extends Behavior
                     'model' => $model,
                     'formOptions' => [
                         'class' => 'form-horizontal',
-                        // 'url' => $this->isCAv4() ? $model->url('processWorkflow') : $model->ControllerAction->url('processWorkflow'),
-                        'onSubmit' => 'document.getElementById("workflow-submit").disabled=true;'
+                        'url' => $this->isCAv4() ? $model->url('processReassign') : $model->ControllerAction->url('processReassign'),
+                        'onSubmit' => 'document.getElementById("reassign-submit").disabled=true;'
                     ],
-                    // 'fields' => $fields
+                    'fields' => $fields
                 ],
                 'buttons' => $buttons,
                 'cancelButton' => true
@@ -1460,10 +1517,18 @@ class WorkflowBehavior extends Behavior
 
                     if ($canAddButtons) {
                         // reassign button
+                        $reassignJsonObject = [
+                            'step_id' => $workflowStep->id,
+                            'is_school_based' => $isSchoolBased,
+                            'auto_assign_assignee' => 0,
+                        ];
+
+                        $json = json_encode($reassignJsonObject, JSON_NUMERIC_CHECK);
+
                         $reassignButtonAttr = [
                             'escapeTitle' => false,
                             'escape' => true,
-                            // 'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
+                            'onclick' => 'Workflow.init();Workflow.copy('.$json.', "reassign");return false;',
                             'data-toggle' => 'modal',
                             'data-target' => '#workflowReassign'
                         ];
@@ -1486,7 +1551,7 @@ class WorkflowBehavior extends Behavior
                             }
                         }
                         // end
-                        
+
                         foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
                             $eventKeys = $actionObj->event_key;
                             $eventsObject = new ArrayObject();
@@ -1787,7 +1852,48 @@ class WorkflowBehavior extends Behavior
 
         // get the latest entity after status is updated
         $entity = $this->_table->get($id);
+
         $this->setAssigneeId($entity, $requestData);
+    }
+
+    public function processReassign()
+    {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $request = $model->controller->request;
+
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->data;
+            $subject = $this->config('model') == null ? $this->_table : TableRegistry::get($this->config('model'));
+
+            $entity = $this->WorkflowTransitions->newEntity($requestData, ['validate' => false]);
+            $id = $entity->model_reference;
+
+            $currentAssigneeId = $entity->old_assignee_id;
+            $newAssigneeId = $entity->assignee_id;
+
+            $unassigned = '<'.__('Unassigned').'>';
+            if ($currentAssigneeId != 0) {
+                $currentAssigneeName = $model->Assignees->get($currentAssigneeId)->name;
+            } else {
+                $currentAssigneeName = $unassigned;
+            }
+
+            $newAssigneeName = $model->Assignees->get($newAssigneeId)->name;
+            $entity->comment = __('From') . ' ' . $currentAssigneeName . ' ' . __('to') . ' '  .$newAssigneeName;
+
+            if ($this->WorkflowTransitions->save($entity)) {
+                $this->_table->controller->Alert->success('general.edit.success', ['reset' => true]);
+
+                // Trigger workflow after save event here
+                $event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $requestData], $subject);
+                if ($event->isStopped()) {
+                    return $event->result;
+                }
+            }
+
+            $url = $model->url('view');
+            return $this->_table->controller->redirect($url);
+        }
     }
 
     public function processWorkflow()
