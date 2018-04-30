@@ -48,7 +48,9 @@ class POCOR2098 extends AbstractMigration
             ];
         }
 
-        $this->insert('survey_forms_filters', $data);
+        if (!empty($data)) {
+            $this->insert('survey_forms_filters', $data);
+        }
     }
 
     public function down()
@@ -56,3 +58,4 @@ class POCOR2098 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `survey_forms_filters`');
     }
 }
+
