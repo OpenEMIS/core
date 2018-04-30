@@ -47,11 +47,11 @@ class EducationLevelsTable extends ControllerActionTable
         $this->controller->set(compact('systemOptions', 'selectedSystem'));
 		$query->where([$this->aliasField('education_system_id') => $selectedSystem]);
 
-    $sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
-    if (array_key_exists('sortWhitelist', $extra['options'])) {
-        $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
-    }
-    $extra['options']['sortWhitelist'] = $sortList;
+	    $sortList = ['name', 'EducationLevelIsced.name', 'EducationSystems.name'];
+	    if (array_key_exists('sortWhitelist', $extra['options'])) {
+	        $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+	    }
+	    $extra['options']['sortWhitelist'] = $sortList;
 	}
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -107,7 +107,7 @@ class EducationLevelsTable extends ControllerActionTable
 	}
 
     public function getLevelOptionsByInstitution($institutionId)
-    {   
+    {
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
