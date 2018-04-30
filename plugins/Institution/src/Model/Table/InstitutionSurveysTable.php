@@ -159,75 +159,78 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function getWorkflowFilterOptions(Event $event)
+    public function getWorkflowFilterOptions(Event $event, array $extra = null)
     {
         $CustomModules = $this->SurveyForms->CustomModules;
         $module = $this->module;
-        $tempList = $this->SurveyForms
+        $surveyList = $this->SurveyForms
             ->find('list')
             ->matching('CustomModules', function ($q) use ($CustomModules, $module) {
                 return $q->where([$CustomModules->aliasField('model') => $module]);
             })
             ->toArray();
-        
-        $session = $this->controller->request->session();
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
 
-        if (!is_null($institutionId)) {
-            $AcademicPeriods = $this->AcademicPeriods;
-            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-            $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
-            $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
-            $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
-            $todayDate = date("Y-m-d");
-            $list = [];
+        if (is_null($extra) || empty($extra['institution_id'])) {
+            // used by WorkflowTable, and it will not pass back $extra, to return the whole list
+            return $surveyList;
+        } else {
+            // used by WorkflowBehavior, and it will pass back $extra with the institution_id to read from
+            $institutionId = $extra['institution_id'];
 
-            foreach ($tempList as $key => $value) {
-                $surveyFormId = $key;
+            if (!is_null($institutionId)) {
+                $AcademicPeriods = $this->AcademicPeriods;
+                $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+                $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
+                $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
+                $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+                $todayDate = date("Y-m-d");
+                $list = [];
 
-                // check if survey form filter type matches
-                $institutionFilterCount = $SurveyFormsFilters
-                    ->find()
-                    ->where([
-                        'AND' => [
-                            [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                            [
-                                'OR' => [
-                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                                    [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
+                foreach ($surveyList as $key => $value) {
+                    $surveyFormId = $key;
+
+                    // check if survey form filter type matches
+                    $institutionFilterCount = $SurveyFormsFilters
+                        ->find()
+                        ->where([
+                            'AND' => [
+                                [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
+                                [
+                                    'OR' => [
+                                        [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                                        [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
+                                    ]
                                 ]
                             ]
-                        ]
-                    ])
-                    ->count();
-
-                // if filter type matches, check if the status is active
-                if ($institutionFilterCount > 0) {
-                    $activeSurveyCount = $SurveyStatusPeriods
-                        ->find()
-                        ->matching($AcademicPeriods->alias())
-                        ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
-                            return $q
-                                ->where([
-                                    $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
-                                    $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
-                                ]);
-                        })
+                        ])
                         ->count();
-                } else {
-                    $activeSurveyCount = 0;
-                }
 
-                // update the filter list if their is existing active surveys for the institution by institution type
-                if ($activeSurveyCount > 0) {
-                    $list[$key] = $value; 
+                    // if filter type matches, check if the status is active
+                    if ($institutionFilterCount > 0) {
+                        $activeSurveyCount = $SurveyStatusPeriods
+                            ->find()
+                            ->matching($AcademicPeriods->alias())
+                            ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
+                                return $q
+                                    ->where([
+                                        $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
+                                        $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
+                                    ]);
+                            })
+                            ->count();
+                    } else {
+                        $activeSurveyCount = 0;
+                    }
+
+                    // update the filter list if their is existing active surveys for the institution by institution type
+                    if ($activeSurveyCount > 0) {
+                        $list[$key] = $value;
+                    }
                 }
             }
-        }
 
-        return $list;
+            return $list;
+        }
     }
 
     public function triggerBuildSurveyRecordsShell($params)
