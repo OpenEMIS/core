@@ -19,6 +19,7 @@ use App\Model\Table\ControllerActionTable;
 class StaffAppraisalsTable extends ControllerActionTable
 {
     private $periodList = [];
+    private $staff;
 
     public function initialize(array $config)
     {
@@ -76,11 +77,27 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if (in_array($this->action, ['view', 'edit', 'delete'])) {
+            $modelAlias = 'Staff Appraisals';
+            $userType = 'StaffUser';
+            $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        }
+
         if ($this->action != 'download') {
-            $userId = $this->request->query('user_id');
-            $staff = $this->Users->get($userId);
-            $this->staff = $staff;
-            $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
+            if (!is_null($this->request->query('user_id'))) {
+                $userId = $this->request->query('user_id');
+            } else {
+                $session = $this->request->session();
+                if ($session->check('Staff.Staff.id')) {
+                    $userId = $session->read('Staff.Staff.id');
+                }
+            }
+
+            if (!is_null($userId)) {
+                $staff = $this->Users->get($userId);
+                $this->staff = $staff;
+                $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
+            }
         }
     }
 
