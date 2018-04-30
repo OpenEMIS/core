@@ -72,9 +72,9 @@ class EducationProgrammesTable extends ControllerActionTable
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
-        $this->fields['education_field_of_study_id']['sort'] = ['field' => 'EducationFieldOfStudies.name'];
-        $this->fields['education_cycle_id']['sort'] = ['field' => 'EducationCycles.name'];
-        $this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
+		$this->fields['education_field_of_study_id']['sort'] = ['field' => 'EducationFieldOfStudies.name'];
+		$this->fields['education_cycle_id']['sort'] = ['field' => 'EducationCycles.name'];
+		$this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
@@ -93,11 +93,11 @@ class EducationProgrammesTable extends ControllerActionTable
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
 		$query->where([$this->aliasField('education_cycle_id') => $selectedCycle]);
 
-        $sortList = ['code', 'name', 'EducationFieldOfStudies.name', 'EducationCycles.name', 'EducationCertifications.name'];
-        if (array_key_exists('sortWhitelist', $extra['options'])) {
-            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
-        }
-        $extra['options']['sortWhitelist'] = $sortList;
+		$sortList = ['code', 'name', 'EducationFieldOfStudies.name', 'EducationCycles.name', 'EducationCertifications.name'];
+		if (array_key_exists('sortWhitelist', $extra['options'])) {
+		    $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+		}
+		$extra['options']['sortWhitelist'] = $sortList;
 	}
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)

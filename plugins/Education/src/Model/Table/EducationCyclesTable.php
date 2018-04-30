@@ -59,11 +59,11 @@ class EducationCyclesTable extends ControllerActionTable
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
 		$query->where([$this->aliasField('education_level_id') => $selectedLevel]);
 		
-        $sortList = ['name','EducationLevels.name'];
-        if (array_key_exists('sortWhitelist', $extra['options'])) {
-            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
-        }
-        $extra['options']['sortWhitelist'] = $sortList;
+		$sortList = ['name','EducationLevels.name'];
+			if (array_key_exists('sortWhitelist', $extra['options'])) {
+		    $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+		}
+			$extra['options']['sortWhitelist'] = $sortList;
 	}
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
