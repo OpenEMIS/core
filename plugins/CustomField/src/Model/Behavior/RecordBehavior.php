@@ -835,7 +835,9 @@ class RecordBehavior extends Behavior
                     'attr' => [
                         'label' => $customField->name,
                         'fieldKey' => $this->config('fieldKey'),
-                        'formKey' => $this->config('formKey')
+                        'formKey' => $this->config('formKey'),
+                        'tableColumnKey' => $this->config('tableColumnKey'),
+                        'tableRowKey' => $this->config('tableRowKey')
                     ],
                     'valueClass' => $valueClass,
                     'customField' => $customField,
