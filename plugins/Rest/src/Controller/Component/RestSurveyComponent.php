@@ -634,6 +634,7 @@ class RestSurveyComponent extends Component
         $fieldNode->addChild("label", "Academic Period", NS_XF);
        
         $SurveyForms = TableRegistry::get('Survey.SurveyForms');
+        $SurveyStatuses = $SurveyForms->SurveyStatuses;
         $todayDate = date("Y-m-d");
 
         $periodListResults = $SurveyForms
@@ -650,7 +651,7 @@ class RestSurveyComponent extends Component
             ->where([
                 'AND' => [
                     [$SurveyForms->aliasField('id') => $id],
-                    ['SurveyStatuses.date_disabled >= ' . $todayDate]
+                    [$SurveyStatuses->aliasField('date_disabled >= ') => $todayDate]
                 ]
             ])
             ->all();
