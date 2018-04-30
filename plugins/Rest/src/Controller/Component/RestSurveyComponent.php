@@ -618,7 +618,7 @@ class RestSurveyComponent extends Component
         $fieldNode = $bodyNode->addChild("input", null, NS_XF);
         $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
         $fieldNode->addAttribute("oe-type", "string");
-        $fieldNode->addChild("label", "Institution", NS_XF);
+        $fieldNode->addChild("label", "Institution Code", NS_XF);
 
         $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
         // End
