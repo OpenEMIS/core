@@ -1220,7 +1220,7 @@ class RestSurveyComponent extends Component
         $extra['type'] = $bindType;
         $extra['required'] = $field->default_is_mandatory;
 
-        if (empty($extra['constraint'])) {
+        if (isset($extra['constraint']) && empty($extra['constraint'])) {
             unset($extra['constraint']);
         }
         $this->setBindNode($extra['model'], $instanceId, $extra['references'], $extra);
