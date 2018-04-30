@@ -18,6 +18,10 @@ class RenderTableBehavior extends RenderBehavior {
         $customField = $attr['customField'];
         $fieldId = $attr['customField']->id;
         $cellValues = $attr['customTableCells'];
+        $fieldKey = $attr['attr']['fieldKey'];
+        $formKey = $attr['attr']['formKey'];
+        $tableColumnKey = $attr['attr']['tableColumnKey'];
+        $tableRowKey = $attr['attr']['tableRowKey'];
         $form = $event->subject()->Form;
 
         $tableHeaders = [];
@@ -50,6 +54,7 @@ class RenderTableBehavior extends RenderBehavior {
         }
         // end
 
+        $cellErrors = $entity->errors('custom_table_cells');
         foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
             $rowData = [];
             $rowData[] = $rowObj->name;
@@ -77,7 +82,38 @@ class RenderTableBehavior extends RenderBehavior {
                     $cellOptions['value'] = $cellValue;
                 }
 
+                // start build error messages for each cell
+                $errorInput = '';
+                if (!empty($cellErrors)) {
+                    foreach ($cellErrors as $errorKey => $errorObj) {
+                        $cellEntity = $entity->custom_table_cells[$errorKey];
+
+                        $cellFieldId = $cellEntity->{$fieldKey};
+                        $cellRowId = $cellEntity->{$tableRowKey};
+                        $cellColumnId = $cellEntity->{$tableColumnKey};
+
+                        if ($cellFieldId == $fieldId && $cellRowId == $tableRowId && $cellColumnId == $tableColumnId) {
+                            $errors = '';
+                            foreach ($errorObj as $fieldCol => $fieldErrors) {
+                                foreach ($fieldErrors as $fieldErrorRule => $fieldErrorMessage) {
+                                    if (empty($errors)) {
+                                        $errors .= $fieldErrorMessage;
+                                    } else {
+                                        $errors .= '<br>' . $fieldErrorMessage;
+                                    }
+                                }
+                            }
+                            $errorInput = '<div class="error-message">'.$errors.'</div>';
+                            unset($cellErrors[$errorKey]);
+                        }
+                    }
+                }
+                // end build error messages for each cell
                 $cellInput .= $form->input("$cellPrefix.$valueColumn", $cellOptions);
+                if (!empty($errorInput)) {
+                    $cellInput .= $errorInput;
+                }
+
                 $unlockFields[] = "$cellPrefix.$valueColumn";
 
                 if ($action == 'view') {
@@ -139,7 +175,9 @@ class RenderTableBehavior extends RenderBehavior {
                             $tableColumnKey => $columnId,
                             'text_value' => $textValue,
                             'number_value' => $numberValue,
-                            'decimal_value' => $decimalValue
+                            'decimal_value' => $decimalValue,
+                            'field_type' => $obj['field_type'],
+                            'params' => $obj['params']
                         ];
                     }
                 }
