@@ -60,10 +60,10 @@ class EducationCyclesTable extends ControllerActionTable
 		$query->where([$this->aliasField('education_level_id') => $selectedLevel]);
 		
 		$sortList = ['name','EducationLevels.name'];
-			if (array_key_exists('sortWhitelist', $extra['options'])) {
-		    $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+		if (array_key_exists('sortWhitelist', $extra['options'])) {
+			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
 		}
-			$extra['options']['sortWhitelist'] = $sortList;
+		$extra['options']['sortWhitelist'] = $sortList;
 	}
 
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
