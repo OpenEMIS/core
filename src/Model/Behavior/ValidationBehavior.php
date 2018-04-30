@@ -1533,7 +1533,7 @@ class ValidationBehavior extends Behavior
                 if ($key == 'number') {
                     // table type
                     $numberValidation = is_array($obj) ? key($obj) : null;
-                    $value = array_key_exists($numberValidation, $obj) ? $obj[$numberValidation] : null;
+                    $value = isset($numberValidation, $obj) ? $obj[$numberValidation] : null;
                 } else {
                     // number type
                     $numberValidation = $key;
