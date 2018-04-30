@@ -213,7 +213,6 @@ class EducationGradesTable extends ControllerActionTable
         $this->fields['education_programme_id']['sort'] = ['field' => 'EducationProgrammes.name'];
         $this->fields['education_stage_id']['sort'] = ['field' => 'EducationStages.name'];
 
-
         $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'education_stage_id', 'subjects'];
     }
 
