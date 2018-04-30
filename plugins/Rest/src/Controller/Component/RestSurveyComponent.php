@@ -618,7 +618,7 @@ class RestSurveyComponent extends Component
         $fieldNode = $bodyNode->addChild("input", null, NS_XF);
         $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
         $fieldNode->addAttribute("oe-type", "string");
-        $fieldNode->addChild("label", "Institution", NS_XF);
+        $fieldNode->addChild("label", "Institution Code", NS_XF);
 
         $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
         // End
@@ -634,6 +634,7 @@ class RestSurveyComponent extends Component
         $fieldNode->addChild("label", "Academic Period", NS_XF);
        
         $SurveyForms = TableRegistry::get('Survey.SurveyForms');
+        $SurveyStatuses = $SurveyForms->SurveyStatuses;
         $todayDate = date("Y-m-d");
 
         $periodListResults = $SurveyForms
@@ -650,7 +651,7 @@ class RestSurveyComponent extends Component
             ->where([
                 'AND' => [
                     [$SurveyForms->aliasField('id') => $id],
-                    ['SurveyStatuses.date_disabled >= ' . $todayDate]
+                    [$SurveyStatuses->aliasField('date_disabled >= ') => $todayDate]
                 ]
             ])
             ->all();
@@ -824,6 +825,7 @@ class RestSurveyComponent extends Component
 
     private function number($field, $parentNode, $instanceId, $extra)
     {
+        $bindType = 'integer';
         $constraint = null;
         $validationType = null;
         $validations = [];
@@ -885,6 +887,7 @@ class RestSurveyComponent extends Component
 
     private function decimal($field, $parentNode, $instanceId, $extra)
     {
+        $bindType = 'decimial';
         $constraint = null;
         $validationType = null;
         $validations = [];
@@ -1217,7 +1220,7 @@ class RestSurveyComponent extends Component
         $extra['type'] = $bindType;
         $extra['required'] = $field->default_is_mandatory;
 
-        if (empty($extra['constraint'])) {
+        if (isset($extra['constraint']) && empty($extra['constraint'])) {
             unset($extra['constraint']);
         }
         $this->setBindNode($extra['model'], $instanceId, $extra['references'], $extra);
