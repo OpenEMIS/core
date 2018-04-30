@@ -1422,7 +1422,7 @@ trait MessagesTrait
                 'height' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
                     'notZero' => 'Height must be more than 0',
-                    'validHeight' => 'Height must be within 0 and 300 centimetre',
+                    'validHeight' => 'Height must be within 50 and 300 centimetre',
                 ],
                 'weight' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',

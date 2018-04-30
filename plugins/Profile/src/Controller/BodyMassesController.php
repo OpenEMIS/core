@@ -220,7 +220,7 @@ class BodyMassesController extends PageController
             $page->get('height')->setLabel([
                 'escape' => false,
                 'class' => 'tooltip-desc',
-                'text' => __('Height') . $this->tooltipMessage(__('Within 0 to 300 centimetre'))
+                'text' => __('Height') . $this->tooltipMessage(__('Within 50 to 300 centimetre'))
             ]);
 
             $page->get('weight')->setLabel([
