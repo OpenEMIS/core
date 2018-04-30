@@ -33,7 +33,7 @@ class UserBodyMassesTable extends AppTable
                     'last' => true
                 ],
                 'validHeight' => [
-                    'rule' => ['range', 0, 300],
+                    'rule' => ['range', 50, 300],
                     'last' => true
                 ],
                 'validateDecimal' => [
