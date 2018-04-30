@@ -22,23 +22,29 @@ var Workflow = {
 		Workflow.hideError();
 	},
 
-	copy: function(jsonObj) {
-		$('.workflowtransition-assignee-id').val('');
-		$('.workflowtransition-comment').val('');
-		$('.workflowtransition-action-id').val(jsonObj.id);
-		$('.workflowtransition-action-name').val(jsonObj.name);
-		$('.workflowtransition-action-description').val(jsonObj.description);
-		$('.workflowtransition-step-id').val(jsonObj.next_step_id);
-		$('.workflowtransition-step-name').val(jsonObj.next_step_name);
-		$('.workflowtransition-assignee-required').val(jsonObj.assignee_required);
-		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
-		$('.workflowtransition-event-description').html(jsonObj.event_description);
-        var assigneeUrl = $('.workflowtransition-assignee-id').attr('assignee-url');
+	copy: function(jsonObj, actionType = 'transition') {
+		if (actionType == 'transition') {
+			$('.workflowtransition-assignee-id').val('');
+			$('.workflowtransition-comment').val('');
+			$('.workflowtransition-action-id').val(jsonObj.id);
+			$('.workflowtransition-action-name').val(jsonObj.name);
+			$('.workflowtransition-action-description').val(jsonObj.description);
+			$('.workflowtransition-step-id').val(jsonObj.next_step_id);
+			$('.workflowtransition-step-name').val(jsonObj.next_step_name);
+			$('.workflowtransition-assignee-required').val(jsonObj.assignee_required);
+			$('.workflowtransition-comment-required').val(jsonObj.comment_required);
+			$('.workflowtransition-event-description').html(jsonObj.event_description);
+	        var assigneeUrl = $('.workflowtransition-assignee-id').attr('assignee-url');
 
-		Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id, jsonObj.auto_assign_assignee);
-		Workflow.resetError();
-		Workflow.toggleAssignee(jsonObj.assignee_required);
-		Workflow.toggleComment(jsonObj.comment_required);
+			Workflow.getTransitionAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id, jsonObj.auto_assign_assignee);
+			Workflow.resetError();
+			Workflow.toggleAssignee(jsonObj.assignee_required);
+			Workflow.toggleComment(jsonObj.comment_required);
+		} else if (actionType == 'reassign') {
+	        var reassignAssigneeUrl = $('.workflow-reassign-new-assignee').attr('assignee-url');
+			Workflow.getReassigneeOptions(reassignAssigneeUrl, jsonObj.is_school_based, jsonObj.step_id, jsonObj.auto_assign_assignee);
+		}
+		
 	},
 
 	hideError: function() {
@@ -47,12 +53,18 @@ var Workflow = {
 		$('.workflowtransition-assignee-error').hide();
 		$('.workflowtransition-assignee-sql-error').hide();
 		$('.workflowtransition-comment-error').hide();
+		$('.workflow-reassign-assignee-error').hide();
+		$('.workflow-reassign-assignee-sql-error').hide();
 	},
 
-	resetError: function() {
-		$('div').remove('.assignee-error');
-		$('.workflowtransition-assignee-id').removeClass('form-error');
-		$('.workflowtransition-comment').removeClass('form-error');
+	resetError: function(actionType = 'transition') {
+		if (actionType == 'transition') {
+			$('div').remove('.assignee-error');
+			$('.workflowtransition-assignee-id').removeClass('form-error');
+			$('.workflowtransition-comment').removeClass('form-error');
+		} else if (actionType == 'reassign') {
+			$('.workflow-reassign-assignee-error').removeClass('form-error');
+		}
 	},
 
 	toggleAssignee: function(required) {
@@ -72,37 +84,52 @@ var Workflow = {
 		}
 	},
 
-	onSubmit: function(obj) {
-		var assigneeRequired = $('.workflowtransition-assignee-required').val();
-		var assigneeId = $('.workflowtransition-assignee-id').val();
-		var commentRequired = $('.workflowtransition-comment-required').val();
-		var comment = $.trim($('.workflowtransition-comment').val());
-		Workflow.resetError();
+	onSubmit: function(actionType = 'transition') {
+		console.log('here', actionType);
+		if (actionType == 'transition') {
+			var assigneeRequired = $('.workflowtransition-assignee-required').val();
+			var assigneeId = $('.workflowtransition-assignee-id').val();
+			var commentRequired = $('.workflowtransition-comment-required').val();
+			var comment = $.trim($('.workflowtransition-comment').val());
+			Workflow.resetError(actionType);
 
-		var error = false;
-		if (assigneeRequired == 1 && assigneeId == '') {
-			$('.workflowtransition-assignee-id').addClass('form-error');
-			$('.workflowtransition-assignee-id').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflowtransition-assignee-error').html() + '</div>');
-			error = true;
-		}
+			var error = false;
+			if (assigneeRequired == 1 && assigneeId == '') {
+				$('.workflowtransition-assignee-id').addClass('form-error');
+				$('.workflowtransition-assignee-id').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflowtransition-assignee-error').html() + '</div>');
+				error = true;
+			}
 
-		if (commentRequired == 1 && comment.length === 0) {
-			$('.workflowtransition-comment').addClass('form-error');
-			$('.workflowtransition-comment-error').show();
-			error = true;
-		} else {
-			$('.workflowtransition-comment').removeClass('form-error');
-			$('.workflowtransition-comment-error').hide();
-		}
+			if (commentRequired == 1 && comment.length === 0) {
+				$('.workflowtransition-comment').addClass('form-error');
+				$('.workflowtransition-comment-error').show();
+				error = true;
+			} else {
+				$('.workflowtransition-comment').removeClass('form-error');
+				$('.workflowtransition-comment-error').hide();
+			}
 
-		if (error) {
-			return false;
-		} else {
-			return true;
+			if (error) {
+				return false;
+			} else {
+				return true;
+			}
+		} else if (actionType == 'reassign') {
+			var assigneeId = $('.workflow-reassign-new-assignee').val();
+			Workflow.resetError(actionType);
+
+			var error = false;
+			if (assigneeId == '') {
+				$('.workflow-reassign-new-assignee').addClass('form-error');
+				$('.workflow-reassign-new-assignee').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflowtransition-assignee-error').html() + '</div>');
+				error = true;
+			}
+
+			return !error;
 		}
 	},
 
-	getAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
+	getTransitionAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
 		var url = assigneeUrl;
 
 		$.ajax({
@@ -143,6 +170,46 @@ var Workflow = {
 
             	if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
             		$('.workflowtransition-assignee-sql-error').show();
+            	}
+            }
+        });
+	},
+
+	getReassigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
+		var url = assigneeUrl;
+
+		$.ajax({
+			url: url,
+            dataType: "json",
+            data: {
+            	is_school_based: isSchoolBased,
+                next_step_id: nextStepId,
+                auto_assign_assignee: autoAssignAssignee
+            },
+            success: function(response) {
+            	var defaultKey = response.default_key;
+            	var assignees = response.assignees;
+
+            	$('.workflow-reassign-new-assignee').empty();
+            	if (jQuery.isEmptyObject(assignees)) {
+            		// show No options if assignees is empty
+            		$('.workflow-reassign-new-assignee').append($('<option>').text(defaultKey).attr('value', ''));
+            	} else {
+            		if (defaultKey.length != 0) {
+                        $('.workflow-reassign-new-assignee').append($('<option>').text(defaultKey).attr('value', ''));
+                    }
+					$.each(assignees, function(i, value) {
+						$('.workflow-reassign-new-assignee').append($('<option>').text(value).attr('value', i));
+					});
+            	}
+
+            },
+            error: function(error) {
+            	console.log('Workflow.getReassigneeOptions() error callback:');
+            	console.log(error);
+
+            	if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
+            		$('.workflow-reassign-assignee-sql-error').show();
             	}
             }
         });
