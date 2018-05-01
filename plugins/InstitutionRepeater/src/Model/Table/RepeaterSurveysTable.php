@@ -1,16 +1,18 @@
 <?php
 namespace InstitutionRepeater\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class RepeaterSurveysTable extends AppTable {
+class RepeaterSurveysTable extends ControllerActionTable
+{
 	// Default Status
 	const EXPIRED = -1;
 
 	private $surveyInstitutionId = null;
 	private $studentId = null;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('institution_repeater_surveys');
 		parent::initialize($config);
 		
