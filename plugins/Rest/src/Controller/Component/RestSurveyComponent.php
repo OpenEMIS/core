@@ -1059,6 +1059,101 @@ class RestSurveyComponent extends Component
             $fieldNode = $this->setModelNode($field, $extra['form'], $instanceId, $extra);
             $extra['form'] = null;  // set to null to skip adding into Head > Model > Instance
 
+            // start validation constraint
+            $inputType = 'string';
+            $constraint = null;
+            $validationType = null;
+            $validations = [];
+            $validationHint = '';
+
+            if ($field->has('params') && !empty($field->params)) {
+                $params = json_decode($field->params, true);
+
+                if (array_key_exists('number', $params)) {
+                    $inputType = 'integer';
+
+                    $validationRules = $params['number'];
+                    if (is_array($validationRules)) {
+                        foreach ($validationRules as $key => $value) {
+                            switch ($key) {
+                                case 'min_value':
+                                    $validationType = $key;
+                                    $validations['min_inclusive'] = $value;
+                                    $validationHint = $this->Field->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+                                    break;
+                                case 'max_value':
+                                    $validationType = $key;
+                                    $validations['max_inclusive'] = $value;
+                                    $validationHint = $this->Field->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+                                    break;
+                                case 'range':
+                                    $validationType = $key;
+                                    $validations['min_inclusive'] = $value['lower'];
+                                    $validations['max_inclusive'] = $value['upper'];
+                                    $validationHint = $this->Field->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                                    break;
+                            }
+                        }
+                    }
+                } elseif (array_key_exists('decimal', $params)) {
+                    $inputType = 'decimial';
+
+                    $generateRangeValues = function($length, $precision = 0) {
+                        $range = str_repeat('9', $length);
+                        if ($precision > 0) {
+                            $range .= '.' . str_repeat('9', $precision);
+                        }
+                        return $range;
+                    };
+
+                    $validationRules = $params['decimal'];
+                    $length = $validationRules['length'];
+                    $precision = $validationRules['precision'];
+
+                    // for positive values
+                    $validations['min_inclusive'] = 0;
+                    $validations['max_inclusive'] = $generateRangeValues($length, $precision);
+
+                    if ($precision == 0) {
+                        $validationType = 'total_digits';
+                        $validationHint = $this->Field->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
+                    } else {
+                        $validationType = 'fraction_digits';
+                        $validations['fraction_digits'] = $precision;
+                        $validationHint = $this->Field->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
+                    }
+                }
+            }
+
+            if (!is_null($validationType)) {
+                $bindType = $inputType.Inflector::camelize($validationType).$extra['index'];
+
+                // introduce subIndex to handle question inside repeater has validation
+                $subIndex = $extra['subIndex'];
+                if (!empty($subIndex)) {
+                    $bindType .= "_$subIndex";
+                }
+                // End
+
+                $schemaNode = $extra['schema'];
+                $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+                $simpleType->addAttribute("name", $bindType);
+
+                $restriction = $simpleType->addChild('restriction', null, NS_XSD);
+                $restriction->addAttribute("base", "xf:".$inputType);
+
+                foreach ($validations as $key => $value) {
+                    $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                    $condition->addAttribute("value", $value);
+                }
+            } else {
+                $bindType = $inputType;
+            }
+
+            $extra['type'] = $bindType;
+            $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+            // end validation constraint
+
             foreach ($tableRows as $row => $tableRow) {
                 $rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
                 $rowNode->addAttribute("id", $tableRow->id);
@@ -1068,10 +1163,14 @@ class RestSurveyComponent extends Component
                         $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
                         $columnNode->addAttribute("id", $col);
                         $cellType = 'output';
+                        $cellLabel = $tableRow->name;
+                        $cellHint = null;
                     } else {
                         $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
                         $columnNode->addAttribute("id", $tableColumn->id);
                         $cellType = 'input';
+                        $cellLabel = $tableRow->name;
+                        $cellHint = !is_null($extra['hint']) ? $extra['hint'] : null;
                     }
 
                     if ($row == 0) {
@@ -1080,7 +1179,10 @@ class RestSurveyComponent extends Component
                         $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
                         $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col])));
 
-                        $extra['type'] = 'string';
+                        $tbodyCell->addChild("label", htmlspecialchars($cellLabel, ENT_QUOTES), NS_XF);
+                        if (!empty($cellHint)) {
+                            $tbodyCell->addChild("hint", htmlspecialchars($cellHint, ENT_QUOTES), NS_XF);
+                        }
 
                         $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col]), $extra);
                     }
