@@ -141,7 +141,6 @@ class SetupTableBehavior extends SetupBehavior
     public function onSetTableElements(Event $event, Entity $entity)
     {
         $model = $this->_table;
-        $currentAction = $model->action;
 
         // addOnInitialize or editOnInitialize
         if ($model->request->is(['get'])) {
@@ -150,7 +149,6 @@ class SetupTableBehavior extends SetupBehavior
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
                     if (array_key_exists('number', $params)) {
-                        $model->request->query['table_rule'] = 'number';
                         $entity->table_validation_rule = 'number';
 
                         $numberAttr = $params['number'];
@@ -180,7 +178,6 @@ class SetupTableBehavior extends SetupBehavior
                             $entity->table_number_validation = 1;
                         }
                     } else if (array_key_exists('decimal', $params)) {
-                        $model->request->query['table_rule'] = 'decimal';
                         $entity->table_validation_rule = 'decimal';
 
                         $decimalAttr = $params['decimal'];
@@ -465,7 +462,7 @@ class SetupTableBehavior extends SetupBehavior
                                         $minValue = array_key_exists('table_minimum_value', $data) ? $data['table_minimum_value']: null;
 
                                         if (!is_null($minValue)) {
-                                            $params['number']['min_value'] = $data['table_minimum_value'];
+                                            $params['number']['min_value'] = $minValue;
                                         }
                                         break;
 
@@ -473,7 +470,7 @@ class SetupTableBehavior extends SetupBehavior
                                         $maxValue = array_key_exists('table_maximum_value', $data) ? $data['table_maximum_value']: null;
 
                                         if (!is_null($maxValue)) {
-                                            $params['number']['max_value'] = $data['table_maximum_value'];
+                                            $params['number']['max_value'] = $maxValue;
                                         }
                                         break;
 
@@ -483,8 +480,8 @@ class SetupTableBehavior extends SetupBehavior
 
                                         if (!is_null($lowerLimit) && !is_null($upperLimit)) {
                                             $params['number']['range'] = [
-                                                'lower' => $data['table_lower_limit'],
-                                                'upper' => $data['table_upper_limit']
+                                                'lower' => $lowerLimit,
+                                                'upper' => $upperLimit
                                             ];
                                         }
                                         break;
