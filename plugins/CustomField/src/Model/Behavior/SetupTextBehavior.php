@@ -254,7 +254,7 @@ class SetupTextBehavior extends SetupBehavior
     public function onGetTextValidationRule(Event $event, Entity $entity)
     {
         $value = '';
-        $selectedValidationRule = $entity->has('text_validation_rule') ? $entity->table_validation_rule : key($this->ruleOptions);
+        $selectedValidationRule = $entity->has('text_validation_rule') ? $entity->text_validation_rule : key($this->ruleOptions);
         $value = array_key_exists($selectedValidationRule, $this->ruleOptions) ? $this->ruleOptions[$selectedValidationRule] : current($this->ruleOptions);
 
         return $value;
