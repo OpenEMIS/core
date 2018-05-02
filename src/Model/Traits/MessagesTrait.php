@@ -109,6 +109,7 @@ trait MessagesTrait
             'reject' => 'Reject',
             'noClasses' => 'No Classes',
             'noSubjects' => 'No Subjects',
+            'noSurveys' => 'No Surveys',
             'noStaff' => 'No Staff',
             'type' => 'Type',
             'amount' => 'Amount',

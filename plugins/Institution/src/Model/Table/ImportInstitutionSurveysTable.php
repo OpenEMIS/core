@@ -217,12 +217,12 @@ class ImportInstitutionSurveysTable extends AppTable {
       
             $surveyStatus = $this->institutionSurvey->status_id;
             $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-            $entity = $WorkflowSteps
+            $workflowStepEntity = $WorkflowSteps
                 ->find()
                 ->where([$WorkflowSteps->aliasField('id') => $surveyStatus])
                 ->first();
 
-            if($entity && $entity->category == WorkflowSteps::DONE) {
+            if($workflowStepEntity && $workflowStepEntity->category == WorkflowSteps::DONE) {
                 $model->Alert->warning($this->aliasField('restrictImport'), ['reset'=>true]);
                 return false;
             }

@@ -142,6 +142,8 @@ class FieldOptionComponent extends Component
         'ImmunizationTypes' => ['className' => 'Health.ImmunizationTypes', 'parent' => 'Health'],
         'Relationships' => ['className' => 'Health.Relationships', 'parent' => 'Health'],
         'TestTypes' => ['className' => 'Health.TestTypes', 'parent' => 'Health'],
+        'InsuranceProviders' => ['className' => 'Health.InsuranceProviders', 'parent' => 'Health'],
+        'InsuranceTypes' => ['className' => 'Health.InsuranceTypes', 'parent' => 'Health'],
 
     // Transport
         'TransportFeatures' => ['className' => 'Transport.TransportFeatures', 'parent' => 'Transport'],

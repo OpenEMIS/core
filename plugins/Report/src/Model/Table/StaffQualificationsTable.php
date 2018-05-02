@@ -42,7 +42,8 @@ class StaffQualificationsTable extends AppTable  {
         $this->addBehavior('Excel', [
             'excludes' => [
                 'file_name'
-            ]
+            ],
+            'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
@@ -67,15 +68,62 @@ class StaffQualificationsTable extends AppTable  {
         $superAdmin = $requestData->super_admin;
 
         $query
-            ->contain(['QualificationTitles.QualificationLevels', 'FieldOfStudies'])
-            ->contain(['EducationSubjects', 'QualificationSpecialisations'])
             ->select([
+                $this->aliasField('id'),
+                $this->aliasField('staff_id'),
+                $this->aliasField('qualification_title_id'),
+                $this->aliasField('education_field_of_study_id'),
+                $this->aliasField('qualification_country_id'),
+                $this->aliasField('qualification_institution'),
+                $this->aliasField('document_no'),
+                $this->aliasField('graduate_year'),
+                $this->aliasField('gpa'),
                 'institution_name' => 'Institutions.name',
                 'institution_code' => 'Institutions.code',
                 'staff_position_name' => 'StaffPositionTitles.name',
                 'staff_type_name' => 'StaffTypes.name',
-                'qualification_level' => 'QualificationLevels.name',
-                'field_of_study_name' => 'FieldOfStudies.name'
+                'qualification_level' => 'QualificationLevels.name'
+
+            ])
+            ->contain([
+                'QualificationTitles.QualificationLevels',
+                'EducationSubjects' => [
+                    'fields' => [
+                        'EducationSubjects.id',
+                        'QualificationsSubjects.staff_qualification_id',
+                        'EducationSubjects.name',
+                        'EducationSubjects.code'
+                    ]
+                ],
+                'QualificationSpecialisations' => [
+                    'fields' => [
+                        'QualificationSpecialisations.id',
+                        'QualificationsSpecialisations.staff_qualification_id',
+                        'QualificationSpecialisations.name'
+                    ]
+                ],
+                'FieldOfStudies' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'QualificationTitles' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'QualificationCountries' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Users' => [
+                    'fields' => [
+                        'first_name',
+                        'last_name'
+                    ]
+                ]
+
             ])
             ->innerJoin(
                 ['InstitutionStaff' => 'institution_staff'],
@@ -97,7 +145,7 @@ class StaffQualificationsTable extends AppTable  {
                 ['StaffTypes' => 'staff_types'],
                     ['InstitutionStaff.staff_type_id = StaffTypes.id']
             )
-            ->autoFields(true);
+            ;
 
         if (!$superAdmin) {
             $query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
