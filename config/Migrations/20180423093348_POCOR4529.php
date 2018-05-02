@@ -215,47 +215,35 @@ class POCOR4529 extends AbstractMigration
     public function down()
     {
         $workflowModelId = 19;
-        $workflowCode = 'STAFF-APPRAISAL-1001';
-
-        $workflowEntity = $this->fetchRow("SELECT `id` FROM `workflows` WHERE `code` = '" . $workflowCode . "'");
-        $workflowId = $workflowEntity['id'];
 
         // workflow_models
         $this->execute('DELETE FROM workflow_models WHERE `id` = ' . $workflowModelId);
 
-        // workflows
-        $this->execute('DELETE FROM workflows WHERE `workflow_model_id` = ' . $workflowModelId);
+        // workflow
+        $this->execute('
+            DELETE FROM `workflows` WHERE NOT EXISTS (
+                SELECT 1 FROM `workflow_models` WHERE `workflow_models`.`id` = `workflows`.`workflow_model_id`
+            )
+        ');
 
         // workflow_steps
-        $this->execute('DELETE FROM workflow_steps WHERE `workflow_id` = ' . $workflowId);
+        $this->execute('
+            DELETE FROM `workflow_steps` WHERE NOT EXISTS (
+                SELECT 1 FROM `workflows` WHERE `workflows`.`id` = `workflow_steps`.`workflow_id`
+            )
+        ');
 
         // workflow_actions
         $this->execute('
-            DELETE FROM `workflow_actions` WHERE `workflow_actions`.`workflow_step_id` IN (
-                SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = ' . $workflowId . '
+            DELETE FROM `workflow_actions` WHERE NOT EXISTS (
+                SELECT 1 FROM `workflow_steps` WHERE `workflow_steps`.`id` = `workflow_actions`.`workflow_step_id`
             )
         ');
 
         // workflows_filters
-        $this->execute('DELETE FROM workflows_filters WHERE `workflow_id` = ' . $workflowId);
-
-        // workflow_statuses
-        $this->execute('DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = ' . $workflowModelId);
-
-        // workflow_transitions
-        $this->execute('DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = ' . $workflowModelId);
-
-        // workflow_statuses_steps
         $this->execute('
-            DELETE FROM `workflow_statuses_steps` WHERE `workflow_status_id` IN (
-              SELECT `id` FROM `workflow_statuses` WHERE `workflow_model_id` = ' . $workflowModelId . '
-            )
-        ');
-
-        // workflow_steps_roles
-        $this->execute('
-            DELETE FROM `workflow_steps_roles` WHERE `workflow_steps_roles`.`workflow_step_id` IN (
-              SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = ' . $workflowId . '
+            DELETE FROM `workflows_filters` WHERE NOT EXISTS (
+                SELECT 1 FROM `workflows` WHERE `workflows`.`id` = `workflows_filters`.`workflow_id`
             )
         ');
 
