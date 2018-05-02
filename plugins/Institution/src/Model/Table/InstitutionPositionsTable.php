@@ -369,15 +369,21 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $this->field('is_homeroom');
 
+        $this->field('created', [
+            'visible' => true,
+            'after' => 'is_homeroom'
+        ]);
+
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
 
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
         $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
+        $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
 
         $this->setFieldOrder([
             'position_no', 'staff_position_title_id',
-            'staff_position_grade_id',
+            'staff_position_grade_id'
         ]);
 
         if ($extra['auto_search']) {
@@ -386,6 +392,10 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $extra['OR'] = [$this->StaffPositionTitles->aliasField('name').' LIKE' => '%' . $search . '%'];
             }
         }
+        if (is_null($this->request->query('sort'))) {
+            $this->request->query['sort'] = 'created';
+            $this->request->query['direction'] = 'desc';
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -393,10 +403,51 @@ class InstitutionPositionsTable extends ControllerActionTable
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
 
-        $query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'Assignees'])
-            ->autoFields(true);
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('position_no'),
+                $this->aliasField('staff_position_title_id'),
+                $this->aliasField('staff_position_grade_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('is_homeroom'),
+                $this->aliasField('created')
+            ])
+            ->contain([
+                'Statuses' => [
+                    'fields' => [
+                        'Statuses.id',
+                        'Statuses.name'
+                    ]
+                ],
+                'StaffPositionTitles'=> [
+                    'fields' => [
+                        'StaffPositionTitles.id',
+                        'StaffPositionTitles.name',
+                        'StaffPositionTitles.order'
+                    ]
+                ],
+                'StaffPositionGrades'=> [
+                    'fields' => [
+                        'StaffPositionGrades.id',
+                        'StaffPositionGrades.name',
+                        'StaffPositionGrades.order'
+                    ]
+                ],
+                'Assignees'=> [
+                    'fields' => [
+                        'Assignees.id',
+                        'Assignees.first_name',
+                        'Assignees.middle_name',
+                        'Assignees.third_name',
+                        'Assignees.last_name',
+                        'Assignees.preferred_name'
+                    ]
+                ]
+            ]);
 
-        $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order'];
+        $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order', 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }

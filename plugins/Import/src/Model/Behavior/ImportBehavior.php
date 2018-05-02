@@ -262,16 +262,16 @@ class ImportBehavior extends Behavior
             ->add('select_file', 'ruleUploadFileError', [
                 'rule' => 'uploadError',
                 'last' => true,
-                'message' => $this->getExcelLabel('Import', 'upload_error')
+                'message' => $this->_table->getMessage('Import.upload_error') // will be overwritten in addBeforeSave if message exists
             ])
             ->add('select_file', 'ruleInvalidFileType', [
                 'rule' => ['mimeType', $supportedFormats],
-                'message' => $this->getExcelLabel('Import', 'not_supported_format'),
+                'message' => $this->_table->getMessage('Import.not_supported_format'),
                 'last' => true
             ])
             ->add('select_file', 'ruleInvalidFileSize', [
                 'rule' => ['fileSize', '<=', $maxSize],
-                'message' => $this->getExcelLabel('Import', 'over_max')
+                'message' => $this->_table->getMessage('Import.over_max')
             ]);
     }
 
@@ -310,10 +310,15 @@ class ImportBehavior extends Behavior
         return function ($model, $entity) {
             $errors = $entity->errors();
             if (!empty($errors)) {
+                // set error message for php file upload errors
                 $fileError = Hash::get($entity->invalid(), 'select_file.error');
                 if (!empty($fileError)) {
-                    Log::write('debug', 'Import File Error: '.$this->phpFileUploadErrors[$fileError]);
+                    $errorMessage = $model->getMessage("fileUpload.$fileError");
+                    if ($errorMessage != '[Message Not Found]') {
+                        $entity->errors('select_file', $errorMessage, true);
+                    }
                 }
+
                 return false;
             }
 
