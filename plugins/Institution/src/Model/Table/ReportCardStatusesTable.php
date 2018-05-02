@@ -428,9 +428,20 @@ class ReportCardStatusesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
-            $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
-            $this->Alert->warning('ReportCardStatuses.generateAll');
+            $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+            $inProgress = $ReportCardProcesses->find()
+                ->where([
+                    $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
+                    $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id']
+                ])
+                ->count();
 
+            if (!$inProgress) {
+                $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+                $this->Alert->warning('ReportCardStatuses.generateAll');
+            } else {
+                $this->Alert->warning('ReportCardStatuses.inProgress');
+            }
         } else {
             $this->Alert->warning('ReportCardStatuses.noTemplate');
         }
