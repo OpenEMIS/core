@@ -10,7 +10,7 @@ use Cake\Console\Shell;
 
 class GenerateAllReportCardsShell extends Shell
 {
-    private $maxProcesses = 5;
+    private $maxProcesses = 1;
     private $sleepTime = 5;
 
     public function initialize()
