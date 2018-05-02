@@ -92,9 +92,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
 
         if ($this->action != 'download') {
-            $userId = null;
-            // temp fix - to update StaffLeave table to pass user_id to query string
-            if (array_key_exists('user_id', $this->request->query)) {
+            if (!is_null($this->request->query('user_id'))) {
                 $userId = $this->request->query('user_id');
             } else {
                 $session = $this->request->session();
