@@ -623,13 +623,13 @@ class POCOR2813 extends AbstractMigration
             // end scholarship applications
 
         //TBC 
-        $table = $this->table('institution_choices', [
+        $table = $this->table('scholarship_institution_choices', [
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains all the institution choices of the scholarship application'
         ]);
 
         $table
-            ->addColumn('location_type', 'integer', [
+            ->addColumn('location_type_id', 'integer', [
                 'limit' => 1,
                 'null' => false,
                 'comment' => '0 - Domestic, 1 - International'
@@ -639,12 +639,6 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to countries.id'
-            ])
-            ->addColumn('institution_id', 'integer', [ // Will be set to 0 if it's International 
-                'default' => 0, 
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to institutions.id'
             ])
             ->addColumn('institution_name', 'string', [ // Will be null if it's domestic
                 'default' => null,
@@ -694,7 +688,8 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to scholarships.id'
             ])
-            ->addColumn('selection', 'integer', [    //Applicant selection
+            ->addColumn('selection_id', 'integer', [    //Applicant selection
+                'default' => 0,
                 'null' => false,
                 'limit' => 1,
                 'comment' => '0 - No, 1 - Yes'
@@ -723,7 +718,6 @@ class POCOR2813 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('country_id')
-            ->addIndex('institution_id')
             ->addIndex('institution_choice_status_id')
             ->addIndex('education_field_of_study_id')
             ->addIndex('level_of_study_id')
@@ -1464,7 +1458,7 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('scholarship_loans');
         $this->dropTable('scholarship_attachments');
         $this->dropTable('scholarship_applications');
-        $this->dropTable('institution_choices');
+        $this->dropTable('scholarship_institution_choices');
         $this->dropTable('institution_choice_statuses');
         $this->dropTable('scholarship_applications_attachments');
         $this->dropTable('scholarship_recipents');
