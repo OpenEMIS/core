@@ -1,22 +1,22 @@
 <?php
 namespace CustomField\Model\Table;
 
-use ArrayObject;
-use Cake\Event\Event;
-use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
-class CustomFieldValuesTable extends AppTable {
+class CustomFieldValuesTable extends AppTable
+{
 	protected $extra = ['scope' => 'custom_field_id'];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 		$this->belongsTo('CustomRecords', ['className' => 'CustomField.CustomRecords']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 		$scope = $this->extra['scope'];
 

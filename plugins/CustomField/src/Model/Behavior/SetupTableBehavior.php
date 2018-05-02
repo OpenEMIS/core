@@ -11,15 +11,24 @@ use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupTableBehavior extends SetupBehavior
 {
-    private $validationOptions = [];
+    private $ruleOptions = [];
+    private $numberValidationOptions = [];
 
     public function initialize(array $config)
     {
         parent::initialize($config);
 
         $this->ruleOptions = [
+            '' => __('No Validation'),
             'number' => __('Number Validation'),
             'decimal' => __('Decimal Validation')
+        ];
+
+        $this->numberValidationOptions = [
+            1 => __('No Validation'),
+            'min_value' => __('Should not be lesser than'),
+            'max_value' => __('Should not be greater than'),
+            'range' => __('In between (inclusive)')
         ];
     }
 
@@ -43,6 +52,9 @@ class SetupTableBehavior extends SetupBehavior
 
     private function buildTableValidator()
     {
+        $min = $this->inputLimits['number_value']['min'];
+        $max = $this->inputLimits['number_value']['max'];
+
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
 
@@ -51,6 +63,66 @@ class SetupTableBehavior extends SetupBehavior
 
         $validator = $this->_table->validator();
         $validator
+            // NUMBER
+            ->notEmpty('table_minimum_value')
+            ->add('table_minimum_value', 'validateLower', [
+                'rule' => function ($value, $context) use ($min) {
+                    return intval($value) >= $min;
+                },
+                'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+            ])
+            ->add('table_minimum_value', 'validateUpper', [
+                'rule' => function ($value, $context) use ($max) {
+                    return intval($value) <= $max;
+                },
+                'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+            ])
+            ->notEmpty('table_maximum_value')
+            ->add('table_maximum_value', 'validateLower', [
+                'rule' => function ($value, $context) use ($min) {
+                    return intval($value) >= $min;
+                },
+                'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+            ])
+            ->add('table_maximum_value', 'validateUpper', [
+                'rule' => function ($value, $context) use ($max) {
+                    return intval($value) <= $max;
+                },
+                'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+            ])
+            ->notEmpty('table_lower_limit')
+            ->add('table_lower_limit', 'validateLower', [
+                'rule' => function ($value, $context) use ($min) {
+                    return intval($value) >= $min;
+                },
+                'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+            ])
+            ->add('table_lower_limit', 'validateUpper', [
+                'rule' => function ($value, $context) use ($max) {
+                    return intval($value) <= $max;
+                },
+                'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+            ])
+            ->add('table_lower_limit', 'comparison', [
+                'rule' => function ($value, $context) {
+                    return intval($value) <= intval($context['data']['table_upper_limit']);
+                },
+                'message' => __('Lower Limit cannot be more than the Upper Limit.')
+            ])
+            ->notEmpty('table_upper_limit')
+            ->add('table_upper_limit', 'validateLower', [
+                'rule' => function ($value, $context) use ($min) {
+                    return intval($value) >= $min;
+                },
+                'message' => vsprintf(__('This field cannot be less than %d'), [$min])
+            ])
+            ->add('table_upper_limit', 'validateUpper', [
+                'rule' => function ($value, $context) use ($max) {
+                    return intval($value) <= $max;
+                },
+                'message' => vsprintf(__('This field cannot be more than %d'), [$max])
+            ])
+            // DECIMAL
             ->notEmpty('table_decimal_length')
             ->add('table_decimal_length', [
                 'ruleRange' => [
@@ -68,20 +140,50 @@ class SetupTableBehavior extends SetupBehavior
 
     public function onSetTableElements(Event $event, Entity $entity)
     {
-        // start table rule
         $model = $this->_table;
+        $currentAction = $model->action;
 
+        // addOnInitialize or editOnInitialize
         if ($model->request->is(['get'])) {
-            if (isset($entity->id)) {
-                // view / edit
+            // view and edit
+            if (!$entity->isNew()) {
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
                     if (array_key_exists('number', $params)) {
                         $model->request->query['table_rule'] = 'number';
+                        $entity->table_validation_rule = 'number';
+
+                        $numberAttr = $params['number'];
+                        if (is_array($numberAttr)) {
+                            if (array_key_exists('min_value', $numberAttr)) {
+                                $entity->table_number_validation = 'min_value';
+                                $entity->table_minimum_value = $numberAttr['min_value'];
+                            }
+
+                            if (array_key_exists('max_value', $numberAttr)) {
+                                $entity->table_number_validation = 'max_value';
+                                $entity->table_maximum_value = $numberAttr['max_value'];
+                            }
+
+                            if (array_key_exists('range', $numberAttr)) {
+                                $entity->table_number_validation = 'range';
+
+                                if (array_key_exists('lower', $numberAttr['range'])) {
+                                    $entity->table_lower_limit = $numberAttr['range']['lower'];
+                                }
+
+                                if (array_key_exists('upper', $numberAttr['range'])) {
+                                    $entity->table_upper_limit = $numberAttr['range']['upper'];
+                                }
+                            }
+                        } else {
+                            $entity->table_number_validation = 1;
+                        }
                     } else if (array_key_exists('decimal', $params)) {
                         $model->request->query['table_rule'] = 'decimal';
-                        $decimalAttr = $params['decimal'];
+                        $entity->table_validation_rule = 'decimal';
 
+                        $decimalAttr = $params['decimal'];
                         if (array_key_exists('length', $decimalAttr)) {
                             $entity->table_decimal_length = $decimalAttr['length'];
                         }
@@ -89,52 +191,89 @@ class SetupTableBehavior extends SetupBehavior
                         if (array_key_exists('precision', $decimalAttr)) {
                             $entity->table_decimal_precision = $decimalAttr['precision'];
                         }
+                    } else {
+                        $entity->table_validation_rule = '';
                     }
                 }
-            } else {
-                // add
-                unset($model->request->query['table_rule']);
-            }
-
-            if ($model->action == 'view') {
-                $selectedRule = $model->request->query('table_rule');
-                $entity->validation_rule = !is_null($selectedRule) ? $this->ruleOptions[$selectedRule] : __('No Validation');
             }
         }
 
-        $ruleOptions = ['' => __('No Validation')] + $this->ruleOptions;
-        $selectedRule = $model->queryString('table_rule', $ruleOptions);
+        $model->field('table_validation_rule', [
+            'after' => 'is_unique',
+            'attr' => [
+                'label' => __('Validation Rule'),
+                'required' => true
+            ],
+            'entity' => $entity
+        ]);
 
-        if ($model->action == 'edit') {
-            $model->field('validation_rule', [
-                'type' => 'readonly',
-                'value' => $selectedRule,
-                'attr' => [
-                    'value' => $ruleOptions[$selectedRule]
-                ]
-            ]);
-        } else {
-            $model->field('validation_rule', [
-                'type' => 'select',
-                'options' => $ruleOptions,
-                'default' => $selectedRule,
-                'value' => $selectedRule,
-                'onChangeReload' => true,
-                'after' => 'is_unique'
-            ]);
-        }
-
+        $selectedRule = $entity->has('table_validation_rule') ? $entity->table_validation_rule : '';
         switch ($selectedRule) {
+            case 'number':
+                $model->field('table_number_validation', [
+                    'after' => 'table_validation_rule',
+                    'attr' => [
+                        'label' => __('Number Validation'),
+                        'required' => true
+                    ],
+                    'entity' => $entity
+                ]);
+
+                $selectedNumberValidation = $entity->has('table_number_validation') ? $entity->table_number_validation : '';
+                switch ($selectedNumberValidation) {
+                    case 'min_value':
+                        $model->field('table_minimum_value', [
+                            'type' => 'integer',
+                            'after' => 'table_number_validation',
+                            'attr' => [
+                                'label' => __('Minimum Value'),
+                                'required' => true
+                            ]
+                        ]);
+                        break;
+
+                    case 'max_value':
+                        $model->field('table_maximum_value', [
+                            'type' => 'integer',
+                            'after' => 'table_number_validation',
+                            'attr' => [
+                                'label' => __('Maximum Value'),
+                                'required' => true
+                            ]
+                        ]);
+                        break;
+
+                    case 'range':
+                        $model->field('table_lower_limit', [
+                            'type' => 'integer',
+                            'after' => 'table_number_validation',
+                            'attr' => [
+                                'label' => __('Lower Limit'),
+                                'required' => true
+                            ]
+                        ]);
+                        $model->field('table_upper_limit', [
+                            'type' => 'integer',
+                            'after' => 'table_lower_limit',
+                            'attr' => [
+                                'label' => __('Upper Limit'),
+                                'required' => true
+                            ]
+                        ]);
+                        break;
+                    
+                    default:
+                        break;
+                }
+                break;
             case 'decimal':
                 $model->field('table_decimal_length');
                 $model->field('table_decimal_precision');
                 break;
-            case 'number':
-                break;
             default:
+                // No Validation
                 break;
         }
-        // end table rule
 
         // start tables element
         $fieldType = strtolower($this->fieldTypeCode);
@@ -147,6 +286,55 @@ class SetupTableBehavior extends SetupBehavior
         ]);
         $this->sortFieldOrder('tables');
         // end tables element
+    }
+
+    public function onGetTableValidationRule(Event $event, Entity $entity)
+    {
+        $value = '';
+        $selectedValidationRule = $entity->has('table_validation_rule') ? $entity->table_validation_rule : key($this->ruleOptions);
+        $value = array_key_exists($selectedValidationRule, $this->ruleOptions) ? $this->ruleOptions[$selectedValidationRule] : current($this->ruleOptions);
+
+        return $value;
+    }
+
+    public function onGetTableNumberValidation(Event $event, Entity $entity)
+    {
+        $value = '';
+        $selectedNumberValidation = $entity->has('table_number_validation') ? $entity->table_number_validation : key($this->numberValidationOptions);
+        $value = array_key_exists($selectedNumberValidation, $this->numberValidationOptions) ? $this->numberValidationOptions[$selectedNumberValidation] : current($this->numberValidationOptions);
+
+        return $value;
+    }
+
+    public function onUpdateFieldTableValidationRule(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $this->ruleOptions;
+        } elseif ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $selectedValidationRule = $entity->has('table_validation_rule') ? $entity->table_validation_rule : key($this->ruleOptions);
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $selectedValidationRule;
+            $attr['attr']['value'] = $this->ruleOptions[$selectedValidationRule];
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldTableNumberValidation(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = 'changeValidation';
+            $attr['select'] = false;
+            $attr['options'] = $this->numberValidationOptions;
+        }
+
+        return $attr;
     }
 
     public function onUpdateFieldTableDecimalLength(Event $event, array $attr, $action, Request $request)
@@ -263,28 +451,63 @@ class SetupTableBehavior extends SetupBehavior
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
-            if (isset($data['validation_rule'])) {
-                $model = $this->_table;
-                $request = $model->request;
-                unset($request->query['table_rule']);
+            if (isset($data['table_validation_rule'])) {
+                if (!empty($data['table_validation_rule'])) {
+                    $selectedRule = $data['table_validation_rule'];
 
-                if (!empty($data['validation_rule'])) {
-                    $selectedRule = $data['validation_rule'];
-                    $request->query['table_rule'] = $selectedRule;
                     $params = [];
-
                     switch ($selectedRule) {
                         case 'number':
-                            $params['number'] = 1;
+                            if (isset($data['table_number_validation']) && !empty($data['table_number_validation'])) {
+                                $selectedNumberValidation = $data['table_number_validation'];
+                                switch ($selectedNumberValidation) {
+                                    case 'min_value':
+                                        $minValue = array_key_exists('table_minimum_value', $data) ? $data['table_minimum_value']: null;
+
+                                        if (!is_null($minValue)) {
+                                            $params['number']['min_value'] = $data['table_minimum_value'];
+                                        }
+                                        break;
+
+                                    case 'max_value':
+                                        $maxValue = array_key_exists('table_maximum_value', $data) ? $data['table_maximum_value']: null;
+
+                                        if (!is_null($maxValue)) {
+                                            $params['number']['max_value'] = $data['table_maximum_value'];
+                                        }
+                                        break;
+
+                                    case 'range':
+                                        $lowerLimit = array_key_exists('table_lower_limit', $data) ? $data['table_lower_limit']: null;
+                                        $upperLimit = array_key_exists('table_upper_limit', $data) ? $data['table_upper_limit']: null;
+
+                                        if (!is_null($lowerLimit) && !is_null($upperLimit)) {
+                                            $params['number']['range'] = [
+                                                'lower' => $data['table_lower_limit'],
+                                                'upper' => $data['table_upper_limit']
+                                            ];
+                                        }
+                                        break;
+                                    case 1:
+                                        $params['number'] = 1;
+                                        break;
+                                    
+                                    default:
+                                        break;
+                                }
+                            }
                             break;
+
                         case 'decimal':
                             $length = array_key_exists('table_decimal_length', $data) ? $data['table_decimal_length'] : null;
                             $precision = array_key_exists('table_decimal_precision', $data) ? $data['table_decimal_precision'] : null;
+
                             $params['decimal'] = [
                                 'length' => $length,
                                 'precision' => $precision
                             ];
                             break;
+
                         default:
                             break;
                     }
@@ -293,9 +516,9 @@ class SetupTableBehavior extends SetupBehavior
                 } else {
                     $data['params'] = '';
                 }
-                
+
                 $submit = isset($data['submit']) ? $data['submit'] : 'save';
-                // turn off validation when reload
+                // turn off validation when reload, to fix when changing validation rule and columns / rows name is empty
                 if ($submit != 'save') {
                     $options['associated']['CustomTableColumns'] = ['validate' => false];
                     $options['associated']['CustomTableRows'] = ['validate' => false];

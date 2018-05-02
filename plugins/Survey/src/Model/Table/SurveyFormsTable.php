@@ -341,9 +341,12 @@ class SurveyFormsTable extends CustomFormsTable
                 $attr['type'] = 'disabled';
                 $attr['attr']['value'] = implode(', ', $selectedOptionsName);
             } else {
+                $customModule = $attr['attr']['customModule'];
+                $filter = $customModule->filter;
+                $chosenSelectList = TableRegistry::get($filter)->getList()->toArray();
                 $attr['type'] = 'readonly';
                 $attr['value'] = self::ALL_CUSTOM_FILER;
-                $attr['attr']['value'] = __('All Custom Filters Selected');
+                $attr['attr']['value'] = implode(', ', $chosenSelectList);
             }
         }
 
