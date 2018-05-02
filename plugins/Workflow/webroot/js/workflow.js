@@ -63,7 +63,9 @@ var Workflow = {
 			$('.workflowtransition-assignee-id').removeClass('form-error');
 			$('.workflowtransition-comment').removeClass('form-error');
 		} else if (actionType == 'reassign') {
+			$('div').remove('.assignee-error');
 			$('.workflow-reassign-assignee-error').removeClass('form-error');
+			$('.workflow-reassign-assignee-same-error').removeClass('form-error');
 		}
 	},
 
@@ -85,7 +87,6 @@ var Workflow = {
 	},
 
 	onSubmit: function(actionType = 'transition') {
-		console.log('here', actionType);
 		if (actionType == 'transition') {
 			var assigneeRequired = $('.workflowtransition-assignee-required').val();
 			var assigneeId = $('.workflowtransition-assignee-id').val();
@@ -116,13 +117,20 @@ var Workflow = {
 			}
 		} else if (actionType == 'reassign') {
 			var assigneeId = $('.workflow-reassign-new-assignee').val();
+			var currentAssigneeId = $('.workflow-reassign-current-assignee-id').val();
 			Workflow.resetError(actionType);
 
 			var error = false;
 			if (assigneeId == '') {
 				$('.workflow-reassign-new-assignee').addClass('form-error');
-				$('.workflow-reassign-new-assignee').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflowtransition-assignee-error').html() + '</div>');
+				$('.workflow-reassign-new-assignee').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflow-reassign-assignee-error').html() + '</div>');
 				error = true;
+			} else if (assigneeId == currentAssigneeId) {
+				$('.workflow-reassign-new-assignee').addClass('form-error');
+				$('.workflow-reassign-new-assignee').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflow-reassign-assignee-same-error').html() + '</div>');
+				error = true;
+			} else {
+				$('.workflow-reassign-new-assignee').removeClass('form-error');
 			}
 
 			return !error;
@@ -175,7 +183,7 @@ var Workflow = {
         });
 	},
 
-	getReassigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
+	getReassigneeOptions: function(assigneeUrl, isSchoolBased, stepId, autoAssignAssignee) {
 		var url = assigneeUrl;
 
 		$.ajax({
@@ -183,7 +191,7 @@ var Workflow = {
             dataType: "json",
             data: {
             	is_school_based: isSchoolBased,
-                next_step_id: nextStepId,
+                next_step_id: stepId,
                 auto_assign_assignee: autoAssignAssignee
             },
             success: function(response) {
