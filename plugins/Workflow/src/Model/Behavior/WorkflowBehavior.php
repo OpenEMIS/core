@@ -1471,39 +1471,47 @@ class WorkflowBehavior extends Behavior
 
                     $canAddButtons = $this->checkIfCanAddButtons($isSchoolBased, $entity);
 
-                        if ($canAddButtons) {
+                    if ($canAddButtons) {
                         // reassign button
-                        $reassignJsonObject = [
-                            'step_id' => $workflowStep->id,
-                            'is_school_based' => $isSchoolBased,
-                            'auto_assign_assignee' => 0,
-                        ];
+                        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 
-                        $json = json_encode($reassignJsonObject, JSON_NUMERIC_CHECK);
+                        $userId = $model->Auth->user('id');
+                        $isSuperAdmin = $model->Auth->user('super_admin');
+                        $assigneeId = $entity->assignee_id;
 
-                        $reassignButtonAttr = [
-                            'escapeTitle' => false,
-                            'escape' => true,
-                            'onclick' => 'Workflow.init();Workflow.copy('.$json.', "reassign");return false;',
-                            'data-toggle' => 'modal',
-                            'data-target' => '#workflowReassign'
-                        ];
-                        $reassignButtonAttr = array_merge($attr, $reassignButtonAttr);
-                        $reassignButton = [];
-                        $reassignButton['type'] = 'button';
-                        $reassignButton['label'] = '<i class="fa fa-tasks"></i>';
-                        $reassignButton['url'] = '#';
-                        $reassignButton['attr'] = $reassignButtonAttr;
-                        $reassignButton['attr']['title'] = __('Reassign');
-                        $toolbarButtons['reassign'] = $reassignButton;
+                        if ($isSuperAdmin || $userId == $assigneeId) {
+                            $reassignJsonObject = [
+                                'step_id' => $workflowStep->id,
+                                'is_school_based' => $isSchoolBased,
+                                'auto_assign_assignee' => 0,
+                            ];
 
-                        $modal = $this->getReassignModalOptions($entity);
-                        if (!empty($modal)) {
-                            if (!isset($this->_table->controller->viewVars['modals'])) {
-                                $this->_table->controller->set('modals', ['workflowReassign' => $modal]);
-                            } else {
-                                $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowReassign' => $modal]);
-                                $this->_table->controller->set('modals', $modals);
+                            $json = json_encode($reassignJsonObject, JSON_NUMERIC_CHECK);
+
+                            $reassignButtonAttr = [
+                                'escapeTitle' => false,
+                                'escape' => true,
+                                'onclick' => 'Workflow.init();Workflow.copy('.$json.', "reassign");return false;',
+                                'data-toggle' => 'modal',
+                                'data-target' => '#workflowReassign'
+                            ];
+                            $reassignButtonAttr = array_merge($attr, $reassignButtonAttr);
+                            $reassignButton = [];
+                            $reassignButton['type'] = 'button';
+                            $reassignButton['label'] = '<i class="fa fa-tasks"></i>';
+                            $reassignButton['url'] = '#';
+                            $reassignButton['attr'] = $reassignButtonAttr;
+                            $reassignButton['attr']['title'] = __('Reassign');
+                            $toolbarButtons['reassign'] = $reassignButton;
+
+                            $modal = $this->getReassignModalOptions($entity);
+                            if (!empty($modal)) {
+                                if (!isset($this->_table->controller->viewVars['modals'])) {
+                                    $this->_table->controller->set('modals', ['workflowReassign' => $modal]);
+                                } else {
+                                    $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowReassign' => $modal]);
+                                    $this->_table->controller->set('modals', $modals);
+                                }
                             }
                         }
                         // end
