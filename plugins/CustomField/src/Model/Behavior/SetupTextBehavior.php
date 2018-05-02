@@ -121,6 +121,8 @@ class SetupTextBehavior extends SetupBehavior
                         $model->request->query['text_rule'] = 'length';
                         $entity->minimum_length = $params['range']['lower'];
                         $entity->maximum_length = $params['range']['upper'];
+                    } else if (array_key_exists('url', $params)) {
+                        $model->request->query['text_rule'] = 'url';
                     } else if (array_key_exists('input_mask', $params)) {
                         $model->request->query['text_rule'] = 'input_mask';
                         $entity->validation_format = $params['input_mask'];
