@@ -904,7 +904,7 @@ class RestSurveyComponent extends Component
 
     private function decimal($field, $parentNode, $instanceId, $extra)
     {
-        $bindType = 'decimial';
+        $bindType = 'decimal';
         $constraint = null;
         $validationType = null;
         $validations = [];
@@ -939,7 +939,7 @@ class RestSurveyComponent extends Component
         }
 
         if (!is_null($validationType)) {
-            $bindType = "decimial".Inflector::camelize($validationType).$extra['index'];
+            $bindType = "decimal".Inflector::camelize($validationType).$extra['index'];
 
             // introduce subIndex to handle question inside repeater has validation
             $subIndex = $extra['subIndex'];
@@ -1113,7 +1113,7 @@ class RestSurveyComponent extends Component
                         }
                     }
                 } elseif (array_key_exists('decimal', $params)) {
-                    $inputType = 'decimial';
+                    $inputType = 'decimal';
 
                     $generateRangeValues = function($length, $precision = 0) {
                         $range = str_repeat('9', $length);
