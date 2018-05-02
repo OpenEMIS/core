@@ -734,7 +734,7 @@ trait MessagesTrait
             'noFilesToDownload' => 'There are no generated Report Cards to download',
             'noFilesToPublish' => 'There are no generated Report Cards to publish',
             'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
-            'inProgress' => 'There is already a running process for this Report Card',
+            'inProgress' => 'There is already a process running for this Report Card',
             'generate' => 'The Report Card has been successfully generated',
             'generateAll' => 'All Report Cards will be generated in the background',
             'publish' => 'The Report Card has been successfully published',
