@@ -85,9 +85,14 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if (in_array($this->action, ['view', 'edit', 'delete'])) {
+            $modelAlias = 'Staff Appraisals';
+            $userType = 'StaffUser';
+            $this->controller->changeUserHeader($this, $modelAlias, $userType);
+        }
+
         if ($this->action != 'download') {
             $userId = null;
-
             // temp fix - to update StaffLeave table to pass user_id to query string
             if (array_key_exists('user_id', $this->request->query)) {
                 $userId = $this->request->query('user_id');

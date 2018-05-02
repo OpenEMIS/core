@@ -381,7 +381,18 @@ class WorkflowBehavior extends Behavior
 
                 // Trigger event to get the correct wofkflow filter options
                 $subject = TableRegistry::get($model);
-                $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
+
+                $params = [];
+                if ($workflowModel->is_school_based) {
+                    $session = $this->controller->request->session();
+                    if ($session->check('Institution.Institutions.id')) {
+                        $params = [
+                            'institution_id' => $session->read('Institution.Institutions.id')
+                        ];
+                    }
+                }
+
+                $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
                 if ($newEvent->isStopped()) {
                     return $newEvent->result;
                 }
