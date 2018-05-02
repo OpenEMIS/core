@@ -255,7 +255,8 @@ class RestSurveyComponent extends Component
 
                 foreach ($fields as $field) {
                     $fieldId = $field->attributes()->id->__toString();
-                    $fieldType = $this->Field->get($fieldId)->field_type;
+                    $fieldEntity = $this->Field->get($fieldId);
+                    $fieldType = $fieldEntity->field_type;
                     $responseValue = urldecode($field->__toString());
 
                     $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
@@ -274,6 +275,7 @@ class RestSurveyComponent extends Component
                         $extra['recordKey'] = $this->recordKey;
                         $extra['formKey'] = $this->formKey;
                         $extra['fieldKey'] = $this->fieldKey;
+                        $extra['fieldEntity'] = $fieldEntity;
 
                         $questionId = $extra['data']['survey_question_id'];
                         $show = $this->isRelevantQuestion($rules, $questionId, $answers, $responseValue);
@@ -433,6 +435,18 @@ class RestSurveyComponent extends Component
     {
         $data = $extra['data'];
         $value = $extra['value'];
+        $fieldEntity = $extra['fieldEntity'];
+
+        $cellValueColumn = 'text_value';
+        if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
+            $params = json_decode($fieldEntity->params, true);
+
+            if (array_key_exists('number', $params)) {
+                $cellValueColumn = 'number_value';
+            } elseif (array_key_exists('decimal', $params)) {
+                $cellValueColumn = 'decimal_value';
+            }
+        }
 
         $this->deleteTableCell($data, $extra);
         foreach ($field->children() as $row => $rowObj) {
@@ -445,8 +459,11 @@ class RestSurveyComponent extends Component
                         $cellData = array_merge($data, [
                             $this->tableColumnKey => $colId,
                             $this->tableRowKey => $rowId,
-                            'text_value' => $cellValue
+                            'text_value' => '',
+                            'number_value' => '',
+                            'decimal_value' => ''
                         ]);
+                        $cellData[$cellValueColumn] = $cellValue;
 
                         $this->saveTableCell($cellData, $extra);
                     }
