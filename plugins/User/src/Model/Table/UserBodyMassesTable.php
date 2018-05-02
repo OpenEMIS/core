@@ -33,7 +33,7 @@ class UserBodyMassesTable extends AppTable
                     'last' => true
                 ],
                 'validHeight' => [
-                    'rule' => ['range', 50, 300],
+                    'rule' => ['range', 0, 300],
                     'last' => true
                 ],
                 'validateDecimal' => [
@@ -91,7 +91,7 @@ class UserBodyMassesTable extends AppTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['height']) && !empty($data['weight'])) {
-            $height = round($data['height'], 2);
+            $height = round($data['height']/100, 2);
             $weight = round($data['weight'], 2);
 
             $denominator = $height * $height;
