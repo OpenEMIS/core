@@ -118,8 +118,7 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
-            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
-            'restrictDiffSectorTransfer' => 'Transfer between different institution sectors is restricted.'
+            'inactive_message' => 'This institution is inactive, all data entry operation are disabled.'
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -777,6 +776,9 @@ trait MessagesTrait
             'endDate' => [
                     'compareWithStartDate' => 'End Date should not be earlier than Start Date'
                 ]
+        ],
+        'StaffTransfers' => [
+            'restrictDifferentSectorTransfer' => 'Transfer is not allowed between different institution sectors.'
         ],
         'StaffTransferOut' => [
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
