@@ -1048,7 +1048,8 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
             $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
 
-            $entity = $OutcomeTemplates->find()
+            $entity = $OutcomeTemplates
+                ->find()
                 ->innerJoinWith('Periods')
                 ->where([
                     $OutcomeTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
@@ -1056,7 +1057,7 @@ class ReportCardsTable extends AppTable
                     'Periods.start_date >= ' => $extra['report_card_start_date'],
                     'Periods.end_date <= ' => $extra['report_card_end_date']
                 ])
-                ->group($OutcomeTemplates->aliasField('id')); 
+                ->group($OutcomeTemplates->aliasField('id'));
 
             if ($entity->count() > 0) {
                 $extra['outcome_templates_ids'] = $entity->extract('id')->toArray();
@@ -1088,7 +1089,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseOutcomeSubjects(Event $event, array $params, ArrayObject $extra)
     {
 
-       if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('institution_class_id', $params) &&array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('institution_class_id', $params) &&array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])) {
 
             $classId = $params['institution_class_id'];
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
@@ -1097,6 +1098,8 @@ class ReportCardsTable extends AppTable
           
             $entity = $EducationSubjects
                 ->find()
+                ->find('visible')
+                ->find('order')
                 ->select([
                     'outcome_template_id' => $OutcomePeriods->aliasField('outcome_template_id'),
                     'outcome_period_id' => $OutcomePeriods->aliasField('id')
@@ -1124,8 +1127,8 @@ class ReportCardsTable extends AppTable
                 })
                 ->autoFields(true);
 
-        return $entity->toArray();
-      }
+            return $entity->toArray();
+        }
     }
 
     public function onExcelTemplateInitialiseOutcomeCriterias(Event $event, array $params, ArrayObject $extra)
