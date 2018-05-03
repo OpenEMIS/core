@@ -109,6 +109,7 @@ trait MessagesTrait
             'reject' => 'Reject',
             'noClasses' => 'No Classes',
             'noSubjects' => 'No Subjects',
+            'noSurveys' => 'No Surveys',
             'noStaff' => 'No Staff',
             'type' => 'Type',
             'amount' => 'Amount',
@@ -602,6 +603,7 @@ trait MessagesTrait
             'success' => 'is successfully imported.',
             'failed' => 'failed to import.',
             'partial_failed' => 'failed to import completely.',
+            'upload_error' => 'The file cannot be imported due to errors encountered.',
             'value_not_in_list' => 'Selected value is not in the list',
             'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
             'survey_not_found' => 'No identifiable survey found',
@@ -613,6 +615,9 @@ trait MessagesTrait
             'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.'
+        ],
+        'ImportInstitutionSurveys' => [
+            'restrictImport' => 'Import operation is not allowed as the record is already Done'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
@@ -1445,7 +1450,7 @@ trait MessagesTrait
             ],
             'Guardians' => [
                 'guardian_id' => [
-                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                    'ruleStudentGuardianId' => 'This guardian has already been added.'
                 ]
             ],
             'Students' => [
@@ -1478,7 +1483,7 @@ trait MessagesTrait
         'Profile' => [
             'Guardians' => [
                 'guardian_id' => [
-                    'ruleStudentGuardianId' => 'This guardian has already added.'
+                    'ruleStudentGuardianId' => 'This guardian has already been added.'
                 ]
             ],
             'Accounts' => [
@@ -1747,7 +1752,7 @@ trait MessagesTrait
         'CustomField' => [
             'text' => [
                 'minLength' => 'Text should be at least %d characters',
-                'maxLength' => 'Text should not be exceed %d characters',
+                'maxLength' => 'Text should not exceed %d characters',
                 'range' => 'Text should be between %d and %d characters'
             ],
             'number' => [
@@ -2042,7 +2047,17 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This name already exists in the system',
                 ]
-            ]
+            ],
+            'GuardianRelations' => [
+                'gender_id' => [
+                    'ruleCheckGuardianGender' => 'Gender mismatch. Please check against existing records',
+                ]
+            ],
+            'StaffPositionTitles' => [
+               'position_grades' => [
+                    'ruleCheckPositionGrades' => 'You are not allow to remove the following in-use grades: %s',
+                ]
+            ] 
         ],
         'Configuration' => [
             'ConfigProductLists' => [
@@ -2155,6 +2170,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? __(vsprintf($message, $sprintf)) : $message;
+        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
     }
 }

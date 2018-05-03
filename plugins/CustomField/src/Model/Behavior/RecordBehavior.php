@@ -2,6 +2,8 @@
 namespace CustomField\Model\Behavior;
 
 use ArrayObject;
+use Exception;
+
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -12,6 +14,7 @@ use Cake\ORM\Table;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use Cake\Datasource\ConnectionManager;
 
 class RecordBehavior extends Behavior
 {
@@ -173,12 +176,14 @@ class RecordBehavior extends Behavior
         $alias = $model->alias();
 
         if (array_key_exists($alias, $data)) {
+            $CustomFields = TableRegistry::get($this->config('fieldClass.className'));
+
             if (array_key_exists('custom_field_values', $data[$alias])) {
                 $values = $data[$alias]['custom_field_values'];
                 $fieldValues = $model->array_column($values, $this->config('fieldKey'));
-
-                $CustomFields = TableRegistry::get($this->config('fieldClass.className'));
-                $fields = $CustomFields->find()->where(['id IN' => $fieldValues])->all();
+                $fields = $CustomFields->find()
+                    ->where(['id IN' => $fieldValues])
+                    ->all();
 
                 foreach ($values as $key => $attr) {
                     foreach ($fields as $f) {
@@ -202,6 +207,32 @@ class RecordBehavior extends Behavior
                                 return $event->result;
                             }
                             // End
+                        }
+                    }
+                }
+            }
+
+            if (array_key_exists('custom_table_cells', $data[$alias])) {
+                $cells = $data[$alias]['custom_table_cells'];
+                $fieldValues = array_keys($cells);
+
+                $fieldResults = $CustomFields->find()
+                    ->where(['id IN' => $fieldValues])
+                    ->all();
+
+                $fields = [];
+                foreach ($fieldResults as $f) {
+                    $fields[$f->id] = $f;
+                }
+
+                foreach ($cells as $fieldId => $rows) {
+                    foreach ($rows as $rowId => $columns) {
+                        foreach ($columns as $columnId => $attr) {
+                            $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
+                            if (!is_null($thisField)) {
+                                $data[$alias]['custom_table_cells'][$fieldId][$rowId][$columnId]['field_type'] = $thisField->field_type;
+                                $data[$alias]['custom_table_cells'][$fieldId][$rowId][$columnId]['params'] = $thisField->params;
+                            }
                         }
                     }
                 }
@@ -243,161 +274,176 @@ class RecordBehavior extends Behavior
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        return $this->processSave($entity, $data);
+        return $this->processSave($entity, $data, $extra);
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        return $this->processSave($entity, $data);
+        return $this->processSave($entity, $data, $extra);
     }
 
-    private function processSave(Entity $entity, ArrayObject $data)
+    private function processSave(Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $model = $this->_table;
         $process = function ($model, $entity) use ($data) {
-            $errors = $entity->errors();
+            try {
+                $errors = $entity->errors();
 
-            $fileErrors = [];
-            $session = $model->request->session();
-            $sessionErrors = $model->registryAlias().'.parseFileError';
-            if ($session->check($sessionErrors)) {
-                $fileErrors = $session->read($sessionErrors);
-            }
-
-            if (empty($errors) && empty($fileErrors)) {
-                $settings = new ArrayObject([
-                    'recordKey' => $this->config('recordKey'),
-                    'fieldKey' => $this->config('fieldKey'),
-                    'tableColumnKey' => $this->config('tableColumnKey'),
-                    'tableRowKey' => $this->config('tableRowKey'),
-                    'valueKey' => null,
-                    'customValue' => null,
-                    'fieldValues' => [],
-                    'tableCells' => [],
-                    'deleteFieldIds' => []
-                ]);
-
-                if (array_key_exists($model->alias(), $data)) {
-                    if (array_key_exists('custom_field_values', $data[$model->alias()])) {
-                        $values = $data[$model->alias()]['custom_field_values'];
-                        foreach ($values as $key => $obj) {
-                            $fieldType = Inflector::camelize(strtolower($obj['field_type']));
-                            $settings['customValue'] = $obj;
-
-                            $event = $model->dispatchEvent('Render.process'.$fieldType.'Values', [$entity, $data, $settings], $model);
-                            if ($event->isStopped()) {
-                                return $event->result;
-                            }
-                        }
-                    }
+                $fileErrors = [];
+                $session = $model->request->session();
+                $sessionErrors = $model->registryAlias().'.parseFileError';
+                if ($session->check($sessionErrors)) {
+                    $fileErrors = $session->read($sessionErrors);
                 }
 
-                if ($this->_table->hasBehavior('RenderTable')) {
+                if (empty($errors) && empty($fileErrors)) {
+                    $settings = new ArrayObject([
+                        'recordKey' => $this->config('recordKey'),
+                        'fieldKey' => $this->config('fieldKey'),
+                        'tableColumnKey' => $this->config('tableColumnKey'),
+                        'tableRowKey' => $this->config('tableRowKey'),
+                        'valueKey' => null,
+                        'customValue' => null,
+                        'fieldValues' => [],
+                        'tableCells' => [],
+                        'deleteFieldIds' => []
+                    ]);
+
                     if (array_key_exists($model->alias(), $data)) {
-                        if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
-                            $event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
-                            if ($event->isStopped()) {
-                                return $event->result;
-                            }
-                        }
-                    }
-                }
+                        if (array_key_exists('custom_field_values', $data[$model->alias()])) {
+                            $values = $data[$model->alias()]['custom_field_values'];
+                            foreach ($values as $key => $obj) {
+                                $fieldType = Inflector::camelize(strtolower($obj['field_type']));
+                                $settings['customValue'] = $obj;
 
-                // Logic to delete all the answer for rules
-                if (is_null($this->config('moduleKey'))) {
-                    if (isset($data[$this->_table->alias()][$this->config('formKey')])) {
-                        $surveyFormId = $data[$this->_table->alias()][$this->config('formKey')];
-                        $SurveyRules = TableRegistry::get('Survey.SurveyRules');
-                        $rules = $SurveyRules
-                            ->find()
-                            ->where([
-                                $SurveyRules->aliasField('survey_form_id') => $surveyFormId,
-                                $SurveyRules->aliasField('enabled') => 1
-                            ])
-                            ->toArray();
-                        $showRules = [];
-                        foreach ($rules as $rule) {
-                            $settings['deleteFieldIds'][] = $rule->survey_question_id;
-                        }
-                    }
-                }
-
-                // when edit always delete all the checkbox values before reinsert,
-                // also delete previously saved records with empty value
-                if (isset($entity->id)) {
-                    $id = $entity->id;
-                    $deleteFieldIds = $settings['deleteFieldIds'];
-
-                    if (!empty($deleteFieldIds)) {
-                        $this->CustomFieldValues->deleteAll([
-                            $this->CustomFieldValues->aliasField($settings['recordKey']) => $id,
-                            $this->CustomFieldValues->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
-                        ]);
-
-                        // when edit always delete all the cell values before reinsert
-                        if (!is_null($this->config('tableCellClass'))) {
-                            $this->CustomTableCells->deleteAll([
-                                $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
-                                $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
-                            ]);
-                        }
-                        // $event = $model->dispatchEvent('Render.deleteCustomFieldValues', [$entity, $deleteFieldIds], $model);
-                    }
-                }
-
-                // repatch $entity for saving, turn off validation
-                $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
-                $data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
-
-                $requestData = $data->getArrayCopy();
-                $entity = $model->patchEntity($entity, $requestData);
-                // End
-
-                return $model->save($entity);
-            } else {
-                $indexedErrors = [];
-                $fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
-                if (array_key_exists('custom_field_values', $errors)) {
-                    if ($entity->has('custom_field_values')) {
-                        foreach ($entity->custom_field_values as $key => $obj) {
-                            $fieldId = $obj->{$this->config('fieldKey')};
-
-                            if (array_key_exists($key, $errors['custom_field_values'])) {
-                                $indexedErrors[$fieldId] = $errors['custom_field_values'][$key];
-                                foreach ($fields as $field) {
-                                    $entity->custom_field_values[$key]->dirty($field, true);
+                                $event = $model->dispatchEvent('Render.process'.$fieldType.'Values', [$entity, $data, $settings], $model);
+                                if ($event->isStopped()) {
+                                    return $event->result;
                                 }
                             }
                         }
                     }
-                }
 
-                $indexedErrors = $indexedErrors + $fileErrors;
+                    if ($this->_table->hasBehavior('RenderTable')) {
+                        if (array_key_exists($model->alias(), $data)) {
+                            if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
+                                $event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
+                                if ($event->isStopped()) {
+                                    return $event->result;
+                                }
+                            }
+                        }
+                    }
 
-                if (!empty($indexedErrors)) {
-                    if (array_key_exists($model->alias(), $data)) {
-                        if (array_key_exists('custom_field_values', $data[$model->alias()])) {
-                            foreach ($data[$model->alias()]['custom_field_values'] as $key => $obj) {
-                                $fieldId = $obj[$this->config('fieldKey')];
+                    $conn = ConnectionManager::get('default');
+                    $conn->begin();
 
-                                if (array_key_exists($fieldId, $indexedErrors)) {
+                    // Logic to delete all the answer for rules
+                    if (is_null($this->config('moduleKey'))) {
+                        if (isset($data[$this->_table->alias()][$this->config('formKey')])) {
+                            $surveyFormId = $data[$this->_table->alias()][$this->config('formKey')];
+                            $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+                            $rules = $SurveyRules
+                                ->find()
+                                ->where([
+                                    $SurveyRules->aliasField('survey_form_id') => $surveyFormId,
+                                    $SurveyRules->aliasField('enabled') => 1
+                                ])
+                                ->toArray();
+                            $showRules = [];
+                            foreach ($rules as $rule) {
+                                $settings['deleteFieldIds'][] = $rule->survey_question_id;
+                            }
+                        }
+                    }
+
+                    // when edit always delete all the checkbox values before reinsert,
+                    // also delete previously saved records with empty value
+                    if (isset($entity->id)) {
+                        $id = $entity->id;
+                        $deleteFieldIds = $settings['deleteFieldIds'];
+
+                        if (!empty($deleteFieldIds)) {
+                            $this->CustomFieldValues->deleteAll([
+                                $this->CustomFieldValues->aliasField($settings['recordKey']) => $id,
+                                $this->CustomFieldValues->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
+                            ]);
+
+                            // when edit always delete all the cell values before reinsert
+                            if (!is_null($this->config('tableCellClass'))) {
+                                $this->CustomTableCells->deleteAll([
+                                    $this->CustomTableCells->aliasField($settings['recordKey']) => $id,
+                                    $this->CustomTableCells->aliasField($settings['fieldKey'] . ' IN ') => $deleteFieldIds
+                                ]);
+                            }
+                            // $event = $model->dispatchEvent('Render.deleteCustomFieldValues', [$entity, $deleteFieldIds], $model);
+                        }
+                    }
+
+                    // repatch $entity for saving, turn off validation
+                    $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
+                    $data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
+
+                    $requestData = $data->getArrayCopy();
+                    $entity = $model->patchEntity($entity, $requestData);
+                    // End
+
+                    $result = $model->save($entity);
+                    if ($result) {
+                        $conn->commit();
+                    } else {
+                        $conn->rollback();
+                    }
+                    return $result;
+                } else {
+                    $indexedErrors = [];
+                    $fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
+                    if (array_key_exists('custom_field_values', $errors)) {
+                        if ($entity->has('custom_field_values')) {
+                            foreach ($entity->custom_field_values as $key => $obj) {
+                                $fieldId = $obj->{$this->config('fieldKey')};
+
+                                if (array_key_exists($key, $errors['custom_field_values'])) {
+                                    $indexedErrors[$fieldId] = $errors['custom_field_values'][$key];
                                     foreach ($fields as $field) {
-                                        if (array_key_exists($field, $indexedErrors[$fieldId])) {
-                                            $error = $indexedErrors[$fieldId][$field];
-                                            $entity->custom_field_values[$key]->errors($field, $error, true);
+                                        $entity->custom_field_values[$key]->dirty($field, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    $indexedErrors = $indexedErrors + $fileErrors;
+
+                    if (!empty($indexedErrors)) {
+                        if (array_key_exists($model->alias(), $data)) {
+                            if (array_key_exists('custom_field_values', $data[$model->alias()])) {
+                                foreach ($data[$model->alias()]['custom_field_values'] as $key => $obj) {
+                                    $fieldId = $obj[$this->config('fieldKey')];
+
+                                    if (array_key_exists($fieldId, $indexedErrors)) {
+                                        foreach ($fields as $field) {
+                                            if (array_key_exists($field, $indexedErrors[$fieldId])) {
+                                                $error = $indexedErrors[$fieldId][$field];
+                                                $entity->custom_field_values[$key]->errors($field, $error, true);
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                Log::write('debug', $entity->errors());
-                Log::write('debug', $fileErrors);
+                    Log::write('debug', $entity->errors());
+                    Log::write('debug', $fileErrors);
 
-                return false;
+                    return false;
+                }
+            } catch (Exception $ex) {
+                Log::write('error', $ex);
+                $msg = $ex->getMessage();
+                $model->Alert->error($msg, ['type' => 'text', 'reset' => true]);
             }
         };
 
@@ -764,7 +810,11 @@ class RecordBehavior extends Behavior
                         $rowId = $obj->{$tableRowKey};
                         $columnId = $obj->{$tableColumnKey};
 
-                        $cells[$fieldId][$rowId][$columnId] = $obj['text_value'];
+                        $cells[$fieldId][$rowId][$columnId] = [
+                            'text_value' => $obj['text_value'],
+                            'number_value' => $obj['number_value'],
+                            'decimal_value' => $obj['decimal_value']
+                        ];
                     }
                 }
             }
@@ -803,7 +853,9 @@ class RecordBehavior extends Behavior
                     'attr' => [
                         'label' => $customField->name,
                         'fieldKey' => $this->config('fieldKey'),
-                        'formKey' => $this->config('formKey')
+                        'formKey' => $this->config('formKey'),
+                        'tableColumnKey' => $this->config('tableColumnKey'),
+                        'tableRowKey' => $this->config('tableRowKey')
                     ],
                     'valueClass' => $valueClass,
                     'customField' => $customField,
