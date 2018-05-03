@@ -22,13 +22,23 @@ class WorkflowTransitionsTable extends AppTable {
 		}
 		if ($assigneeId != 0) {
 			$Users = TableRegistry::get('User.Users');
-			$newAssigneeName = $Users->get($assigneeId)->name;
+			$assigneeEntity = $Users
+				->find()
+				->select([
+					$Users->aliasField('first_name'),
+					$Users->aliasField('middle_name'),
+					$Users->aliasField('third_name'),
+					$Users->aliasField('last_name'),
+					$Users->aliasField('preferred_name')
+				])
+				->where([$Users->aliasField('id') => $assigneeId])
+				->first();
+			$newAssigneeName = $assigneeEntity->name;
 		} else {
 			$newAssigneeName = $unassigned;
 		}
 
 		if ($origAssigneeName != $newAssigneeName) {
-
 			// get stepName via contain, _matching, or status_id
 			$stepName = '';
 			if ($affectedEntity->has('status')) {
@@ -38,7 +48,12 @@ class WorkflowTransitionsTable extends AppTable {
 			} elseif ($affectedEntity->has('status_id')) {
 				$WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
 				$statusId = $affectedEntity->status_id;
-				$stepName = $WorkflowStepsTable->get($statusId)->name;
+				$stepEntity = $WorkflowStepsTable
+					->find()
+					->select([$WorkflowStepsTable->aliasField('name')])
+					->where([$WorkflowStepsTable->aliasField('id') => $statusId])
+					->first();
+				$stepName = $stepEntity->name;
 			}
 
 			$data = [

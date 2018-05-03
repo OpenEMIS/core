@@ -38,11 +38,12 @@ var Workflow = {
 
 			Workflow.getTransitionAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id, jsonObj.auto_assign_assignee);
 			Workflow.resetError();
-			Workflow.toggleAssignee(jsonObj.assignee_required);
+			Workflow.toggleAssignee(jsonObj.assignee_required, 'transition');
 			Workflow.toggleComment(jsonObj.comment_required);
 		} else if (actionType == 'reassign') {
 			var reassignAssigneeUrl = $('.workflow-reassign-new-assignee').attr('assignee-url');
 			Workflow.getReassigneeOptions(reassignAssigneeUrl, jsonObj.is_school_based, jsonObj.step_id, jsonObj.auto_assign_assignee);
+			Workflow.toggleAssignee(1, 'reassign');
 		}
 		
 	},
@@ -69,11 +70,18 @@ var Workflow = {
 		}
 	},
 
-	toggleAssignee: function(required) {
+	toggleAssignee: function(required, actionType = 'transition') {
+		var requireInputClass = '';
+		if (actionType == 'transition') {
+			requireInputClass = '.workflowtransition-assignee-id';
+		} else if (actionType == 'reassign') {
+			requireInputClass = '.workflow-reassign-new-assignee'
+		}
+
 		if (required == 0) {
-			$('.workflowtransition-assignee-id').closest('.input').hide().removeClass('required');
+			$(requireInputClass).closest('.input').hide().removeClass('required');
 		} else {
-			$('.workflowtransition-assignee-id').closest('.input').show().addClass('required');
+			$(requireInputClass).closest('.input').show().addClass('required');
 		}
 	},
 
@@ -194,6 +202,11 @@ var Workflow = {
 				next_step_id: stepId,
 				auto_assign_assignee: autoAssignAssignee
 			},
+			beforeSend: function(xhr) {
+				// always show loading when user click on submit button
+				$('.workflow-reassign-new-assignee').empty();
+				$('.workflow-reassign-new-assignee').append($('<option>').text($('.workflow-reassign-assignee-loading').html() + '...').attr('value', ''));
+			},
 			success: function(response) {
 				var defaultKey = response.default_key;
 				var assignees = response.assignees;
@@ -215,6 +228,8 @@ var Workflow = {
 			error: function(error) {
 				console.log('Workflow.getReassigneeOptions() error callback:');
 				console.log(error);
+				$('.workflow-reassign-new-assignee').empty();
+				$('.workflow-reassign-new-assignee').append($('<option>').text($('.workflowtransition-assignee-no_options').html()).attr('value', ''));
 
 				if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
 					$('.workflow-reassign-assignee-sql-error').show();
