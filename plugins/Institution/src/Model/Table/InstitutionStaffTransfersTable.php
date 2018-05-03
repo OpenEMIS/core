@@ -150,13 +150,18 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
-        
-        $ConfigItems = TableRegistry::get('Configuration.ConfigStaffTransfers');
-        $restrictStaffTransferBySectorValue = $ConfigItems->getRestrictStaffTransferBySectorConfig();
-        $value = $this->onCompareInstitutionSector($entity);
 
-        if ($restrictStaffTransferBySectorValue == 1 && $value == false) {
-            $this->Alert->error('general.restrictDiffSectorTransfer');
+        // start: restrict staff transfer by sector
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $restrictStaffTransferBySector = $ConfigItems->value('restrict_staff_transfer_by_sector');
+
+        $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
+        $sameSector = $ConfigStaffTransfersTable->compareInstitutionSector($entity->previous_institution_id, $entity->new_institution_id);
+        // end: restrict staff transfer by sector
+
+        if ($restrictStaffTransferBySector && !$sameSector) {
+            // alert warning message if restrict staff transfer by sector is set to true and incoming & outgoing institution are not same sector
+            $this->Alert->warning('StaffTransfers.restrictDifferentSectorTransfer', ['reset' => true]);
         } else {
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
@@ -164,35 +169,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                 $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
             }
         }
-        // if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
-        //     $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
-        // } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
-        //     $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
-        // }
+
         return $canAddButtons;
-    }
-
-
-    public function onCompareInstitutionSector(Entity $entity)
-    {
-        $value = false;
-        $conditions = [];
-        $tmp = [];
-       
-        $tmp[] = ['id =' => $entity->new_institution_id];
-        $tmp[] = ['id =' => $entity->previous_institution_id];
-        $conditions['OR'] = $tmp;
-                //pr($conditions);die;
-        $institutionSectorIds = TableRegistry::get('Institution.Institutions')
-        ->find()
-        ->select('Institutions.institution_sector_id')
-        ->where($conditions)
-        ->toArray();
-        
-        if ($institutionSectorIds[0]->institution_sector_id == $institutionSectorIds[1]->institution_sector_id) {
-            $value = true;
-        }
-        return $value;
     }
 
     public function onSetCustomAssigneeParams(Event $event, Entity $entity, $params)

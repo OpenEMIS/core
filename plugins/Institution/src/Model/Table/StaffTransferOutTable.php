@@ -560,22 +560,27 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             if ($action == 'add') {
                 // using institution_staff entity
-                $ConfigItems = TableRegistry::get('Configuration.ConfigStaffTransfers');
                 $conditions = [];
-                $restrictStaffTransferBySectorValue = $ConfigItems->getRestrictStaffTransferBySectorConfig();
-                if ($restrictStaffTransferBySectorValue == 1) {
-                    $conditions = ['institution_sector_id =' =>
-                    $entity->institution['institution_sector_id']];
+                $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
+
+                // start: restrict staff transfer by sector
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $restrictStaffTransferBySector = $ConfigItems->value('restrict_staff_transfer_by_sector');
+                if ($restrictStaffTransferBySector) {
+                    if ($entity->has('institution') && $entity->institution->has('institution_sector_id')) {
+                        $conditions['institution_sector_id'] = $entity->institution->institution_sector_id;
+                    }
                 }
+                // end: restrict staff transfer by sector
+
                 $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'code_name'
                     ])
-                    ->where([$this->NewInstitutions->aliasField('id <>') => $entity->institution_id])
                     ->where($conditions)
                     ->order($this->NewInstitutions->aliasField('code'))
                     ->toArray();
-                
+
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['select'] = true;

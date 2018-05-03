@@ -194,7 +194,7 @@ class StaffUserTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'MainNationalities', 'MainIdentityTypes', 'Institutions'
+            'MainNationalities', 'MainIdentityTypes'
         ]);
     }
 
@@ -208,15 +208,7 @@ class StaffUserTable extends ControllerActionTable
         $this->Session->write('Staff.Staff.name', $entity->name);
         $this->setupTabElements($entity);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigStaffTransfers');
-        $enableStaffTransferConfig = $ConfigItems->getEnableStaffTransferConfig();
-        $enableStaffTransferConfigValue = explode(',', $enableStaffTransferConfig);
-
-        $institutionTypeId = $entity->institutions[0]['institution_type_id'];
-  
-        if ($enableStaffTransferConfigValue == -1 || (in_array($institutionTypeId, $enableStaffTransferConfigValue))) {
-            $this->addTransferButton($entity, $extra);
-        }
+        $this->addTransferButton($entity, $extra);
     }
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
@@ -226,10 +218,13 @@ class StaffUserTable extends ControllerActionTable
             $toolbarButtons = $extra['toolbarButtons'];
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
             $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
             $userId = $entity->id;
+
+            $enableStaffTransfer = $ConfigStaffTransfersTable->checkIfTransferEnabled($institutionId);
 
             $assignedStaffRecords = $StaffTable->find()
                 ->where([
@@ -239,7 +234,7 @@ class StaffUserTable extends ControllerActionTable
                 ])
                 ->count();
 
-            if ($assignedStaffRecords > 0) {
+            if ($enableStaffTransfer && $assignedStaffRecords > 0) {
                 $url = [
                     'plugin' => $this->controller->plugin,
                     'controller' => $this->controller->name,
