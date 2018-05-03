@@ -19,7 +19,9 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
         $this->hasMany('StaffQualifications', ['className' => 'Staff.Qualifications', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        
+        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices']);
+        
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
             'joinTable' => 'education_subjects_field_of_studies',
@@ -56,5 +58,17 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         if (!$sortable) {
             $query->find('order');
         }
+    }
+
+    public function findScholarshipOptionList(Query $query, array $options)
+    {
+        $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : 0;
+
+        $query
+            ->matching('Scholarships', function ($q) use ($scholarshipId) {
+                return $q->where(['scholarship_id' => $scholarshipId]);
+            });
+        
+        return parent::findOptionList($query, $options);
     }
 }

@@ -11,8 +11,6 @@ class ScholarshipsEducationFieldOfStudiesTable extends AppTable
 	
 		$this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
 		$this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies' , 'foreignKey' => 'education_field_of_study_id']);
-
-		$this->addBehavior('CompositeKey');
     }
 
 }
