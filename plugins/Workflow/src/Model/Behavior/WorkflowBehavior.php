@@ -85,8 +85,7 @@ class WorkflowBehavior extends Behavior
 
         if ($this->isCAv4()) {
             $actions = $this->config('actions');
-            $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-
+            $model = $this->_table;
             foreach ($actions as $key => $value) {
                 $model->toggle($key, $value);
             }
