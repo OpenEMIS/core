@@ -302,6 +302,26 @@ class ConfigItemsTable extends AppTable
         $includes['configItems'] = ['include' => true, 'js' => ['config']];
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save' && $data['type'] == 'Student Settings') {
+            
+            $currentMaxNumberOfStudents = $this
+                ->getCurrentNumberOfStudents($data['label'], $data['value']);
+
+            if($currentMaxNumberOfStudents){
+                $validationRules = [
+                    'bet' => [
+                        'rule'  => ['range', $currentMaxNumberOfStudents['total_number_of_students'], 100],
+                        'message' => 'Numeric Value should be between '.$currentMaxNumberOfStudents['total_number_of_students'].' to 100',
+                        'last' => true
+                    ]
+                ];
+                $this->validator()->add('value', $validationRules);
+            }
+        }
+    }
+
 
 /******************************************************************************************************************
 **
@@ -479,6 +499,34 @@ class ConfigItemsTable extends AppTable
         $numerical = intval($ConfigItems->value('password_has_number')) ? $groups[2] : 0;
         $specialCharacter = intval($ConfigItems->value('password_has_non_alpha')) ? $groups[3] : 0;
         return $UsersTable->generatePassword($passwordLength, $upperCase, $numerical, $specialCharacter);
+    }
+
+
+    private function getCurrentNumberOfStudents($label, $userInput)
+    {
+        $max = null;
+
+        if($label == 'Max Students Per Class'){
+            $InstitutionClassSubjectTable = TableRegistry::get('Institution.InstitutionClasses');
+        }elseif($label == 'Max Students Per Subject'){
+            $InstitutionClassSubjectTable = TableRegistry::get('Institution.InstitutionSubjects');
+        }
+
+        $query = $InstitutionClassSubjectTable->find();
+        $query->select([
+            'total_number_of_students' => $query->func()->sum('total_male_students + total_female_students'),
+            'id','name', 'total_male_students', 'total_female_students'
+        ])
+        ->group('id','name', 'total_male_students', 'total_female_students')
+        ->having(['total_number_of_students >' => $userInput,
+            'total_number_of_students <' => 100]);
+        
+        $count = $query->count();
+
+        if($count){
+            $max = $query->max('total_number_of_students');
+        }
+        return $max;
     }
 
 
