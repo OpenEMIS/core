@@ -85,21 +85,24 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         if ($entity->has('code')) {
             switch ($entity->code) {
                 case 'enable_staff_transfer':
-                    if ($entity->value != self::SELECT_ALL_INSTITUTION_TYPES) {
-                        $entity['institution_type_selection'] = '1';
-                        $id = explode(',', $entity->value);
-                        $conditions = [];
-                        $tmp = [];
-                        foreach ($id as $key => $value) {
-                            $tmp[] = ['id =' => $value];
-                        }
-                        $conditions['OR'] = $tmp;
-                        $institutionTypesName = $this->getInstitutionTypes($conditions);
-                        $entity->value = $institutionTypesName;
-                    } else if ($entity->value == self::SELECT_ALL_INSTITUTION_TYPES) {
-                        $entity['institution_type_selection'] = $entity->value;
+                    if ($entity->value == self::SELECT_ALL_INSTITUTION_TYPES) {
+                        $entity->institution_type_selection = self::SELECT_ALL_INSTITUTION_TYPES;
+                    } else {
+                        $entity->institution_type_selection = self::SELECT_INSTITUTION_TYPES;
+
+                        $institutionTypeIds = explode(',', $entity->value);
+                        $institutionTypeResults = $this->InstitutionTypes
+                            ->find()
+                            ->find('visible')
+                            ->find('order')
+                            ->where([
+                                $this->InstitutionTypes->aliasField('id IN ') => $institutionTypeIds
+                            ]);
+
+                        $entity->value = $institutionTypeResults;
                     }
                     break;
+
                 default:
                     break;
             }
@@ -205,6 +208,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
                     break;
             }
         }
+
         return $attr;
     }
 
@@ -218,21 +222,20 @@ class ConfigStaffTransfersTable extends ControllerActionTable
                         $institutionTypeSelection = $entity->institution_type_selection;
 
                         if ($institutionTypeSelection == self::SELECT_INSTITUTION_TYPES) {
-                            $institutionTypesNames = $this->getInstitutionTypes();
-                            foreach ($institutionTypesNames as $key => $value) {
-                                $institutionTypeId = $value['id'];
-                                $institutionTypes[$institutionTypeId] = $value['name'];
-                            }
-                            $institutionTypeOptions = $institutionTypes;
+                            $institutionTypeOptions = $this->InstitutionTypes
+                                ->getList()
+                                ->toArray();
+
                             $attr['type'] = 'chosenSelect';
                             $attr['placeholder'] = __('Select Institution Types');
                             $attr['attr'] = ['required' => true];
                             $attr['options'] = $institutionTypeOptions;
                         } elseif ($institutionTypeSelection == self::SELECT_ALL_INSTITUTION_TYPES) {
-                            $attr['value'] = self::SELECT_ALL_INSTITUTION_TYPES;
                             $attr['type'] = 'readonly';
+                            $attr['value'] = self::SELECT_ALL_INSTITUTION_TYPES;
                             $attr['attr']['value'] = __('All Institution Types Selected');
                         }
+
                         $attr['attr']['label'] = __('Institution Types');
                     }
                     break;
@@ -247,6 +250,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
                     break;
             }
         }
+
         return $attr;
     }
 
@@ -264,37 +268,30 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         ]);
     }
 
-
-    public function getEnableStaffTransferConfig()
+    public function checkIfTransferEnabled($institutionId = 0)
     {
-        $enableStaffTransfer = TableRegistry::get($this->table('config_items'));
-        $enableStaffTransferConfig = $enableStaffTransfer
-            ->findByCode('enable_staff_transfer')
-            ->first();
-        $enableStaffTransferConfigValue = $enableStaffTransferConfig->value;
+        $enableStaffTransfer = false;
 
-        return $enableStaffTransferConfigValue;
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $enableStaffTransferValue = $ConfigItems->value('enable_staff_transfer');
+        $enableStaffTransferTypeIds = explode(",", $enableStaffTransferValue);
+
+        if ($enableStaffTransferValue == self::SELECT_ALL_INSTITUTION_TYPES || in_array($institutionTypeId, $enableStaffTransferTypeIds)) {
+            $enableStaffTransfer = true;
+        }
+
+        return $enableStaffTransfer;
     }
 
-    public function getRestrictStaffTransferBySectorConfig()
+    public function compareInstitutionSector($institutionId = 0, $compareInstitutionId = 0)
     {
-        $restrictStaffTransferBySector = TableRegistry::get($this->table('config_items'));
-        $restrictStaffTransferBySectorConfig = $restrictStaffTransferBySector
-            ->findByCode('restrict_staff_transfer_by_sector')
-            ->first();
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $sectorId = $Institutions->get($institutionId)->institution_sector_id;
+        $compareSectorId = $Institutions->get($compareInstitutionId)->institution_sector_id;
 
-        $restrictStaffTransferBySectorValue = $restrictStaffTransferBySectorConfig->value;
-        return $restrictStaffTransferBySectorValue;
-    }
-
-    public function getInstitutionTypes($conditions = [])
-    {
-        $institutionTypeObj = TableRegistry::get('Institution.Types')
-            ->find()
-            ->where($conditions)
-            ->order(['order' => 'ASC'])
-            ->toArray();
-
-        return $institutionTypeObj;
+        return $sectorId == $compareSectorId;
     }
 }
