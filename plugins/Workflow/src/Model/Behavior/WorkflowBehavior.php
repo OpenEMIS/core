@@ -93,15 +93,6 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    public function validationAddAssigneeId(Validator $validator)
-    {
-        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $validator = $model->validationDefault($validator);
-
-        return $validator
-            ->notEmpty('assignee_id');
-    }
-
     private function isCAv4()
     {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
@@ -128,7 +119,6 @@ class WorkflowBehavior extends Behavior
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
         $events['ControllerAction.Model.edit.beforePatch']      = ['callable' => 'editBeforePatch', 'priority' => 1];
-        $events['ControllerAction.Model.add.beforePatch']       = ['callable' => 'addBeforePatch', 'priority' => 1];
         $events['Model.custom.onUpdateToolbarButtons']          = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
         $events['Model.custom.onUpdateActionButtons']           = ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
         $events['Workflow.afterTransition'] = 'workflowAfterTransition';
@@ -140,7 +130,15 @@ class WorkflowBehavior extends Behavior
         $events['Model.Validation.getPendingRecords'] = 'getPendingRecords';
         $events['ControllerAction.Model.approve'] = 'approve';
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
+
+        $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
         return $events;
+    }
+
+    public function buildValidator(Event $event, Validator $validator, $name)
+    {
+        return $validator
+            ->notEmpty('assignee_id');
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
@@ -749,11 +747,6 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $options['validate'] = 'addAssigneeId';
-    }
-
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $this->setToolbarButtons($toolbarButtons, $attr, $action);
@@ -825,9 +818,12 @@ class WorkflowBehavior extends Behavior
 
                 if (empty($assigneeOptions)) {
                     // if no security roles is set to the workflow open status, it will auto assign to self set on beforeSave
-                    $attr['type'] = 'disabled';
-                    $attr['value'] = 0;
-                    $attr['attr']['value'] = $model->Auth->user('openemis_no') . ' - ' . $model->Auth->user('name');
+                    $userId = $model->Auth->user('id');
+                    $userEntity = $this->getAssigneeEntity($userId);
+
+                    $attr['type'] = 'readonly';
+                    $attr['value'] = $userEntity->id;
+                    $attr['attr']['value'] = $userEntity->name_with_id;
                 } else {
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
@@ -835,7 +831,7 @@ class WorkflowBehavior extends Behavior
                 }
             } else {
                 // model has filter key, but is not set in the entity
-                $assigneeOptions = ['' => '-- ' . __('No Option') . ' --'];
+                $assigneeOptions = ['' => $model->getMessage('general.select.noOptions')];
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
@@ -843,13 +839,19 @@ class WorkflowBehavior extends Behavior
         } elseif ($action == 'edit') {
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
             $entity = $attr['entity'];
-            $attr['type'] = 'readonly';
 
-            if (!is_null($entity->assignee_id)) {
+            if ($entity->has('assignee_id')) {
                 $assigneeId = $entity->assignee_id;
-                $assigneeEntity = $model->Assignees->get($assigneeId);
-                $attr['attr']['value'] = $assigneeEntity->openemis_no . ' - ' . $assigneeEntity->name;
+                $assigneeEntity = $this->getAssigneeEntity($assigneeId);
+                $assigneeName = $assigneeEntity->name_with_id;
+            } else {
+                $assigneeName = '<'.__('Unassigned').'>';
+                $assigneeId = 0;
             }
+            
+            $attr['type'] = 'readonly';
+            $attr['value'] = $assigneeId;
+            $attr['attr']['value'] = $assigneeName;
         }
 
         return $attr;
@@ -1188,11 +1190,13 @@ class WorkflowBehavior extends Behavior
 
         $assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
 
-        $assigneeName = '';
-        if (!is_null($entity->assignee_id)) {
-            $assigneeEntity = $model->Assignees->get($entity->assignee_id);
-            $assigneeName = $assigneeEntity->name;
+        if ($entity->has('assignee_id')) {
+            $assigneeEntity = $this->getAssigneeEntity($entity->assignee_id);
+            $assigneeName = $assigneeEntity->name_with_id;
             $assigneeId = $assigneeEntity->id;
+        } else {
+            $assigneeName = '<'.__('Unassigned').'>';
+            $assigneeId = 0;
         }
 
         if (!is_null($step)) {
@@ -1205,45 +1209,35 @@ class WorkflowBehavior extends Behavior
                 ]
             ];
 
-            $contentFields = new ArrayObject(
-                [
-                    'step_name' => [
-                        'label' => __('Action'),
-                        'type' => 'string',
-                        'readonly' => 'readonly',
-                        'disabled' => 'disabled',
-                        'class'=> 'workflow-reassign-action',
-                        'value' => __('Change Assignee')
-                    ],
-                    'status_id' => [
-                        'label' => __('Status'),
-                        'type' => 'string',
-                        'readonly' => 'readonly',
-                        'disabled' => 'disabled',
-                        'class'=> 'workflow-reassign-status',
-                        'value' => $entity->status->name
-                    ],
-                    'current_assignee_name' => [
-                        'label' => __('Current Assignee'),
-                        'type' => 'string',
-                        'readonly' => 'readonly',
-                        'disabled' => 'disabled',
-                        'class'=> 'workflow-reassign-current-assignee-name',
-                        'value' => $assigneeName
-                    ],
-                    'current_assignee_id' => [
-                        'type' => 'hidden',
-                        'class'=> 'workflow-reassign-current-assignee-id',
-                        'value' => $assigneeId
-                    ],
-                    'assignee_id' => [
-                        'label' => __('New Assignee'),
-                        'type' => 'select',
-                        'class'=> 'workflow-reassign-new-assignee required',
-                        'assignee-url' => $assigneeUrl
-                    ]
+            $contentFields = new ArrayObject([
+                'status_id' => [
+                    'label' => __('Status'),
+                    'type' => 'string',
+                    'readonly' => 'readonly',
+                    'disabled' => 'disabled',
+                    'class'=> 'workflow-reassign-status',
+                    'value' => $entity->status->name
+                ],
+                'current_assignee_name' => [
+                    'label' => __('Current Assignee'),
+                    'type' => 'string',
+                    'readonly' => 'readonly',
+                    'disabled' => 'disabled',
+                    'class'=> 'workflow-reassign-current-assignee-name',
+                    'value' => $assigneeName
+                ],
+                'current_assignee_id' => [
+                    'type' => 'hidden',
+                    'class'=> 'workflow-reassign-current-assignee-id',
+                    'value' => $assigneeId
+                ],
+                'assignee_id' => [
+                    'label' => __('New Assignee'),
+                    'type' => 'select',
+                    'class'=> 'workflow-reassign-new-assignee',
+                    'assignee-url' => $assigneeUrl
                 ]
-            );
+            ]);
 
             // $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
 
@@ -1483,7 +1477,7 @@ class WorkflowBehavior extends Behavior
                     $canAddButtons = $this->checkIfCanAddButtons($isSchoolBased, $entity);
 
                     if ($canAddButtons) {
-                        // reassign button
+                        // reassign button - only super admin and login user is the assignee of the workflow
                         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 
                         $userId = $model->Auth->user('id');
@@ -1918,6 +1912,28 @@ class WorkflowBehavior extends Behavior
             $url = $model->url('view');
             return $this->_table->controller->redirect($url);
         }
+    }
+
+    public function getAssigneeEntity($assigneeId)
+    {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $AssigneesTable = $model->Assignees;
+
+        $assigneeEntity = $AssigneesTable
+            ->find()
+            ->select([
+                $AssigneesTable->aliasField('id'),
+                $AssigneesTable->aliasField('openemis_no'),
+                $AssigneesTable->aliasField('first_name'),
+                $AssigneesTable->aliasField('middle_name'),
+                $AssigneesTable->aliasField('third_name'),
+                $AssigneesTable->aliasField('last_name'),
+                $AssigneesTable->aliasField('preferred_name')
+            ])
+            ->where([$AssigneesTable->aliasField('id') => $assigneeId])
+            ->first();
+
+        return $assigneeEntity;
     }
 
     public function setFilterNotEditable(Entity $entity)
