@@ -391,6 +391,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->Users->aliasField('last_name'),
                 $this->Users->aliasField('preferred_name'),
                 $this->AppraisalTypes->aliasField('name'),
+                $this->AppraisalForms->aliasField('name'),
+                $this->AppraisalPeriods->aliasField('name'),
                 $this->Institutions->aliasField('code'),
                 $this->Institutions->aliasField('name'),
                 $this->CreatedUser->aliasField('openemis_no'),
@@ -403,6 +405,8 @@ class StaffAppraisalsTable extends ControllerActionTable
             ->contain([
                 $this->Users->alias(),
                 $this->AppraisalTypes->alias(),
+                $this->AppraisalForms->alias(),
+                $this->AppraisalPeriods->alias(),
                 $this->Institutions->alias(),
                 $this->CreatedUser->alias()
             ])
@@ -437,7 +441,8 @@ class StaffAppraisalsTable extends ControllerActionTable
 
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
-                    $row['request_title'] = sprintf(__('%s of %s'), $row->appraisal_type->name, $row->user->name_with_id);
+                    // Name (Type) for OpenEMIS ID - Staff Name in Appraisal Period
+                    $row['request_title'] = sprintf(__('%s (%s) for %s in %s'), $row->appraisal_form->name, $row->appraisal_type->name, $row->user->name_with_id, $row->appraisal_period->name);
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
