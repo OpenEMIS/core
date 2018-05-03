@@ -29,12 +29,31 @@ class ConfigStaffTransfersTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
+
+        $this->InstitutionTypes = TableRegistry::get('Institution.Types');
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $submit = isset($data['submit']) ? $data['submit'] : 'save';
+        if ($submit == 'save') {
+            if ($data['code'] == 'enable_staff_transfer') {
+                if (isset($data['institution_type_selection']) && $data['institution_type_selection'] == self::SELECT_INSTITUTION_TYPES) {
+                    if (isset($data['value']['_ids']) && !empty($data['value']['_ids'])) {
+                        $institutionTypeIds = $data['value']['_ids'];
+                        $data['value'] = implode(",", $institutionTypeIds);
+                    } else {
+                        $data['value'] = '';
+                    }
+                }
+            }
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name', ['visible' => ['index' => true]]);
-        $this->field('code', ['visible' => false]);
+        $this->field('code', ['type' => 'hidden']);
         $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
         $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
         $this->field('default_value', ['visible' => ['view' => true]]);
@@ -94,60 +113,70 @@ class ConfigStaffTransfersTable extends ControllerActionTable
 
     public function onGetValue(Event $event, Entity $entity)
     {
+        $value = '';
         if ($entity->has('code')) {
             switch ($entity->code) {
                 case 'enable_staff_transfer':
-                    $conditions = [];
-                    $tmp = [];
+                    $list = [];
                     if ($entity->value == self::SELECT_ALL_INSTITUTION_TYPES) {
-                        $institutionTypeObj = $this->getInstitutionTypes();
+                        $list = $this->InstitutionTypes
+                            ->getList()
+                            ->toArray();
                     } else {
                         $institutionTypeIds = explode(",", $entity->value);
-                        foreach ($institutionTypeIds as $key => $value) {
-                            $tmp[] = ['id =' => $value];
+                        if (!empty($institutionTypeIds)) {
+                            $list = $this->InstitutionTypes
+                                ->getList()
+                                ->where([
+                                    $this->InstitutionTypes->aliasField('id IN ') => $institutionTypeIds
+                                ])
+                                ->toArray();
                         }
-                        $conditions['OR'] = $tmp;
-                        $institutionTypeObj = $this->getInstitutionTypes($conditions);
                     }
-                    foreach ($institutionTypeObj as $key => $value) {
-                        $institutionTypeNames[] = $value['name'];
+
+                    if (!empty($list)) {
+                        $value = implode(", ", $list);
                     }
-                    $valueOptions = implode(", ", $institutionTypeNames);
-                    return $valueOptions;
                     break;
 
                 case 'restrict_staff_transfer_by_sector':
                     $valueOptions = $this->getSelectOptions('general.yesno');
                    
-                    return array_key_exists($entity->value, $valueOptions) ? $valueOptions[$entity->value] : $valueOptions[$entity->value];
+                    $value = array_key_exists($entity->value, $valueOptions) ? $valueOptions[$entity->value] : '';
+                    break;
+
+                default:
                     break;
             }
         }
+
+        return $value;
     }
 
     public function onGetDefaultValue(Event $event, Entity $entity)
     {
+        $value = '';
         if ($entity->has('code')) {
             switch ($entity->code) {
                 case 'enable_staff_transfer':
-                    $valueOptions = $this->getSelectOptions('StaffTransfers.institution_type_selection');
+                    if ($entity->default_value == self::SELECT_ALL_INSTITUTION_TYPES) {
+                        $list = $this->InstitutionTypes->getList()->toArray();
+                        $value = implode(", ", $list);
+                    }
+
                     break;
 
                 case 'restrict_staff_transfer_by_sector':
-                    $valueOptions = $this->getSelectOptions('general.yesno');
+                    $defaultValueOptions = $this->getSelectOptions('general.yesno');
+                    $value = array_key_exists($entity->default_value, $defaultValueOptions) ? $defaultValueOptions[$entity->default_value] : '';
+                    break;
+
+                default:
                     break;
             }
         }
-        return array_key_exists($entity->default_value, $valueOptions) ? $valueOptions[$entity->default_value] : $entity->default_value;
-    }
 
-    public function editbeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-        if ($entity->institution_type_selection == self::SELECT_INSTITUTION_TYPES) {
-            $institution_ids = $requestData['ConfigStaffTransfers']['value']['_ids'];
-            $ids = implode(",", $institution_ids);
-            $entity->value = $ids;
-        }
+        return $value;
     }
 
     public function onUpdateFieldInstitutionTypeSelection(Event $event, array $attr, $action, Request $request)
@@ -156,10 +185,16 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         if ($entity->has('code')) {
             switch ($entity->code) {
                 case 'enable_staff_transfer':
-                    $institutionTypeSelectionOptions = $this->getSelectOptions('StaffTransfers.institution_type_selection');
-                    $attr['type'] = 'select';
-                    $attr['options'] = $institutionTypeSelectionOptions;
-                    $attr['onChangeReload'] = true;
+                    if ($action == 'edit') {
+                        $institutionTypeSelectionOptions = $this->getSelectOptions('StaffTransfers.institution_type_selection');
+
+                        $attr['type'] = 'select';
+                        $attr['options'] = $institutionTypeSelectionOptions;
+                        $attr['select'] = false;
+                        $attr['onChangeReload'] = true;
+                    } else {
+                        $attr['visible'] = false;
+                    }
                     break;
 
                 case 'restrict_staff_transfer_by_sector':
@@ -218,7 +253,6 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->field('institution_type_selection', [
-            'visible' => ['view' => false,  'edit' => true],
             'entity' => $entity
         ]);
         $this->field('value', [
@@ -235,8 +269,8 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     {
         $enableStaffTransfer = TableRegistry::get($this->table('config_items'));
         $enableStaffTransferConfig = $enableStaffTransfer
-        ->findByCode('enable_staff_transfer')
-        ->first();
+            ->findByCode('enable_staff_transfer')
+            ->first();
         $enableStaffTransferConfigValue = $enableStaffTransferConfig->value;
 
         return $enableStaffTransferConfigValue;
@@ -246,8 +280,8 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     {
         $restrictStaffTransferBySector = TableRegistry::get($this->table('config_items'));
         $restrictStaffTransferBySectorConfig = $restrictStaffTransferBySector
-        ->findByCode('restrict_staff_transfer_by_sector')
-        ->first();
+            ->findByCode('restrict_staff_transfer_by_sector')
+            ->first();
 
         $restrictStaffTransferBySectorValue = $restrictStaffTransferBySectorConfig->value;
         return $restrictStaffTransferBySectorValue;
