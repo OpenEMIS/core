@@ -27,7 +27,7 @@ class SetupTextBehavior extends SetupBehavior
 
         $this->lengthValidationOptions = [
             'min_length' => __('Should be at least'),
-            'max_length' => __('Should not be exceed'),
+            'max_length' => __('Should not exceed'),
             'range' => __('Should be between')
         ];
     }
