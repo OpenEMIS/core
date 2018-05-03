@@ -1162,7 +1162,7 @@ class InstitutionsController extends AppController
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
                 }
-            } elseif (isset($requestQuery['user_id'][1])) {
+            } elseif (isset($requestQuery['user_id'])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
             }
 

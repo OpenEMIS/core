@@ -13,6 +13,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use PHPExcel_Worksheet;
 
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+
 class ImportInstitutionSurveysTable extends AppTable {
     const RECORD_QUESTION = 2;
     const FIRST_RECORD = 3;
@@ -212,6 +214,19 @@ class ImportInstitutionSurveysTable extends AppTable {
      */
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
         return function ($model, $entity) {
+      
+            $surveyStatus = $this->institutionSurvey->status_id;
+            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowStepEntity = $WorkflowSteps
+                ->find()
+                ->where([$WorkflowSteps->aliasField('id') => $surveyStatus])
+                ->first();
+
+            if($workflowStepEntity && $workflowStepEntity->category == WorkflowSteps::DONE) {
+                $model->Alert->warning($this->aliasField('restrictImport'), ['reset'=>true]);
+                return false;
+            }
+                
             $errors = $entity->errors();
             if (!empty($errors)) {
                 return false;
