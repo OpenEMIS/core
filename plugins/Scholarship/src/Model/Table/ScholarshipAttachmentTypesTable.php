@@ -5,7 +5,7 @@ use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
-class ScholarshipAttachmentsTable extends AppTable
+class ScholarshipAttachmentTypesTable extends AppTable
 {
     public function initialize(array $config)
     {

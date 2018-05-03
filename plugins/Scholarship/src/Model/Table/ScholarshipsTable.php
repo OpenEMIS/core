@@ -13,13 +13,11 @@ class ScholarshipsTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('FinancialAssistanceTypes', ['className' => 'Scholarship.FinancialAssistanceTypes']);
-
         $this->belongsTo('FundingSources', ['className' => 'Scholarship.FundingSources']);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-
-        $this->hasMany('ScholarshipAttachments', ['className' => 'Scholarship.ScholarshipAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
-        
+        $this->hasMany('ScholarshipAttachmentTypes', ['className' => 'Scholarship.ScholarshipAttachmentTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('EducationFieldOfStudies', [
                     'className' => 'Education.EducationFieldOfStudies',
                     'joinTable' => 'scholarships_education_field_of_studies',
@@ -48,5 +46,4 @@ class ScholarshipsTable extends AppTable
         $query->contain(['EducationFieldOfStudies']);
         return $query;
     }
-
 }

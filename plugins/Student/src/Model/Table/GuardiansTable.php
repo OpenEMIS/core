@@ -57,34 +57,36 @@ class GuardiansTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
-        if ($this->action != 'view') {
-            if ($this->controller->name == 'Directories') {
-                $options['type'] = 'student';
-                $tabElements = $this->controller->getStudentGuardianTabElements($options);
-            } else {
-                $tabElements = $this->controller->getUserTabElements();
-            }
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', $this->alias());
-        } elseif ($this->action == 'view') {
-            $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+        if($this->controller->name == "ScholarshipApplications") {
+            $tabElements = $this->controller->getScholarshipTabElements();
+        } else {   
+            if ($this->action != 'view') {
+                if ($this->controller->name == 'Directories') {
+                    $options['type'] = 'student';
+                    $tabElements = $this->controller->getStudentGuardianTabElements($options);
+                } else {
+                    $tabElements = $this->controller->getUserTabElements();
+                }
+            } elseif ($this->action == 'view') {
+                $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 
-            $tabElements = [
-                'Guardians' => ['text' => __('Relation')],
-                'GuardianUser' => ['text' => __('General')]
-            ];
-            $action = $this->alias();
-            $actionUser = 'GuardianUser';
-            if ($this->controller->name == 'Directories') {
-                $action = 'StudentGuardians';
-                $actionUser = 'StudentGuardianUser';
-            }
-            $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
-            $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
-            $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
+                $tabElements = [
+                    'Guardians' => ['text' => __('Relation')],
+                    'GuardianUser' => ['text' => __('General')]
+                ];
+                $action = $this->alias();
+                $actionUser = 'GuardianUser';
+                if ($this->controller->name == 'Directories') {
+                    $action = 'StudentGuardians';
+                    $actionUser = 'StudentGuardianUser';
+                }
+                $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
+                $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
+                $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
+            }            
+        }
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->alias());
-        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)

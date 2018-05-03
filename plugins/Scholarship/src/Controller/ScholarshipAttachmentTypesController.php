@@ -7,7 +7,7 @@ use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use App\Model\Traits\OptionsTrait;
 
-class ScholarshipAttachmentsController extends PageController
+class ScholarshipAttachmentTypesController extends PageController
 {
      use OptionsTrait;
 
@@ -22,7 +22,7 @@ class ScholarshipAttachmentsController extends PageController
     public function implementedEvents()
     {
         $event = parent::implementedEvents();
-        $event['Controller.Page.onRenderMandatory'] = 'onRenderMandatory';
+        $event['Controller.Page.onRenderIsMandatory'] = 'onRenderIsMandatory';
 
         return $event;
     }
@@ -30,7 +30,6 @@ class ScholarshipAttachmentsController extends PageController
     public function beforeFilter(Event $event)
     {   
         $page = $this->Page;
-
 
         parent::beforeFilter($event);
         $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'index']);
@@ -49,15 +48,13 @@ class ScholarshipAttachmentsController extends PageController
     }
     
     public function index()
-    {
-           
+    {       
         parent::index();
         $page = $this->Page;
 
         $page->exclude(['scholarship_id']);
 
         $page->move('type')->after('is_mandatory');
-
     }
 
     public function add()
@@ -93,8 +90,8 @@ class ScholarshipAttachmentsController extends PageController
                 'url' => ['plugin' => $this->plugin, 'controller' => 'Scholarships', 'action' => 'view', $encodedScholarshipId],
                 'text' => __('Scholarships')
             ],
-            'ScholarshipAttachments' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipAttachments', 'action' => 'index', 'querystring' => $queryString],
+            'ScholarshipAttachmentTypes' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipAttachmentTypes', 'action' => 'index', 'querystring' => $queryString],
                 'text' => __('Attachments')
             ],
         ];
@@ -105,16 +102,15 @@ class ScholarshipAttachmentsController extends PageController
                 ->setUrl($tabAttr['url']);
         }
 
-        $page->getTab('ScholarshipAttachments')->setActive('true');      
+        $page->getTab('ScholarshipAttachmentTypes')->setActive('true');      
     }
 
-    public function onRenderMandatory(Event $event, Entity $entity, PageElement $element)
+    public function onRenderIsMandatory(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
         if ($page->is(['index', 'view', 'delete'])) {
-            
-            if($entity->mandatory == 1) {
+            if($entity->is_mandatory == 1) {
                 return "<i class='fa fa-check'></i>";
             } else {
                 return "<i class='fa fa-close'></i>";

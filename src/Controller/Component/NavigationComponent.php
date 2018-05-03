@@ -1471,7 +1471,13 @@ class NavigationComponent extends Component
                         'title' => 'Scholarships',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.index', 'Scholarships.view', 'Scholarships.add', 'Scholarships.edit', 'Scholarships.delete']
+                        'selected' => ['Scholarships.index', 'Scholarships.view', 'Scholarships.add', 'Scholarships.edit', 'Scholarships.delete','ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
+                    ],
+                    'ScholarshipApplications.ScholarshipApplications' => [
+                        'title' => 'Applications',
+                        'parent' => 'Administration.Scholarships',
+                        'params' => ['plugin' => 'Scholarship'],
+                        'selected' => ['ScholarshipApplications.index', 'ScholarshipApplications.view', 'ScholarshipApplications.add', 'ScholarshipApplications.edit', 'ScholarshipApplications.delete','ScholarshipApplicationDirectories.index', 'ScholarshipApplicationDirectories.view']
                     ],
                     
             'Textbooks.Textbooks' => [

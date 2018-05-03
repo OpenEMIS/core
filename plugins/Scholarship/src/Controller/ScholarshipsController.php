@@ -25,7 +25,6 @@ class ScholarshipsController extends PageController
         $page->addCrumb('Scholarships');
 
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
-
     }
 
     public function index()
@@ -61,15 +60,6 @@ class ScholarshipsController extends PageController
         $page->get('academic_period_id')
             ->setControlType('select')
             ->setOptions($this->academicPeriodOptions, false);
-
-        $page->get('date_applications_open')
-            ->setControlType('date')
-            ->setRequired(true);
-
-        $page->addNew('date_applications_close')
-            ->setControlType('date')
-            ->setRequired(true);
-
     
         $maxYear = 20;
         $bondOptions = $this->getBondOptions($maxYear);
@@ -114,16 +104,16 @@ class ScholarshipsController extends PageController
         $page = $this->Page;
         $plugin = $this->plugin;
 
-        $scholarshipId = $page->decode($options['id']); //get actual value of scholarship
-        $queryString = $page->encode(['scholarship_id' => $scholarshipId['id']]); // manually set up the querystring
+        $scholarshipId = $page->decode($options['id'])['id']; //get actual value of scholarship
+        $queryString = $page->encode(['scholarship_id' => $scholarshipId]); 
 
         $tabElements = [
             'Scholarships' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => 'Scholarships', 'action' => 'view', $options['id']],
                 'text' => __('Scholarships')
             ],
-            'ScholarshipAttachments' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipAttachments', 'action' => 'index', 'querystring' => $queryString],
+            'ScholarshipAttachmentTypes' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipAttachmentTypes', 'action' => 'index', 'querystring' => $queryString],
                 'text' => __('Attachments')
             ],
         ];
