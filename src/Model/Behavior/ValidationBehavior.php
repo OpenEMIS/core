@@ -1528,17 +1528,30 @@ class ValidationBehavior extends Behavior
         if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
-            foreach ($params as $key => $value) {
-                if ($key == 'min_value' && $field < $value) {
-                    return $model->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+
+            foreach ($params as $key => $obj) {
+                if ($key == 'number') {
+                    // table type
+                    $numberValidation = is_array($obj) ? key($obj) : null;
+                    $value = isset($numberValidation, $obj) ? $obj[$numberValidation] : null;
+                } else {
+                    // number type
+                    $numberValidation = $key;
+                    $value = $obj;
                 }
-                if ($key == 'max_value' && $field > $value) {
-                    return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
-                }
-                if ($key == 'range' && is_array($value)) {
-                    if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
-                        if ($field < $value['lower'] || $field > $value['upper']) {
-                            return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+
+                if (!is_null($numberValidation)) {
+                    if ($numberValidation == 'min_value' && $field < $value) {
+                        return $model->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+                    }
+                    if ($numberValidation == 'max_value' && $field > $value) {
+                        return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+                    }
+                    if ($numberValidation == 'range' && is_array($value)) {
+                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                            if ($field < $value['lower'] || $field > $value['upper']) {
+                                return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                            }
                         }
                     }
                 }
@@ -1554,8 +1567,15 @@ class ValidationBehavior extends Behavior
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
 
-            $length = $params['length'];
-            $precision = $params['precision'];
+            if (array_key_exists('decimal', $params)) {
+                // table type
+                $length = $params['decimal']['length'];
+                $precision = $params['decimal']['precision'];
+            } else {
+                // decimal type
+                $length = $params['length'];
+                $precision = $params['precision'];
+            }
 
             if ($precision == 0) {
                 $pattern = '/^[0-9]{1,'.$length.'}$/';
@@ -2402,6 +2422,30 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    public static function checkGuardianGender($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+    
+        $StudentGuardians = TableRegistry::get('Student.Guardians');
+        $genderId = $globalData['data']['gender_id'];
+
+        $mismatchCount = $StudentGuardians
+            ->find()
+            ->matching('Users', function ($q) use ($genderId) {
+                return $q->where(['Users.gender_id <> ' => $genderId]);
+            })
+            ->where([
+                $StudentGuardians->aliasField('guardian_relation_id') => $globalData['data']['id']
+            ])
+            ->count();
+
+        if ($mismatchCount > 0) {
+            return $model->getMessage('FieldOption.GuardianRelations.gender_id.ruleCheckGuardianGender');
+        }
+
+        return true;
+    }
+
     public static function checkAssessmentMarks($field, array $globalData)
     {
         if (strlen($field) > 0) {
@@ -2447,6 +2491,40 @@ class ValidationBehavior extends Behavior
                 return false;
             }
         }
+        return true;
+    }
+
+    public static function checkPositionGrades($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
+
+        $institutionPositionGrades = $InstitutionPositions->find()
+                            ->distinct('staff_position_grade_id')
+                            ->where([
+                                $InstitutionPositions->aliasField('staff_position_title_id') => $globalData['data']['id']
+                            ])
+                            ->extract('staff_position_grade_id')
+                            ->toArray();
+
+        if(!empty($institutionPositionGrades)) {  // not empty means position title in use & there's associated grade
+            $postPositionGrades = $globalData['data']['position_grades']['_ids'];
+            if (array_intersect($institutionPositionGrades, $postPositionGrades) == $institutionPositionGrades) {
+                return true;
+            } else {
+                $arr = array_diff($institutionPositionGrades, $postPositionGrades);
+                $results = $StaffPositionGrades->find()
+                    ->where([$StaffPositionGrades->aliasField('id IN ') => $arr])
+                    ->extract('name')
+                    ->toArray();
+
+                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
+                
+                return $errorMsg;
+            }
+        }
+
         return true;
     }
 
