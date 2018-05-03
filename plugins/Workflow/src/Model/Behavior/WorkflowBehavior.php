@@ -840,7 +840,7 @@ class WorkflowBehavior extends Behavior
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
             $entity = $attr['entity'];
 
-            if ($entity->has('assignee_id')) {
+            if ($entity->has('assignee_id') && $entity->assignee_id != 0) {
                 $assigneeId = $entity->assignee_id;
                 $assigneeEntity = $this->getAssigneeEntity($assigneeId);
                 $assigneeName = $assigneeEntity->name_with_id;
@@ -1190,7 +1190,7 @@ class WorkflowBehavior extends Behavior
 
         $assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
 
-        if ($entity->has('assignee_id')) {
+        if ($entity->has('assignee_id') && $entity->assignee_id != 0) {
             $assigneeEntity = $this->getAssigneeEntity($entity->assignee_id);
             $assigneeName = $assigneeEntity->name_with_id;
             $assigneeId = $assigneeEntity->id;
