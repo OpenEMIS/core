@@ -35,7 +35,9 @@ class ConfigItemsTable extends AppTable
             'Students' => ['index'],
             'Staff' => ['index'],
             'OpenEMIS_Classroom' => ['index'],
-            'Map' => ['index']
+            'Map' => ['index'],
+            'ClassStudents' => ['index'],
+            'SubjectStudents' => ['index']
         ]);
     }
 
@@ -264,7 +266,7 @@ class ConfigItemsTable extends AppTable
                         $attr['data'] = [];
                     } else if ($entity->type == 'Student Settings') {
                         $attr['type'] = 'integer';
-                        $attr['attr'] = ['min' => 1, 'max' => 50];
+                        $attr['attr'] = ['min' => 1, 'max' => 100];
                     }
                 }
             }
@@ -679,12 +681,12 @@ class ConfigItemsTable extends AppTable
     private $validateStudentSettings = [
         'num' => [
             'rule'  => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 50',
+            'message' => 'Numeric Value should be between 0 to 100',
             'last' => true
         ],
         'bet' => [
             'rule'  => ['range', 0, 100],
-            'message' => 'Numeric Value should be between 0 to 50',
+            'message' => 'Numeric Value should be between 0 to 100',
             'last' => true
         ]
     ];
