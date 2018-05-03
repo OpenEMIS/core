@@ -13,7 +13,9 @@ use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Hash;
+use Cake\Datasource\ResultSetInterface;
 
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 
 class StaffAppraisalsTable extends ControllerActionTable
@@ -25,6 +27,8 @@ class StaffAppraisalsTable extends ControllerActionTable
     {
         $this->table('institution_staff_appraisals');
         parent::initialize($config);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
@@ -43,8 +47,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Institution.StaffProfile'); // POCOR-4047 to get staff profile data
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
+        ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
         $this->behaviors()->get('ControllerAction')->config(
@@ -356,5 +364,93 @@ class StaffAppraisalsTable extends ControllerActionTable
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAppraisals');
+    }
+
+    public function findWorkbench(Query $query, array $options)
+    {
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $doneStatus = WorkflowSteps::DONE;
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('staff_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $this->AppraisalTypes->aliasField('name'),
+                $this->AppraisalForms->aliasField('name'),
+                $this->AppraisalPeriods->aliasField('name'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([
+                $this->Users->alias(),
+                $this->AppraisalTypes->alias(),
+                $this->AppraisalForms->alias(),
+                $this->AppraisalPeriods->alias(),
+                $this->Institutions->alias(),
+                $this->CreatedUser->alias()
+            ])
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([
+                    $Statuses->aliasField('category <> ') => $doneStatus
+                ]);
+            })
+            ->where([
+                $this->aliasField('assignee_id') => $userId
+            ])
+            ->order([
+                $this->aliasField('created') => 'DESC'
+            ])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffAppraisals',
+                        'view',
+                        $this->paramsEncode(['id' => $row->id]),
+                        'user_id' => $row->staff_id,
+                        'institution_id' => $row->institution_id
+                    ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
+                    } else {
+                        $receivedDate = $this->formatDate($row->modified);
+                    }
+
+                    $row['url'] = $url;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    // Name (Type) for OpenEMIS ID - Staff Name in Appraisal Period
+                    $row['request_title'] = sprintf(__('%s (%s) for %s in %s'), $row->appraisal_form->name, $row->appraisal_type->name, $row->user->name_with_id, $row->appraisal_period->name);
+                    $row['institution'] = $row->institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
     }
 }
