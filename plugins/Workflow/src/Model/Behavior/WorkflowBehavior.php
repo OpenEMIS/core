@@ -810,27 +810,39 @@ class WorkflowBehavior extends Behavior
                 $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
             }
 
-            // option list is generated based on model has filter key or not
-            // if model do not have filter, or model has filter, and the option for the filter is set
-            if (is_null($filterKey) || (!is_null($filterKey) && $entity->has($filterKey))) {
-                $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $workflowModelEntity, $registryAlias, $request);
+            $isSchoolBased = $workflowModelEntity->is_school_based;
+            $assignToSelf = false;
 
-                if (empty($assigneeOptions)) {
-                    // if no security roles is set to the workflow open status, it will auto assign to self set on beforeSave
-                    $userId = $model->Auth->user('id');
-                    $userEntity = $this->getAssigneeEntity($userId);
-
-                    $attr['type'] = 'readonly';
-                    $attr['value'] = $userEntity->id;
-                    $attr['attr']['value'] = $userEntity->name_with_id;
+            // extract the first step if the workflow can be found:
+            // - the workflow model do not have filter key
+            // - the worflow has filter key and entity has the filter key
+            if (is_null($filterKey) || !is_null($filterKey) && $entity->has($filterKey)) {
+                $firstStepEntity = $this->getFirstWorkflowStep($registryAlias, $entity);
+                if (empty($firstStepEntity->security_roles)) {
+                    $assignToSelf = true;
                 } else {
-                    $attr['type'] = 'chosenSelect';
-                    $attr['attr']['multiple'] = false;
-                    $attr['options'] = $assigneeOptions;
+                    $firstStepId = $firstStepEntity->id;
+                    $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $isSchoolBased, $firstStepId, $request);
                 }
+            }
+
+            if (!$assignToSelf) {
+                if (isset($assigneeOptions) && !empty($assigneeOptions)) {
+                    $assigneeOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+                } else {
+                    $assigneeOptions = ['' => $model->getMessage('general.select.noOptions')];
+                }
+            }
+
+            if ($assignToSelf) {
+                // if no security roles is set to the workflow open status, assign to self
+                $userId = $model->Auth->user('id');
+                $userEntity = $this->getAssigneeEntity($userId);
+
+                $attr['type'] = 'readonly';
+                $attr['value'] = $userEntity->id;
+                $attr['attr']['value'] = $userEntity->name_with_id;
             } else {
-                // model has filter key, but is not set in the entity
-                $assigneeOptions = ['' => $model->getMessage('general.select.noOptions')];
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
@@ -856,32 +868,28 @@ class WorkflowBehavior extends Behavior
         return $attr;
     }
 
-    public function getFirstStepAssigneeOptions(Entity $entity, Entity $workflowModelEntity, $registryAlias, Request $request)
+    public function getFirstStepAssigneeOptions(Entity $entity, $isSchoolBased, $stepId, Request $request)
     {
-        $firstStepEntity = $this->getFirstWorkflowStep($registryAlias, $entity);
-        if (!empty($firstStepEntity->security_roles)) {
-            $firstStepId = $firstStepEntity->id;
-            $isSchoolBased = $workflowModelEntity->is_school_based;
+        $params = [
+            'is_school_based' => $isSchoolBased,
+            'workflow_step_id' => $stepId
+        ];
 
-            $params = [
-                'is_school_based' => $isSchoolBased,
-                'workflow_step_id' => $firstStepId
-            ];
-
-            $session = $request->session();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-                $params['institution_id'] = $institutionId;
+        if ($isSchoolBased) {
+            if ($entity->has('institution_id')) {
+                $params['institution_id'] = $entity->institution_id;
+            } else {
+                $session = $request->session();
+                if ($session->check('Institution.Institutions.id')) {
+                    $institutionId = $session->read('Institution.Institutions.id');
+                    $params['institution_id'] = $institutionId;
+                }
             }
-
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-            $assigneeOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
-
-            return $assigneeOptions;
         }
-     
-        return [];
+
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+        return $assigneeOptions;
     }
 
     public function getFirstWorkflowStep($registryAlias, Entity $entity)
@@ -1913,26 +1921,25 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    public function getAssigneeEntity($assigneeId)
+    public function getAssigneeEntity($userId)
     {
-        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $AssigneesTable = $model->Assignees;
+        $Users = TableRegistry::get('User.Users');
 
-        $assigneeEntity = $AssigneesTable
+        $userEntity = $Users
             ->find()
             ->select([
-                $AssigneesTable->aliasField('id'),
-                $AssigneesTable->aliasField('openemis_no'),
-                $AssigneesTable->aliasField('first_name'),
-                $AssigneesTable->aliasField('middle_name'),
-                $AssigneesTable->aliasField('third_name'),
-                $AssigneesTable->aliasField('last_name'),
-                $AssigneesTable->aliasField('preferred_name')
+                $Users->aliasField('id'),
+                $Users->aliasField('openemis_no'),
+                $Users->aliasField('first_name'),
+                $Users->aliasField('middle_name'),
+                $Users->aliasField('third_name'),
+                $Users->aliasField('last_name'),
+                $Users->aliasField('preferred_name')
             ])
-            ->where([$AssigneesTable->aliasField('id') => $assigneeId])
+            ->where([$Users->aliasField('id') => $userId])
             ->first();
 
-        return $assigneeEntity;
+        return $userEntity;
     }
 
     public function setFilterNotEditable(Entity $entity)
