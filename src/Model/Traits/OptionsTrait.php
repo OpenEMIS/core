@@ -54,6 +54,9 @@ trait OptionsTrait
             'StaffTrainingNeeds' => [
                 'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
             ],
+            'InstitutionChoices' => [
+                'location_type' => [0 => __('Domestic'), '-1' => __('International')]
+            ],
             'Health' => [
                 'blood_types' => [
                     'O+' => 'O+', 'O-' => 'O-',

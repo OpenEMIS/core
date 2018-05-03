@@ -50,7 +50,12 @@ class UsersTable extends AppTable
         $this->hasMany('Counsellings', ['className' => 'Counselling.Counsellings', 'foreignKey' => 'counselor_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('BodyMasses', ['className' => 'User.UserBodyMasses', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Insurances', ['className' => 'User.UserInsurances', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        
+        $this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ScholarshipHistories', ['className' => 'Scholarship.ScholarshipHistories', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+      
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables

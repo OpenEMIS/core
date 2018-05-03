@@ -41,19 +41,24 @@ class ContactsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        $options = [
-            'userRole' => '',
-        ];
+        if($this->controller->name == "ScholarshipApplications") {
+            $tabElements = $this->controller->getScholarshipTabElements();
+        } else {
+            $options = [
+                'userRole' => '',
+            ];
 
-        switch ($this->controller->name) {
-            case 'Students':
-                $options['userRole'] = 'Students';
-                break;
-            case 'Staff':
-                $options['userRole'] = 'Staff';
-                break;
+            switch ($this->controller->name) {
+                case 'Students':
+                    $options['userRole'] = 'Students';
+                    break;
+                case 'Staff':
+                    $options['userRole'] = 'Staff';
+                    break;
+            }
+            $tabElements = $this->controller->getUserTabElements($options);    
         }
-        $tabElements = $this->controller->getUserTabElements($options);
+        
         if ($this->controller->name != 'Preferences') {
             $this->controller->set('selectedAction', $this->alias());
         } else {
