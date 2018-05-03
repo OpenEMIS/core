@@ -18,6 +18,10 @@ class RenderTableBehavior extends RenderBehavior {
         $customField = $attr['customField'];
         $fieldId = $attr['customField']->id;
         $cellValues = $attr['customTableCells'];
+        $fieldKey = $attr['attr']['fieldKey'];
+        $formKey = $attr['attr']['formKey'];
+        $tableColumnKey = $attr['attr']['tableColumnKey'];
+        $tableRowKey = $attr['attr']['tableRowKey'];
         $form = $event->subject()->Form;
 
         $tableHeaders = [];
@@ -26,6 +30,31 @@ class RenderTableBehavior extends RenderBehavior {
         $fieldPrefix = $attr['model'] . '.custom_table_cells.' . $fieldId;
         $unlockFields = [];
 
+        // validation rules
+        $valueColumn = 'text_value';
+        $cellAttr = [
+            'type' => 'string'
+        ];
+        if ($customField->has('params') && !empty($customField->params)) {
+            $params = json_decode($customField->params, true);
+
+            if (array_key_exists('number', $params)) {
+                $valueColumn = 'number_value';
+                $cellAttr['type'] = 'number';
+            } else if (array_key_exists('decimal', $params)) {
+                $valueColumn = 'decimal_value';
+                $cellAttr['type'] = 'number';
+
+                $cellAttr['min'] = 0;
+                $step = $this->getStepFromParams($params['decimal']);
+                if (!is_null($step)) {
+                    $cellAttr['step'] = $step;
+                }
+            }
+        }
+        // end
+
+        $cellErrors = $entity->errors('custom_table_cells');
         foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
             $rowData = [];
             $rowData[] = $rowObj->name;
@@ -46,14 +75,46 @@ class RenderTableBehavior extends RenderBehavior {
                 $cellValue = "";
                 $cellInput = "";
                 $cellOptions = ['label' => false];
+                $cellOptions = array_merge($cellOptions, $cellAttr);
 
                 if (isset($cellValues[$fieldId][$tableRowId][$tableColumnId])) {
-                    $cellValue = $cellValues[$fieldId][$tableRowId][$tableColumnId];
+                    $cellValue = $cellValues[$fieldId][$tableRowId][$tableColumnId][$valueColumn];
                     $cellOptions['value'] = $cellValue;
                 }
 
-                $cellInput .= $form->input($cellPrefix.".text_value", $cellOptions);
-                $unlockFields[] = $cellPrefix.".text_value";
+                // start build error messages for each cell
+                $errorInput = '';
+                if (!empty($cellErrors)) {
+                    foreach ($cellErrors as $errorKey => $errorObj) {
+                        $cellEntity = $entity->custom_table_cells[$errorKey];
+
+                        $cellFieldId = $cellEntity->{$fieldKey};
+                        $cellRowId = $cellEntity->{$tableRowKey};
+                        $cellColumnId = $cellEntity->{$tableColumnKey};
+
+                        if ($cellFieldId == $fieldId && $cellRowId == $tableRowId && $cellColumnId == $tableColumnId) {
+                            $errors = '';
+                            foreach ($errorObj as $fieldCol => $fieldErrors) {
+                                foreach ($fieldErrors as $fieldErrorRule => $fieldErrorMessage) {
+                                    if (empty($errors)) {
+                                        $errors .= $fieldErrorMessage;
+                                    } else {
+                                        $errors .= '<br>' . $fieldErrorMessage;
+                                    }
+                                }
+                            }
+                            $errorInput = '<div class="error-message">'.$errors.'</div>';
+                            unset($cellErrors[$errorKey]);
+                        }
+                    }
+                }
+                // end build error messages for each cell
+                $cellInput .= $form->input("$cellPrefix.$valueColumn", $cellOptions);
+                if (!empty($errorInput)) {
+                    $cellInput .= $errorInput;
+                }
+
+                $unlockFields[] = "$cellPrefix.$valueColumn";
 
                 if ($action == 'view') {
                     $rowData[$colKey] = $cellValue;
@@ -94,13 +155,29 @@ class RenderTableBehavior extends RenderBehavior {
             $settings['deleteFieldIds'][] = $fieldId;
             foreach ($rows as $rowId => $columns) {
                 foreach ($columns as $columnId => $obj) {
-                    $cellValue = $obj[$valueKey];
-                    if (strlen($cellValue) > 0) {
+                    $textValue = NULL;
+                    $numberValue = NULL;
+                    $decimalValue = NULL;
+                    if (array_key_exists('text_value', $obj)) {
+                        $textValue = $obj['text_value'];
+                    }
+                    if (array_key_exists('number_value', $obj)) {
+                        $numberValue = $obj['number_value'];
+                    }
+                    if (array_key_exists('decimal_value', $obj)) {
+                        $decimalValue = $obj['decimal_value'];
+                    }
+
+                    if (strlen($textValue) > 0 || strlen($numberValue) > 0 || strlen($decimalValue) > 0) {
                         $tableCells[] = [
                             $fieldKey => $fieldId,
                             $tableRowKey => $rowId,
                             $tableColumnKey => $columnId,
-                            $valueKey => $cellValue
+                            'text_value' => $textValue,
+                            'number_value' => $numberValue,
+                            'decimal_value' => $decimalValue,
+                            'field_type' => $obj['field_type'],
+                            'params' => $obj['params']
                         ];
                     }
                 }

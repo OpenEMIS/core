@@ -217,27 +217,30 @@ class StaffBehavioursTable extends ControllerActionTable
             $startDate = $academicPeriod->start_date;
             $endDate = $academicPeriod->end_date;
 
-            $todayDate = Date::now();
-            if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
-                $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
+            if ($action == 'add') {
+                $todayDate = Date::now();
 
-                // if today date is not within selected academic period, default date will be start of the year
-                if ($inputDate < $startDate || $inputDate > $endDate) {
-                    $attr['value'] = $startDate->format('d-m-Y');
+                if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
+                    $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
 
-                    // if today date is within selected academic period, default date will be current date
-                    if ($todayDate >= $startDate && $todayDate <= $endDate) {
+                    // if today date is not within selected academic period, default date will be start of the year
+                    if ($inputDate < $startDate || $inputDate > $endDate) {
+                        $attr['value'] = $startDate->format('d-m-Y');
+
+                        // if today date is within selected academic period, default date will be current date
+                        if ($todayDate >= $startDate && $todayDate <= $endDate) {
+                            $attr['value'] = $todayDate->format('d-m-Y');
+                        }
+                    }
+                } else {
+                    if ($todayDate <= $startDate || $todayDate >= $endDate) {
+                        $attr['value'] = $startDate->format('d-m-Y');
+                    } else {
                         $attr['value'] = $todayDate->format('d-m-Y');
                     }
                 }
-            } else {
-                if ($todayDate <= $startDate || $todayDate >= $endDate) {
-                    $attr['value'] = $startDate->format('d-m-Y');
-                } else {
-                    $attr['value'] = $todayDate->format('d-m-Y');
-                }
             }
-
+      
             $attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
             $attr['date_options']['todayBtn'] = false;
         }
