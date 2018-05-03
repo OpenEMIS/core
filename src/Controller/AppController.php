@@ -93,6 +93,7 @@ class AppController extends Controller
             'authenticate' => [
                 'Form' => [
                     'userModel' => 'User.Users',
+                    'finder' => 'auth',
                     'passwordHasher' => [
                         'className' => 'Fallback',
                         'hashers' => ['Default', 'Legacy']

@@ -1753,7 +1753,7 @@ trait MessagesTrait
         'CustomField' => [
             'text' => [
                 'minLength' => 'Text should be at least %d characters',
-                'maxLength' => 'Text should not be exceed %d characters',
+                'maxLength' => 'Text should not exceed %d characters',
                 'range' => 'Text should be between %d and %d characters'
             ],
             'number' => [
