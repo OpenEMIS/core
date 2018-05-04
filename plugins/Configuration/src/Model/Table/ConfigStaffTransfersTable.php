@@ -97,7 +97,8 @@ class ConfigStaffTransfersTable extends ControllerActionTable
                             ->find('order')
                             ->where([
                                 $this->InstitutionTypes->aliasField('id IN ') => $institutionTypeIds
-                            ]);
+                            ])
+                            ->all();
 
                         $entity->value = $institutionTypeResults;
                     }
@@ -284,6 +285,24 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         }
 
         return $enableStaffTransfer;
+    }
+
+    public function checkDifferentSectorTransferRestricted($institutionId = 0, $compareInstitutionId = 0)
+    {
+        $isRestricted = false;
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $restrictStaffTransferBySector = $ConfigItems->value('restrict_staff_transfer_by_sector');
+
+        $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
+        $sameSector = $ConfigStaffTransfersTable->compareInstitutionSector($institutionId, $compareInstitutionId);
+
+        // restrict staff transfer by sector is set to true and incoming & outgoing institution are not same sector
+        if ($restrictStaffTransferBySector && !$sameSector) {
+            $isRestricted = true;
+        }
+
+        return $isRestricted;
     }
 
     public function compareInstitutionSector($institutionId = 0, $compareInstitutionId = 0)
