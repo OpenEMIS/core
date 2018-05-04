@@ -512,7 +512,7 @@ class POCOR2813 extends AbstractMigration
         ]);
 
         $table
-            ->addColumn('type', 'string', [
+            ->addColumn('name', 'string', [
                 'null' => false,
                 'limit' => 45
             ])
@@ -789,16 +789,36 @@ class POCOR2813 extends AbstractMigration
             ->addColumn('file_name', 'string', [
                 'default' => null,
                 'limit' => 250,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('file_content', 'blob', [
                 'limit' => '4294967295',
                 'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
                 'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
             ])
             ->addIndex('applicant_id')
             ->addIndex('scholarship_id')
             ->addIndex('scholarship_attachment_type_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
 
         // End of Applicant ====================================================            
@@ -1445,7 +1465,7 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('scholarship_applications');
         $this->dropTable('scholarship_institution_choices');
         $this->dropTable('institution_choice_statuses');
-        $this->dropTable('scholarship_applications_attachments');
+        $this->dropTable('scholarship_application_attachments');
         $this->dropTable('scholarship_recipients');
         $this->dropTable('scholarship_recipient_activities');
         $this->dropTable('activity_statuses');

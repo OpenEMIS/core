@@ -93,15 +93,16 @@ class ScholarshipApplicationsController extends AppController
             // 'Qualifications' => ['text' => __('Qualifications')],
             'ScholarshipHistories' => ['text' => __('Scholarship History')], //page
             'ApplicationInstitutionChoices' => ['text' => __('Institution Choice')], //page
-            // 'Attachments' => ['text' => __('Attachments')], //page
+            'ScholarshipApplicationAttachments' => ['text' => __('Attachments')], //page
         ];
 
         foreach ($tabElements as $key => $value) {
             if ($key == $this->name) {
                 $tabElements[$key]['url']['action'] = 'ScholarshipApplications';
-                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][0] = 'view';
+                $tabElements[$key]['url'][1] = $queryString;
                 $tabElements[$key]['url']['queryString'] = $queryString;
-            } elseif (in_array($key, ['ScholarshipHistories', 'ApplicationInstitutionChoices'])) {
+            } elseif (in_array($key, ['ScholarshipHistories', 'ApplicationInstitutionChoices', 'ScholarshipApplicationAttachments'])) {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $key,
