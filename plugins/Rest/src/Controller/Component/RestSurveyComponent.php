@@ -255,7 +255,8 @@ class RestSurveyComponent extends Component
 
                 foreach ($fields as $field) {
                     $fieldId = $field->attributes()->id->__toString();
-                    $fieldType = $this->Field->get($fieldId)->field_type;
+                    $fieldEntity = $this->Field->get($fieldId);
+                    $fieldType = $fieldEntity->field_type;
                     $responseValue = urldecode($field->__toString());
 
                     $fieldTypeFunction = "upload" . Inflector::camelize(strtolower($fieldType));
@@ -274,6 +275,7 @@ class RestSurveyComponent extends Component
                         $extra['recordKey'] = $this->recordKey;
                         $extra['formKey'] = $this->formKey;
                         $extra['fieldKey'] = $this->fieldKey;
+                        $extra['fieldEntity'] = $fieldEntity;
 
                         $questionId = $extra['data']['survey_question_id'];
                         $show = $this->isRelevantQuestion($rules, $questionId, $answers, $responseValue);
@@ -433,6 +435,18 @@ class RestSurveyComponent extends Component
     {
         $data = $extra['data'];
         $value = $extra['value'];
+        $fieldEntity = $extra['fieldEntity'];
+
+        $cellValueColumn = 'text_value';
+        if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
+            $params = json_decode($fieldEntity->params, true);
+
+            if (array_key_exists('number', $params)) {
+                $cellValueColumn = 'number_value';
+            } elseif (array_key_exists('decimal', $params)) {
+                $cellValueColumn = 'decimal_value';
+            }
+        }
 
         $this->deleteTableCell($data, $extra);
         foreach ($field->children() as $row => $rowObj) {
@@ -445,8 +459,11 @@ class RestSurveyComponent extends Component
                         $cellData = array_merge($data, [
                             $this->tableColumnKey => $colId,
                             $this->tableRowKey => $rowId,
-                            'text_value' => $cellValue
+                            'text_value' => '',
+                            'number_value' => '',
+                            'decimal_value' => ''
                         ]);
+                        $cellData[$cellValueColumn] = $cellValue;
 
                         $this->saveTableCell($cellData, $extra);
                     }
@@ -887,7 +904,7 @@ class RestSurveyComponent extends Component
 
     private function decimal($field, $parentNode, $instanceId, $extra)
     {
-        $bindType = 'decimial';
+        $bindType = 'decimal';
         $constraint = null;
         $validationType = null;
         $validations = [];
@@ -922,7 +939,7 @@ class RestSurveyComponent extends Component
         }
 
         if (!is_null($validationType)) {
-            $bindType = "decimial".Inflector::camelize($validationType).$extra['index'];
+            $bindType = "decimal".Inflector::camelize($validationType).$extra['index'];
 
             // introduce subIndex to handle question inside repeater has validation
             $subIndex = $extra['subIndex'];
@@ -1059,6 +1076,101 @@ class RestSurveyComponent extends Component
             $fieldNode = $this->setModelNode($field, $extra['form'], $instanceId, $extra);
             $extra['form'] = null;  // set to null to skip adding into Head > Model > Instance
 
+            // start validation constraint
+            $inputType = 'string';
+            $constraint = null;
+            $validationType = null;
+            $validations = [];
+            $validationHint = '';
+
+            if ($field->has('params') && !empty($field->params)) {
+                $params = json_decode($field->params, true);
+
+                if (array_key_exists('number', $params)) {
+                    $inputType = 'integer';
+
+                    $validationRules = $params['number'];
+                    if (is_array($validationRules)) {
+                        foreach ($validationRules as $key => $value) {
+                            switch ($key) {
+                                case 'min_value':
+                                    $validationType = $key;
+                                    $validations['min_inclusive'] = $value;
+                                    $validationHint = $this->Field->getMessage('CustomField.number.minValue', ['sprintf' => $value]);
+                                    break;
+                                case 'max_value':
+                                    $validationType = $key;
+                                    $validations['max_inclusive'] = $value;
+                                    $validationHint = $this->Field->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
+                                    break;
+                                case 'range':
+                                    $validationType = $key;
+                                    $validations['min_inclusive'] = $value['lower'];
+                                    $validations['max_inclusive'] = $value['upper'];
+                                    $validationHint = $this->Field->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
+                                    break;
+                            }
+                        }
+                    }
+                } elseif (array_key_exists('decimal', $params)) {
+                    $inputType = 'decimal';
+
+                    $generateRangeValues = function($length, $precision = 0) {
+                        $range = str_repeat('9', $length);
+                        if ($precision > 0) {
+                            $range .= '.' . str_repeat('9', $precision);
+                        }
+                        return $range;
+                    };
+
+                    $validationRules = $params['decimal'];
+                    $length = $validationRules['length'];
+                    $precision = $validationRules['precision'];
+
+                    // for positive values
+                    $validations['min_inclusive'] = 0;
+                    $validations['max_inclusive'] = $generateRangeValues($length, $precision);
+
+                    if ($precision == 0) {
+                        $validationType = 'total_digits';
+                        $validationHint = $this->Field->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
+                    } else {
+                        $validationType = 'fraction_digits';
+                        $validations['fraction_digits'] = $precision;
+                        $validationHint = $this->Field->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
+                    }
+                }
+            }
+
+            if (!is_null($validationType)) {
+                $bindType = $inputType.Inflector::camelize($validationType).$extra['index'];
+
+                // introduce subIndex to handle question inside repeater has validation
+                $subIndex = $extra['subIndex'];
+                if (!empty($subIndex)) {
+                    $bindType .= "_$subIndex";
+                }
+                // End
+
+                $schemaNode = $extra['schema'];
+                $simpleType = $schemaNode->addChild('simpleType', null, NS_XSD);
+                $simpleType->addAttribute("name", $bindType);
+
+                $restriction = $simpleType->addChild('restriction', null, NS_XSD);
+                $restriction->addAttribute("base", "xf:".$inputType);
+
+                foreach ($validations as $key => $value) {
+                    $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                    $condition->addAttribute("value", $value);
+                }
+            } else {
+                $bindType = $inputType;
+            }
+
+            $extra['type'] = $bindType;
+            $extra['hint'] = !empty($validationHint) ? $validationHint : null;
+            // end validation constraint
+
             foreach ($tableRows as $row => $tableRow) {
                 $rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
                 $rowNode->addAttribute("id", $tableRow->id);
@@ -1068,10 +1180,14 @@ class RestSurveyComponent extends Component
                         $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
                         $columnNode->addAttribute("id", $col);
                         $cellType = 'output';
+                        $cellLabel = $tableRow->name;
+                        $cellHint = null;
                     } else {
                         $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
                         $columnNode->addAttribute("id", $tableColumn->id);
                         $cellType = 'input';
+                        $cellLabel = $tableRow->name;
+                        $cellHint = !is_null($extra['hint']) ? $extra['hint'] : null;
                     }
 
                     if ($row == 0) {
@@ -1080,7 +1196,10 @@ class RestSurveyComponent extends Component
                         $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
                         $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col])));
 
-                        $extra['type'] = 'string';
+                        $tbodyCell->addChild("label", htmlspecialchars($cellLabel, ENT_QUOTES), NS_XF);
+                        if (!empty($cellHint)) {
+                            $tbodyCell->addChild("hint", htmlspecialchars($cellHint, ENT_QUOTES), NS_XF);
+                        }
 
                         $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col]), $extra);
                     }
