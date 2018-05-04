@@ -18,6 +18,7 @@ class ScholarshipsTable extends AppTable
         $this->hasMany('ScholarshipAttachmentTypes', ['className' => 'Scholarship.ScholarshipAttachmentTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('EducationFieldOfStudies', [
                     'className' => 'Education.EducationFieldOfStudies',
                     'joinTable' => 'scholarships_education_field_of_studies',
@@ -45,5 +46,24 @@ class ScholarshipsTable extends AppTable
     {
         $query->contain(['EducationFieldOfStudies']);
         return $query;
+    }
+
+    public function getAvailableScholarships($options = [])
+    {
+        $list = [];
+        $applicantId = array_key_exists('applicant_id', $options) ? $options['applicant_id'] : '';
+        $financialTypeId = array_key_exists('financial_type_id', $options) ? $options['financial_type_id'] : '';
+
+        if ($applicantId && $financialTypeId) {
+            $list = $this->find('list')
+                ->notMatching('ScholarshipApplications', function ($q) use ($applicantId) {
+                        return $q->where([
+                            'ScholarshipApplications.applicant_id' => $applicantId
+                        ]);
+                     })
+                ->where([$this->aliasField('financial_assistance_type_id') => $financialTypeId])
+                ->toArray();
+        } 
+        return $list;
     }
 }

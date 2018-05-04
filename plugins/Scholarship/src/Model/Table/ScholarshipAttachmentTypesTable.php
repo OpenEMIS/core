@@ -11,6 +11,7 @@ class ScholarshipAttachmentTypesTable extends AppTable
     {
         parent::initialize($config);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
+        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
     public function validationDefault(Validator $validator)
@@ -18,5 +19,14 @@ class ScholarshipAttachmentTypesTable extends AppTable
         $validator = parent::validationDefault($validator);
 
         return $validator;
+    }
+
+    public function findAttachmentTypeOptionList(Query $query, array $options)
+    {
+        $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : 0;
+
+        $query->where(['scholarship_id' => $scholarshipId]);
+
+        return parent::findOptionList($query, $options);
     }
 }

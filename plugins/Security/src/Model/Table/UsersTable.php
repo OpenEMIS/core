@@ -55,6 +55,7 @@ class UsersTable extends AppTable
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ScholarshipHistories', ['className' => 'Scholarship.ScholarshipHistories', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
       
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
