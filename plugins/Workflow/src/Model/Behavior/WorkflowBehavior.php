@@ -801,7 +801,7 @@ class WorkflowBehavior extends Behavior
         } elseif ($action == 'add') {
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
             $entity = $attr['entity'];
-            $registryAlias = $model->registryAlias();
+            $registryAlias = $this->config('model');
             $workflowModelEntity = $this->getWorkflowSetup($registryAlias);
             // find the filter type column key
             $filterKey = null;
@@ -863,6 +863,8 @@ class WorkflowBehavior extends Behavior
             $attr['type'] = 'readonly';
             $attr['value'] = $assigneeId;
             $attr['attr']['value'] = $assigneeName;
+        } elseif ($action == 'approve') {
+            $attr['type'] = 'hidden';
         }
 
         return $attr;
@@ -1899,8 +1901,7 @@ class WorkflowBehavior extends Behavior
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
 
-            $registryAlias = $model->registryAlias();
-            $workflowModelEntity = $this->getWorkflowSetup($registryAlias);
+            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
 
             $assigneeId = $requestData['assignee_id'];
             $entity = $model
@@ -1950,12 +1951,12 @@ class WorkflowBehavior extends Behavior
             $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
             $results = $WorkflowModels
                 ->find()
-                ->where([$WorkflowModels->aliasField('model') => $model->registryAlias()])
+                ->where([$WorkflowModels->aliasField('model') => $this->config('model')])
                 ->first();
 
             if (!empty($results) && !empty($results->filter)) {
                 $filterAlias = $results->filter;
-                $modelAlias = $model->registryAlias();
+                $modelAlias = $this->config('model');
 
                 $filterKey = $this->getFilterKey($filterAlias, $this->config('model'));
                 if (empty($filterKey)) {
