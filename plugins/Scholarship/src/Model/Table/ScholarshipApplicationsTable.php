@@ -37,9 +37,20 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->belongsTo('Applicants', ['className' => 'Security.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices','dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments','dependent' => true, 'cascadeCallbacks' => true]);
-        
+        $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
+        $this->hasMany('InstitutionChoices', [
+            'className' => 'Scholarship.InstitutionChoices',
+            'foreignKey' => ['applicant_id', 'scholarship_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('ApplicationAttachments', [
+            'className' => 'Scholarship.ApplicationAttachments',
+            'foreignKey' => ['applicant_id', 'scholarship_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Workflow.Workflow');
     
