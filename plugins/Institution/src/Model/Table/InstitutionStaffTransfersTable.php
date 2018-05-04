@@ -151,15 +151,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        // start: restrict staff transfer by sector
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $restrictStaffTransferBySector = $ConfigItems->value('restrict_staff_transfer_by_sector');
-
         $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
-        $sameSector = $ConfigStaffTransfersTable->compareInstitutionSector($entity->previous_institution_id, $entity->new_institution_id);
-        // end: restrict staff transfer by sector
+        $isRestricted = $ConfigStaffTransfersTable->checkDifferentSectorTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
 
-        if ($restrictStaffTransferBySector && !$sameSector) {
+        if ($isRestricted) {
             // alert warning message if restrict staff transfer by sector is set to true and incoming & outgoing institution are not same sector
             $this->Alert->warning('StaffTransfers.restrictDifferentSectorTransfer', ['reset' => true]);
         } else {
