@@ -45,6 +45,9 @@ class ScholarshipAttachmentTypesController extends PageController
 
         $page->get('is_mandatory')
             ->setLabel('Mandatory');
+
+        $page->get('name')
+            ->setLabel('Type');
     }
     
     public function index()
@@ -54,7 +57,7 @@ class ScholarshipAttachmentTypesController extends PageController
 
         $page->exclude(['scholarship_id']);
 
-        $page->move('type')->after('is_mandatory');
+        $page->move('name')->after('is_mandatory');
     }
 
     public function add()

@@ -4,7 +4,7 @@ use Phinx\Migration\AbstractMigration;
 
 class POCOR2813 extends AbstractMigration
 {
-    private $workflowModelId = 19;
+    private $workflowModelId = 20;
 
     public function up()
     {
@@ -141,7 +141,7 @@ class POCOR2813 extends AbstractMigration
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => 'Workflow.onApprove',
                 'workflow_step_id' => $applicationReviewStatusId,
                 'next_workflow_step_id' => $applicationApprovedStatusId,
                 'created_user_id' => '1',
@@ -196,11 +196,11 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to academic_periods.id'
             ])
-            ->addColumn('date_applications_open', 'date', [
+            ->addColumn('date_application_open', 'date', [
                 'default' => null,
                 'null' => false
             ])
-            ->addColumn('date_applications_close', 'date', [
+            ->addColumn('date_application_close', 'date', [
                 'default' => null,
                 'null' => false
             ])
@@ -512,7 +512,7 @@ class POCOR2813 extends AbstractMigration
         ]);
 
         $table
-            ->addColumn('type', 'string', [
+            ->addColumn('name', 'string', [
                 'null' => false,
                 'limit' => 45
             ])
@@ -789,16 +789,36 @@ class POCOR2813 extends AbstractMigration
             ->addColumn('file_name', 'string', [
                 'default' => null,
                 'limit' => 250,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('file_content', 'blob', [
                 'limit' => '4294967295',
                 'default' => null,
+                'null' => false
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
                 'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
             ])
             ->addIndex('applicant_id')
             ->addIndex('scholarship_id')
             ->addIndex('scholarship_attachment_type_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
 
         // End of Applicant ====================================================            
@@ -1445,7 +1465,7 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('scholarship_applications');
         $this->dropTable('scholarship_institution_choices');
         $this->dropTable('institution_choice_statuses');
-        $this->dropTable('scholarship_applications_attachments');
+        $this->dropTable('scholarship_application_attachments');
         $this->dropTable('scholarship_recipients');
         $this->dropTable('scholarship_recipient_activities');
         $this->dropTable('activity_statuses');
