@@ -71,14 +71,13 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
+        $this->toggle('remove', false); // For Institution Survey, delete button will be disabled regardless settings in Workflow
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
         $events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
-        // $events['Restful.Model.index.workbench'] = 'indexAfterFindWorkbench';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
 
         return $events;
@@ -434,18 +433,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         ]);
         // this extra field is use by repeater type to know user click add on which repeater question
         $this->field('repeater_question_id');
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-        // For Institution Survey, delete button will be disabled regardless settings in Workflow
-        if (array_key_exists('remove', $buttons)) {
-            unset($buttons['remove']);
-        }
-
-        return $buttons;
     }
 
     public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request)
