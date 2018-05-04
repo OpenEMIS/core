@@ -166,7 +166,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         if (key != 'date_of_birth') {
                             params[key] = options['conditions'][key];
                         } else {
-                            params[key] = vm.formatDate(options['conditions'][key]);
+                            params[key] = vm.formatDateForSaving(options['conditions'][key]);
                         }
                         var replaceKey = '{'+key+'}';
                         replacement[replaceKey] = params[key];
