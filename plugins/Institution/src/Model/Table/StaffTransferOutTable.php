@@ -560,11 +560,29 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             if ($action == 'add') {
                 // using institution_staff entity
+                $conditions = [];
+                $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
+
+                // start: restrict staff transfer by sector
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $restrictStaffTransferBySector = $ConfigItems->value('restrict_staff_transfer_by_sector');
+                if ($restrictStaffTransferBySector) {
+                    if ($entity->has('institution_id')) {
+                        $institutionId = $entity->institution_id;
+                        $Institutions = TableRegistry::get('Institution.Institutions');
+                        $institutionSectorId = $Institutions->get($institutionId)->institution_sector_id;
+                        
+                        $conditions['institution_sector_id'] = $institutionSectorId;
+                    }
+                }
+
+                // end: restrict staff transfer by sector
+
                 $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'code_name'
                     ])
-                    ->where([$this->NewInstitutions->aliasField('id <>') => $entity->institution_id])
+                    ->where($conditions)
                     ->order($this->NewInstitutions->aliasField('code'))
                     ->toArray();
 

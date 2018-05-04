@@ -36,6 +36,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         getAddNewStaffConfig: getAddNewStaffConfig,
+        getStaffTransfersConfig: getStaffTransfersConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
@@ -746,6 +747,14 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return ConfigItems
             .select()
             .where({type: 'Add New Staff'})
+            .ajax({defer: true});
+    }
+
+    function getStaffTransfersConfig() {
+        return ConfigItems
+            .select()
+            .where({type: 'Staff Transfers',
+                    code: 'restrict_staff_transfer_by_sector'})
             .ajax({defer: true});
     }
 

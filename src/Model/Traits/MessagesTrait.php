@@ -778,6 +778,9 @@ trait MessagesTrait
                     'compareWithStartDate' => 'End Date should not be earlier than Start Date'
                 ]
         ],
+        'StaffTransfers' => [
+            'restrictDifferentSectorTransfer' => 'Transfer is not allowed between different institution sectors.'
+        ],
         'StaffTransferOut' => [
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
         ],
