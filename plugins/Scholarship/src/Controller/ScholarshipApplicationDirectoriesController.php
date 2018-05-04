@@ -49,7 +49,7 @@ class ScholarshipApplicationDirectoriesController extends PageController
             $toolbars->offsetUnset('add');
         }
 
-        if($currentAction == 'index') {
+        if ($currentAction == 'index') {
             $page->addToolbar('Back', [
                 'type' => 'element',
                 'element' => 'Page.button',
@@ -66,6 +66,30 @@ class ScholarshipApplicationDirectoriesController extends PageController
                 ],
                 'options' => []
             ]);
+        } elseif ($currentAction == 'view') {
+
+            $encodedApplicantId = $request->pass[0];
+            $applicantId = $page->decode($encodedApplicantId)['id']; // Page decode
+            $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
+
+            $page->addToolbar('Apply', [
+                'type' => 'element',
+                'element' => 'Page.button',
+                'data' => [
+                    'title' => __('Back'),
+                    'url' => [
+                        'plugin' => 'Scholarship',
+                        'controller' => 'ScholarshipApplications',
+                        'action' => 'ScholarshipApplications',
+                        'add',
+                        'queryString' => $queryString
+                    ],
+                    'iconClass' => 'fa kd-add',
+                    'linkOptions' => ['title' => __('Apply')]
+                ],
+                'options' => []
+            ]);
+
         }
     }
     

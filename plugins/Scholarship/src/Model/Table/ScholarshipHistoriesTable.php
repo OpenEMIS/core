@@ -27,7 +27,7 @@ class ScholarshipHistoriesTable extends AppTable
             ->contain([
                 'Applicants',
                 'Statuses',
-                'Scholarships.AcademicPeriods',
+                'Scholarships.AcademicPeriods'
             ])
             ->where([$this->aliasField('scholarship_id') . ' <> ' => $scholarshipId])
             ->order(['AcademicPeriods.name' => 'DESC']);

@@ -3,64 +3,124 @@ namespace Scholarship\Controller;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
-use App\Model\Traits\OptionsTrait;
 
-class ScholarshipHistoriesController extends PageController
+class ApplicationAttachmentsController extends PageController
 {
-
     public function initialize()
     {
-        parent::initialize();
+        parent::initialize();  
         $this->loadModel('Security.Users');
+        $this->loadModel('Scholarship.ApplicationAttachments');
+        $this->loadModel('Scholarship.ScholarshipAttachmentTypes');
+        $this->Page->loadElementsFromTable($this->ApplicationAttachments);
+        
     }
 
     public function implementedEvents()
     {
         $event = parent::implementedEvents();
+        $event['Controller.Page.onRenderMandatory'] = 'onRenderMandatory';
         return $event;
     }
 
     public function beforeFilter(Event $event)
     {   
         $page = $this->Page;
-        
-        $queryString = $this->request->query['queryString'];
-        $applicantId = $this->paramsDecode($queryString)['applicant_id'];
-        $scholarshipId = $this->paramsDecode($queryString)['scholarship_id'];
-        $userName = $this->Users->get($applicantId)->name;
-        
-         parent::beforeFilter($event);
-        // set header
-        $page->setHeader($userName . ' - ' . __('Institution Choices'));
 
-        $page->setQueryString('applicant_id', $applicantId); // will automatically build into query if the name matches
-        $page->setQueryString('scholarshipId', $scholarshipId);
-       
-        $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'index']);
-        $page->addCrumb('Applicants', ['plugin' => 'Scholarship','controller' => 'ScholarshipApplications', 'action' => 'ScholarshipApplications', 'index', 'queryString' => $queryString]);
-        $page->addCrumb($userName);
-        $page->addCrumb('Scholarship History');
-      
-        $page->disable(['add', 'edit', 'delete', 'view']);
+        parent::beforeFilter($event);
+
+        $page->get('scholarship_attachment_type_id')
+            ->setLabel('Type');
     
-        $this->setupTabElements(['queryString' => $queryString]);
     }
-    
+
     public function index()
-    {         
+    {
         $page = $this->Page;
         $page->setAutoContain(false);
-        
-        parent::index();
+        parent::index();   
 
-        $this->reorderFields();
+        $page->exclude(['applicant_id', 'scholarship_id', 'file_name', 'file_content']);
+
+        $page->addNew('mandatory');
+
+        $page->addNew('uploaded_by');
+        $page->get('uploaded_by')->setDisplayFrom('created_user.name');
+
+        $page->addNew('uploaded_on');
+        $page->get('uploaded_on')->setDisplayFrom('created');
+
+        $page->move('mandatory')->first();
     }
 
-    public function setupTabElements($options)
-     {  
+    public function add()
+    {
+        parent::add();
+        $this->addEdit();
+    }
+
+    public function edit($id)
+    {
+        parent::edit($id);
+        $this->addEdit();
+    }
+
+    private function addEdit()
+    {
+        $page = $this->Page;
+
+        $page->exclude(['file_name']);
+        $scholarshipId = $page->getQueryString('scholarship_id');
+
+        $attachmentTypesOption = $this->ScholarshipAttachmentTypes
+            ->find('attachmentTypeOptionList', [
+                'defaultOption' => false,
+                'scholarship_id' => $scholarshipId
+            ])
+            ->toArray();
+
+        $page->get('scholarship_attachment_type_id')
+            ->setControlType('select')
+            ->setOptions($attachmentTypesOption); 
+
+    }
+    
+
+
+    public function setBreadCrumb($options)
+    {
+        $page = $this->Page;
+        $plugin = $this->plugin;
+        $name = $this->name;
+        
+        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+
+
+        if ($plugin == 'Scholarship') {
+            $page->addCrumb('Scholarships', [
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'index'
+            ]);
+
+            $page->addCrumb('Applicants', [
+                    'plugin' => 'Scholarship',
+                    'controller' => 'ScholarshipApplications',
+                    'action' => 'index'
+            ]);
+
+            $page->addCrumb($userName);
+            $page->addCrumb('Attachments');
+           
+        } else if ($plugin == 'Profile') {
+    
+        } 
+    }
+
+     public function setupTabElements($options)
+     {
         $page = $this->Page;
         $plugin = $this->plugin;
         $queryString = array_key_exists('queryString', $options) ? $options['queryString'] : '';
@@ -95,6 +155,7 @@ class ScholarshipHistoriesController extends PageController
                     'action' => 'index',
                     'queryString' => $queryString
                 ];
+                
             } else {
                 $url = [
                     'plugin' => $plugin,
@@ -103,7 +164,7 @@ class ScholarshipHistoriesController extends PageController
                     'index',
                     'queryString' => $queryString
                 ];
-                // exceptions
+            
                 if ($action == 'UserNationalities') {
                     $url['action'] = 'Nationalities';
                 }
@@ -119,26 +180,19 @@ class ScholarshipHistoriesController extends PageController
                 ->setUrl($tabAttr['url']);
         }
         // set active tab
-        $page->getTab('ScholarshipHistories')->setActive('true');
+        $page->getTab('ScholarshipApplicationAttachments')->setActive('true');
     }
 
-    private function reorderFields()
+    public function onRenderMandatory(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
-        $page->exclude(['applicant_id', 'assignee_id', 'requested_amount']);
-
-        $page->addNew('academic_period');
-        $page->get('academic_period')->setDisplayFrom('scholarship.academic_period.name');
-
-        $page->addNew('comment');
-        $page->get('comment')->setDisplayFrom('scholarship.comment');
-
-        
-        $page->move('status_id')->first();
-        $page->move('academic_period')->after('status_id');
+        if ($page->is(['index'])) {
+            if($entity->scholarship_attachment_type->is_mandatory == 1) {
+                return "<i class='fa fa-check'></i>";
+            } else {
+                return "<i class='fa fa-close'></i>";
+            }
+        }
     }
-
-
-    
 }
