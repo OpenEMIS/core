@@ -884,6 +884,34 @@ class UsersTable extends AppTable
         return $data;
     }
 
+    public function findAuth(Query $query, array $options)
+    {
+        $query
+            ->select([
+                'id',
+                'username',
+                'password',
+                'openemis_no',
+                'first_name',
+                'middle_name',
+                'third_name',
+                'last_name',
+                'preferred_name',
+                'super_admin',
+                'status',
+                'last_login',
+                'preferred_language',
+                'is_student',
+                'is_staff',
+                'is_guardian'
+            ])
+            ->where([
+                'status' => 1
+            ]);
+
+        return $query;
+    }
+
     public function findStaff(Query $query, array $options)
     {
         // is_staff == 1
