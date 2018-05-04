@@ -4,7 +4,7 @@ use Phinx\Migration\AbstractMigration;
 
 class POCOR2813 extends AbstractMigration
 {
-    private $workflowModelId = 19;
+    private $workflowModelId = 20;
 
     public function up()
     {
@@ -141,7 +141,7 @@ class POCOR2813 extends AbstractMigration
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => NULL,
+                'event_key' => 'Workflow.onApprove',
                 'workflow_step_id' => $applicationReviewStatusId,
                 'next_workflow_step_id' => $applicationApprovedStatusId,
                 'created_user_id' => '1',
@@ -196,11 +196,11 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to academic_periods.id'
             ])
-            ->addColumn('date_applications_open', 'date', [
+            ->addColumn('date_application_open', 'date', [
                 'default' => null,
                 'null' => false
             ])
-            ->addColumn('date_applications_close', 'date', [
+            ->addColumn('date_application_close', 'date', [
                 'default' => null,
                 'null' => false
             ])

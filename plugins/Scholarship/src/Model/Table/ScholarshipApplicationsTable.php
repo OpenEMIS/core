@@ -20,6 +20,15 @@ use Cake\ORM\ResultSet;
 class ScholarshipApplicationsTable extends ControllerActionTable
 {
     private $applicantName = null;
+   
+    private $workflowEvents = [
+        [
+            'value' => 'Workflow.onApprove',
+            'text' => 'Approval of Scholaship Application',
+            'description' => 'Performing this action will create an identical record in the ScholarshipRecipientTable.',
+            'method' => 'OnApprove'
+        ]
+    ];
 
     public function initialize(array $config)
     {
@@ -304,9 +313,52 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         if ($action == 'add') {
             $financialAssistanceTypeOptions = TableRegistry::get('Scholarship.FinancialAssistanceTypes')->getList()->toArray();
 
+             if (!empty($request->data[$this->alias()]['financial_assistance_type_id'])) {
+                $financialTypeId = $request->data[$this->alias()]['financial_assistance_type_id'];
+
+                 switch ($financialAssistanceTypeOptions[$financialTypeId]) {
+                    case 'Scholarship':
+                        // No implementation
+                        break;
+                    case 'Loan':
+                        $this->field('requested_amount', [
+                            'visible' => true
+                            // 'after' => 'scholarship_id'
+                        ]);
+                        $this->field('interest_rate', [
+                            'type' => 'disabled',
+                            'attr' => ['label' => __('Interest rate %')]
+                            // 'after' => 'requested_amount'
+                        ]);
+                        $this->field('interest_rate_type', [
+                            'type' => 'disabled',
+                            'attr' => ['label' => __('Interest Rate Type')]
+                            // 'after' => 'interest_rate'
+                        ]);
+                        $this->field('payment_frequency_id', [
+                            'type' => 'disabled',
+                            'attr' => ['label' => __('Payment Frequency')]
+                            // 'after' => 'interest_rate_type'
+                        ]);
+                        $this->field('loan_term', [
+                            'type' => 'disabled',
+                            'attr' => ['label' => __('Loan Term')]
+                            // 'after' => 'payment_frequency_id'
+                        ]); 
+                        break;
+                    case 'Grant':
+                        // No implementation
+                        break;
+                    case 'Workstudy':
+                        // No implementation
+                        break;
+                }
+            }
+
             $attr['type'] = 'select';
             $attr['options'] = $financialAssistanceTypeOptions;
             $attr['onChangeReload'] = 'changeFinancialAssistanceTypeId';
+
         }
 
         return $attr;
@@ -324,16 +376,21 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['financial_assistance_type_id'])) {
+            $scholarshipOptions = [];
+
+            if (!empty($request->data[$this->alias()]['financial_assistance_type_id']) && !empty($request->data[$this->alias()]['applicant_id'])) {
                 
-                // $applicantId = $request->data[$this->alias()]['applicant_id'];
-                $selectedFinancialType = $request->data[$this->alias()]['financial_assistance_type_id'];
-                $scholarshipOptions = $this->Scholarships->getAvailableScholarships($selectedFinancialType);
-                
-                $attr['type'] = 'select';
-                $attr['onChangeReload'] = true;
-                $attr['options'] = $scholarshipOptions;
+                $options = [
+                    'applicant_id' => $request->data[$this->alias()]['applicant_id'],
+                    'financial_type_id' => $request->data[$this->alias()]['financial_assistance_type_id']
+                ];
+
+                $scholarshipOptions = $this->Scholarships->getAvailableScholarships($options);
             }
+
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $scholarshipOptions;
         }
         return $attr;
     }
@@ -341,7 +398,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-
             $attr['type'] = 'disabled';
             
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
@@ -360,7 +416,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function onUpdateFieldDescription(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-           
             $attr['type'] = 'disabled';
             
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
@@ -419,6 +474,54 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 $attr['attr']['value'] = $scholarshipEntity->requirement;
             }
         }
+        return $attr;
+    }
+
+    public function onUpdateFieldInterestRate(Event $event, array $attr, $action, $request)
+    {
+
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['scholarship_id'])) {
+                $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
+                $attr['attr']['value'] = 'TBC';
+           }
+        }
+
+        return $attr;
+    }
+    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['scholarship_id'])) {
+                $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
+                $attr['attr']['value'] = 'TBC';
+            }
+        }
+
+        return $attr;
+    }
+    public function onUpdateFieldPaymentFrequencyId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['scholarship_id'])) {
+                $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
+                $attr['attr']['value'] = 'TBC';
+            }
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldloanTerm(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['scholarship_id'])) {
+
+                $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
+                $attr['attr']['value'] = 'TBC';
+            }
+        }
+
         return $attr;
     }
 
@@ -487,4 +590,22 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
         return $buttons;
     }
+
+
+    public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+
+        $ScholarshipRecipient = TableRegistry::get('Institution.ScholarshipRecipient');
+        $entity = $this->get($id);
+
+        $recipient = [
+            'recipient_id' => $entity->applicant_id,
+            'scholarship_id' => $entity->scholarship_id,
+            'approved_amount' => 0
+        ];
+
+        $newEntity = $ScholarshipRecipient->newEntity($recipient);
+        $ScholarshipRecipient->save($newEntity);
+    }
+
 }

@@ -48,12 +48,19 @@ class ScholarshipsTable extends AppTable
         return $query;
     }
 
-    public function getAvailableScholarships($financialTypeId = null)
+    public function getAvailableScholarships($options = [])
     {
         $list = [];
+        $applicantId = array_key_exists('applicant_id', $options) ? $options['applicant_id'] : '';
+        $financialTypeId = array_key_exists('financial_type_id', $options) ? $options['financial_type_id'] : '';
 
-        if (!is_null($financialTypeId)) {
-            $list = $this->find('list')  
+        if ($applicantId && $financialTypeId) {
+            $list = $this->find('list')
+                ->notMatching('ScholarshipApplications', function ($q) use ($applicantId) {
+                        return $q->where([
+                            'ScholarshipApplications.applicant_id' => $applicantId
+                        ]);
+                     })
                 ->where([$this->aliasField('financial_assistance_type_id') => $financialTypeId])
                 ->toArray();
         } 
