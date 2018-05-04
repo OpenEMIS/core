@@ -236,7 +236,7 @@ class ValidationBehavior extends Behavior
 
         if($count){
             $max = $query->max('total_number_of_students');
-            $validationErrorMsg = $model->getMessage('Configuration.ConfigMaxNumberOfStudents.maxStudentLimitPerClass.message', ['sprintf' => [$max['total_number_of_students'], $MaxStudentSysConfig]]);
+            $validationErrorMsg = $model->getMessage('Configuration.ConfigStudentSettings.max_students_per_class.maxStudentLimit', ['sprintf' => [$max['total_number_of_students'], $MaxStudentSysConfig]]);
         }
         if (!empty($validationErrorMsg)) {
             return $validationErrorMsg;
@@ -266,7 +266,7 @@ class ValidationBehavior extends Behavior
 
         if($count){
             $max = $query->max('total_number_of_students');
-            $validationErrorMsg = $model->getMessage('Configuration.ConfigMaxNumberOfStudents.maxStudentLimitPerSubject.message', ['sprintf' => [$max['total_number_of_students'], $MaxStudentSysConfig]]);
+            $validationErrorMsg = $model->getMessage('Configuration.ConfigStudentSettings.max_students_per_subject.maxStudentLimit', ['sprintf' => [$max['total_number_of_students'], $MaxStudentSysConfig]]);
         }
         if (!empty($validationErrorMsg)) {
             return $validationErrorMsg;
