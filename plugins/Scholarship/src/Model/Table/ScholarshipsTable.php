@@ -18,6 +18,7 @@ class ScholarshipsTable extends AppTable
         $this->hasMany('ScholarshipAttachmentTypes', ['className' => 'Scholarship.ScholarshipAttachmentTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('EducationFieldOfStudies', [
                     'className' => 'Education.EducationFieldOfStudies',
                     'joinTable' => 'scholarships_education_field_of_studies',
@@ -45,5 +46,17 @@ class ScholarshipsTable extends AppTable
     {
         $query->contain(['EducationFieldOfStudies']);
         return $query;
+    }
+
+    public function getAvailableScholarships($financialTypeId = null)
+    {
+        $list = [];
+
+        if (!is_null($financialTypeId)) {
+            $list = $this->find('list')  
+                ->where([$this->aliasField('financial_assistance_type_id') => $financialTypeId])
+                ->toArray();
+        } 
+        return $list;
     }
 }

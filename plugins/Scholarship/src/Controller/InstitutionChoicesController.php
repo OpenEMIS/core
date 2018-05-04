@@ -168,7 +168,7 @@ class InstitutionChoicesController extends PageController
             // 'Qualifications' => ['text' => __('Qualifications')],
             'ScholarshipHistories' => ['text' => __('Scholarship History')], //page
             'ApplicationInstitutionChoices' => ['text' => __('Institution Choice')], //page
-            // 'ScholarshipApplicationAttachments' => ['text' => __('Attachments')], //page
+            'ScholarshipApplicationAttachments' => ['text' => __('Attachments')], //page
         ];
 
         foreach ($tabElements as $action => &$obj) {
@@ -180,7 +180,7 @@ class InstitutionChoicesController extends PageController
                     'view',
                     'queryString' => $queryString
                 ];
-            } elseif (in_array($action, ['ScholarshipHistories', 'ApplicationInstitutionChoices'])) {
+            } elseif (in_array($action, ['ScholarshipHistories', 'ApplicationInstitutionChoices', 'ScholarshipApplicationAttachments'])) {
                 $url = [
                     'plugin' => $plugin,
                     'controller' => $action,

@@ -28,4 +28,11 @@ class ScholarshipApplicationDirectoriesTable extends AppTable
 
         return $validator;
     }
+
+    public function findIndex(Query $query, array $options)
+    {   
+        $query->where([$this->aliasField('super_admin') => 0]);
+
+        return $query;
+    }
 }
