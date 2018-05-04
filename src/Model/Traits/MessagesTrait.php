@@ -2108,6 +2108,14 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This webhook name already exists in the system',
                 ],
+            ],
+            'ConfigStudentSettings' => [
+                'max_students_per_class' => [
+                    'maxStudentLimit' => 'Numeric Value should be between %s to %s'
+                ],
+                'max_students_per_subject' => [
+                    'maxStudentLimit' => 'Numeric Value should be between %s to %s'
+                ],
             ]
         ],
         'Alert' => [
