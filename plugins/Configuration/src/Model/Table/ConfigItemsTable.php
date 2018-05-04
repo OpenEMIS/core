@@ -712,16 +712,4 @@ class ConfigItemsTable extends AppTable
         ]
     ];
 
-    private $validateStudentSettings = [
-        'num' => [
-            'rule'  => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 100',
-            'last' => true
-        ],
-        'bet' => [
-            'rule'  => ['range', 0, 100],
-            'message' => 'Numeric Value should be between 0 to 100',
-            'last' => true
-        ]
-    ];
 }
