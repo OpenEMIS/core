@@ -40,21 +40,21 @@ class AppraisalNumberAnswersTable extends AppTable
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
-        $AppraisalNumbers = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
         return $validator
             ->add('answer', 'validation_rule', [
-                'rule' => function ($value, $context) use ($AppraisalNumbers) {
-                    $appraisalNumber = $AppraisalNumbers
+                'rule' => function ($value, $context) {
+                    $AppraisalNumbersTable = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
+                    $appraisalNumber = $AppraisalNumbersTable
                         ->find()
                         ->select([
-                            $AppraisalNumbers->aliasField('min_inclusive'),
-                            $AppraisalNumbers->aliasField('min_exclusive'),
-                            $AppraisalNumbers->aliasField('max_inclusive'),
-                            $AppraisalNumbers->aliasField('max_exclusive'),
-                            $AppraisalNumbers->aliasField('validation_rule')
+                            $AppraisalNumbersTable->aliasField('min_inclusive'),
+                            $AppraisalNumbersTable->aliasField('min_exclusive'),
+                            $AppraisalNumbersTable->aliasField('max_inclusive'),
+                            $AppraisalNumbersTable->aliasField('max_exclusive'),
+                            $AppraisalNumbersTable->aliasField('validation_rule')
                         ])
                         ->where([
-                            $AppraisalNumbers->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id']
+                            $AppraisalNumbersTable->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id']
                         ])
                         ->first();
 
@@ -92,7 +92,6 @@ class AppraisalNumberAnswersTable extends AppTable
                                     return true;
                                 }
                                 return sprintf(__('This field must be in between %d to %d'), $validateLowerLimit, $validateUpperLimit);
-                                break;
                             default:
                                 return true;
                         }
