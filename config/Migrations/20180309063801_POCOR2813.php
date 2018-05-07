@@ -20,7 +20,7 @@ class POCOR2813 extends AbstractMigration
                 'is_school_based' => '0',
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
-            ],
+            ]
         ];
         $this->insert('workflow_models', $workflowModelData);
 
@@ -32,7 +32,7 @@ class POCOR2813 extends AbstractMigration
                 'workflow_model_id' => $this->workflowModelId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
-            ],
+            ]
         ];
         $this->insert('workflows', $workflowData);
 
@@ -47,8 +47,8 @@ class POCOR2813 extends AbstractMigration
             [
                 'name' => 'Open',
                 'category' => '1',
-                'is_editable' => '0',
-                'is_removable' => '0',
+                'is_editable' => '1',
+                'is_removable' => '1',
                 'is_system_defined' => '1',
                 'workflow_id' => $workflowId,
                 'created_user_id' => '1',
@@ -163,15 +163,16 @@ class POCOR2813 extends AbstractMigration
         ];
         $this->insert('workflow_actions', $workflowActionData);
 
+        // scholarships
         $table = $this->table('scholarships', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the scholarships'
+            'comment' => 'This table contains the list of scholarships'
         ]);
 
         $table
             ->addColumn('code', 'string', [
                 'null' => false,
-                'limit' => 45
+                'limit' => 50
             ])
             ->addColumn('name', 'string', [
                 'null' => false,
@@ -181,21 +182,6 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('financial_assistance_type_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to financial_assistance_types.id'
-            ])
-            ->addColumn('funding_source_id', 'integer', [ 
-                'null' => true,
-                'limit' => 11,
-                'comment' => 'links to funding_sources.id'
-            ])
-            ->addColumn('academic_period_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to academic_periods.id'
-            ])
             ->addColumn('date_application_open', 'date', [
                 'default' => null,
                 'null' => false
@@ -204,7 +190,7 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addColumn('max_award_amount', 'decimal', [
+            ->addColumn('maximum_award_amount', 'decimal', [
                 'default' => null,
                 'precision' => 15,
                 'scale' => 2,
@@ -218,13 +204,28 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 2,
                 'null' => true
             ])
-             ->addColumn('requirement', 'text', [
+             ->addColumn('requirements', 'text', [
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('instruction', 'text', [
+            ->addColumn('instructions', 'text', [
                 'default' => null,
                 'null' => true
+            ])
+            ->addColumn('financial_assistance_type_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to financial_assistance_types.id'
+            ])
+            ->addColumn('scholarship_funding_source_id', 'integer', [ 
+                'null' => true,
+                'limit' => 11,
+                'comment' => 'links to scholarship_funding_sources.id'
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to academic_periods.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -245,16 +246,16 @@ class POCOR2813 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('financial_assistance_type_id')
-            ->addIndex('funding_source_id')
+            ->addIndex('scholarship_funding_source_id')
             ->addIndex('academic_period_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
 
-        // Financial Assistance Type
+        // financial_assistance_types
         $table = $this->table('financial_assistance_types', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the list of available custom financial assistance types'
+            'comment' => 'This table contains the fixed list of financial assistance types used in scholarships'
         ]);
 
         $table
@@ -275,25 +276,18 @@ class POCOR2813 extends AbstractMigration
                     'name' => 'Scholarship'
                 ],
                 [
-                    'code' => 'GRANT',
-                    'name' => 'Grant'
-                ],
-                [
                     'code' => 'LOAN',
                     'name' => 'Loan'
-                ],
-                [
-                    'code' => 'WORKSTUDY',
-                    'name' => 'Workstudy'
                 ]
             ])
             ->save();
 
-        // Funding sources
-        $table = $this->table('funding_sources', [
-                'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains types of funding sources'
-            ]);
+        // scholarship_funding_sources
+        $table = $this->table('scholarship_funding_sources', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This field options table contains the list of funding sources used in scholarships'
+        ]);
+
         $table
             ->addColumn('name', 'string', [
                 'default' => null,
@@ -351,18 +345,16 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end funding sources
 
-
-        // scholarships_education_field_of_studies
-        $table = $this->table('scholarships_education_field_of_studies', [
+        // scholarships_field_of_studies
+        $table = $this->table('scholarships_field_of_studies', [
             'id' => false,
             'primary_key' => [
                 'scholarship_id',
                 'education_field_of_study_id',
             ],
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the education field of studies for the scholarships'
+            'comment' => 'This table contains the list of field of studies linked to specific scholarship'
         ]);
 
         $table
@@ -381,14 +373,13 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('scholarship_id')
             ->addIndex('education_field_of_study_id')
             ->save();
-        // end scholarships_education_field_of_studies
 
-
-        // payment frequencies 
-        $table = $this->table('payment_frequencies', [
+        // scholarship_payment_frequencies
+        $table = $this->table('scholarship_payment_frequencies', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains payment frequencies'
+                'comment' => 'This field options table contains the list of payment frequencies used in scholarships'
             ]);
+
         $table
             ->addColumn('name', 'string', [
                 'default' => null,
@@ -446,14 +437,13 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end payment frequencies    
 
-       // Table for Financial Assistance Type (LOANS)
+       // scholarship_loans
         $table = $this->table('scholarship_loans', [
             'id' => false,
             'primary_key' => ['scholarship_id'],
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the loan details for a specific scholarship'
+            'comment' => 'This table contains the loan details linked to specific scholarship'
         ]);
         
         $table
@@ -470,16 +460,16 @@ class POCOR2813 extends AbstractMigration
             ->addColumn('interest_rate_type', 'integer', [
                 'limit' => 1,
                 'null' => true,
-                'comment' => '0 - Fixed, 1 - Variable'
-            ])
-            ->addColumn('payment_frequency_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to payment_frequencies.id'
+                'comment' => '0 -> Fixed, 1 -> Variable'
             ])
             ->addColumn('loan_term', 'integer', [
-                'limit' => 2,
+                'limit' => 3,
                 'null' => true
+            ])
+            ->addColumn('scholarship_payment_frequency_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to scholarship_payment_frequencies.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -500,21 +490,21 @@ class POCOR2813 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('scholarship_id')
-            ->addIndex('payment_frequency_id')
+            ->addIndex('scholarship_payment_frequency_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
 
-        // Scholarship Attachment Types
+        // scholarship_attachment_types
         $table = $this->table('scholarship_attachment_types', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the types of attachments for the scholarships'
+            'comment' => 'This table contains the list of attachment types linked to specific scholarship'
         ]);
 
         $table
             ->addColumn('name', 'string', [
                 'null' => false,
-                'limit' => 45
+                'limit' => 50
             ])
             ->addColumn('is_mandatory', 'integer', [
                 'default' => '0',
@@ -548,14 +538,15 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('scholarship_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
-            ->save();        
+            ->save();
 
-        // scholarship applications
+        // Start of applicant =====================================================
+        // scholarship_applications
         $table = $this->table('scholarship_applications', [
             'id' => false,
             'primary_key' => ['applicant_id', 'scholarship_id'],
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the scholarship applications'
+            'comment' => 'This table contains the list of applications linked to specific scholarship'
         ]);
         $table
             ->addColumn('applicant_id', 'integer', [
@@ -568,6 +559,12 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to scholarships.id'
             ])
+            ->addColumn('requested_amount', 'decimal', [
+                'default' => null,
+                'precision' => 15,
+                'scale' => 2,
+                'null' => true
+            ])
             ->addColumn('status_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -579,12 +576,6 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to security_users.id'
-            ])
-            ->addColumn('requested_amount', 'decimal', [
-                'default' => null,
-                'precision' => 15,
-                'scale' => 2,
-                'null' => true
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -606,59 +597,38 @@ class POCOR2813 extends AbstractMigration
             ])
             ->addIndex('applicant_id')
             ->addIndex('scholarship_id')
-            ->addIndex('assignee_id')
             ->addIndex('status_id')
+            ->addIndex('assignee_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-            // end scholarship applications
  
-        $table = $this->table('scholarship_institution_choices', [
+        // scholarship_application_institution_choices
+        $table = $this->table('scholarship_application_institution_choices', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the institution choices of the scholarship application'
+            'comment' => 'This table contains the list of institution choices linked to specific scholarship application'
         ]);
 
         $table
-            ->addColumn('location_type_id', 'integer', [
-                'limit' => 1,
+            ->addColumn('location_type', 'string', [
+                'limit' => 20,
                 'null' => false,
-                'comment' => '0 - Domestic, 1 - International'
-            ])
-            ->addColumn('country_id', 'integer', [     // Will be set to 0 if it's domestic
-                'default' => 0,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to countries.id'
+                'comment' => 'DOMESTIC, INTERNATIONAL'
             ])
             ->addColumn('institution_name', 'string', [ 
                 'default' => null,
                 'limit' => 150,
                 'null' => true
             ])
-            ->addColumn('institution_choice_status_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to institution_choice_statuses.id' 
-            ])
             ->addColumn('estimated_cost', 'decimal', [
                 'default' => null,
                 'precision' => 15,
                 'scale' => 2,
             ])
-            ->addColumn('education_field_of_study_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to education_field_of_studies.id'
-            ])
             ->addColumn('course_name', 'string', [
                 'default' => null,
                 'limit' => 150,
                 'null' => false
-            ])
-            ->addColumn('level_of_study_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to qualification_levels.id'
             ])
             ->addColumn('start_date', 'date', [
                 'default' => null,
@@ -667,6 +637,38 @@ class POCOR2813 extends AbstractMigration
             ->addColumn('end_date', 'date', [
                 'default' => null,
                 'null' => false
+            ])
+            ->addColumn('is_selected', 'integer', [    // Applicant selection
+                'default' => 0,
+                'null' => false,
+                'limit' => 1,
+                'comment' => '0 -> No, 1 -> Yes'
+            ])
+            ->addColumn('order', 'integer', [
+                'default' => null,
+                'limit' => 3,
+                'null' => false
+            ])
+            ->addColumn('country_id', 'integer', [     // Will be set to 0 if it's domestic
+                'default' => 0,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to countries.id'
+            ])
+            ->addColumn('scholarship_institution_choice_status_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to scholarship_institution_choice_statuses.id' 
+            ])
+            ->addColumn('education_field_of_study_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to education_field_of_studies.id'
+            ])
+            ->addColumn('qualification_level_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to qualification_levels.id'
             ])
             ->addColumn('applicant_id', 'integer', [
                 'null' => false,
@@ -677,17 +679,6 @@ class POCOR2813 extends AbstractMigration
                 'null' => false,
                 'limit' => 11,
                 'comment' => 'links to scholarships.id'
-            ])
-            ->addColumn('selection_id', 'integer', [    //Applicant selection
-                'default' => 0,
-                'null' => false,
-                'limit' => 1,
-                'comment' => '0 - No, 1 - Yes'
-            ])
-            ->addColumn('order', 'integer', [
-                'default' => null,
-                'limit' => 3,
-                'null' => false
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -708,18 +699,19 @@ class POCOR2813 extends AbstractMigration
                 'null' => false
             ])
             ->addIndex('country_id')
-            ->addIndex('institution_choice_status_id')
+            ->addIndex('scholarship_institution_choice_status_id')
             ->addIndex('education_field_of_study_id')
-            ->addIndex('level_of_study_id')
+            ->addIndex('qualification_level_id')
             ->addIndex('applicant_id')
             ->addIndex('scholarship_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
 
-        $table = $this->table('institution_choice_statuses', [
+        // scholarship_institution_choice_statuses
+        $table = $this->table('scholarship_institution_choice_statuses', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the list of available custom financial assistance types'
+            'comment' => 'This table contains the fixed list of statuses for institution choices in scholarship applications'
         ]);
 
         $table
@@ -736,7 +728,7 @@ class POCOR2813 extends AbstractMigration
         $table
             ->insert([
                 [
-                    'code' => 'PENDING ACCEPTANCE',
+                    'code' => 'PENDING_ACCEPTANCE',
                     'name' => 'Pending Acceptance'
                 ],
                 [
@@ -744,11 +736,11 @@ class POCOR2813 extends AbstractMigration
                     'name' => 'Accepted'
                 ],
                 [
-                    'code' => 'CONDITIONAL OFFER',
+                    'code' => 'CONDITIONAL_OFFER',
                     'name' => 'Conditional Offer'
                 ],
                 [
-                    'code' => 'UNCONDITIONAL OFFER',
+                    'code' => 'UNCONDITIONAL_OFFER',
                     'name' => 'Unconditional Offer'
                 ],
                 [
@@ -758,33 +750,18 @@ class POCOR2813 extends AbstractMigration
             ])
             ->save();
 
+        // scholarship_application_attachments
         $table = $this->table('scholarship_application_attachments', [
             'id' => false,
             'primary_key' => 'id',
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the attachments for the scholarship applications'
+            'comment' => 'This table contains the list of attachments linked to specific scholarship application'
         ]);
 
         $table
             ->addColumn('id', 'uuid', [
                 'default' => null,
                 'null' => false
-            ])
-            ->addColumn('applicant_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to security_users.id'
-            ])
-            ->addColumn('scholarship_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to scholarships.id'
-            ])
-            ->addColumn('scholarship_attachment_type_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to scholarship_attachment_types.id'
             ])
             ->addColumn('file_name', 'string', [
                 'default' => null,
@@ -795,6 +772,22 @@ class POCOR2813 extends AbstractMigration
                 'limit' => '4294967295',
                 'default' => null,
                 'null' => false
+            ])
+            ->addColumn('scholarship_attachment_type_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to scholarship_attachment_types.id'
+            ])
+            ->addColumn('applicant_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('scholarship_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to scholarships.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -814,24 +807,21 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('scholarship_attachment_type_id')
             ->addIndex('applicant_id')
             ->addIndex('scholarship_id')
-            ->addIndex('scholarship_attachment_type_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-
-        // End of Applicant ====================================================            
-
+        // End of applicant =====================================================
 
         // Start of recipient ===================================================
-        // scholarship recipient 
-
+        // scholarship_recipients
         $table = $this->table('scholarship_recipients', [
             'id' => false,
             'primary_key' => ['recipient_id', 'scholarship_id'],
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the scholarship recipients'
+            'comment' => 'This table contains the list of recipients linked to specific scholarship'
         ]);
 
         $table
@@ -874,13 +864,27 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
+        // scholarship_recipient_activities
         $table = $this->table('scholarship_recipient_activities', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the activities of the recipients'
+            'comment' => 'This table contains the list of activities linked to specific scholarship recipient'
         ]);
 
         $table
-           ->addColumn('recipient_id', 'integer', [
+            ->addColumn('date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('comments', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('scholarship_recipient_activity_status_id', 'integer', [ 
+                'null' => true,
+                'limit' => 11,
+                'comment' => 'links to scholarship_recipient_activity_statuses.id'
+            ])
+            ->addColumn('recipient_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
                 'comment' => 'links to security_users.id'
@@ -889,19 +893,6 @@ class POCOR2813 extends AbstractMigration
                 'null' => false,
                 'limit' => 11,
                 'comment' => 'links to scholarships.id'
-            ])
-            ->addColumn('date', 'date', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addColumn('activity_status_id', 'integer', [ 
-                'null' => true,
-                'limit' => 11,
-                'comment' => 'links to activity_statuses.id'
-            ])
-            ->addColumn('comment', 'string', [
-                'null' => false,
-                'limit' => 250
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -921,17 +912,17 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('scholarship_recipient_activity_status_id')
             ->addIndex('recipient_id')
             ->addIndex('scholarship_id')
-            ->addIndex('activity_status_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
 
-         // recipient_activity_status
-        $table = $this->table('activity_statuses', [
+         // scholarship_recipient_activity_statuses
+        $table = $this->table('scholarship_recipient_activity_statuses', [
                 'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains types of recipient activity statuses'
+                'comment' => 'This field options table contains the list of statuses used in scholarship recipient activities'
             ]);
         $table
             ->addColumn('name', 'string', [
@@ -990,28 +981,17 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end recipient_activity_statuses
 
-
-        $table = $this->table('recipient_payment_structures', [
+        // scholarship_recipient_payment_structures
+        $table = $this->table('scholarship_recipient_payment_structures', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the payment structures of the recipients'
+            'comment' => 'This table contains the list of payment structures linked to specific scholarship recipient'
         ]);
 
         $table
-           ->addColumn('recipient_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to security_users.id'
-            ])
-            ->addColumn('scholarship_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to scholarships.id'
-            ])
             ->addColumn('code', 'string', [
                 'null' => false,
-                'limit' => 45
+                'limit' => 50
             ])
             ->addColumn('name', 'string', [
                 'null' => false,
@@ -1022,37 +1002,6 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to academic_periods.id'
             ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('recipient_id')
-            ->addIndex('scholarship_id')
-            ->addIndex('academic_period_id')
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
-            ->save();
-
-        $table = $this->table('recipient_payment_structure_estimates', [
-            'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the payment structure estimates of the recipients'
-        ]);
-
-        $table
             ->addColumn('recipient_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
@@ -1063,28 +1012,71 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to scholarships.id'
             ])
-            ->addColumn('recipient_payment_structure_id', 'integer', [
-                'null' => false,
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
                 'limit' => 11,
-                'comment' => 'links to recipient_payment_structures.id'
+                'null' => true
             ])
-            ->addColumn('payment_structure_category_id', 'integer', [ 
-                'null' => true,
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
                 'limit' => 11,
-                'comment' => 'links to payment_structure_categories.id'
+                'null' => false
             ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('academic_period_id')
+            ->addIndex('recipient_id')
+            ->addIndex('scholarship_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+
+        // scholarship_recipient_payment_structure_estimates
+        $table = $this->table('scholarship_recipient_payment_structure_estimates', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of payment structure estimates linked to specific scholarship recipient'
+        ]);
+
+        $table
             ->addColumn('estimated_disbursement_date', 'date', [
                 'default' => null,
                 'null' => false
             ])
             ->addColumn('estimated_amount', 'decimal', [
                 'default' => null,
-                'precision' => 15,
-                'scale' => 2,
-            ])
-            ->addColumn('comment', 'string', [
                 'null' => false,
-                'limit' => 250
+                'precision' => 15,
+                'scale' => 2
+            ])
+            ->addColumn('comments', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('scholarship_disbursement_category_id', 'integer', [
+                'null' => true,
+                'limit' => 11,
+                'comment' => 'links to scholarship_disbursement_categories.id'
+            ])
+            ->addColumn('scholarship_recipient_payment_structure_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to scholarship_recipient_payment_structures.id'
+            ])
+            ->addColumn('recipient_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to security_users.id'
+            ])
+            ->addColumn('scholarship_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to scholarships.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -1104,36 +1096,21 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('scholarship_disbursement_category_id')
+            ->addIndex('scholarship_recipient_payment_structure_id')
             ->addIndex('recipient_id')
             ->addIndex('scholarship_id')
-            ->addIndex('recipient_payment_structure_id')
-            ->addIndex('payment_structure_category_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
 
-
+        // scholarship_recipient_disbursements
         $table = $this->table('scholarship_recipient_disbursements', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the disbursement of the recipients'
+            'comment' => 'This table contains the list of disbursements linked to specific scholarship recipient'
         ]);
 
         $table
-           ->addColumn('recipient_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to security_users.id'
-            ])
-            ->addColumn('scholarship_id', 'integer', [
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to scholarships.id'
-            ])
-            ->addColumn('semester_id', 'integer', [ 
-                'null' => false,
-                'limit' => 11,
-                'comment' => 'links to semesters.id'
-            ])
             ->addColumn('disbursement_date', 'date', [
                 'default' => null,
                 'null' => false
@@ -1143,176 +1120,20 @@ class POCOR2813 extends AbstractMigration
                 'precision' => 15,
                 'scale' => 2,
             ])
-            ->addColumn('payment_structure_category_id', 'integer', [ 
+            ->addColumn('comments', 'text', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('scholarship_semester_id', 'integer', [ 
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to scholarship_semesters.id'
+            ])
+            ->addColumn('scholarship_disbursement_category_id', 'integer', [ 
                 'null' => true,
                 'limit' => 11,
-                'comment' => 'links to payment_structure_categories.id'
+                'comment' => 'links to scholarship_disbursement_categories.id'
             ])
-            ->addColumn('comment', 'string', [
-                'null' => false,
-                'limit' => 250
-            ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('recipient_id')
-            ->addIndex('scholarship_id')
-            ->addIndex('semester_id')
-            ->addIndex('payment_structure_category_id')
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
-            ->save();
-
-          // disbursement_semesters
-        $table = $this->table('semesters', [
-                'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains types of semesters'
-            ]);
-        $table
-            ->addColumn('name', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => false
-            ])
-            ->addColumn('order', 'integer', [
-                'default' => null,
-                'limit' => 3,
-                'null' => false
-            ])
-            ->addColumn('visible', 'integer', [
-                'default' => 1,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('editable', 'integer', [
-                'default' => 1,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('default', 'integer', [
-                'default' => 0,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('international_code', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => true
-            ])
-            ->addColumn('national_code', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => true
-            ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
-            ->save();
-        // end disbursement_semesters
-
-
-         // payment_structure_categories
-        $table = $this->table('payment_structure_categories', [
-                'collation' => 'utf8mb4_unicode_ci',
-                'comment' => 'This field options table contains types of payment structure categories'
-            ]);
-        $table
-            ->addColumn('name', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => false
-            ])
-            ->addColumn('order', 'integer', [
-                'default' => null,
-                'limit' => 3,
-                'null' => false
-            ])
-            ->addColumn('visible', 'integer', [
-                'default' => 1,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('editable', 'integer', [
-                'default' => 1,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('default', 'integer', [
-                'default' => 0,
-                'limit' => 1,
-                'null' => false
-            ])
-            ->addColumn('international_code', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => true
-            ])
-            ->addColumn('national_code', 'string', [
-                'default' => null,
-                'limit' => 50,
-                'null' => true
-            ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => true
-            ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
-            ->save();
-        // end payment_structure_categories 
-
-         // collection       
-        $table = $this->table('scholarship_recipient_collections', [
-            'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the collections of the recipients'
-        ]);
-        $table
             ->addColumn('recipient_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
@@ -1323,11 +1144,164 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to scholarships.id'
             ])
-            ->addColumn('academic_period_id', 'integer', [
-                'null' => false,
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
                 'limit' => 11,
-                'comment' => 'links to academic_periods.id'
+                'null' => true
             ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('scholarship_semester_id')
+            ->addIndex('scholarship_disbursement_category_id')
+            ->addIndex('recipient_id')
+            ->addIndex('scholarship_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+
+          // scholarship_semesters
+        $table = $this->table('scholarship_semesters', [
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This field options table contains the list of semesters used in scholarships'
+            ]);
+        $table
+            ->addColumn('name', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => false
+            ])
+            ->addColumn('order', 'integer', [
+                'default' => null,
+                'limit' => 3,
+                'null' => false
+            ])
+            ->addColumn('visible', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('editable', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('default', 'integer', [
+                'default' => 0,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('international_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
+            ])
+            ->addColumn('national_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+
+        // scholarship_disbursement_categories
+        $table = $this->table('scholarship_disbursement_categories', [
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This field options table contains the list of disbursement categories used in scholarships'
+            ]);
+        $table
+            ->addColumn('name', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => false
+            ])
+            ->addColumn('order', 'integer', [
+                'default' => null,
+                'limit' => 3,
+                'null' => false
+            ])
+            ->addColumn('visible', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('editable', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('default', 'integer', [
+                'default' => 0,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('international_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
+            ])
+            ->addColumn('national_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
+            ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+
+         // scholarship_recipient_collections
+        $table = $this->table('scholarship_recipient_collections', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of collections linked to specific scholarship recipient'
+        ]);
+        $table
             ->addColumn('payment_date', 'date', [
                 'default' => null,
                 'null' => false
@@ -1337,42 +1311,15 @@ class POCOR2813 extends AbstractMigration
                 'precision' => 15,
                 'scale' => 2,
             ])
-            ->addColumn('comment', 'text', [
+            ->addColumn('comments', 'text', [
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('modified_user_id', 'integer', [
-                'default' => null,
+            ->addColumn('academic_period_id', 'integer', [
+                'null' => false,
                 'limit' => 11,
-                'null' => true
+                'comment' => 'links to academic_periods.id'
             ])
-            ->addColumn('modified', 'datetime', [
-                'default' => null,
-                'null' => true
-            ])
-            ->addColumn('created_user_id', 'integer', [
-                'default' => null,
-                'limit' => 11,
-                'null' => false
-            ])
-            ->addColumn('created', 'datetime', [
-                'default' => null,
-                'null' => false
-            ])
-            ->addIndex('recipient_id')
-            ->addIndex('scholarship_id')
-            ->addIndex('academic_period_id')
-            ->addIndex('modified_user_id')
-            ->addIndex('created_user_id')
-            ->save();
-        // collection        
-
-        // academic standing    
-        $table = $this->table('scholarship_recipient_academic_standings', [
-            'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all the academic standings of all recipients'
-        ]);
-        $table
             ->addColumn('recipient_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
@@ -1383,28 +1330,69 @@ class POCOR2813 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to scholarships.id'
             ])
+            ->addColumn('modified_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => true
+            ])
+            ->addColumn('modified', 'datetime', [
+                'default' => null,
+                'null' => true
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addIndex('academic_period_id')
+            ->addIndex('recipient_id')
+            ->addIndex('scholarship_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
+            ->save();
+
+        // scholarship_recipient_academic_standings
+        $table = $this->table('scholarship_recipient_academic_standings', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of academic standings linked to specific scholarship recipient'
+        ]);
+        $table
+            ->addColumn('date', 'date', [
+                'default' => null,
+                'null' => false
+            ])
+            ->addColumn('gpa', 'decimal', [
+                'null' => false,
+                'precision' => 3,
+                'scale' => 2
+            ])
+            ->addColumn('comments', 'text', [
+                'default' => null,
+                'null' => true
+            ])
             ->addColumn('academic_period_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
                 'comment' => 'links to academic_periods.id'
             ])
-            ->addColumn('semester_id', 'integer', [
+            ->addColumn('scholarship_semester_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
-                'comment' => 'links to semesters.id'
+                'comment' => 'links to scholarship_semesters.id'
             ])
-            ->addColumn('date_entered', 'date', [
-                'default' => null,
-                'null' => false
+            ->addColumn('recipient_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to security_users.id'
             ])
-            ->addColumn('student_gpa', 'decimal', [
-                'null' => true,
-                'precision' => 3,
-                'scale' => 2
-            ])
-            ->addColumn('comment', 'text', [
-                'default' => null,
-                'null' => true
+            ->addColumn('scholarship_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to scholarships.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -1424,14 +1412,13 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
+            ->addIndex('academic_period_id')
+            ->addIndex('scholarship_semester_id')
             ->addIndex('recipient_id')
             ->addIndex('scholarship_id')
-            ->addIndex('academic_period_id')
-            ->addIndex('semester_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // end of academic standing
     }
 
     public function down()
@@ -1457,23 +1444,23 @@ class POCOR2813 extends AbstractMigration
 
         $this->dropTable('scholarships');
         $this->dropTable('financial_assistance_types');
-        $this->dropTable('funding_sources');
-        $this->dropTable('scholarships_education_field_of_studies');
-        $this->dropTable('payment_frequencies');  
+        $this->dropTable('scholarship_funding_sources');
+        $this->dropTable('scholarships_field_of_studies');
+        $this->dropTable('scholarship_payment_frequencies');
         $this->dropTable('scholarship_loans');
         $this->dropTable('scholarship_attachment_types');
         $this->dropTable('scholarship_applications');
-        $this->dropTable('scholarship_institution_choices');
-        $this->dropTable('institution_choice_statuses');
+        $this->dropTable('scholarship_application_institution_choices');
+        $this->dropTable('scholarship_institution_choice_statuses');
         $this->dropTable('scholarship_application_attachments');
         $this->dropTable('scholarship_recipients');
         $this->dropTable('scholarship_recipient_activities');
-        $this->dropTable('activity_statuses');
-        $this->dropTable('recipient_payment_structures');
-        $this->dropTable('recipient_payment_structure_estimates');
+        $this->dropTable('scholarship_recipient_activity_statuses');
+        $this->dropTable('scholarship_recipient_payment_structures');
+        $this->dropTable('scholarship_recipient_payment_structure_estimates');
         $this->dropTable('scholarship_recipient_disbursements');
-        $this->dropTable('semesters');
-        $this->dropTable('payment_structure_categories');
+        $this->dropTable('scholarship_semesters');
+        $this->dropTable('scholarship_disbursement_categories');
         $this->dropTable('scholarship_recipient_collections');
         $this->dropTable('scholarship_recipient_academic_standings');
     }
