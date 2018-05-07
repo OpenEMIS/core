@@ -252,6 +252,9 @@ class HtmlFieldHelper extends Helper
     public function select($action, Entity $data, $attr, $options = [])
     {
         $value = '';
+        // pr('sfd');
+        // pr($attr);
+        // die;
         if ($action == 'index' || $action == 'view') {
             $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
             $selectedOption = Hash::get($data, $fieldName, '');

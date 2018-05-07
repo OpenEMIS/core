@@ -4,8 +4,10 @@ namespace StaffAppraisal\Model\Table;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use StaffAppraisal\Model\Table\AppraisalNumbersTable as AppraisalNumbers;
 
 class AppraisalNumberAnswersTable extends AppTable
 {
@@ -17,12 +19,18 @@ class AppraisalNumberAnswersTable extends AppTable
         $this->belongsTo('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'institution_staff_appraisal_id', 'joinType' => 'INNER']);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
+        return $events;
+    }
+
     // this will be moved to a behaviour when revamping the custom fields
     public function validationDefault(Validator $validator)
     {
         return $validator
             ->notEmpty('answer', __('This field cannot be left empty'), function ($context) {
-                pr($context);die;
                 if (array_key_exists('is_mandatory', $context['data'])) {
                     return $context['data']['is_mandatory'];
                 }
@@ -30,9 +38,74 @@ class AppraisalNumberAnswersTable extends AppTable
             });
     }
 
+    public function buildValidator(Event $event, Validator $validator, $name)
+    {
+        $AppraisalNumbers = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
+        return $validator
+            ->add('answer', 'validation_rule', [
+                'rule' => function ($value, $context) use ($AppraisalNumbers) {
+                    $appraisalNumber = $AppraisalNumbers
+                        ->find()
+                        ->select([
+                            $AppraisalNumbers->aliasField('min_inclusive'),
+                            $AppraisalNumbers->aliasField('min_exclusive'),
+                            $AppraisalNumbers->aliasField('max_inclusive'),
+                            $AppraisalNumbers->aliasField('max_exclusive'),
+                            $AppraisalNumbers->aliasField('validation_rule')
+                        ])
+                        ->where([
+                            $AppraisalNumbers->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id']
+                        ])
+                        ->first();
+
+                    if (!is_null($appraisalNumber)) {
+                        $validateRuleType = $appraisalNumber->validation_rule;
+                        switch ($validateRuleType) {
+                            case AppraisalNumbers::GREATER_THAN:
+                                $validateValue = $appraisalNumber->min_exclusive;
+                                if ($value > $validateValue) {
+                                    return true;
+                                }
+                                return sprintf(__('This field must be more than %d'), $validateValue);
+                            case AppraisalNumbers::GREATER_THAN_OR_EQUAL:
+                                $validateValue = $appraisalNumber->min_inclusive;
+                                if ($value >= $validateValue) {
+                                    return true;
+                                }
+                                return sprintf(__('This field must be more than or equals to %d'), $validateValue);
+                            case AppraisalNumbers::LESS_THAN:
+                                $validateValue = $appraisalNumber->max_exclusive;
+                                if ($value < $validateValue) {
+                                    return true;
+                                }
+                                return sprintf(__('This field must be less than %d'), $validateValue);
+                            case AppraisalNumbers::LESS_THAN_OR_EQUAL:
+                                $validateValue = $appraisalNumber->max_inclusive;
+                                if ($value <= $validateValue) {
+                                    return true;
+                                }
+                                return sprintf(__('This field must be less than or equals to %d'), $validateValue);
+                            case AppraisalNumbers::BETWEEN:
+                                $validateLowerLimit = $appraisalNumber->min_inclusive;
+                                $validateUpperLimit = $appraisalNumber->max_inclusive;
+                                if ($value >= $validateLowerLimit && $value <= $validateUpperLimit) {
+                                    return true;
+                                }
+                                return sprintf(__('This field must be in between %d to %d'), $validateLowerLimit, $validateUpperLimit);
+                                break;
+                            default:
+                                return true;
+                        }
+                    }
+
+                    return true;
+                }
+            ]);
+
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
         if ($entity->isNew() && is_null($entity->answer)) {
             return $event->stopPropagation();
         }
