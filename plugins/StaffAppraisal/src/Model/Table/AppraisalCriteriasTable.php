@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use StaffAppraisal\Model\Table\AppraisalNumbersTable as AppraisalNumbers;
 
 class AppraisalCriteriasTable extends ControllerActionTable
 {
@@ -16,6 +17,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('FieldTypes', ['className' => 'FieldTypes', 'foreignKey' => 'field_type_id']);
         $this->hasOne('AppraisalSliders', ['className' => 'StaffAppraisal.AppraisalSliders', 'foreignKey' => 'appraisal_criteria_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasOne('AppraisalNumbers', ['className' => 'StaffAppraisal.AppraisalNumbers', 'foreignKey' => 'appraisal_criteria_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalDropdownOptions', [
             'className' => 'StaffAppraisal.AppraisalDropdownOptions',
             'foreignKey' => 'appraisal_criteria_id',
@@ -34,6 +36,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
+
+        $this->fieldTypeList = $this->FieldTypes
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code'
+            ])
+            ->toArray();
     }
 
     public function validationDefault(Validator $validator)
@@ -49,7 +58,17 @@ class AppraisalCriteriasTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['FieldTypes', 'AppraisalSliders', 'AppraisalDropdownOptions.AppraisalDropdownAnswers']);
+        $query->contain(['FieldTypes', 'AppraisalSliders', 'AppraisalNumbers', 'AppraisalDropdownOptions.AppraisalDropdownAnswers']);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $code = $this->fieldTypeList[$entity->field_type_id];
+
+        if ($code == 'NUMBER') {
+            $entity = $this->AppraisalNumbers->updateEntity($entity);
+            $entity->dirty('appraisal_number', true); // manual set to dirty to ensure all changes is updated via saveAssociation
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -70,6 +89,9 @@ class AppraisalCriteriasTable extends ControllerActionTable
                     'element' => 'StaffAppraisal.dropdown_options',
                     'after' => 'field_type_id'
                 ]);
+                break;
+            case 'NUMBER':
+                $this->setupNumberField($entity);
                 break;
         }
     }
@@ -97,6 +119,12 @@ class AppraisalCriteriasTable extends ControllerActionTable
     public function onGetStep(Event $event, Entity $entity)
     {
         return strval($entity->appraisal_slider->step);
+    }
+
+    public function onGetNumberValidationRule(Event $event, Entity $entity)
+    {
+        $numberValidationOptions = $this->AppraisalNumbers->getValidationTypeOptions();
+        return $numberValidationOptions[$entity->number_validation_rule];
     }
 
     public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
@@ -128,8 +156,8 @@ class AppraisalCriteriasTable extends ControllerActionTable
                         $this->field('appraisal_slider.min', [
                             'type' => 'integer',
                             'attr' => ['label' => __('Min'),
-                            'required' => true
-                        ]]);
+                            'required' => true]
+                        ]);
                         $this->field('appraisal_slider.max', [
                             'type' => 'integer',
                             'attr' => ['label' => __('Max'),
@@ -147,8 +175,33 @@ class AppraisalCriteriasTable extends ControllerActionTable
                             'element' => 'StaffAppraisal.dropdown_options'
                         ]);
                         break;
+                    case 'NUMBER':
+                        $this->setupNumberField($entity);
+                        break;
                 }
             }
+            $attr['onChangeReload'] = 'changeFieldType';
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldNumberValidationRule(Event $event, array $attr, $action, Request $request)
+    {
+        $entity = $attr['entity'];
+
+        if ($action == 'view') {
+            $entity->number_validation_rule = $this->AppraisalNumbers->getValidationTypeId($entity);;
+        } elseif ($action == 'add') {
+            $attr['options'] = $this->AppraisalNumbers->getValidationTypeOptions();
+            // $attr['onChangeReload'] = 'changeValidationRule';
+            $attr['onChangeReload'] = true;
+        } elseif ($action == 'edit') {
+            if ($request->is(['get'])) {
+                $entity->number_validation_rule = $this->AppraisalNumbers->getValidationTypeId($entity);
+            }
+
+            $attr['options'] = $this->AppraisalNumbers->getValidationTypeOptions();
             $attr['onChangeReload'] = true;
         }
 
@@ -186,6 +239,10 @@ class AppraisalCriteriasTable extends ControllerActionTable
                     $defaultKey = $data['is_default'];
                     $data['appraisal_dropdown_options'][$defaultKey]['is_default'] = 1; // set default option
                 }
+            } elseif ($fieldTypeCode == 'NUMBER') {
+                if ($data['submit'] == 'save') {
+                    $this->AppraisalNumbers->updateData($data);
+                }
             }
         }
     }
@@ -195,5 +252,83 @@ class AppraisalCriteriasTable extends ControllerActionTable
         $extra['excludedModels'] = [
             $this->AppraisalDropdownOptions->alias()
         ];
+    }
+
+    // Number field type
+    public function setupNumberField(Entity $entity)
+    {
+        $this->field('number_validation_rule', [
+            'type' => 'select',
+            'entity' => $entity,
+            'after' => 'field_type_id',
+            'attr' => [
+                'label' => __('Validation Rule'),
+            ]
+        ]);
+
+        if ($entity->has('number_validation_rule')) {
+            $validationType = $entity->number_validation_rule;
+
+            switch ($validationType) {
+                case AppraisalNumbers::LESS_THAN:
+                    $this->field('appraisal_number.max_exclusive', [
+                        'type' => 'integer',
+                        'after' => 'number_validation_rule',
+                        'attr' => [
+                            'label' => __('Maximum value'),
+                            'required' => true
+                        ]
+                    ]);
+                    break;
+                case AppraisalNumbers::LESS_THAN_OR_EQUAL:
+                    $this->field('appraisal_number.max_inclusive', [
+                        'type' => 'integer',
+                        'after' => 'number_validation_rule',
+                        'attr' => [
+                            'label' => __('Maximum value'),
+                            'required' => true
+                        ]
+                    ]);
+                    break;
+                case AppraisalNumbers::GREATER_THAN:
+                    $this->field('appraisal_number.min_exclusive', [
+                        'type' => 'integer',
+                        'after' => 'number_validation_rule',
+                        'attr' => [
+                            'label' => __('Minimum value'),
+                            'required' => true
+                        ]
+                    ]);
+                    break;
+                case AppraisalNumbers::GREATER_THAN_OR_EQUAL:
+                    $this->field('appraisal_number.min_inclusive', [
+                        'type' => 'integer',
+                        'after' => 'number_validation_rule',
+                        'attr' => [
+                            'label' => __('Minimum value'),
+                            'required' => true
+                        ]
+                    ]);
+                    break;
+                case AppraisalNumbers::BETWEEN:
+                    $this->field('appraisal_number.min_inclusive', [
+                        'type' => 'integer',
+                        'after' => 'number_validation_rule',
+                        'attr' => [
+                            'label' => __('Minimum value'),
+                            'required' => true
+                        ]
+                    ]);
+                    $this->field('appraisal_number.max_inclusive', [
+                        'type' => 'integer',
+                        'after' => 'number_validation_rule',
+                        'attr' => [
+                            'label' => __('Maximum value'),
+                            'required' => true
+                        ]
+                    ]);
+                    break;
+            }
+        }
     }
 }
