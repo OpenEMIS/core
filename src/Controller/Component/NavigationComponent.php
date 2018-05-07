@@ -266,7 +266,7 @@ class NavigationComponent extends Component
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances'
         ];
 
-        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances'];
+        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipDirectories'];
         $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
 
         if (in_array($controller->name, $institutionControllers) || (
@@ -956,6 +956,12 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.Employments', 'Profiles.StaffQualifications', 'Profiles.StaffExtracurriculars', 'Profiles.StaffMemberships', 'Profiles.StaffLicenses', 'Profiles.StaffAwards']
+            ],
+            'Profiles.ScholarshipApplications' => [
+                'title' => 'Scholarships',
+                'parent' => 'Profiles.Profiles',
+                'params' => ['plugin' => 'Profile'],
+                'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipDirectories.index', 'ScholarshipDirectories.view']
             ],
         ];
         return $navigation;
