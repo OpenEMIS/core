@@ -9,11 +9,11 @@ use Cake\ORM\Entity;
 
 class AppraisalNumbersTable extends AppTable
 {
-    const NO_VALIDATION = '';
-    const GREATER_THAN = 'greaterThan';
-    const GREATER_THAN_OR_EQUAL = 'greaterThanEqual';
-    const LESS_THAN = 'lessThan';
-    const LESS_THAN_OR_EQUAL = 'lessThanEqual';
+    const NO_VALIDATION = 'no_validation';
+    const GREATER_THAN = 'greater_than';
+    const GREATER_THAN_OR_EQUAL = 'greater_than_equal';
+    const LESS_THAN = 'less_than';
+    const LESS_THAN_OR_EQUAL = 'less_than_equal';
     const BETWEEN = 'between';
 
     public function initialize(array $config)
@@ -24,15 +24,40 @@ class AppraisalNumbersTable extends AppTable
 
     public function validationDefault(Validator $validator)
     {
+
         return $validator
-            ->notEmpty('min_exclusive')
-            ->notEmpty('min_inclusive')
-            ->notEmpty('max_exclusive')
-            ->notEmpty('max_inclusive')
+            ->notEmpty('min_exclusive', __('This field cannot be left empty'), function ($context) {
+                if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::GREATER_THAN) {
+                    return empty($context['data']['min_exclusive']);
+                }
+                return false;
+            })
+            ->notEmpty('min_inclusive', __('This field cannot be left empty'), function ($context) {
+                if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::GREATER_THAN_OR_EQUAL) {
+                    return empty($context['data']['min_inclusive']);
+                }
+                return false;
+            })
+            ->notEmpty('max_exclusive', __('This field cannot be left empty'), function ($context) {
+                if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::LESS_THAN) {
+                    return empty($context['data']['max_exclusive']);
+                }
+                return false;
+            })
+            ->notEmpty('max_inclusive', __('This field cannot be left empty'), function ($context) {
+                if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::LESS_THAN_OR_EQUAL) {
+                    return empty($context['data']['max_inclusive']);
+                }
+                return false;
+            })
             ->add('min_inclusive', 'comparison', [
                 'rule' => function ($value, $context) {
-                    if (isset($context['data']['max_inclusive'])) {
-                        return intval($value) <= intval($context['data']['max_inclusive']);
+                    if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::BETWEEN) {
+                        if (isset($context['data']['max_inclusive'])) {
+                            return intval($value) <= intval($context['data']['max_inclusive']);
+                        } else {
+                            return true;
+                        }
                     }
                     return true;
                 },
@@ -54,80 +79,41 @@ class AppraisalNumbersTable extends AppTable
         return $ruleOptions;
     }
  
-    public function getValidationTypeId(Entity $entity)
-    {
-        if ($entity->has('appraisal_number')) {
-            $appraisalNumber = $entity->appraisal_number;
-            $minInclusive = $appraisalNumber->min_inclusive;
-            $minExclusive = $appraisalNumber->min_exclusive;
-            $maxInclusive = $appraisalNumber->max_inclusive;
-            $maxExclusive = $appraisalNumber->max_exclusive;
-
-            if (!is_null($minInclusive) && !is_null($maxInclusive)) {
-                return self::BETWEEN;
-            } elseif (!is_null($minInclusive)) {
-                return self::GREATER_THAN_OR_EQUAL;
-            } elseif (!is_null($minExclusive)) {
-                return self::GREATER_THAN;
-            } elseif (!is_null($maxInclusive)) {
-                return self::LESS_THAN_OR_EQUAL;
-            } elseif (!is_null($maxExclusive)) {
-                return self::LESS_THAN;
-            }
-        }
-
-        return self::NO_VALIDATION;
-    }
-
     public function updateData(ArrayObject $data)
     {
-        if (array_key_exists('number_validation_rule', $data)) {
-            $data['appraisal_number']['validation_rule'] = $data['number_validation_rule'];
-        }
-        // pr($data);
-        // die;
-    }
-
-    public function updateEntity(Entity $entity)
-    {
-        if ($entity->has('appraisal_number')) {
-            $validationType = ($entity->has('number_validation_rule')) ? $entity->number_validation_rule : self::NO_VALIDATION;
-            $appraisalNumber = $entity->appraisal_number;
-
+        if (array_key_exists('appraisal_number', $data)) {
+            $validationRuleType = $data['appraisal_number']['validation_rule'];
             $minInclusive = '';
             $maxInclusive = '';
             $minExclusive = '';
             $maxExclusive = '';
 
-            switch ($validationType) {
+            switch ($validationRuleType) {
                 case self::NO_VALIDATION:
-                    $this->delete($appraisalNumber);
-                    unset($entity->appraisal_number);
+                    // dont have any value
                     break;
                 case self::GREATER_THAN:
-                    $minExclusive = $appraisalNumber->min_exclusive;
+                    $minExclusive = $data['appraisal_number']['min_exclusive'];
                     break;
                 case self::GREATER_THAN_OR_EQUAL:
-                    $minInclusive = $appraisalNumber->min_inclusive;
+                    $minInclusive = $data['appraisal_number']['min_inclusive'];
                     break;
                 case self::LESS_THAN:
-                    $maxExclusive = $appraisalNumber->max_exclusive;
+                    $maxExclusive = $data['appraisal_number']['max_exclusive'];
                     break;
                 case self::LESS_THAN_OR_EQUAL:
-                    $maxInclusive = $appraisalNumber->max_inclusive;
+                    $maxInclusive = $data['appraisal_number']['max_inclusive'];
                     break;
                 case self::BETWEEN:
-                    $minInclusive = $appraisalNumber->min_inclusive;
-                    $maxInclusive = $appraisalNumber->max_inclusive;
+                    $minInclusive = $data['appraisal_number']['min_inclusive'];
+                    $maxInclusive = $data['appraisal_number']['max_inclusive'];
                     break;
             }
 
-            $appraisalNumber->min_inclusive = $minInclusive;
-            $appraisalNumber->max_inclusive = $maxInclusive;
-            $appraisalNumber->min_exclusive = $minExclusive;
-            $appraisalNumber->max_exclusive = $maxExclusive;
+            $data['appraisal_number']['min_exclusive'] = $minExclusive;
+            $data['appraisal_number']['min_inclusive'] = $minInclusive;
+            $data['appraisal_number']['max_exclusive'] = $maxExclusive;
+            $data['appraisal_number']['max_inclusive'] = $maxInclusive;
         }
-
-        return $entity;
     }
 }
