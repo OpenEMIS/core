@@ -33,6 +33,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalNumberAnswers', ['className' => 'StaffAppraisal.AppraisalNumberAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -201,6 +202,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                     'AppraisalCriterias' => [
                         'FieldTypes',
                         'AppraisalSliders',
+                        'AppraisalNumbers',
                         'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
                     ],
                     'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
@@ -211,6 +213,9 @@ class StaffAppraisalsTable extends ControllerActionTable
                     },
                     'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
                         return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalNumberAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
                     }
                 ])
                 ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
@@ -232,11 +237,19 @@ class StaffAppraisalsTable extends ControllerActionTable
                 }
                 $this->appraisalCustomFieldExtra($details, $formCritieria, $criteriaCounter, $entity);
             }
+            // die;
         }
     }
 
+    // public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    // {
+    //     // pr($entity);
+    //     // die;
+    // }
+
     private function appraisalCustomFieldExtra(ArrayObject $details, Entity $formCritieria, ArrayObject $criteriaCounter, Entity $entity)
     {
+        // pr($details);
         $fieldTypeCode = $details['field_type'];
         if (!$criteriaCounter->offsetExists($fieldTypeCode)) {
             $criteriaCounter[$fieldTypeCode] = 0;
@@ -244,7 +257,9 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         $key = [];
         $attr = [];
+        $params = [];
         $criteria = $formCritieria->appraisal_criteria;
+        // pr($criteria);
 
         switch ($fieldTypeCode) {
             case 'SLIDER':
@@ -264,6 +279,18 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $attr['options'] = Hash::combine($criteria->appraisal_dropdown_options, '{n}.id', '{n}.name');
                 $attr['default'] = current(Hash::extract($criteria->appraisal_dropdown_options, '{n}[is_default=1].id'));
                 break;
+            case 'NUMBER':
+                $key = 'appraisal_number_answers';
+                $attr['type'] = 'integer';
+                if ($criteria->has('appraisal_number')) {
+                    $params = [
+                        'min_inclusive' => $criteria->appraisal_number->min_inclusive,
+                        'max_inclusive' => $criteria->appraisal_number->max_inclusive,
+                        'min_exclusive' => $criteria->appraisal_number->min_exclusive,
+                        'max_exclusive' => $criteria->appraisal_number->max_exclusive
+                    ];
+                }
+                break;
         }
 
         // set each answer in entity
@@ -281,6 +308,10 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field($fieldKey.'.is_mandatory', ['type' => 'hidden', 'value' => $details['is_mandatory']]);
         $this->field($fieldKey.'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
         $this->field($fieldKey.'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
+        $this->field($fieldKey.'.params', ['type' => 'hidden', 'value' => json_encode($params)]);
+        // if ($key == 'appraisal_number_answers') {
+
+        // }
 
         $criteriaCounter[$fieldTypeCode]++;
     }
