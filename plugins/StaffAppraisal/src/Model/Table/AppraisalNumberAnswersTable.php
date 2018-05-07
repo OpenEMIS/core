@@ -102,6 +102,109 @@ class AppraisalNumberAnswersTable extends AppTable
                 }
             ]);
 
+        // return $validator
+        //     ->add('answer', 'greaterThan', [
+        //         'rule' => function ($value, $context) use ($AppraisalNumbers) {
+        //             $appraisalNumber = $AppraisalNumbers
+        //                 ->find()
+        //                 ->select([$AppraisalNumbers->aliasField('min_exclusive')])
+        //                 ->where([
+        //                     $AppraisalNumbers->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id'],
+        //                     $AppraisalNumbers->aliasField('validation_rule') => 'greater_than',
+        //                 ])
+        //                 ->first();
+
+        //             if (!is_null($appraisalNumber)) {
+        //                 $validateValue = $appraisalNumber->min_exclusive;
+        //                 return $value > $validateValue;
+        //             }
+
+        //             return true;
+        //         },
+        //         'message' => __('The number should be greater than 50?')
+        //     ])
+        //     ->add('answer', 'greaterThanEqual', [
+        //         'rule' => function ($value, $context) use ($AppraisalNumbers) {
+        //             $appraisalNumber = $AppraisalNumbers
+        //                 ->find()
+        //                 ->select([$AppraisalNumbers->aliasField('min_inclusive')])
+        //                 ->where([
+        //                     $AppraisalNumbers->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id'],
+        //                     $AppraisalNumbers->aliasField('validation_rule') => 'greater_than_equal'
+        //                 ])
+        //                 ->first();
+
+        //             if (!is_null($appraisalNumber)) {
+        //                 $validateValue = $appraisalNumber->min_inclusive;
+        //                 return $value >= $validateValue;
+        //             }
+
+        //             return true;
+        //         }
+        //     ])
+        //     ->add('answer', 'lessThan', [
+        //         'rule' => function ($value, $context) use ($AppraisalNumbers) {
+        //             $appraisalNumber = $AppraisalNumbers
+        //                 ->find()
+        //                 ->select([$AppraisalNumbers->aliasField('max_exclusive')])
+        //                 ->where([
+        //                     $AppraisalNumbers->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id'],
+        //                     $AppraisalNumbers->aliasField('validation_rule') => 'less_than',
+        //                 ])
+        //                 ->first();
+
+        //             if (!is_null($appraisalNumber)) {
+        //                 $validateValue = $appraisalNumber->max_exclusive;
+        //                 return 'ms vi';
+        //             }
+
+        //             return true;
+        //         },
+        //     ])
+        //     ->add('answer', 'lessThanEqual', [
+        //         'rule' => function ($value, $context) use ($AppraisalNumbers) {
+        //             $appraisalNumber = $AppraisalNumbers
+        //                 ->find()
+        //                 ->select([$AppraisalNumbers->aliasField('max_inclusive')])
+        //                 ->where([
+        //                     $AppraisalNumbers->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id'],
+        //                     $AppraisalNumbers->aliasField('validation_rule') => 'less_than_equal',
+        //                 ])
+        //                 ->first();
+
+        //             if (!is_null($appraisalNumber)) {
+        //                 $validateValue = $appraisalNumber->max_inclusive;
+        //                 return $value <= $validateValue;
+        //             }
+
+        //             return true;
+        //         },
+        //         'message' => __('test4')
+        //     ])
+        //     ->add('answer', 'between', [
+        //         'rule' => function ($value, $context) use ($AppraisalNumbers) {
+        //             $appraisalNumber = $AppraisalNumbers
+        //                 ->find()
+        //                 ->select([
+        //                     $AppraisalNumbers->aliasField('min_inclusive'),
+        //                     $AppraisalNumbers->aliasField('max_inclusive')
+        //                 ])
+        //                 ->where([
+        //                     $AppraisalNumbers->aliasField('appraisal_criteria_id') => $context['data']['appraisal_criteria_id'],
+        //                     $AppraisalNumbers->aliasField('validation_rule') => 'between',
+
+        //                 ])
+        //                 ->first();
+
+        //             if (!is_null($appraisalNumber)) {
+        //                 $validateValue = $appraisalNumber->max_inclusive;
+        //                 return $value <= $validateValue;
+        //             }
+
+        //             return true;
+        //         },
+        //         'message' => __('test5')
+        //     ]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -118,4 +221,3 @@ class AppraisalNumberAnswersTable extends AppTable
         }
     }
 }
-`   
