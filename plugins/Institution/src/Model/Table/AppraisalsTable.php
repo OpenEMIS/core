@@ -29,6 +29,7 @@ class AppraisalsTable extends ControllerActionTable
         $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalNumberAnswers', ['className' => 'StaffAppraisal.AppraisalNumberAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('OpenEmis.Section');
 
@@ -117,6 +118,7 @@ class AppraisalsTable extends ControllerActionTable
                     'AppraisalCriterias' => [
                         'FieldTypes',
                         'AppraisalSliders',
+                        'AppraisalNumbers',
                         'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
                     ],
                     'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
@@ -127,6 +129,9 @@ class AppraisalsTable extends ControllerActionTable
                     },
                     'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
                         return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalNumberAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
                     }
                 ])
                 ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
@@ -179,6 +184,10 @@ class AppraisalsTable extends ControllerActionTable
                 $attr['type'] = 'select';
                 $attr['options'] = Hash::combine($criteria->appraisal_dropdown_options, '{n}.id', '{n}.name');
                 $attr['default'] = current(Hash::extract($criteria->appraisal_dropdown_options, '{n}[is_default=1].id'));
+                break;
+            case 'NUMBER':
+                $key = 'appraisal_number_answers';
+                $attr['type'] = 'integer';
                 break;
         }
 
