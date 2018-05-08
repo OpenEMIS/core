@@ -13,7 +13,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('Applicants', ['className' => 'Security.Users', 'foreignKey' => 'applicant_id']);
+        $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);

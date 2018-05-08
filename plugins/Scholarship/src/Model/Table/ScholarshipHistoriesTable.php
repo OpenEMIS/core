@@ -12,7 +12,7 @@ class ScholarshipHistoriesTable extends AppTable
         $this->table('scholarship_applications');
         parent::initialize($config);
 
-        $this->belongsTo('Applicants', ['className' => 'Security.Users', 'foreignKey' => 'applicant_id']);
+        $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices','dependent' => true, 'cascadeCallbacks' => true]);

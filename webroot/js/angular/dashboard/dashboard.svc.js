@@ -90,6 +90,10 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         StaffLicensesTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
             model: 'Staff.Licenses'
+        },
+        ScholarshipApplicationsTable: {
+            cols: workbenchItemTypes.NON_SCHOOL_BASED,
+            model: 'Scholarship.ScholarshipApplications'
         }
     };
 
