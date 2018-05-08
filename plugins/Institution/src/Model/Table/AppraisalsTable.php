@@ -64,7 +64,7 @@ class AppraisalsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('appraisal_period_id', ['visible' => false]);
-        $this->setFieldOrder(['appraisal_type_id', 'title', 'from', 'to', 'appraisal_form_id']);
+        $this->setFieldOrder(['appraisal_type_id', 'title', 'appraisal_period_from', 'appraisal_period_to', 'appraisal_form_id']);
         $this->setupTabElements();
     }
 
@@ -92,8 +92,8 @@ class AppraisalsTable extends ControllerActionTable
         $this->field('title');
         $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
         $this->field('institution_id');
-        $this->field('from');
-        $this->field('to');
+        $this->field('appraisal_period_from');
+        $this->field('appraisal_period_to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('appraisal_period_id');
         $this->field('appraisal_form_id');
