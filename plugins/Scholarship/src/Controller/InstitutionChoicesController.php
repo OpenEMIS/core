@@ -221,7 +221,7 @@ class InstitutionChoicesController extends PageController
                     'text' => __('Institution Choices')
                 ],
                 'Attachments' => [
-                    'url' => ['plugin' => 'Profile', 'controller' => 'ScholarshipAttachments', 'action' => 'index', 'queryString' => $queryString],
+                    'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
                     'text' => __('Attachments')
                 ]
             ];
