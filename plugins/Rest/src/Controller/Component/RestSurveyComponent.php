@@ -600,8 +600,9 @@ class RestSurveyComponent extends Component
     public function getXForms($instanceId, $id)
     {
         $title = $this->Form->get($id)->name;
+        $description = $this->Form->get($id)->description;
         $title = htmlspecialchars($title, ENT_QUOTES);
-
+        $description = htmlspecialchars($description, ENT_QUOTES);
         $fields = $this->getFields($id);
 
         $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
@@ -618,6 +619,9 @@ class RestSurveyComponent extends Component
         $headNode = $xml->addChild("head", null, NS_XHTML);
         $bodyNode = $xml->addChild("body", null, NS_XHTML);
         $headNode->addChild("title", $title, NS_XHTML);
+        $metaNode = $headNode->addChild("meta", null, NS_XHTML);
+        $metaNode->addAttribute("name", "description");
+        $metaNode->addAttribute("content", $description);
         $modelNode = $headNode->addChild("model", null, NS_XF);
 
         $instanceNode = $modelNode->addChild("instance", null, NS_XF);
