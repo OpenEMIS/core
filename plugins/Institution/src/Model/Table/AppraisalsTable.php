@@ -171,6 +171,7 @@ class AppraisalsTable extends ControllerActionTable
         switch ($fieldTypeCode) {
             case 'SLIDER':
                 $key = 'appraisal_slider_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'slider';
                 $attr['max'] = $criteria->appraisal_slider->max;
                 $attr['min'] = $criteria->appraisal_slider->min;
@@ -178,30 +179,36 @@ class AppraisalsTable extends ControllerActionTable
                 break;
             case 'TEXTAREA':
                 $key = 'appraisal_text_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'text';
                 break;
             case 'DROPDOWN':
                 $key = 'appraisal_dropdown_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'select';
                 $attr['options'] = Hash::combine($criteria->appraisal_dropdown_options, '{n}.id', '{n}.name');
                 $attr['default'] = current(Hash::extract($criteria->appraisal_dropdown_options, '{n}[is_default=1].id'));
                 break;
             case 'NUMBER':
                 $key = 'appraisal_number_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'integer';
+
+                if ($criteria->has('appraisal_number')) {
+                    $this->field($fieldKey.'.validation_rule', ['type' => 'hidden', 'value' => $criteria->appraisal_number->validation_rule]);
+                }
                 break;
         }
+
+        // build custom fields
+        $attr['attr']['label'] = $details['criteria_name'];
+        $attr['attr']['required'] = $details['is_mandatory'];
 
         // set each answer in entity
         if (!$entity->offsetExists($key)) {
             $entity->{$key} = [];
         }
         $entity->{$key}[$criteriaCounter[$fieldTypeCode]] = !empty($formCritieria->{$key}) ? current($formCritieria->{$key}) : [];
-
-        // build custom fields
-        $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
-        $attr['attr']['label'] = $details['criteria_name'];
-        $attr['attr']['required'] = $details['is_mandatory'];
 
         $this->field($fieldKey.'.answer', $attr);
         $this->field($fieldKey.'.is_mandatory', ['type' => 'hidden', 'value' => $details['is_mandatory']]);
