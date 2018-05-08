@@ -51,19 +51,25 @@ class POCOR4547 extends AbstractMigration
               ])
             ->addColumn('modified_user_id', 'integer', [
                 'limit' => 11,
-                'null' => true
+                'null' => true,
+                'default' => null
             ])
             ->addColumn('modified', 'datetime', [
-                'null' => true
+                'null' => true,
+                'default' => null
             ])
             ->addColumn('created_user_id', 'integer', [
                 'limit' => 11,
-                'null' => false
+                'null' => false,
+                'default' => null
             ])
             ->addColumn('created', 'datetime', [
-                'null' => false
+                'null' => false,
+                'default' => null
             ])
             ->addIndex('appraisal_criteria_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
 
         // appraisal_number_answers
@@ -97,21 +103,27 @@ class POCOR4547 extends AbstractMigration
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'limit' => 11,
-                'null' => true
+                'null' => true,
+                'default' => null
             ])
             ->addColumn('modified', 'datetime', [
-                'null' => true
+                'null' => true,
+                'default' => null
             ])
             ->addColumn('created_user_id', 'integer', [
                 'limit' => 11,
-                'null' => false
+                'null' => false,
+                'default' => null
             ])
             ->addColumn('created', 'datetime', [
-                'null' => false
+                'null' => false,
+                'default' => null
             ])
             ->addIndex('appraisal_form_id')
             ->addIndex('appraisal_criteria_id')
             ->addIndex('institution_staff_appraisal_id')
+            ->addIndex('modified_user_id')
+            ->addIndex('created_user_id')
             ->save();
     }
 
