@@ -386,10 +386,10 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('financial_assistance_type_id', 'integer', [
+            ->addColumn('scholarship_financial_assistance_type_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
-                'comment' => 'links to financial_assistance_types.id'
+                'comment' => 'links to scholarship_financial_assistance_types.id'
             ])
             ->addColumn('scholarship_funding_source_id', 'integer', [ 
                 'null' => true,
@@ -419,7 +419,7 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addIndex('financial_assistance_type_id')
+            ->addIndex('scholarship_financial_assistance_type_id')
             ->addIndex('scholarship_funding_source_id')
             ->addIndex('academic_period_id')
             ->addIndex('modified_user_id')
@@ -427,7 +427,7 @@ class POCOR2813 extends AbstractMigration
             ->save();
 
         // financial_assistance_types
-        $table = $this->table('financial_assistance_types', [
+        $table = $this->table('scholarship_financial_assistance_types', [
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains the fixed list of financial assistance types used in scholarships'
         ]);
@@ -1636,9 +1636,8 @@ class POCOR2813 extends AbstractMigration
         // delete workflow_transitions
         $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->workflowModelId);
 
-
         $this->dropTable('scholarships');
-        $this->dropTable('financial_assistance_types');
+        $this->dropTable('scholarship_financial_assistance_types');
         $this->dropTable('scholarship_funding_sources');
         $this->dropTable('scholarships_field_of_studies');
         $this->dropTable('scholarship_payment_frequencies');
@@ -1658,6 +1657,5 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('scholarship_disbursement_categories');
         $this->dropTable('scholarship_recipient_collections');
         $this->dropTable('scholarship_recipient_academic_standings');
-    
     }
 }
