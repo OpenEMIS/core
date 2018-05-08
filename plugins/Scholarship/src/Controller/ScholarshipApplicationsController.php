@@ -44,15 +44,40 @@ class ScholarshipApplicationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-        $header = __('Scholarships');
-
-        $alias = ($model->alias == 'ScholarshipApplications') ? 'Applicants' : $model->alias;
-        $header .= ' - ' . $model->getHeader($alias);
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) 
+    {
+       
         $this->Navigation->addCrumb('Scholarship',  ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'index']);
+        $this->Navigation->addCrumb('Applicants', ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplications', 'action' => 'ScholarshipApplications']);
 
-        $this->Navigation->addCrumb($model->getHeader($alias));
 
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+              
+            $alias = $model->alias();
+            $excludedModel = ['ScholarshipApplications'];
+
+            if (!in_array($alias, $excludedModel)) {
+                $model->toggle('add', false);
+                $model->toggle('edit', false);
+                $model->toggle('remove', false);
+            }
+        }            
+        
+        if (array_key_exists('queryString', $this->request->query)) {
+            $applicantId = $this->ControllerAction->getQueryString('applicant_id');   
+            $alias = ($model->alias == 'ScholarshipApplications') ? 'Overview' : $model->alias;
+            $entity = $this->ScholarshipApplications->Applicants->get($applicantId);
+            $header = $entity->name;
+            $this->Navigation->addCrumb($header);
+
+            $this->Navigation->addCrumb($model->getHeader($alias));
+
+        } else {
+             $header = __('Scholarships');
+             $alias = 'Applicants';
+        }
+
+        $header .= ' - ' . $model->getHeader($alias);
         $this->set('contentHeader', $header);
 
         $persona = false;
