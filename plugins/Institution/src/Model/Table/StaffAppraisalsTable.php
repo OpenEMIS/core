@@ -237,19 +237,11 @@ class StaffAppraisalsTable extends ControllerActionTable
                 }
                 $this->appraisalCustomFieldExtra($details, $formCritieria, $criteriaCounter, $entity);
             }
-            // die;
         }
     }
 
-    // public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    // {
-    //     // pr($entity);
-    //     // die;
-    // }
-
     private function appraisalCustomFieldExtra(ArrayObject $details, Entity $formCritieria, ArrayObject $criteriaCounter, Entity $entity)
     {
-        // pr($details);
         $fieldTypeCode = $details['field_type'];
         if (!$criteriaCounter->offsetExists($fieldTypeCode)) {
             $criteriaCounter[$fieldTypeCode] = 0;
@@ -259,11 +251,11 @@ class StaffAppraisalsTable extends ControllerActionTable
         $attr = [];
         $params = [];
         $criteria = $formCritieria->appraisal_criteria;
-        // pr($criteria);
 
         switch ($fieldTypeCode) {
             case 'SLIDER':
                 $key = 'appraisal_slider_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'slider';
                 $attr['max'] = $criteria->appraisal_slider->max;
                 $attr['min'] = $criteria->appraisal_slider->min;
@@ -271,27 +263,30 @@ class StaffAppraisalsTable extends ControllerActionTable
                 break;
             case 'TEXTAREA':
                 $key = 'appraisal_text_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'text';
                 break;
             case 'DROPDOWN':
                 $key = 'appraisal_dropdown_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'select';
                 $attr['options'] = Hash::combine($criteria->appraisal_dropdown_options, '{n}.id', '{n}.name');
                 $attr['default'] = current(Hash::extract($criteria->appraisal_dropdown_options, '{n}[is_default=1].id'));
                 break;
             case 'NUMBER':
                 $key = 'appraisal_number_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'integer';
+
                 if ($criteria->has('appraisal_number')) {
-                    $params = [
-                        'min_inclusive' => $criteria->appraisal_number->min_inclusive,
-                        'max_inclusive' => $criteria->appraisal_number->max_inclusive,
-                        'min_exclusive' => $criteria->appraisal_number->min_exclusive,
-                        'max_exclusive' => $criteria->appraisal_number->max_exclusive
-                    ];
+                    $this->field($fieldKey.'.validation_rule', ['type' => 'hidden', 'value' => $criteria->appraisal_number->validation_rule]);
                 }
                 break;
         }
+
+        // build custom fields
+        $attr['attr']['label'] = $details['criteria_name'];
+        $attr['attr']['required'] = $details['is_mandatory'];
 
         // set each answer in entity
         if (!$entity->offsetExists($key)) {
@@ -299,19 +294,10 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
         $entity->{$key}[$criteriaCounter[$fieldTypeCode]] = !empty($formCritieria->{$key}) ? current($formCritieria->{$key}) : [];
 
-        // build custom fields
-        $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
-        $attr['attr']['label'] = $details['criteria_name'];
-        $attr['attr']['required'] = $details['is_mandatory'];
-
         $this->field($fieldKey.'.answer', $attr);
         $this->field($fieldKey.'.is_mandatory', ['type' => 'hidden', 'value' => $details['is_mandatory']]);
         $this->field($fieldKey.'.appraisal_form_id', ['type' => 'hidden', 'value' => $details['appraisal_form_id']]);
         $this->field($fieldKey.'.appraisal_criteria_id', ['type' => 'hidden', 'value' => $details['appraisal_criteria_id']]);
-        $this->field($fieldKey.'.params', ['type' => 'hidden', 'value' => json_encode($params)]);
-        // if ($key == 'appraisal_number_answers') {
-
-        // }
 
         $criteriaCounter[$fieldTypeCode]++;
     }

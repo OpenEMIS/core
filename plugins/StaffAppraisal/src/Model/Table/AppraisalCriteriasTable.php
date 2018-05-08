@@ -227,6 +227,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
             'onChangeReload' => true,
             'attr' => [
                 'label' => __('Validation Rule'),
+                'required' => true
             ]
         ]);
 
