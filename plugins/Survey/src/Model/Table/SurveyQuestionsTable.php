@@ -52,7 +52,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['code', 'name', 'field_type', 'is_mandatory', 'is_unique']);
+        $this->setFieldOrder(['code', 'name', 'description','field_type', 'is_mandatory', 'is_unique']);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
