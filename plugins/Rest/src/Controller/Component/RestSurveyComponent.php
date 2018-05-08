@@ -1334,6 +1334,24 @@ class RestSurveyComponent extends Component
         // End
     }
 
+    private function note($field, $parentNode, $instanceId, $extra)
+    {
+
+        $noteResults = $this->Field
+            ->find()
+            ->select('description')
+            ->where([
+                $this->Field->aliasField('id') => $field->field_id
+            ])
+            ->toArray();
+
+        $noteBreakNode = $parentNode->addChild('group', null, NS_XF);
+        $noteBreakNode->addAttribute("ref", $field->field_id);
+        $noteBreakNode->addChild("label", htmlspecialchars($field->default_name, ENT_QUOTES), NS_XF);
+        $noteBreakNode->addAttribute("oe-type", "note");
+        $noteNode = $noteBreakNode->addChild("p", $noteResults[0]['description'], NS_XHTML);
+    }
+
     private function setCommonNode($field, $parentNode, $instanceId, $extra)
     {
         $tagName = array_key_exists('tagName', $extra) ? $extra['tagName'] : 'input';
