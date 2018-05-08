@@ -10,7 +10,7 @@ class CustomModule extends Entity
         'Institution.Institutions' => [
             'filter' => 'Institution.Types',
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER', 'NOTE']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER','NOTE']
         ],
         'Student.Students' => [
             'filter' => null,
