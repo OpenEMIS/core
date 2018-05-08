@@ -2,7 +2,6 @@
 namespace Scholarship\Model\Table;
 
 use Cake\ORM\Query;
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class ScholarshipAttachmentTypesTable extends AppTable
@@ -12,13 +11,6 @@ class ScholarshipAttachmentTypesTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
-    }
-
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-        return $validator;
     }
 
     public function findAttachmentTypeOptionList(Query $query, array $options)

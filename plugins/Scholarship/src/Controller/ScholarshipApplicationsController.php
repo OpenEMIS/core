@@ -16,13 +16,13 @@ class ScholarshipApplicationsController extends AppController
 
     }
 
-    public function ScholarshipApplications() 
+    public function ScholarshipApplications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.ScholarshipApplications']);
     }
-    // public function Generals() { 
-    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Generals']); 
-    // } 
+    // public function General() {
+    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.General']);
+    // }
     public function Identities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
@@ -44,15 +44,14 @@ class ScholarshipApplicationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) 
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-       
         $this->Navigation->addCrumb('Scholarship',  ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'index']);
         $this->Navigation->addCrumb('Applicants', ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplications', 'action' => 'ScholarshipApplications']);
 
 
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
-              
+
             $alias = $model->alias();
             $excludedModel = ['ScholarshipApplications'];
 
@@ -61,10 +60,10 @@ class ScholarshipApplicationsController extends AppController
                 $model->toggle('edit', false);
                 $model->toggle('remove', false);
             }
-        }            
-        
+        }
+
         if (array_key_exists('queryString', $this->request->query)) {
-            $applicantId = $this->ControllerAction->getQueryString('applicant_id');   
+            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
             $alias = ($model->alias == 'ScholarshipApplications') ? 'Overview' : $model->alias;
             $entity = $this->ScholarshipApplications->Applicants->get($applicantId);
             $header = $entity->name;
@@ -99,11 +98,11 @@ class ScholarshipApplicationsController extends AppController
     }
 
     public function getScholarshipTabElements($options = [])
-    {   
+    {
         if (array_key_exists('queryString', $this->request->query)) {
             $queryString = $this->request->query('queryString');
         }
-    
+
         $plugin = $this->plugin;
         $name = $this->name;
 
@@ -114,7 +113,7 @@ class ScholarshipApplicationsController extends AppController
             'UserNationalities' => ['text' => __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Guardians' => ['text' => __('Guardians')],
-            // 'ExaminationResults' => ['text' => __('Examinations')],  
+            // 'ExaminationResults' => ['text' => __('Examinations')],
             // 'Qualifications' => ['text' => __('Qualifications')],
             'ScholarshipHistories' => ['text' => __('Scholarship History')], //page
             'ApplicationInstitutionChoices' => ['text' => __('Institution Choice')], //page
@@ -135,7 +134,7 @@ class ScholarshipApplicationsController extends AppController
                     'queryString' => $queryString,
                 ];
                 $tabElements[$key]['url'] = $url;
-            } else { 
+            } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
@@ -156,4 +155,4 @@ class ScholarshipApplicationsController extends AppController
        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
-     
+
