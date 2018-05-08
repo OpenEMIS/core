@@ -600,8 +600,9 @@ class RestSurveyComponent extends Component
     public function getXForms($instanceId, $id)
     {
         $title = $this->Form->get($id)->name;
+        $description = $this->Form->get($id)->description;
         $title = htmlspecialchars($title, ENT_QUOTES);
-
+        $description = htmlspecialchars($description, ENT_QUOTES);
         $fields = $this->getFields($id);
 
         $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
@@ -618,6 +619,9 @@ class RestSurveyComponent extends Component
         $headNode = $xml->addChild("head", null, NS_XHTML);
         $bodyNode = $xml->addChild("body", null, NS_XHTML);
         $headNode->addChild("title", $title, NS_XHTML);
+        $metaNode = $headNode->addChild("meta", null, NS_XHTML);
+        $metaNode->addAttribute("name", "description");
+        $metaNode->addAttribute("content", $description);
         $modelNode = $headNode->addChild("model", null, NS_XF);
 
         $instanceNode = $modelNode->addChild("instance", null, NS_XF);
@@ -764,6 +768,7 @@ class RestSurveyComponent extends Component
                 'is_unique' => $this->FormField->aliasField('is_unique'),
                 'field_type' => $this->Field->aliasField('field_type'),
                 'default_name' => $this->Field->aliasField('name'),
+                'default_description' => $this->Field->aliasField('description'),
                 'default_is_mandatory' => $this->Field->aliasField('is_mandatory'),
                 'default_is_unique' => $this->Field->aliasField('is_unique'),
                 'params' => $this->Field->aliasField('params')
@@ -1328,6 +1333,15 @@ class RestSurveyComponent extends Component
             Log::write('debug', 'Repeater Survey Form ID is not configured.');
         }
         // End
+    }
+
+    private function note($field, $parentNode, $instanceId, $extra)
+    {
+        $noteBreakNode = $parentNode->addChild('group', null, NS_XF);
+        $noteBreakNode->addAttribute("ref", $field->field_id);
+        $noteBreakNode->addChild("label", htmlspecialchars($field->default_name, ENT_QUOTES), NS_XF);
+        $noteBreakNode->addAttribute("oe-type", "note");
+        $noteBreakNode->addChild("p", htmlspecialchars($field->default_description, ENT_QUOTES), NS_XHTML);
     }
 
     private function setCommonNode($field, $parentNode, $instanceId, $extra)
