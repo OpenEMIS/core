@@ -839,6 +839,7 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'precision' => 15,
                 'scale' => 2,
+                'null' => true
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -1419,6 +1420,9 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+        // end of academic standing
+
+        $this->execute('ALTER TABLE `workflow_transitions` MODIFY COLUMN `model_reference` char(64) NOT NULL');
     }
 
     public function down()
@@ -1463,5 +1467,7 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('scholarship_disbursement_categories');
         $this->dropTable('scholarship_recipient_collections');
         $this->dropTable('scholarship_recipient_academic_standings');
+        
+        $this->execute('ALTER TABLE `workflow_transitions` MODIFY COLUMN `model_reference` int(11) NOT NULL');
     }
 }
