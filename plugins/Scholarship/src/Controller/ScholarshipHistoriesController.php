@@ -86,6 +86,7 @@ class ScholarshipHistoriesController extends PageController
                     'controller' => 'ScholarshipApplications',
                     'action' => $action,
                     'view',
+                    $queryString,
                     'queryString' => $queryString
                 ];
             } elseif (in_array($action, ['ScholarshipHistories', 'ApplicationInstitutionChoices', 'ScholarshipApplicationAttachments'])) {
