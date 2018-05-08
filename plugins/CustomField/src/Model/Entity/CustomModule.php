@@ -10,17 +10,17 @@ class CustomModule extends Entity
         'Institution.Institutions' => [
             'filter' => 'Institution.Types',
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER','NOTE']
         ],
         'Student.Students' => [
             'filter' => null,
             'behavior' => 'Student',
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES','NOTE']
         ],
         'Staff.Staff' => [
             'filter' => null,
             'behavior' => 'Staff',
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES','NOTE']
         ],
         'Student.StudentSurveys' => [
             'filter' => null,
@@ -38,22 +38,22 @@ class CustomModule extends Entity
         'Institution.InstitutionLands' => [
             'filter' => 'Infrastructure.LandTypes',
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES','NOTE']
         ],
         'Institution.InstitutionBuildings' => [
             'filter' => 'Infrastructure.BuildingTypes',
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES','NOTE']
         ],
         'Institution.InstitutionFloors' => [
             'filter' => 'Infrastructure.FloorTypes',
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES','NOTE']
         ],
         'Institution.InstitutionRooms' => [
             'filter' => 'Infrastructure.RoomTypes',
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES','NOTE']
         ]
         // End infrastructure modules
     ];
