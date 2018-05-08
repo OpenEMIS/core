@@ -11,14 +11,21 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Network\Request;
 use Cake\Controller\Component;
-use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
-use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Security;
+use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\ResultSet;
+use Cake\Utility\Inflector;
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
 
 class ScholarshipApplicationsTable extends ControllerActionTable
 {
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
+    
     private $applicantName = null;
    
     private $workflowEvents = [
@@ -34,7 +41,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('Applicants', ['className' => 'Security.Users', 'foreignKey' => 'applicant_id']);
+        $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
@@ -70,10 +77,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->action == 'view' || $this->action == 'edit') {    
-            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-            $this->applicantName = $this->Applicants->get($applicantId)->name;
-        }
+
 
     }
 
@@ -98,8 +102,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // $this->controller->set('contentHeader', __('Examination') . ' - ' .__('Single Student Registration'));
-
+        $this->controller->set('contentHeader', __('Scholarship') . ' - ' .__('Scholarship Applications'));
         $query = $this->ControllerAction->getQueryString();
         
         if (isset($extra['toolbarButtons']['back']['url'])) {
@@ -111,6 +114,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
         if ($query) {
             $applicantId = $query['applicant_id'];
+
             $applicantEntity = $this->Applicants->get($applicantId, [
                 'contain' => ['Genders']
             ]);
@@ -283,17 +287,8 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function onUpdateFieldGenderId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-
             $attr['type'] = 'disabled';
-            $genderId = $attr['entity']->gender_id;
-            
-            if($genderId == 1) {      // Will make the changes later (Unable to contain gender)
-                $genderName = 'Male';
-            } else {
-                $genderName = 'Female';
-            }   
-            
-            $attr['attr']['value'] = $genderName;
+            $attr['attr']['value'] = $attr['entity']->gender->name;
         }
 
         return $attr;
@@ -324,48 +319,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         if ($action == 'add') {
             $financialAssistanceTypeOptions = TableRegistry::get('Scholarship.FinancialAssistanceTypes')->getList()->toArray();
 
-             if (!empty($request->data[$this->alias()]['financial_assistance_type_id'])) {
-                $financialTypeId = $request->data[$this->alias()]['financial_assistance_type_id'];
-
-                 switch ($financialAssistanceTypeOptions[$financialTypeId]) {
-                    case 'Scholarship':
-                        // No implementation
-                        break;
-                    case 'Loan':
-                        $this->field('requested_amount', [
-                            'visible' => true
-                            // 'after' => 'scholarship_id'
-                        ]);
-                        $this->field('interest_rate', [
-                            'type' => 'disabled',
-                            'attr' => ['label' => __('Interest rate %')]
-                            // 'after' => 'requested_amount'
-                        ]);
-                        $this->field('interest_rate_type', [
-                            'type' => 'disabled',
-                            'attr' => ['label' => __('Interest Rate Type')]
-                            // 'after' => 'interest_rate'
-                        ]);
-                        $this->field('payment_frequency_id', [
-                            'type' => 'disabled',
-                            'attr' => ['label' => __('Payment Frequency')]
-                            // 'after' => 'interest_rate_type'
-                        ]);
-                        $this->field('loan_term', [
-                            'type' => 'disabled',
-                            'attr' => ['label' => __('Loan Term')]
-                            // 'after' => 'payment_frequency_id'
-                        ]); 
-                        break;
-                    case 'Grant':
-                        // No implementation
-                        break;
-                    case 'Workstudy':
-                        // No implementation
-                        break;
-                }
-            }
-
             $attr['type'] = 'select';
             $attr['options'] = $financialAssistanceTypeOptions;
             $attr['onChangeReload'] = 'changeFinancialAssistanceTypeId';
@@ -391,12 +344,51 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
             if (!empty($request->data[$this->alias()]['financial_assistance_type_id']) && !empty($request->data[$this->alias()]['applicant_id'])) {
                 
+                $financialAssistanceTypeOptions = TableRegistry::get('Scholarship.FinancialAssistanceTypes')->getList()->toArray();
+                $applicantId = $request->data[$this->alias()]['applicant_id'];
+                $financialTypeId =  $request->data[$this->alias()]['financial_assistance_type_id'];
+
                 $options = [
-                    'applicant_id' => $request->data[$this->alias()]['applicant_id'],
-                    'financial_type_id' => $request->data[$this->alias()]['financial_assistance_type_id']
+                    'applicant_id' => $applicantId,
+                    'financial_type_id' => $financialTypeId
                 ];
 
                 $scholarshipOptions = $this->Scholarships->getAvailableScholarships($options);
+
+                if (!empty($request->data[$this->alias()]['scholarship_id'])) {
+                     switch ($financialAssistanceTypeOptions[$financialTypeId]) {
+                        case 'Scholarship':
+                            // No implementation
+                            break;
+                        case 'Loan':
+                            $this->field('requested_amount', [
+                                'visible' => true
+                            ]);
+                            $this->field('interest_rate', [
+                                'type' => 'disabled',
+                                'attr' => ['label' => __('Interest rate %')]
+                            ]);
+                            $this->field('interest_rate_type', [
+                                'type' => 'disabled',
+                                'attr' => ['label' => __('Interest Rate Type')]
+                            ]);
+                            $this->field('payment_frequency_id', [
+                                'type' => 'disabled',
+                                'attr' => ['label' => __('Payment Frequency')]
+                            ]);
+                            $this->field('loan_term', [
+                                'type' => 'disabled',
+                                'attr' => ['label' => __('Loan Term')]
+                            ]); 
+                            break;
+                        case 'Grant':
+                            // No implementation
+                            break;
+                        case 'Workstudy':
+                            // No implementation
+                            break;
+                    }
+                }
             }
 
             $attr['type'] = 'select';
@@ -539,6 +531,10 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         if ($this->action == 'add') {
+            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+            $applicantName = $this->Applicants->get($applicantId)->name;
+            $Navigation->removeCrumb('Overview');
+            $Navigation->removeCrumb($applicantName);
             $Navigation->substituteCrumb('Applicants', 'Single Application');
         } 
     }
@@ -605,18 +601,82 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
     public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
     {
-
         $ScholarshipRecipient = TableRegistry::get('Institution.ScholarshipRecipient');
+
         $entity = $this->get($id);
 
         $recipient = [
             'recipient_id' => $entity->applicant_id,
-            'scholarship_id' => $entity->scholarship_id,
-            'approved_amount' => 0
+            'scholarship_id' => $entity->scholarship_id
         ];
 
         $newEntity = $ScholarshipRecipient->newEntity($recipient);
         $ScholarshipRecipient->save($newEntity);
+    }
+
+    public function findWorkbench(Query $query, array $options)
+    {
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $doneStatus = self::DONE;
+
+        $query
+            ->select([
+                $this->aliasField('applicant_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([$this->CreatedUser->alias()])
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId])
+            ->order([$this->aliasField('created') => 'DESC'])
+            ->formatResults(function (ResultSetInterface $results) {
+                   return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Scholarship',
+                        'controller' => 'ScholarshipApplications',
+                        'action' => 'ScholarshipApplications',
+                        'view',
+                         $this->paramsEncode([
+                            'applicant_id' => $row->applicant_id,
+                            'scholarship_id' => $row->scholarship_id
+                        ]),
+                        'queryString' => $this->paramsEncode([
+                            'applicant_id' => $row->applicant_id,
+                            'scholarship_id' => $row->scholarship_id
+                        ])
+                    ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
+                    } else {
+                        $receivedDate = $this->formatDate($row->modified);
+                    }
+                    $row['url'] = $url;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    $row['request_title'] = $row->applicant_id; // TBC
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
     }
 
 }

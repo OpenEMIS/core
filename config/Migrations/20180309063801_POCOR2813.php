@@ -10,6 +10,7 @@ class POCOR2813 extends AbstractMigration
     {
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
         $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
 
         $workflowModelData = [
             [
@@ -47,15 +48,25 @@ class POCOR2813 extends AbstractMigration
             [
                 'name' => 'Open',
                 'category' => '1',
-                'is_editable' => '0',
-                'is_removable' => '0',
+                'is_editable' => '1',
+                'is_removable' => '1',
                 'is_system_defined' => '1',
                 'workflow_id' => $workflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Application Review',
+                'name' => 'Pending For Review',
+                'category' => '2',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
+                'workflow_id' => $workflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Pending For Approval',
                 'category' => '2',
                 'is_editable' => '0',
                 'is_removable' => '0',
@@ -65,7 +76,7 @@ class POCOR2813 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Application Approved',
+                'name' => 'Withdrawn',
                 'category' => '3',
                 'is_editable' => '0',
                 'is_removable' => '0',
@@ -75,11 +86,21 @@ class POCOR2813 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Rejected',
+                'name' => 'Approved',
                 'category' => '3',
                 'is_editable' => '0',
                 'is_removable' => '0',
-                'is_system_defined' => '1',
+                'is_system_defined' => '0',
+                'workflow_id' => $workflowId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Rejected',
+                'category' => '0',
+                'is_editable' => '0',
+                'is_removable' => '0',
+                'is_system_defined' => '0',
                 'workflow_id' => $workflowId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
@@ -95,25 +116,42 @@ class POCOR2813 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
-        $applicationReviewStatusId = $WorkflowStepsTable->find()
+        $pendingForReviewStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
-                $WorkflowStepsTable->aliasField('category') => 2
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending For Review'
             ])
             ->extract('id')
             ->first();
-        $applicationApprovedStatusId = $WorkflowStepsTable->find()
+        $pendingForApprovalStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
+                $WorkflowStepsTable->aliasField('category') => 2,
+                $WorkflowStepsTable->aliasField('name') => 'Pending For Approval'
+            ])
+            ->extract('id')
+            ->first();
+        $withdrawnStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
-                $WorkflowStepsTable->aliasField('name') => 'Application Approved'
+                $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
+            ])
+            ->extract('id')
+            ->first();
+        $approvedStatusId = $WorkflowStepsTable->find()
+            ->where([
+                $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
+                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('name') => 'Approved'
             ])
             ->extract('id')
             ->first();
         $rejectedStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
-                $WorkflowStepsTable->aliasField('category') => 3,
+                $WorkflowStepsTable->aliasField('category') => 0,
                 $WorkflowStepsTable->aliasField('name') => 'Rejected'
             ])
             ->extract('id')
@@ -122,7 +160,7 @@ class POCOR2813 extends AbstractMigration
         //  workflow_actions
         $workflowActionData = [
             [
-                'name' => 'Submit For Review',
+                'name' => 'Submit For Approval',
                 'description' => NULL,
                 'action' => '0',
                 'visible' => '1',
@@ -130,7 +168,7 @@ class POCOR2813 extends AbstractMigration
                 'allow_by_assignee' => '1',
                 'event_key' => NULL,
                 'workflow_step_id' => $openStatusId,
-                'next_workflow_step_id' => $applicationReviewStatusId,
+                'next_workflow_step_id' => $pendingForReviewStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -141,9 +179,9 @@ class POCOR2813 extends AbstractMigration
                 'visible' => '1',
                 'comment_required' => '0',
                 'allow_by_assignee' => '0',
-                'event_key' => 'Workflow.onApprove',
-                'workflow_step_id' => $applicationReviewStatusId,
-                'next_workflow_step_id' => $applicationApprovedStatusId,
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingForReviewStatusId,
+                'next_workflow_step_id' => $pendingForApprovalStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -152,16 +190,152 @@ class POCOR2813 extends AbstractMigration
                 'description' => NULL,
                 'action' => '1',
                 'visible' => '1',
-                'comment_required' => '1',
+                'comment_required' => '0',
                 'allow_by_assignee' => '0',
                 'event_key' => NULL,
-                'workflow_step_id' => $applicationReviewStatusId,
+                'workflow_step_id' => $pendingForReviewStatusId,
                 'next_workflow_step_id' => $rejectedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Approve',
+                'description' => NULL,
+                'action' => '0',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => 'Workflow.onApproveScholarship',
+                'workflow_step_id' => $pendingForApprovalStatusId,
+                'next_workflow_step_id' => $approvedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $pendingForApprovalStatusId,
+                'next_workflow_step_id' => $rejectedStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Withdraw From Scholarship Application',
+                'description' => NULL,
+                'action' => NULL,
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '1',
+                'event_key' => 'Workflow.onWithdrawScholarship',
+                'workflow_step_id' => $approvedStatusId,
+                'next_workflow_step_id' => $withdrawnStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('workflow_actions', $workflowActionData);
+
+         // workflow_statuses
+        $workflowStatusesData = [
+            [
+                'code' => 'PENDINGREVIEW',
+                'name' => 'Pending Review',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'code' => 'PENDINGAPPROVAL',
+                'name' => 'Pending Approval',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'code' => 'APPROVED',
+                'name' => 'Approved',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'code' => 'REJECTED',
+                'name' => 'Rejected',
+                'is_editable' => 0,
+                'is_removable' => 0,
+                'workflow_model_id' => $this->workflowModelId,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('workflow_statuses', $workflowStatusesData);
+
+
+        $pendingReviewId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'PENDINGREVIEW',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
+        $pendingApprovalId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'PENDINGAPPROVAL',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
+        $approvedId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'APPROVED',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
+        $rejectedId = $WorkflowStatusesTable->find()
+            ->where([
+                $WorkflowStatusesTable->aliasField('code') => 'REJECTED',
+                $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
+            ])
+            ->extract('id')
+            ->first();
+
+        // workflow_statuses_steps
+        $workflowStatusesStepsData = [
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $pendingReviewId,
+                'workflow_step_id' => $pendingForReviewStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $pendingApprovalId,
+                'workflow_step_id' => $pendingForApprovalStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $approvedId,
+                'workflow_step_id' => $approvedStatusId
+            ],
+            [
+                'id' => Text::uuid(),
+                'workflow_status_id' => $rejectedId,
+                'workflow_step_id' => $rejectedStatusId
+            ]
+        ];
+        $this->insert('workflow_statuses_steps', $workflowStatusesStepsData);
+
 
         $table = $this->table('scholarships', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -558,6 +732,11 @@ class POCOR2813 extends AbstractMigration
             'comment' => 'This table contains all the scholarship applications'
         ]);
         $table
+            ->addColumn('id', 'char', [
+                'default' => null,
+                'limit' => 64,
+                'null' => false
+            ])
             ->addColumn('applicant_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
@@ -1434,7 +1613,6 @@ class POCOR2813 extends AbstractMigration
             ->save();
         // end of academic standing
 
-        $this->execute('ALTER TABLE `workflow_transitions` MODIFY COLUMN `model_reference` char(64) NOT NULL');
     }
 
     public function down()
@@ -1455,8 +1633,21 @@ class POCOR2813 extends AbstractMigration
                 SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = " . $workflowId . "
             )");
 
+        // delete workflow_statuses_steps
+        $this->execute("DELETE FROM `workflow_statuses_steps` WHERE `workflow_statuses_steps`.`workflow_step_id` IN (
+                SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = " . $workflowId . "
+            )");
+
+
         // delete workflow_steps
         $this->execute("DELETE FROM `workflow_steps` WHERE `workflow_id` = " . $workflowId);
+
+        // delete workflow_statuses
+        $this->execute("DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = " . $this->workflowModelId);
+
+        // delete workflow_transitions
+        $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->workflowModelId);
+
 
         $this->dropTable('scholarships');
         $this->dropTable('financial_assistance_types');
@@ -1479,7 +1670,6 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('payment_structure_categories');
         $this->dropTable('scholarship_recipient_collections');
         $this->dropTable('scholarship_recipient_academic_standings');
-        
-        $this->execute('ALTER TABLE `workflow_transitions` MODIFY COLUMN `model_reference` int(11) NOT NULL');
+    
     }
 }
