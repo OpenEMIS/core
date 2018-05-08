@@ -35,6 +35,22 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        $params = [
+            'applicant_id' => $entity->applicant_id,
+            'scholarship_id' => $entity->scholarship_id
+        ];
+
+        if (isset($buttons['view']['url'])) {
+            $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
+        }
+
+        return $buttons;
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('requested_amount', ['visible' => false]);
@@ -43,6 +59,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->field('financial_assistance_type_id');
         $this->setFieldOrder(['status_id', 'assignee_id', 'academic_period_id', 'scholarship_id', 'financial_assistance_type_id']);
 
+        // scholarship directory add button
         if ($extra['toolbarButtons']->offsetExists('add')) {
             $extra['toolbarButtons']['add']['url'] = [
                 'plugin' => 'Profile',
@@ -111,6 +128,11 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->setFieldOrder([
             'academic_period_id', 'code', 'scholarship_id', 'financial_assistance_type_id', 'description', 'max_award_amount', 'bond', 'requirement', 'instruction'
         ]);
+
+        // setup tabs only in view page
+        $tabElements = $this->controller->getScholarshipTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -132,15 +154,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $value = '';
         if ($entity->has('scholarship')) {
             $value = $entity->scholarship->code;
-        }
-        return $value;
-    }
-
-    public function onGetScholarshipId(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->name;
         }
         return $value;
     }
