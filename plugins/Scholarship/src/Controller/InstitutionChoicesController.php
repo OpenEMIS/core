@@ -46,9 +46,6 @@ class InstitutionChoicesController extends PageController
         $page->get('education_field_of_study_id')
             ->setLabel('Field Of Study');
 
-        // $page->get('location_type_id')
-        //     ->setLabel('Location Type');
-
         $page->get('is_selected')
             ->setLabel('Selection');
     }

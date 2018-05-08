@@ -25,9 +25,9 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
-    
+
     private $applicantName = null;
-   
+
     private $workflowEvents = [
         [
             'value' => 'Workflow.onApprove',
@@ -60,7 +60,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Workflow.Workflow');
-    
     }
 
     public function validationDefault(Validator $validator)
@@ -69,23 +68,16 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-
-
-    }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain([
-            'Applicants.Genders',
-        ]);
+        $query->contain(['Applicants.Genders']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -104,7 +96,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         $this->controller->set('contentHeader', __('Scholarship') . ' - ' .__('Scholarship Applications'));
         $query = $this->ControllerAction->getQueryString();
-        
+
         if (isset($extra['toolbarButtons']['back']['url'])) {
             $extra['toolbarButtons']['back']['url']['controller'] = 'ScholarshipApplicationDirectories';
             $extra['toolbarButtons']['back']['url']['action'] = 'index';
@@ -136,7 +128,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {   
+    {
         $query->contain([
             'Scholarships.AcademicPeriods',
             'Scholarships.FinancialAssistanceTypes'
@@ -151,103 +143,103 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $tabElements = $this->controller->getScholarshipTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
-       
+
         $this->setupFields();
     }
 
 
-    public function onGetOpenemisNo(Event $event, Entity $entity) 
-    {   
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
         if ($this->action == 'index') {
             return $entity->applicant->openemis_no;
         }
     }
 
-    public function onGetDateOfBirth(Event $event, Entity $entity) 
+    public function onGetDateOfBirth(Event $event, Entity $entity)
     {
         if ($this->action == 'index') {
             return $this->formatDate($entity->applicant->date_of_birth);
         }
     }
 
-    public function onGetGenderId(Event $event, Entity $entity) 
+    public function onGetGenderId(Event $event, Entity $entity)
     {
         if ($this->action == 'index') {
             return $entity->applicant->gender->name;
         }
     }
 
-    public function onGetIdentityType(Event $event, Entity $entity) 
+    public function onGetIdentityType(Event $event, Entity $entity)
     {
         if ($this->action == 'index') {
             return $entity->applicant->identity_type_id;
         }
     }
 
-    public function onGetIdentityNumber(Event $event, Entity $entity) 
+    public function onGetIdentityNumber(Event $event, Entity $entity)
     {
         if ($this->action == 'index') {
             return $entity->applicant->identity_number;
         }
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity) 
-    { 
+    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    {
         if ($this->action == 'view') {
             return $entity->scholarship->academic_period->name;
         }
     }
 
-    public function onGetCode(Event $event, Entity $entity) 
-    { 
+    public function onGetCode(Event $event, Entity $entity)
+    {
         if ($this->action == 'view') {
             return $entity->scholarship->code;
-        }    
+        }
     }
 
-    public function onGetScholarshipId(Event $event, Entity $entity) 
+    public function onGetScholarshipId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->scholarship->name;
         }
     }
 
-    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity) 
+    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->scholarship->financial_assistance_type->name;
         }
     }
 
-    public function onGetDescription(Event $event, Entity $entity) 
+    public function onGetDescription(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
           return $entity->scholarship->description;
         }
     }
 
-    public function onGetMaxAwardAmount(Event $event, Entity $entity) 
+    public function onGetMaxAwardAmount(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->scholarship->max_award_amount;
         }
     }
 
-    public function onGetBond(Event $event, Entity $entity) 
+    public function onGetBond(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->scholarship->bond.' Years';
         }
     }
 
-    public function onGetRequirement(Event $event, Entity $entity) 
+    public function onGetRequirement(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
           return $entity->scholarship->requirement;
         }
     }
 
-    public function onGetInstruction(Event $event, Entity $entity) 
+    public function onGetInstruction(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->scholarship->instruction;
@@ -343,7 +335,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             $scholarshipOptions = [];
 
             if (!empty($request->data[$this->alias()]['financial_assistance_type_id']) && !empty($request->data[$this->alias()]['applicant_id'])) {
-                
+
                 $financialAssistanceTypeOptions = TableRegistry::get('Scholarship.FinancialAssistanceTypes')->getList()->toArray();
                 $applicantId = $request->data[$this->alias()]['applicant_id'];
                 $financialTypeId =  $request->data[$this->alias()]['financial_assistance_type_id'];
@@ -379,7 +371,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                             $this->field('loan_term', [
                                 'type' => 'disabled',
                                 'attr' => ['label' => __('Loan Term')]
-                            ]); 
+                            ]);
                             break;
                         case 'Grant':
                             // No implementation
@@ -402,9 +394,9 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $attr['type'] = 'disabled';
-            
+
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
-                
+
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
                 $scholarshipEntity = $this->Scholarships->get($scholarshipId, [
                     'contain' => ['AcademicPeriods']
@@ -420,9 +412,9 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $attr['type'] = 'disabled';
-            
+
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
-                
+
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
                 $scholarshipEntity = $this->Scholarships->get($scholarshipId);
 
@@ -436,9 +428,9 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $attr['type'] = 'disabled';
-            
+
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
-                
+
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
                 $scholarshipEntity = $this->Scholarships->get($scholarshipId);
 
@@ -452,9 +444,9 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         if ($action == 'add') {
              $attr['type'] = 'disabled';
-            
+
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
-                
+
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
                 $scholarshipEntity = $this->Scholarships->get($scholarshipId);
 
@@ -463,14 +455,14 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         }
         return $attr;
     }
-    
+
     public function onUpdateFieldRequirement(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'disabled';
-            
+
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
-                
+
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
                 $scholarshipEntity = $this->Scholarships->get($scholarshipId);
 
@@ -536,7 +528,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             $Navigation->removeCrumb('Overview');
             $Navigation->removeCrumb($applicantName);
             $Navigation->substituteCrumb('Applicants', 'Single Application');
-        } 
+        }
     }
 
     public function setupFields($entity = null)
@@ -560,10 +552,10 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 $this->field('status_id', ['type' => 'hidden']);
                 $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
             }
-        } 
+        }
 
         if (in_array($this->action, ['view', 'add'])) {
-            
+
             $this->field('financial_assistance_type_id');
             $this->field('scholarship_id', ['type' => 'select']);
             $this->field('academic_period_id');
@@ -577,7 +569,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 $this->field('instruction');
                 $this->setFieldOrder([
                     'academic_period_id', 'status_id', 'code', 'scholarship_id', 'financial_assistance_type_id', 'description', 'max_award_amount', 'bond', 'requirement', 'instruction'
-                ]);  
+                ]);
             }
         }
     }

@@ -10,7 +10,7 @@ class ScholarshipsController extends PageController
     public function initialize()
     {
         parent::initialize();
-      
+
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Scholarship.ScholarshipsFieldOfStudies');
@@ -31,7 +31,7 @@ class ScholarshipsController extends PageController
     {
         parent::index();
         $page = $this->Page;
-       
+
         $page->exclude(['description', 'financial_assistance_type_id', 'scholarship_funding_source_id', 'academic_period_id', 'total_amount', 'requirements', 'instructions']);
     }
 
@@ -60,7 +60,7 @@ class ScholarshipsController extends PageController
         $page->get('academic_period_id')
             ->setControlType('select')
             ->setOptions($this->academicPeriodOptions, false);
-    
+
         $maxYear = 20;
         $bondOptions = $this->getBondOptions($maxYear);
 
@@ -80,7 +80,6 @@ class ScholarshipsController extends PageController
             ->setOptions($educationFieldOfStudiesOptions, false);
 
         $page->move('education_field_of_studies')->after('scholarship_funding_source_id');
-
     }
 
     public function view($id)
@@ -88,7 +87,7 @@ class ScholarshipsController extends PageController
         parent::view($id);
         $page = $this->Page;
 
-        $this->setupTabElements(['id' => $id]); 
+        $this->setupTabElements(['id' => $id]);
 
         $page->addNew('education_field_of_studies')
             ->setLabel('Fields Of Study')
@@ -100,12 +99,12 @@ class ScholarshipsController extends PageController
 
 
     public function setupTabElements($options)
-    {   
+    {
         $page = $this->Page;
         $plugin = $this->plugin;
 
         $scholarshipId = $page->decode($options['id'])['id']; //get actual value of scholarship
-        $queryString = $page->encode(['scholarship_id' => $scholarshipId]); 
+        $queryString = $page->encode(['scholarship_id' => $scholarshipId]);
 
         $tabElements = [
             'Scholarships' => [
@@ -124,13 +123,12 @@ class ScholarshipsController extends PageController
                 ->setUrl($tabAttr['url']);
         }
 
-        $page->getTab('Scholarships')->setActive('true');    
-      
+        $page->getTab('Scholarships')->setActive('true');
     }
 
     public function getBondOptions($maxYears)
     {
-        $bondOptions = [];    
+        $bondOptions = [];
 
         for ($i=0; $i<$maxYears; $i++) {
             $bondOptions [] = __($i .' Years');
