@@ -11,6 +11,5 @@ class InstitutionChoiceStatusesTable extends AppTable
     {
         parent::initialize($config);
         $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices']);
-        
     }
 }
