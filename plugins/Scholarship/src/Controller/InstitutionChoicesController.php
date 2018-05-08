@@ -46,10 +46,10 @@ class InstitutionChoicesController extends PageController
         $page->get('education_field_of_study_id')
             ->setLabel('Field Of Study');
 
-        $page->get('location_type_id')
-            ->setLabel('Location Type');
+        // $page->get('location_type_id')
+        //     ->setLabel('Location Type');
 
-        $page->get('selection_id')
+        $page->get('is_selected')
             ->setLabel('Selection');
     }
 
@@ -58,7 +58,7 @@ class InstitutionChoicesController extends PageController
         $page = $this->Page;
         parent::index();
 
-        $page->exclude(['institution_id', 'estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id', 'selection_id', 'requested_amount']);
+        $page->exclude(['institution_id', 'estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id', 'is_selected', 'requested_amount']);
 
         $page->move('institution_choice_status_id')->first();
     }
@@ -81,7 +81,7 @@ class InstitutionChoicesController extends PageController
 
         $scholarshipId = $page->getQueryString('scholarship_id');
 
-        $page->get('location_type_id')
+        $page->get('location_type')
             ->setControlType('select')
             ->setOptions($this->locationTypeOptions);
 

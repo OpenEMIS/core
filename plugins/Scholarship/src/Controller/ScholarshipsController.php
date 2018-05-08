@@ -32,7 +32,7 @@ class ScholarshipsController extends PageController
         parent::index();
         $page = $this->Page;
        
-        $page->exclude(['description', 'financial_assistance_type_id', 'funding_source_id', 'academic_period_id', 'total_amount', 'requirement', 'instruction']);
+        $page->exclude(['description', 'financial_assistance_type_id', 'scholarship_funding_source_id', 'academic_period_id', 'total_amount', 'requirements', 'instructions']);
     }
 
     public function add()
@@ -54,7 +54,7 @@ class ScholarshipsController extends PageController
         $page->get('financial_assistance_type_id')
             ->setControlType('select');
 
-        $page->get('funding_source_id')
+        $page->get('scholarship_funding_source_id')
             ->setControlType('select');
 
         $page->get('academic_period_id')
@@ -79,7 +79,7 @@ class ScholarshipsController extends PageController
             ->setAttributes('placeholder', __('Select Study Fields'))
             ->setOptions($educationFieldOfStudiesOptions, false);
 
-        $page->move('education_field_of_studies')->after('funding_source_id');
+        $page->move('education_field_of_studies')->after('scholarship_funding_source_id');
 
     }
 
