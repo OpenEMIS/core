@@ -151,7 +151,7 @@ class FieldOptionComponent extends Component
         'TripTypes' => ['className' => 'Transport.TripTypes', 'parent' => 'Transport'],
 
     // Scholarship
-        'FundingSources' => ['className' => 'Scholarship.FundingSources', 'parent' => 'Scholarship'],
+        'ScholarshipFundingSources' => ['className' => 'Scholarship.FundingSources', 'parent' => 'Scholarship'],
     ];
 
     public $components = ['AccessControl'];

@@ -14,7 +14,7 @@ class InstitutionChoicesTable extends AppTable
 {
     public function initialize(array $config)
     {
-        $this->table('scholarship_institution_choices');
+        $this->table('scholarship_application_institution_choices');
         parent::initialize($config);
 
         $this->belongsTo('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => ['scholarship_id', 'applicant_id']]);
