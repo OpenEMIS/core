@@ -109,7 +109,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('appraisal_period_id', ['visible' => false]);
-        $this->setFieldOrder(['appraisal_type_id', 'title', 'from', 'to', 'appraisal_form_id']);
+        $this->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'title', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
         $this->setupTabElements();
     }
 
@@ -131,8 +131,8 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden', 'value' => $entity->staff_id]);
         $this->field('title');
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period->academic_period_id, 'attr' => ['value' => $entity->appraisal_period->academic_period->name]]);
-        $this->field('from');
-        $this->field('to');
+        $this->field('appraisal_period_from');
+        $this->field('appraisal_period_to');
         $this->field('appraisal_type_id', ['type' => 'readonly', 'value' => $entity->appraisal_type_id, 'attr' => ['label' => __('Type'), 'value' => $entity->appraisal_type->name]]);
         $this->field('appraisal_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period_id, 'attr' => ['value' => $entity->appraisal_period->name]]);
         $this->field('appraisal_form_id', ['type' => 'readonly', 'value' => $entity->appraisal_form_id, 'attr' => ['value' => $entity->appraisal_form->name]]);
@@ -147,8 +147,8 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden', 'value' => $this->staff->id]);
         $this->field('title');
         $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
-        $this->field('from');
-        $this->field('to');
+        $this->field('appraisal_period_from', ['attr' => ['label' => __('Appraisal Period From')]]);
+        $this->field('appraisal_period_to', ['attr' => ['label' => __('Appraisal Period To')]]);
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
         $this->field('appraisal_period_id', ['type' => 'select', 'options' => $this->periodList, 'onChangeReload' => true]);
         $this->field('appraisal_form_id', ['type' => 'readonly']);
@@ -159,6 +159,11 @@ class StaffAppraisalsTable extends ControllerActionTable
         $entity = $this->newEntity();
         $appraisalFormId = $this->request->data($this->aliasField('appraisal_form_id'));
         $this->printAppraisalCustomField($appraisalFormId, $entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFieldOrder();
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -176,8 +181,8 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('staff_id', ['visible' => false]);
         $this->field('title');
         $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
-        $this->field('from');
-        $this->field('to');
+        $this->field('appraisal_period_from');
+        $this->field('appraisal_period_to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('appraisal_period_id');
         $this->field('appraisal_form_id');
@@ -185,6 +190,12 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment');
         $this->printAppraisalCustomField($entity->appraisal_form_id, $entity);
+        $this->setupFieldOrder();
+    }
+ 
+    private function setupFieldOrder()
+    {
+        $this->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'title', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
     }
 
     private function printAppraisalCustomField($appraisalFormId, Entity $entity)
