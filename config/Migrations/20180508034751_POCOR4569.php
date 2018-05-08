@@ -71,6 +71,7 @@ class POCOR4569 extends AbstractMigration
                 'comment' => 'links to appraisal_forms.id'
             ])
             ->addColumn('modified_user_id', 'integer', [
+                'limit' => 11,
                 'null' => true,
                 'default' => null
             ])
