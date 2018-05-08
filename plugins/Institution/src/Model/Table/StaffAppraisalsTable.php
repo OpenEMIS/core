@@ -260,7 +260,6 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         $key = [];
         $attr = [];
-        $params = [];
         $criteria = $formCritieria->appraisal_criteria;
 
         switch ($fieldTypeCode) {
