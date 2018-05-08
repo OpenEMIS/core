@@ -36,13 +36,6 @@ class AppraisalCriteriasTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
-
-        $this->fieldTypeList = $this->FieldTypes
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'code'
-            ])
-            ->toArray();
     }
 
     public function validationDefault(Validator $validator)
