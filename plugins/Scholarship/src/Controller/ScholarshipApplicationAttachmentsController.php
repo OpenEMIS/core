@@ -11,7 +11,7 @@ use Scholarship\Controller\ApplicationAttachmentsController as BaseController;
 class ScholarshipApplicationAttachmentsController extends BaseController
 {
     public function beforeFilter(Event $event)
-    {   
+    {
         $page = $this->Page;
 
         $queryString = $this->request->query['queryString'];
@@ -22,16 +22,15 @@ class ScholarshipApplicationAttachmentsController extends BaseController
         parent::beforeFilter($event);
         // // set header
         $page->setHeader($userName . ' - ' . __('Attachments'));
-      
+
         $page->setQueryString('applicant_id', $applicantId);
         $page->setQueryString('scholarship_id', $scholarshipId);
 
-        $page->get('applicant_id')->setControlType('hidden')->setValue($applicantId);        
+        $page->get('applicant_id')->setControlType('hidden')->setValue($applicantId);
         $page->get('scholarship_id')->setControlType('hidden')->setValue($scholarshipId);
-        
+
 
         $this->setBreadCrumb(['userName' => $userName]);
         $this->setupTabElements(['queryString' => $queryString]);
-
     }
 }

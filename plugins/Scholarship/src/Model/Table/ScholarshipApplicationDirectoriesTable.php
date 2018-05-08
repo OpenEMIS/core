@@ -2,7 +2,6 @@
 namespace Scholarship\Model\Table;
 
 use Cake\ORM\Query;
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class ScholarshipApplicationDirectoriesTable extends AppTable
@@ -18,19 +17,10 @@ class ScholarshipApplicationDirectoriesTable extends AppTable
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
-
-
-    }
-
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-        return $validator;
     }
 
     public function findIndex(Query $query, array $options)
-    {   
+    {
         $query->where([$this->aliasField('super_admin') => 0]);
 
         return $query;
