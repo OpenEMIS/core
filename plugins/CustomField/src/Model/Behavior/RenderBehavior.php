@@ -55,7 +55,7 @@ class RenderBehavior extends Behavior {
         $customValue = $settings['customValue'];
         $fieldValues = $settings['fieldValues'];
 
-        if (strlen($customValue[$valueKey]) == 0) {
+        if (isset($customValue[$valueKey]) && strlen($customValue[$valueKey]) == 0) {
             if (isset($entity->id)) {
                 $settings['deleteFieldIds'][] = $customValue[$fieldKey];
             }
