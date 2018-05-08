@@ -768,6 +768,7 @@ class RestSurveyComponent extends Component
                 'is_unique' => $this->FormField->aliasField('is_unique'),
                 'field_type' => $this->Field->aliasField('field_type'),
                 'default_name' => $this->Field->aliasField('name'),
+                'default_description' => $this->Field->aliasField('description'),
                 'default_is_mandatory' => $this->Field->aliasField('is_mandatory'),
                 'default_is_unique' => $this->Field->aliasField('is_unique'),
                 'params' => $this->Field->aliasField('params')
@@ -1336,20 +1337,11 @@ class RestSurveyComponent extends Component
 
     private function note($field, $parentNode, $instanceId, $extra)
     {
-
-        $noteResults = $this->Field
-            ->find()
-            ->select('description')
-            ->where([
-                $this->Field->aliasField('id') => $field->field_id
-            ])
-            ->toArray();
-
         $noteBreakNode = $parentNode->addChild('group', null, NS_XF);
         $noteBreakNode->addAttribute("ref", $field->field_id);
         $noteBreakNode->addChild("label", htmlspecialchars($field->default_name, ENT_QUOTES), NS_XF);
         $noteBreakNode->addAttribute("oe-type", "note");
-        $noteNode = $noteBreakNode->addChild("p", $noteResults[0]['description'], NS_XHTML);
+        $noteBreakNode->addChild("p", htmlspecialchars($field->default_description, ENT_QUOTES), NS_XHTML);
     }
 
     private function setCommonNode($field, $parentNode, $instanceId, $extra)
