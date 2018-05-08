@@ -9,7 +9,6 @@ class ScholarshipsTable extends AppTable
 {
     public function initialize(array $config)
     {
-      
         parent::initialize($config);
 
         $this->belongsTo('FinancialAssistanceTypes', ['className' => 'Scholarship.FinancialAssistanceTypes']);
@@ -20,14 +19,14 @@ class ScholarshipsTable extends AppTable
         $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('EducationFieldOfStudies', [
-                    'className' => 'Education.EducationFieldOfStudies',
-                    'joinTable' => 'scholarships_field_of_studies',
-                    'foreignKey' => 'scholarship_id', 
-                    'targetForeignKey' => 'education_field_of_study_id',
-                    'through' => 'Scholarship.ScholarshipsFieldOfStudies',
-                    'dependent' => true,
-                    'cascadeCallbacks' => true
-                ]);
+            'className' => 'Education.EducationFieldOfStudies',
+            'joinTable' => 'scholarships_field_of_studies',
+            'foreignKey' => 'scholarship_id',
+            'targetForeignKey' => 'education_field_of_study_id',
+            'through' => 'Scholarship.ScholarshipsFieldOfStudies',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
     }
 
     public function validationDefault(Validator $validator)
@@ -63,7 +62,7 @@ class ScholarshipsTable extends AppTable
                      })
                 ->where([$this->aliasField('financial_assistance_type_id') => $financialTypeId])
                 ->toArray();
-        } 
+        }
         return $list;
     }
 }
