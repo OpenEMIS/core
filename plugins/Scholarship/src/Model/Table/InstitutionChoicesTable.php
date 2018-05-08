@@ -19,7 +19,7 @@ class InstitutionChoicesTable extends AppTable
 
         $this->belongsTo('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => ['scholarship_id', 'applicant_id']]);
 
-        $this->belongsTo('Applicants', ['className' => 'Security.Users', 'foreignKey' => 'applicant_id']);
+        $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
 
         $this->belongsTo('Countries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'country_id']);
