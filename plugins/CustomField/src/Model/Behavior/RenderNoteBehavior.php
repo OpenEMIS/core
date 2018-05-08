@@ -16,30 +16,29 @@ class RenderNoteBehavior extends RenderBehavior
 
     public function onGetCustomNoteElement(Event $event, $action, $entity, $attr, $options = [])
     {
-
         $value = '';
 
         // for edit
-        $fieldId = $attr['customField']->id;
+        $customField = $attr['customField'];
+        $fieldId = $customField->id;
         $fieldValues = $attr['customFieldValues'];
         $savedId = null;
+        $displayValue = null;
 
-        $surveyQuestions = TableRegistry::get('Survey.SurveyQuestions');
-        $surveyQuestionsDesc = $surveyQuestions
-            ->find()
-            ->select('description')
-            ->where([$surveyQuestions->aliasField('id') => $fieldId])
-            ->toArray();
-            //pr($surveyQuestionsDesc);
         if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
             if (isset($fieldValues[$fieldId]['id'])) {
                 $savedId = $fieldValues[$fieldId]['id'];
             }
         }
+        if ($customField->has('description')) {
+            $displayValue = $customField->description;
+        }
         // End
 
         if ($action == 'view') {
-             $value = $surveyQuestionsDesc[0]['description'];
+            if (!is_null($displayValue)) {
+                $value = nl2br($displayValue);
+            }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
             $unlockFields = [];
@@ -47,7 +46,9 @@ class RenderNoteBehavior extends RenderBehavior
 
             $options['type'] = 'textarea';
             $options['disabled'] = 'disabled';
-            $options['value'] = $surveyQuestionsDesc[0]['description'];
+            if (!is_null($displayValue)) {
+                $options['value'] = $displayValue;
+            }
            
             $value .= $form->input($fieldPrefix.".textarea_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
@@ -62,11 +63,5 @@ class RenderNoteBehavior extends RenderBehavior
 
         $event->stopPropagation();
         return $value;
-    }
-
-    public function processNoteValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
-    {
-        $settings['valueKey'] = 'textarea_value';
-        $this->processValues($entity, $data, $settings);
     }
 }
