@@ -147,8 +147,8 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden', 'value' => $this->staff->id]);
         $this->field('title');
         $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
-        $this->field('appraisal_period_from', ['attr' => ['label' => __('Appraisal Period From')]]);
-        $this->field('appraisal_period_to', ['attr' => ['label' => __('Appraisal Period To')]]);
+        $this->field('appraisal_period_from');
+        $this->field('appraisal_period_to');
         $this->field('appraisal_type_id', ['attr' => ['label' => __('Type')], 'type' => 'select']);
         $this->field('appraisal_period_id', ['type' => 'select', 'options' => $this->periodList, 'onChangeReload' => true]);
         $this->field('appraisal_form_id', ['type' => 'readonly']);
