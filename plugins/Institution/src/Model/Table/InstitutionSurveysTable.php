@@ -140,6 +140,18 @@ class InstitutionSurveysTable extends ControllerActionTable
         ];
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $broadcaster = $this;
+        $listeners = [];
+        $listeners[] = TableRegistry::get('Student.StudentSurveys');
+        $listeners[] = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+
+        if (!empty($listeners)) {
+            $this->dispatchEventToModels('Model.InstitutionSurveys.afterSave', [$entity], $broadcaster, $listeners);
+        }
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $errors = $entity->errors();
