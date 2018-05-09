@@ -1600,7 +1600,6 @@ class WorkflowBehavior extends Behavior
                     return $event->result;
                 }
 
-
                 // Trigger event here
                 $workflowAction = $this->WorkflowActions->get($entity->workflow_action_id);
 
