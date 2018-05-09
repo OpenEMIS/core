@@ -31,7 +31,7 @@ class AppraisalNumberAnswersTable extends AppTable
     public function validationDefault(Validator $validator)
     {
         return $validator
-            ->notEmpty('answer', __('This field cannot be left empty'), function ($context) {
+            ->notEmpty('answer', null, function ($context) {
                 if (array_key_exists('is_mandatory', $context['data'])) {
                     return $context['data']['is_mandatory'];
                 }
@@ -194,7 +194,7 @@ class AppraisalNumberAnswersTable extends AppTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew() && is_null($entity->answer)) {
-            return $event->stopPropagation();
+            return false;
         }
     }
 
