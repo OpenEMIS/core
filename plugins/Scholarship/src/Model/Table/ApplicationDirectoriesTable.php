@@ -4,7 +4,7 @@ namespace Scholarship\Model\Table;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 
-class ScholarshipApplicationDirectoriesTable extends AppTable
+class ApplicationDirectoriesTable extends AppTable
 {
     public function initialize(array $config)
     {

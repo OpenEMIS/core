@@ -1473,7 +1473,7 @@ class NavigationComponent extends Component
                     'parent' => 'Administration',
                     'link' => false,
                 ],
-                    'Scholarships.index' => [
+                    'Scholarships.Scholarships' => [
                         'title' => 'Scholarships',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],

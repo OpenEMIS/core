@@ -54,6 +54,9 @@ trait OptionsTrait
             'StaffTrainingNeeds' => [
                 'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
             ],
+            'Scholarships' => [
+                'field_of_study_selection' => [1 => __('Select Field Of Study'), '-1' => __('Select All Field Of Studies')]
+            ],
             'InstitutionChoices' => [
                 'location_type' => [0 => __('Domestic'), '-1' => __('International')]
             ],

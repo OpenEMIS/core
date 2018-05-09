@@ -1977,6 +1977,13 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'Scholarship' => [
+            'Scholarships' => [
+                'date_application_close' => [
+                    'ruleCompareDateReverse' => 'Application End date should not be earlier than Application Start date'
+                ]
+            ],
+        ],
         'Competency' => [
             'GradingOptions' => [
                 'code' => [

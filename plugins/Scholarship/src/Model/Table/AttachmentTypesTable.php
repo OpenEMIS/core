@@ -4,10 +4,11 @@ namespace Scholarship\Model\Table;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 
-class ScholarshipAttachmentTypesTable extends AppTable
+class AttachmentTypesTable extends AppTable
 {
     public function initialize(array $config)
     {
+        $this->table('scholarship_attachment_types');
         parent::initialize($config);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);

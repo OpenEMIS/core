@@ -9,6 +9,7 @@ class FinancialAssistanceTypesTable extends AppTable
 {
     public function initialize(array $config)
     {
+    	$this->table('scholarship_financial_assistance_types');
         parent::initialize($config);
         $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
