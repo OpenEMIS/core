@@ -283,15 +283,15 @@ class StaffAppraisalsTable extends ControllerActionTable
                 break;
         }
 
-        // build custom fields
-        $attr['attr']['label'] = $details['criteria_name'];
-        $attr['attr']['required'] = $details['is_mandatory'];
-
         // set each answer in entity
         if (!$entity->offsetExists($key)) {
             $entity->{$key} = [];
         }
         $entity->{$key}[$criteriaCounter[$fieldTypeCode]] = !empty($formCritieria->{$key}) ? current($formCritieria->{$key}) : [];
+
+        // build custom fields
+        $attr['attr']['label'] = $details['criteria_name'];
+        $attr['attr']['required'] = $details['is_mandatory'];
 
         $this->field($fieldKey.'.answer', $attr);
         $this->field($fieldKey.'.is_mandatory', ['type' => 'hidden', 'value' => $details['is_mandatory']]);
