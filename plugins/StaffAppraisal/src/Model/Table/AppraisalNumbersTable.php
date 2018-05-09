@@ -26,25 +26,25 @@ class AppraisalNumbersTable extends AppTable
     {
 
         return $validator
-            ->notEmpty('min_exclusive', __('This field cannot be left empty'), function ($context) {
+            ->notEmpty('min_exclusive', null, function ($context) {
                 if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::GREATER_THAN) {
                     return empty($context['data']['min_exclusive']);
                 }
                 return false;
             })
-            ->notEmpty('min_inclusive', __('This field cannot be left empty'), function ($context) {
+            ->notEmpty('min_inclusive', null, function ($context) {
                 if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::GREATER_THAN_OR_EQUAL) {
                     return empty($context['data']['min_inclusive']);
                 }
                 return false;
             })
-            ->notEmpty('max_exclusive', __('This field cannot be left empty'), function ($context) {
+            ->notEmpty('max_exclusive', null, function ($context) {
                 if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::LESS_THAN) {
                     return empty($context['data']['max_exclusive']);
                 }
                 return false;
             })
-            ->notEmpty('max_inclusive', __('This field cannot be left empty'), function ($context) {
+            ->notEmpty('max_inclusive', null, function ($context) {
                 if (array_key_exists('validation_rule', $context['data']) && $context['data']['validation_rule'] == self::LESS_THAN_OR_EQUAL) {
                     return empty($context['data']['max_inclusive']);
                 }

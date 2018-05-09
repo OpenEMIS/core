@@ -98,8 +98,7 @@ class POCOR4547 extends AbstractMigration
             ])
             ->addColumn('answer', 'integer', [
                 'limit' => 11,
-                'null' => true,
-                'comment' => 'links to appraisal_dropdown_options.id'
+                'null' => true
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'limit' => 11,
