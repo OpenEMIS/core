@@ -16,6 +16,7 @@ class GuardianUserTable extends UserTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
+        $this->addBehavior('User.Mandatory', ['userRole' => 'Guardian', 'roleFields' =>['Identities', 'Nationalities']]);
     }
 
     public function implementedEvents()
@@ -128,6 +129,14 @@ class GuardianUserTable extends UserTable {
         $extra['toolbarButtons']['back']['url'][0] = 'add';
 
         $this->controller->set('selectedAction', 'Guardians');
+        $this->setFieldOrder([
+            'information_section', 'photo_content', 'openemis_no', 'first_name',
+            'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id',
+            'date_of_birth', 'nationality_id','identity_type_id', 'location_section',
+            'address', 'postal_code', 'address_area_section', 'address_area_id',
+            'birthplace_area_section', 'birthplace_area_id', 'other_information_section',
+            'nationality','identity_type', 'identity_number', 'username', 'password'
+        ]);
     }
 
     public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
