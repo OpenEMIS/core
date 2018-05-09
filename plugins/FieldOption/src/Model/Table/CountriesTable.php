@@ -11,7 +11,7 @@ class CountriesTable extends ControllerActionTable
         $this->table('countries');
         parent::initialize($config);
 
-        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices']);
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);
         
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('cascade');

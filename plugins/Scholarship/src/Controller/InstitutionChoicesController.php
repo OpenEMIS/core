@@ -18,8 +18,8 @@ class InstitutionChoicesController extends PageController
         parent::initialize();
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Security.Users');
-        $this->loadModel('Scholarship.InstitutionChoices');
-        $this->Page->loadElementsFromTable($this->InstitutionChoices);
+        $this->loadModel('Scholarship.ApplicationInstitutionChoices');
+        $this->Page->loadElementsFromTable($this->ApplicationInstitutionChoices);
 
         $this->locationTypeOptions = $this->getSelectOptions('InstitutionChoices.location_type');
     }
@@ -37,7 +37,7 @@ class InstitutionChoicesController extends PageController
 
         parent::beforeFilter($event);
 
-        $page->get('institution_choice_status_id')
+        $page->get('scholarship_institution_choice_status_id')
             ->setLabel('Status');
 
         $page->get('institution_name')
@@ -57,7 +57,7 @@ class InstitutionChoicesController extends PageController
 
         $page->exclude(['institution_id', 'estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id', 'is_selected', 'requested_amount']);
 
-        $page->move('institution_choice_status_id')->first();
+        $page->move('scholarship_institution_choice_status_id')->first();
     }
 
     public function add()
@@ -85,15 +85,15 @@ class InstitutionChoicesController extends PageController
         $page->get('country_id')
             ->setControlType('select');
 
-        $page->get('level_of_study_id')
+        $page->get('qualification_level_id')
             ->setControlType('select');
 
-        $page->get('institution_choice_status_id')
+        $page->get('scholarship_institution_choice_status_id')
             ->setControlType('select');
 
         // Education Field of Studies
         $educationFieldOfStudies = $this->EducationFieldOfStudies
-            ->find('scholarshipOptionList', [
+            ->find('availableFieldOfStudyOptionList', [
                 'defaultOption' => false,
                 'scholarship_id' => $scholarshipId
             ])
@@ -102,6 +102,8 @@ class InstitutionChoicesController extends PageController
         $page->get('education_field_of_study_id')
             ->setControlType('select')
             ->setOptions($educationFieldOfStudies);
+
+        $this->reorderFields();
     }
 
     public function setBreadCrumb($options)
@@ -152,77 +154,49 @@ class InstitutionChoicesController extends PageController
         }
     }
 
-    public function setupTabElements($options)
-    {
+   public function setupTabElements()
+    {  
         $page = $this->Page;
-        $plugin = $this->plugin;
-        $tabElements = [];
-        $queryString = array_key_exists('queryString', $options) ? $options['queryString'] : '';
 
-        if ($plugin == 'Scholarship') {
-            $tabElements = [
-                'ScholarshipApplications' => ['text' => __('Overview')],
-                // 'Generals' => ['text' => __('General')],
-                'Identities' => ['text' => __('Identities')],
-                'UserNationalities' => ['text' => __('Nationalities')],
-                'Contacts' => ['text' => __('Contacts')],
-                'Guardians' => ['text' => __('Guardians')],
-                // 'ExaminationResults' => ['text' => __('Examinations')],
-                // 'Qualifications' => ['text' => __('Qualifications')],
-                'ScholarshipHistories' => ['text' => __('Scholarship History')], //page
-                'ApplicationInstitutionChoices' => ['text' => __('Institution Choices')], //page
-                'ScholarshipApplicationAttachments' => ['text' => __('Attachments')], //page
-            ];
-
-            foreach ($tabElements as $action => &$obj) {
-                if ($action == 'ScholarshipApplications') {
-                    $url = [
-                        'plugin' => $plugin,
-                        'controller' => 'ScholarshipApplications',
-                        'action' => $action,
-                        'view',
-                        $queryString,
-                        'queryString' => $queryString
-                    ];
-                } elseif (in_array($action, ['ScholarshipHistories', 'ApplicationInstitutionChoices', 'ScholarshipApplicationAttachments'])) {
-                    $url = [
-                        'plugin' => $plugin,
-                        'controller' => $action,
-                        'action' => 'index',
-                        'queryString' => $queryString
-                    ];
-
-                } else {
-                    $url = [
-                        'plugin' => $plugin,
-                        'controller' => 'ScholarshipApplications',
-                        'action' => $action,
-                        'index',
-                        'queryString' => $queryString
-                    ];
-
-                    if ($action == 'UserNationalities') {
-                        $url['action'] = 'Nationalities';
-                    }
-                }
-                $obj['url'] = $url;
-            }
-        } else if ($plugin == 'Profile') {
-            $tabElements = [
-                'ScholarshipApplications' => [
-                    'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplications', 'view', $queryString, 'queryString' => $queryString],
-                    'text' => __('Overview')
-                ],
-                'InstitutionChoices' => [
-                    'url' => ['plugin' => 'Profile', 'controller' => 'ProfileInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
-                    'text' => __('Institution Choices')
-                ],
-                'Attachments' => [
-                    'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
-                    'text' => __('Attachments')
-                ]
-            ];
+        if (array_key_exists('queryString', $this->request->query)) {
+            $queryString = $this->request->query('queryString');
         }
+
+        $tabElements = [
+            'Applications' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'view', $queryString, 'queryString' => $queryString],
+                'text' => __('Overview')
+            ],
+            'Identities' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Identities', 'index', 'queryString' => $queryString],
+                'text' => __('Identities')
+            ],
+            'UserNationalities' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Nationalities', 'index', 'queryString' => $queryString],
+                'text' => __('Nationalities')
+            ],
+            'Contacts' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Contacts', 'index', $queryString, 'queryString' => $queryString],
+                'text' => __('Contacts')
+            ],
+            'Guardians' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Guardians', 'index', $queryString, 'queryString' => $queryString],
+                'text' => __('Guardians')
+            ],
+            'Histories' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipHistories', 'action' => 'index', 'queryString' => $queryString],
+                'text' => __('Scholarship History')
+            ],
+            'InstitutionChoices' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
+                'text' => __('Institution Choices')
+            ],
+            'ApplicationAttachments' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
+                'text' => __('Attachments')
+            ],
+     
+        ];
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
@@ -231,9 +205,8 @@ class InstitutionChoicesController extends PageController
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
-
         // set active tab
-        // $page->getTab('InstitutionChoices')->setActive('true');
+        $page->getTab('InstitutionChoices')->setActive('true');
     }
 
     public function onRenderLocationTypeId(Event $event, Entity $entity, PageElement $element)
@@ -245,5 +218,15 @@ class InstitutionChoicesController extends PageController
 
             return $value;
         }
+    }
+
+    private function reorderFields()
+    {
+        $page = $this->Page;
+
+        $page->move('country_id')->after('location_type');
+        $page->move('scholarship_institution_choice_status_id')->after('institution_name');
+        $page->move('education_field_of_study_id')->after('estimated_cost');
+        $page->move('qualification_level_id')->after('course_name');
     }
 }

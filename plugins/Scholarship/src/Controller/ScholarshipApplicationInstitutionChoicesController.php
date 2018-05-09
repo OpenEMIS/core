@@ -7,7 +7,7 @@ use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use Scholarship\Controller\InstitutionChoicesController as BaseController;
 
-class ApplicationInstitutionChoicesController extends BaseController
+class ScholarshipApplicationInstitutionChoicesController extends BaseController
 {
     public function beforeFilter(Event $event)
     {
@@ -32,6 +32,6 @@ class ApplicationInstitutionChoicesController extends BaseController
         $this->setBreadCrumb(['userName' => $userName]);
         $this->setupTabElements(['queryString' => $queryString]);
 
-        $page->exclude(['selection_id']);
+        $page->exclude(['is_selected']);
     }
 }

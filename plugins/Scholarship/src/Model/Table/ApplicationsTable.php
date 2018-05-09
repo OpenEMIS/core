@@ -20,7 +20,8 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
 class ApplicationsTable extends ControllerActionTable
-{
+{   
+    use OptionsTrait;
     // Workflow Steps - category
     const TO_DO = 1;
     const IN_PROGRESS = 2;
@@ -47,8 +48,8 @@ class ApplicationsTable extends ControllerActionTable
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
 
-        $this->hasMany('InstitutionChoices', [
-            'className' => 'Scholarship.InstitutionChoices',
+        $this->hasMany('ApplicationInstitutionChoices', [
+            'className' => 'Scholarship.ApplicationInstitutionChoices',
             'foreignKey' => ['applicant_id', 'scholarship_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -62,6 +63,7 @@ class ApplicationsTable extends ControllerActionTable
 
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('CompositeKey');
     }
 
     public function validationDefault(Validator $validator)
@@ -85,7 +87,7 @@ class ApplicationsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add']['url'])) {
-            $extra['toolbarButtons']['add']['url']['controller'] = 'ApplicationDirectories';
+            $extra['toolbarButtons']['add']['url']['controller'] = 'ScholarshipApplicationDirectories';
             $extra['toolbarButtons']['add']['url']['action'] = 'index';
             $extra['toolbarButtons']['add']['attr']['title'] = __('Apply');
             unset($extra['toolbarButtons']['add']['url'][0]);
@@ -100,7 +102,7 @@ class ApplicationsTable extends ControllerActionTable
         $query = $this->ControllerAction->getQueryString();
 
         if (isset($extra['toolbarButtons']['back']['url'])) {
-            $extra['toolbarButtons']['back']['url']['controller'] = 'ApplicationDirectories';
+            $extra['toolbarButtons']['back']['url']['controller'] = 'ScholarshipApplicationDirectories';
             $extra['toolbarButtons']['back']['url']['action'] = 'index';
             unset($extra['toolbarButtons']['back']['url'][0]);
             unset($extra['toolbarButtons']['back']['url']['queryString']);
@@ -223,7 +225,7 @@ class ApplicationsTable extends ControllerActionTable
     public function onGetMaxAwardAmount(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->scholarship->max_award_amount;
+            return $entity->scholarship->maximum_award_amount;
         }
     }
 
@@ -237,14 +239,14 @@ class ApplicationsTable extends ControllerActionTable
     public function onGetRequirement(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-          return $entity->scholarship->requirement;
+          return $entity->scholarship->requirements;
         }
     }
 
     public function onGetInstruction(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->scholarship->instruction;
+            return $entity->scholarship->instructions;
         }
     }
 
@@ -429,8 +431,8 @@ class ApplicationsTable extends ControllerActionTable
 
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
                 $scholarshipEntity = $this->Scholarships->get($scholarshipId);
-
-                $attr['attr']['value'] = $scholarshipEntity->max_award_amount;
+             
+                $attr['attr']['value'] = $scholarshipEntity->maximum_award_amount;
             }
         }
         return $attr;
@@ -461,8 +463,8 @@ class ApplicationsTable extends ControllerActionTable
 
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
                 $scholarshipEntity = $this->Scholarships->get($scholarshipId);
-
-                $attr['attr']['value'] = $scholarshipEntity->requirement;
+        
+                $attr['attr']['value'] = $scholarshipEntity->requirements;
             }
         }
         return $attr;
@@ -474,7 +476,12 @@ class ApplicationsTable extends ControllerActionTable
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
-                $attr['attr']['value'] = 'TBC';
+                $scholarshipEntity = $this->Scholarships->get($scholarshipId, [
+                    'contain' => ['Loans']
+                ]);
+                
+                $value = $scholarshipEntity->loan->interest_rate;
+                $attr['attr']['value'] = $value . '%';
            }
         }
 
@@ -485,7 +492,14 @@ class ApplicationsTable extends ControllerActionTable
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
-                $attr['attr']['value'] = 'TBC';
+                     $scholarshipEntity = $this->Scholarships->get($scholarshipId, [
+                    'contain' => ['Loans']
+                ]);
+
+                $value = $scholarshipEntity->loan->interest_rate_type;
+                $interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
+
+                $attr['attr']['value'] = $interestRateOptions[$value];
             }
         }
 
@@ -496,7 +510,12 @@ class ApplicationsTable extends ControllerActionTable
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
-                $attr['attr']['value'] = 'TBC';
+                $scholarshipEntity = $this->Scholarships->get($scholarshipId, [
+                    'contain' => ['Loans.PaymentFrequencies']
+                ]);
+       
+                $value = $scholarshipEntity->loan->payment_frequency->name;
+                $attr['attr']['value'] = $value;
             }
         }
 
@@ -509,7 +528,12 @@ class ApplicationsTable extends ControllerActionTable
             if (!empty($request->data[$this->alias()]['scholarship_id'])) {
 
                 $scholarshipId = $request->data[$this->alias()]['scholarship_id'];
-                $attr['attr']['value'] = 'TBC';
+                $scholarshipEntity = $this->Scholarships->get($scholarshipId, [
+                    'contain' => ['Loans']
+                ]);
+
+                $value = $scholarshipEntity->loan->loan_term;
+                $attr['attr']['value'] = $value . 'Years';
             }
         }
 
@@ -529,10 +553,11 @@ class ApplicationsTable extends ControllerActionTable
 
     public function setupFields($entity = null)
     {
+
         $this->field('requested_amount', ['visible' => false]);
         $this->field('assignee_id', ['visible' => false]);
 
-        if(in_array($this->action, ['index', 'add'])) {
+        if(in_array($this->action, ['index', 'add', 'edit'])) {
             $this->field('applicant_id',['type' => 'readonly', 'entity' => $entity]);
             $this->field('openemis_no',['entity' => $entity]);
             $this->field('date_of_birth',['entity' => $entity]);
@@ -544,13 +569,13 @@ class ApplicationsTable extends ControllerActionTable
                 'status_id', 'openemis_no', 'applicant_id', 'date_of_birth', 'gender_id', 'identity_type_id', 'identity_number'
             ]);
 
-            if($this->action == 'add') {
+            if(in_array($this->action, ['add', 'edit'])) {
                 $this->field('status_id', ['type' => 'hidden']);
                 $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
             }
         }
 
-        if (in_array($this->action, ['view', 'add'])) {
+        if (in_array($this->action, ['view', 'add', 'edit'])) {
 
             $this->field('financial_assistance_type_id');
             $this->field('scholarship_id', ['type' => 'select']);
@@ -581,6 +606,10 @@ class ApplicationsTable extends ControllerActionTable
 
         if (isset($buttons['view']['url'])) {
             $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
+        }
+
+        if (isset($buttons['edit']['url'])) {
+            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
         }
 
         return $buttons;

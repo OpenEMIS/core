@@ -16,8 +16,8 @@ class HistoriesTable extends AppTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
-        $this->hasMany('InstitutionChoices', [
-            'className' => 'Scholarship.InstitutionChoices',
+        $this->hasMany('ApplicationInstitutionChoices', [
+            'className' => 'Scholarship.ApplicationInstitutionChoices',
             'foreignKey' => ['applicant_id', 'scholarship_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
