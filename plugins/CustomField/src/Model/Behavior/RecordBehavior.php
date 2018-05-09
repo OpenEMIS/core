@@ -55,7 +55,7 @@ class RecordBehavior extends Behavior
     ];
 
     // value for these field types will be saved on custom_field_values
-    private $fieldValueArray = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
+    private $fieldValueArray = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE', 'NOTE'];
 
     private $CustomFieldValues = null;
     private $CustomTableCells = null;
@@ -110,6 +110,7 @@ class RecordBehavior extends Behavior
         $this->_table->addBehavior('CustomField.RenderCoordinates');
         $this->_table->addBehavior('CustomField.RenderFile');
         $this->_table->addBehavior('CustomField.RenderRepeater');
+        $this->_table->addBehavior('CustomField.RenderNote');
         // End
 
         // If tabSection is not set, added to handle Section Header
