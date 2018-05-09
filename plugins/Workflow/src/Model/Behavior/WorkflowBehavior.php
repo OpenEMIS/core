@@ -1591,6 +1591,15 @@ class WorkflowBehavior extends Behavior
                     return $event->result;
                 }
                 // End
+                
+                // Dispatch event for student list and repeater to update the status id accordingly
+                $modelEntity = $this->_table->get($id);
+                $statusId = $modelEntity->status_id;
+                $event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$modelEntity, $statusId], $subject);
+                if ($event->isStopped()) {
+                    return $event->result;
+                }
+
 
                 // Trigger event here
                 $workflowAction = $this->WorkflowActions->get($entity->workflow_action_id);
