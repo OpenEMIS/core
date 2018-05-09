@@ -152,6 +152,7 @@ class FieldOptionComponent extends Component
 
     // Scholarship
         'ScholarshipFundingSources' => ['className' => 'Scholarship.FundingSources', 'parent' => 'Scholarship'],
+        'ScholarshipPaymentFrequencies' => ['className' => 'Scholarship.PaymentFrequencies', 'parent' => 'Scholarship'],
     ];
 
     public $components = ['AccessControl'];

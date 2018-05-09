@@ -14,6 +14,8 @@ class ScholarshipApplicationDirectoriesController extends PageController
     public function initialize()
     {
         parent::initialize();
+        $this->loadModel('Scholarship.ApplicationDirectories'); 
+        $this->Page->loadElementsFromTable($this->ApplicationDirectories); 
     }
 
     public function implementedEvents()
@@ -57,8 +59,8 @@ class ScholarshipApplicationDirectoriesController extends PageController
                     'title' => __('Back'),
                     'url' => [
                         'plugin' => 'Scholarship',
-                        'controller' => 'ScholarshipApplications',
-                        'action' => 'ScholarshipApplications',
+                        'controller' => 'Scholarships',
+                        'action' => 'Applications',
                         'index'
                     ],
                     'iconClass' => 'fa kd-back',
@@ -79,8 +81,8 @@ class ScholarshipApplicationDirectoriesController extends PageController
                     'title' => __('Back'),
                     'url' => [
                         'plugin' => 'Scholarship',
-                        'controller' => 'ScholarshipApplications',
-                        'action' => 'ScholarshipApplications',
+                        'controller' => 'Scholarships',
+                        'action' => 'Applications',
                         'add',
                         'queryString' => $queryString
                     ],

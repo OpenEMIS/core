@@ -20,7 +20,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $this->hasMany('StaffQualifications', ['className' => 'Staff.Qualifications', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations', 'dependent' => true, 'cascadeCallbacks' => true]);
         
-        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices']);
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);
         
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
@@ -60,7 +60,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         }
     }
 
-    public function findScholarshipOptionList(Query $query, array $options)
+    public function findAvailableFieldOfStudyOptionList(Query $query, array $options)
     {
         $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : 0;
 
@@ -68,7 +68,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
             ->matching('Scholarships', function ($q) use ($scholarshipId) {
                 return $q->where(['scholarship_id' => $scholarshipId]);
             });
-        
+ 
         return parent::findOptionList($query, $options);
     }
 }

@@ -17,7 +17,7 @@ class POCOR2813 extends AbstractMigration
             [
                 'id' => $this->workflowModelId,
                 'name' => 'Administration > Scholarships > Applications',
-                'model' => 'Scholarship.ScholarshipApplications',
+                'model' => 'Scholarship.Applications',
                 'filter' => NULL,
                 'is_school_based' => '0',
                 'created_user_id' => '1',
