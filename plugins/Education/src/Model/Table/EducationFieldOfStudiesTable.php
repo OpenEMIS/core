@@ -35,8 +35,8 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $this->belongsToMany('Scholarships', [
             'className' => 'Scholarship.Scholarships',
             'joinTable' => 'scholarships_field_of_studies',
-            'foreignKey' => 'education_field_of_study_id', 
-            'targetForeignKey' => 'scholarship_id', 
+            'foreignKey' => 'education_field_of_study_id',
+            'targetForeignKey' => 'scholarship_id',
             'through' => 'Scholarship.ScholarshipsFieldOfStudies',
             'dependent' => true,
             'cascadeCallbacks' => true
