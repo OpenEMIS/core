@@ -9,7 +9,8 @@ class InstitutionChoiceStatusesTable extends AppTable
 {
     public function initialize(array $config)
     {
+    	$this->table('scholarship_institution_choice_statuses');
         parent::initialize($config);
-        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices']);
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);
     }
 }

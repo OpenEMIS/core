@@ -57,7 +57,7 @@ class GuardiansTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
-        if($this->controller->name == "ScholarshipApplications") {
+        if($this->controller->name == "Scholarships") {
             $tabElements = $this->controller->getScholarshipTabElements();
         } else {   
             if ($this->action != 'view') {

@@ -16,6 +16,9 @@ class ScholarshipAttachmentTypesController extends PageController
     public function initialize()
     {
         parent::initialize();
+        $this->loadModel('Scholarship.Scholarships'); 
+        $this->loadModel('Scholarship.AttachmentTypes'); 
+        $this->Page->loadElementsFromTable($this->AttachmentTypes); 
         $this->mandatoryOptions = $this->getSelectOptions('general.yesno');
     }
 
@@ -32,13 +35,19 @@ class ScholarshipAttachmentTypesController extends PageController
         $page = $this->Page;
 
         parent::beforeFilter($event);
+
+        $queryString = $this->request->query['queryString'];
+        $scholarshipId = $this->paramsDecode($queryString)['id'];
+        $scholarshipName = $this->Scholarships->get($scholarshipId)->name;
+
+        $page->setQueryString('scholarship_id', $scholarshipId);
+
+        $page->setHeader($scholarshipName . ' - ' . __('Attachments'));     
+        
         $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'index']);
+        $page->addCrumb($scholarshipName);
         $page->addCrumb('Attachment');
 
-        $scholarshipId = $page->getQueryString('scholarship_id');
-        
-        $this->setupTabElements(['scholarshipId' => $scholarshipId]);
-        
         $page->get('scholarship_id')
             ->setControlType('hidden')
             ->setValue($scholarshipId);
@@ -48,6 +57,8 @@ class ScholarshipAttachmentTypesController extends PageController
 
         $page->get('name')
             ->setLabel('Type');
+
+        $this->setupTabElements();
     }
     
     public function index()
@@ -80,32 +91,31 @@ class ScholarshipAttachmentTypesController extends PageController
             ->setOptions($this->mandatoryOptions);
     }
 
-    public function setupTabElements($options)
+    public function setupTabElements()
     {   
         $page = $this->Page;
         $plugin = $this->plugin;
     
-        $encodedScholarshipId = $page->encode(['id' => $options['scholarshipId']]);
-        $queryString = $this->request->query['querystring'];
-
-        $tabElements = [
+        $queryString = $this->request->query['queryString'];
+        $scholarshipTabElements = [
             'Scholarships' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => 'Scholarships', 'action' => 'view', $encodedScholarshipId],
-                'text' => __('Scholarships')
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'view', $queryString, 'queryString' => $queryString],
+                'text' => __('Overview')
             ],
-            'ScholarshipAttachmentTypes' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipAttachmentTypes', 'action' => 'index', 'querystring' => $queryString],
+            'Attachments' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipAttachmentTypes', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Attachments')
-            ],
+            ]
         ];
 
-        foreach ($tabElements as $tab => $tabAttr) {
+
+        foreach ($scholarshipTabElements as $tab => $tabAttr) {
             $page->addTab($tab)
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
 
-        $page->getTab('ScholarshipAttachmentTypes')->setActive('true');      
+        $page->getTab('Attachments')->setActive('true');      
     }
 
     public function onRenderIsMandatory(Event $event, Entity $entity, PageElement $element)

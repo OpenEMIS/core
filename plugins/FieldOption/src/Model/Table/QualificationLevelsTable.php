@@ -11,7 +11,7 @@ class QualificationLevelsTable extends ControllerActionTable
         $this->table('qualification_levels');
         parent::initialize($config);
         $this->hasMany('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
-        $this->hasMany('InstitutionChoices', ['className' => 'Scholarship.InstitutionChoices']);
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);
 
         $this->addBehavior('FieldOption.FieldOption');
 
