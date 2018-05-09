@@ -42,9 +42,9 @@ class ScholarshipDirectoriesController extends PageController
         $page = $this->Page;
         parent::index();
 
-        $page->exclude(['description', 'financial_assistance_type_id', 'funding_source_id', 'academic_period_id', 'total_amount', 'requirement', 'instruction']);
+        $page->exclude(['description', 'scholarship_financial_assistance_type_id', 'scholarship_funding_source_id', 'academic_period_id', 'total_amount', 'requirements', 'instructions']);
 
-        // back button to scholarshipApplications page
+        // back button to ScholarshipApplications page
         $page->addToolbar('back', [
             'type' => 'element',
             'element' => 'Page.button',
@@ -68,7 +68,7 @@ class ScholarshipDirectoriesController extends PageController
         $page = $this->Page;
         parent::view($id);
 
-        // add button to scholarshipApplications page
+        // add button to ScholarshipApplications page
         $scholarshipId = $page->decode($id)['id'];
         $addUrl = $this->setQueryString([
             'plugin' => 'Profile',
@@ -77,7 +77,7 @@ class ScholarshipDirectoriesController extends PageController
             'add'
         ], ['scholarship_id' => $scholarshipId]);
 
-        $page->addToolbar('back', []);
+        $page->addToolbar('back', []); // to fix the order of the buttons
         $page->addToolbar('add', [
             'type' => 'element',
             'element' => 'Page.button',
