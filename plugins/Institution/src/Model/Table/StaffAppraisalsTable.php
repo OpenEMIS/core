@@ -37,6 +37,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalNumberAnswers', ['className' => 'StaffAppraisal.AppraisalNumberAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -209,6 +210,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                     'AppraisalCriterias' => [
                         'FieldTypes',
                         'AppraisalSliders',
+                        'AppraisalNumbers',
                         'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
                     ],
                     'AppraisalTextAnswers' => function ($q) use ($staffAppraisalId) {
@@ -219,6 +221,9 @@ class StaffAppraisalsTable extends ControllerActionTable
                     },
                     'AppraisalDropdownAnswers' => function ($q) use ($staffAppraisalId) {
                         return $q->where(['AppraisalDropdownAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
+                    },
+                    'AppraisalNumberAnswers' => function ($q) use ($staffAppraisalId) {
+                        return $q->where(['AppraisalNumberAnswers.institution_staff_appraisal_id' => $staffAppraisalId]);
                     }
                 ])
                 ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
@@ -257,6 +262,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         switch ($fieldTypeCode) {
             case 'SLIDER':
                 $key = 'appraisal_slider_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'slider';
                 $attr['max'] = $criteria->appraisal_slider->max;
                 $attr['min'] = $criteria->appraisal_slider->min;
@@ -264,13 +270,24 @@ class StaffAppraisalsTable extends ControllerActionTable
                 break;
             case 'TEXTAREA':
                 $key = 'appraisal_text_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'text';
                 break;
             case 'DROPDOWN':
                 $key = 'appraisal_dropdown_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'select';
                 $attr['options'] = Hash::combine($criteria->appraisal_dropdown_options, '{n}.id', '{n}.name');
                 $attr['default'] = current(Hash::extract($criteria->appraisal_dropdown_options, '{n}[is_default=1].id'));
+                break;
+            case 'NUMBER':
+                $key = 'appraisal_number_answers';
+                $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
+                $attr['type'] = 'integer';
+
+                if ($criteria->has('appraisal_number')) {
+                    $this->field($fieldKey.'.validation_rule', ['type' => 'hidden', 'value' => $criteria->appraisal_number->validation_rule]);
+                }
                 break;
         }
 
@@ -281,7 +298,6 @@ class StaffAppraisalsTable extends ControllerActionTable
         $entity->{$key}[$criteriaCounter[$fieldTypeCode]] = !empty($formCritieria->{$key}) ? current($formCritieria->{$key}) : [];
 
         // build custom fields
-        $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
         $attr['attr']['label'] = $details['criteria_name'];
         $attr['attr']['required'] = $details['is_mandatory'];
 
