@@ -19,7 +19,7 @@ use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class ScholarshipApplicationsTable extends ControllerActionTable
+class ApplicationsTable extends ControllerActionTable
 {
     // Workflow Steps - category
     const TO_DO = 1;
@@ -39,12 +39,14 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+        $this->table('scholarship_applications');
         parent::initialize($config);
 
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
+
         $this->hasMany('InstitutionChoices', [
             'className' => 'Scholarship.InstitutionChoices',
             'foreignKey' => ['applicant_id', 'scholarship_id'],
@@ -83,7 +85,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add']['url'])) {
-            $extra['toolbarButtons']['add']['url']['controller'] = 'ScholarshipApplicationDirectories';
+            $extra['toolbarButtons']['add']['url']['controller'] = 'ApplicationDirectories';
             $extra['toolbarButtons']['add']['url']['action'] = 'index';
             $extra['toolbarButtons']['add']['attr']['title'] = __('Apply');
             unset($extra['toolbarButtons']['add']['url'][0]);
@@ -98,7 +100,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $query = $this->ControllerAction->getQueryString();
 
         if (isset($extra['toolbarButtons']['back']['url'])) {
-            $extra['toolbarButtons']['back']['url']['controller'] = 'ScholarshipApplicationDirectories';
+            $extra['toolbarButtons']['back']['url']['controller'] = 'ApplicationDirectories';
             $extra['toolbarButtons']['back']['url']['action'] = 'index';
             unset($extra['toolbarButtons']['back']['url'][0]);
             unset($extra['toolbarButtons']['back']['url']['queryString']);
@@ -372,12 +374,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                                 'type' => 'disabled',
                                 'attr' => ['label' => __('Loan Term')]
                             ]);
-                            break;
-                        case 'Grant':
-                            // No implementation
-                            break;
-                        case 'Workstudy':
-                            // No implementation
                             break;
                     }
                 }

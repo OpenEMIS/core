@@ -17,10 +17,10 @@ class ApplicationAttachmentsTable extends AppTable
         $this->table('scholarship_application_attachments');
         parent::initialize($config);
 
-        $this->belongsTo('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => ['scholarship_id', 'applicant_id']]);
+        $this->belongsTo('Applications', ['className' => 'Scholarship.Applications', 'foreignKey' => ['scholarship_id', 'applicant_id']]);
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
-        $this->belongsTo('ScholarshipAttachmentTypes', ['className' => 'Scholarship.ScholarshipAttachmentTypes']);
+        $this->belongsTo('AttachmentTypes', ['className' => 'Scholarship.AttachmentTypes', 'foreignKey' => 'scholarship_attachment_type_id']);
         
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
@@ -34,7 +34,7 @@ class ApplicationAttachmentsTable extends AppTable
             ->contain([
                 'ModifiedUser',
                 'CreatedUser',
-                'ScholarshipApplications',
+                'Applications',
                 'Applicants',
                 'Scholarships',
                 'ScholarshipAttachmentTypes'

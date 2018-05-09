@@ -2,9 +2,9 @@
 use Cake\Routing\Router;
 
 Router::scope('/Scholarship', ['plugin' => 'Scholarship'], function ($routes) {
-    $routes->scope('/ScholarshipApplications', ['controller' => 'ScholarshipApplications'], function ($route){
+    $routes->scope('/Scholarships', ['controller' => 'Scholarships'], function ($route){
         $route->connect('/',
-            ['action' => 'ScholarshipApplications' ]
+            ['action' => 'Scholarships' ]
         );
     });
  
@@ -21,9 +21,9 @@ Router::scope('/Scholarship', ['plugin' => 'Scholarship'], function ($routes) {
     });
 });
 
-Router::scope('/ScholarshipApplications', ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplications'], function ($routes) {
+Router::scope('/Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships'], function ($routes) {
     $routes->connect('/',
-        ['action' => 'ScholarshipApplications']
+        ['action' => 'Scholarships']
     );
 
     // For controller action version 3
