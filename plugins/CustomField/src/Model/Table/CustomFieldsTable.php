@@ -19,7 +19,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     protected $fieldTypeFormat = ['OpenEMIS'];
     // Supported Field Types contain full list by default and can by override in individual model extends CustomFieldsTable
-    protected $supportedFieldTypes = ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER'];
+    protected $supportedFieldTypes = ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER','NOTE'];
 
     private $fieldTypes = [];
     private $fieldTypeOptions = [];
@@ -184,7 +184,7 @@ class CustomFieldsTable extends ControllerActionTable
             return $event->result;
         }
 
-        $this->setFieldOrder(['field_type', 'name', 'is_mandatory', 'is_unique']);
+        $this->setFieldOrder(['field_type', 'name', 'description', 'is_mandatory', 'is_unique']);
     }
 
     public function setFieldTypes($type)
