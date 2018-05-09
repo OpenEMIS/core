@@ -30,7 +30,8 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        $this->addBehavior('Workflow.Workflow', ['model' => 'Scholarship.ScholarshipApplications']);
+        $this->addBehavior('Workflow.Workflow', ['model' => 'Scholarship.Applications']);
+        $this->addBehavior('CompositeKey');
 
         $this->toggle('edit', false);
     }
@@ -119,14 +120,14 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->field('code');
         $this->field('scholarship_id', ['type' => 'string']);
         $this->field('financial_assistance_type_id');
-        $this->field('description');
-        $this->field('max_award_amount');
+        $this->field('description', ['type' =>'text']);
+        $this->field('maximum_award_amount');
         $this->field('bond');
-        $this->field('requirement', ['type' =>'text']);
-        $this->field('instruction', ['type' =>'text']);
+        $this->field('requirements', ['type' =>'text']);
+        $this->field('instructions', ['type' =>'text']);
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'scholarship_id', 'financial_assistance_type_id', 'description', 'max_award_amount', 'bond', 'requirement', 'instruction'
+            'academic_period_id', 'code', 'scholarship_id', 'financial_assistance_type_id', 'description', 'maximum_award_amount', 'bond', 'requirements', 'instructions'
         ]);
 
         // setup tabs only in view page
@@ -176,11 +177,11 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetMaxAwardAmount(Event $event, Entity $entity)
+    public function onGetMaximumAwardAmount(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->max_award_amount;
+            $value = $entity->scholarship->maximum_award_amount;
         }
         return $value;
     }
@@ -194,20 +195,20 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetRequirement(Event $event, Entity $entity)
+    public function onGetRequirements(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->requirement;
+            $value = $entity->scholarship->requirements;
         }
         return $value;
     }
 
-    public function onGetInstruction(Event $event, Entity $entity)
+    public function onGetInstructions(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->instruction;
+            $value = $entity->scholarship->instructions;
         }
         return $value;
     }
