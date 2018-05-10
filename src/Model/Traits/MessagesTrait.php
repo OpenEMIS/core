@@ -2143,6 +2143,13 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'Survey' => [
+            'SurveyForms' => [
+                'custom_filters' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ]
     ];
 
 
