@@ -9,7 +9,7 @@ class ScholarshipsFieldOfStudiesTable extends AppTable
     {
         parent::initialize($config);
 
-		$this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
-		$this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
+        $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
+        $this->belongsTo('EducationFieldOfStudies', ['className' => 'Education.EducationFieldOfStudies']);
     }
 }

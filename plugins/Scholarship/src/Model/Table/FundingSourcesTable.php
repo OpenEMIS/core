@@ -7,7 +7,7 @@ class FundingSourcesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-    	$this->table('scholarship_funding_sources');
+        $this->table('scholarship_funding_sources');
         parent::initialize($config);
 
         $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);

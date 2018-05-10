@@ -1,8 +1,6 @@
 <?php
 namespace Scholarship\Model\Table;
 
-use Cake\ORM\Query;
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class InstitutionChoiceStatusesTable extends AppTable
@@ -11,6 +9,7 @@ class InstitutionChoiceStatusesTable extends AppTable
     {
     	$this->table('scholarship_institution_choice_statuses');
         parent::initialize($config);
-        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);
+
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 }
