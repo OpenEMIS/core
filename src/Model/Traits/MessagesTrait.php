@@ -433,7 +433,8 @@ trait MessagesTrait
         'SurveyForms' => [
             'add_question' => 'Add Question',
             'add_to_section' => 'Add to Section',
-            'notSupport' => 'Not supported in this form.'
+            'notSupport' => 'Not supported in this form.',
+            'restrictEditFilters' => 'You are not allow to remove the following filters: %s'
         ],
         'StaffPositionTitles' => [
             'inProgress' => 'Update of staff position title roles is in process, please try again later.',
@@ -2154,6 +2155,13 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'Survey' => [
+            'SurveyForms' => [
+                'custom_filters' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ]
     ];
 
 
