@@ -1512,7 +1512,7 @@ class WorkflowBehavior extends Behavior
                             $reassignButtonAttr = array_merge($attr, $reassignButtonAttr);
                             $reassignButton = [];
                             $reassignButton['type'] = 'button';
-                            $reassignButton['label'] = '<i class="fa fa-tasks"></i>';
+                            $reassignButton['label'] = '<i class="fa kd-reassign"></i>';
                             $reassignButton['url'] = '#';
                             $reassignButton['attr'] = $reassignButtonAttr;
                             $reassignButton['attr']['title'] = __('Reassign');
