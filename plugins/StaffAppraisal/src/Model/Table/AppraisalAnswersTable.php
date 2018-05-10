@@ -6,7 +6,6 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Cake\Log\Log;
 
 class AppraisalAnswersTable extends AppTable
 {
@@ -32,7 +31,6 @@ class AppraisalAnswersTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        Log::write('debug', $entity);
         if (is_null($entity->answer) || $entity->answer === '') {
             return $event->stopPropagation();
         }
