@@ -1717,14 +1717,6 @@ class WorkflowBehavior extends Behavior
                 $statusId = $workflowStep->id;
 
                 $entity->status_id = $statusId;
-
-                $subject = $model;
-                // Trigger workflow update status event here
-                $event = $subject->dispatchEvent('Workflow.updateWorkflowStatus', [$entity, $statusId], $subject);
-                if ($event->isStopped()) {
-                    return $event->result;
-                }
-                // End
             }
         }
     }
