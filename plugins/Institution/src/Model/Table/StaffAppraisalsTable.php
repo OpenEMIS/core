@@ -34,10 +34,33 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms']);
         $this->belongsTo('AppraisalTypes', ['className' => 'StaffAppraisal.AppraisalTypes']);
         $this->belongsTo('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods']);
-        $this->hasMany('AppraisalTextAnswers', ['className' => 'StaffAppraisal.AppraisalTextAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AppraisalSliderAnswers', ['className' => 'StaffAppraisal.AppraisalSliderAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AppraisalDropdownAnswers', ['className' => 'StaffAppraisal.AppraisalDropdownAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AppraisalNumberAnswers', ['className' => 'StaffAppraisal.AppraisalNumberAnswers', 'foreignKey' => 'institution_staff_appraisal_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalTextAnswers', [
+            'className' => 'StaffAppraisal.AppraisalTextAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('AppraisalSliderAnswers', [
+            'className' => 'StaffAppraisal.AppraisalSliderAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalDropdownAnswers', [
+            'className' => 'StaffAppraisal.AppraisalDropdownAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('AppraisalNumberAnswers', [
+            'className' => 'StaffAppraisal.AppraisalNumberAnswers',
+            'foreignKey' => 'institution_staff_appraisal_id',
+            'saveStrategy' => 'replace',
+            'dependent' => true, 
+            'cascadeCallbacks' => true
+        ]);
 
         // for file upload
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -66,20 +89,20 @@ class StaffAppraisalsTable extends ControllerActionTable
     {
         return $validator
             ->allowEmpty('file_content')
-            ->add('from', [
+            ->add('appraisal_period_from', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'message' => __('Date range is not within the academic period.')
                 ]
             ])
-            ->add('to', [
+            ->add('appraisal_period_to', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'message' => __('Date range is not within the academic period.')
                 ],
                 'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'from', true],
-                    'message' => __('To Date should not be earlier than From Date')
+                    'rule' => ['compareDateReverse', 'appraisal_period_from', true],
+                    'message' => __('Appraisal Period To Date should not be earlier than Appraisal Period From Date')
                 ]
             ]);
     }
