@@ -8,16 +8,14 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use StaffAppraisal\Model\Table\AppraisalAnswersTable;
 use StaffAppraisal\Model\Table\AppraisalNumbersTable as AppraisalNumbers;
 
-class AppraisalNumberAnswersTable extends AppTable
+class AppraisalNumberAnswersTable extends AppraisalAnswersTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms', 'foreignKey' => 'appraisal_form_id']);
-        $this->belongsTo('AppraisalCriterias', ['className' => 'StaffAppraisal.AppraisalCriterias', 'foreignKey' => 'appraisal_criteria_id']);
-        $this->belongsTo('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'institution_staff_appraisal_id', 'joinType' => 'INNER']);
     }
 
     public function implementedEvents()
@@ -25,18 +23,6 @@ class AppraisalNumberAnswersTable extends AppTable
         $events = parent::implementedEvents();
         $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
         return $events;
-    }
-
-    // this will be moved to a behaviour when revamping the custom fields
-    public function validationDefault(Validator $validator)
-    {
-        return $validator
-            ->notEmpty('answer', null, function ($context) {
-                if (array_key_exists('is_mandatory', $context['data'])) {
-                    return $context['data']['is_mandatory'];
-                }
-                return false;
-            });
     }
 
     public function buildValidator(Event $event, Validator $validator, $name)
@@ -189,19 +175,5 @@ class AppraisalNumberAnswersTable extends AppTable
                     return true;
                 }
             ]);
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew() && is_null($entity->answer)) {
-            return false;
-        }
-    }
-
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if (is_null($entity->answer)) {
-            $this->delete($entity);
-        }
     }
 }
