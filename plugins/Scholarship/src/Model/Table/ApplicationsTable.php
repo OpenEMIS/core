@@ -342,11 +342,11 @@ class ApplicationsTable extends ControllerActionTable
 
                 $financialAssistanceTypeOptions = TableRegistry::get('Scholarship.FinancialAssistanceTypes')->getList()->toArray();
                 $applicantId = $request->data[$this->alias()]['applicant_id'];
-                $financialTypeId =  $request->data[$this->alias()]['financial_assistance_type_id'];
+                $financialAssistanceTypeId = $request->data[$this->alias()]['financial_assistance_type_id'];
 
                 $options = [
                     'applicant_id' => $applicantId,
-                    'financial_type_id' => $financialTypeId
+                    'financial_assistance_type_id' => $financialAssistanceTypeId
                 ];
 
                 $scholarshipOptions = $this->Scholarships->getAvailableScholarships($options);
