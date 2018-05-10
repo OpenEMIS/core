@@ -1,4 +1,15 @@
 ### [3.24.0] - 2018-04-20
+- Added Column sorting to Administration > Education Structure > Grade Subjects
+- Change height metric from Metres to Centimetres in Health > Body Mass feature
+- Implemented rule for staff transfer in Administration > System configuration
+- Implemented workflow for Staff Appraisal feature in Staff > Career > Appraisals
+- Implemented score number in Staff Appraisals feature in Staff > Career > Appraisals
+- Implemented Student limit per class and subject in Administration > System Configuration
+
+### [3.24.3] - 2018-04-20
+- Implemented "Note" in Administration > Survey > Forms
+
+### [3.24.0] - 2018-04-20
 - Input type validation has been added for Table field type under Administration > Survey > Questions
 - Implemented links between Staff Position Titles and Staff Position Grades under Administration > Field Options > Staff Position Titles
 - Implemented Gender for Guardian Relations under Administration > Field Options > Guardian Relations
