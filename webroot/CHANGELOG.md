@@ -1,4 +1,4 @@
-### [3.24.0] - 2018-04-20
+### [3.25.0] - 2018-04-20
 - Added Column sorting to Administration > Education Structure > Grade Subjects
 - Change height metric from Metres to Centimetres in Health > Body Mass feature
 - Implemented rule for staff transfer in Administration > System configuration
