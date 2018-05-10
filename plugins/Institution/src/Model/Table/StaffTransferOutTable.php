@@ -562,21 +562,34 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 // using institution_staff entity
                 $conditions = [];
                 $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
-
-                // start: restrict staff transfer by sector
+                
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $restrictStaffTransferBySector = $ConfigItems->value('restrict_staff_transfer_by_sector');
-                if ($restrictStaffTransferBySector) {
+                $Institutions = TableRegistry::get('Institution.Institutions');
+
+                // start: restrict staff transfer by type
+                $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_transfer_by_type');
+                if ($restrictStaffTransferByType) {
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
-                        $Institutions = TableRegistry::get('Institution.Institutions');
-                        $institutionSectorId = $Institutions->get($institutionId)->institution_sector_id;
+
+                        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
                         
-                        $conditions['institution_sector_id'] = $institutionSectorId;
+                        $conditions['institution_type_id'] = $institutionTypeId;
                     }
                 }
+                // end: restrict staff transfer by type
 
-                // end: restrict staff transfer by sector
+                // start: restrict staff transfer by provider
+                $restrictStaffTransferByProvider = $ConfigItems->value('restrict_staff_transfer_by_provider');
+                if ($restrictStaffTransferByProvider) {
+                    if ($entity->has('institution_id')) {
+                        $institutionId = $entity->institution_id;
+                        $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
+                        
+                        $conditions['institution_provider_id'] = $institutionProviderId;
+                    }
+                }
+                // end: restrict staff transfer by provider
 
                 $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
