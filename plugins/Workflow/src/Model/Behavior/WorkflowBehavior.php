@@ -239,7 +239,7 @@ class WorkflowBehavior extends Behavior
             $this->setStatusAsOpen($entity);
         }
 
-        if (!$entity->has('assignee_id')) {
+        if (!$entity->has('assignee_id') || ($entity->assignee_id == -1)) {
             $this->autoAssignAssignee($entity);
         }
     }
