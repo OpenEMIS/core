@@ -36,7 +36,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         getAddNewStaffConfig: getAddNewStaffConfig,
-        getStaffTransfersConfig: getStaffTransfersConfig,
+        getStaffTransfersByTypeConfig: getStaffTransfersByTypeConfig,
+        getStaffTransfersByProviderConfig: getStaffTransfersByProviderConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
@@ -750,11 +751,19 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({defer: true});
     }
 
-    function getStaffTransfersConfig() {
+    function getStaffTransfersByTypeConfig() {
         return ConfigItems
             .select()
             .where({type: 'Staff Transfers',
-                    code: 'restrict_staff_transfer_by_sector'})
+                    code: 'restrict_staff_transfer_by_type'})
+            .ajax({defer: true});
+    }
+
+    function getStaffTransfersByProviderConfig() {
+        return ConfigItems
+            .select()
+            .where({type: 'Staff Transfers',
+                    code: 'restrict_staff_transfer_by_provider'})
             .ajax({defer: true});
     }
 
