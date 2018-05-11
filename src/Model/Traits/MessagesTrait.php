@@ -779,7 +779,7 @@ trait MessagesTrait
                 ]
         ],
         'StaffTransfers' => [
-            'restrictStaffTransfer' => 'Transfer is not allowed between different institution type and institution provider.'
+            'restrictStaffTransfer' => 'Transfer is not allowed between different institution type or institution provider.'
         ],
         'StaffTransferOut' => [
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
