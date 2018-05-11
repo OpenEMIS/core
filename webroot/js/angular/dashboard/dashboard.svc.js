@@ -97,7 +97,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         },
         ScholarshipApplicationsTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
-            model: 'Scholarship.ScholarshipApplications'
+            model: 'Scholarship.Applications'
         }
     };
 

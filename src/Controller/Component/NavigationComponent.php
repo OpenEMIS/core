@@ -1483,7 +1483,7 @@ class NavigationComponent extends Component
                         'title' => 'Applications',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Applications.index', 'Applications.view', 'Applications.add', 'Applications.edit', 'Applications.delete','ScholarshipApplicationDirectories.index', 'ScholarshipApplicationDirectories.view']
+                        'selected' => ['Applications.index', 'Applications.view', 'Applications.add', 'Applications.edit', 'Applications.delete','ApplicantsDirectory.index', 'ApplicantsDirectory.view']
                     ],
                     
             'Textbooks.Textbooks' => [
