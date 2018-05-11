@@ -63,7 +63,7 @@ class POCOR4490 extends AbstractMigration
                 'default' => null
             ])
             ->addColumn('mapped_email', 'string', [
-                'limit' => 100,
+                'limit' => 50,
                 'null' => true,
                 'default' => null
             ])
