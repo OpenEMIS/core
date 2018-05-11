@@ -399,30 +399,58 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         return $enableStaffTransfer;
     }
 
-    public function checkDifferentSectorTransferRestricted($institutionId = 0, $compareInstitutionId = 0)
+    public function checkStaffTransferRestricted($institutionId = 0, $compareInstitutionId = 0)
     {
         $isRestricted = false;
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $restrictStaffTransferBySector = $ConfigItems->value('restrict_staff_transfer_by_type');
+        $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_transfer_by_type');
 
-        $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
-        $sameSector = $ConfigStaffTransfersTable->compareInstitutionSector($institutionId, $compareInstitutionId);
+        $restrictStaffTransferByProvider = $ConfigItems->value('restrict_staff_transfer_by_provider');
 
-        // restrict staff transfer by sector is set to true and incoming & outgoing institution are not same sector
-        if ($restrictStaffTransferBySector && !$sameSector) {
-            $isRestricted = true;
+        //when both type and provider restriction are enabled
+        if ($restrictStaffTransferByType && $restrictStaffTransferByProvider) {
+            $sameInstitutionType = $this->compareInstitutionType($institutionId, $compareInstitutionId);
+
+            $sameProviderType = $this->compareInstitutionProvider($institutionId, $compareInstitutionId);
+
+            if (!$sameInstitutionType || !$sameProviderType) {
+                $isRestricted = true;
+            }
+        //when type restriction enabled
+        } elseif ($restrictStaffTransferByType) {
+            $sameInstitutionType = $this->compareInstitutionType($institutionId, $compareInstitutionId);
+
+            if (!$sameInstitutionType) {
+                $isRestricted = true;
+            }
+        //when provider restriction enabled
+        } elseif ($restrictStaffTransferByProvider) {
+            $sameProviderType = $this->compareInstitutionProvider($institutionId, $compareInstitutionId);
+
+            if (!$sameProviderType) {
+                $isRestricted = true;
+            }
         }
 
         return $isRestricted;
     }
 
-    public function compareInstitutionSector($institutionId = 0, $compareInstitutionId = 0)
+    public function compareInstitutionType($institutionId = 0, $compareInstitutionId = 0)
     {
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $sectorId = $Institutions->get($institutionId)->institution_sector_id;
-        $compareSectorId = $Institutions->get($compareInstitutionId)->institution_sector_id;
+        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
+        $compareinstitutionTypeId = $Institutions->get($compareInstitutionId)->institution_type_id;
 
-        return $sectorId == $compareSectorId;
+        return $institutionTypeId == $compareinstitutionTypeId;
+    }
+    
+    public function compareInstitutionProvider($institutionId = 0, $compareInstitutionId = 0)
+    {
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $institutionaProviderId = $Institutions->get($institutionId)->institution_provider_id;
+        $compareinstitutionProviderId = $Institutions->get($compareInstitutionId)->institution_provider_id;
+
+        return $institutionaProviderId == $compareinstitutionProviderId;
     }
 }
