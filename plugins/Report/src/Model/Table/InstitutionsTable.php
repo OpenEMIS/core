@@ -357,6 +357,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['options'] = $statusOptions;
+                $attr['attr']['required'] = true;
                 return $attr;
             } else {
                 $attr['value'] = self::NO_FILTER;

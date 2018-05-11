@@ -1,12 +1,12 @@
-/* KORDIT FONT PACK v.1.0.12 */
+/* KORDIT FONT PACK v.1.0.13 */
 
 @font-face {
   font-family: 'kordit-fonts';
-  src:  url('fonts/kordit-fonts.eot?tdefq');
-  src:  url('fonts/kordit-fonts.eot?tdefq#iefix') format('embedded-opentype'),
-    url('fonts/kordit-fonts.ttf?tdefq') format('truetype'),
-    url('fonts/kordit-fonts.woff?tdefq') format('woff'),
-    url('fonts/kordit-fonts.svg?tdefq#kordit-fonts') format('svg');
+  src:  url('fonts/kordit-fonts.eot?84ftaf');
+  src:  url('fonts/kordit-fonts.eot?84ftaf#iefix') format('embedded-opentype'),
+    url('fonts/kordit-fonts.ttf?84ftaf') format('truetype'),
+    url('fonts/kordit-fonts.woff?84ftaf') format('woff'),
+    url('fonts/kordit-fonts.svg?84ftaf#kordit-fonts') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -20,138 +20,35 @@
   font-variant: normal;
   text-transform: none;
   line-height: 1;
-  display: inline-block;
 
   /* Better Font Rendering =========== */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.kd-publish:before {
-  content: "\e917";
+.kd-assign:before {
+  content: "\e91d";
 }
-.kd-unpublish:before {
-  content: "\e918";
+.kd-reassign:before {
+  content: "\e91e";
 }
-.kd-add-multiple:before {
-  content: "\e916";
+.kd-upload-success:before {
+  content: "\e91f";
 }
-.kd-user:before {
-  content: "\e915";
-}
-.kd-close-round:before {
-  content: "\e913";
-}
-.kd-close:before {
-  content: "\e914";
-}
-.kd-tab:before {
-  content: "\e912";
-}
-.kd-add-tab:before {
-  content: "\e911";
-}
-.kd-validate-row:before {
-  content: "\e90f";
-}
-.kd-validate-col:before {
-  content: "\e910";
-}
-.kd-alphabet:before {
-  content: "\e906";
-}
-.kd-alphanumeric:before {
-  content: "\e907";
-}
-.kd-numeric:before {
-  content: "\e908";
-}
-.kd-add-column:before {
-  content: "\e909";
-}
-.kd-add-row:before {
-  content: "\e90a";
-}
-.kd-header-row-col:before {
-  content: "\e90b";
-}
-.kd-header-row:before {
-  content: "\e90c";
-}
-.kd-header-col:before {
-  content: "\e90d";
-}
-.kd-remove:before {
-  content: "\e90e";
-}
-.kd-download-success:before {
-  content: "\e905";
-}
-.kd-download-fail:before {
-  content: "\e904";
-}
-.kd-sort-alphabet-asc:before {
-  content: "\e902";
-}
-.kd-sort-alphabet-desc:before {
-  content: "\e903";
-}
-.kd-sort-date-desc:before {
+.kd-iso:before {
   content: "\e900";
 }
-.kd-sort-date-asc:before {
+.kd-opensource:before {
   content: "\e901";
 }
-.kd-shipment:before {
-  content: "\e800";
+.kd-secure:before {
+  content: "\e902";
 }
-.kd-header:before {
-  content: "\e642";
-}
-.kd-rows:before {
-  content: "\e643";
-}
-.kd-table:before {
-  content: "\e644";
-}
-.kd-draggable-line:before {
-  content: "\e641";
-}
-.kd-draggable:before {
-  content: "\e640";
-}
-.kd-reorder:before {
-  content: "\e63f";
-}
-.kd-guardian:before {
-  content: "\e63d";
-}
-.kd-dropout:before {
-  content: "\e63a";
-}
-.kd-transfer:before {
-  content: "\e63b";
-}
-.kd-graduate:before {
-  content: "\e63c";
-}
-.kd-reject:before {
-  content: "\e638";
-}
-.kd-approve:before {
-  content: "\e639";
-}
-.kd-compile:before {
-  content: "\e63e";
+.kd-interoperable:before {
+  content: "\e903";
 }
 .kd-404-error:before {
   content: "\e600";
-}
-.kd-403-error:before {
-  content: "\e636";
-}
-.kd-role:before {
-  content: "\e637";
 }
 .kd-preview:before {
   content: "\e601";
@@ -311,4 +208,127 @@
 }
 .kd-arrow-first:before {
   content: "\e635";
+}
+.kd-403-error:before {
+  content: "\e636";
+}
+.kd-role:before {
+  content: "\e637";
+}
+.kd-reject:before {
+  content: "\e638";
+}
+.kd-approve:before {
+  content: "\e639";
+}
+.kd-dropout:before {
+  content: "\e63a";
+}
+.kd-transfer:before {
+  content: "\e63b";
+}
+.kd-graduate:before {
+  content: "\e63c";
+}
+.kd-guardian:before {
+  content: "\e63d";
+}
+.kd-compile:before {
+  content: "\e63e";
+}
+.kd-reorder:before {
+  content: "\e63f";
+}
+.kd-draggable:before {
+  content: "\e640";
+}
+.kd-draggable-line:before {
+  content: "\e641";
+}
+.kd-header:before {
+  content: "\e642";
+}
+.kd-rows:before {
+  content: "\e643";
+}
+.kd-table:before {
+  content: "\e644";
+}
+.kd-shipment:before {
+  content: "\e800";
+}
+.kd-sort-date-desc:before {
+  content: "\e904";
+}
+.kd-sort-date-asc:before {
+  content: "\e905";
+}
+.kd-sort-alphabet-asc:before {
+  content: "\e906";
+}
+.kd-sort-alphabet-desc:before {
+  content: "\e907";
+}
+.kd-download-fail:before {
+  content: "\e908";
+}
+.kd-download-success:before {
+  content: "\e909";
+}
+.kd-alphabet:before {
+  content: "\e90a";
+}
+.kd-alphanumeric:before {
+  content: "\e90b";
+}
+.kd-numeric:before {
+  content: "\e90c";
+}
+.kd-add-column:before {
+  content: "\e90d";
+}
+.kd-add-row:before {
+  content: "\e90e";
+}
+.kd-header-row-col:before {
+  content: "\e90f";
+}
+.kd-header-row:before {
+  content: "\e910";
+}
+.kd-header-col:before {
+  content: "\e911";
+}
+.kd-remove:before {
+  content: "\e912";
+}
+.kd-validate-row:before {
+  content: "\e913";
+}
+.kd-validate-col:before {
+  content: "\e914";
+}
+.kd-add-tab:before {
+  content: "\e915";
+}
+.kd-tab:before {
+  content: "\e916";
+}
+.kd-close-round:before {
+  content: "\e917";
+}
+.kd-close:before {
+  content: "\e918";
+}
+.kd-user:before {
+  content: "\e919";
+}
+.kd-add-multiple:before {
+  content: "\e91a";
+}
+.kd-publish:before {
+  content: "\e91b";
+}
+.kd-unpublish:before {
+  content: "\e91c";
 }
