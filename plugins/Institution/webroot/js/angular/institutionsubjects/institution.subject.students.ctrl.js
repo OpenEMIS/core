@@ -71,6 +71,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.classOptions = [];
     Controller.classes = [];
     Controller.toValidateClasses = false;
+    Controller.maxStudentsPerSubject = null;
 
     // Function mapping
     Controller.setTop = setTop;
@@ -162,6 +163,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 promises[1] = InstitutionSubjectStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                 promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.academic_period_id, Controller.institutionSubjectId);
                 promises[3] = InstitutionSubjectStudentsSvc.getClassOptions(response.institution_id, response.academic_period_id, Controller.educationGradeId, response.id);
+                promises[4] = InstitutionSubjectStudentsSvc.getConfigItemValue('max_students_per_subject');
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
@@ -197,7 +199,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 Controller.teacherOptions = promises[1];
                 Controller.roomOptions = promises[2];
                 Controller.classOptions = promises[3];
-
+                Controller.maxStudentsPerSubject = promises[4];
                 var toTranslate = [];
                 angular.forEach(Controller.colDef, function(value, key) {
                     this.push(value.headerName);
@@ -325,28 +327,31 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                 institution_id: Controller.institutionId
             });
         }, postData.subject_staff);
-
-        InstitutionSubjectStudentsSvc.saveInstitutionSubject(postData)
-        .then(function(response) {
-            var error = response.data.error;
-            if (error instanceof Array && error.length == 0) {
-                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
-                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
-                $http.get(Controller.alertUrl)
-                .then(function(response) {
-                    $window.location.href = Controller.redirectUrl;
-                }, function (error) {
-                    console.log(error);
-                });
-            } else {
-                AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
-                angular.forEach(error, function(value, key) {
-                    Controller.postError[key] = value;
-                })
-            }
-        }, function(error){
-            console.log(error);
-        });
+        if(classStudents.length > Controller.maxStudentsPerSubject){
+            AlertSvc.error(Controller, 'The number of students per subject has reached the maximum limit of '+Controller.maxStudentsPerSubject+' students.');
+        }else{
+            InstitutionSubjectStudentsSvc.saveInstitutionSubject(postData)
+            .then(function(response) {
+                var error = response.data.error;
+                if (error instanceof Array && error.length == 0) {
+                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
+                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                    $http.get(Controller.alertUrl)
+                    .then(function(response) {
+                        $window.location.href = Controller.redirectUrl;
+                    }, function (error) {
+                        console.log(error);
+                    });
+                } else {
+                    AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
+                    angular.forEach(error, function(value, key) {
+                        Controller.postError[key] = value;
+                    })
+                }
+            }, function(error){
+                console.log(error);
+            });
+        }
 
     }
 
