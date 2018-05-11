@@ -5,9 +5,9 @@ use ArrayObject;
 
 use Cake\Validation\Validator;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 
-class UserInsurancesTable extends ControllerActionTable
+class UserInsurancesTable extends AppTable
 {
     public function initialize(array $config)
     {
