@@ -29,8 +29,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
     StaffController.institutionId = null;
-    StaffController.institutionType = null; //new institution sector id (receiving school)
-    StaffController.institutionProvider = null; //new institution sector id (receiving school)
+    StaffController.institutionType = null; // new institution type id (receiving school)
+    StaffController.institutionProvider = null; // new institution provider id (receiving school)
     StaffController.institutionName = '';
     StaffController.addStaffError = false;
     StaffController.transferStaffError = false;
@@ -157,12 +157,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             var addNewStaffConfig = promisesObj[0].data;
             var staffTypes = promisesObj[1].data;
             var institutionName = promisesObj[2].data[0]['code_name'];
-            var institutionType = promisesObj[2].data[0]['institution_type_id']; // new institution sector id
-            var institutionProvider = promisesObj[2].data[0]['institution_provider_id']; // new institution sector id
+            var institutionType = promisesObj[2].data[0]['institution_type_id']; // new institution type id
+            var institutionProvider = promisesObj[2].data[0]['institution_provider_id']; // new institution provider id
             StaffController.institutionName = institutionName;
             StaffController.staffTypeOptions = staffTypes;
-            StaffController.institutionType = institutionType; // to set to into controller for other functions to access the value
-            StaffController.institutionProvider = institutionProvider; // to set to into controller for other functions to access the value
+            StaffController.institutionType = institutionType; // to set into controller for other functions to access the value
+            StaffController.institutionProvider = institutionProvider; // to set into controller for other functions to access the value
             StaffController.restrictStaffTransferByTypeValue = promisesObj[3].data;
             StaffController.restrictStaffTransferByProviderValue = promisesObj[4].data;
 
@@ -739,34 +739,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var newInstitutionProvider = StaffController.institutionProvider;
                     var restrictStaffTransferByTypeConfig = StaffController.restrictStaffTransferByTypeValue[0]['value'];
                     var restrictStaffTransferByProviderConfig = StaffController.restrictStaffTransferByProviderValue[0]['value'];
-                    
-                    //if restrict by type and provider is enabled
-                    if(restrictStaffTransferByTypeConfig == 1 && restrictStaffTransferByProviderConfig == 1){
-                        if((currentInstitutionType!=newInstitutionType) || (currentInstitutionProvider != newInstitutionProvider)){
-                            StaffController.addStaffError = true;
-                            AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different types and providers is restricted.');
-                        }else{
-                            StaffController.transferStaffError = true;
-                            AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
-                        }
 
-                    }else if(restrictStaffTransferByTypeConfig == 1 && restrictStaffTransferByProviderConfig == 0){
-                        if(currentInstitutionType!=newInstitutionType){
-                            StaffController.addStaffError = true;
-                            AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different types is restricted.');
-                        }else{
-                            StaffController.transferStaffError = true;
-                            AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
-                        }
-                    }else if(restrictStaffTransferByTypeConfig == 0 && restrictStaffTransferByProviderConfig == 1){
-                        if(currentInstitutionProvider!=newInstitutionProvider){
-                            StaffController.addStaffError = true;
-                            AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different providers is restricted.');
-                        }else{
-                            StaffController.transferStaffError = true;
-                            AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
-                        }
-                    }else{
+                    if (restrictStaffTransferByTypeConfig == 1 && currentInstitutionType != newInstitutionType) {
+                        StaffController.addStaffError = true;
+                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different type is restricted.');
+                    } else if (restrictStaffTransferByProviderConfig == 1 && currentInstitutionProvider != newInstitutionProvider) {
+                        StaffController.addStaffError = true;
+                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different provider is restricted.');
+                    } else {
                         StaffController.transferStaffError = true;
                         AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
                     }
