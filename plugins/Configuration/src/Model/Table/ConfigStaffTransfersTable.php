@@ -268,7 +268,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
 
                 case 'enable_staff_transfer_by_sectors':
                     if ($action == 'edit') {
-                        $sectorTypeSelectionOptions = $this->getSelectOptions('StaffTransfers.sector_type_selection');
+                        $sectorTypeSelectionOptions = $this->getSelectOptions('StaffTransfers.institution_sector_selection');
                         $attr['type'] = 'select';
                         $attr['options'] = $sectorTypeSelectionOptions;
                         $attr['select'] = false;
