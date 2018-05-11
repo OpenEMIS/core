@@ -152,11 +152,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
-        $isRestricted = $ConfigStaffTransfersTable->checkDifferentSectorTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
+        $isRestricted = $ConfigStaffTransfersTable->checkStaffTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
 
         if ($isRestricted) {
-            // alert warning message if restrict staff transfer by sector is set to true and incoming & outgoing institution are not same sector
-            $this->Alert->warning('StaffTransfers.restrictDifferentSectorTransfer', ['reset' => true]);
+            $this->Alert->warning('StaffTransfers.restrictStaffTransfer', ['reset' => true]);
         } else {
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
