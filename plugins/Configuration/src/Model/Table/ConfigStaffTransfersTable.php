@@ -443,9 +443,9 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     public function compareInstitutionProvider($institutionId = 0, $compareInstitutionId = 0)
     {
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $institutionaProviderId = $Institutions->get($institutionId)->institution_provider_id;
+        $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
         $compareInstitutionProviderId = $Institutions->get($compareInstitutionId)->institution_provider_id;
 
-        return $institutionaProviderId == $compareInstitutionProviderId;
+        return $institutionProviderId == $compareInstitutionProviderId;
     }
 }
