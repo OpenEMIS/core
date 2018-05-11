@@ -32,6 +32,12 @@ class AppraisalFormsCriteriasTable extends AppTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        $this->hasMany('AppraisalNumberAnswers', [
+            'className' => 'StaffAppraisal.AppraisalNumberAnswers',
+            'foreignKey' => ['appraisal_form_id', 'appraisal_criteria_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('CompositeKey');
         $this->removeBehavior('Reorder');
