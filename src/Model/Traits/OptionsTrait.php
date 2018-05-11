@@ -43,7 +43,8 @@ trait OptionsTrait
                 'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
             ],
             'StaffTransfers' => [
-                'institution_type_selection' => [1 => __('Select Institution Types'), '-1' => __('Select All Institution Types')]
+                'institution_type_selection' => [1 => __('Select Institution Types'), '-1' => __('Select All Institution Types')],
+                'institution_sector_selection' => [1 => __('Select Institution Sectors'), '-1' => __('Select All Institution Sectors')]
             ],
             'TrainingCourses' => [
                 'target_population_selection' => [1 => __('Select Target Populations'), '-1' => __('Select All Target Populations')]

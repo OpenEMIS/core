@@ -29,11 +29,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
     StaffController.institutionId = null;
-    StaffController.institutionSector = null; //new institution sector id (receiving school)
+    StaffController.institutionType = null; // new institution type id (receiving school)
+    StaffController.institutionProvider = null; // new institution provider id (receiving school)
     StaffController.institutionName = '';
     StaffController.addStaffError = false;
     StaffController.transferStaffError = false;
-    StaffController.restrictStaffTransferBySectorValue = null; // value from config_items
+    StaffController.restrictStaffTransferByTypeValue = null; // value from config_items
+    StaffController.restrictStaffTransferByProviderValue = null; // value from config_items
 
     // 0 - Non-mandatory, 1 - Mandatory, 2 - Excluded
     StaffController.StaffContacts = 2;
@@ -142,7 +144,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
          
             promises.push(InstitutionsStaffSvc.getStaffTypes());
             promises.push(InstitutionsStaffSvc.getInstitution(StaffController.institutionId));
-            promises.push(InstitutionsStaffSvc.getStaffTransfersConfig());
+            promises.push(InstitutionsStaffSvc.getStaffTransfersByTypeConfig());
+            promises.push(InstitutionsStaffSvc.getStaffTransfersByProviderConfig());
            return $q.all(promises);
         }, function(error) {
             console.log(error);
@@ -154,11 +157,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             var addNewStaffConfig = promisesObj[0].data;
             var staffTypes = promisesObj[1].data;
             var institutionName = promisesObj[2].data[0]['code_name'];
-            var institutionSector = promisesObj[2].data[0]['institution_sector_id']; // new institution sector id
+            var institutionType = promisesObj[2].data[0]['institution_type_id']; // new institution type id
+            var institutionProvider = promisesObj[2].data[0]['institution_provider_id']; // new institution provider id
             StaffController.institutionName = institutionName;
             StaffController.staffTypeOptions = staffTypes;
-            StaffController.institutionSector = institutionSector; // to set to into controller for other functions to access the value
-            StaffController.restrictStaffTransferBySectorValue = promisesObj[3].data;
+            StaffController.institutionType = institutionType; // to set into controller for other functions to access the value
+            StaffController.institutionProvider = institutionProvider; // to set into controller for other functions to access the value
+            StaffController.restrictStaffTransferByTypeValue = promisesObj[3].data;
+            StaffController.restrictStaffTransferByProviderValue = promisesObj[4].data;
 
             for(i=0; i < addNewStaffConfig.length; i++) {
                 var code = addNewStaffConfig[i].code;
@@ -727,15 +733,20 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.selectedStaffData['institution_staff'] = response.institution_staff;
                     var idName = StaffController.selectedStaffData.openemis_no + ' - ' + StaffController.selectedStaffData.name;
                     var institutionName = StaffController.selectedStaffData['institution_staff'][0]['institution']['code_name'];
-                    var currentInstitutionSector = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_sector_id'];
-                    var newInstitutionSector = StaffController.institutionSector;
-                    var restrictStaffTransferBySectorConfig = StaffController.restrictStaffTransferBySectorValue[0]['value'];
-                    
+                    var currentInstitutionType = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_type_id'];
+                    var currentInstitutionProvider = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_provider_id'];
+                    var newInstitutionType = StaffController.institutionType;
+                    var newInstitutionProvider = StaffController.institutionProvider;
+                    var restrictStaffTransferByTypeConfig = StaffController.restrictStaffTransferByTypeValue[0]['value'];
+                    var restrictStaffTransferByProviderConfig = StaffController.restrictStaffTransferByProviderValue[0]['value'];
 
-                    if(restrictStaffTransferBySectorConfig == 1 && currentInstitutionSector!=newInstitutionSector){
+                    if (restrictStaffTransferByTypeConfig == 1 && currentInstitutionType != newInstitutionType) {
                         StaffController.addStaffError = true;
-                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different sector is restricted.');
-                    }else{
+                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different type is restricted.');
+                    } else if (restrictStaffTransferByProviderConfig == 1 && currentInstitutionProvider != newInstitutionProvider) {
+                        StaffController.addStaffError = true;
+                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different provider is restricted.');
+                    } else {
                         StaffController.transferStaffError = true;
                         AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
                     }
@@ -895,6 +906,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             new_FTE: fte,
             new_institution_position_id: institutionPositionId,
             status_id: 0,
+            assignee_id: -1,
             new_institution_id: StaffController.institutionId,
             previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
             comment: StaffController.comment
