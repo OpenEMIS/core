@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -48,6 +49,27 @@ class ScholarshipsTable extends ControllerActionTable
 
         $this->fieldOfStudySelection = $this->getSelectOptions($this->aliasField('field_of_study_selection'));
         $this->interestRateOptions = $this->getSelectOptions($this->aliasField('interest_rate'));
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        if (in_array($this->action, ['view', 'edit'])) {
+            $queryString = $request->query('queryString');
+            $scholarshipId = $this->paramsDecode($queryString)['id'];
+            $scholarshipName = $this->get($scholarshipId)->name;
+
+            $Navigation->addCrumb($scholarshipName);
+            $Navigation->addCrumb(__('Overview'));
+        } else {
+            $Navigation->addCrumb(__($this->getHeader($this->alias())));
+        }
     }
 
     public function validationDefault(Validator $validator)
@@ -117,6 +139,7 @@ class ScholarshipsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->setupTabElements();
+        $this->setOverviewHeader($entity);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -146,6 +169,7 @@ class ScholarshipsTable extends ControllerActionTable
 
         $this->setupFields($entity);
         $this->setupTabElements();
+        $this->setOverviewHeader($entity);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -388,6 +412,11 @@ class ScholarshipsTable extends ControllerActionTable
         }
 
         return $buttons;
+    }
+
+    public function setOverviewHeader($entity)
+    {
+        $this->controller->set('contentHeader', $entity->name. ' - ' .__('Overview'));
     }
 
     public function getBondOptions($maxYears)
