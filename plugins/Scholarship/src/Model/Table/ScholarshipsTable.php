@@ -64,6 +64,20 @@ class ScholarshipsTable extends ControllerActionTable
             ])
             ->add('date_application_close', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_application_open', true]
+            ])
+            ->add('total_amount', [
+                'ruleCompareMaximumAwardAmount' => [
+                    'rule' => ['compareValues', 'maximum_award_amount'],
+                    'message' => __('Total Amount must be greater than Maximum Award Amount')
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                    'message' => __('Value cannot be more than two decimal places')
+                ]
+            ])
+            ->add('maximum_award_amount', 'validateDecimal', [
+                'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                'message' => __('Value cannot be more than two decimal places')
             ]);
     }
 
@@ -244,6 +258,7 @@ class ScholarshipsTable extends ControllerActionTable
 
                         // fields for loan type
                         $this->field('loan.interest_rate', [
+                            'type' => 'integer',
                             'attr' => ['label' => __('Interest Rate'). ' (%)'],
                             'after' => 'bond'
                         ]);
@@ -306,6 +321,7 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
         $this->field('academic_period_id', [
             'type' => 'select',
+            'options' => $this->AcademicPeriods->getYearList(['isEditable' => true]),
             'after' => 'scholarship_funding_source_id'
         ]);
         $this->field('field_of_study_selection', [
@@ -320,6 +336,14 @@ class ScholarshipsTable extends ControllerActionTable
             'attr' => ['required' => true],
             'entity' => $entity,
             'after' => 'field_of_study_selection'
+        ]);
+        $this->field('maximum_award_amount', [
+            'type' => 'integer',
+            'after' => 'date_application_close'
+        ]);
+        $this->field('total_amount', [
+            'type' => 'integer',
+            'after' => 'maximum_award_amount'
         ]);
         $this->field('bond', [
             'type' => 'select',
