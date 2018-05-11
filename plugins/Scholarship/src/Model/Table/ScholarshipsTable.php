@@ -61,8 +61,7 @@ class ScholarshipsTable extends ControllerActionTable
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         if (in_array($this->action, ['view', 'edit'])) {
-            $queryString = $request->query('queryString');
-            $scholarshipId = $this->paramsDecode($queryString)['id'];
+            $scholarshipId = $this->ControllerAction->getQueryString('id');
             $scholarshipName = $this->get($scholarshipId)->name;
 
             $Navigation->addCrumb($scholarshipName);
@@ -271,9 +270,9 @@ class ScholarshipsTable extends ControllerActionTable
             $financialAssistanceTypeId = $entity->scholarship_financial_assistance_type_id;
 
             if (!empty($financialAssistanceTypeId)) {
-                $financialAssistanceType = $this->FinancialAssistanceTypes->get($financialAssistanceTypeId);
+                $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes->getList()->toArray();
 
-                switch ($financialAssistanceType->code) {
+                switch ($financialAssistanceTypeOptions[$financialAssistanceTypeId]) {
                     case 'SCHOLARSHIP':
                         // No implementation
                         break;
