@@ -895,7 +895,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         var positionType = StaffController.positionType;
         var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value: '';
-        var institutionPositionAssigneeId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.assignee_id: '';
         institutionPositionId = (institutionPositionId == undefined) ? '' : institutionPositionId;
         var fte = StaffController.fte;
         var staffTypeId = (StaffController.staffTypeId != null && StaffController.staffTypeId.hasOwnProperty('id')) ? StaffController.staffTypeId.id : '';
@@ -907,7 +906,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             new_FTE: fte,
             new_institution_position_id: institutionPositionId,
             status_id: 0,
-            assignee_id: institutionPositionAssigneeId,
+            assignee_id: -1,
             new_institution_id: StaffController.institutionId,
             previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
             comment: StaffController.comment

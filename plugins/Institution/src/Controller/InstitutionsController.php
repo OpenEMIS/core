@@ -1719,7 +1719,7 @@ class InstitutionsController extends AppController
             $name = $position->name . ' - ' . $position->grade_name;
 
             $type = __($types[$position->type]);
-            $options[] = ['value' => $position->id, 'assignee_id' => $position->assignee_id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
 
         $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
