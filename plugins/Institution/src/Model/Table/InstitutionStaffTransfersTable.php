@@ -122,7 +122,6 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                     // end previous institution staff record
                     $oldRecord->end_date = $entity->previous_end_date;
                     $StaffTable->save($oldRecord);
-
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
                     // end previous institution staff record
                     $oldRecord->end_date = $entity->previous_end_date;
@@ -152,11 +151,19 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
-            $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
-        } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
-            $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
+        $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
+        $isRestricted = $ConfigStaffTransfersTable->checkStaffTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
+
+        if ($isRestricted) {
+            $this->Alert->warning('StaffTransfers.restrictStaffTransfer', ['reset' => true]);
+        } else {
+            if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
+                $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
+            } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
+                $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
+            }
         }
+
         return $canAddButtons;
     }
 

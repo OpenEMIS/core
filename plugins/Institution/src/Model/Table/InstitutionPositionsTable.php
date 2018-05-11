@@ -76,12 +76,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         );
     }
 
-    // public function implementedEvents() {
- //    	$events = parent::implementedEvents();
- //    	$events['Restful.Model.index.workbench'] = 'indexAfterFindWorkbench';
- //    	return $events;
- //    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
