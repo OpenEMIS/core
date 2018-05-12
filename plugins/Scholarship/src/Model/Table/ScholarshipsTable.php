@@ -2,6 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -9,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
+
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -34,8 +36,15 @@ class ScholarshipsTable extends ControllerActionTable
 
         $this->hasMany('AttachmentTypes', ['className' => 'Scholarship.AttachmentTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Applications', ['className' => 'Scholarship.Applications', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Recipients', ['className' => 'Scholarship.Recipients', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RecipientAcademicStandings', ['className' => 'Scholarship.RecipientAcademicStandings', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RecipientActivities', ['className' => 'Scholarship.RecipientActivities', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RecipientCollections', ['className' => 'Scholarship.RecipientCollections', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RecipientDisbursements', ['className' => 'Scholarship.RecipientDisbursements', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RecipientPaymentStructures', ['className' => 'Scholarship.RecipientPaymentStructures', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('FieldOfStudies', [
             'className' => 'Education.EducationFieldOfStudies',

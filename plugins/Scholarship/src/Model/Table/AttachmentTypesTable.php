@@ -13,7 +13,7 @@ class AttachmentTypesTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
-        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'scholarship_attachment_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
     public function validationDefault(Validator $validator)

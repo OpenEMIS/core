@@ -10,7 +10,7 @@ class PaymentFrequenciesTable extends ControllerActionTable
         $this->table('scholarship_payment_frequencies');
         parent::initialize($config);
 
-        $this->hasMany('Loans', ['className' => 'Scholarship.Loans', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Loans', ['className' => 'Scholarship.Loans', 'foreignKey' => 'scholarship_payment_frequency_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');

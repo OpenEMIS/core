@@ -2,7 +2,6 @@
 namespace Scholarship\Model\Table;
 
 use Cake\ORM\Query;
-use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class HistoriesTable extends AppTable
@@ -16,14 +15,14 @@ class HistoriesTable extends AppTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
-        $this->hasMany('ApplicationInstitutionChoices', [
-            'className' => 'Scholarship.ApplicationInstitutionChoices',
+        $this->hasMany('ApplicationAttachments', [
+            'className' => 'Scholarship.ApplicationAttachments',
             'foreignKey' => ['applicant_id', 'scholarship_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        $this->hasMany('ApplicationAttachments', [
-            'className' => 'Scholarship.ApplicationAttachments',
+        $this->hasMany('ApplicationInstitutionChoices', [
+            'className' => 'Scholarship.ApplicationInstitutionChoices',
             'foreignKey' => ['applicant_id', 'scholarship_id'],
             'dependent' => true,
             'cascadeCallbacks' => true

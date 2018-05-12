@@ -10,6 +10,6 @@ class InstitutionChoiceStatusesTable extends AppTable
     	$this->table('scholarship_institution_choice_statuses');
         parent::initialize($config);
 
-        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'foreignKey' => 'scholarship_institution_choice_status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 }
