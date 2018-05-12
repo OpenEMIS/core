@@ -10,7 +10,7 @@ class FundingSourcesTable extends ControllerActionTable
         $this->table('scholarship_funding_sources');
         parent::initialize($config);
 
-        $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'foreignKey' => 'scholarship_funding_source_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');
