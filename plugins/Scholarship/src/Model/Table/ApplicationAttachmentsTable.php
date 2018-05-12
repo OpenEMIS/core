@@ -1,13 +1,7 @@
 <?php
 namespace Scholarship\Model\Table;
 
-use ArrayObject;
-
 use Cake\ORM\Query;
-use Cake\Validation\Validator;
-use Cake\Event\Event;
-use Cake\Network\Request;
-
 use App\Model\Table\AppTable;
 
 class ApplicationAttachmentsTable extends AppTable
@@ -17,7 +11,7 @@ class ApplicationAttachmentsTable extends AppTable
         $this->table('scholarship_application_attachments');
         parent::initialize($config);
 
-        $this->belongsTo('Applications', ['className' => 'Scholarship.Applications', 'foreignKey' => ['scholarship_id', 'applicant_id']]);
+        $this->belongsTo('Applications', ['className' => 'Scholarship.Applications', 'foreignKey' => ['applicant_id', 'scholarship_id']]);
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('AttachmentTypes', ['className' => 'Scholarship.AttachmentTypes', 'foreignKey' => 'scholarship_attachment_type_id']);

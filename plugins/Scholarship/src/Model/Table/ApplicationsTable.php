@@ -2,6 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -9,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Controller\Component;
 use Cake\Datasource\ResultSetInterface;
+
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -41,14 +43,14 @@ class ApplicationsTable extends ControllerActionTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
-        $this->hasMany('ApplicationInstitutionChoices', [
-            'className' => 'Scholarship.ApplicationInstitutionChoices',
+        $this->hasMany('ApplicationAttachments', [
+            'className' => 'Scholarship.ApplicationAttachments',
             'foreignKey' => ['applicant_id', 'scholarship_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        $this->hasMany('ApplicationAttachments', [
-            'className' => 'Scholarship.ApplicationAttachments',
+        $this->hasMany('ApplicationInstitutionChoices', [
+            'className' => 'Scholarship.ApplicationInstitutionChoices',
             'foreignKey' => ['applicant_id', 'scholarship_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
