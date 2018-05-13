@@ -13,24 +13,25 @@ use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 class ApplicationsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    // Workflow Steps - category
-    const TO_DO = 1;
-    const IN_PROGRESS = 2;
-    const DONE = 3;
-
     private $interestRateOptions = [];
-
     private $workflowEvents = [
         [
-            'value' => 'Workflow.onApprove',
+            'value' => 'Workflow.onApproveScholarship',
             'text' => 'Approval of Scholaship Application',
-            'description' => 'Performing this action will add this applicant as a receipient',
-            'method' => 'OnApprove'
+            'description' => 'Performing this action will add the applicant as a scholarship recipient.',
+            'method' => 'onApproveScholarship'
+        ],
+        [
+            'value' => 'Workflow.onWithdrawScholarship',
+            'text' => 'Withdrawal from Scholarship Applications',
+            'description' => 'Performing this action will withdraw the applicant from approved scholarship applications.',
+            'method' => 'onWithdrawScholarship'
         ]
     ];
 
@@ -479,7 +480,7 @@ class ApplicationsTable extends ControllerActionTable
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
-        $doneStatus = self::DONE;
+        $doneStatus = WorkflowSteps::DONE;
 
         $query
             ->select([
