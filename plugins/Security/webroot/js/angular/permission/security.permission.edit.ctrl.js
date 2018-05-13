@@ -28,6 +28,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     ];
     Controller.selectedModule = 'Institutions';
     Controller.roleId = 0;
+    Controller.roleData = null;
     Controller.pageSections = [];
     Controller.originalPageSections = [];
     Controller.redirectUrl = '';
@@ -271,7 +272,22 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
             'security_functions': permissions
         };
         UtilsSvc.isAppendLoader(true);
-        SecurityPermissionEditSvc.savePermissions(postData)
+        SecurityPermissionEditSvc.getRoleData(Controller.roleId)
+        .then(function(response) {
+            Controller.roleData = response.data;
+
+            postData['name'] = Controller.roleData.name;
+            postData['code'] = Controller.roleData.code;
+            postData['order'] = Controller.roleData.order;
+            postData['visible'] = Controller.roleData.visible;
+            postData['security_group_id'] = Controller.roleData.security_group_id;
+
+            return SecurityPermissionEditSvc.savePermissions(postData);
+        }, function(error){
+            console.log(error);
+            AlertSvc.warning(Controller, 'The record does not exist.');
+            UtilsSvc.isAppendLoader(false);
+        })
         .then(function(response) {
             var error = response.data.error;
             if (error instanceof Array && error.length == 0) {
