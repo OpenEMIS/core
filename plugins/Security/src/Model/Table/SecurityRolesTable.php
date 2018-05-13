@@ -56,7 +56,7 @@ class SecurityRolesTable extends ControllerActionTable
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Permissions' => ['edit']
+            'Permissions' => ['view', 'edit']
         ]);
     }
 
