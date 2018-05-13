@@ -98,7 +98,7 @@ class POCOR2813 extends AbstractMigration
             ],
             [
                 'name' => 'Rejected',
-                'category' => '0',
+                'category' => '3',
                 'is_editable' => '0',
                 'is_removable' => '0',
                 'is_system_defined' => '0',
@@ -152,7 +152,7 @@ class POCOR2813 extends AbstractMigration
         $rejectedStatusId = $WorkflowStepsTable->find()
             ->where([
                 $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
-                $WorkflowStepsTable->aliasField('category') => 0,
+                $WorkflowStepsTable->aliasField('category') => 3,
                 $WorkflowStepsTable->aliasField('name') => 'Rejected'
             ])
             ->extract('id')
@@ -161,7 +161,7 @@ class POCOR2813 extends AbstractMigration
         //  workflow_actions
         $workflowActionData = [
             [
-                'name' => 'Submit For Approval',
+                'name' => 'Submit For Review',
                 'description' => NULL,
                 'action' => '0',
                 'visible' => '1',
@@ -170,6 +170,19 @@ class POCOR2813 extends AbstractMigration
                 'event_key' => NULL,
                 'workflow_step_id' => $openStatusId,
                 'next_workflow_step_id' => $pendingForReviewStatusId,
+                'created_user_id' => '1',
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Reject',
+                'description' => NULL,
+                'action' => '1',
+                'visible' => '1',
+                'comment_required' => '0',
+                'allow_by_assignee' => '0',
+                'event_key' => NULL,
+                'workflow_step_id' => $openStatusId,
+                'next_workflow_step_id' => $rejectedStatusId,
                 'created_user_id' => '1',
                 'created' => date('Y-m-d H:i:s')
             ],
@@ -244,7 +257,7 @@ class POCOR2813 extends AbstractMigration
          // workflow_statuses
         $workflowStatusesData = [
             [
-                'code' => 'PENDINGREVIEW',
+                'code' => 'PENDING_REVIEW',
                 'name' => 'Pending Review',
                 'is_editable' => 0,
                 'is_removable' => 0,
@@ -253,7 +266,7 @@ class POCOR2813 extends AbstractMigration
                 'created' => date('Y-m-d H:i:s')
             ],
             [
-                'code' => 'PENDINGAPPROVAL',
+                'code' => 'PENDING_APPROVAL',
                 'name' => 'Pending Approval',
                 'is_editable' => 0,
                 'is_removable' => 0,
@@ -282,17 +295,16 @@ class POCOR2813 extends AbstractMigration
         ];
         $this->insert('workflow_statuses', $workflowStatusesData);
 
-
         $pendingReviewId = $WorkflowStatusesTable->find()
             ->where([
-                $WorkflowStatusesTable->aliasField('code') => 'PENDINGREVIEW',
+                $WorkflowStatusesTable->aliasField('code') => 'PENDING_REVIEW',
                 $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
             ])
             ->extract('id')
             ->first();
         $pendingApprovalId = $WorkflowStatusesTable->find()
             ->where([
-                $WorkflowStatusesTable->aliasField('code') => 'PENDINGAPPROVAL',
+                $WorkflowStatusesTable->aliasField('code') => 'PENDING_APPROVAL',
                 $WorkflowStatusesTable->aliasField('workflow_model_id') => $this->workflowModelId
             ])
             ->extract('id')
