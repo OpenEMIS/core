@@ -22,6 +22,8 @@ use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 class WorkflowBehavior extends Behavior
 {
     use OptionsTrait;
+    
+    const AUTO_ASSIGN = -1;
 
     protected $_defaultConfig = [
         'model' => null,
@@ -54,7 +56,6 @@ class WorkflowBehavior extends Behavior
             'method' => 'onAssignBack'
         ]
     ];
-
 
     private $controller;
     private $model = null;
@@ -313,7 +314,8 @@ class WorkflowBehavior extends Behavior
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $this->WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this);
+            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+            $WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this->_table);
         } elseif (!$entity->isNew() && $entity->dirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
@@ -517,12 +519,7 @@ class WorkflowBehavior extends Behavior
                 if (!$transitionResults->isEmpty()) {
                     $transitions = $transitionResults->toArray();
                     foreach ($transitions as $key => $transition) {
-                        if ($key == 0 && $transition->prev_workflow_step_name == __('New')) {
-                            $transitionDisplay = '<span class="status new" style="border: 1px solid #8ECEE3; background-color: #C2EBFF;">' . $transition->prev_workflow_step_name . '</span>';
-                        } else {
-                            $transitionDisplay = '<span class="status past">' . $transition->prev_workflow_step_name . '</span>';
-                        }
-
+                        $transitionDisplay = '<span class="status past">' . $transition->prev_workflow_step_name . '</span>';
                         $transitionDisplay .= '<span class="transition-arrow"></span>';
                         if (count($transitions) - 1 == $key) {
                             $transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step_name . '</span>';
