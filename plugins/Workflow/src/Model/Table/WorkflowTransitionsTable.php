@@ -1,6 +1,7 @@
 <?php
 namespace Workflow\Model\Table;
 
+use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
@@ -79,7 +80,7 @@ class WorkflowTransitionsTable extends AppTable {
 	}
 
 	// public function createFirstTransitionRecord(Entity $entity)
-	public function onWorkflowAddAfterSave(Entity $entity)
+	public function onWorkflowAddAfterSave(Event $event, Entity $entity)
 	{
 		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
 		$stepEntity = $WorkflowSteps
@@ -100,7 +101,7 @@ class WorkflowTransitionsTable extends AppTable {
 			'created_user_id' => $entity->created_user_id,
 			'created' => new Time('NOW')
 		];
-		
+
 		$entity = $this->newEntity($data);
 		$this->save($entity);
 	}
