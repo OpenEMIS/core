@@ -313,9 +313,7 @@ class WorkflowBehavior extends Behavior
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-            // $this->_table->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this->WorkflowTransitions);
-            $this->WorkflowTransitions->onWorkflowAddAfterSave($entity);
+            $this->WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this);
         } elseif (!$entity->isNew() && $entity->dirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
