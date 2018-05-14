@@ -116,7 +116,7 @@
                 case "checkbox":
                 case "radio":
                     inputConfig["cellRenderer"] = function(params) {
-                        if(params.data != undefined){
+                        if (params.data != undefined) {
                             return initCheckbox(_scope, params, _scope.agSelectionType, false);
                         }
                     };
@@ -124,7 +124,7 @@
                 case "checkboxAll":
                     inputConfig["headerComponent"] = headerCheckboxComponent;
                     inputConfig["cellRenderer"] = function(params) {
-                        if(params.data != undefined){
+                        if (params.data != undefined) {
                             return initCheckbox(_scope, params, "checkbox", true);
                         }
                     };
