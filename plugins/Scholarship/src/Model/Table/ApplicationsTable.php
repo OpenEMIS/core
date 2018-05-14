@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 use Cake\Controller\Component;
 use Cake\Datasource\ResultSetInterface;
 
@@ -73,6 +74,19 @@ class ApplicationsTable extends ControllerActionTable
             $events[$event['value']] = $event['method'];
         }        
         return $events;
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('requested_amount', [
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                    'message' => __('Value cannot be more than two decimal places')
+                ]
+            ]);
     }
 
     public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
@@ -145,6 +159,7 @@ class ApplicationsTable extends ControllerActionTable
             }
 
             // setup fields
+            $this->field('assignee_id', ['visible' => false]);
             $this->setupApplicantFields($applicantEntity);
             $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
             $this->setupScholarshipFields($scholarshipEntity);
@@ -243,11 +258,6 @@ class ApplicationsTable extends ControllerActionTable
     public function onGetCode(Event $event, Entity $entity)
     {
         return $entity->scholarship->code;
-    }
-
-    public function onGetScholarshipId(Event $event, Entity $entity)
-    {
-        return $entity->scholarship->name;
     }
 
     public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
@@ -421,7 +431,7 @@ class ApplicationsTable extends ControllerActionTable
     public function setupScholarshipFields($entity = null)
     {
         $this->field('financial_assistance_type_id');
-        $this->field('scholarship_id');
+        $this->field('scholarship_id', ['type' => 'string']);
         $this->field('academic_period_id', ['type' => 'disabled']);
         $this->field('description', ['type' => 'text', 'attr' => ['disabled' => 'disabled']]);
         $this->field('maximum_award_amount', ['type' => 'disabled']);

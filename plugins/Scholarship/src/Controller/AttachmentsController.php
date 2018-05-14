@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
-class ApplicationAttachmentsController extends PageController
+class AttachmentsController extends PageController
 {
     public function initialize()
     {
@@ -95,13 +95,15 @@ class ApplicationAttachmentsController extends PageController
             $page->addCrumb('Scholarships', [
                 'plugin' => 'Scholarship',
                 'controller' => 'Scholarships',
-                'action' => 'index'
+                'action' => 'Scholarships',
+                'index'
             ]);
-
+            
             $page->addCrumb('Applicants', [
-                    'plugin' => 'Scholarship',
-                    'controller' => 'ScholarshipApplications',
-                    'action' => 'index'
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'Applications',
+                'index'
             ]);
 
             $page->addCrumb($userName);
@@ -157,7 +159,7 @@ class ApplicationAttachmentsController extends PageController
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Institution Choices')
             ],
-            'ApplicationAttachments' => [
+            'Attachments' => [
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Attachments')
             ],
@@ -172,7 +174,7 @@ class ApplicationAttachmentsController extends PageController
                 ->setUrl($tabAttr['url']);
         }
         // set active tab
-        $page->getTab('ApplicationAttachments')->setActive('true');
+        $page->getTab('Attachments')->setActive('true');
     }
 
     public function onRenderMandatory(Event $event, Entity $entity, PageElement $element)

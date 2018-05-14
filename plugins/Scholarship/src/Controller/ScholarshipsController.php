@@ -13,7 +13,7 @@ class ScholarshipsController extends AppController
     public function initialize()
     {
         parent::initialize();
-
+        $this->loadModel('User.Users');
     }
 
     public function Scholarships()
@@ -50,40 +50,30 @@ class ScholarshipsController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $this->Navigation->addCrumb('Scholarship',  ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'index']);
-        $alias = ($model->alias == 'ScholarshipApplications') ? 'Applications' : $model->alias;
-        $this->Navigation->addCrumb($alias);
-        $header = '';
-        // if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+        $this->Navigation->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
+    
+        $header = __('Scholarships');
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
 
-        //     $alias = $model->alias();
-        //     $excludedModel = ['Applications', 'Scholarships'];
+            $alias = $model->alias();
+            $excludedModel = ['Applications', 'Scholarships'];
 
-        //     if (!in_array($alias, $excludedModel)) {
-        //         $model->toggle('add', false);
-        //         $model->toggle('edit', false);
-        //         $model->toggle('remove', false);
-        //     }
-        // }
+            if (!in_array($alias, $excludedModel)) {
+                $model->toggle('add', false);
+                $model->toggle('edit', false);
+                $model->toggle('remove', false);
+
+                $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+                $header = $this->Users->get($applicantId)->name;
+                $alias = $model->alias();
+                $this->Navigation->addCrumb('Applications', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'index']);
+                $this->Navigation->addCrumb($header);
+                $this->Navigation->addCrumb($model->getHeader($alias));  
+            }
+        }
         
-        // $header = __('Scholarships');
-        // $alias = 'Applicants';
-        
-        // if (array_key_exists('queryString', $this->request->query)) {
-        //     $ids = $this->ControllerAction->paramsDecode($this->request->query['queryString']);
-            
-        //     if(isset($ids['applicant_id'])) {
-        //         $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-        //         $alias = ($model->alias == 'ScholarshipApplications') ? 'Overview' : $model->alias;
-        //         $entity = $this->Applications->Applicants->get($applicantId);
-        //         $header = $entity->name;
-        //         $this->Navigation->addCrumb($header);
-        //         $this->Navigation->addCrumb($model->getHeader($alias));
-        //     }
-        // } 
-
-        // $header .= ' - ' . $model->getHeader($alias);
-        // $this->set('contentHeader', $header);
+        $header .= ' - ' . $model->getHeader($alias);
+        $this->set('contentHeader', $header);
 
         $persona = false;
         $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
@@ -139,7 +129,7 @@ class ScholarshipsController extends AppController
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Institution Choices')
             ],
-            'ApplicationAttachments' => [
+            'Attachments' => [
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Attachments')
             ],

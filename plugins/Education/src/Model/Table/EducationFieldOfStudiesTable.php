@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
-
+use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
 class EducationFieldOfStudiesTable extends ControllerActionTable
@@ -77,11 +77,16 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
     {
         $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : 0;
 
-        $query
-            ->matching('Scholarships', function ($q) use ($scholarshipId) {
-                return $q->where(['scholarship_id' => $scholarshipId]);
-            });
- 
+        $scholarshipEntity = $this->Scholarships->get($scholarshipId);
+        $isSelectAll = $this->Scholarships->checkIsSelectAll($scholarshipEntity);
+
+        if (!$isSelectAll) {
+            $query
+                ->matching('Scholarships', function ($q) use ($scholarshipId) {
+                    return $q->where(['scholarship_id' => $scholarshipId]);
+                });
+        } 
+
         return parent::findOptionList($query, $options);
     }
 }
