@@ -93,13 +93,13 @@ class WorkflowTransitionsTable extends AppTable {
 
 		$data = [
 			'comment' => '',
-			'prev_workflow_step_name' => __('New'),
+			'prev_workflow_step_name' => 'New',
 			'workflow_step_name' => $stepEntity->name,
 			'workflow_action_name' => __('Administration - Record Created'),
 			'workflow_model_id' => $workflowModel->id,
 			'model_reference' => $entity->id,
 			'created_user_id' => $entity->created_user_id,
-			'created' => new Time('NOW')
+			'created' => $entity->created
 		];
 
 		$entity = $this->newEntity($data);
