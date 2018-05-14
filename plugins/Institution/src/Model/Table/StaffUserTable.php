@@ -218,10 +218,13 @@ class StaffUserTable extends ControllerActionTable
             $toolbarButtons = $extra['toolbarButtons'];
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
             $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
             $userId = $entity->id;
+
+            $enableStaffTransfer = $ConfigStaffTransfersTable->checkIfTransferEnabled($institutionId);
 
             $assignedStaffRecords = $StaffTable->find()
                 ->where([
@@ -231,7 +234,7 @@ class StaffUserTable extends ControllerActionTable
                 ])
                 ->count();
 
-            if ($assignedStaffRecords > 0) {
+            if ($enableStaffTransfer && $assignedStaffRecords > 0) {
                 $url = [
                     'plugin' => $this->controller->plugin,
                     'controller' => $this->controller->name,
@@ -338,7 +341,7 @@ class StaffUserTable extends ControllerActionTable
             $conditions['openemis_no LIKE'] = $openemisNo . '%';
         }
         if (!empty($dateOfBirth)) {
-            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');;
+            $conditions['date_of_birth'] = date_create($dateOfBirth)->format('Y-m-d');
         }
 
         $identityConditions = [];

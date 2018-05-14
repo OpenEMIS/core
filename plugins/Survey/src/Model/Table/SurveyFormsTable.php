@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
+use Cake\Log\Log;
 
 class SurveyFormsTable extends CustomFormsTable
 {
@@ -18,6 +19,7 @@ class SurveyFormsTable extends CustomFormsTable
     const ALL_CUSTOM_FILER = 0;
 
     private $excludedCustomModules = ['Student', 'Staff'];
+    private $isFilterSelectionEditable = true;
 
     public function initialize(array $config)
     {
@@ -59,12 +61,15 @@ class SurveyFormsTable extends CustomFormsTable
         $validator = parent::validationDefault($validator);
 
         $validator
-            ->requirePresence('custom_filters', function ($context) {
-                if (array_key_exists('id', $context['data'])) {
-                    return false;
+            ->add('custom_filters', 'ruleNotEmpty', [
+                'rule' => function ($value, $context) {
+                    if ($value != self::ALL_CUSTOM_FILER && isset($value['_ids']) && empty($value['_ids'])) {
+                        return false;
+                    }
+
+                    return true;
                 }
-                return true;
-            })
+            ])
             ->add('name', [
                 'unique' => [
                     'rule' => ['validateUnique', ['scope' => 'custom_module_id']],
@@ -83,16 +88,34 @@ class SurveyFormsTable extends CustomFormsTable
         return $validator;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        unset($this->fields['apply_to_all']);
-        $this->setFieldOrder(['custom_module_id', 'code', 'name', 'description', 'custom_fields']);
-    }
-
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew()) {
-            unset($entity->custom_filters);
+            // allow additional custom filters to be added but not removed
+            if ($entity->has('custom_filter_selection') && $entity->custom_filter_selection == self::CUSTOM_FILTER) {
+                $originalEntity = $entity->extractOriginal(['custom_filters']);
+                $postedEntity = $entity->extract(['custom_filters']);
+
+                $originalFilters = [];
+                foreach ($originalEntity['custom_filters'] as $key => $obj) {
+                    $originalFilters[$obj->id] = $obj->name;
+                }
+
+                $postedFilters = [];
+                foreach ($postedEntity['custom_filters'] as $key => $obj) {
+                    $postedFilters[$obj->id] = $obj->name;
+                }
+
+                $compareFilters = array_intersect_key($originalFilters, $postedFilters);
+                if (sizeof($originalFilters) != sizeof($compareFilters)) {
+                    $differentFilters = array_diff_key($originalFilters, $postedFilters);
+
+                    $errorMsg = $this->getMessage($this->aliasField('restrictEditFilters'), ['sprintf' => [implode(", ", $differentFilters)]]);
+                    $entity->errors('custom_filters', [$errorMsg]);
+                    return false;
+                }
+            }
+            // end
         }
     }
 
@@ -101,26 +124,9 @@ class SurveyFormsTable extends CustomFormsTable
         $this->setAllCustomFilter($entity);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('code');
-    }
-
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-    }
-
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        $keywords = ['custom_filters'];
-        foreach ($keywords as $key => $value) {
-            if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
-                if ($requestData[$this->alias()][$value] != self::ALL_CUSTOM_FILER && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
-                    $requestData[$this->alias()][$value] = [];
-                }
-            }
-        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -152,12 +158,35 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        unset($this->fields['apply_to_all']);
+
+        $fieldsOrder = ['custom_module_id', 'code', 'name', 'description'];
+        $moreFields = ['custom_filter_selection', 'custom_filters', 'custom_fields'];
+        foreach ($moreFields as $fieldKey) {
+            if (array_key_exists($fieldKey, $this->fields)) {
+                $fieldsOrder[] = $fieldKey;
+            }
+        }
+
+        $this->setFieldOrder($fieldsOrder);
+    }
+
+    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $entity->code = substr(Text::uuid(), 0, 8);
+    }
+
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         parent::editOnInitialize($event, $entity, $extra);
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
         $isAllFilterType = $SurveyFormsFilters->getIsAllFilterType($entity->id);
         $entity->custom_filter_selection = ($isAllFilterType) ? self::ALL_CUSTOM_FILER : self::CUSTOM_FILTER;
+        if ($isAllFilterType) {
+            $this->isFilterSelectionEditable = false;
+        }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -239,17 +268,6 @@ class SurveyFormsTable extends CustomFormsTable
         return parent::onUpdateFieldCustomModuleId($event, $attr, $action, $request);
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            if (!$request->is('post')) {
-                $textValue = substr(Text::uuid(), 0, 8);
-                $attr['attr']['value'] = $textValue;
-            }
-            return $attr;
-        }
-    }
-
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $entity->is_deletable = true;
@@ -278,19 +296,29 @@ class SurveyFormsTable extends CustomFormsTable
     {
         if ($action == 'view') {
             $attr['visible'] = false;
-        } elseif ($action == 'add') {
+        } elseif ($action == 'add' || $action == 'edit') {
+            $entity = $attr['attr']['entity'];
+
             $filterSelectionOptions = [
                 self::CUSTOM_FILTER => __('Select Custom Filters'),
                 self::ALL_CUSTOM_FILER => __('Select All Custom Filters')
             ];
 
-            $attr['type'] = 'select';
-            $attr['options'] = $filterSelectionOptions;
-            $attr['after'] = 'custom_module_id';
-            $attr['select'] = false;
-            $attr['onChangeReload'] = true;
-        } elseif ($action == 'edit') {
-            $attr['type'] = 'hidden';
+            $selectionType = self::CUSTOM_FILTER;
+            if ($entity->has('custom_filter_selection')) {
+                $selectionType = $entity->custom_filter_selection;
+            }
+
+            if ($this->isFilterSelectionEditable) {
+                $attr['type'] = 'select';
+                $attr['options'] = $filterSelectionOptions;
+                $attr['select'] = false;
+                $attr['onChangeReload'] = true;
+            } else {
+                $attr['type'] = 'readonly';
+                $attr['value'] = $selectionType;
+                $attr['attr']['value'] = $filterSelectionOptions[$selectionType];
+            }
         }
 
         return $attr;
@@ -300,8 +328,11 @@ class SurveyFormsTable extends CustomFormsTable
     {
         if ($action == 'view') {
             parent::onUpdateFieldCustomFilters($event, $attr, $action, $request);
-        } elseif ($action == 'add') {
+        } elseif ($action == 'add' || $action == 'edit') {
             $entity = $attr['attr']['entity'];
+            $customModule = $attr['attr']['customModule'];
+            $filter = $customModule->filter;
+            $filterOptions = TableRegistry::get($filter)->getList()->toArray();
 
             $selectionType = self::CUSTOM_FILTER;
             if ($entity->has('custom_filter_selection')) {
@@ -309,44 +340,13 @@ class SurveyFormsTable extends CustomFormsTable
             }
 
             if ($selectionType == self::CUSTOM_FILTER) {
-                $customModule = $attr['attr']['customModule'];
-                $selectedModule = $customModule->id;
-                $filter = $customModule->filter;
-                $filterOptions = TableRegistry::get($filter)->getList()->toArray();
-
                 $attr['options'] = $filterOptions;
                 $attr['type'] = 'chosenSelect';
                 $attr['placeholder'] = __('Select Filters');
             } else {
                 $attr['type'] = 'readonly';
                 $attr['value'] = self::ALL_CUSTOM_FILER;
-                $attr['attr']['value'] = __('All Custom Filters Selected');
-            }
-        } elseif ($action == 'edit') {
-            $entity = $attr['attr']['entity'];
-            
-            $selectionType = self::CUSTOM_FILTER;
-            if ($entity->has('custom_filter_selection')) {
-                $selectionType = $entity->custom_filter_selection;
-            }
-
-            if ($selectionType == self::CUSTOM_FILTER) {
-                $customFilterList = $entity->custom_filters;
-                $selectedOptionsName = [];
-                foreach ($customFilterList as $obj) {
-                    $selectedOptionsName[] = $obj->name;
-                }
-                sort($selectedOptionsName);
-                // set this options to disabled so it won't post this data back
-                $attr['type'] = 'disabled';
-                $attr['attr']['value'] = implode(', ', $selectedOptionsName);
-            } else {
-                $customModule = $attr['attr']['customModule'];
-                $filter = $customModule->filter;
-                $chosenSelectList = TableRegistry::get($filter)->getList()->toArray();
-                $attr['type'] = 'readonly';
-                $attr['value'] = self::ALL_CUSTOM_FILER;
-                $attr['attr']['value'] = implode(', ', $chosenSelectList);
+                $attr['attr']['value'] = implode(', ', $filterOptions);
             }
         }
 
@@ -366,6 +366,8 @@ class SurveyFormsTable extends CustomFormsTable
 
     private function setupFields(Entity $entity)
     {
+        $this->field('code');
+
         $selectedModule = $this->request->query('module');
         $customModule = $this->CustomModules->get($selectedModule);
         $filter = $customModule->filter;
@@ -373,7 +375,11 @@ class SurveyFormsTable extends CustomFormsTable
         $this->field('custom_module_id');
 
         if (!is_null($filter)) {
-            $this->field('custom_filter_selection');
+            $this->field('custom_filter_selection', [
+                'attr' => [
+                    'entity' => $entity
+                ]
+            ]);
 
             $this->field('custom_filters', [
                 'attr' => [
@@ -405,7 +411,7 @@ class SurveyFormsTable extends CustomFormsTable
 
             if ($SurveyFormsFilters->save($surveyFormFilterEntity)) {
             } else {
-                $SurveyFormsFilters->log($surveyFormFilterEntity->errors(), 'debug');
+                Log::write('debug', $surveyFormFilterEntity->errors());
             }
         }
     }
