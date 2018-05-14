@@ -2,6 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class ApplicationInstitutionChoicesTable extends AppTable
 {
@@ -17,5 +18,19 @@ class ApplicationInstitutionChoicesTable extends AppTable
         $this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels',  'foreignKey' =>'qualification_level_id' ]);
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('end_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'start_date', true]
+            ])
+            ->add('estimated_cost', 'validateDecimal', [
+                'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                'message' => __('Value cannot be more than two decimal places')
+            ]);;
     }
 }
