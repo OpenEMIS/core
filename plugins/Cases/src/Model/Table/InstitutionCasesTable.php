@@ -182,7 +182,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $feature = $WorkflowRules->getFeatureByRegistryAlias($registryAlias);
 
         $statusId = 0;
-        $assigneeId = 0;
+        $assigneeId = -1;
         $institutionId = $linkedRecordEntity->has('institution_id') ? $linkedRecordEntity->institution_id : 0;
         $recordId = $linkedRecordEntity->id;
 
