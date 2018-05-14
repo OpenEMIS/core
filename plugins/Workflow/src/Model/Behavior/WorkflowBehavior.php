@@ -22,7 +22,7 @@ use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 class WorkflowBehavior extends Behavior
 {
     use OptionsTrait;
-    
+
     const AUTO_ASSIGN = -1;
 
     protected $_defaultConfig = [
@@ -519,17 +519,17 @@ class WorkflowBehavior extends Behavior
                 if (!$transitionResults->isEmpty()) {
                     $transitions = $transitionResults->toArray();
                     foreach ($transitions as $key => $transition) {
-                        $transitionDisplay = '<span class="status past">' . $transition->prev_workflow_step_name . '</span>';
+                        $transitionDisplay = '<span class="status past">' . __($transition->prev_workflow_step_name) . '</span>';
                         $transitionDisplay .= '<span class="transition-arrow"></span>';
                         if (count($transitions) - 1 == $key) {
-                            $transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step_name . '</span>';
+                            $transitionDisplay .= '<span class="status highlight">' . __($transition->workflow_step_name) . '</span>';
                         } else {
-                            $transitionDisplay .= '<span class="status past">' . $transition->workflow_step_name . '</span>';
+                            $transitionDisplay .= '<span class="status past">' . __($transition->workflow_step_name) . '</span>';
                         }
 
                         $rowData = [];
                         $rowData[] = $transitionDisplay;
-                        $rowData[] = $transition->workflow_action_name;
+                        $rowData[] = __($transition->workflow_action_name);
                         $rowData[] = nl2br(htmlspecialchars($transition->comment));
                         $rowData[] = $transition->created_user->name;
                         $rowData[] = $transition->created->format('Y-m-d H:i:s');
