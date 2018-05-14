@@ -809,7 +809,7 @@ class POCOR2813 extends AbstractMigration
             ->addColumn('institution_name', 'string', [ 
                 'default' => null,
                 'limit' => 150,
-                'null' => true
+                'null' => false
             ])
             ->addColumn('estimated_cost', 'decimal', [
                 'default' => null,
