@@ -33,6 +33,11 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields['education_programme_orientation_id']['sort'] = ['field' => 'ProgrammeOrientations.name'];
+    }
+
     public function addEditBeforeAction(Event $event) {
         $this->fields['education_programme_orientation_id']['type'] = 'select';
     }
@@ -41,6 +46,14 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
     {
         // POCOR-4079 if no manual sorting, will be sort by order.
         $requestQuery = $this->request->query;
+
+        $sortList = ['name', 'ProgrammeOrientations.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+
         $sortable = array_key_exists('sort', $requestQuery) ? true : false;
 
         if (!$sortable) {

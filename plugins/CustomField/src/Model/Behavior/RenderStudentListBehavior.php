@@ -468,16 +468,4 @@ class RenderStudentListBehavior extends RenderBehavior {
             }
         }
     }
-
-    public function updateWorkflowStatus(Event $event, $entity, $statusId) {
-        $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-        $StudentSurveys->updateAll(
-            ['status_id' => $statusId],
-            [
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id,
-                'parent_form_id' => $entity->survey_form_id
-            ]
-        );
-    }
 }

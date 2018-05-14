@@ -560,11 +560,42 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
             if ($action == 'add') {
                 // using institution_staff entity
+                $conditions = [];
+                $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
+                
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $Institutions = TableRegistry::get('Institution.Institutions');
+
+                // start: restrict staff transfer by type
+                $restrictStaffTransferByType = $ConfigItems->value('restrict_staff_transfer_by_type');
+                if ($restrictStaffTransferByType) {
+                    if ($entity->has('institution_id')) {
+                        $institutionId = $entity->institution_id;
+
+                        $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
+                        
+                        $conditions['institution_type_id'] = $institutionTypeId;
+                    }
+                }
+                // end: restrict staff transfer by type
+
+                // start: restrict staff transfer by provider
+                $restrictStaffTransferByProvider = $ConfigItems->value('restrict_staff_transfer_by_provider');
+                if ($restrictStaffTransferByProvider) {
+                    if ($entity->has('institution_id')) {
+                        $institutionId = $entity->institution_id;
+                        $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
+                        
+                        $conditions['institution_provider_id'] = $institutionProviderId;
+                    }
+                }
+                // end: restrict staff transfer by provider
+
                 $options = $this->NewInstitutions->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'code_name'
                     ])
-                    ->where([$this->NewInstitutions->aliasField('id <>') => $entity->institution_id])
+                    ->where($conditions)
                     ->order($this->NewInstitutions->aliasField('code'))
                     ->toArray();
 

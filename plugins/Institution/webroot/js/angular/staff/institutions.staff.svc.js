@@ -36,6 +36,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         getAddNewStaffConfig: getAddNewStaffConfig,
+        getStaffTransfersByTypeConfig: getStaffTransfersByTypeConfig,
+        getStaffTransfersByProviderConfig: getStaffTransfersByProviderConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
@@ -166,7 +168,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         if (key != 'date_of_birth') {
                             params[key] = options['conditions'][key];
                         } else {
-                            params[key] = vm.formatDate(options['conditions'][key]);
+                            params[key] = vm.formatDateForSaving(options['conditions'][key]);
                         }
                         var replaceKey = '{'+key+'}';
                         replacement[replaceKey] = params[key];
@@ -746,6 +748,22 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return ConfigItems
             .select()
             .where({type: 'Add New Staff'})
+            .ajax({defer: true});
+    }
+
+    function getStaffTransfersByTypeConfig() {
+        return ConfigItems
+            .select()
+            .where({type: 'Staff Transfers',
+                    code: 'restrict_staff_transfer_by_type'})
+            .ajax({defer: true});
+    }
+
+    function getStaffTransfersByProviderConfig() {
+        return ConfigItems
+            .select()
+            .where({type: 'Staff Transfers',
+                    code: 'restrict_staff_transfer_by_provider'})
             .ajax({defer: true});
     }
 

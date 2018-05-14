@@ -1,6 +1,8 @@
 <?php
 namespace InstitutionRepeater\Model\Table;
 
+use Cake\ORM\Entity;
+use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
 class RepeaterSurveysTable extends ControllerActionTable
@@ -40,4 +42,24 @@ class RepeaterSurveysTable extends ControllerActionTable
 			'tableCellClass' => ['className' => 'InstitutionRepeater.RepeaterSurveyTableCells', 'foreignKey' => 'institution_repeater_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
 	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';
+
+        return $events;
+    }
+
+	public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
+    {
+    	$this->updateAll(
+            ['status_id' => $institutionSurveyEntity->status_id],
+            [
+                'institution_id' => $institutionSurveyEntity->institution_id,
+                'academic_period_id' => $institutionSurveyEntity->academic_period_id,
+                'parent_form_id' => $institutionSurveyEntity->survey_form_id
+            ]
+        );
+    }
 }
