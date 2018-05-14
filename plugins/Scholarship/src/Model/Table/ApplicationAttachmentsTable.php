@@ -31,7 +31,7 @@ class ApplicationAttachmentsTable extends AppTable
                 'Applications',
                 'Applicants',
                 'Scholarships',
-                'ScholarshipAttachmentTypes'
+                'AttachmentTypes'
             ]);
         
         return $query;
