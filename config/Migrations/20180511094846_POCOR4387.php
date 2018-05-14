@@ -84,11 +84,50 @@ class POCOR4387 extends AbstractMigration
                 ON `workflow_steps`.`workflow_id` = `workflows`.`id`
             ');
         }
+
+        // translations for workflow_transition workflow_action_name
+        $data = [
+            [
+                'en' => 'Administration - Reject Record',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Administration - Close Record',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Administration - Approve Record',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Administration - Change Assignee',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Administration - Record Created',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('locale_contents', $data);
     }
 
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `workflow_transitions`');
         $this->execute('RENAME TABLE `z_4387_workflow_transitions` TO `workflow_transitions`');
+
+        // translations for workflow_transition workflow_action_name
+        $this->execute('DELETE FROM `locale_contents` WHERE `en` = "Administration - Reject Record"');
+        $this->execute('DELETE FROM `locale_contents` WHERE `en` = "Administration - Close Record"');
+        $this->execute('DELETE FROM `locale_contents` WHERE `en` = "Administration - Approve Record"');
+        $this->execute('DELETE FROM `locale_contents` WHERE `en` = "Administration - Change Assignee"');
+        $this->execute('DELETE FROM `locale_contents` WHERE `en` = "Administration - Record Created"');
+
     }
 }
