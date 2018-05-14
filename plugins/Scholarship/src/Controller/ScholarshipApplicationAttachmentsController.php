@@ -5,7 +5,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
-use Scholarship\Controller\ApplicationAttachmentsController as BaseController;
+use Scholarship\Controller\AttachmentsController as BaseController;
 
 
 class ScholarshipApplicationAttachmentsController extends BaseController

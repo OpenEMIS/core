@@ -279,7 +279,13 @@ class ScholarshipsTable extends ControllerActionTable
             $financialAssistanceTypeId = $entity->scholarship_financial_assistance_type_id;
 
             if (!empty($financialAssistanceTypeId)) {
-                $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes->getList()->toArray();
+                $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'code'
+                    ])
+                    ->order([$this->FinancialAssistanceTypes->aliasField('id')])
+                    ->toArray();
 
                 switch ($financialAssistanceTypeOptions[$financialAssistanceTypeId]) {
                     case 'SCHOLARSHIP':

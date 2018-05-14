@@ -42,7 +42,7 @@ class ScholarshipHistoriesController extends PageController
         $page->setQueryString('scholarshipId', $scholarshipId);
        
         $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
-        $page->addCrumb('Applicants', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Application', 'index']);
+        $page->addCrumb('Applicants', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'index']);
         $page->addCrumb($userName);
         $page->addCrumb('Scholarship History');
       
@@ -54,10 +54,8 @@ class ScholarshipHistoriesController extends PageController
     public function index()
     {         
         $page = $this->Page;
-        // $page->setAutoContain(false);
         
         parent::index();
-
         $this->reorderFields();
     }
 
@@ -98,7 +96,7 @@ class ScholarshipHistoriesController extends PageController
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Institution Choices')
             ],
-            'ApplicationAttachments' => [
+            'Attachments' => [
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Attachments')
             ],
