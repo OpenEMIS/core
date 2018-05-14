@@ -58,6 +58,7 @@ class SamlAuthenticate extends BaseAuthenticate
                         'gender' => isset($userAttribute[$fields['mapped_gender']][0]) ? $userAttribute[$fields['mapped_gender']][0] : ' - ',
                         'dateOfBirth' => isset($userAttribute[$fields['mapped_date_of_birth']][0]) ? $userAttribute[$fields['mapped_date_of_birth']][0] : ' - ',
                         'role' => isset($userAttribute[$fields['mapped_role']][0]) ? $userAttribute[$fields['mapped_role']][0] : '',
+                        'email' => isset($userAttribute[$fields['mapped_email']][0]) ? $userAttribute[$fields['mapped_email']][0] : '',
                     ];
 
                     $User = TableRegistry::get($this->_config['userModel']);
