@@ -79,7 +79,6 @@ class WorkflowTransitionsTable extends AppTable {
 		}
 	}
 
-	// public function createFirstTransitionRecord(Entity $entity)
 	public function onWorkflowAddAfterSave(Event $event, Entity $entity)
 	{
 		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
