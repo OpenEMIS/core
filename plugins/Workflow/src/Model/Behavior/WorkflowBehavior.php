@@ -240,7 +240,7 @@ class WorkflowBehavior extends Behavior
             $this->setStatusAsOpen($entity);
         }
 
-        if (!$entity->has('assignee_id') || $entity->assignee_id == -1) {
+        if (!$entity->has('assignee_id') || $entity->assignee_id == self::AUTO_ASSIGN) {
             $this->autoAssignAssignee($entity);
         }
     }
@@ -924,7 +924,7 @@ class WorkflowBehavior extends Behavior
             $actionAttr = $attr['entity'];
 
             if ($actionAttr['auto_assign_assignee']) {
-                $assigneeOptions = ['-1' => __('Auto Assign')];
+                $assigneeOptions = [self::AUTO_ASSIGN => __('Auto Assign')];
                 $attr['select'] = false;
             } else {
                 $model = $this->_table;
@@ -1769,7 +1769,7 @@ class WorkflowBehavior extends Behavior
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
                 if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
                     $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
-                    if ($assigneeId == '-1') {
+                    if ($assigneeId == self::AUTO_ASSIGN) {
                         $this->autoAssignAssignee($entity);
                     } else {
                         $entity->assignee_id = $assigneeId;
