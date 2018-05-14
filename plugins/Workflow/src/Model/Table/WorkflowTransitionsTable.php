@@ -84,7 +84,7 @@ class WorkflowTransitionsTable extends AppTable {
 		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
 		$stepEntity = $WorkflowSteps
 			->find()
-            ->matching('Workflows.WorkflowModels')
+			->matching('Workflows.WorkflowModels')
 			->where([$WorkflowSteps->aliasField('id') => $entity->status_id])
 			->first();
 
