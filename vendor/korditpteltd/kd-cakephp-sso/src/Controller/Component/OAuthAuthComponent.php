@@ -93,6 +93,7 @@ class OAuthAuthComponent extends Component
         $this->mapping['lastName'] = $mappingAttributes['mapped_last_name'];
         $this->mapping['dob'] = $mappingAttributes['mapped_date_of_birth'];
         $this->mapping['gender'] = $mappingAttributes['mapped_gender'];
+        $this->mapping['email'] = $mappingAttributes['mapped_email'];
         $this->createUser = $mappingAttributes['allow_create_user'];
 
         $hashAttributes = $oAuthAttributes;
