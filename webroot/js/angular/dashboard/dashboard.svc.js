@@ -70,6 +70,10 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StudentTransferOut'
         },
+        StaffAppraisalsTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffAppraisals'
+        },
         // NON_SCHOOL_BASED Workflow
         TrainingCoursesTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,

@@ -216,7 +216,8 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $data->{$attr['field']};
+            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $value = Hash::get($data, $fieldName, '');
         } elseif ($action == 'edit') {
             $options['type'] = 'number';
             $fieldName = $attr['model'] . '.' . $attr['field'];
