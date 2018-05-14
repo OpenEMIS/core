@@ -504,18 +504,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
         // }
     // }
 
-    public function updateWorkflowStatus(Event $event, $entity, $statusId) {
-        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-        $RepeaterSurveys->updateAll(
-            ['status_id' => $statusId],
-            [
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id,
-                'parent_form_id' => $entity->survey_form_id
-            ]
-        );
-    }
-
     private function getRepeaters($model, $requestData, $fieldId) {
         $repeaters = [];
 
