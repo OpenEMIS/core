@@ -433,7 +433,8 @@ trait MessagesTrait
         'SurveyForms' => [
             'add_question' => 'Add Question',
             'add_to_section' => 'Add to Section',
-            'notSupport' => 'Not supported in this form.'
+            'notSupport' => 'Not supported in this form.',
+            'restrictEditFilters' => 'You are not allow to remove the following filters: %s'
         ],
         'StaffPositionTitles' => [
             'inProgress' => 'Update of staff position title roles is in process, please try again later.',
@@ -734,6 +735,7 @@ trait MessagesTrait
             'noFilesToDownload' => 'There are no generated Report Cards to download',
             'noFilesToPublish' => 'There are no generated Report Cards to publish',
             'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
+            'inProgress' => 'There is already a process running for this Report Card',
             'generate' => 'The Report Card has been successfully generated',
             'generateAll' => 'All Report Cards will be generated in the background',
             'publish' => 'The Report Card has been successfully published',
@@ -776,6 +778,9 @@ trait MessagesTrait
             'endDate' => [
                     'compareWithStartDate' => 'End Date should not be earlier than Start Date'
                 ]
+        ],
+        'StaffTransfers' => [
+            'restrictStaffTransfer' => 'Transfer is not allowed between different institution type or institution provider.'
         ],
         'StaffTransferOut' => [
             'existingStaffTransfer' => 'There is an existing transfer record for this staff'
@@ -1422,7 +1427,7 @@ trait MessagesTrait
                 'height' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
                     'notZero' => 'Height must be more than 0',
-                    'validHeight' => 'Height must be within 0 and 3 metre',
+                    'validHeight' => 'Height must be within 0 and 300 centimetre',
                 ],
                 'weight' => [
                     'validateDecimal' => 'Cannot be more than two decimal place',
@@ -2104,6 +2109,14 @@ trait MessagesTrait
                 'name' => [
                     'ruleUnique' => 'This webhook name already exists in the system',
                 ],
+            ],
+            'ConfigStudentSettings' => [
+                'max_students_per_class' => [
+                    'maxStudentLimit' => 'Numeric Value should be between %s to %s'
+                ],
+                'max_students_per_subject' => [
+                    'maxStudentLimit' => 'Numeric Value should be between %s to %s'
+                ],
             ]
         ],
         'Alert' => [
@@ -2142,6 +2155,13 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'Survey' => [
+            'SurveyForms' => [
+                'custom_filters' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ]
     ];
 
 

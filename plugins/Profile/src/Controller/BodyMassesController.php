@@ -220,19 +220,19 @@ class BodyMassesController extends PageController
             $page->get('height')->setLabel([
                 'escape' => false,
                 'class' => 'tooltip-desc',
-                'text' => __('Height') . $this->tooltipMessage(__('Within 0 to 3 metre'))
+                'text' => __('Height') . $this->tooltipMessage(__('Within 0 to 300 centimetres'))
             ]);
 
             $page->get('weight')->setLabel([
                 'escape' => false,
                 'class' => 'tooltip-desc',
-                'text' => __('Weight') . $this->tooltipMessage(__('Within 0 to 500 kilogram'))
+                'text' => __('Weight') . $this->tooltipMessage(__('Within 0 to 500 kilograms'))
             ]);
 
             $page->get('body_mass_index')->setLabel([
                 'escape' => false,
                 'class' => 'tooltip-desc',
-                'text' => __('Body Mass Index') . $this->tooltipMessage(__('Weight / Height<sup>2</sup>'))
+                'text' => __('Body Mass Index') . $this->tooltipMessage(__('Weight (kg) / Height<sup>2</sup> (m)'))
             ]);
         }
     }

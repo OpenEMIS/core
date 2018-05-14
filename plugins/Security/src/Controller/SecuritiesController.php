@@ -16,11 +16,17 @@ class SecuritiesController extends AppController
         $this->ControllerAction->models = [
             'Accounts'      => ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
             'Users'             => ['className' => 'Security.Users'],
-            'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']],
-            'Roles'             => ['className' => 'Security.SecurityRoles']
+            'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']]
         ];
         $this->attachAngularModules();
     }
+
+    // CAv4
+    public function Roles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SecurityRoles']);
+    }
+    // end
 
     public function Permissions($subaction = 'index', $roleId = null)
     {

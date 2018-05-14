@@ -187,6 +187,14 @@ class ReportCardsTable extends AppTable
             'file_name' => $fileName,
             'file_content' => $fileContent
         ], $params);
+
+        // delete report card process
+        $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
+        $ReportCardProcesses->deleteAll([
+            'report_card_id' => $params['report_card_id'],
+            'institution_class_id' => $params['institution_class_id'],
+            'student_id' => $params['student_id']
+        ]);
     }
 
     public function afterRenderExcelTemplate(Event $event, ArrayObject $extra, $controller)

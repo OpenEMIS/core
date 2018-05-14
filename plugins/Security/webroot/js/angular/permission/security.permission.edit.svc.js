@@ -8,8 +8,9 @@ function SecurityPermissionEditSvc($http, $q, $filter, KdDataSvc) {
 
     var service = {
         init: init,
-        getPermissions: getPermissions,
         translate: translate,
+        getRoleData: getRoleData,
+        getPermissions: getPermissions,
         savePermissions: savePermissions
     };
 
@@ -33,6 +34,10 @@ function SecurityPermissionEditSvc($http, $q, $filter, KdDataSvc) {
             deferred.resolve(translated);
         };
         return translation.translate(data, {success:success, defer: true});
+    }
+
+    function getRoleData(roleId) {
+        return SecurityRoles.get(roleId).ajax({defer: true});
     }
 
     function getPermissions(roleId, module) {
