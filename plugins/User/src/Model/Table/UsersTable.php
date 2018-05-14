@@ -152,6 +152,7 @@ class UsersTable extends AppTable
             'openemis_no' => $openemisNo,
             'first_name' => $userInfo['firstName'],
             'last_name' => $userInfo['lastName'],
+            'email' => $userInfo['email'],
             'gender_id' => $gender,
             'date_of_birth' => $dateOfBirth,
             'super_admin' => 0,
