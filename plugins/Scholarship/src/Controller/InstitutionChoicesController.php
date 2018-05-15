@@ -16,9 +16,12 @@ class InstitutionChoicesController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Security.Users');
+        $this->loadModel('FieldOption.Countries');
+        $this->loadModel('Area.AreaAdministratives');
+        $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Scholarship.ApplicationInstitutionChoices');
+        
         $this->Page->loadElementsFromTable($this->ApplicationInstitutionChoices);
 
         $this->locationTypeOptions = $this->getSelectOptions('InstitutionChoices.location_type');
@@ -27,7 +30,7 @@ class InstitutionChoicesController extends PageController
     public function implementedEvents()
     {
         $event = parent::implementedEvents();
-        $event['Controller.Page.onRenderLocationTypeId'] = 'onRenderLocationTypeId';
+        $event['Controller.Page.onRenderLocationType'] = 'onRenderLocationType';
         return $event;
     }
 
@@ -69,21 +72,24 @@ class InstitutionChoicesController extends PageController
     public function edit($id)
     {
         parent::edit($id);
-        $this->addEdit();
+        $this->addEdit($id);
     }
 
-    private function addEdit()
+    private function addEdit($id=0)
     {
         $page = $this->Page;
 
         $scholarshipId = $page->getQueryString('scholarship_id');
 
         $page->get('location_type')
+            ->setId('location_type')
             ->setControlType('select')
             ->setOptions($this->locationTypeOptions);
 
         $page->get('country_id')
-            ->setControlType('select');
+            ->setControlType('select')
+            ->setDependentOn('location_type')
+            ->setParams('Countries');
 
         $page->get('qualification_level_id')
             ->setControlType('select');
@@ -103,6 +109,9 @@ class InstitutionChoicesController extends PageController
             ->setControlType('select')
             ->setOptions($educationFieldOfStudies);
 
+        $entity = $page->getData();
+
+        $this->setCountryOptions($entity);
         $this->reorderFields();
     }
 
@@ -119,14 +128,16 @@ class InstitutionChoicesController extends PageController
             $page->addCrumb('Scholarships', [
                 'plugin' => 'Scholarship',
                 'controller' => 'Scholarships',
-                'action' => 'index'
+                'action' => 'Scholarships',
+                'index'
             ]);
 
             if ($name == 'ScholarshipApplicationInstitutionChoices') {
                 $page->addCrumb('Applicants', [
                     'plugin' => 'Scholarship',
-                    'controller' => 'ScholarshipApplications',
-                    'action' => 'index'
+                    'controller' => 'Scholarships',
+                    'action' => 'Applications',
+                    'index'
                 ]);
 
                 $page->addCrumb($userName);
@@ -134,8 +145,9 @@ class InstitutionChoicesController extends PageController
             } else if ($name == 'RecipientInstitutionChoices') {
                 $page->addCrumb('Applicants', [
                     'plugin' => 'Scholarship',
-                    'controller' => 'ScholarshipApplications',
-                    'action' => 'index'
+                    'controller' => 'Scholarships',
+                    'action' => 'Applications',
+                    'index'
                 ]);
             }
 
@@ -191,7 +203,7 @@ class InstitutionChoicesController extends PageController
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Institution Choices')
             ],
-            'ApplicationAttachments' => [
+            'Attachments' => [
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Attachments')
             ],
@@ -209,12 +221,43 @@ class InstitutionChoicesController extends PageController
         $page->getTab('InstitutionChoices')->setActive('true');
     }
 
-    public function onRenderLocationTypeId(Event $event, Entity $entity, PageElement $element)
+    private function setCountryOptions(Entity $entity)
+    {
+        $page = $this->Page;
+        if ($entity->has('location_type')) {
+            $locationType = $entity->location_type;
+            $mainCountry = $this->AreaAdministratives
+                ->find()
+                ->where([$this->AreaAdministratives->aliasField('is_main_country') => 1])
+                ->extract('name')
+                ->first();
+
+            if($locationType == 'DOMESTIC') {
+                $countryOptions = $this->Countries
+                    ->find('optionList')
+                    ->where([
+                        $this->Countries->aliasField('name') => $mainCountry
+                    ])
+                    ->toArray();
+            } else {
+                $countryOptions = $this->Countries
+                    ->find('optionList')
+                    ->toArray();
+            }
+        } else {
+            $countryOptions = [];
+        }
+
+        $page->get('country_id')
+            ->setOptions($countryOptions);
+    }
+
+    public function onRenderLocationType(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
         if ($page->is(['index', 'view', 'delete'])) {
-            $value = $this->locationTypeOptions[$entity->location_type_id];
+            $value = $this->locationTypeOptions[$entity->location_type];
 
             return $value;
         }
