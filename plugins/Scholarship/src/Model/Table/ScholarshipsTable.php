@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -197,7 +198,7 @@ class ScholarshipsTable extends ControllerActionTable
             $ScholarshipsFieldOfStudiesEntity = $ScholarshipsFieldOfStudies->newEntity($data);
 
             if (!$ScholarshipsFieldOfStudies->save($ScholarshipsFieldOfStudiesEntity)) {
-                $ScholarshipsFieldOfStudies->log($ScholarshipsFieldOfStudiesEntity->errors(), 'debug');
+                Log::write('debug', $ScholarshipsFieldOfStudiesEntity->errors());
             }
         }
     }
@@ -249,7 +250,7 @@ class ScholarshipsTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->fieldOfStudySelection;
             $attr['select'] = false;
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeFieldOfStudy';
         }
         return $attr;
     }
@@ -331,7 +332,7 @@ class ScholarshipsTable extends ControllerActionTable
                         break;
                 }
             }
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeFinancialAssistanceType';
         }
         return $attr;
     }
