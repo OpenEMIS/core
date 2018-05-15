@@ -1,6 +1,7 @@
 <?php
 namespace Workflow\Model\Table;
 
+use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
@@ -12,7 +13,14 @@ class WorkflowTransitionsTable extends AppTable {
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 	}
 
-	public function trackChanges(Entity $workflowModelEntity, Entity $affectedEntity, $assigneeId=0) {
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Workflow.add.afterSave'] = 'onWorkflowAddAfterSave';
+        return $events;
+    }
+
+	public function trackChanges(Entity $workflowModelEntity, Entity $affectedEntity, $assigneeId=0){
 		$unassigned = '<'.__('Unassigned').'>';
 
 		if ($affectedEntity->has('assignee')) {
@@ -37,7 +45,6 @@ class WorkflowTransitionsTable extends AppTable {
 		} else {
 			$newAssigneeName = $unassigned;
 		}
-
 		if ($origAssigneeName != $newAssigneeName) {
 			// get stepName via contain, _matching, or status_id
 			$stepName = '';
@@ -60,7 +67,7 @@ class WorkflowTransitionsTable extends AppTable {
 				'comment' => __('From').' '.$origAssigneeName.' '.__('to').' '.$newAssigneeName,
 				'prev_workflow_step_name' => $stepName,
 				'workflow_step_name' => $stepName,
-				'workflow_action_name' => __('Administration - Change Assignee'),
+				'workflow_action_name' => 'Administration - Change Assignee',
 				'workflow_model_id' => $workflowModelEntity->id,
 				'model_reference' => $affectedEntity->id,
 				'created_user_id' => 1,
@@ -70,5 +77,31 @@ class WorkflowTransitionsTable extends AppTable {
 			$entity = $this->newEntity($data);
 			$this->save($entity);
 		}
+	}
+
+	public function onWorkflowAddAfterSave(Event $event, Entity $entity)
+	{
+		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+		$stepEntity = $WorkflowSteps
+			->find()
+			->matching('Workflows.WorkflowModels')
+			->where([$WorkflowSteps->aliasField('id') => $entity->status_id])
+			->first();
+
+		$workflowModel = $stepEntity->_matchingData['WorkflowModels'];
+
+		$data = [
+			'comment' => '',
+			'prev_workflow_step_name' => 'New',
+			'workflow_step_name' => $stepEntity->name,
+			'workflow_action_name' => 'Administration - Record Created',
+			'workflow_model_id' => $workflowModel->id,
+			'model_reference' => $entity->id,
+			'created_user_id' => $entity->created_user_id,
+			'created' => $entity->created
+		];
+
+		$entity = $this->newEntity($data);
+		$this->save($entity);
 	}
 }
