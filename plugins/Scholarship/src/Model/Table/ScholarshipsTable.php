@@ -28,6 +28,7 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+        $this->table('scholarships');
         parent::initialize($config);
 
         $this->belongsTo('FinancialAssistanceTypes', ['className' => 'Scholarship.FinancialAssistanceTypes', 'foreignKey' => 'scholarship_financial_assistance_type_id']);
