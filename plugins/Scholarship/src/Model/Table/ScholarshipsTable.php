@@ -193,7 +193,7 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['FieldOfStudies', 'Loans.PaymentFrequencies']);
+        $query->contain(['FinancialAssistanceTypes','FieldOfStudies', 'Loans.PaymentFrequencies']);
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -295,6 +295,12 @@ class ScholarshipsTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
             $financialAssistanceTypeId = $entity->scholarship_financial_assistance_type_id;
+
+            if (!$entity->isNew()) { // edit not allow to change field type
+                $attr['type'] = 'readonly';
+                $attr['value'] = $financialAssistanceTypeId;
+                $attr['attr']['value'] = $entity->financial_assistance_type->name;
+            }
 
             if (!empty($financialAssistanceTypeId)) {
                 $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes
