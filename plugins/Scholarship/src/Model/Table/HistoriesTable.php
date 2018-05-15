@@ -1,10 +1,18 @@
 <?php
 namespace Scholarship\Model\Table;
 
-use Cake\ORM\Query;
-use App\Model\Table\AppTable;
+use ArrayObject;
 
-class HistoriesTable extends AppTable
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Controller\Component;
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+
+class HistoriesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -27,17 +35,55 @@ class HistoriesTable extends AppTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
+        $this->addBehavior('Workflow.Workflow', ['model' => 'Scholarship.Applications']);
+        $this->addBehavior('CompositeKey');
+        $this->toggle('view', false);
     }
 
-    public function findIndex(Query $query, array $options)
+    public function implementedEvents()
     {
-        $scholarshipId = $options['querystring']['scholarshipId'];
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
 
-        $query
-            ->contain(['Scholarships.AcademicPeriods'])
-            ->where([$this->aliasField('scholarship_id') . ' <> ' => $scholarshipId])
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $queryString = $this->request->query['queryString'];
+        $scholarshipId = $this->paramsDecode($queryString)['scholarship_id'];
+        
+        $query->contain(['Scholarships.AcademicPeriods'])
+            ->where([$this->aliasField('scholarship_id')  => $scholarshipId])
             ->order(['AcademicPeriods.name' => 'DESC']);
+    }
 
-        return $query;
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+        $applicantName = $this->Applicants->get($applicantId)->name;
+        $this->controller->set('contentHeader', $applicantName. ' - ' .__('Scholarship History'));
+
+        $tabElements = $this->controller->getScholarshipTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('requested_amount', ['visible' => false]);
+        $this->field('assignee_id', ['visible' => false]);
+        $this->field('scholarship_id', ['type' => 'string']);
+        $this->field('academic_period_id', ['type' => 'disabled']);  
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {   
+        $this->Navigation->substituteCrumb($this->getHeader($this->alias()), __('Scholarship History'));
+    }
+
+    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->academic_period->name;
     }
 }
