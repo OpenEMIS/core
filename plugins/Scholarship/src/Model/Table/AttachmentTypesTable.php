@@ -19,7 +19,14 @@ class AttachmentTypesTable extends AppTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        return $validator->requirePresence(['name', 'is_mandatory']);
+        return $validator
+            ->add('name', [
+                'ruleUniqueCode' => [
+                    'rule' => ['validateUnique', ['scope' => 'scholarship_id']],
+                    'provider' => 'table'
+                ]
+            ])
+            ->requirePresence(['name', 'is_mandatory']);
     }
 
     public function findAttachmentTypeOptionList(Query $query, array $options)
