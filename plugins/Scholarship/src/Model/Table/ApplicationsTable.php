@@ -159,7 +159,7 @@ class ApplicationsTable extends ControllerActionTable
             }
 
             // setup fields
-            $this->field('assignee_id', ['visible' => false]);
+            $this->field('assignee_id', ['type' => 'hidden', 'value' => -1]);
             $this->setupApplicantFields($applicantEntity);
             $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
             $this->setupScholarshipFields($scholarshipEntity);
@@ -468,7 +468,7 @@ class ApplicationsTable extends ControllerActionTable
     }
 
 
-    public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onApproveScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $ScholarshipRecipient = TableRegistry::get('Institution.ScholarshipRecipient');
 
