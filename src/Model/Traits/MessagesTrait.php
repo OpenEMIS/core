@@ -1995,6 +1995,11 @@ trait MessagesTrait
                 'name' => [
                     'ruleUniqueCode' => 'Code must be unique for the same scholarship',
                 ]
+            ],
+            'Applications' => [
+                'requested_amount' => [
+                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Max Award Amount',
+                ]
             ]
         ],
         'Competency' => [
