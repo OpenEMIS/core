@@ -69,6 +69,8 @@ class ScholarshipsController extends AppController
                 $model->toggle('edit', false);
                 $model->toggle('remove', false);
 
+                $model->fields['security_user_id']['type'] = 'hidden';
+
                 $applicantId = $this->ControllerAction->getQueryString('applicant_id');
                 $header = $this->Users->get($applicantId)->name;
 
@@ -117,11 +119,11 @@ class ScholarshipsController extends AppController
                 'text' => __('Nationalities')
             ],
             'Contacts' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Contacts', 'index', $queryString, 'queryString' => $queryString],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Contacts', 'index', 'queryString' => $queryString],
                 'text' => __('Contacts')
             ],
             'Guardians' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Guardians', 'index', $queryString, 'queryString' => $queryString],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Guardians', 'index', 'queryString' => $queryString],
                 'text' => __('Guardians')
             ],
             'Histories' => [
