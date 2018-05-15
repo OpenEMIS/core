@@ -174,7 +174,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $cellOptions['type'] = 'string';
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
-                                    $cellOptions['tableColumnClass'] = 'vertical-align-top';
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
                                     $continue = true;
@@ -346,7 +345,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             if ($action == 'view') {
                                 $rowData[$colKey+$colOffset] = $cellValue;
                             } else if ($action == 'edit') {
-                                $rowData[$colKey+$colOffset] = $cellInput;
+                                $rowData[$colKey+$colOffset] = [$cellInput,['style' => 'vertical-align: top']];
                             }
                         }
 
@@ -370,7 +369,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
             // Survey Form ID not found
             Log::write('debug', $debugInfo . ': Repeater Survey Form ID is not configured.');
         }
-
+        //die;
         // $attr['attr']['classOptions'] = $classOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
