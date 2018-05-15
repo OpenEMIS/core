@@ -59,11 +59,11 @@ trait OptionsTrait
                 'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
             ],
             'Scholarships' => [
-                'field_of_study_selection' => [1 => __('Select Field Of Study'), '-1' => __('Select All Field Of Studies')],
-                'interest_rate' => [0 => __('Fixed'), '1' => __('Variable')] 
+                'field_of_study_selection' => [1 => __('Select Field Of Studies'), '-1' => __('Select All Field Of Studies')],
+                'interest_rate' => [0 => __('Fixed'), '1' => __('Variable')]
             ],
             'InstitutionChoices' => [
-                'location_type' => [0 => __('Domestic'), '-1' => __('International')]
+                'location_type' => ['DOMESTIC' => __('Domestic'), 'INTERNATIONAL' => __('International')]
             ],
             'Health' => [
                 'blood_types' => [
