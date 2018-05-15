@@ -152,7 +152,7 @@ class AttachmentsController extends PageController
                 'text' => __('Guardians')
             ],
             'Histories' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipHistories', 'action' => 'index', 'queryString' => $queryString],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Histories',  'index', 'queryString' => $queryString],
                 'text' => __('Scholarship History')
             ],
             'InstitutionChoices' => [

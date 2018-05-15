@@ -48,10 +48,9 @@ class ScholarshipsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']);
     }
-
-    public function StaffQualifications()
+    public function Histories()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Histories']);
     }
     // end
 
@@ -127,7 +126,7 @@ class ScholarshipsController extends AppController
                 'text' => __('Guardians')
             ],
             'Histories' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipHistories', 'action' => 'index', 'queryString' => $queryString],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Histories',  'index', 'queryString' => $queryString],
                 'text' => __('Scholarship History')
             ],
             'InstitutionChoices' => [
