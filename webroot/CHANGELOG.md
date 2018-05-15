@@ -1,3 +1,5 @@
+### [3.26.0]
+
 ### [3.25.0] - 2018-04-20
 - Added Column sorting to Administration > Education Structure > Grade Subjects
 - Change height metric from Metres to Centimetres in Health > Body Mass feature
