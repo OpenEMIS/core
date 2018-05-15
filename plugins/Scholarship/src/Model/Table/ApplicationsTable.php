@@ -62,6 +62,7 @@ class ApplicationsTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('CompositeKey');
+        $this->addBehavior('User.AdvancedNameSearch');
 
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
@@ -71,6 +72,7 @@ class ApplicationsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
@@ -117,6 +119,14 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'scholarship_id';
+        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'applicant_id';
+        $searchableFields[] = 'identity_number';
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('requested_amount', ['visible' => false]);
@@ -134,11 +144,96 @@ class ApplicationsTable extends ControllerActionTable
         // setup fields
         $this->field('scholarship_id', ['type' => 'string']);
         $this->setupApplicantFields();
+
+        $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
+        $this->fields['scholarship_id']['sort'] = ['field' => 'Scholarships.name'];
+        $this->fields['openemis_no']['sort'] = ['field' => 'Applicants.openemis_no'];
+        $this->fields['applicant_id']['sort'] = ['field' => 'Applicants.first_name'];
+        $this->fields['date_of_birth']['sort'] = ['field' => 'Applicants.date_of_birth'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Applicants' => ['Genders', 'MainIdentityTypes'], 'Scholarships']);
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('applicant_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('requested_amount'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id')
+            ])
+            ->contain([
+                'Statuses' => [
+                    'fields' => [
+                        'Statuses.name'
+                    ]
+                ],
+                'Assignees' => [
+                    'fields' => [
+                        'id',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ],
+                'Applicants' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name',
+                        'gender_id',
+                        'date_of_birth',
+                        'identity_type_id',
+                        'identity_number',
+                    ]
+                ],
+                'Applicants.Genders' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Applicants.MainIdentityTypes' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Scholarships' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ]
+            ]);
+
+        // sort
+        $sortList = ['Assignees.first_name', 'Scholarships.name', 'Applicants.openemis_no', 'Applicants.first_name', 'Applicants.date_of_birth'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => $this->Applicants->alias(), 'searchTerm' => $search]);
+
+            $searchString = $search . '%';
+            $orConditions = [
+                $this->Scholarships->aliasField('code LIKE') => $searchString,
+                $this->Scholarships->aliasField('name LIKE') => $searchString,
+                $this->Applicants->aliasField('identity_number LIKE') => $searchString
+            ];
+
+            $extra['OR'] = array_merge($nameConditions, $orConditions); // to be merged with auto_search 'OR' conditions
+        }
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
