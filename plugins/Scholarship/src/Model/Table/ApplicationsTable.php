@@ -72,7 +72,7 @@ class ApplicationsTable extends ControllerActionTable
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
-        }        
+        }
         return $events;
     }
 
@@ -96,7 +96,7 @@ class ApplicationsTable extends ControllerActionTable
             $attr['description'] = __($attr['description']);
             $eventsObject[] = $attr;
         }
-    }    
+    }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
@@ -138,6 +138,12 @@ class ApplicationsTable extends ControllerActionTable
         $query->contain(['Applicants' => ['Genders', 'MainIdentityTypes'], 'Scholarships']);
     }
 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // remove queryString when redirect
+        $extra['redirect'] = $this->url('index', false);
+    }
+
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['back']['url'])) {
@@ -159,10 +165,10 @@ class ApplicationsTable extends ControllerActionTable
             }
 
             // setup fields
-            $this->field('assignee_id', ['type' => 'hidden', 'value' => -1]);
             $this->setupApplicantFields($applicantEntity);
             $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
             $this->setupScholarshipFields($scholarshipEntity);
+            $this->field('assignee_id');
         } else {
             $event->stopPropagation();
             return $this->controller->redirect($this->url('index'));
