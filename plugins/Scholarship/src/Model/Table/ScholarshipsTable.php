@@ -24,6 +24,7 @@ class ScholarshipsTable extends ControllerActionTable
 
     private $fieldOfStudySelection = [];
     private $interestRateOptions = [];
+    private $currency = [];
 
     public function initialize(array $config)
     {
@@ -59,6 +60,7 @@ class ScholarshipsTable extends ControllerActionTable
 
         $this->fieldOfStudySelection = $this->getSelectOptions($this->aliasField('field_of_study_selection'));
         $this->interestRateOptions = $this->getSelectOptions($this->aliasField('interest_rate'));
+        $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
 
     public function implementedEvents()
@@ -378,10 +380,12 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
         $this->field('maximum_award_amount', [
             'type' => 'integer',
+            'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')],
             'after' => 'date_application_close'
         ]);
         $this->field('total_amount', [
             'type' => 'integer',
+            'attr' => ['label' => $this->addCurrencySuffix('Total Amount')],
             'after' => 'maximum_award_amount'
         ]);
         $this->field('bond', [
@@ -465,6 +469,11 @@ class ScholarshipsTable extends ControllerActionTable
             $ScholarshipsFieldOfStudies->aliasField('education_field_of_study_id') => self::SELECT_ALL_FIELD_OF_STUDIES
         ]);
         return $isSelectAll;
+    }
+
+    public function addCurrencySuffix($label)
+    {
+        return __($label) . ' (' . $this->currency . ')';
     }
 
     public function getAvailableScholarships($options = [])
