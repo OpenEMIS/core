@@ -57,6 +57,8 @@ class ScholarshipsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->setDeleteStrategy('restrict');
+
         $this->fieldOfStudySelection = $this->getSelectOptions($this->aliasField('field_of_study_selection'));
         $this->interestRateOptions = $this->getSelectOptions($this->aliasField('interest_rate'));
     }
@@ -86,6 +88,12 @@ class ScholarshipsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->add('code', [
+                'ruleUniqueCode' => [
+                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                    'provider' => 'table'
+                ]
+            ])
             ->requirePresence('field_of_studies')
             ->add('field_of_studies', 'notEmpty', [
                 'rule' => function ($value, $context) {
@@ -184,6 +192,13 @@ class ScholarshipsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['FieldOfStudies', 'Loans.PaymentFrequencies']);
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->AttachmentTypes->alias(), $this->FieldOfStudies->alias()
+        ];
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)

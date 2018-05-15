@@ -81,6 +81,7 @@ class ApplicationsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->requirePresence('financial_assistance_type_id', 'create')
             ->add('requested_amount', [
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
@@ -402,7 +403,7 @@ class ApplicationsTable extends ControllerActionTable
             }
 
             $attr['type'] = 'select';
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeScholarship';
             $attr['options'] = $scholarshipOptions;
         }
         return $attr;

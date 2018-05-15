@@ -1984,10 +1984,18 @@ trait MessagesTrait
         ],
         'Scholarship' => [
             'Scholarships' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
                 'date_application_close' => [
                     'ruleCompareDateReverse' => 'Application End date should not be earlier than Application Start date'
                 ]
             ],
+            'AttachmentTypes' => [
+                'name' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same scholarship',
+                ]
+            ]
         ],
         'Competency' => [
             'GradingOptions' => [
