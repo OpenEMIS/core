@@ -11,7 +11,8 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
 use Cake\Datasource\ResultSetInterface;
-
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
@@ -27,13 +28,15 @@ class ApplicationsTable extends ControllerActionTable
             'value' => 'Workflow.onApproveScholarship',
             'text' => 'Approval of Scholaship Application',
             'description' => 'Performing this action will add the applicant as a scholarship recipient.',
-            'method' => 'onApproveScholarship'
+            'method' => 'onApproveScholarship',
+            'unique' => true
         ],
         [
             'value' => 'Workflow.onWithdrawScholarship',
             'text' => 'Withdrawal from Scholarship Applications',
-            'description' => 'Performing this action will withdraw the applicant from approved scholarship applications.',
-            'method' => 'onWithdrawScholarship'
+            'description' => 'Performing this action will withdraw the applicant from the approved scholarship applications.',
+            'method' => 'onWithdrawScholarship',
+            'unique' => true
         ]
     ];
 
@@ -486,20 +489,37 @@ class ApplicationsTable extends ControllerActionTable
         return $buttons;
     }
 
-
     public function onApproveScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $ScholarshipRecipient = TableRegistry::get('Institution.ScholarshipRecipient');
 
         $entity = $this->get($id);
-
-        $recipient = [
+        $newRecipient = [
             'recipient_id' => $entity->applicant_id,
             'scholarship_id' => $entity->scholarship_id
         ];
 
-        $newEntity = $ScholarshipRecipient->newEntity($recipient);
+        $newEntity = $ScholarshipRecipient->newEntity($newRecipient);
         $ScholarshipRecipient->save($newEntity);
+    }
+
+    public function onWithdrawScholarship(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $ScholarshipRecipient = TableRegistry::get('Institution.ScholarshipRecipient');
+
+        $entity = $this->get($id);
+        $existingRecipient = [
+            'recipient_id' => $entity->applicant_id,
+            'scholarship_id' => $entity->scholarship_id
+        ];
+
+        try {
+            $existingEntity = $this->get($existingRecipient);
+            $ScholarshipRecipient->delete($existingEntity);
+
+        } catch (RecordNotFoundException $e) {
+            Log::write('debug', $e->getMessage());
+        }
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -569,5 +589,4 @@ class ApplicationsTable extends ControllerActionTable
 
         return $query;
     }
-
 }
