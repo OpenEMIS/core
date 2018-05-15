@@ -2,18 +2,33 @@
 namespace Profile\Controller;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
+use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
+use App\Model\Traits\OptionsTrait;
 
 class ScholarshipDirectoriesController extends PageController
 {
+    use OptionsTrait;
+
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Profile.Scholarships');
-        $this->Page->loadElementsFromTable($this->Scholarships);
+        $this->loadModel('Profile.ScholarshipDirectories');
+        $this->loadModel('Education.EducationFieldOfStudies');
+        $this->Page->loadElementsFromTable($this->ScholarshipDirectories);
+
         $this->Page->disable(['add', 'edit', 'delete']);
+    }
+
+    public function implementedEvents()
+    {
+        $event = parent::implementedEvents();
+        $event['Controller.Page.onRenderFieldOfStudies'] = 'onRenderFieldOfStudies';
+        $event['Controller.Page.onRenderBond'] = 'onRenderBond';
+        return $event;
     }
 
     public function beforeFilter(Event $event)
@@ -35,6 +50,10 @@ class ScholarshipDirectoriesController extends PageController
         $page->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $encodedApplicantId]);
         $page->addCrumb($applicantName);
         $page->addCrumb('Scholarship Directory');
+
+        // set labels
+        $page->get('scholarship_financial_assistance_type_id')->setLabel('Financial Assistance Type');
+        $page->get('scholarship_funding_source_id')->setLabel('Funding Source');
     }
 
     public function index()
@@ -44,7 +63,7 @@ class ScholarshipDirectoriesController extends PageController
 
         $page->exclude(['description', 'scholarship_financial_assistance_type_id', 'scholarship_funding_source_id', 'academic_period_id', 'total_amount', 'requirements', 'instructions']);
 
-        // back button to ScholarshipApplications page
+        // back button
         $page->addToolbar('back', [
             'type' => 'element',
             'element' => 'Page.button',
@@ -66,9 +85,53 @@ class ScholarshipDirectoriesController extends PageController
     public function view($id)
     {
         $page = $this->Page;
+        $page->setAutoContain(false);
+
         parent::view($id);
 
-        // add button to ScholarshipApplications page
+        $page->addNew('field_of_studies')
+            ->setControlType('select')
+            ->setAttributes('multiple', true);
+
+        $page->move('scholarship_financial_assistance_type_id')->after('description');
+        $page->move('scholarship_funding_source_id')->after('scholarship_financial_assistance_type_id');
+        $page->move('academic_period_id')->after('scholarship_funding_source_id');
+        $page->move('field_of_studies')->after('academic_period_id');
+
+        // extra fields
+        $entity = $page->getVar('data');
+        if ($entity->has('financial_assistance_type')) {
+            switch ($entity->financial_assistance_type->code) {
+                case 'SCHOLARSHIP':
+                    // No implementation
+                    break;
+                case 'LOAN':
+                    if ($entity->has('loan')) {
+                        $interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
+
+                        $page->addNew('interest_rate')
+                            ->setLabel(__('Interest Rate').' (%)')
+                            ->setValue($entity->loan->interest_rate);
+
+                        $page->addNew('interest_rate_type')
+                            ->setValue($interestRateOptions[$entity->loan->interest_rate_type]);
+
+                        $page->addNew('payment_frequency')
+                            ->setValue($entity->loan->payment_frequency->name);
+
+                        $page->addNew('loan_term')
+                            ->setValue($entity->loan->loan_term . ' ' . __('Years'));
+
+                        $page->move('interest_rate')->after('bond');
+                        $page->move('interest_rate_type')->after('interest_rate');
+                        $page->move('payment_frequency')->after('interest_rate_type');
+                        $page->move('loan_term')->after('payment_frequency');
+                    }
+                    break;
+            }
+        }
+
+        // add button
         $scholarshipId = $page->decode($id)['id'];
         $addUrl = $this->setQueryString([
             'plugin' => 'Profile',
@@ -89,5 +152,39 @@ class ScholarshipDirectoriesController extends PageController
             ],
             'options' => []
         ]);
+    }
+
+    public function onRenderFieldOfStudies(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['view'])) {
+            $list = [];
+
+            if ($this->ScholarshipDirectories->checkIsSelectAll($entity)) {
+                $list = $this->EducationFieldOfStudies
+                    ->find('order')
+                    ->find('visible')
+                    ->extract('name')
+                    ->toArray();
+
+            } else if ($entity->has('field_of_studies')) {
+                foreach($entity->field_of_studies as $fieldOfStudy) {
+                    $list[] = $fieldOfStudy->name;
+                }
+            }
+
+            $value = implode(", ", $list);
+            return $value;
+        }
+    }
+
+    public function onRenderBond(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['index', 'view'])) {
+            return $entity->bond . ' ' . __('Years');
+        }
     }
 }
