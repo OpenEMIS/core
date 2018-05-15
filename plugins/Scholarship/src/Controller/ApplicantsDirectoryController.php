@@ -2,11 +2,7 @@
 namespace Scholarship\Controller;
 
 use Cake\Event\Event;
-use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
-use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
-use App\Model\Traits\OptionsTrait;
 
 class ApplicantsDirectoryController extends PageController
 {

@@ -182,7 +182,7 @@ class AttachmentsController extends PageController
         $page = $this->Page;
 
         if ($page->is(['index'])) {
-            if($entity->scholarship_attachment_type->is_mandatory == 1) {
+            if($entity->attachment_type->is_mandatory == 1) {
                 return "<i class='fa fa-check'></i>";
             } else {
                 return "<i class='fa fa-close'></i>";

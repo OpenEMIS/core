@@ -36,7 +36,7 @@ class ScholarshipHistoriesController extends PageController
         
          parent::beforeFilter($event);
         // set header
-        $page->setHeader($userName . ' - ' . __('Institution Choices'));
+        $page->setHeader($userName . ' - ' . __('Scholarship History'));
 
         $page->setQueryString('applicant_id', $applicantId); // will automatically build into query if the name matches
         $page->setQueryString('scholarshipId', $scholarshipId);

@@ -1473,17 +1473,17 @@ class NavigationComponent extends Component
                     'parent' => 'Administration',
                     'link' => false,
                 ],
-                    'Scholarships.Scholarships' => [
+                    'Scholarships.Scholarships.index' => [
                         'title' => 'Scholarships',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.index', 'Scholarships.view', 'Scholarships.add', 'Scholarships.edit', 'Scholarships.delete','ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
+                        'selected' => ['Scholarships.Scholarships.view', 'Scholarships.Scholarships.add', 'Scholarships.Scholarships.edit', 'Scholarships.Scholarships.delete', 'ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
                     ],
-                    'Scholarships.Applications' => [
+                    'Scholarships.Applications.index' => [
                         'title' => 'Applications',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Applications.index', 'Applications.view', 'Applications.add', 'Applications.edit', 'Applications.delete','ApplicantsDirectory.index', 'ApplicantsDirectory.view']
+                        'selected' => ['Scholarships.Applications.view', 'Scholarships.Applications.add', 'Scholarships.Applications.edit', 'Scholarships.Applications.delete','ApplicantsDirectory.index', 'ApplicantsDirectory.view', 'Scholarships.Identities.index', 'Scholarships.Identities.view', 'Scholarships.Nationalities.index', 'Scholarships.Nationalities.view', 'Scholarships.Contacts.index', 'Scholarships.Contacts.view', 'Scholarships.Contacts.index', 'Scholarships.Contacts.view', 'Scholarships.Guardians.index', 'Scholarships.Guardians.view', 'ScholarshipHistories.index', 'ScholarshipHistories.view', 'ScholarshipApplicationInstitutionChoices.index', 'ScholarshipApplicationInstitutionChoices.view', 'ScholarshipApplicationAttachments.index', 'ScholarshipApplicationAttachments.view']
                     ],
                     
             'Textbooks.Textbooks' => [
