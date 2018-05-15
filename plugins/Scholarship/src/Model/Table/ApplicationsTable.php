@@ -21,6 +21,7 @@ class ApplicationsTable extends ControllerActionTable
     use OptionsTrait;
 
     private $interestRateOptions = [];
+    private $currency = [];
     private $workflowEvents = [
         [
             'value' => 'Workflow.onApproveScholarship',
@@ -63,6 +64,7 @@ class ApplicationsTable extends ControllerActionTable
         $this->addBehavior('CompositeKey');
 
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
+        $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
 
     public function implementedEvents()
@@ -206,8 +208,9 @@ class ApplicationsTable extends ControllerActionTable
                     break;
                 case 'LOAN':
                     $this->field('requested_amount', [
+                        'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')],
                         'visible' => true
-                    ]);                    
+                    ]);
                     $this->field('interest_rate', [
                         'attr' => ['label' => __('Interest Rate').' (%)'],
                         'after' => 'bond'
@@ -372,7 +375,8 @@ class ApplicationsTable extends ControllerActionTable
 
                             $this->field('requested_amount', [
                                 'visible' => true,
-                                'type' => 'integer'
+                                'type' => 'integer',
+                                'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')]
                             ]);
                             $this->field('interest_rate', [
                                 'type' => 'disabled',
@@ -440,7 +444,10 @@ class ApplicationsTable extends ControllerActionTable
         $this->field('scholarship_id', ['type' => 'string']);
         $this->field('academic_period_id', ['type' => 'disabled']);
         $this->field('description', ['type' => 'text', 'attr' => ['disabled' => 'disabled']]);
-        $this->field('maximum_award_amount', ['type' => 'disabled']);
+        $this->field('maximum_award_amount', [
+            'type' => 'disabled',
+            'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')]
+        ]);
         $this->field('bond', ['type' => 'disabled']);
         $this->field('requirements', ['type' => 'text', 'attr' => ['disabled' => 'disabled']]);
 
@@ -451,6 +458,11 @@ class ApplicationsTable extends ControllerActionTable
             $this->fields['bond']['attr']['value'] = $entity->bond . ' ' . __('Years');
             $this->fields['requirements']['attr']['value'] = $entity->requirements;
         }
+    }
+
+    public function addCurrencySuffix($label)
+    {
+        return __($label) . ' (' . $this->currency . ')';
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
