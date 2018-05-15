@@ -930,6 +930,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             end_date: endDate,
             student_id: StudentController.selectedStudent,
             status_id: 0,
+            assignee_id: -1,
             institution_id: StudentController.institutionId,
             academic_period_id: StudentController.selectedStudentData.institution_students[0]['academic_period_id'],
             education_grade_id: StudentController.selectedStudentData.institution_students[0]['education_grade_id'],
