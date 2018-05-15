@@ -122,7 +122,7 @@ class InstitutionChoicesController extends PageController
                 'action' => 'index'
             ]);
 
-            if ($name == 'ApplicationInstitutionChoices') {
+            if ($name == 'ScholarshipApplicationInstitutionChoices') {
                 $page->addCrumb('Applicants', [
                     'plugin' => 'Scholarship',
                     'controller' => 'ScholarshipApplications',
@@ -188,7 +188,7 @@ class InstitutionChoicesController extends PageController
                 'text' => __('Scholarship History')
             ],
             'InstitutionChoices' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
                 'text' => __('Institution Choices')
             ],
             'ApplicationAttachments' => [
