@@ -48,6 +48,7 @@ class ScholarshipsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']);
     }
+
     public function Histories()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Histories']);
@@ -59,27 +60,24 @@ class ScholarshipsController extends AppController
         $this->Navigation->addCrumb('Scholarships', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Scholarships', 'index']);
 
         $header = __('Scholarships');
-        $alias = $model->alias;
-    
-        $excludedModel = ['Scholarships', 'Applications'];
+        $alias = $model->alias();
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+            $excludedModel = ['Scholarships', 'Applications'];
 
-        if (!in_array($alias, $excludedModel)) {
-            $model->toggle('add', false);
-            $model->toggle('edit', false);
-            $model->toggle('remove', false);
+            if (!in_array($alias, $excludedModel)) {
+                $model->toggle('add', false);
+                $model->toggle('edit', false);
+                $model->toggle('remove', false);
 
-            if ($model->hasField('security_user_id')) {
-                $model->fields['security_user_id']['type'] = 'hidden';
+                $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+                $header = $this->Users->get($applicantId)->name;
+
+                $this->Navigation->addCrumb('Applications', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Applications', 'index']);
+                $this->Navigation->addCrumb($header);
+                $this->Navigation->addCrumb($model->getHeader($alias));
             }
-
-            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-            $header = $this->Users->get($applicantId)->name;
-
-            $this->Navigation->addCrumb('Applications', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Applications', 'index']);
-            $this->Navigation->addCrumb($header);
-            $this->Navigation->addCrumb($model->getHeader($alias));
         }
-    
+
         $header .= ' - ' . $model->getHeader($alias);
         $this->set('contentHeader', $header);
 
@@ -97,9 +95,7 @@ class ScholarshipsController extends AppController
                 $query->where([$model->aliasField('security_user_id') => $applicantId]);
             } else if ($model->hasField('student_id')) {
                 $query->where([$model->aliasField('student_id') => $applicantId]);
-            } else if ($model->hasField('applicant_id')) {
-                $query->where([$model->aliasField('applicant_id') => $applicantId]);
-            }  
+            }
         }
     }
 
