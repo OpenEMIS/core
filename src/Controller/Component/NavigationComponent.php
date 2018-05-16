@@ -266,7 +266,7 @@ class NavigationComponent extends Component
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances'
         ];
 
-        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipDirectories', 'ProfileInstitutionChoices', 'ProfileApplicationAttachments'];
+        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipDirectories', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
         $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
 
         if (in_array($controller->name, $institutionControllers) || (
@@ -961,7 +961,7 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipDirectories.index', 'ScholarshipDirectories.view', 'ProfileInstitutionChoices.index', 'ProfileInstitutionChoices.view', 'ProfileInstitutionChoices.add', 'ProfileInstitutionChoices.edit', 'ProfileInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
+                'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipDirectories.index', 'ScholarshipDirectories.view', 'ProfileApplicationInstitutionChoices.index', 'ProfileApplicationInstitutionChoices.view', 'ProfileApplicationInstitutionChoices.add', 'ProfileApplicationInstitutionChoices.edit', 'ProfileApplicationInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
             ],
         ];
         return $navigation;
