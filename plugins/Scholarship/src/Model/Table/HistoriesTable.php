@@ -36,7 +36,15 @@ class HistoriesTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        $this->addBehavior('Workflow.Workflow', ['model' => 'Scholarship.Applications']);
+        $this->addBehavior('Workflow.Workflow', [
+            'model' => 'Scholarship.Applications',
+            'actions' => [
+                'add' => false,
+                'remove' => false,
+                'edit' => false
+            ],
+            'disableWorkflow' => true
+        ]);
         $this->addBehavior('CompositeKey');
         $this->toggle('view', false);
     }
