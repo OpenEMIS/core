@@ -2592,6 +2592,20 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
+    public static function checkRequestedAmount($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $entity = TableRegistry::get('Scholarship.Scholarships')->get($globalData['data']['scholarship_id']);
+        $requestAmount = $globalData['data']['requested_amount'];
+        $maxAwardAmount = $entity->maximum_award_amount;
+
+        if($requestAmount > $maxAwardAmount) {
+            return $model->getMessage('Scholarship.Applications.requested_amount.ruleCheckRequestedAmount');
+        }
+        
+        return true; 
+    }
+
     //check whether position assigned to class(es)
     public static function checkHomeRoomTeacherAssignments($field, array $globalData)
     {

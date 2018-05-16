@@ -1473,13 +1473,13 @@ class NavigationComponent extends Component
                     'parent' => 'Administration',
                     'link' => false,
                 ],
-                    'Scholarships.Scholarships.index' => [
+                    'Scholarships.Scholarships' => [
                         'title' => 'Scholarships',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
                         'selected' => ['Scholarships.Scholarships.view', 'Scholarships.Scholarships.add', 'Scholarships.Scholarships.edit', 'Scholarships.Scholarships.remove', 'ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
                     ],
-                    'Scholarships.Applications.index' => [
+                    'Scholarships.Applications' => [
                         'title' => 'Applications',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
