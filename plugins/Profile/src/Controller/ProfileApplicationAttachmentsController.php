@@ -33,6 +33,6 @@ class ProfileApplicationAttachmentsController extends BaseController
         $page->get('scholarship_id')->setControlType('hidden')->setValue($scholarshipId);
 
         $this->setBreadCrumb(['userName' => $applicantName, 'userId' => $applicantId]);
-        $this->ScholarshipTabs->getScholarshipProfileTabs();
+        $this->setupTabElements();
     }
 }
