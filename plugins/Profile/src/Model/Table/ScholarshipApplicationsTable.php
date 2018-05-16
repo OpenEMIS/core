@@ -52,6 +52,21 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $buttons;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        if (in_array($this->action, ['view', 'edit'])) {
+            // set header
+            $scholarshipId = $this->getQueryString('scholarship_id');
+            $scholarshipName = $this->Scholarships->get($scholarshipId)->name;
+            $this->controller->set('contentHeader', $scholarshipName . ' - ' . __('Overview'));
+
+            // set tabs
+            $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', $this->alias());
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('requested_amount', ['visible' => false]);
@@ -129,11 +144,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->setFieldOrder([
             'academic_period_id', 'code', 'scholarship_id', 'financial_assistance_type_id', 'description', 'maximum_award_amount', 'bond', 'requirements', 'instructions'
         ]);
-
-        // setup tabs only in view page
-        $tabElements = $this->controller->getScholarshipTabElements();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)

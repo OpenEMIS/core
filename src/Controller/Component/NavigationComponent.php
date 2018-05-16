@@ -266,7 +266,7 @@ class NavigationComponent extends Component
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances'
         ];
 
-        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipDirectories', 'ProfileInstitutionChoices', 'ProfileApplicationAttachments'];
+        $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipDirectories', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
         $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
 
         if (in_array($controller->name, $institutionControllers) || (
@@ -961,7 +961,7 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Profiles',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipDirectories.index', 'ScholarshipDirectories.view', 'ProfileInstitutionChoices.index', 'ProfileInstitutionChoices.view', 'ProfileInstitutionChoices.add', 'ProfileInstitutionChoices.edit', 'ProfileInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
+                'selected' => ['Profiles.ScholarshipApplications', 'ScholarshipDirectories.index', 'ScholarshipDirectories.view', 'ProfileApplicationInstitutionChoices.index', 'ProfileApplicationInstitutionChoices.view', 'ProfileApplicationInstitutionChoices.add', 'ProfileApplicationInstitutionChoices.edit', 'ProfileApplicationInstitutionChoices.delete', 'ProfileApplicationAttachments.index', 'ProfileApplicationAttachments.view', 'ProfileApplicationAttachments.add', 'ProfileApplicationAttachments.edit', 'ProfileApplicationAttachments.delete']
             ],
         ];
         return $navigation;
@@ -1469,23 +1469,23 @@ class NavigationComponent extends Component
                     ],
 
             'Administration.Scholarships' => [
+                'title' => 'Scholarships',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+                'Scholarships.Scholarships' => [
                     'title' => 'Scholarships',
-                    'parent' => 'Administration',
-                    'link' => false,
+                    'parent' => 'Administration.Scholarships',
+                    'params' => ['plugin' => 'Scholarship'],
+                    'selected' => ['Scholarships.Scholarships', 'ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
                 ],
-                    'Scholarships.Scholarships' => [
-                        'title' => 'Scholarships',
-                        'parent' => 'Administration.Scholarships',
-                        'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.Scholarships.view', 'Scholarships.Scholarships.add', 'Scholarships.Scholarships.edit', 'Scholarships.Scholarships.remove', 'ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
-                    ],
-                    'Scholarships.Applications' => [
-                        'title' => 'Applications',
-                        'parent' => 'Administration.Scholarships',
-                        'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.Applications.view', 'Scholarships.Applications.add', 'Scholarships.Applications.edit', 'Scholarships.Applications.delete','ApplicantsDirectory.index', 'ApplicantsDirectory.view', 'Scholarships.Identities.index', 'Scholarships.Identities.view', 'Scholarships.Nationalities.index', 'Scholarships.Nationalities.view', 'Scholarships.Contacts.index', 'Scholarships.Contacts.view', 'Scholarships.Contacts.index', 'Scholarships.Contacts.view', 'Scholarships.Guardians.index', 'Scholarships.Guardians.view', 'ScholarshipHistories.index', 'ScholarshipHistories.view', 'ScholarshipApplicationInstitutionChoices.index', 'ScholarshipApplicationInstitutionChoices.view', 'ScholarshipApplicationAttachments.index', 'ScholarshipApplicationAttachments.view']
-                    ],
-                    
+                'Scholarships.Applications' => [
+                    'title' => 'Applications',
+                    'parent' => 'Administration.Scholarships',
+                    'params' => ['plugin' => 'Scholarship'],
+                    'selected' => ['Scholarships.Applications', 'ApplicantsDirectory.index', 'ApplicantsDirectory.view', 'Scholarships.Identities.index', 'Scholarships.Identities.view', 'Scholarships.Nationalities.index', 'Scholarships.Nationalities.view', 'Scholarships.Contacts.index', 'Scholarships.Contacts.view', 'Scholarships.Guardians.index', 'Scholarships.Guardians.view', 'Scholarships.Histories', 'ScholarshipApplicationInstitutionChoices.index', 'ScholarshipApplicationInstitutionChoices.view', 'ScholarshipApplicationInstitutionChoices.add', 'ScholarshipApplicationInstitutionChoices.edit', 'ScholarshipApplicationInstitutionChoices.delete', 'ScholarshipApplicationAttachments.index', 'ScholarshipApplicationAttachments.view', 'ScholarshipApplicationAttachments.add', 'ScholarshipApplicationAttachments.edit', 'ScholarshipApplicationAttachments.delete']
+                ],
+
             'Textbooks.Textbooks' => [
                 'title' => 'Textbooks',
                 'parent' => 'Administration',
