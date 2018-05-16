@@ -21,7 +21,9 @@ class InstitutionChoicesController extends PageController
         $this->loadModel('Area.AreaAdministratives');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Scholarship.ApplicationInstitutionChoices');
-        
+
+        $this->loadComponent('Scholarship.ScholarshipTabs');
+
         $this->Page->loadElementsFromTable($this->ApplicationInstitutionChoices);
 
         $this->locationTypeOptions = $this->getSelectOptions('InstitutionChoices.location_type');
@@ -159,6 +161,7 @@ class InstitutionChoicesController extends PageController
                 $this->paramsEncode(['id' => $userId])
             ]);
             $page->addCrumb($userName);
+            $page->addCrumb('Scholarship Applications');
             $page->addCrumb('Instititution Choices');
         }
     }

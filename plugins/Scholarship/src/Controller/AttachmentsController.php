@@ -15,6 +15,8 @@ class AttachmentsController extends PageController
         $this->loadModel('Scholarship.ApplicationAttachments');
         $this->loadModel('Scholarship.AttachmentTypes');
 
+        $this->loadComponent('Scholarship.ScholarshipTabs');
+
         $this->Page->loadElementsFromTable($this->ApplicationAttachments);
     }
 
@@ -118,7 +120,8 @@ class AttachmentsController extends PageController
                 $this->paramsEncode(['id' => $userId])
             ]);
             $page->addCrumb($userName);
-            $page->addCrumb(__('Attachments'));
+            $page->addCrumb('Scholarship Applications');
+            $page->addCrumb('Attachments');
         }
     }
 
