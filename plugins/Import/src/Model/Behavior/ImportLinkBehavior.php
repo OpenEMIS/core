@@ -47,6 +47,7 @@ class ImportLinkBehavior extends Behavior
             $customButton['url'] = $this->_table->url('index');
             $customButton['url']['action'] = $this->config('import_model');
             $customButton['url'][0] = 'add';
+
             $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
         }
     }
@@ -101,6 +102,12 @@ class ImportLinkBehavior extends Behavior
         }
         if (array_key_exists('filter', $customButton['url'])) {
             unset($customButton['url']['filter']);
+        }
+        if (array_key_exists('user_id', $customButton['url'])) { // testing - remove user_id
+            unset($customButton['url']['user_id']);
+        }
+        if (array_key_exists('category', $customButton['url'])) { // testing - remove category
+            unset($customButton['url']['category']);
         }
         $customButton['url'][0] = 'add';
 
