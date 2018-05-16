@@ -95,6 +95,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $application['staff_id'] = $staffId;
         $application['training_session_id'] = $sessionId;
         $application['status_id'] = 0;
+        $application['assignee_id'] = -1;
         $application['institution_id'] = $institutionId;
         $entity = $this->newEntity($application);
 
