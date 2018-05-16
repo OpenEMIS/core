@@ -339,8 +339,7 @@ class ScholarshipsTable extends ControllerActionTable
                             'attr' => [
                                 'label' => __('Payment Frequency'),
                                 'select' => true,
-                                'options' => $PaymentFrequencies->getList()->toArray(),
-                                'default' => $PaymentFrequencies->getDefaultValue()
+                                'options' => $PaymentFrequencies->getList()->toArray()
                             ],
                             'after' => 'loan.interest_rate_type'
                         ]);
