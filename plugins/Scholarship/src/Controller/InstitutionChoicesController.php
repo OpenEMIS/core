@@ -21,7 +21,9 @@ class InstitutionChoicesController extends PageController
         $this->loadModel('Area.AreaAdministratives');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Scholarship.ApplicationInstitutionChoices');
-        
+
+        $this->loadComponent('Scholarship.ScholarshipTabs');
+
         $this->Page->loadElementsFromTable($this->ApplicationInstitutionChoices);
 
         $this->locationTypeOptions = $this->getSelectOptions('InstitutionChoices.location_type');
@@ -109,9 +111,6 @@ class InstitutionChoicesController extends PageController
             ->setControlType('select')
             ->setOptions($educationFieldOfStudies);
 
-        $entity = $page->getData();
-
-        $this->setCountryOptions($entity);
         $this->reorderFields();
     }
 
@@ -162,94 +161,31 @@ class InstitutionChoicesController extends PageController
                 $this->paramsEncode(['id' => $userId])
             ]);
             $page->addCrumb($userName);
+            $page->addCrumb('Scholarship Applications');
             $page->addCrumb('Instititution Choices');
         }
     }
 
-   public function setupTabElements()
-    {  
+    public function setupTabElements()
+    {
         $page = $this->Page;
+        $name = $this->name;
 
-        if (array_key_exists('queryString', $this->request->query)) {
-            $queryString = $this->request->query('queryString');
+        $tabElements = [];
+        if ($name == 'ScholarshipApplicationInstitutionChoices') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } elseif ($name == 'ProfileApplicationInstitutionChoices') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
         }
-
-        $tabElements = [
-            'Applications' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'view', $queryString, 'queryString' => $queryString],
-                'text' => __('Overview')
-            ],
-            'Identities' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Identities', 'index', 'queryString' => $queryString],
-                'text' => __('Identities')
-            ],
-            'UserNationalities' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Nationalities', 'index', 'queryString' => $queryString],
-                'text' => __('Nationalities')
-            ],
-            'Contacts' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Contacts', 'index', $queryString, 'queryString' => $queryString],
-                'text' => __('Contacts')
-            ],
-            'Guardians' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Guardians', 'index', $queryString, 'queryString' => $queryString],
-                'text' => __('Guardians')
-            ],
-            'Histories' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Histories',  'index', 'queryString' => $queryString],
-                'text' => __('Scholarship History')
-            ],
-            'InstitutionChoices' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Institution Choices')
-            ],
-            'Attachments' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Attachments')
-            ],
-     
-        ];
-
-        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $tab => $tabAttr) {
             $page->addTab($tab)
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
+
         // set active tab
         $page->getTab('InstitutionChoices')->setActive('true');
-    }
-
-    private function setCountryOptions(Entity $entity)
-    {
-        $page = $this->Page;
-        if ($entity->has('location_type')) {
-            $locationType = $entity->location_type;
-            $mainCountry = $this->AreaAdministratives
-                ->find()
-                ->where([$this->AreaAdministratives->aliasField('is_main_country') => 1])
-                ->extract('name')
-                ->first();
-
-            if($locationType == 'DOMESTIC') {
-                $countryOptions = $this->Countries
-                    ->find('optionList')
-                    ->where([
-                        $this->Countries->aliasField('name') => $mainCountry
-                    ])
-                    ->toArray();
-            } else {
-                $countryOptions = $this->Countries
-                    ->find('optionList')
-                    ->toArray();
-            }
-        } else {
-            $countryOptions = [];
-        }
-
-        $page->get('country_id')
-            ->setOptions($countryOptions);
     }
 
     public function onRenderLocationType(Event $event, Entity $entity, PageElement $element)

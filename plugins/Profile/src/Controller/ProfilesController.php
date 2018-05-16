@@ -69,6 +69,7 @@ class ProfilesController extends AppController
 
         $this->loadComponent('Training.Training');
         $this->loadComponent('User.Image');
+        $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->attachAngularModules();
 
         $this->set('contentHeader', 'Profiles');
@@ -562,25 +563,5 @@ class ProfilesController extends AppController
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
-    }
-
-    public function getScholarshipTabElements($options = [])
-    {
-        $queryString = $this->request->query('queryString');
-        $scholarshipTabElements = [
-            'ScholarshipApplications' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplications', 'view', $queryString, 'queryString' => $queryString],
-                'text' => __('Overview')
-            ],
-            'InstitutionChoices' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Institution Choices')
-            ],
-            'Attachments' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Attachments')
-            ]
-        ];
-        return $this->TabPermission->checkTabPermission($scholarshipTabElements);
     }
 }

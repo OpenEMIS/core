@@ -15,6 +15,8 @@ class AttachmentsController extends PageController
         $this->loadModel('Scholarship.ApplicationAttachments');
         $this->loadModel('Scholarship.AttachmentTypes');
 
+        $this->loadComponent('Scholarship.ScholarshipTabs');
+
         $this->Page->loadElementsFromTable($this->ApplicationAttachments);
     }
 
@@ -118,61 +120,29 @@ class AttachmentsController extends PageController
                 $this->paramsEncode(['id' => $userId])
             ]);
             $page->addCrumb($userName);
-            $page->addCrumb(__('Attachments'));
+            $page->addCrumb('Scholarship Applications');
+            $page->addCrumb('Attachments');
         }
     }
 
- public function setupTabElements()
-    {  
+    public function setupTabElements()
+    {
         $page = $this->Page;
+        $name = $this->name;
 
-        if (array_key_exists('queryString', $this->request->query)) {
-            $queryString = $this->request->query('queryString');
+        $tabElements = [];
+        if ($name == 'ScholarshipApplicationAttachments') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } elseif ($name == 'ProfileApplicationAttachments') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
         }
-
-        $tabElements = [
-            'Applications' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'view', $queryString, 'queryString' => $queryString],
-                'text' => __('Overview')
-            ],
-            'Identities' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Identities', 'index', 'queryString' => $queryString],
-                'text' => __('Identities')
-            ],
-            'UserNationalities' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Nationalities', 'index', 'queryString' => $queryString],
-                'text' => __('Nationalities')
-            ],
-            'Contacts' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Contacts', 'index', $queryString, 'queryString' => $queryString],
-                'text' => __('Contacts')
-            ],
-            'Guardians' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Guardians', 'index', $queryString, 'queryString' => $queryString],
-                'text' => __('Guardians')
-            ],
-            'Histories' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Histories',  'index', 'queryString' => $queryString],
-                'text' => __('Scholarship History')
-            ],
-            'InstitutionChoices' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Institution Choices')
-            ],
-            'Attachments' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Attachments')
-            ],
-     
-        ];
-
-        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         foreach ($tabElements as $tab => $tabAttr) {
             $page->addTab($tab)
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
+
         // set active tab
         $page->getTab('Attachments')->setActive('true');
     }
