@@ -756,7 +756,7 @@ class POCOR2813 extends AbstractMigration
                 'scale' => 2,
                 'null' => true
             ])
-            ->addColumn('comment', 'text', [
+            ->addColumn('comments', 'text', [
                 'default' => null,
                 'null' => true
             ])
