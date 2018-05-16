@@ -41,8 +41,8 @@ class ContactsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        if($this->controller->name == "Scholarships") {
-            $tabElements = $this->controller->getScholarshipTabElements();
+        if ($this->controller->name == 'Scholarships') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
         } else {
             $options = [
                 'userRole' => '',
