@@ -21,6 +21,8 @@ class ApplicationsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    CONST SCHOLARSHIP_LOANS = 2;
+    
     private $interestRateOptions = [];
     private $currency = [];
     private $workflowEvents = [
@@ -93,6 +95,14 @@ class ApplicationsTable extends ControllerActionTable
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                     'message' => __('Value cannot be more than two decimal places')
+                ],
+                'ruleCheckRequestedAmount' => [
+                    'rule' => ['checkRequestedAmount'],
+                    'provider' => 'table',
+                    'on' => function ($context) {  
+                        //trigger validation only when the application is of type 'LOAN'
+                        return ($context['data']['financial_assistance_type_id'] == self::SCHOLARSHIP_LOANS );
+                    }
                 ]
             ]);
     }

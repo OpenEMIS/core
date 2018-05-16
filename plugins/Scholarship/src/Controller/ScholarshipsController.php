@@ -48,6 +48,7 @@ class ScholarshipsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']);
     }
+
     public function Histories()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Histories']);
@@ -67,8 +68,6 @@ class ScholarshipsController extends AppController
                 $model->toggle('add', false);
                 $model->toggle('edit', false);
                 $model->toggle('remove', false);
-
-                $model->fields['security_user_id']['type'] = 'hidden';
 
                 $applicantId = $this->ControllerAction->getQueryString('applicant_id');
                 $header = $this->Users->get($applicantId)->name;
