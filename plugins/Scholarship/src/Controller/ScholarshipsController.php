@@ -16,6 +16,7 @@ class ScholarshipsController extends AppController
     {
         parent::initialize();
         $this->loadModel('User.Users');
+        $this->loadComponent('Scholarship.ScholarshipTabs');
     }
 
     // CAv4
