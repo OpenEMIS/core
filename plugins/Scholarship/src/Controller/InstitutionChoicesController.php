@@ -109,9 +109,6 @@ class InstitutionChoicesController extends PageController
             ->setControlType('select')
             ->setOptions($educationFieldOfStudies);
 
-        $entity = $page->getData();
-
-        $this->setCountryOptions($entity);
         $this->reorderFields();
     }
 
@@ -219,37 +216,6 @@ class InstitutionChoicesController extends PageController
         }
         // set active tab
         $page->getTab('InstitutionChoices')->setActive('true');
-    }
-
-    private function setCountryOptions(Entity $entity)
-    {
-        $page = $this->Page;
-        if ($entity->has('location_type')) {
-            $locationType = $entity->location_type;
-            $mainCountry = $this->AreaAdministratives
-                ->find()
-                ->where([$this->AreaAdministratives->aliasField('is_main_country') => 1])
-                ->extract('name')
-                ->first();
-
-            if($locationType == 'DOMESTIC') {
-                $countryOptions = $this->Countries
-                    ->find('optionList')
-                    ->where([
-                        $this->Countries->aliasField('name') => $mainCountry
-                    ])
-                    ->toArray();
-            } else {
-                $countryOptions = $this->Countries
-                    ->find('optionList')
-                    ->toArray();
-            }
-        } else {
-            $countryOptions = [];
-        }
-
-        $page->get('country_id')
-            ->setOptions($countryOptions);
     }
 
     public function onRenderLocationType(Event $event, Entity $entity, PageElement $element)
