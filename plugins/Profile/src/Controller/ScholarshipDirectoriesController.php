@@ -18,6 +18,7 @@ class ScholarshipDirectoriesController extends PageController
         parent::initialize();
         $this->loadModel('Profile.ScholarshipDirectories');
         $this->loadModel('Education.EducationFieldOfStudies');
+        $this->loadModel('Configuration.ConfigItems');
         $this->Page->loadElementsFromTable($this->ScholarshipDirectories);
 
         $this->Page->disable(['add', 'edit', 'delete']);
@@ -39,6 +40,7 @@ class ScholarshipDirectoriesController extends PageController
         $applicantId = $this->Auth->user('id');
         $applicantName = $this->Auth->user('name');
         $encodedApplicantId = $this->paramsEncode(['id' => $applicantId]);
+        $currency = $this->ConfigItems->value('currency');
 
         // set queryString
         $page->setQueryString('applicant_id', $applicantId);
@@ -54,6 +56,8 @@ class ScholarshipDirectoriesController extends PageController
         // set labels
         $page->get('scholarship_financial_assistance_type_id')->setLabel('Financial Assistance Type');
         $page->get('scholarship_funding_source_id')->setLabel('Funding Source');
+        $page->get('maximum_award_amount')->setLabel(__('Maximum Award Amount') . ' (' . $currency . ')');
+        $page->get('total_amount')->setLabel(__('Total Amount') . ' (' . $currency . ')');
     }
 
     public function index()
