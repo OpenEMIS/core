@@ -57,9 +57,9 @@ class GuardiansTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
-        if($this->controller->name == "Scholarships") {
-            $tabElements = $this->controller->getScholarshipTabElements();
-        } else {   
+        if ($this->controller->name == 'Scholarships') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } else {
             if ($this->action != 'view') {
                 if ($this->controller->name == 'Directories') {
                     $options['type'] = 'student';
@@ -83,10 +83,11 @@ class GuardiansTable extends ControllerActionTable
                 $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
                 $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
                 $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
-            }            
+            }
         }
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', $this->alias());
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
