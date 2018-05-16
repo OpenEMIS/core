@@ -1998,7 +1998,7 @@ trait MessagesTrait
             ],
             'Applications' => [
                 'requested_amount' => [
-                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Max Award Amount',
+                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
                 ]
             ]
         ],

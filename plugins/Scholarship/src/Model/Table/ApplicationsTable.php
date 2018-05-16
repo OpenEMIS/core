@@ -155,7 +155,7 @@ class ApplicationsTable extends ControllerActionTable
         }
 
         // setup fields
-        $this->field('comment', ['visible' => false]);
+        $this->field('comments', ['visible' => false]);
         $this->field('scholarship_id', ['type' => 'string']);
         $this->setupApplicantFields();
 
@@ -522,7 +522,7 @@ class ApplicationsTable extends ControllerActionTable
                 $attr['attr']['value'] = $entity->name; 
             }
 
-            if(isset($financialAssistanceTypeId) && isset($scholarshipId)) {
+            if (isset($financialAssistanceTypeId) && isset($scholarshipId)) {
                 switch ($financialAssistanceTypeOptions[$financialAssistanceTypeId]) {
                     case 'SCHOLARSHIP':
                         // No implementation
