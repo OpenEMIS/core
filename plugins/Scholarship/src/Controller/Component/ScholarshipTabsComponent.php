@@ -74,47 +74,20 @@ class ScholarshipTabsComponent extends Component
 
     public function getScholarshipProfileTabs($options = [])
     {
-        $queryString = $this->request->query('queryString');
-
         $tabElements = [
             'ScholarshipApplications' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplications', 'view', $queryString, 'queryString' => $queryString],
+                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplications', 'view', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Overview')
             ],
-            'ProfileApplicationInstitutionChoices' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
+            'InstitutionChoices' => [
+                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $this->queryString],
                 'text' => __('Institution Choices')
             ],
-            'ProfileApplicationAttachments' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
+            'Attachments' => [
+                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationAttachments', 'action' => 'index', 'queryString' => $this->queryString],
                 'text' => __('Attachments')
             ]
         ];
-
-        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
-        return $this->renderTabs($tabElements);
-    }
-
-    public function renderTabs($tabElements)
-    {
-        if ($this->controller instanceof \Page\Controller\PageController) {
-            // page
-            $page = $this->Page;
-
-            foreach ($tabElements as $tab => $tabAttr) {
-                $page->addTab($tab)
-                    ->setTitle($tabAttr['text'])
-                    ->setUrl($tabAttr['url']);
-            }
-
-            // set active tab
-            $page->getTab($this->controller->name)->setActive('true');
-        } else {
-            return $tabElements;
-            // CAv4
-            // $this->controller->set('tabElements', $tabElements);
-            // pr($this->controller);
-            // $this->controller->set('selectedAction', $this->alias());
-        }
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
