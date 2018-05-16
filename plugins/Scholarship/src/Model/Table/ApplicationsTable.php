@@ -69,6 +69,9 @@ class ApplicationsTable extends ControllerActionTable
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('CompositeKey');
         $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
+        ]);
 
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');

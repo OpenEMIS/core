@@ -16,6 +16,8 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         workbenchItems: {}
     };
 
+    var includedPlugins = ['Scholarship'];
+
     var configModels = {
         // SCHOOL_BASED Workflow
         StudentWithdrawTable: {
@@ -226,7 +228,12 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 cellRenderer: function(params) {
                     if (typeof params.data !== 'undefined') {
                         var urlParams = params.data.url;
-                        var url = [urlParams.controller, urlParams.action].join('/');
+
+                        if (includedPlugins.indexOf(urlParams.plugin) !== -1) {
+                            var url = [urlParams.plugin, urlParams.controller, urlParams.action].join('/');
+                        } else {
+                            var url = [urlParams.controller, urlParams.action].join('/');
+                        }
 
                         var queryParams = [];
                         angular.forEach(urlParams, function(obj, key) {
