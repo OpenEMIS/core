@@ -2,9 +2,6 @@
 namespace Profile\Controller;
 
 use Cake\Event\Event;
-use Cake\ORM\Entity;
-use Page\Model\Entity\PageElement;
-use App\Controller\PageController;
 use Scholarship\Controller\ApplicationAttachmentsController as BaseController;
 
 class ProfileApplicationAttachmentsController extends BaseController
@@ -20,7 +17,6 @@ class ProfileApplicationAttachmentsController extends BaseController
 
         parent::beforeFilter($event);
 
-        // set header
         $page->setHeader($applicantName . ' - ' . __('Attachments'));
 
         $page->setQueryString('applicant_id', $applicantId);
@@ -31,6 +27,5 @@ class ProfileApplicationAttachmentsController extends BaseController
 
         $this->setBreadCrumb(['userName' => $applicantName, 'userId' => $applicantId]);
         $this->setupTabElements(['queryString' => $queryString]);
-
     }
 }
