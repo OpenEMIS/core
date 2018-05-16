@@ -523,7 +523,8 @@ class ApplicationsTable extends ControllerActionTable
 
                         $this->field('requested_amount', [
                             'visible' => true,
-                            'type' => 'integer'
+                            'type' => 'integer',
+                            'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')]
                         ]);
                         $this->field('interest_rate', [
                             'type' => 'disabled',
