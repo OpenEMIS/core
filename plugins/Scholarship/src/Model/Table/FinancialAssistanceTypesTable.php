@@ -12,4 +12,14 @@ class FinancialAssistanceTypesTable extends AppTable
 
         $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'foreignKey' => 'scholarship_financial_assistance_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
+
+    public function is($id = 0, $type)
+    {
+        if ($id) {
+            $entity = $this->get($id);
+            return $entity->code == $type;
+        }
+
+        return false;
+    }
 }
