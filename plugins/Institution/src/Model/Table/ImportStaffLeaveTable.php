@@ -25,6 +25,11 @@ class ImportStaffLeaveTable extends AppTable
             'plugin' => 'Institution',
             'model' => 'StaffLeave'
         ]);
+
+        $this->Workflows = TableRegistry::get('Workflow.Workflows');
+        $this->WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+        $this->StaffLeaveTypes = TableRegistry::get('Staff.StaffLeaveTypes');
     }
 
     public function implementedEvents()
@@ -101,31 +106,28 @@ class ImportStaffLeaveTable extends AppTable
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         // $order = [$lookedUpTable->aliasField('name')];
-        $Workflows = TableRegistry::get('Workflow.Workflows');
-        $WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-        $StaffLeaveTypes = TableRegistry::get('Staff.StaffLeaveTypes');
 
-        $workflowResult = $Workflows
+        $workflowResult = $this->Workflows
             ->find()
             ->select([
-                'workflow_id' => $Workflows->aliasField('id'),
-                'workflow_name' => $Workflows->aliasField('name'),
+                'workflow_id' => $this->Workflows->aliasField('id'),
+                'workflow_name' => $this->Workflows->aliasField('name'),
                 'workflow_step_id' => $lookedUpTable->aliasField('id'),
                 'workflow_step_name' => $lookedUpTable->aliasField('name'),
-                'leave_type_id' => $StaffLeaveTypes->aliasField('id'),
-                'leave_type_name' => $StaffLeaveTypes->aliasField('name')
+                'leave_type_id' => $this->StaffLeaveTypes->aliasField('id'),
+                'leave_type_name' => $this->StaffLeaveTypes->aliasField('name')
             ])
             ->matching('WorkflowModels', function ($q) {
                 return $q->where(['WorkflowModels.model' => 'Institution.StaffLeave']);
             })
             ->matching($lookupModel)
             ->leftJoin(
-                [$WorkflowsFilters->alias() => $WorkflowsFilters->table()],
-                [$Workflows->aliasField('id = ') . $WorkflowsFilters->aliasField('workflow_id')]
+                [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
+                [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
             )
             ->leftJoin(
-                [$StaffLeaveTypes->alias() => $StaffLeaveTypes->table()],
-                [$StaffLeaveTypes->aliasField('id = ') . $WorkflowsFilters->aliasField('filter_id')]
+                [$this->StaffLeaveTypes->alias() => $this->StaffLeaveTypes->table()],
+                [$this->StaffLeaveTypes->aliasField('id = ') . $this->WorkflowsFilters->aliasField('filter_id')]
             )
             ->all();
 
@@ -151,20 +153,64 @@ class ImportStaffLeaveTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $tempRow['assignee_id'] = -1;
+        if (!$this->institutionId) {
+            $rowInvalidCodeCols['institution_id'] = __('No active institution');
+            $tempRow['institution_id'] = false;
+            return false;
+        }
+
+        if (!$this->staffId) {
+            $rowInvalidCodeCols['staff_id'] = __('Staff ID was not defined');
+            $tempRow['staff_id'] = false;
+            return false;
+        }
+
+        $tempRow['assignee_id'] = -1; // trigger auto assign behaviour
         $tempRow['institution_id'] = $this->institutionId;
         $tempRow['staff_id'] = $this->staffId;
-        // pr('event');
-        // pr($event);
-        // pr('references');
-        // pr($references);
-        // pr('tempRow'); // ?
-        // pr($tempRow); // ?
-        // pr('originalRow');
-        // pr($originalRow);
-        // pr('rowInvalidCodeCols');
-        // pr($rowInvalidCodeCols);
-        // die;
+
+        $filterIdCondition = [$this->WorkflowsFilters->aliasField('filter_id') => $tempRow['staff_leave_type_id']];
+
+        // find workflow for the specific staff leave type
+        $filterStepsQuery = $this->Workflows
+            ->find()
+            ->matching('WorkflowModels', function ($q) {
+                return $q->where(['WorkflowModels.model' => 'Institution.StaffLeave']);
+            })
+            ->matching($this->WorkflowSteps->alias())
+            ->leftJoin(
+                [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
+                [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
+            )
+            ->where([$filterIdCondition]);
+
+        $filterStepsResult = $filterStepsQuery->all();
+
+        if ($filterStepsResult->isEmpty()) {
+            // if specific staff leave type cannot be found
+            // override the existing where condition, and find with apply to all filter (0)
+            $filterStepsCount = $filterStepsQuery
+                ->where($filterIdCondition, [], true)
+                ->where([
+                    $this->WorkflowsFilters->aliasField('filter_id') => 0,
+                    $this->WorkflowSteps->aliasField('id') => $tempRow['status_id']
+                ])
+                ->count();
+        } else {
+            // if specific staff leave type vsn be found
+            // use the query to find if the steps existed in the workflow
+            $filterStepsCount = $filterStepsQuery
+                ->where([
+                    $this->WorkflowSteps->aliasField('id') => $tempRow['status_id']
+                ])
+                ->count();
+        }
+
+        if ($filterStepsCount == 0) {
+            $rowInvalidCodeCols['status_id'] = __('Workflow step and staff leave type mismatch');
+            return false;
+        }
+
         return true;
     }
 }
