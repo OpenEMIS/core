@@ -75,7 +75,7 @@ class HistoriesTable extends ControllerActionTable
         $applicantName = $this->Applicants->get($applicantId)->name;
         $this->controller->set('contentHeader', $applicantName. ' - ' .__('Scholarship History'));
 
-        $tabElements = $this->controller->getScholarshipTabElements();
+        $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }

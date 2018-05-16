@@ -16,6 +16,7 @@ class ScholarshipsController extends AppController
     {
         parent::initialize();
         $this->loadModel('User.Users');
+        $this->loadComponent('Scholarship.ScholarshipTabs');
     }
 
     // CAv4
@@ -97,47 +98,5 @@ class ScholarshipsController extends AppController
                 $query->where([$model->aliasField('student_id') => $applicantId]);
             }
         }
-    }
-
-    public function getScholarshipTabElements($options = [])
-    {
-        $queryString = $this->request->query('queryString');
-
-        $tabElements = [
-            'Applications' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Applications', 'view', $queryString, 'queryString' => $queryString],
-                'text' => __('Overview')
-            ],
-            'Identities' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Identities', 'index', 'queryString' => $queryString],
-                'text' => __('Identities')
-            ],
-            'UserNationalities' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Nationalities', 'index', 'queryString' => $queryString],
-                'text' => __('Nationalities')
-            ],
-            'Contacts' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Contacts', 'index', 'queryString' => $queryString],
-                'text' => __('Contacts')
-            ],
-            'Guardians' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Guardians', 'index', 'queryString' => $queryString],
-                'text' => __('Guardians')
-            ],
-            'Histories' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Histories',  'index', 'queryString' => $queryString],
-                'text' => __('Scholarship History')
-            ],
-            'InstitutionChoices' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Institution Choices')
-            ],
-            'Attachments' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Attachments')
-            ]
-        ];
-
-        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }

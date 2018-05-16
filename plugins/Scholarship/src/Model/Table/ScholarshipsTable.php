@@ -417,22 +417,7 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function setupTabElements()
     {
-        if (array_key_exists('queryString', $this->request->query)) {
-            $queryString = $this->request->query('queryString');
-        }
-
-        $scholarshipTabElements = [
-            'Scholarships' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'view', $queryString, 'queryString' => $queryString],
-                'text' => __('Overview')
-            ],
-            'Attachments' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipAttachmentTypes', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Attachments')
-            ]
-        ];
-
-        $tabElements = $this->controller->TabPermission->checkTabPermission($scholarshipTabElements);
+        $tabElements = $this->ScholarshipTabs->getScholarshipTabs();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }
