@@ -484,6 +484,7 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function getAvailableScholarships($options = [])
     {
+        $todayDate = date("Y-m-d");
         $availableScholarships = [];
         $applicantId = array_key_exists('applicant_id', $options) ? $options['applicant_id'] : null;
         $financialAssistanceTypeId = array_key_exists('financial_assistance_type_id', $options) ? $options['financial_assistance_type_id'] : null;
@@ -497,7 +498,10 @@ class ScholarshipsTable extends ControllerActionTable
                 ->notMatching('Applications', function ($q) use ($applicantId) {
                     return $q->where(['Applications.applicant_id' => $applicantId]);
                  })
-                ->where([$this->aliasField('scholarship_financial_assistance_type_id') => $financialAssistanceTypeId])
+                ->where([
+                    $this->aliasField('scholarship_financial_assistance_type_id') => $financialAssistanceTypeId,
+                    $this->aliasField('date_application_close >=') => $todayDate
+                ])
                 ->toArray();
         }
         return $availableScholarships;
