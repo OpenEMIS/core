@@ -143,6 +143,18 @@ class ApplicationsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('requested_amount', ['visible' => false]);
+
+        if (in_array($this->action, ['view', 'edit'])) {
+            // set header
+            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+            $applicantName = $this->Applicants->get($applicantId)->name;
+            $this->controller->set('contentHeader', $applicantName . ' - ' . __('Overview'));
+
+            // set tabs
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', $this->alias());
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -302,14 +314,6 @@ class ApplicationsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-        $applicantName = $this->Applicants->get($applicantId)->name;
-        $this->controller->set('contentHeader', $applicantName. ' - ' .__('Overview'));
-
-        $tabElements = $this->controller->getScholarshipTabElements();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
-
         // setup fields
         $this->field('code');
         $this->field('instructions', ['type' => 'text']);

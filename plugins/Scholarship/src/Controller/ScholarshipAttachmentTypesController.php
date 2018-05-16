@@ -19,6 +19,9 @@ class ScholarshipAttachmentTypesController extends PageController
         $this->loadModel('Scholarship.Scholarships');
         $this->loadModel('Scholarship.AttachmentTypes');
         $this->Page->loadElementsFromTable($this->AttachmentTypes);
+
+        $this->loadComponent('Scholarship.ScholarshipTabs');
+
         $this->mandatoryOptions = $this->getSelectOptions('general.yesno');
     }
 
@@ -90,30 +93,18 @@ class ScholarshipAttachmentTypesController extends PageController
     }
 
     public function setupTabElements()
-    {   
+    {
         $page = $this->Page;
-        $plugin = $this->plugin;
-    
-        $queryString = $this->request->query['queryString'];
-        $scholarshipTabElements = [
-            'Scholarships' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'view', $queryString, 'queryString' => $queryString],
-                'text' => __('Overview')
-            ],
-            'Attachments' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipAttachmentTypes', 'action' => 'index', 'queryString' => $queryString],
-                'text' => __('Attachments')
-            ]
-        ];
 
+        $tabElements = $this->ScholarshipTabs->getScholarshipTabs();
 
-        foreach ($scholarshipTabElements as $tab => $tabAttr) {
+        foreach ($tabElements as $tab => $tabAttr) {
             $page->addTab($tab)
                 ->setTitle($tabAttr['text'])
                 ->setUrl($tabAttr['url']);
         }
 
-        $page->getTab('Attachments')->setActive('true');      
+        $page->getTab('Attachments')->setActive('true');
     }
 
     public function onRenderIsMandatory(Event $event, Entity $entity, PageElement $element)
