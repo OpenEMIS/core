@@ -21,8 +21,9 @@ class ApplicationsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    CONST SCHOLARSHIP_LOANS = 2;
-    
+    CONST SCHOLARSHIP = 1;
+    CONST LOAN = 2;
+
     private $interestRateOptions = [];
     private $currency = [];
     private $workflowEvents = [
@@ -101,7 +102,7 @@ class ApplicationsTable extends ControllerActionTable
                     'provider' => 'table',
                     'on' => function ($context) {  
                         //trigger validation only when the application is of type 'LOAN'
-                        return ($context['data']['financial_assistance_type_id'] == self::SCHOLARSHIP_LOANS );
+                        return ($context['data']['financial_assistance_type_id'] == self::LOAN);
                     }
                 ]
             ]);
@@ -140,11 +141,6 @@ class ApplicationsTable extends ControllerActionTable
         $searchableFields[] = 'identity_number';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('requested_amount', ['visible' => false]);
-    }
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add']['url'])) {
@@ -155,9 +151,15 @@ class ApplicationsTable extends ControllerActionTable
         }
 
         // setup fields
-        $this->field('comment', ['visible' => false]);
-        $this->field('scholarship_id', ['type' => 'string']);
-        $this->setupApplicantFields();
+        $this->field('scholarship_id', ['type' => 'integer']);
+        $this->field('openemis_no');
+        $this->field('applicant_id', ['type' => 'integer']);
+        $this->field('date_of_birth');
+        $this->field('gender');
+        $this->field('identity_type');
+        $this->field('identity_number');
+        $this->field('requested_amount', ['visible' => false]);
+        $this->field('comments', ['visible' => false]);
 
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
         $this->fields['scholarship_id']['sort'] = ['field' => 'Scholarships.name'];
@@ -178,21 +180,6 @@ class ApplicationsTable extends ControllerActionTable
                 $this->aliasField('assignee_id')
             ])
             ->contain([
-                'Statuses' => [
-                    'fields' => [
-                        'Statuses.name'
-                    ]
-                ],
-                'Assignees' => [
-                    'fields' => [
-                        'id',
-                        'first_name',
-                        'middle_name',
-                        'third_name',
-                        'last_name',
-                        'preferred_name'
-                    ]
-                ],
                 'Applicants' => [
                     'fields' => [
                         'id',
@@ -224,6 +211,21 @@ class ApplicationsTable extends ControllerActionTable
                         'code',
                         'name'
                     ]
+                ],
+                'Statuses' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Assignees' => [
+                    'fields' => [
+                        'id',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
                 ]
             ]);
 
@@ -250,54 +252,76 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
+    public function addEditOnChangeFinancialAssistanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $data[$this->alias()]['scholarship_id'] = '';
+        $data['scholarship'] = [];
+
+        // Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+        $options['associated'] = [
+            'Applicants' => [
+                'validate' => false
+            ],
+            'Scholarships' => [
+                'validate' => false
+            ]
+        ];
+    }
+
+    public function addEditOnChangeScholarship(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $data['scholarship'] = [];
+
+        // Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+        $options['associated'] = [
+            'Applicants' => [
+                'validate' => false
+            ],
+            'Scholarships' => [
+                'validate' => false
+            ]
+        ];
+    }
+
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         // remove queryString when redirect
         $extra['redirect'] = $this->url('index', false);
+
+        if (isset($extra['toolbarButtons']['back']['url'])) {
+            $extra['toolbarButtons']['back']['url'] = [
+                'plugin' => 'Scholarship',
+                'controller' => 'ApplicantsDirectory',
+                'action' => 'index'
+            ];
+        }
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if (isset($extra['toolbarButtons']['back']['url'])) {
-            $extra['toolbarButtons']['back']['url']['controller'] = 'ApplicantsDirectory';
-            $extra['toolbarButtons']['back']['url']['action'] = 'index';
-            unset($extra['toolbarButtons']['back']['url'][0]);
-            unset($extra['toolbarButtons']['back']['url']['queryString']);
-        }
+        if ($entity->isNew()) {
+            $entity->unsetProperty('scholarship');
 
-        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-
-        if ($applicantId) {
+            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
             $applicantEntity = $this->Applicants->get($applicantId, ['contain' => ['Genders', 'MainIdentityTypes']]);
 
-            $scholarshipEntity = null;
-            if (!empty($this->request->data[$this->alias()]['scholarship_id'])) {
-                $scholarshipId = $this->request->data[$this->alias()]['scholarship_id'];
-                $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => ['AcademicPeriods']]);
+            $entity->applicant_id = $applicantEntity->id;
+            $entity->applicant = $applicantEntity;
+
+            if ($entity->has('scholarship_id')) {
+                $scholarshipId = $entity->scholarship_id;
+                $scholarshipEntity = $this->Scholarships->get($scholarshipId, [
+                    'contain' => ['AcademicPeriods' , 'FinancialAssistanceTypes', 'Loans.PaymentFrequencies']
+                ]);
+
+                $entity->scholarship = $scholarshipEntity;
             }
-
-            // setup fields
-            $this->setupApplicantFields($applicantEntity);
-            $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
-            $this->setupScholarshipFields($scholarshipEntity);
-            $this->field('assignee_id');
-        } else {
-            $event->stopPropagation();
-            return $this->controller->redirect($this->url('index'));
         }
-    }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {   
-        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-        $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
-        $applicantEntity = $this->Applicants->get($applicantId, ['contain' => ['Genders', 'MainIdentityTypes']]);
-        $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => ['AcademicPeriods' , 'FinancialAssistanceTypes']]);
-
-        $this->setupApplicantFields($applicantEntity);
+        // setup fields
+        $this->setupApplicantFields($entity);
         $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
-        $this->setupScholarshipFields($scholarshipEntity);
-        $this->field('assignee_id');
+        $this->setupScholarshipFields($entity);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -309,48 +333,107 @@ class ApplicationsTable extends ControllerActionTable
         $tabElements = $this->controller->getScholarshipTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
-
-        // setup fields
-        $this->field('code');
-        $this->field('instructions', ['type' => 'text']);
-        $this->setupScholarshipFields();
-        $this->setFieldOrder(['academic_period_id', 'code', 'scholarship_id', 'financial_assistance_type_id', 'description', 'maximum_award_amount', 'bond', 'requirements', 'instructions']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Scholarships' => ['AcademicPeriods', 'FinancialAssistanceTypes', 'Loans.PaymentFrequencies']]);
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('applicant_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('requested_amount'),
+                $this->aliasField('comments'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id')
+            ])
+            ->contain([
+                'Applicants' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name',
+                        'gender_id',
+                        'date_of_birth',
+                        'identity_type_id',
+                        'identity_number',
+                    ]
+                ],
+                'Applicants.Genders' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Applicants.MainIdentityTypes' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Scholarships' => [
+                    'fields' => [
+                        'code',
+                        'name',
+                        'description',
+                        'maximum_award_amount',
+                        'total_amount',
+                        'bond',
+                        'requirements',
+                        'instructions',
+                        'scholarship_financial_assistance_type_id',
+                        'academic_period_id'
+                    ]
+                ],
+                'Scholarships.AcademicPeriods' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Scholarships.FinancialAssistanceTypes' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Scholarships.Loans' => [
+                    'fields' => [
+                        'interest_rate',
+                        'interest_rate_type',
+                        'loan_term',
+                        'scholarship_payment_frequency_id'
+                    ]
+                ],
+                'Scholarships.Loans.PaymentFrequencies' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Statuses' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Assignees' => [
+                    'fields' => [
+                        'id',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ]
+            ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($entity->has('scholarship') && $entity->scholarship->has('financial_assistance_type')) {
-            switch ($entity->scholarship->financial_assistance_type->code) {
-                case 'SCHOLARSHIP':
-                    // No implementation
-                    break;
-                case 'LOAN':
-                    $this->field('requested_amount', [
-                        'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')],
-                        'visible' => true
-                    ]);
-                    $this->field('interest_rate', [
-                        'attr' => ['label' => __('Interest Rate').' (%)'],
-                        'after' => 'bond'
-                    ]);
-                    $this->field('interest_rate_type', [
-                        'after' => 'interest_rate'
-                    ]);
-                    $this->field('scholarship_payment_frequency_id', [
-                        'attr' => ['label' => __('Payment Frequency')],
-                        'after' => 'interest_rate_type'
-                    ]);
-                    $this->field('loan_term', [
-                        'after' => 'scholarship_payment_frequency_id'
-                    ]);
-                    break;
-            }
-        }
+        $this->setupScholarshipFields($entity);
     }
 
     // index fields
@@ -364,7 +447,7 @@ class ApplicationsTable extends ControllerActionTable
         return $this->formatDate($entity->applicant->date_of_birth);
     }
 
-    public function onGetGenderId(Event $event, Entity $entity)
+    public function onGetGender(Event $event, Entity $entity)
     {
         return $entity->applicant->gender->name;
     }
@@ -452,164 +535,239 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
+    public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $dateOfBirthValue = '';
+            if ($entity->has('applicant') && $entity->applicant->has('date_of_birth')) {
+                $applicantEntity = $entity->applicant;
+                $dateOfBirthValue = $this->formatDate($applicantEntity->date_of_birth);
+            }
+
+            $attr['value'] = $dateOfBirthValue;
+            $attr['attr']['value'] = $dateOfBirthValue;
+        }
+
+        return $attr;
+    }
+
     public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-            $FinancialAssistanceTypes = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
-            $financialAssistanceTypeOptions = $FinancialAssistanceTypes->getList()->toArray();
+            $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+            $financialAssistanceTypeOptions = $FinancialAssistanceTypesTable->getList()->toArray();
 
             $attr['type'] = 'select';
             $attr['options'] = $financialAssistanceTypeOptions;
-            $attr['onChangeReload'] = 'changeFinancialAssistanceTypeId';
+            $attr['onChangeReload'] = 'changeFinancialAssistanceType';
+        } elseif ($action == 'edit') {
+            $entity = $attr['entity'];
 
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->scholarship->scholarship_financial_assistance_type_id;
+            $attr['attr']['value'] = $entity->scholarship->financial_assistance_type->name;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            $entity = $attr['entity'];
+
+            $scholarshipOptions = [];
+            if ($entity->has('applicant_id') && $entity->has('financial_assistance_type_id')) {
+                $applicantId = $entity->applicant_id;
+                $financialAssistanceTypeId = $entity->financial_assistance_type_id;
+
+                $scholarshipOptions = $this->Scholarships->getAvailableScholarships(['applicant_id' => $applicantId, 'financial_assistance_type_id' => $financialAssistanceTypeId]);
+            }
+
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = 'changeScholarship';
+            $attr['options'] = $scholarshipOptions;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
             
             $attr['type'] = 'readonly';
-            $attr['value'] = $entity->scholarship_financial_assistance_type_id;
-            $attr['attr']['value'] = $entity->financial_assistance_type->name;   
+            $attr['value'] = $entity->scholarship_id;
+            $attr['attr']['value'] = $entity->scholarship->code_name;
         }
+
         return $attr;
     }
 
-    public function addOnChangeFinancialAssistanceTypeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('scholarship_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['scholarship_id']);
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->bond) && strlen($entity->scholarship->bond) > 0) {
+                $value = $entity->scholarship->bond . ' ' . __('Years');
             }
+
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $value;
         }
+
+        return $attr;
     }
 
-    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
-    {   
+    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
+    {
         if ($action == 'add' || $action == 'edit') {
-            
-            $FinancialAssistanceTypes = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
-            $financialAssistanceTypeOptions = $FinancialAssistanceTypes
-                 ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'code'
-                ])
-                ->order([$FinancialAssistanceTypes->aliasField('id')])
-                ->toArray();
-            
-            if ($action == 'add') {
-                $scholarshipOptions = [];
+            $entity = $attr['entity'];
 
-                if (!empty($request->data[$this->alias()]['financial_assistance_type_id']) && !empty($request->data[$this->alias()]['applicant_id'])) {
-                    $applicantId = $request->data[$this->alias()]['applicant_id'];
-                    $financialAssistanceTypeId = $request->data[$this->alias()]['financial_assistance_type_id'];
-
-                    $scholarshipOptions = $this->Scholarships->getAvailableScholarships(['applicant_id' => $applicantId, 'financial_assistance_type_id' => $financialAssistanceTypeId]);
-
-                    if (!empty($request->data[$this->alias()]['scholarship_id'])) {
-                        $scholarshipId = $this->request->data[$this->alias()]['scholarship_id'];
-                    }
-                }
-
-                $attr['type'] = 'select';
-                $attr['onChangeReload'] = true;
-                $attr['options'] = $scholarshipOptions;
-
-            } else {
-                $entity = $attr['entity'];
-                $scholarshipId = $entity->id;
-                $financialAssistanceTypeId = $entity->scholarship_financial_assistance_type_id;
-                
-                $attr['type'] = 'readonly';
-                $attr['value'] = $scholarshipId;
-                $attr['attr']['value'] = $entity->name; 
+            $value = '';
+            if (isset($entity->scholarship->loan->interest_rate_type) && strlen($entity->scholarship->loan->interest_rate_type) > 0) {
+                $interestRateType = $entity->scholarship->loan->interest_rate_type;
+                $value = $this->interestRateOptions[$interestRateType];
             }
 
-            if(isset($financialAssistanceTypeId) && isset($scholarshipId)) {
-                switch ($financialAssistanceTypeOptions[$financialAssistanceTypeId]) {
-                    case 'SCHOLARSHIP':
-                        // No implementation
-                        break;
-                    case 'LOAN':
-
-                        $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => ['Loans.PaymentFrequencies']]);
-
-                        $this->field('requested_amount', [
-                            'visible' => true,
-                            'type' => 'integer'
-                        ]);
-                        $this->field('interest_rate', [
-                            'type' => 'disabled',
-                            'attr' => [
-                                'label' => __('Interest Rate') . ' (%)',
-                                'value' => $scholarshipEntity->loan->interest_rate
-                            ]
-                        ]);
-                        $this->field('interest_rate_type', [
-                            'type' => 'disabled',
-                            'attr' => [
-                                'label' => __('Interest Rate Type'),
-                                'value' => $this->interestRateOptions[$scholarshipEntity->loan->interest_rate_type]
-                            ]
-                        ]);
-                        $this->field('payment_frequency_id', [
-                            'type' => 'disabled',
-                            'attr' => [
-                                'label' => __('Payment Frequency'),
-                                'value' => $scholarshipEntity->loan->payment_frequency->name
-                            ]
-                        ]);
-                        $this->field('loan_term', [
-                            'type' => 'disabled',
-                            'attr' => [
-                                'label' => __('Loan Term'),
-                                'value' => $scholarshipEntity->loan->loan_term . ' ' . __('Years')
-                            ]
-                        ]);
-                        break;
-                }
-            }
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $value;
         }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->loan->loan_term) && strlen($entity->scholarship->loan->loan_term) > 0) {
+                $value = $entity->scholarship->loan->loan_term . ' ' . __('Years');
+            }
+
+            $attr['value'] = $value;
+            $attr['attr']['value'] = $value;
+        }
+
         return $attr;
     }
 
     public function setupApplicantFields($entity = null)
     {
-        $this->field('openemis_no', ['type' => 'disabled']);
-        $this->field('applicant_id', ['type' => 'readonly']);
-        $this->field('date_of_birth', ['type' => 'disabled']);
-        $this->field('gender_id', ['type' => 'disabled']);
-        $this->field('identity_type', ['type' => 'disabled']);
-        $this->field('identity_number', ['type' => 'disabled']);
-
-        if (!is_null($entity)) {
-            $this->fields['openemis_no']['attr']['value'] = $entity->openemis_no;
-            $this->fields['applicant_id']['attr']['value'] = $entity->name;
-            $this->fields['applicant_id']['value'] = $entity->id;
-            $this->fields['date_of_birth']['attr']['value'] = $this->formatDate($entity->date_of_birth);
-            $this->fields['gender_id']['attr']['value'] = $entity->has('gender') ? $entity->gender->name : '';
-            $this->fields['identity_type']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
-            $this->fields['identity_number']['attr']['value'] = $entity->identity_number;
-        }
+        $this->field('openemis_no', [
+            'type' => 'disabled',
+            'fieldName' => 'applicant.openemis_no'
+        ]);
+        $this->field('applicant_name', [
+            'type' => 'disabled',
+            'fieldName' => 'applicant.name',
+            'attr' => ['label' => __('Applicant')]
+        ]);
+        $this->field('applicant_id', [
+            'type' => 'hidden'
+        ]);
+        $this->field('date_of_birth', [
+            'type' => 'disabled',
+            'fieldName' => 'applicant.date_of_birth',
+            'entity' => $entity
+        ]);
+        $this->field('gender', [
+            'type' => 'disabled',
+            'fieldName' => 'applicant.gender.name'
+        ]);
+        $this->field('identity_type', [
+            'type' => 'disabled',
+            'fieldName' => 'applicant.main_identity_type.name'
+        ]);
+        $this->field('identity_number', [
+            'type' => 'disabled',
+            'fieldName' => 'applicant.identity_number'
+        ]);
     }
 
     public function setupScholarshipFields($entity = null)
     {
-        $this->field('financial_assistance_type_id', ['entity' => $entity]);
-        $this->field('scholarship_id', ['type' => 'string','entity' => $entity]);
-        $this->field('academic_period_id', ['type' => 'disabled']);
-        $this->field('description', ['type' => 'text', 'attr' => ['disabled' => 'disabled']]);
+        $isLoan = false;
+        $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+        if ($entity->has('financial_assistance_type_id')) {
+            // for add
+            $isLoan = $FinancialAssistanceTypesTable->is($entity->financial_assistance_type_id, 'LOAN');
+        } elseif ($entity->has('scholarship') && $entity->scholarship->has('scholarship_financial_assistance_type_id')) {
+            // for view and edit
+            $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
+        }
+
+        $this->field('financial_assistance_type_id', [
+            'entity' => $entity
+        ]);
+        $this->field('scholarship_id', [
+            'type' => 'string', // required in view because composite primary key is set to hidden by default
+            'entity' => $entity
+        ]);
+        $this->field('requested_amount', [
+            'type' => 'integer',
+            'visible' => $isLoan,
+            'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')]
+        ]);
+        $this->field('comments');
+        $this->field('academic_period_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.academic_period.name'
+        ]);
+        $this->field('description', [
+            'type' => 'text',
+            'fieldName' => 'scholarship.description',
+            'attr' => ['disabled' => 'disabled']
+        ]);
         $this->field('maximum_award_amount', [
             'type' => 'disabled',
-            'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')]
+            'fieldName' => 'scholarship.maximum_award_amount',
+            'attr' => [
+                'require' => false,
+                'label' => $this->addCurrencySuffix('Maximum Award Amount')
+            ]
         ]);
-        $this->field('bond', ['type' => 'disabled']);
-        $this->field('requirements', ['type' => 'text', 'attr' => ['disabled' => 'disabled']]);
+        $this->field('bond', [
+            'type' => 'disabled',
+            'entity' => $entity
+        ]);
 
-        if (!is_null($entity)) {
-            $this->fields['academic_period_id']['attr']['value'] = $entity->has('academic_period') ? $entity->academic_period->name : '';
-            $this->fields['description']['attr']['value'] = $entity->description;
-            $this->fields['maximum_award_amount']['attr']['value'] = $entity->maximum_award_amount;
-            $this->fields['bond']['attr']['value'] = $entity->bond . ' ' . __('Years');
-            $this->fields['requirements']['attr']['value'] = $entity->requirements;
+        if ($isLoan) {
+            $this->setupLoanFields($entity);
         }
+
+        $this->field('requirements', [
+            'type' => 'text',
+            'fieldName' => 'scholarship.requirements',
+            'attr' => ['disabled' => 'disabled']
+        ]);
+        $this->field('instructions', [
+            'type' => 'text',
+            'fieldName' => 'scholarship.instructions',
+            'visible' => ['view' => true, 'add' => false, 'edit' => false]
+        ]);
+    }
+
+    public function setupLoanFields($entity = null)
+    {
+        $this->field('interest_rate', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.loan.interest_rate',
+            'attr' => ['label' => __('Interest Rate').' (%)']
+        ]);
+        $this->field('interest_rate_type', [
+            'type' => 'disabled',
+            'entity' => $entity
+        ]);
+        $this->field('scholarship_payment_frequency_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.loan.payment_frequency.name',
+            'attr' => ['label' => __('Payment Frequency')]
+        ]);
+        $this->field('loan_term', [
+            'type' => 'disabled',
+            'entity' => $entity
+        ]);
     }
 
     public function addCurrencySuffix($label)
