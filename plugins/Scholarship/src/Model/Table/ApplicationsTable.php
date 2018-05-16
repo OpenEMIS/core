@@ -167,7 +167,7 @@ class ApplicationsTable extends ControllerActionTable
         }
 
         // setup fields
-        $this->field('comments', ['visible' => false]);
+        $this->field('comment', ['visible' => false]);
         $this->field('scholarship_id', ['type' => 'string']);
         $this->setupApplicantFields();
 
