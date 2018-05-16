@@ -1817,11 +1817,14 @@ class WorkflowBehavior extends Behavior
 
     public function workflowAfterTransition(Event $event, $id = null, $requestData)
     {
-        $entity = $this->_table->get($id);
+        // use find instead of get to cater for models with composite keys using a hash id
+        $model = $this->_table;
+
+        $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
         $this->setStatusId($entity, $requestData);
 
         // get the latest entity after status is updated
-        $entity = $this->_table->get($id);
+        $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
         $this->setAssigneeId($entity, $requestData);
     }
 

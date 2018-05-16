@@ -797,31 +797,31 @@ class ApplicationsTable extends ControllerActionTable
 
     public function onApproveScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
-        $ScholarshipRecipient = TableRegistry::get('Institution.ScholarshipRecipient');
+        $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
 
-        $entity = $this->get($id);
+        $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
         $newRecipient = [
             'recipient_id' => $entity->applicant_id,
             'scholarship_id' => $entity->scholarship_id
         ];
 
-        $newEntity = $ScholarshipRecipient->newEntity($newRecipient);
-        $ScholarshipRecipient->save($newEntity);
+        $newEntity = $ScholarshipRecipients->newEntity($newRecipient);
+        $ScholarshipRecipients->save($newEntity);
     }
 
     public function onWithdrawScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
-        $ScholarshipRecipient = TableRegistry::get('Institution.ScholarshipRecipient');
+        $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
 
-        $entity = $this->get($id);
+        $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
         $existingRecipient = [
             'recipient_id' => $entity->applicant_id,
             'scholarship_id' => $entity->scholarship_id
         ];
 
         try {
-            $existingEntity = $this->get($existingRecipient);
-            $ScholarshipRecipient->delete($existingEntity);
+            $existingEntity = $ScholarshipRecipients->get($existingRecipient);
+            $ScholarshipRecipients->delete($existingEntity);
 
         } catch (RecordNotFoundException $e) {
             Log::write('debug', $e->getMessage());
