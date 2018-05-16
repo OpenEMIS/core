@@ -31,7 +31,7 @@ class ScholarshipApplicationInstitutionChoicesController extends BaseController
             $page->get('scholarship_id')->setControlType('hidden')->setValue($scholarshipId);
 
             $this->setBreadCrumb(['userName' => $userName]);
-            $this->setupTabElements(['queryString' => $queryString]);
+            $this->setupTabElements();
 
             $page->exclude(['is_selected']); 
         }

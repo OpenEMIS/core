@@ -62,7 +62,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             $this->controller->set('contentHeader', $header);
 
             // set tabs
-            $tabElements = $this->controller->ScholarshipTabs->getScholarshipProfileTabs();
+            $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->alias());
         }
