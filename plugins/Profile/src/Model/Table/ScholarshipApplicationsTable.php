@@ -58,8 +58,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             // set header
             $scholarshipId = $this->getQueryString('scholarship_id');
             $scholarshipName = $this->Scholarships->get($scholarshipId)->name;
-            $header = $scholarshipName . ' - ' . __('Overview');
-            $this->controller->set('contentHeader', $header);
+            $this->controller->set('contentHeader', $scholarshipName . ' - ' . __('Overview'));
 
             // set tabs
             $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
