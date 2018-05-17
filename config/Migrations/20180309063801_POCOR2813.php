@@ -617,6 +617,39 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('education_field_of_study_id')
             ->save();
 
+        // scholarships_scholarship_attachment_types
+        $table = $this->table('scholarships_scholarship_attachment_types', [
+            'id' => false,
+            'primary_key' => [
+                'scholarship_id',
+                'scholarship_attachment_type_id',
+            ],
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains the list of attachment types linked to specific scholarship'
+        ]);
+
+        $table
+            ->addColumn('scholarship_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to scholarships.id'
+            ])
+            ->addColumn('scholarship_attachment_type_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+                'comment' => 'links to scholarship_attachment_types.id'
+            ])
+            ->addColumn('is_mandatory', 'integer', [
+                'default' => '0',
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addIndex('scholarship_id')
+            ->addIndex('scholarship_attachment_type_id')
+            ->save();
+
         // scholarship_payment_frequencies
         $table = $this->table('scholarship_payment_frequencies', [
                 'collation' => 'utf8mb4_unicode_ci',
@@ -740,25 +773,45 @@ class POCOR2813 extends AbstractMigration
 
         // scholarship_attachment_types
         $table = $this->table('scholarship_attachment_types', [
-            'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains the list of attachment types linked to specific scholarship'
-        ]);
+                'collation' => 'utf8mb4_unicode_ci',
+                'comment' => 'This field options table contains the list of attachment types used in scholarships'
+            ]);
 
         $table
             ->addColumn('name', 'string', [
-                'null' => false,
-                'limit' => 50
-            ])
-            ->addColumn('is_mandatory', 'integer', [
-                'default' => '0',
-                'limit' => 1,
-                'null' => false,
-            ])
-            ->addColumn('scholarship_id', 'integer', [
                 'default' => null,
-                'limit' => 11,
-                'null' => false,
-                'comment' => 'links to scholarships.id'
+                'limit' => 50,
+                'null' => false
+            ])
+            ->addColumn('order', 'integer', [
+                'default' => null,
+                'limit' => 3,
+                'null' => false
+            ])
+            ->addColumn('visible', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('editable', 'integer', [
+                'default' => 1,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('default', 'integer', [
+                'default' => 0,
+                'limit' => 1,
+                'null' => false
+            ])
+            ->addColumn('international_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
+            ])
+            ->addColumn('national_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -778,7 +831,6 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addIndex('scholarship_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
