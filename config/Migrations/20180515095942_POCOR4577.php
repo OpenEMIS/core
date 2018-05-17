@@ -99,16 +99,42 @@ class POCOR4577 extends AbstractMigration
         $this->insert('locale_contents', $localeData);
 
         // security_functions
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= 135');
+        
+        $securityData = [
+            [
+                'id' => 3043,
+                'name' => 'Import Staff Leave',
+                'controller' => 'Institutions',
+                'module' => 'Institutions',
+                'category' => 'Staff - Career',
+                'parent_id' => 3000,
+                '_view' => null,
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                '_execute' => 'ImportStaffLeave.add|ImportStaffLeave.template|ImportStaffLeave.results|ImportStaffLeave.downloadFailed|ImportStaffLeave.downloadPassed',
+                'order' => 135,
+                'visible' => 1,
+                'description' => null,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('security_functions', $securityData);
     }
 
     public function down()
     {
         // import_mapping
-        $this->execute("DELETE FROM import_mapping WHERE model = 'Institution.StaffLeave'");
+        $this->execute("DELETE FROM `import_mapping` WHERE `model` = 'Institution.StaffLeave'");
         
         // locale_contents
-        $this->execute("DELETE FROM locale_contents WHERE en = 'Administration - Record Imported'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Administration - Record Imported'");
 
         // security_functions
+        $this->execute("DELETE FROM `security_functions` WHERE `id` = 3043");
+        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 135");
     }
 }
