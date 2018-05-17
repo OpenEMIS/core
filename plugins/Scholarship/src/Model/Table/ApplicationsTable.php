@@ -69,6 +69,9 @@ class ApplicationsTable extends ControllerActionTable
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('CompositeKey');
         $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
+        ]);
 
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
@@ -139,6 +142,21 @@ class ApplicationsTable extends ControllerActionTable
         $searchableFields[] = 'openemis_no';
         $searchableFields[] = 'applicant_id';
         $searchableFields[] = 'identity_number';
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        if (in_array($this->action, ['view', 'edit'])) {
+            // set header
+            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+            $applicantName = $this->Applicants->get($applicantId)->name;
+            $this->controller->set('contentHeader', $applicantName . ' - ' . __('Overview'));
+
+            // set tabs
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', $this->alias());
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -322,17 +340,6 @@ class ApplicationsTable extends ControllerActionTable
         $this->setupApplicantFields($entity);
         $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
         $this->setupScholarshipFields($entity);
-    }
-
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-        $applicantName = $this->Applicants->get($applicantId)->name;
-        $this->controller->set('contentHeader', $applicantName. ' - ' .__('Overview'));
-
-        $tabElements = $this->controller->getScholarshipTabElements();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -697,6 +704,10 @@ class ApplicationsTable extends ControllerActionTable
             $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
         }
 
+        $this->field('academic_period_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.academic_period.name'
+        ]);
         $this->field('financial_assistance_type_id', [
             'entity' => $entity
         ]);
@@ -704,21 +715,17 @@ class ApplicationsTable extends ControllerActionTable
             'type' => 'string', // required in view because composite primary key is set to hidden by default
             'entity' => $entity
         ]);
+        $this->field('description', [
+            'type' => 'text',
+            'fieldName' => 'scholarship.description',
+            'attr' => ['disabled' => 'disabled']
+        ]);
         $this->field('requested_amount', [
             'type' => 'integer',
             'visible' => $isLoan,
             'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')]
         ]);
         $this->field('comments');
-        $this->field('academic_period_id', [
-            'type' => 'disabled',
-            'fieldName' => 'scholarship.academic_period.name'
-        ]);
-        $this->field('description', [
-            'type' => 'text',
-            'fieldName' => 'scholarship.description',
-            'attr' => ['disabled' => 'disabled']
-        ]);
         $this->field('maximum_award_amount', [
             'type' => 'disabled',
             'fieldName' => 'scholarship.maximum_award_amount',
