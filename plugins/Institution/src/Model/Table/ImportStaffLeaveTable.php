@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 class ImportStaffLeaveTable extends AppTable
 {
@@ -121,6 +122,14 @@ class ImportStaffLeaveTable extends AppTable
         $data[$columnOrder]['data'][] = [__('Staff Leave Type Id'), __('Workflow'), $translatedReadableCol, $translatedCol];
 
         if (!$workflowResult->isEmpty()) {
+            // default value to set to open
+            $data[$columnOrder]['data'][] = [
+                __('N/A'),
+                __('N/A'),
+                __('Default'),
+                0
+            ];
+
             $modelData = $workflowResult->toArray();
 
             foreach ($modelData as $row) {
@@ -145,12 +154,12 @@ class ImportStaffLeaveTable extends AppTable
         }
 
         if (!$this->staffId) {
-            $rowInvalidCodeCols['staff_id'] = __('Staff ID was not defined');
+            $rowInvalidCodeCols['staff_id'] = __('No staff id found');
             $tempRow['staff_id'] = false;
             return false;
         }
 
-        $tempRow['assignee_id'] = -1; // trigger auto assign behaviour
+        $tempRow['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
         $tempRow['institution_id'] = $this->institutionId;
         $tempRow['staff_id'] = $this->staffId;
 
@@ -192,7 +201,7 @@ class ImportStaffLeaveTable extends AppTable
         }
 
         if ($result->isEmpty()) {
-            $rowInvalidCodeCols['status_id'] = __('Workflow step and staff leave type mismatch');
+            $rowInvalidCodeCols['status_id'] = __('Selected value does not match with Staff Leave Type');
             return false;
         }
 
