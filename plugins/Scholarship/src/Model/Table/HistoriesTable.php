@@ -60,12 +60,10 @@ class HistoriesTable extends ControllerActionTable
     {
         $queryString = $this->request->query['queryString'];
         $scholarshipId = $this->paramsDecode($queryString)['scholarship_id'];
-        
+
         $query
             ->contain(['Scholarships.AcademicPeriods'])
-            ->where([
-                $this->aliasField('scholarship_id').' <> ' => $scholarshipId
-            ])
+            ->where([$this->aliasField('scholarship_id').' <> ' => $scholarshipId])
             ->order(['AcademicPeriods.name' => 'DESC']);
     }
 
@@ -85,7 +83,8 @@ class HistoriesTable extends ControllerActionTable
         $this->field('requested_amount', ['visible' => false]);
         $this->field('assignee_id', ['visible' => false]);
         $this->field('scholarship_id', ['type' => 'string']);
-        $this->field('academic_period_id');  
+        $this->field('academic_period_id');
+        $this->setFieldOrder(['academic_period_id', 'scholarship_id', 'comments']);
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)

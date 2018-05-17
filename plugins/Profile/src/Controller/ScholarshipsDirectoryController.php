@@ -9,17 +9,17 @@ use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use App\Model\Traits\OptionsTrait;
 
-class ScholarshipDirectoriesController extends PageController
+class ScholarshipsDirectoryController extends PageController
 {
     use OptionsTrait;
 
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Profile.ScholarshipDirectories');
+        $this->loadModel('Profile.ScholarshipsDirectory');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Configuration.ConfigItems');
-        $this->Page->loadElementsFromTable($this->ScholarshipDirectories);
+        $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
 
         $this->Page->disable(['add', 'edit', 'delete']);
     }
@@ -46,12 +46,12 @@ class ScholarshipDirectoriesController extends PageController
         $page->setQueryString('applicant_id', $applicantId);
 
         // set header
-        $page->setHeader($applicantName . ' - ' . __('Scholarship Directory'));
+        $page->setHeader($applicantName . ' - ' . __('Scholarships Directory'));
 
         // set breadcrumbs
         $page->addCrumb('Profile', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Profiles', 'view', $encodedApplicantId]);
         $page->addCrumb($applicantName);
-        $page->addCrumb('Scholarship Directory');
+        $page->addCrumb('Scholarships Directory');
 
         // set labels
         $page->get('scholarship_financial_assistance_type_id')->setLabel('Financial Assistance Type');
@@ -165,7 +165,7 @@ class ScholarshipDirectoriesController extends PageController
         if ($page->is(['view'])) {
             $list = [];
 
-            if ($this->ScholarshipDirectories->checkIsSelectAll($entity)) {
+            if ($this->ScholarshipsDirectory->checkIsSelectAll($entity)) {
                 $list = $this->EducationFieldOfStudies
                     ->find('order')
                     ->find('visible')

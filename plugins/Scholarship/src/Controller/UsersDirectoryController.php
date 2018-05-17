@@ -4,13 +4,14 @@ namespace Scholarship\Controller;
 use Cake\Event\Event;
 use App\Controller\PageController;
 
-class ApplicantsDirectoryController extends PageController
+class UsersDirectoryController extends PageController
 {
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Scholarship.ApplicantsDirectory');
-        $this->Page->loadElementsFromTable($this->ApplicantsDirectory);
+        $this->loadModel('Scholarship.UsersDirectory');
+        $this->loadComponent('User.User');
+        $this->Page->loadElementsFromTable($this->UsersDirectory);
     }
 
     public function beforeFilter(Event $event)
@@ -19,9 +20,9 @@ class ApplicantsDirectoryController extends PageController
         parent::beforeFilter($event);
 
         $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
-        $page->addCrumb('Applicants Directory');
+        $page->addCrumb('Users Directory');
 
-        $page->setHeader(__('Scholarships') . ' - ' . __('Applicants Directory'));
+        $page->setHeader(__('Scholarships') . ' - ' . __('Users Directory'));
 
         $page->disable(['add', 'edit', 'delete']);
     }
@@ -48,10 +49,7 @@ class ApplicantsDirectoryController extends PageController
             'options' => []
         ]);
 
-        $page->exclude(['username', 'password','first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'email', 'date_of_death','address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'nationality_id', 'photo_content', 'external_reference', 'is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status', 'preferred_language', 'last_login']);
-
         $page->addNew('name')->setDisplayFrom('name');
-
         $page->move('name')->after('openemis_no');
         $page->move('date_of_birth')->after('name');
     }
