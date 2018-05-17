@@ -4,13 +4,13 @@ namespace Scholarship\Controller;
 use Cake\Event\Event;
 use App\Controller\PageController;
 
-class ApplicantsDirectoryController extends PageController
+class UsersDirectoryController extends PageController
 {
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Scholarship.ApplicantsDirectory');
-        $this->Page->loadElementsFromTable($this->ApplicantsDirectory);
+        $this->loadModel('Scholarship.UsersDirectory');
+        $this->Page->loadElementsFromTable($this->UsersDirectory);
     }
 
     public function beforeFilter(Event $event)
@@ -19,9 +19,9 @@ class ApplicantsDirectoryController extends PageController
         parent::beforeFilter($event);
 
         $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
-        $page->addCrumb('Applicants Directory');
+        $page->addCrumb('Users Directory');
 
-        $page->setHeader(__('Scholarships') . ' - ' . __('Applicants Directory'));
+        $page->setHeader(__('Scholarships') . ' - ' . __('Users Directory'));
 
         $page->disable(['add', 'edit', 'delete']);
     }
