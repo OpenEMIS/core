@@ -9,8 +9,14 @@ class UsersDirectoryController extends PageController
     public function initialize()
     {
         parent::initialize();
+<<<<<<< HEAD:plugins/Scholarship/src/Controller/UsersDirectoryController.php
         $this->loadModel('Scholarship.UsersDirectory');
         $this->Page->loadElementsFromTable($this->UsersDirectory);
+=======
+        $this->loadModel('Scholarship.ApplicantsDirectory');
+        $this->loadComponent('User.User');
+        $this->Page->loadElementsFromTable($this->ApplicantsDirectory);
+>>>>>>> ef67a37a852b71bed8645f1392ed6fe617f4f06a:plugins/Scholarship/src/Controller/ApplicantsDirectoryController.php
     }
 
     public function beforeFilter(Event $event)
@@ -48,10 +54,7 @@ class UsersDirectoryController extends PageController
             'options' => []
         ]);
 
-        $page->exclude(['username', 'password','first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'email', 'date_of_death','address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'nationality_id', 'photo_content', 'external_reference', 'is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status', 'preferred_language', 'last_login']);
-
         $page->addNew('name')->setDisplayFrom('name');
-
         $page->move('name')->after('openemis_no');
         $page->move('date_of_birth')->after('name');
     }
