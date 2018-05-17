@@ -114,8 +114,8 @@ class ScholarshipsTable extends ControllerActionTable
                 },
                 'message' => __('This field cannot be left empty')
             ])
-            ->add('date_application_close', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_application_open', true]
+            ->add('application_close_date', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'application_open_date', true]
             ])
             ->add('total_amount', [
                 'ruleCompareMaximumAwardAmount' => [
@@ -408,7 +408,7 @@ class ScholarshipsTable extends ControllerActionTable
         $this->field('maximum_award_amount', [
             'type' => 'integer',
             'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')],
-            'after' => 'date_application_close'
+            'after' => 'application_close_date'
         ]);
         $this->field('total_amount', [
             'type' => 'integer',
@@ -494,7 +494,8 @@ class ScholarshipsTable extends ControllerActionTable
                  })
                 ->where([
                     $this->aliasField('scholarship_financial_assistance_type_id') => $financialAssistanceTypeId,
-                    $this->aliasField('date_application_close >=') => $todayDate
+                    $this->aliasField('application_open_date <=') => $todayDate,
+                    $this->aliasField('application_close_date >=') => $todayDate
                 ])
                 ->toArray();
         }
