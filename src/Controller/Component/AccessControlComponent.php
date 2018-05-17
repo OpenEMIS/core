@@ -275,6 +275,12 @@ class AccessControlComponent extends Component
             }
         }
 
+        // exclude profile controllers
+        $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices', 'ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'Profiles', 'ScholarshipsDirectory'];
+        if (isset($url['controller']) && in_array($url['controller'], $excludedController)) {
+            return true;
+        }
+
         if (array_key_exists('controller', $url)) {
             $checkUrl[] = $url['controller'];
             unset($url['controller']);
