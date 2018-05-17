@@ -1726,6 +1726,196 @@ class POCOR2813 extends AbstractMigration
             ->save();
         // end of academic standing
 
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 314');
+
+        // Scholarships - Setup
+        $this->insert('security_functions', [
+                'id' => 5090,
+                'name' => 'Scholarships',
+                'controller' => 'Scholarships',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Setup',
+                'parent_id' => 5000,
+                '_view' => 'Scholarships.index|Scholarships.view',
+                '_edit' => 'Scholarships.edit',
+                '_add' => 'Scholarships.add',
+                '_delete' => 'Scholarships.remove',
+                'order' => 315,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
+
+        // Scholarships - Applications
+        $this->insert('security_functions', [
+                'id' => 5091,
+                'name' => 'Applications',
+                'controller' => 'Scholarships',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'Applications.index|Applications.view',
+                '_edit' => 'Applications.edit',
+                '_add' => 'Applications.add',
+                '_delete' => 'Applications.remove',
+                'order' => 316,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
+
+        $this->insert('security_functions', [
+                'id' => 5092,
+                'name' => 'Users Directory',
+                'controller' => 'UsersDirectory',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'index|view',
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                'order' => 317,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
+
+        $this->insert('security_functions', [
+                'id' => 5093,
+                'name' => 'Identities',
+                'controller' => 'Scholarships',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'Identities.index|Identities.view',
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                'order' => 318,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]);
+
+        $this->insert('security_functions', [
+                'id' => 5094,
+                'name' => 'Nationalities',
+                'controller' => 'Scholarships',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'Nationalities.index|Identities.view',
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                'order' => 319,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $this->insert('security_functions', [
+                'id' => 5095,
+                'name' => 'Contacts',
+                'controller' => 'Scholarships',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'Contacts.index|Contacts.view',
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                'order' => 320,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $this->insert('security_functions', [
+                'id' => 5096,
+                'name' => 'Guardians',
+                'controller' => 'Scholarships',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'Guardians.index|Guardians.view',
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                'order' => 321,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $this->insert('security_functions', [
+                'id' => 5097,
+                'name' => 'Histories',
+                'controller' => 'Scholarships',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'Histories.index',
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                'order' => 322,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $this->insert('security_functions', [
+                'id' => 5098,
+                'name' => 'Institution Choices',
+                'controller' => 'ScholarshipApplicationInstitutionChoices',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 323,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $this->insert('security_functions', [
+                'id' => 5099,
+                'name' => 'Application Attachments',
+                'controller' => 'ScholarshipApplicationAttachments',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Applications',
+                'parent_id' => 5000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 324,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $this->insert('security_functions', [
+                'id' => 5100,
+                'name' => 'Recipients',
+                'controller' => 'ScholarshipRecipients',
+                'module' => 'Administration',
+                'category' => 'Scholarships - Recipients',
+                'parent_id' => 5000,
+                '_view' => 'index|view',
+                '_edit' => null,
+                '_add' => null,
+                '_delete' => null,
+                'order' => 325,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+        ]);
     }
 
     public function down()
@@ -1786,5 +1976,18 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('scholarship_disbursement_categories');
         $this->dropTable('scholarship_recipient_collections');
         $this->dropTable('scholarship_recipient_academic_standings');
+
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 314');
+        $this->execute('DELETE FROM security_functions WHERE id = 5090');
+        $this->execute('DELETE FROM security_functions WHERE id = 5091');
+        $this->execute('DELETE FROM security_functions WHERE id = 5092');
+        $this->execute('DELETE FROM security_functions WHERE id = 5093');
+        $this->execute('DELETE FROM security_functions WHERE id = 5094');
+        $this->execute('DELETE FROM security_functions WHERE id = 5095');  
+        $this->execute('DELETE FROM security_functions WHERE id = 5096');
+        $this->execute('DELETE FROM security_functions WHERE id = 5097');
+        $this->execute('DELETE FROM security_functions WHERE id = 5098');  
+        $this->execute('DELETE FROM security_functions WHERE id = 5099');
+        $this->execute('DELETE FROM security_functions WHERE id = 5100');
     }
 }
