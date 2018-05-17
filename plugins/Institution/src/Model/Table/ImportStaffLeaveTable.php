@@ -42,25 +42,47 @@ class ImportStaffLeaveTable extends AppTable
         return $events;
     }
 
-    public function beforeAction($event)
+    // public function beforeAction($event)
+    // {
+    //     if (!is_null($this->request->query('user_id'))) {
+    //         $this->staffId = $this->request->query('user_id');
+    //         $Users = TableRegistry::get('Security.Users');
+    //     } else {
+    //         $session = $this->request->session();
+    //         if ($session->check('Staff.Staff.id')) {
+    //             $this->staffId = $session->read('Staff.Staff.id');
+    //             $this->request->query['user_id'] = $this->staffId;
+    //         }
+    //     }
+
+    //     $session = $this->request->session();
+    //     if ($session->check('Institution.Institutions.id')) {
+    //         $this->institutionId = $session->read('Institution.Institutions.id');
+    //     }
+    // }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
+        if (!is_null($persona)) {
+            $this->staffId = $persona->id;
+        } elseif (!is_null($request->query('user_id'))) {
+            $this->staffId = $request->query('user_id');
+        } else {
+            $session = $request->session();
+            if ($session->check('Staff.Staff.id')) {
+                $this->staffId = $session->read('Staff.Staff.id');
+            }
+        }
+
         $session = $this->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-
-        if ($session->check('Staff.Staff.id')) {
-            $this->staffId = $session->read('Staff.Staff.id');
-        }
-    }
-
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
-    {
-        // $institutionId = $request->param('institutionId') ? $this->_table->paramsDecode($request->param('institutionId'))['id'] : $request->session()->read('Institution.Institutions.id');
-        // $staffUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
-        // $personaUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->paramsEncode(['id' => $persona->id])];
-        // $Navigation->substituteCrumb('Imports', 'Staff', $staffUrl);
-        // $Navigation->substituteCrumb($persona->name, $persona->name, $personaUrl);
+        
+        $staffUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'institutionId' => $this->paramsEncode(['id' => $this->institutionId])];
+        $personaUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->paramsEncode(['id' => $this->staffId])];
+        $Navigation->substituteCrumb('Imports', 'Staff', $staffUrl);
+        $Navigation->substituteCrumb($persona->name, $persona->name, $personaUrl);
     }
 
     public function onImportPopulateStaffLeaveTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
