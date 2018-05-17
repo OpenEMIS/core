@@ -56,7 +56,7 @@ class POCOR4577 extends AbstractMigration
                 'model' => 'Institution.StaffLeave',
                 'column_name' => 'status_id',
                 'description' => '',
-                'order' => 6,
+                'order' => 5,
                 'is_optional' => 0,
                 'foreign_key' => 2,
                 'lookup_plugin' => 'Workflow',
@@ -66,7 +66,38 @@ class POCOR4577 extends AbstractMigration
         ];
 
         $this->insert('import_mapping', $data);
-        
+
+        // locale_contents
+        $localeData = [
+            [
+                'en' => 'Administration - Record Imported',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Selected value does not match with Staff Leave Type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Staff Leave Type Id',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'No active institution',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'No staff id found',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+
+        $this->insert('locale_contents', $localeData);
+
         // security_functions
     }
 
@@ -74,6 +105,9 @@ class POCOR4577 extends AbstractMigration
     {
         // import_mapping
         $this->execute("DELETE FROM import_mapping WHERE model = 'Institution.StaffLeave'");
+        
+        // locale_contents
+        $this->execute("DELETE FROM locale_contents WHERE en = 'Administration - Record Imported'");
 
         // security_functions
     }
