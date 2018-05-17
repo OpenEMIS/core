@@ -704,16 +704,16 @@ class ApplicationsTable extends ControllerActionTable
             $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
         }
 
-        $this->field('academic_period_id', [
-            'type' => 'disabled',
-            'fieldName' => 'scholarship.academic_period.name'
-        ]);
         $this->field('financial_assistance_type_id', [
             'entity' => $entity
         ]);
         $this->field('scholarship_id', [
             'type' => 'string', // required in view because composite primary key is set to hidden by default
             'entity' => $entity
+        ]);
+        $this->field('academic_period_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.academic_period.name'
         ]);
         $this->field('description', [
             'type' => 'text',
