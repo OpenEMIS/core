@@ -14,6 +14,7 @@ class AttachmentsController extends PageController
         $this->loadModel('Security.Users');
         $this->loadModel('Scholarship.ApplicationAttachments');
         $this->loadModel('Scholarship.AttachmentTypes');
+        $this->loadModel('Scholarship.ScholarshipsScholarshipAttachmentTypes');
 
         $this->loadComponent('Scholarship.ScholarshipTabs');
 
@@ -70,11 +71,13 @@ class AttachmentsController extends PageController
         $page = $this->Page;
 
         $page->exclude(['file_name']);
+        $applicantId = $page->getQueryString('applicant_id');
         $scholarshipId = $page->getQueryString('scholarship_id');
 
         $attachmentTypesOption = $this->AttachmentTypes
-            ->find('attachmentTypeOptionList', [
-                'defaultOption' => false,
+            ->find('list')
+            ->find('availableAttachmentTypes', [
+                'applicant_id' => $applicantId,
                 'scholarship_id' => $scholarshipId
             ])
             ->toArray();
@@ -152,11 +155,19 @@ class AttachmentsController extends PageController
         $page = $this->Page;
 
         if ($page->is(['index'])) {
-            if($entity->attachment_type->is_mandatory == 1) {
+            $isMandatory = $this->ScholarshipsScholarshipAttachmentTypes->get([
+                    'scholarship_id' => $entity->scholarship_id,
+                    'scholarship_attachment_type_id' => $entity->scholarship_attachment_type_id
+                ])
+                ->is_mandatory;
+
+            if ($isMandatory) {
                 return "<i class='fa fa-check'></i>";
             } else {
                 return "<i class='fa fa-close'></i>";
             }
+
+            return "<i class='fa fa-close'></i>";
         }
     }
 }

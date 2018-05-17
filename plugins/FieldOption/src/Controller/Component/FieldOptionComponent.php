@@ -152,6 +152,7 @@ class FieldOptionComponent extends Component
 
     // Scholarship
         'ScholarshipFundingSources' => ['className' => 'Scholarship.FundingSources', 'parent' => 'Scholarship'],
+        'ScholarshipAttachmentTypes' => ['className' => 'Scholarship.AttachmentTypes', 'parent' => 'Scholarship'],
         'ScholarshipPaymentFrequencies' => ['className' => 'Scholarship.PaymentFrequencies', 'parent' => 'Scholarship'],
         'ScholarshipRecipientActivityStatuses' => ['className' => 'Scholarship.RecipientActivityStatuses', 'parent' => 'Scholarship'],
         'ScholarshipDisbursementCategories' => ['className' => 'Scholarship.DisbursementCategories', 'parent' => 'Scholarship'],
