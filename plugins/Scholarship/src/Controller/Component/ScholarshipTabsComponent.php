@@ -14,21 +14,6 @@ class ScholarshipTabsComponent extends Component
         $this->queryString = $this->request->query('queryString');
     }
 
-    public function getScholarshipTabs($options = [])
-    {
-        $tabElements = [
-            'Scholarships' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'view', $this->queryString, 'queryString' => $this->queryString],
-                'text' => __('Overview')
-            ],
-            'Attachments' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipAttachmentTypes', 'action' => 'index', 'queryString' => $this->queryString],
-                'text' => __('Attachments')
-            ]
-        ];
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
-
     public function getScholarshipApplicationTabs($options = [])
     {
         $tabElements = [
