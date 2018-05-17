@@ -5,6 +5,8 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
@@ -12,7 +14,11 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    CONST SCHOLARSHIP = 1;
+    CONST LOAN = 2;
+
     private $interestRateOptions = [];
+    private $currency = '';
 
     public function initialize(array $config)
     {
@@ -38,9 +44,29 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->addBehavior('Workflow.Workflow', ['model' => 'Scholarship.Applications']);
         $this->addBehavior('CompositeKey');
 
-        $this->toggle('edit', false);
-
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
+        $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('requested_amount', [
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                    'message' => __('Value cannot be more than two decimal places')
+                ],
+                'ruleCheckRequestedAmount' => [
+                    'rule' => ['checkRequestedAmount'],
+                    'provider' => 'table',
+                    'on' => function ($context) {
+                        //trigger validation only when the application is of type 'LOAN'
+                        return ($context['data']['financial_assistance_type_id'] == self::LOAN);
+                    }
+                ]
+            ]);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -54,6 +80,10 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
         if (isset($buttons['view']['url'])) {
             $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
+        }
+
+        if (isset($buttons['edit']['url'])) {
+            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
         }
 
         return $buttons;
@@ -76,10 +106,11 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('requested_amount', ['visible' => false]);
         $this->field('academic_period_id');
         $this->field('scholarship_id', ['type' => 'string']);
         $this->field('financial_assistance_type_id');
+        $this->field('comments', ['visible' => false]);
+        $this->field('requested_amount', ['visible' => false]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'academic_period_id', 'scholarship_id', 'financial_assistance_type_id']);
 
         // scholarship directory add button
@@ -94,130 +125,207 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Scholarships' => ['AcademicPeriods', 'FinancialAssistanceTypes']]);
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('applicant_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('requested_amount'),
+                $this->aliasField('comments'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id')
+            ])
+            ->contain([
+                'Scholarships' => [
+                    'fields' => [
+                        'code',
+                        'name',
+                        'description',
+                        'maximum_award_amount',
+                        'total_amount',
+                        'bond',
+                        'requirements',
+                        'instructions',
+                        'scholarship_financial_assistance_type_id',
+                        'academic_period_id'
+                    ]
+                ],
+                'Scholarships.AcademicPeriods' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Scholarships.FinancialAssistanceTypes' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Statuses' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Assignees' => [
+                    'fields' => [
+                        'id',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ]
+            ]);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $queryString = $this->ControllerAction->getQueryString();
-
-        if (array_key_exists('scholarship_id', $queryString) && !empty($queryString['scholarship_id'])) {
-            $scholarshipId = $queryString['scholarship_id'];
-            $applicantId = $this->Auth->user('id');
-
-            $scholarshipDetails = $this->Scholarships->get($scholarshipId, ['contain' => ['AcademicPeriods' , 'FinancialAssistanceTypes', 'Loans.PaymentFrequencies']]);
-           
-            $this->setupScholarshipFields($scholarshipDetails);
- 
-        } else {
-            $event->stopPropagation();
-            return $this->controller->redirect($this->url('index', false));
+        if ($entity->isNew()) {
+            $scholarshipId = $this->getQueryString('scholarship_id');
+            $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => [
+                'AcademicPeriods',
+                'FinancialAssistanceTypes',
+                'Loans.PaymentFrequencies'
+            ]]);
+            $entity->scholarship = $scholarshipEntity;
+            $entity->applicant_id = $this->Auth->user('id');
         }
+
+        $this->setupFields($entity);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $this->field('requested_amount', ['visible' => false]);
-        $this->field('academic_period_id');
-        $this->field('code');
-        $this->field('scholarship_id', ['type' => 'string']);
-        $this->field('financial_assistance_type_id');
-        $this->field('description', ['type' =>'text']);
-        $this->field('maximum_award_amount');
-        $this->field('bond');
-        $this->field('requirements', ['type' =>'text']);
-        $this->field('instructions', ['type' =>'text']);
-
-        $this->setFieldOrder([
-            'academic_period_id', 'code', 'scholarship_id', 'financial_assistance_type_id', 'description', 'maximum_award_amount', 'bond', 'requirements', 'instructions'
-        ]);
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('applicant_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('requested_amount'),
+                $this->aliasField('comments'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id')
+            ])
+            ->contain([
+                'Scholarships' => [
+                    'fields' => [
+                        'code',
+                        'name',
+                        'description',
+                        'maximum_award_amount',
+                        'total_amount',
+                        'bond',
+                        'requirements',
+                        'instructions',
+                        'scholarship_financial_assistance_type_id',
+                        'academic_period_id'
+                    ]
+                ],
+                'Scholarships.AcademicPeriods' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Scholarships.FinancialAssistanceTypes' => [
+                    'fields' => [
+                        'code',
+                        'name'
+                    ]
+                ],
+                'Scholarships.Loans' => [
+                    'fields' => [
+                        'interest_rate',
+                        'interest_rate_type',
+                        'loan_term',
+                        'scholarship_payment_frequency_id'
+                    ]
+                ],
+                'Scholarships.Loans.PaymentFrequencies' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Statuses' => [
+                    'fields' => [
+                        'name'
+                    ]
+                ],
+                'Assignees' => [
+                    'fields' => [
+                        'id',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ]
+            ]);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $query->contain(['Scholarships' => ['AcademicPeriods', 'FinancialAssistanceTypes']]);
+        $this->setupFields($entity);
     }
 
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
-        $value = '';
-        if ($entity->has('scholarship') && $entity->scholarship->has('academic_period')) {
-            $value = $entity->scholarship->academic_period->name;
-        }
-        return $value;
-    }
-
-    public function onGetCode(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->code;
-        }
-        return $value;
-    }
-
-    public function onGetDescription(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->description;
-        }
-        return $value;
+        return $entity->scholarship->academic_period->name;
     }
 
     public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
     {
-        $value = '';
-        if ($entity->has('scholarship') && $entity->scholarship->has('financial_assistance_type')) {
-            $value = $entity->scholarship->financial_assistance_type->name;
-        }
-        return $value;
+        return $entity->scholarship->financial_assistance_type->name;
     }
 
     public function onGetMaximumAwardAmount(Event $event, Entity $entity)
     {
-        $value = '';
-        if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->maximum_award_amount;
-        }
-        return $value;
+        return $entity->scholarship->maximum_award_amount;
     }
 
     public function onGetBond(Event $event, Entity $entity)
     {
-        $value = '';
-        if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->bond;
-        }
-        return $value;
+        return $entity->scholarship->bond . ' ' . __('Years');
     }
 
-    public function onGetRequirements(Event $event, Entity $entity)
+    public function onGetInterestRate(Event $event, Entity $entity)
     {
-        $value = '';
-        if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->requirements;
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            return $entity->scholarship->loan->interest_rate;
         }
-        return $value;
     }
 
-    public function onGetInstructions(Event $event, Entity $entity)
+    public function onGetInterestRateType(Event $event, Entity $entity)
     {
-        $value = '';
-        if ($entity->has('scholarship')) {
-            $value = $entity->scholarship->instructions;
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            $interestRateType = $entity->scholarship->loan->interest_rate_type;
+            return $this->interestRateOptions[$interestRateType];
         }
-        return $value;
+    }
+
+    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
+    {
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            return $entity->scholarship->loan->payment_frequency->name;
+        }
+    }
+
+    public function onGetLoanTerm(Event $event, Entity $entity)
+    {
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            return $entity->scholarship->loan->loan_term . ' ' . __('Years');
+        }
     }
 
     public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-           
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->scholarship_financial_assistance_type_id;
-            $attr['attr']['value'] = $entity->financial_assistance_type->name;  
+            $attr['value'] = $entity->scholarship->scholarship_financial_assistance_type_id;
+            $attr['attr']['value'] = $entity->scholarship->financial_assistance_type->name;
         }
         return $attr;
     }
@@ -226,75 +334,139 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->id;
-            $attr['attr']['value'] = $entity->name;  
-
-            $financialAssistanceTypeCode = $entity->financial_assistance_type->code;
-
-            if ($financialAssistanceTypeCode == 'LOAN') {
-
-                $this->field('requested_amount', [
-                    'visible' => true,
-                    'type' => 'integer',
-                    'attr' => ['label' => __('Requested Amount')]
-                ]);
-                $this->field('interest_rate', [
-                    'type' => 'disabled',
-                    'attr' => [
-                        'label' => __('Interest Rate') . ' (%)',
-                        'value' => $entity->loan->interest_rate
-                    ]
-                ]);
-                $this->field('interest_rate_type', [
-                    'type' => 'disabled',
-                    'attr' => [
-                        'label' => __('Interest Rate Type'),
-                        'value' => $this->interestRateOptions[$entity->loan->interest_rate_type]
-                    ]
-                ]);
-                $this->field('payment_frequency_id', [
-                    'type' => 'disabled',
-                    'attr' => [
-                        'label' => __('Payment Frequency'),
-                        'value' => $entity->loan->payment_frequency->name
-                    ]
-                ]);
-                $this->field('loan_term', [
-                    'type' => 'disabled',
-                    'attr' => [
-                        'label' => __('Loan Term'),
-                        'value' => $entity->loan->loan_term . ' ' . __('Years')
-                    ]
-                ]);
-                
-            }
-
+            $attr['value'] = $entity->scholarship_id;
+            $attr['attr']['value'] = $entity->scholarship->code_name;
         }
         return $attr;
     }
 
-
-    public function setupScholarshipFields($entity = null)
+    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
     {
-        $this->field('financial_assistance_type_id', ['entity' => $entity]);
-        $this->field('scholarship_id', ['type' => 'string','entity' => $entity]);
-        $this->field('academic_period_id', ['type' => 'disabled']);
-        $this->field('description', ['type' => 'text', 'attr' => ['disabled' => 'disabled']]);
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->bond) && strlen($entity->scholarship->bond) > 0) {
+                $value = $entity->scholarship->bond . ' ' . __('Years');
+            }
+            $attr['attr']['value'] = $value;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->loan->interest_rate_type) && strlen($entity->scholarship->loan->interest_rate_type) > 0) {
+                $interestRateType = $entity->scholarship->loan->interest_rate_type;
+                $value = $this->interestRateOptions[$interestRateType];
+            }
+            $attr['attr']['value'] = $value;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->loan->loan_term) && strlen($entity->scholarship->loan->loan_term) > 0) {
+                $value = $entity->scholarship->loan->loan_term . ' ' . __('Years');
+            }
+            $attr['attr']['value'] = $value;
+        }
+        return $attr;
+    }
+
+    public function setupFields($entity)
+    {
+        $isLoan = false;
+        if ($entity->has('scholarship') && $entity->scholarship->has('scholarship_financial_assistance_type_id')) {
+            $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+            $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
+        }
+
+        $this->field('applicant_id', [
+            'type' => 'hidden'
+        ]);
+        $this->field('academic_period_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.academic_period.name'
+        ]);
+        $this->field('financial_assistance_type_id', [
+            'type' => 'readonly',
+            'entity' => $entity
+        ]);
+        $this->field('scholarship_id', [
+            'type' => 'readonly',
+            'entity' => $entity
+        ]);
+        $this->field('description', [
+            'type' => 'text',
+            'fieldName' => 'scholarship.description',
+            'attr' => ['disabled' => 'disabled']
+        ]);
+        $this->field('requested_amount', [
+            'type' => 'integer',
+            'visible' => $isLoan,
+            'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')]
+        ]);
         $this->field('maximum_award_amount', [
             'type' => 'disabled',
-            'attr' => ['label' => __('Maximum Award Amount')]
+            'fieldName' => 'scholarship.maximum_award_amount',
+            'attr' => ['label' => $this->addCurrencySuffix('Maximum Award Amount')]
         ]);
-        $this->field('bond', ['type' => 'disabled']);
-        $this->field('requirements', ['type' => 'text', 'attr' => ['disabled' => 'disabled']]);
+        $this->field('bond', [
+            'type' => 'disabled',
+            'entity' => $entity
+        ]);
 
-        if (!is_null($entity)) {
-            $this->fields['academic_period_id']['attr']['value'] = $entity->has('academic_period') ? $entity->academic_period->name : '';
-            $this->fields['description']['attr']['value'] = $entity->description;
-            $this->fields['maximum_award_amount']['attr']['value'] = $entity->maximum_award_amount;
-            $this->fields['bond']['attr']['value'] = $entity->bond . ' ' . __('Years');
-            $this->fields['requirements']['attr']['value'] = $entity->requirements;
+        if ($isLoan) {
+            $this->setupLoanFields($entity);
         }
+
+        $this->field('requirements', [
+            'type' => 'text',
+            'fieldName' => 'scholarship.requirements',
+            'attr' => ['disabled' => 'disabled']
+        ]);
+        $this->field('instructions', [
+            'type' => 'text',
+            'fieldName' => 'scholarship.instructions',
+            'visible' => ['view' => true, 'add' => false, 'edit' => false]
+        ]);
+        $this->field('comments');
+    }
+
+    public function setupLoanFields($entity = null)
+    {
+        $this->field('interest_rate', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.loan.interest_rate',
+            'attr' => ['label' => __('Interest Rate').' (%)']
+        ]);
+        $this->field('interest_rate_type', [
+            'type' => 'disabled',
+            'entity' => $entity
+        ]);
+        $this->field('scholarship_payment_frequency_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.loan.payment_frequency.name',
+            'attr' => ['label' => __('Payment Frequency')]
+        ]);
+        $this->field('loan_term', [
+            'type' => 'disabled',
+            'entity' => $entity
+        ]);
+    }
+
+    public function addCurrencySuffix($label)
+    {
+        return __($label) . ' (' . $this->currency . ')';
     }
 }
