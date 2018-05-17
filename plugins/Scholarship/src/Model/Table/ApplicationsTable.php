@@ -247,6 +247,9 @@ class ApplicationsTable extends ControllerActionTable
                 ]
             ]);
 
+        // auto_contain_fields
+        $extra['auto_contain_fields'] = ['Scholarships' => ['code']];
+
         // sort
         $sortList = ['Assignees.first_name', 'Scholarships.name', 'Applicants.openemis_no', 'Applicants.first_name', 'Applicants.date_of_birth'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -475,11 +478,6 @@ class ApplicationsTable extends ControllerActionTable
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
-    }
-
-    public function onGetCode(Event $event, Entity $entity)
-    {
-        return $entity->scholarship->code;
     }
 
     public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
