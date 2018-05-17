@@ -10,6 +10,7 @@ class ApplicantsDirectoryController extends PageController
     {
         parent::initialize();
         $this->loadModel('Scholarship.ApplicantsDirectory');
+        $this->loadComponent('User.User');
         $this->Page->loadElementsFromTable($this->ApplicantsDirectory);
     }
 
@@ -48,10 +49,7 @@ class ApplicantsDirectoryController extends PageController
             'options' => []
         ]);
 
-        $page->exclude(['username', 'password','first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'email', 'date_of_death','address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'nationality_id', 'photo_content', 'external_reference', 'is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status', 'preferred_language', 'last_login']);
-
         $page->addNew('name')->setDisplayFrom('name');
-
         $page->move('name')->after('openemis_no');
         $page->move('date_of_birth')->after('name');
     }
