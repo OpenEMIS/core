@@ -162,7 +162,7 @@ class ApplicationsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add']['url'])) {
-            $extra['toolbarButtons']['add']['url']['controller'] = 'ApplicantsDirectory';
+            $extra['toolbarButtons']['add']['url']['controller'] = 'UsersDirectory';
             $extra['toolbarButtons']['add']['url']['action'] = 'index';
             $extra['toolbarButtons']['add']['attr']['title'] = __('Apply');
             unset($extra['toolbarButtons']['add']['url'][0]);
@@ -312,7 +312,7 @@ class ApplicationsTable extends ControllerActionTable
         if (isset($extra['toolbarButtons']['back']['url'])) {
             $extra['toolbarButtons']['back']['url'] = [
                 'plugin' => 'Scholarship',
-                'controller' => 'ApplicantsDirectory',
+                'controller' => 'UsersDirectory',
                 'action' => 'index'
             ];
         }
