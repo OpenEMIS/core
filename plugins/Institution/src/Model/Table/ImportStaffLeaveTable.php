@@ -122,14 +122,6 @@ class ImportStaffLeaveTable extends AppTable
         $data[$columnOrder]['data'][] = [__('Staff Leave Type Id'), __('Workflow'), $translatedReadableCol, $translatedCol];
 
         if (!$workflowResult->isEmpty()) {
-            // default value to set to open
-            $data[$columnOrder]['data'][] = [
-                __('N/A'),
-                __('N/A'),
-                __('Default'),
-                0
-            ];
-
             $modelData = $workflowResult->toArray();
 
             foreach ($modelData as $row) {
