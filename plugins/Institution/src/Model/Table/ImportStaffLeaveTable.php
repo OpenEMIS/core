@@ -180,7 +180,7 @@ class ImportStaffLeaveTable extends AppTable
         $tempRow['institution_id'] = $this->institutionId;
         $tempRow['staff_id'] = $this->staffId;
 
-        $filterIdCondition = [$this->WorkflowsFilters->aliasField('filter_id') => $tempRow['staff_leave_type_id']];
+        $filterIdCondition = [$this->WorkflowSteps->aliasField('id') => $tempRow['status_id']];
 
         // find workflow for the specific staff leave type
         $filterStepsQuery = $this->Workflows
@@ -193,27 +193,20 @@ class ImportStaffLeaveTable extends AppTable
                 [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
                 [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
             )
-            ->where([$filterIdCondition]);
+            ->where([$this->WorkflowsFilters->aliasField('filter_id') => $tempRow['staff_leave_type_id']]);
 
         $filterStepsResult = $filterStepsQuery->all();
 
         if ($filterStepsResult->isEmpty()) {
-            // if specific staff leave type cannot be found
-            // override the existing where condition, and find with apply to all filter (0)
+            // if specific staff leave type cannot be found, override the existing where condition, and find with apply to all filter (0)
             $result = $filterStepsQuery
                 ->where($filterIdCondition, [], true)
-                ->where([
-                    $this->WorkflowsFilters->aliasField('filter_id') => 0,
-                    $this->WorkflowSteps->aliasField('id') => $tempRow['status_id']
-                ])
+                ->where([$this->WorkflowsFilters->aliasField('filter_id') => 0])
                 ->all();
         } else {
-            // if specific staff leave type can be found
-            // use the query to find if the steps existed in the workflow
+            // if specific staff leave type can be found, use the query to find if the steps existed in the workflow
             $result = $filterStepsQuery
-                ->where([
-                    $this->WorkflowSteps->aliasField('id') => $tempRow['status_id']
-                ])
+                ->where($filterIdCondition)
                 ->all();
         }
 
