@@ -115,7 +115,7 @@ class ImportStaffLeaveTable extends AppTable
                 [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
             )
             ->all();
-            
+
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 4;
         $data[$columnOrder]['data'][] = [__('Staff Leave Type Id'), __('Workflow'), $translatedReadableCol, $translatedCol];
@@ -182,7 +182,7 @@ class ImportStaffLeaveTable extends AppTable
                 ])
                 ->all();
         } else {
-            // if specific staff leave type vsn be found
+            // if specific staff leave type can be found
             // use the query to find if the steps existed in the workflow
             $result = $filterStepsQuery
                 ->where([
