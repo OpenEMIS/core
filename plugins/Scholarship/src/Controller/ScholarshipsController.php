@@ -96,6 +96,8 @@ class ScholarshipsController extends AppController
                 $query->where([$model->aliasField('security_user_id') => $applicantId]);
             } else if ($model->hasField('student_id')) {
                 $query->where([$model->aliasField('student_id') => $applicantId]);
+            } else if ($model->hasField('applicant_id')) {
+                $query->where([$model->aliasField('applicant_id') => $applicantId]);
             }
         }
     }
