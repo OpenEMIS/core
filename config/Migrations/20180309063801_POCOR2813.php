@@ -349,6 +349,63 @@ class POCOR2813 extends AbstractMigration
         ];
         $this->insert('workflow_statuses_steps', $workflowStatusesStepsData);
 
+        // workflow_transitions
+        $this->table('workflow_transitions')->rename('z_2813_workflow_transitions');
+
+        $table = $this->table('workflow_transitions', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains specific action executed by users to transit from one step to another'
+        ]);
+
+        $table
+            ->addColumn('comment', 'text', [
+                'default' => null,
+                'limit' => null,
+                'null' => true,
+            ])
+            ->addColumn('prev_workflow_step_name', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false,
+            ])
+            ->addColumn('workflow_step_name', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false,
+            ])
+            ->addColumn('workflow_action_name', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false,
+            ])
+            ->addColumn('workflow_model_id', 'integer', [
+                'comment' => 'links to workflow_models.id',
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+            ])
+            ->addColumn('model_reference', 'char', [
+                'default' => null,
+                'limit' => 64,
+                'null' => false
+            ])
+            ->addColumn('created_user_id', 'integer', [
+                'default' => null,
+                'limit' => 11,
+                'null' => false,
+            ])
+            ->addColumn('created', 'datetime', [
+                'default' => null,
+                'limit' => null,
+                'null' => false,
+            ])
+            ->addIndex('workflow_model_id')
+            ->addIndex('model_reference')
+            ->addIndex('created_user_id')
+            ->create();
+
+        $this->execute('INSERT INTO `workflow_transitions` SELECT * FROM `z_2813_workflow_transitions`');
+
         // scholarships
         $table = $this->table('scholarships', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -1651,6 +1708,10 @@ class POCOR2813 extends AbstractMigration
 
         // delete workflow_transitions
         $this->execute("DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = " . $this->workflowModelId);
+
+        // workflow_transitions
+        $this->execute('DROP TABLE workflow_transitions');
+        $this->table('z_2813_workflow_transitions')->rename('workflow_transitions');
 
         $this->dropTable('scholarships');
         $this->dropTable('scholarship_financial_assistance_types');
