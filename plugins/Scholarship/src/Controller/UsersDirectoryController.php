@@ -9,14 +9,9 @@ class UsersDirectoryController extends PageController
     public function initialize()
     {
         parent::initialize();
-<<<<<<< HEAD:plugins/Scholarship/src/Controller/UsersDirectoryController.php
         $this->loadModel('Scholarship.UsersDirectory');
-        $this->Page->loadElementsFromTable($this->UsersDirectory);
-=======
-        $this->loadModel('Scholarship.ApplicantsDirectory');
         $this->loadComponent('User.User');
-        $this->Page->loadElementsFromTable($this->ApplicantsDirectory);
->>>>>>> ef67a37a852b71bed8645f1392ed6fe617f4f06a:plugins/Scholarship/src/Controller/ApplicantsDirectoryController.php
+        $this->Page->loadElementsFromTable($this->UsersDirectory);
     }
 
     public function beforeFilter(Event $event)
