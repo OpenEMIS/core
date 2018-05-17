@@ -425,11 +425,11 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('date_application_open', 'date', [
+            ->addColumn('application_open_date', 'date', [
                 'default' => null,
                 'null' => false
             ])
-            ->addColumn('date_application_close', 'date', [
+            ->addColumn('application_close_date', 'date', [
                 'default' => null,
                 'null' => false
             ])
