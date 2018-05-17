@@ -142,7 +142,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                         'name',
                         'description',
                         'maximum_award_amount',
-                        'total_amount',
                         'bond',
                         'requirements',
                         'instructions',
@@ -189,6 +188,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 'FinancialAssistanceTypes',
                 'Loans.PaymentFrequencies'
             ]]);
+            $entity->scholarship_id = $scholarshipId;
             $entity->scholarship = $scholarshipEntity;
             $entity->applicant_id = $this->Auth->user('id');
         }
@@ -215,7 +215,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                         'name',
                         'description',
                         'maximum_award_amount',
-                        'total_amount',
                         'bond',
                         'requirements',
                         'instructions',
@@ -394,10 +393,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->field('applicant_id', [
             'type' => 'hidden'
         ]);
-        $this->field('academic_period_id', [
-            'type' => 'disabled',
-            'fieldName' => 'scholarship.academic_period.name'
-        ]);
         $this->field('financial_assistance_type_id', [
             'type' => 'readonly',
             'entity' => $entity
@@ -405,6 +400,10 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->field('scholarship_id', [
             'type' => 'readonly',
             'entity' => $entity
+        ]);
+         $this->field('academic_period_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.academic_period.name'
         ]);
         $this->field('description', [
             'type' => 'text',
