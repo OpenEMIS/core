@@ -702,16 +702,16 @@ class ApplicationsTable extends ControllerActionTable
             $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
         }
 
-        $this->field('academic_period_id', [
-            'type' => 'disabled',
-            'fieldName' => 'scholarship.academic_period.name'
-        ]);
         $this->field('financial_assistance_type_id', [
             'entity' => $entity
         ]);
         $this->field('scholarship_id', [
             'type' => 'string', // required in view because composite primary key is set to hidden by default
             'entity' => $entity
+        ]);
+        $this->field('academic_period_id', [
+            'type' => 'disabled',
+            'fieldName' => 'scholarship.academic_period.name'
         ]);
         $this->field('description', [
             'type' => 'text',
@@ -723,7 +723,6 @@ class ApplicationsTable extends ControllerActionTable
             'visible' => $isLoan,
             'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')]
         ]);
-        $this->field('comments');
         $this->field('maximum_award_amount', [
             'type' => 'disabled',
             'fieldName' => 'scholarship.maximum_award_amount',
@@ -751,6 +750,7 @@ class ApplicationsTable extends ControllerActionTable
             'fieldName' => 'scholarship.instructions',
             'visible' => ['view' => true, 'add' => false, 'edit' => false]
         ]);
+        $this->field('comments');
     }
 
     public function setupLoanFields($entity = null)
