@@ -66,16 +66,16 @@ class ImportStaffLeaveTable extends AppTable
     public function onImportPopulateStaffLeaveTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $order = [$lookedUpTable->aliasField('name')];
-        $selectFields = [
-            $lookedUpTable->aliasField('name'),
-            $lookedUpTable->aliasField($lookupColumn)
-        ];
 
         $result = $lookedUpTable
             ->find('all')
-            ->select($selectFields)
-            ->order($order)
+            ->select([
+                $lookedUpTable->aliasField('name'),
+                $lookedUpTable->aliasField($lookupColumn)
+            ])
+            ->order([
+                $lookedUpTable->aliasField('name')
+            ])
             ->all();
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -96,7 +96,6 @@ class ImportStaffLeaveTable extends AppTable
     public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        // $order = [$lookedUpTable->aliasField('name')];
 
         $workflowResult = $this->Workflows
             ->find()
@@ -115,6 +114,10 @@ class ImportStaffLeaveTable extends AppTable
                 [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
                 [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
             )
+            ->order([
+                $this->Workflows->aliasField('name'),
+                $lookupModel.'.category'
+            ])
             ->all();
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
