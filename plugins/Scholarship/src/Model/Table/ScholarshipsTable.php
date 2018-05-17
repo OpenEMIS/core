@@ -37,7 +37,6 @@ class ScholarshipsTable extends ControllerActionTable
 
         $this->hasOne('Loans', ['className' => 'Scholarship.Loans', 'foreignKey' => 'scholarship_id' , 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->hasMany('AttachmentTypes', ['className' => 'Scholarship.AttachmentTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Applications', ['className' => 'Scholarship.Applications', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -55,6 +54,16 @@ class ScholarshipsTable extends ControllerActionTable
             'foreignKey' => 'scholarship_id',
             'targetForeignKey' => 'education_field_of_study_id',
             'through' => 'Scholarship.ScholarshipsFieldOfStudies',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+        $this->belongsToMany('AttachmentTypes', [
+            'className' => 'Scholarship.AttachmentTypes',
+            'joinTable' => 'scholarships_scholarship_attachment_types',
+            'foreignKey' => 'scholarship_id',
+            'targetForeignKey' => 'scholarship_attachment_type_id',
+            'through' => 'Scholarship.ScholarshipsScholarshipAttachmentTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -159,8 +168,6 @@ class ScholarshipsTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-        $this->setupTabElements();
-        $this->setOverviewHeader($entity);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -189,8 +196,6 @@ class ScholarshipsTable extends ControllerActionTable
         }
 
         $this->setupFields($entity);
-        $this->setupTabElements();
-        $this->setOverviewHeader($entity);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -416,13 +421,6 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
     }
 
-    public function setupTabElements()
-    {
-        $tabElements = $this->ScholarshipTabs->getScholarshipTabs();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
-    }
-
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -438,11 +436,6 @@ class ScholarshipsTable extends ControllerActionTable
         }
 
         return $buttons;
-    }
-
-    public function setOverviewHeader($entity)
-    {
-        $this->controller->set('contentHeader', $entity->name. ' - ' .__('Overview'));
     }
 
     public function getBondOptions($maxYears)

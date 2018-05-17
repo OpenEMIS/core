@@ -1485,6 +1485,12 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Scholarship'],
                     'selected' => ['Scholarships.Applications', 'UsersDirectory.index', 'UsersDirectory.view', 'Scholarships.Identities.index', 'Scholarships.Identities.view', 'Scholarships.Nationalities.index', 'Scholarships.Nationalities.view', 'Scholarships.Contacts.index', 'Scholarships.Contacts.view', 'Scholarships.Guardians.index', 'Scholarships.Guardians.view', 'Scholarships.Histories', 'ScholarshipApplicationInstitutionChoices.index', 'ScholarshipApplicationInstitutionChoices.view', 'ScholarshipApplicationInstitutionChoices.add', 'ScholarshipApplicationInstitutionChoices.edit', 'ScholarshipApplicationInstitutionChoices.delete', 'ScholarshipApplicationAttachments.index', 'ScholarshipApplicationAttachments.view', 'ScholarshipApplicationAttachments.add', 'ScholarshipApplicationAttachments.edit', 'ScholarshipApplicationAttachments.delete']
                 ],
+                'ScholarshipRecipients.index' => [
+                    'title' => 'Recipients',
+                    'parent' => 'Administration.Scholarships',
+                    'params' => ['plugin' => 'Scholarship'],
+                    'selected' => ['ScholarshipRecipients.index', 'ScholarshipRecipients.view', 'ScholarshipRecipients.edit']
+                ],
 
             'Textbooks.Textbooks' => [
                 'title' => 'Textbooks',
