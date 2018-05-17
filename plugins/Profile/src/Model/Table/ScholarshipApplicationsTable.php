@@ -117,7 +117,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         if ($extra['toolbarButtons']->offsetExists('add')) {
             $extra['toolbarButtons']['add']['url'] = [
                 'plugin' => 'Profile',
-                'controller' => 'ScholarshipDirectories',
+                'controller' => 'ScholarshipsDirectory',
                 'action' => 'index'
             ];
         }
