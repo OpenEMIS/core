@@ -29,17 +29,15 @@ class ImportStaffLeaveTable extends AppTable
         $this->Workflows = TableRegistry::get('Workflow.Workflows');
         $this->WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-        $this->StaffLeaveTypes = TableRegistry::get('Staff.StaffLeaveTypes');
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        $events['Model.Navigation.breadcrumb'] = ['callable' => 'onGetBreadcrumb', 'priority' => 15];
         $events['Model.import.onImportPopulateStaffLeaveTypesData'] = 'onImportPopulateStaffLeaveTypesData';
         $events['Model.import.onImportPopulateWorkflowStepsData'] = 'onImportPopulateWorkflowStepsData';
-        // $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
+        $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
     }
 
@@ -55,21 +53,13 @@ class ImportStaffLeaveTable extends AppTable
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        // $plugin = $toolbarButtons['back']['url']['plugin'];
-        // $controller = $toolbarButtons['back']['url']['controller'];
-        // if ($plugin == 'Directory' || $plugin == 'Profile') {
-        //     $toolbarButtons['back']['url']['action'] = 'StaffLeave';
-        // } elseif ($plugin == 'Staff') {
-        //     $toolbarButtons['back']['url']['action'] = 'StaffLeave';
-        // }
-    }
-
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
-        $crumbTitle = $this->getHeader($this->alias());
-        $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
+        // $institutionId = $request->param('institutionId') ? $this->_table->paramsDecode($request->param('institutionId'))['id'] : $request->session()->read('Institution.Institutions.id');
+        // $staffUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
+        // $personaUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->paramsEncode(['id' => $persona->id])];
+        // $Navigation->substituteCrumb('Imports', 'Staff', $staffUrl);
+        // $Navigation->substituteCrumb($persona->name, $persona->name, $personaUrl);
     }
 
     public function onImportPopulateStaffLeaveTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
@@ -114,8 +104,7 @@ class ImportStaffLeaveTable extends AppTable
                 'workflow_name' => $this->Workflows->aliasField('name'),
                 'workflow_step_id' => $lookedUpTable->aliasField('id'),
                 'workflow_step_name' => $lookedUpTable->aliasField('name'),
-                'leave_type_id' => $this->StaffLeaveTypes->aliasField('id'),
-                'leave_type_name' => $this->StaffLeaveTypes->aliasField('name')
+                'workflow_filter_id' => $this->WorkflowsFilters->aliasField('filter_id')
             ])
             ->matching('WorkflowModels', function ($q) {
                 return $q->where(['WorkflowModels.model' => 'Institution.StaffLeave']);
@@ -125,12 +114,8 @@ class ImportStaffLeaveTable extends AppTable
                 [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
                 [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
             )
-            ->leftJoin(
-                [$this->StaffLeaveTypes->alias() => $this->StaffLeaveTypes->table()],
-                [$this->StaffLeaveTypes->aliasField('id = ') . $this->WorkflowsFilters->aliasField('filter_id')]
-            )
             ->all();
-
+            
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 4;
         $data[$columnOrder]['data'][] = [__('Staff Leave Type Id'), __('Workflow'), $translatedReadableCol, $translatedCol];
@@ -139,7 +124,7 @@ class ImportStaffLeaveTable extends AppTable
             $modelData = $workflowResult->toArray();
 
             foreach ($modelData as $row) {
-                $leaveTypeId = is_null($row->leave_type_id) ? 0 : $row->leave_type_id;
+                $leaveTypeId = ($row->workflow_filter_id == 0) ? __('Apply To All') : $row->workflow_filter_id;
 
                 $data[$columnOrder]['data'][] = [
                     $leaveTypeId,
@@ -189,24 +174,24 @@ class ImportStaffLeaveTable extends AppTable
         if ($filterStepsResult->isEmpty()) {
             // if specific staff leave type cannot be found
             // override the existing where condition, and find with apply to all filter (0)
-            $filterStepsCount = $filterStepsQuery
+            $result = $filterStepsQuery
                 ->where($filterIdCondition, [], true)
                 ->where([
                     $this->WorkflowsFilters->aliasField('filter_id') => 0,
                     $this->WorkflowSteps->aliasField('id') => $tempRow['status_id']
                 ])
-                ->count();
+                ->all();
         } else {
             // if specific staff leave type vsn be found
             // use the query to find if the steps existed in the workflow
-            $filterStepsCount = $filterStepsQuery
+            $result = $filterStepsQuery
                 ->where([
                     $this->WorkflowSteps->aliasField('id') => $tempRow['status_id']
                 ])
-                ->count();
+                ->all();
         }
 
-        if ($filterStepsCount == 0) {
+        if ($result->isEmpty()) {
             $rowInvalidCodeCols['status_id'] = __('Workflow step and staff leave type mismatch');
             return false;
         }
