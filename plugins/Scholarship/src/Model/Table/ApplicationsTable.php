@@ -725,7 +725,6 @@ class ApplicationsTable extends ControllerActionTable
             'visible' => $isLoan,
             'attr' => ['label' => $this->addCurrencySuffix('Requested Amount')]
         ]);
-        $this->field('comments');
         $this->field('maximum_award_amount', [
             'type' => 'disabled',
             'fieldName' => 'scholarship.maximum_award_amount',
@@ -753,6 +752,7 @@ class ApplicationsTable extends ControllerActionTable
             'fieldName' => 'scholarship.instructions',
             'visible' => ['view' => true, 'add' => false, 'edit' => false]
         ]);
+        $this->field('comments');
     }
 
     public function setupLoanFields($entity = null)
