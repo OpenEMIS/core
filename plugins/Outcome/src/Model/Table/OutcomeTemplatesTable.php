@@ -127,7 +127,6 @@ class OutcomeTemplatesTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
-
         } else if ($action == 'edit') {
             $academicPeriodId = $attr['entity']->academic_period_id;
             $attr['type'] = 'readonly';
@@ -150,7 +149,6 @@ class OutcomeTemplatesTable extends ControllerActionTable
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
-
         } else if ($action == 'edit') {
             $gradeId = $attr['entity']->education_grade_id;
             $programmeId = $this->EducationGrades->get($gradeId)->education_programme_id;
