@@ -27,7 +27,8 @@ class ApplicationInstitutionChoicesTable extends AppTable
         return $validator
             ->requirePresence('country_id')
             ->add('end_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'start_date', true]
+                'rule' => ['compareDateReverse', 'start_date', true],
+                'message' => __('End Date should not be earlier than Start Date')
             ])
             ->add('estimated_cost', 'validateDecimal', [
                 'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
