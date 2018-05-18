@@ -44,18 +44,44 @@ class ImportStaffLeaveTable extends AppTable
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
-        if (!is_null($persona)) {
+        $session = $request->session();
+        $staffName = '';
+
+        if (!empty($persona)) {
             $this->staffId = $persona->id;
+            $staffName = $persona->name;
         } elseif (!is_null($request->query('user_id'))) {
             $this->staffId = $request->query('user_id');
-        } else {
-            $session = $request->session();
-            if ($session->check('Staff.Staff.id')) {
-                $this->staffId = $session->read('Staff.Staff.id');
-            }
+            $Users = TableRegistry::get('Security.Users');
+            $UserEntity = $Users
+                ->find()
+                ->select([
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('middle_name'),
+                    $Users->aliasField('third_name'),
+                    $Users->aliasField('last_name'),
+                    $Users->aliasField('preferred_name'),
+                ])
+                ->where([$Users->aliasField('id') => $this->staffId])
+                ->first();
+            $staffName = $UserEntity->name;
+        } elseif ($session->check('Staff.Staff.id')) {
+            $this->staffId = $session->read('Staff.Staff.id');
+            $Users = TableRegistry::get('Security.Users');
+            $UserEntity = $Users
+                ->find()
+                ->select([
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('middle_name'),
+                    $Users->aliasField('third_name'),
+                    $Users->aliasField('last_name'),
+                    $Users->aliasField('preferred_name'),
+                ])
+                ->where([$Users->aliasField('id') => $this->staffId])
+                ->first();
+            $staffName = $UserEntity->name;
         }
 
-        $session = $this->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
@@ -63,7 +89,7 @@ class ImportStaffLeaveTable extends AppTable
         $staffUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'institutionId' => $this->paramsEncode(['id' => $this->institutionId])];
         $personaUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->paramsEncode(['id' => $this->staffId])];
         $Navigation->substituteCrumb('Imports', 'Staff', $staffUrl);
-        $Navigation->substituteCrumb($persona->name, $persona->name, $personaUrl);
+        $Navigation->substituteCrumb($staffName, $staffName, $personaUrl);
     }
 
     public function onImportPopulateStaffLeaveTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
