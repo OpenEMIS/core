@@ -1,4 +1,4 @@
-### [3.26.0] - 
+### [3.26.0] - 2018-05-18
 
 ### [3.25.0] - 2018-04-20
 - Added Column sorting to Administration > Education Structure > Grade Subjects
