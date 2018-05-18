@@ -31,11 +31,18 @@
             $attr['options'] = [];
         }
 
-        $selectOptions = ['' => '-- ' . __('Select ' . $label) . ' --'];
-        if (array_key_exists('addAll', $attr) && $attr['addAll'] && !empty($attr['options'])) {
-            $selectOptions['-1'] = '-- ' . __('Add all ' . $label) . ' --';
+        $selectOptions = [];
+        if (!empty($attr['options'])) {
+            $selectOptions[] = '-- ' . __('Select ' . $label) . ' --';
+
+            if (array_key_exists('addAll', $attr) && $attr['addAll'] && !empty($attr['options'])) {
+                $selectOptions['-1'] = '-- ' . __('Add all ' . $label) . ' --';
+            }
+
+            $selectOptions += $attr['options'];
+        } else {
+            $selectOptions[] = __('No options');
         }
-        $selectOptions += $attr['options'];
 
         $_inputOptions = [
             'type' => 'select',
