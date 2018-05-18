@@ -180,7 +180,7 @@ class CommentsController extends PageController
             'History' => ['text' => __('History')]
         ];
 
-        foreach ($tabElements as $action => &$obj) {
+        foreach ($tabElements as $action => $obj) {
             if (in_array($action, [$pluralPlugin, 'Accounts'])) {
                 $url = [
                     'plugin' => $plugin,
@@ -210,7 +210,7 @@ class CommentsController extends PageController
                     $url['queryString'] = $encodedUserAndNationalityId;
                 }
             }
-            $obj['url'] = $url;
+            $tabElements[$action]['url'] = $url;
         }
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);

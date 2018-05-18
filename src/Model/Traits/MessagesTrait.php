@@ -1987,8 +1987,8 @@ trait MessagesTrait
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
                 ],
-                'date_application_close' => [
-                    'ruleCompareDateReverse' => 'Application End date should not be earlier than Application Start date'
+                'application_close_date' => [
+                    'ruleCompareDateReverse' => 'Application Close Date should not be earlier than Application Open Date'
                 ]
             ],
             'AttachmentTypes' => [
