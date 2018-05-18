@@ -10,6 +10,7 @@ class RecipientActivityStatusesTable extends ControllerActionTable
     	$this->table('scholarship_recipient_activity_statuses');
         parent::initialize($config);
 
+        $this->hasMany('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => '  scholarship_recipient_activity_status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('RecipientActivities', ['className' => 'Scholarship.RecipientActivities', 'foreignKey' => '	scholarship_recipient_activity_status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
