@@ -381,27 +381,27 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSelectedAttachmentType(Event $event, array $attr, $action, Request $request)
+    public function addEditOnSelectAttachmentType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if ($action == 'view') {
-            $attr['visible'] = false;
-        } elseif ($action == 'add' || $action == 'edit') {
-            $AttachmentTypesTable = TableRegistry::get('Scholarship.AttachmentTypes');
-            $attachmentTypeOptions = $AttachmentTypesTable->getList()->toArray();
+        $fieldKey = 'attachment_types';
 
-            if (isset($attachmentTypeOptions) && !empty($attachmentTypeOptions)) {
-                $attachmentTypeOptions = ['' => '-- ' . __('Select Attachment Type') . ' --'] + $attachmentTypeOptions;
-            } else {
-                $attachmentTypeOptions = ['' => $this->getMessage('general.select.noOptions')];
-            }
-
-            $attr['type'] = 'chosenSelect';
-            $attr['attr']['multiple'] = false;
-            $attr['attr']['onchange'] = "$('#reload').val('addAttachmentType').click();";
-            $attr['options'] = $attachmentTypeOptions;
+        if (!isset($data[$this->alias()][$fieldKey])) {
+            $data[$this->alias()][$fieldKey] = [];
         }
 
-        return $attr;
+        if (isset($data[$this->alias()]['attachment_type_id'])) {
+            $selectedAttachmentType = $data[$this->alias()]['attachment_type_id'];
+            $attachmentTypeEntity = $this->AttachmentTypes->get($selectedAttachmentType);
+
+            $data[$this->alias()][$fieldKey][] = [
+                'id' => $attachmentTypeEntity->id,
+                'name' => $attachmentTypeEntity->name,
+                'visible' => $attachmentTypeEntity->visible,
+                '_joinData' => [
+                    'is_mandatory' => 0
+                ]
+            ];
+        }
     }
 
     public function onGetCustomAttachmentTypeElement(Event $event, $action, $entity, $attr, $options = [])
@@ -456,56 +456,55 @@ class ScholarshipsTable extends ControllerActionTable
                 $requestData = $this->request->data;
 
                 if (isset($requestData[$this->alias()]['attachment_types'])) {
-                    $arrayAttachmentTypes = $requestData[$this->alias()]['attachment_types'];
+                    foreach ($requestData[$this->alias()]['attachment_types'] as $key => $obj) {
+                        $arrayAttachmentTypes[] = $obj;
+                    }
                 }
             }
 
-            if ($entity->has('selected_attachment_type') && !empty($entity->selected_attachment_type)) {
-                $selectedAttachmentType = $entity->selected_attachment_type;
-                    
-                $AttachmentTypesTable = TableRegistry::get('Scholarship.AttachmentTypes');
-                $attachmentTypeEntity = $AttachmentTypesTable->get($selectedAttachmentType);
+            // options
+            $attachmentTypeOptions = $this->AttachmentTypes->getList()->toArray();
 
-                $arrayAttachmentTypes[] = [
-                    'id' => $attachmentTypeEntity->id,
-                    'name' => $attachmentTypeEntity->name,
-                    'visible' => $attachmentTypeEntity->visible,
-                    '_joinData' => [
-                        'is_mandatory' => 0
-                    ]
-                ];
+            if (!empty($arrayAttachmentTypes)) {
+                foreach ($arrayAttachmentTypes as $key => $obj) {
+                    $fieldPrefix = $attr['model'] . '.attachment_types.' . $cellCount++;
+                    $joinDataPrefix = $fieldPrefix . '._joinData';
+
+                    $cellData = $obj['name'];
+                    $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
+                    $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
+                    $cellData .= $form->hidden($fieldPrefix.".visible", ['value' => $obj['visible']]);
+
+                    $mandatoryInputOptions = [
+                        'type' => 'select',
+                        'label' => false,
+                        'options' => $this->mandatoryOptions,
+                        'default' => $obj['_joinData']['is_mandatory'],
+                        'value' => $obj['_joinData']['is_mandatory']
+                    ];
+
+                    $mandatoryCellData = $form->input("$joinDataPrefix.is_mandatory", $mandatoryInputOptions);
+
+                    $rowData = [];
+                    $rowData[] = $cellData;
+                    $rowData[] = $mandatoryCellData;
+                    $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+
+                    $tableCells[] = $rowData;
+
+                    // remove selected option from dropdown list
+                    if (isset($attachmentTypeOptions[$obj['id']])) {
+                        unset($attachmentTypeOptions[$obj['id']]);
+                    }
+                }
             }
 
-            foreach ($arrayAttachmentTypes as $key => $obj) {
-                $fieldPrefix = $attr['model'] . '.attachment_types.' . $cellCount++;
-                $joinDataPrefix = $fieldPrefix . '._joinData';
-
-                $cellData = $obj['name'];
-                $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
-                $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
-                $cellData .= $form->hidden($fieldPrefix.".visible", ['value' => $obj['visible']]);
-
-                $mandatoryInputOptions = [
-                    'type' => 'select',
-                    'label' => false,
-                    'options' => $this->mandatoryOptions,
-                    'default' => $obj['_joinData']['is_mandatory']
-                ];
-                $mandatoryCellData = $form->input("$joinDataPrefix.is_mandatory", $mandatoryInputOptions);
-
-                $rowData = [];
-                $rowData[] = $cellData;
-                $rowData[] = $mandatoryCellData;
-                $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
-
-                $tableCells[] = $rowData;
-            }
-
+            $attr['options'] = $attachmentTypeOptions;
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
         }
 
-        return $event->subject()->renderElement('Scholarship.attachment_types', ['attr' => $attr]);
+        return $event->subject()->renderElement('../ControllerAction/table_with_dropdown', ['attr' => $attr]);
     }
 
     public function setupFields($entity = null)
@@ -553,14 +552,9 @@ class ScholarshipsTable extends ControllerActionTable
             'type' => 'select',
             'after' => 'total_amount'
         ]);
-        $this->field('selected_attachment_type', [
-            'attr' => ['label' => __('Add Attachment Type')],
-            'after' => 'instructions',
-            'entity' => $entity
-        ]);
-        $this->field('attachment_types', [
+        $this->field('attachment_type_id', [
             'type' => 'custom_attachment_type',
-            'after' => 'selected_attachment_type'
+            'after' => 'instructions'
         ]);
     }
 
