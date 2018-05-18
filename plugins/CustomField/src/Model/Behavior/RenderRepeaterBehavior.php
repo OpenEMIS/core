@@ -276,6 +276,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $event->subject()->viewSet('datepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                    $cellValue =$attr['value'];
                                     unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
@@ -324,6 +325,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $event->subject()->viewSet('timepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
+                                    $cellValue =$attr['value'];
                                     unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
