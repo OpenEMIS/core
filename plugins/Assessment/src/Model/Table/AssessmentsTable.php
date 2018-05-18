@@ -275,11 +275,7 @@ class AssessmentsTable extends ControllerActionTable {
                     ]
                     )
                     ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
-                    ->toArray()
-                    ;
-
-                    // pr($programmeOptions);
-                    // die;
+                    ->toArray();
 
                 $attr['options'] = $programmeOptions;
                 $attr['onChangeReload'] = 'changeEducationProgrammeId';
