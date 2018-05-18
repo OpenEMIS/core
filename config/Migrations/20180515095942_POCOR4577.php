@@ -99,7 +99,10 @@ class POCOR4577 extends AbstractMigration
         $this->insert('locale_contents', $localeData);
 
         // security_functions
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= 153');
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3016'); // Leave id
+        $order = $row['order'];
+
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= ' . $order);
         
         $securityData = [
             [
@@ -138,7 +141,10 @@ class POCOR4577 extends AbstractMigration
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'No staff id found'");
 
         // security_functions
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3016'); // Leave id
+        $order = $row['order'];
+
         $this->execute("DELETE FROM `security_functions` WHERE `id` = 3043");
-        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 153");
+        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= " . $order);
     }
 }
