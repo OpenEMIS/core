@@ -1190,10 +1190,15 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addColumn('scholarship_recipient_activity_status_id', 'integer', [ 
-                'null' => true,
-                'limit' => 11,
-                'comment' => 'links to scholarship_recipient_activity_statuses.id'
+            ->addColumn('prev_recipient_activity_status_name', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false
+            ])
+            ->addColumn('recipient_activity_status_name', 'string', [
+                'default' => null,
+                'limit' => 100,
+                'null' => false
             ])
             ->addColumn('recipient_id', 'integer', [
                 'null' => false,
@@ -1223,7 +1228,6 @@ class POCOR2813 extends AbstractMigration
                 'default' => null,
                 'null' => false
             ])
-            ->addIndex('scholarship_recipient_activity_status_id')
             ->addIndex('recipient_id')
             ->addIndex('scholarship_id')
             ->addIndex('modified_user_id')
