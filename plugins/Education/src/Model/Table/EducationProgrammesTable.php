@@ -130,6 +130,34 @@ class EducationProgrammesTable extends ControllerActionTable
 			->order(['EducationCycles.order' => 'ASC', $this->aliasField('order') => 'ASC']);
 	}
 
+	public function findAvailableProgrammes(Query $query, array $options)
+	{
+		$EducationCycles = TableRegistry::get('Education.EducationCycles');
+		$EducationLevels = TableRegistry::get('Education.EducationLevels');
+
+		return $query
+			->find('visible')
+			->innerJoin(
+                [$EducationCycles->alias() => $EducationCycles->table()],
+                [
+                    $EducationCycles->aliasField('id =') . $this->aliasField('education_cycle_id'),
+                    $EducationCycles->aliasField('visible') => 1
+                ]
+            )
+            ->innerJoin(
+                [$EducationLevels->alias() => $EducationLevels->table()],
+                [
+                    $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
+                    $EducationLevels->aliasField('visible') => 1
+                ]
+            )
+            ->order([
+            	$EducationLevels->aliasField('order') => 'ASC',
+            	$EducationCycles->aliasField('order') => 'ASC',
+                $this->aliasField('order') => 'ASC'
+            ]);
+	}
+
 	public function getSelectOptions()
 	{
 		//Return all required options and their key

@@ -42,6 +42,7 @@ class StaffLeaveTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffLeave']);
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
