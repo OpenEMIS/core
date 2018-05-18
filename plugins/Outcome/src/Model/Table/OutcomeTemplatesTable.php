@@ -144,9 +144,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         if ($action == 'add') {
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                ->find('visible')
-                ->contain('EducationCycles')
-                ->order(['EducationCycles.order', $EducationProgrammes->aliasField('order')])
+                ->find('availableProgrammes')
                 ->toArray();
 
             $attr['type'] = 'select';
