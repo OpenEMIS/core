@@ -35,6 +35,7 @@ class PageController extends BaseController
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 3];
         $events['Controller.Page.onRenderBinary'] = 'onRenderBinary';
         return $events;
     }
@@ -61,12 +62,17 @@ class PageController extends BaseController
         }
     }
 
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->initializeToolbars();
+    }
+
     public function onRenderBinary(Event $event, Entity $entity, PageElement $element)
     {
         $attributes = $element->getAttributes();
         $type = isset($attributes['type']) ? $attributes['type'] : 'binary';
-        $attributes = $element->getAttributes();
-        $fileNameField = $attributes['fileNameField'];
+        $fileNameField = isset($attributes['fileNameField']) ? $attributes['fileNameField'] : 'file_name';
         $fileContentField = $element->getKey();
         if ($type == 'image') {
             if ($this->request->param('_ext') == 'json') {
@@ -180,6 +186,163 @@ class PageController extends BaseController
                     }
                     break;
             }
+        }
+    }
+
+    private function initializeToolbars()
+    {
+        $request = $this->request;
+        $currentAction = $request->action;
+
+        $page = $this->Page;
+        $data = $page->getData();
+
+        $actions = $page->getActions();
+        $disabledActions = [];
+        foreach ($actions as $action => $value) {
+            if ($value == false) {
+                $disabledActions[] = $action;
+            }
+        }
+
+        switch ($currentAction) {
+            case 'index':
+                if (!in_array('add', $disabledActions)) {
+                    $page->addToolbar('add', [
+                        'type' => 'element',
+                        'element' => 'Page.button',
+                        'data' => [
+                            'title' => __('Add'),
+                            'url' => ['action' => 'add'],
+                            'iconClass' => 'fa kd-add',
+                            'linkOptions' => ['title' => __('Add')]
+                        ],
+                        'options' => []
+                    ]);
+                }
+                if (!in_array('search', $disabledActions)) {
+                    $page->addToolbar('search', [
+                        'type' => 'element',
+                        'element' => 'Page.search',
+                        'data' => [],
+                        'options' => []
+                    ]);
+                }
+
+                break;
+            case 'view':
+                $primaryKey = !is_array($data) ? $data->primaryKey : $data['primaryKey']; // $data may be Entity or array
+
+                $page->addToolbar('back', [
+                    'type' => 'element',
+                    'element' => 'Page.button',
+                    'data' => [
+                        'title' => __('Back'),
+                        'url' => ['action' => 'index'],
+                        'iconClass' => 'fa kd-back',
+                        'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
+                    ],
+                    'options' => []
+                ]);
+
+                if (!in_array('edit', $disabledActions)) {
+                    $page->addToolbar('edit', [
+                        'type' => 'element',
+                        'element' => 'Page.button',
+                        'data' => [
+                            'title' => __('Edit'),
+                            'url' => ['action' => 'edit', $primaryKey],
+                            'iconClass' => 'fa kd-edit',
+                            'linkOptions' => ['title' => __('Edit')]
+                        ],
+                        'options' => []
+                    ]);
+                }
+
+                if (!in_array('delete', $disabledActions)) {
+                    $page->addToolbar('remove', [
+                        'type' => 'element',
+                        'element' => 'Page.button',
+                        'data' => [
+                            'title' => __('Delete'),
+                            'url' => ['action' => 'delete', $primaryKey],
+                            'iconClass' => 'fa kd-trash',
+                            'linkOptions' => ['title' => __('Delete')]
+                        ],
+                        'options' => []
+                    ]);
+                }
+                break;
+            case 'add':
+                $page->addToolbar('back', [
+                    'type' => 'element',
+                    'element' => 'Page.button',
+                    'data' => [
+                        'title' => __('Back'),
+                        'url' => ['action' => 'index'],
+                        'iconClass' => 'fa kd-back',
+                        'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
+                    ],
+                    'options' => []
+                ]);
+                break;
+            case 'edit':
+                $primaryKey = !is_array($data) ? $data->primaryKey : $data['primaryKey']; // $data may be Entity or array
+
+                $page->addToolbar('view', [
+                    'type' => 'element',
+                    'element' => 'Page.button',
+                    'data' => [
+                        'title' => __('View'),
+                        'url' => ['action' => 'view', $primaryKey],
+                        'iconClass' => 'fa kd-back',
+                        'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
+                    ],
+                    'options' => []
+                ]);
+
+                $page->addToolbar('list', [
+                    'type' => 'element',
+                    'element' => 'Page.button',
+                    'data' => [
+                        'title' => __('List'),
+                        'url' => ['action' => 'index'],
+                        'iconClass' => 'fa kd-lists',
+                        'linkOptions' => ['title' => __('List')]
+                    ],
+                    'options' => []
+                ]);
+                break;
+            case 'delete':
+                $primaryKey = !is_array($data) ? $data->primaryKey : $data['primaryKey']; // $data may be Entity or array
+
+                $page->addToolbar('view', [
+                    'type' => 'element',
+                    'element' => 'Page.button',
+                    'data' => [
+                        'title' => __('Back'),
+                        'url' => ['action' => 'view', $primaryKey],
+                        'iconClass' => 'fa kd-back',
+                        'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
+                    ],
+                    'options' => []
+                ]);
+
+                $page->addToolbar('list', [
+                    'type' => 'element',
+                    'element' => 'Page.button',
+                    'data' => [
+                        'title' => __('List'),
+                        'url' => ['action' => 'index'],
+                        'iconClass' => 'fa kd-lists',
+                        'linkOptions' => ['title' => __('List')]
+                    ],
+                    'options' => []
+                ]);
+                break;
+            
+            default:
+                break;
         }
     }
 }

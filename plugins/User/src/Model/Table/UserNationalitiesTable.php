@@ -106,21 +106,26 @@ class UserNationalitiesTable extends ControllerActionTable {
 		return $validator->requirePresence('security_user_id', false);
 	}
 
-	private function setupTabElements() {
-		$options = [
-			'userRole' => '',
-		];
+	private function setupTabElements() 
+    {
+        if ($this->controller->name == 'Scholarships') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } else {
+        	$options = [
+    			'userRole' => '',
+    		];
 
-		switch ($this->controller->name) {
-			case 'Students':
-				$options['userRole'] = 'Students';
-				break;
-			case 'Staff':
-				$options['userRole'] = 'Staff';
-				break;
-		}
+    		switch ($this->controller->name) {
+    			case 'Students':
+    				$options['userRole'] = 'Students';
+    				break;
+    			case 'Staff':
+    				$options['userRole'] = 'Staff';
+    				break;
+    		}
 
-        $tabElements = $this->controller->getUserTabElements($options);
+            $tabElements = $this->controller->getUserTabElements($options);
+        }
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
