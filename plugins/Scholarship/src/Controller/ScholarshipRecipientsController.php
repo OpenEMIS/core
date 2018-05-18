@@ -115,7 +115,8 @@ class ScholarshipRecipientsController extends PageController
             ->setControlType('select')
             ->setOptions($nextStatusOptions);
 
-        $page->addNew('comments', ['type' => 'text']);
+        $page->addNew('comments', ['length' => ''])
+            ->setControlType('textarea');
 
         $page->move('scholarship_recipient_activity_status_id')->first();
         $page->move('openemis_no')->after('scholarship_recipient_activity_status_id');
