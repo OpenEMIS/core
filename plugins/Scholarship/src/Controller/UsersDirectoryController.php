@@ -63,22 +63,25 @@ class UsersDirectoryController extends PageController
         $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
 
         $page->addToolbar('back', []); // to fix the order of the buttons
-        $page->addToolbar('Apply', [
-            'type' => 'element',
-            'element' => 'Page.button',
-            'data' => [
-                'title' => __('Apply'),
-                'url' => [
-                    'plugin' => 'Scholarship',
-                    'controller' => 'Scholarships',
-                    'action' => 'Applications',
-                    'add',
-                    'queryString' => $queryString
+
+        if ($this->AccessControl->check(['Scholarships', 'Applications', 'add'])) { 
+            $page->addToolbar('Apply', [
+                'type' => 'element',
+                'element' => 'Page.button',
+                'data' => [
+                    'title' => __('Apply'),
+                    'url' => [
+                        'plugin' => 'Scholarship',
+                        'controller' => 'Scholarships',
+                        'action' => 'Applications',
+                        'add',
+                        'queryString' => $queryString
+                    ],
+                    'iconClass' => 'fa kd-add',
+                    'linkOptions' => ['title' => __('Apply')]
                 ],
-                'iconClass' => 'fa kd-add',
-                'linkOptions' => ['title' => __('Apply')]
-            ],
-            'options' => []
-        ]);
+                'options' => []
+            ]);
+        }
     }
 }
