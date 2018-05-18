@@ -41,7 +41,7 @@
 
             $selectOptions += $attr['options'];
         } else {
-            $selectOptions[] = __('No options');
+            $selectOptions[] = $this->Label->get('general.select.noOptions');
         }
 
         $_inputOptions = [
