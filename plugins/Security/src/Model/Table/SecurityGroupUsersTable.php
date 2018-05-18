@@ -423,9 +423,7 @@ class SecurityGroupUsersTable extends AppTable {
             	Log::write('debug', 'Creator Id: ' . $createdUserId);
 
             	// Set assignee as creator only when no roles is configured in workflow step and category of the workflow step is To Do
-            	if (!is_null($category) && $category == self::TO_DO) {
-            		$assigneeId = $createdUserId;
-            	}
+        		$assigneeId = $createdUserId;
             }
 		}
 
