@@ -1164,7 +1164,7 @@ class InstitutionsController extends AppController
                     $persona = $model->get($ids);
                 }
             } elseif (isset($requestQuery['user_id'])) {
-                // POCOR-4387 - to check if Users association existed in model - for staff leave import
+                // POCOR-4577 - to check if Users association existed in model - for staff leave import
                 if ($model->association('Users')) {
                     $persona = $model->Users->get($requestQuery['user_id']);
                 } else {
