@@ -11,15 +11,12 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 class InstitutionCasesTable extends ControllerActionTable
 {
     use OptionsTrait;
-
-    // Workflow Steps - category
-    const TO_DO = 1;
-    const IN_PROGRESS = 2;
-    const DONE = 3;
 
     public function initialize(array $config)
     {
@@ -181,8 +178,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $registryAlias = $linkedRecordModel->registryAlias();
         $feature = $WorkflowRules->getFeatureByRegistryAlias($registryAlias);
 
-        $statusId = 0;
-        $assigneeId = 0;
+        $statusId = WorkflowBehavior::STATUS_OPEN;
+        $assigneeId = WorkflowBehavior::AUTO_ASSIGN;
         $institutionId = $linkedRecordEntity->has('institution_id') ? $linkedRecordEntity->institution_id : 0;
         $recordId = $linkedRecordEntity->id;
 
@@ -301,7 +298,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
-        $doneStatus = self::DONE;
+        $doneStatus = WorkflowSteps::DONE;
 
         $query
             ->select([

@@ -492,7 +492,7 @@ EOT;
     <div class="form-input">%s</div>
 </div>
 EOT;
-            if ($field['attributes']['value']) {
+            if (isset($field['attributes']['value']) && $field['attributes']['value']) {
                 if (isset($field['attributes']['type']) && $field['attributes']['type'] == 'image') {
                     $link = '<div class="table-thumb"><img src="%s" style="max-width:60px;background-color:%s;"></div>';
                     $backgroundColour = isset($field['attributes']['backgroundColor']) ? $field['attributes']['backgroundColor'] : '#FFFFFF';
