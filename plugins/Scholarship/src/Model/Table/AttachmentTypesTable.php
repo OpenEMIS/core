@@ -17,7 +17,7 @@ class AttachmentTypesTable extends ControllerActionTable
             'joinTable' => 'scholarships_scholarship_attachment_types',
             'foreignKey' => 'scholarship_attachment_type_id',
             'targetForeignKey' => 'scholarship_id',
-            'through' => 'Scholarship.AttachmentTypes',
+            'through' => 'Scholarship.ScholarshipsScholarshipAttachmentTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -32,15 +32,12 @@ class AttachmentTypesTable extends ControllerActionTable
         $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : null;
 
         $ApplicationAttachmentsTable = TableRegistry::get('Scholarship.ApplicationAttachments');
-        $existingAttachmentTypeIds = $ApplicationAttachmentsTable
-            ->find('list', [
-                'keyField' => 'scholarship_attachment_type_id',
-                'valueField' => 'scholarship_attachment_type_id'
-            ])
+        $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()      
             ->where([
                 $ApplicationAttachmentsTable->aliasField('applicant_id') => $applicantId,
                 $ApplicationAttachmentsTable->aliasField('scholarship_id') => $scholarshipId
             ])
+            ->extract('scholarship_attachment_type_id')
             ->toArray();
 
         $ScholarshipsScholarshipAttachmentTypesTable = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
@@ -53,10 +50,13 @@ class AttachmentTypesTable extends ControllerActionTable
                     $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_attachment_type_id = ') . $this->aliasField('id'),
                     $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_id') => $scholarshipId
                 ]
-            )
-            ->where([
+            );
+
+        if($existingAttachmentTypeIds) {
+            $query->where([
                 $this->aliasField('id NOT IN') => $existingAttachmentTypeIds
             ]);
+        }
 
         return $query;
     }
