@@ -1317,6 +1317,7 @@ class RestSurveyComponent extends Component
                     // must reset to null
                     $extra['default_value'] = null;
                     $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]", 'RepeatBlock', $this->Field->alias().$index];
+                    $extra['hint'] = null; // reset hint
 
                     $fieldTypeFunction = strtolower($field->field_type);
                     if (method_exists($this, $fieldTypeFunction)) {
