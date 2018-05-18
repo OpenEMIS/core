@@ -803,8 +803,10 @@ class ApplicationsTable extends ControllerActionTable
     public function onApproveScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
+        $RecipientActivities = TableRegistry::get('Scholarship.RecipientActivities');
         $RecipientActivityStatuses = TableRegistry::get('Scholarship.RecipientActivityStatuses');
-        $recipientActivityStatusId = $RecipientActivityStatuses->find()
+        
+        $recipientActivityStatusEntity = $RecipientActivityStatuses->find()
             ->where([
                 $RecipientActivityStatuses->aliasField('international_code') => 'APPLICATION_APPROVED'
             ])
@@ -814,16 +816,27 @@ class ApplicationsTable extends ControllerActionTable
         $newRecipient = [
             'recipient_id' => $entity->applicant_id,
             'scholarship_id' => $entity->scholarship_id,
-            'scholarship_recipient_activity_status_id' => $recipientActivityStatusId
+            'scholarship_recipient_activity_status_id' => $recipientActivityStatusEntity->id
+        ];
+
+        $newActivity = [
+            'date' => date("Y-m-d"),
+            'recipient_id' => $entity->applicant_id,
+            'scholarship_id' => $entity->scholarship_id,
+            'prev_recipient_activity_status_name' => 'New',
+            'recipient_activity_status_name' => $recipientActivityStatusEntity->name
         ];
 
         $newEntity = $ScholarshipRecipients->newEntity($newRecipient);
+        $newActivityEntity = $RecipientActivities->newEntity($newActivity);
         $ScholarshipRecipients->save($newEntity);
+        $RecipientActivities->save($newActivityEntity);
     }
 
     public function onWithdrawScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
+        $RecipientActivities = TableRegistry::get('Scholarship.RecipientActivities');
 
         $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
         $existingRecipient = [
@@ -834,6 +847,11 @@ class ApplicationsTable extends ControllerActionTable
         try {
             $existingEntity = $ScholarshipRecipients->get($existingRecipient);
             $ScholarshipRecipients->delete($existingEntity);
+            
+            $RecipientActivities->deleteAll([
+                'recipient_id' => $entity->applicant_id,
+                'scholarship_id' => $entity->scholarship_id 
+            ]);
 
         } catch (RecordNotFoundException $e) {
             Log::write('debug', $e->getMessage());
