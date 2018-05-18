@@ -132,6 +132,10 @@ class POCOR4577 extends AbstractMigration
         
         // locale_contents
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Administration - Record Imported'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Selected value does not match with Staff Leave Type'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Staff Leave Type Id'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'No active institution'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'No staff id found'");
 
         // security_functions
         $this->execute("DELETE FROM `security_functions` WHERE `id` = 3043");
