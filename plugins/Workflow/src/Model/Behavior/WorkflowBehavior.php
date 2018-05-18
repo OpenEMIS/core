@@ -24,6 +24,7 @@ class WorkflowBehavior extends Behavior
     use OptionsTrait;
 
     const AUTO_ASSIGN = -1;
+    const STATUS_OPEN = 0;
 
     protected $_defaultConfig = [
         'model' => null,
@@ -236,7 +237,7 @@ class WorkflowBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) {
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) {
             $this->setStatusAsOpen($entity);
         }
 
