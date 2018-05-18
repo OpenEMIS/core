@@ -437,7 +437,28 @@ class ScholarshipsTable extends ControllerActionTable
             $tableHeaders = [__('Name') , __('Mandatory'), ''];
             $tableCells = [];
 
-            $arrayTypes = [];
+            $arrayAttachmentTypes = [];
+            if ($this->request->is(['get'])) {
+                // edit
+                if (!$entity->isNew() && $entity->has('attachment_types')) {
+                    foreach ($entity->attachment_types as $key => $obj) {
+                        $arrayAttachmentTypes[] = [
+                            'id' => $obj->id,
+                            'name' => $obj->name,
+                            'visible' => $obj->visible,
+                            '_joinData' => [
+                                'is_mandatory' => $obj->_joinData->is_mandatory
+                            ]
+                        ];
+                    }
+                }
+            } elseif ($this->request->is(['post', 'put'])) {
+                $requestData = $this->request->data;
+
+                if (isset($requestData[$this->alias()]['attachment_types'])) {
+                    $arrayAttachmentTypes = $requestData[$this->alias()]['attachment_types'];
+                }
+            }
 
             if ($entity->has('selected_attachment_type') && !empty($entity->selected_attachment_type)) {
                 $selectedAttachmentType = $entity->selected_attachment_type;
@@ -445,23 +466,30 @@ class ScholarshipsTable extends ControllerActionTable
                 $AttachmentTypesTable = TableRegistry::get('Scholarship.AttachmentTypes');
                 $attachmentTypeEntity = $AttachmentTypesTable->get($selectedAttachmentType);
 
-                $arrayTypes[] = [
+                $arrayAttachmentTypes[] = [
                     'id' => $attachmentTypeEntity->id,
-                    'name' => $attachmentTypeEntity->name
+                    'name' => $attachmentTypeEntity->name,
+                    'visible' => $attachmentTypeEntity->visible,
+                    '_joinData' => [
+                        'is_mandatory' => 0
+                    ]
                 ];
             }
 
-            foreach ($arrayTypes as $key => $obj) {
+            foreach ($arrayAttachmentTypes as $key => $obj) {
                 $fieldPrefix = $attr['model'] . '.attachment_types.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
 
-                $cellData = $attachmentTypeEntity->name;
-                $cellData .= $form->hidden($fieldPrefix.".scholarship_attachment_type_id", ['value' => $obj['id']]);
+                $cellData = $obj['name'];
+                $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
+                $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
+                $cellData .= $form->hidden($fieldPrefix.".visible", ['value' => $obj['visible']]);
 
                 $mandatoryInputOptions = [
                     'type' => 'select',
                     'label' => false,
-                    'options' => $this->mandatoryOptions
+                    'options' => $this->mandatoryOptions,
+                    'default' => $obj['_joinData']['is_mandatory']
                 ];
                 $mandatoryCellData = $form->input("$joinDataPrefix.is_mandatory", $mandatoryInputOptions);
 
