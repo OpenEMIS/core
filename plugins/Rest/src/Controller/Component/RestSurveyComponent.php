@@ -843,7 +843,6 @@ class RestSurveyComponent extends Component
         $extra['bindType'] = $bindType;
         $extra['hint'] = !empty($validationHint) ? $validationHint : null;
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
-        unset($extra['hint']);
     }
 
     private function number($field, $parentNode, $instanceId, $extra)
@@ -906,7 +905,6 @@ class RestSurveyComponent extends Component
         $extra['bindType'] = $bindType;
         $extra['hint'] = !empty($validationHint) ? $validationHint : null;
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
-        unset($extra['hint']);
     }
 
     private function decimal($field, $parentNode, $instanceId, $extra)
@@ -972,7 +970,6 @@ class RestSurveyComponent extends Component
         $extra['bindType'] = $bindType;
         $extra['hint'] = !empty($validationHint) ? $validationHint : null;
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
-        unset($extra['hint']);
     }
 
     private function textarea($field, $parentNode, $instanceId, $extra)
@@ -1214,7 +1211,6 @@ class RestSurveyComponent extends Component
                 }
             }
         }
-        unset($extra['hint']);
     }
 
 
@@ -1246,7 +1242,6 @@ class RestSurveyComponent extends Component
         $extra['constraint'] = !empty($constraint) ? $constraint : null;
 
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
-        unset($extra['hint']);
     }
 
     private function time($field, $parentNode, $instanceId, $extra)
