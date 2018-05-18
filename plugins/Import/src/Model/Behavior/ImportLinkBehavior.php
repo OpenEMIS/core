@@ -47,7 +47,6 @@ class ImportLinkBehavior extends Behavior
             $customButton['url'] = $this->_table->url('index');
             $customButton['url']['action'] = $this->config('import_model');
             $customButton['url'][0] = 'add';
-
             $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
         }
     }
