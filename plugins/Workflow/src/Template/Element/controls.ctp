@@ -41,8 +41,6 @@
                     }
                     echo $this->Form->input('filter', $inputOptions);
                 }
-                // pr($dataNamedGroup);
-                // die;
 
                 if (!empty($categoryOptions)) {
                     $inputOptions = [
