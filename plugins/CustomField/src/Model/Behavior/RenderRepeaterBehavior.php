@@ -276,13 +276,12 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $event->subject()->viewSet('datepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
-                                    $cellValue =$attr['value'];
+                                    $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                     unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
                                 case 'TIME':
                                     $answerValue = !is_null($answerObj['time_value']) ? $answerObj['time_value'] : null;
-
                                     $_options = [
                                         'defaultTime' => false
                                     ];
@@ -325,7 +324,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $event->subject()->viewSet('timepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
-                                    $cellValue =$attr['value'];
+                                    $cellValue = !is_null($answerValue) ? $this->_table->formatTime($answerValue) : '';
                                     unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
