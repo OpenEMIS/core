@@ -178,7 +178,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $registryAlias = $linkedRecordModel->registryAlias();
         $feature = $WorkflowRules->getFeatureByRegistryAlias($registryAlias);
 
-        $statusId = 0;
+        $statusId = WorkflowBehavior::STATUS_OPEN;
         $assigneeId = WorkflowBehavior::AUTO_ASSIGN;
         $institutionId = $linkedRecordEntity->has('institution_id') ? $linkedRecordEntity->institution_id : 0;
         $recordId = $linkedRecordEntity->id;

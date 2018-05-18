@@ -252,15 +252,12 @@ class AssessmentsTable extends ControllerActionTable {
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
-
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                    ->find('visible')
-                    ->contain(['EducationCycles'])
-                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->find('availableProgrammes')
                     ->toArray();
 
                 $attr['options'] = $programmeOptions;
