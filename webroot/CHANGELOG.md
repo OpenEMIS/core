@@ -1,4 +1,8 @@
 ### [3.26.0] - 2018-05-18
+- Developed Scholarship feature under Profile and Administration
+- Implemented import feature for Staff Leave under Staff > Career > Leave
+- Added Nationality and Identity Type fields when adding a new Guardian under Students > Guardian
+- Fixed a bug where the Assignee is Unassigned upon creation of Cases under Institution > Cases
 
 ### [3.25.0] - 2018-04-20
 - Added Column sorting to Administration > Education Structure > Grade Subjects
