@@ -25,12 +25,12 @@ class CustomModule extends Entity
         'Student.StudentSurveys' => [
             'filter' => null,
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','DROPDOWN']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','DATE','TIME']
         ],
         'InstitutionRepeater.RepeaterSurveys' => [
             'filter' => null,
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','DROPDOWN']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','DATE','TIME']
         ],
 
         // Infrastructure modules will share the same supported field types, if there is changes, please modify all the types of the infrastructure modules
