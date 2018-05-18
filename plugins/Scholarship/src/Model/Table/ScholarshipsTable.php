@@ -72,6 +72,7 @@ class ScholarshipsTable extends ControllerActionTable
 
         $this->fieldOfStudySelection = $this->getSelectOptions($this->aliasField('field_of_study_selection'));
         $this->interestRateOptions = $this->getSelectOptions($this->aliasField('interest_rate'));
+        $this->mandatoryOptions = $this->getSelectOptions('general.yesno');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
 
@@ -200,7 +201,13 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['FinancialAssistanceTypes','FieldOfStudies', 'Loans.PaymentFrequencies']);
+        $query
+            ->contain([
+                'FinancialAssistanceTypes',
+                'FieldOfStudies',
+                'AttachmentTypes',
+                'Loans.PaymentFrequencies'
+            ]);
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -374,6 +381,105 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onUpdateFieldSelectedAttachmentType(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'view') {
+            $attr['visible'] = false;
+        } elseif ($action == 'add' || $action == 'edit') {
+            $AttachmentTypesTable = TableRegistry::get('Scholarship.AttachmentTypes');
+            $attachmentTypeOptions = $AttachmentTypesTable->getList()->toArray();
+
+            if (isset($attachmentTypeOptions) && !empty($attachmentTypeOptions)) {
+                $attachmentTypeOptions = ['' => '-- ' . __('Select Attachment Type') . ' --'] + $attachmentTypeOptions;
+            } else {
+                $attachmentTypeOptions = ['' => $this->getMessage('general.select.noOptions')];
+            }
+
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['attr']['onchange'] = "$('#reload').val('addAttachmentType').click();";
+            $attr['options'] = $attachmentTypeOptions;
+        }
+
+        return $attr;
+    }
+
+    public function onGetCustomAttachmentTypeElement(Event $event, $action, $entity, $attr, $options = [])
+    {
+        if ($action == 'index') {
+            // No implementation yet
+        } elseif ($action == 'view') {
+            $tableHeaders = [__('Name') , __('Mandatory')];
+            $tableCells = [];
+
+            if ($entity->has('attachment_types')) {
+                foreach ($entity->attachment_types as $key => $obj) {
+                    $rowData = [];
+                    $rowData[] = $obj->name;
+                    $isMandatory = $obj->_joinData->is_mandatory;
+                    if ($isMandatory) {
+                        $rowData[] = "<i class='fa fa-check'></i>";
+                    } else {
+                        $rowData[] = "<i class='fa fa-close'></i>";
+                    }
+
+                    $tableCells[] = $rowData;
+                }
+            }
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+        } elseif ($action == 'add' || $action == 'edit') {
+            $form = $event->subject()->Form;
+            $form->unlockField($attr['model'] . '.attachment_types');
+
+            $cellCount = 0;
+            $tableHeaders = [__('Name') , __('Mandatory'), ''];
+            $tableCells = [];
+
+            $arrayTypes = [];
+
+            if ($entity->has('selected_attachment_type') && !empty($entity->selected_attachment_type)) {
+                $selectedAttachmentType = $entity->selected_attachment_type;
+                    
+                $AttachmentTypesTable = TableRegistry::get('Scholarship.AttachmentTypes');
+                $attachmentTypeEntity = $AttachmentTypesTable->get($selectedAttachmentType);
+
+                $arrayTypes[] = [
+                    'id' => $attachmentTypeEntity->id,
+                    'name' => $attachmentTypeEntity->name
+                ];
+            }
+
+            foreach ($arrayTypes as $key => $obj) {
+                $fieldPrefix = $attr['model'] . '.attachment_types.' . $cellCount++;
+                $joinDataPrefix = $fieldPrefix . '._joinData';
+
+                $cellData = $attachmentTypeEntity->name;
+                $cellData .= $form->hidden($fieldPrefix.".scholarship_attachment_type_id", ['value' => $obj['id']]);
+
+                $mandatoryInputOptions = [
+                    'type' => 'select',
+                    'label' => false,
+                    'options' => $this->mandatoryOptions
+                ];
+                $mandatoryCellData = $form->input("$joinDataPrefix.is_mandatory", $mandatoryInputOptions);
+
+                $rowData = [];
+                $rowData[] = $cellData;
+                $rowData[] = $mandatoryCellData;
+                $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+
+                $tableCells[] = $rowData;
+            }
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+        }
+
+        return $event->subject()->renderElement('Scholarship.attachment_types', ['attr' => $attr]);
+    }
+
     public function setupFields($entity = null)
     {
         $this->field('scholarship_financial_assistance_type_id', [
@@ -418,6 +524,15 @@ class ScholarshipsTable extends ControllerActionTable
         $this->field('bond', [
             'type' => 'select',
             'after' => 'total_amount'
+        ]);
+        $this->field('selected_attachment_type', [
+            'attr' => ['label' => __('Add Attachment Type')],
+            'after' => 'instructions',
+            'entity' => $entity
+        ]);
+        $this->field('attachment_types', [
+            'type' => 'custom_attachment_type',
+            'after' => 'selected_attachment_type'
         ]);
     }
 
