@@ -24,6 +24,7 @@ class WorkflowBehavior extends Behavior
     use OptionsTrait;
 
     const AUTO_ASSIGN = -1;
+    const STATUS_OPEN = 0;
 
     protected $_defaultConfig = [
         'model' => null,
