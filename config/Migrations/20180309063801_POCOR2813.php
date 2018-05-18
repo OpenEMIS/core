@@ -1297,6 +1297,18 @@ class POCOR2813 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
+        $this->insert('scholarship_recipient_activity_statuses', [
+            'name' => 'Application Approved',
+            'order' => 1,
+            'visible' => 1,
+            'editable' => 0,
+            'default' => 0,
+            'international_code' => 'APPLICATION_APPROVED',
+            'national_code' => 'APPLICATION_APPROVED',
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
+
         // scholarship_recipient_payment_structures
         $table = $this->table('scholarship_recipient_payment_structures', [
             'collation' => 'utf8mb4_unicode_ci',
