@@ -461,7 +461,11 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $value = $attr['value'];
+            if (array_key_exists('value', $attr)) {
+                $value = $attr['value'];
+            } else {
+                $value = $data->{$attr['field']};
+            }
         } elseif ($action == 'edit') {
             $options['type'] = 'text';
             $options['disabled'] = 'disabled';

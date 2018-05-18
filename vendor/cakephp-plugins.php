@@ -47,6 +47,7 @@ return [
         'Restful' => $baseDir . '/vendor/korditpteltd/kd-cakephp-restful/',
         'Risk' => $baseDir . '/plugins/Risk/',
         'Rubric' => $baseDir . '/plugins/Rubric/',
+        'Scholarship' => $baseDir . '/plugins/Scholarship/',
         'SSO' => $baseDir . '/vendor/korditpteltd/kd-cakephp-sso/',
         'Security' => $baseDir . '/plugins/Security/',
         'Staff' => $baseDir . '/plugins/Staff/',
