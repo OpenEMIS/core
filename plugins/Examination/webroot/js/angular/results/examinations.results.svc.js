@@ -210,7 +210,9 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 filter: "number",
                 hide: visibility,
                 valueGetter: function(params) {
-                    var value = params.data[params.colDef.field];
+                    if(params.data != undefined){
+                        var value = params.data[params.colDef.field];
+                    }
 
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
@@ -249,7 +251,9 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 }
             },
             valueGetter: function(params) {
-                var value = params.data[params.colDef.field];
+                if(params.data != undefined){
+                    var value = params.data[params.colDef.field];
+                }
 
                 if (!isNaN(parseFloat(value))) {
                     return $filter('number')(value, 2);

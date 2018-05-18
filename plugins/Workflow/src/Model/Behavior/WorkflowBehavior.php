@@ -23,6 +23,9 @@ class WorkflowBehavior extends Behavior
 {
     use OptionsTrait;
 
+    const AUTO_ASSIGN = -1;
+    const STATUS_OPEN = 0;
+
     protected $_defaultConfig = [
         'model' => null,
         'institution_key' => 'institution_id',
@@ -54,7 +57,6 @@ class WorkflowBehavior extends Behavior
             'method' => 'onAssignBack'
         ]
     ];
-
 
     private $controller;
     private $model = null;
@@ -235,11 +237,11 @@ class WorkflowBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) {
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) {
             $this->setStatusAsOpen($entity);
         }
 
-        if (!$entity->has('assignee_id') || ($entity->assignee_id == -1)) {
+        if (!$entity->has('assignee_id') || $entity->assignee_id == self::AUTO_ASSIGN) {
             $this->autoAssignAssignee($entity);
         }
     }
@@ -312,7 +314,10 @@ class WorkflowBehavior extends Behavior
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('assignee_id')) {
+        if ($entity->isNew()) {
+            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+            $WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this->_table);
+        } elseif (!$entity->isNew() && $entity->dirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
@@ -515,17 +520,17 @@ class WorkflowBehavior extends Behavior
                 if (!$transitionResults->isEmpty()) {
                     $transitions = $transitionResults->toArray();
                     foreach ($transitions as $key => $transition) {
-                        $transitionDisplay = '<span class="status past">' . $transition->prev_workflow_step_name . '</span>';
+                        $transitionDisplay = '<span class="status past">' . __($transition->prev_workflow_step_name) . '</span>';
                         $transitionDisplay .= '<span class="transition-arrow"></span>';
                         if (count($transitions) - 1 == $key) {
-                            $transitionDisplay .= '<span class="status highlight">' . $transition->workflow_step_name . '</span>';
+                            $transitionDisplay .= '<span class="status highlight">' . __($transition->workflow_step_name) . '</span>';
                         } else {
-                            $transitionDisplay .= '<span class="status past">' . $transition->workflow_step_name . '</span>';
+                            $transitionDisplay .= '<span class="status past">' . __($transition->workflow_step_name) . '</span>';
                         }
 
                         $rowData = [];
                         $rowData[] = $transitionDisplay;
-                        $rowData[] = $transition->workflow_action_name;
+                        $rowData[] = __($transition->workflow_action_name);
                         $rowData[] = nl2br(htmlspecialchars($transition->comment));
                         $rowData[] = $transition->created_user->name;
                         $rowData[] = $transition->created->format('Y-m-d H:i:s');
@@ -920,7 +925,7 @@ class WorkflowBehavior extends Behavior
             $actionAttr = $attr['entity'];
 
             if ($actionAttr['auto_assign_assignee']) {
-                $assigneeOptions = ['-1' => __('Auto Assign')];
+                $assigneeOptions = [self::AUTO_ASSIGN => __('Auto Assign')];
                 $attr['select'] = false;
             } else {
                 $model = $this->_table;
@@ -1765,7 +1770,7 @@ class WorkflowBehavior extends Behavior
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
                 if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
                     $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
-                    if ($assigneeId == '-1') {
+                    if ($assigneeId == self::AUTO_ASSIGN) {
                         $this->autoAssignAssignee($entity);
                     } else {
                         $entity->assignee_id = $assigneeId;
@@ -1817,11 +1822,14 @@ class WorkflowBehavior extends Behavior
 
     public function workflowAfterTransition(Event $event, $id = null, $requestData)
     {
-        $entity = $this->_table->get($id);
+        // use find instead of get to cater for models with composite keys using a hash id
+        $model = $this->_table;
+
+        $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
         $this->setStatusId($entity, $requestData);
 
         // get the latest entity after status is updated
-        $entity = $this->_table->get($id);
+        $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
         $this->setAssigneeId($entity, $requestData);
     }
 
