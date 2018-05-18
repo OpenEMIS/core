@@ -1991,11 +1991,6 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'Application Close Date should not be earlier than Application Open Date'
                 ]
             ],
-            'AttachmentTypes' => [
-                'name' => [
-                    'ruleUniqueCode' => 'Code must be unique for the same scholarship',
-                ]
-            ],
             'Applications' => [
                 'requested_amount' => [
                     'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
