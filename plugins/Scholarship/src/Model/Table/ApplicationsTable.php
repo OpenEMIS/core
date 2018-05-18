@@ -803,11 +803,18 @@ class ApplicationsTable extends ControllerActionTable
     public function onApproveScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
+        $RecipientActivityStatuses = TableRegistry::get('Scholarship.RecipientActivityStatuses');
+        $recipientActivityStatusId = $RecipientActivityStatuses->find()
+            ->where([
+                $RecipientActivityStatuses->aliasField('international_code') => 'APPLICATION_APPROVED'
+            ])
+            ->first();
 
         $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
         $newRecipient = [
             'recipient_id' => $entity->applicant_id,
-            'scholarship_id' => $entity->scholarship_id
+            'scholarship_id' => $entity->scholarship_id,
+            'scholarship_recipient_activity_status_id' => $recipientActivityStatusId
         ];
 
         $newEntity = $ScholarshipRecipients->newEntity($newRecipient);
