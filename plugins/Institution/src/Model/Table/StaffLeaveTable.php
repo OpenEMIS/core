@@ -81,13 +81,6 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->query('user_id'))) {
-            $session = $this->request->session();
-            if ($session->check('Staff.Staff.id')) {
-                $this->request->query['user_id'] = $session->read('Staff.Staff.id');
-            }
-        }
-
         if (in_array($this->action, ['view', 'edit', 'delete'])) {
             $modelAlias = 'Staff Leave';
             $userType = 'StaffUser';
