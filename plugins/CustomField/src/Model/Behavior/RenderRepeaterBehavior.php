@@ -15,6 +15,7 @@ use ControllerAction\Model\Traits\PickerTrait;
 class RenderRepeaterBehavior extends RenderBehavior {
     use IdGeneratorTrait;
     use PickerTrait;
+
 	public function initialize(array $config) {
         parent::initialize($config);
     }
@@ -32,7 +33,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $debugInfo = $model->alias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
         $value = '';
-        $continue = true;
 
         $fieldType = strtolower($this->fieldTypeCode);
         $customField = $attr['customField'];
@@ -176,7 +176,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
-                                    $continue = true;
                                     break;
                                 case 'NUMBER':
                                     $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
@@ -185,7 +184,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
-                                    $continue = true;
                                     break;
                                 case 'DECIMAL':
                                     $answerValue = !is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null;
@@ -204,7 +202,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     }
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
-                                    $continue = true;
                                     break;
                                 case 'DROPDOWN':
                                     $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
@@ -225,7 +222,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $cellOptions['options'] = $dropdownOptions;
 
                                     $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : $dropdownOptions[$dropdownDefault];
-                                    $continue = true;
                                     break;
                                 case 'TEXTAREA':
                                     $answerValue = !is_null($answerObj['textarea_value']) ? $answerObj['textarea_value'] : null;
@@ -234,18 +230,17 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
-                                    $continue = true;
                                     break;
                                 case 'DATE':
                                     $answerValue = !is_null($answerObj['date_value']) ? $answerObj['date_value'] : null;
 
-                              
                                     $_options = [
                                         'format' => 'dd-mm-yyyy',
                                         'todayBtn' => 'linked',
                                         'orientation' => 'auto',
                                         'autoclose' => true,
                                     ];
+
                                     $attr['date_options'] = $_options;
                                     $attr['id'] = $attr['model'] . '_' . $attr['field'];
 
@@ -276,14 +271,12 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                             $attr['value'] = date('d-m-Y', strtotime($attr['value']));
                                         }
                                     }
-                                        
+
                                     $attr['null'] = !$attr['customField']['is_mandatory'];
 
                                     $event->subject()->viewSet('datepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
-                                    //Need to unset so that it will not effect other Date or Time elements.
-                                    unset($attr['value']);
-                                    $continue = false;
+                                    unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
                                 case 'TIME':
@@ -295,6 +288,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $attr['fieldName'] = $cellPrefix.".".$fieldTypes[$questionType];
                                     $attr['id'] = $attr['model'] . '_' . $attr['field'];
+
                                     if (array_key_exists('fieldName', $attr)) {
                                         $attr['id'] = $this->_domId($attr['fieldName']);
                                     }
@@ -307,7 +301,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     }
 
                                     $attr['time_options'] = array_merge($_options, $attr['time_options']);
-
                                   
                                     if (!array_key_exists('value', $attr)) {
                                         if (!is_null($answerValue)) {
@@ -326,26 +319,26 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                             $attr['time_options']['defaultTime'] = $attr['value'];
                                         }
                                     }
-                                    
 
                                     $attr['null'] = !$attr['customField']['is_mandatory'];
+
                                     $event->subject()->viewSet('timepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
-                                    unset($attr['value']);
-                                    $continue = false;
+                                    unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
                                 default:
                                     break;
                             }
-                            if ($continue) {
+
+                            if (in_array($questionType, ['TEXT', 'NUMBER', 'DECIMAL', 'DROPDOWN', 'TEXTAREA'])) {
                                 $cellInput .= $form->input($cellPrefix.".".$fieldTypes[$questionType], $cellOptions);
                             }
 
                             if ($action == 'view') {
                                 $rowData[$colKey+$colOffset] = $cellValue;
                             } else if ($action == 'edit') {
-                                $rowData[$colKey+$colOffset] = [$cellInput,['style' => 'vertical-align: top']];
+                                $rowData[$colKey+$colOffset] = [$cellInput, ['style' => 'vertical-align: top']];
                             }
                         }
 
@@ -369,7 +362,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
             // Survey Form ID not found
             Log::write('debug', $debugInfo . ': Repeater Survey Form ID is not configured.');
         }
-        //die;
+
         // $attr['attr']['classOptions'] = $classOptions;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
