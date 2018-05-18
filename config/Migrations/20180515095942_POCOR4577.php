@@ -93,6 +93,11 @@ class POCOR4577 extends AbstractMigration
                 'en' => 'No staff id found',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Import Staff Leave',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
 
@@ -139,6 +144,7 @@ class POCOR4577 extends AbstractMigration
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Staff Leave Type Id'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'No active institution'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'No staff id found'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Import Staff Leave'");
 
         // security_functions
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3016'); // Leave id
