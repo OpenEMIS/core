@@ -252,29 +252,12 @@ class AssessmentsTable extends ControllerActionTable {
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
-
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-            $EducationCycles = TableRegistry::get('Education.EducationCycles');
-            $EducationLevels = TableRegistry::get('Education.EducationLevels');
 
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                    ->innerJoin(
-                        [$EducationCycles->alias() => $EducationCycles->table()],
-                        [$EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id')]
-                    )
-                    ->innerJoin(
-                        [$EducationLevels->alias() => $EducationLevels->table()],
-                        [$EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'), $EducationLevels->aliasField('visible')=> 1]
-                    )
-                    ->where(
-                        [$EducationProgrammes->aliasField('visible')=> 1,
-                        $EducationCycles->aliasField('visible')=> 1,
-                        $EducationLevels->aliasField('visible')=> 1
-                    ]
-                    )
-                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->find('availableProgrammes')
                     ->toArray();
 
                 $attr['options'] = $programmeOptions;
