@@ -452,17 +452,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $entity->set('institution_repeaters', $repeatersArray);
     }
 
-    // public function processRepeaterValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
-
-    //     $repeaterSurveys = [];
-    //     // build repeater survey data and answer
-
-    //     $settings['repeaterSurveys'] = $repeaterSurveys;
-    // }
-
-    public function processRepeaterValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         if ($entity->has('institution_repeater_surveys')) {
-            $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
             $fieldKey = 'survey_question_id';
             $formKey = 'survey_form_id';
             $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
@@ -551,11 +542,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                         $answers = [];
                         foreach ($repeaterObj as $questionId => $answerObj) {
-                            $field = $CustomFields->find()
-                            ->where(['id IN' => $questionId])
-                            ->first()
-                            ;
-                            //pr($field);die;
                             // checking to skip insert if is empty
                             $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
                             $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
@@ -569,154 +555,22 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $fieldKey => $questionId
                                 ]);
 
-                                $answerObj['params'] = $field['params'];
-                                $answerObj['is_mandatory'] = $field['is_mandatory'];
-                                $answerObj['field_type'] = $field['field_type'];
-                                $answerObj['unique'] = $field['is_unique'];
                                 $answers[] = $answerObj;
                             }
                         }
+
                         $surveyData['custom_field_values'] = $answers;
-                        $tmp[] = $surveyData;
+                        $surveyEntity = $RepeaterSurveys->newEntity($surveyData, ['validate' => false]);
+                        // save repeater by repeater
+                        if ($RepeaterSurveys->save($surveyEntity)) {
+                        } else {
+                            Log::write('debug', $surveyEntity->errors());
+                        }
                     }
                 }
-                $settings['repeaterValues'] = $tmp;
             }
         }
     }
-    // public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-    //     if ($entity->has('institution_repeater_surveys')) {
-    //         $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
-    //         $fieldKey = 'survey_question_id';
-    //         $formKey = 'survey_form_id';
-    //         $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-    //         $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
-
-    //         $status = $entity->status_id;
-    //         $institutionId = $entity->institution_id;
-    //         $periodId = $entity->academic_period_id;
-    //         $parentFormId = $entity->{$formKey};
-
-    //         foreach ($entity->institution_repeater_surveys as $fieldId => $fieldObj) {
-    //             $formId = $fieldObj[$formKey];
-    //             unset($fieldObj[$formKey]);
-
-    //             // Logic to delete all answers before re-insert
-    //             $repeaterIds = array_keys($fieldObj);
-    //             $originalRepeaterIds = [];
-    //             if ($entity->has('institution_repeaters')) {
-    //                 if (array_key_exists($fieldId, $entity->institution_repeaters)) {
-    //                     $originalRepeaterIds = array_values($entity->institution_repeaters[$fieldId]);
-    //                 }
-    //             }
-
-    //             $surveyIds = [];
-    //             if (!empty($originalRepeaterIds)) {
-    //                 $surveyIds = $RepeaterSurveys
-    //                     ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-    //                     ->where([
-    //                         $RepeaterSurveys->aliasField('status_id') => $status,
-    //                         $RepeaterSurveys->aliasField('institution_id') => $institutionId,
-    //                         $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
-    //                         $RepeaterSurveys->aliasField($formKey) => $formId,
-    //                         $RepeaterSurveys->aliasField('repeater_id IN ') => $originalRepeaterIds
-    //                     ])
-    //                     ->toArray();
-    //             }
-
-    //             if (!empty($surveyIds)) {
-    //                 // always deleted all existing answers before re-insert
-    //                 $RepeaterSurveyAnswers->deleteAll([
-    //                     $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
-    //                 ]);
-    //             }
-
-    //             if (!empty($repeaterIds)) {
-    //                 if (!empty($originalRepeaterIds)) {
-    //                     $missingRepeaters = array_diff($originalRepeaterIds, $repeaterIds);
-    //                     if (!empty($missingRepeaters)) {
-    //                         // if user has remove particular repeater from form, delete away that repeater from database too
-    //                         $RepeaterSurveys->deleteAll([
-    //                             $RepeaterSurveys->aliasField('status_id') => $status,
-    //                             $RepeaterSurveys->aliasField('institution_id') => $institutionId,
-    //                             $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
-    //                             $RepeaterSurveys->aliasField($formKey) => $formId,
-    //                             $RepeaterSurveys->aliasField('repeater_id IN ') => $missingRepeaters
-    //                         ]);
-    //                     }
-    //                 }
-    //             } else {
-    //                 // if user remove all rows from form, delete away all repeater records
-    //                 $RepeaterSurveys->deleteAll([
-    //                     $RepeaterSurveys->aliasField('status_id') => $status,
-    //                     $RepeaterSurveys->aliasField('institution_id') => $institutionId,
-    //                     $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
-    //                     $RepeaterSurveys->aliasField($formKey) => $formId
-    //                 ]);
-    //             }
-    //             // End
-
-    //             foreach ($fieldObj as $repeaterId => $repeaterObj) {
-    //                 if (is_array($repeaterObj)) {
-    //                     $surveyData = [
-    //                         'status_id' => $status,
-    //                         'institution_id' => $institutionId,
-    //                         'academic_period_id' => $periodId,
-    //                         $formKey => $formId,
-    //                         'parent_form_id' => $parentFormId,
-    //                         'repeater_id' => $repeaterId
-    //                     ];
-    //                     // for edit record
-    //                     if (array_key_exists('id', $repeaterObj)) {
-    //                         $surveyData['id'] = $repeaterObj['id'];
-    //                         unset($repeaterObj['id']);
-    //                     }
-    //                     // End
-
-    //                     $answers = [];
-    //                     foreach ($repeaterObj as $questionId => $answerObj) {
-    //                         $field = $CustomFields->find()
-    //                         ->where(['id IN' => $questionId])
-    //                         ->first()
-    //                         ;
-    //                         //pr($field);die;
-    //                         // checking to skip insert if is empty
-    //                         $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
-    //                         $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
-    //                         $decimalValue = isset($answerObj['decimal_value']) && strlen($answerObj['decimal_value']) > 0 ? $answerObj['decimal_value'] : null;
-    //                         $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
-    //                         $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
-    //                         $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
-
-    //                         if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
-    //                             $answerObj = array_merge($answerObj, [
-    //                                 $fieldKey => $questionId
-    //                             ]);
-
-    //                             $answerObj['params'] = $field['params'];
-    //                             $answerObj['is_mandatory'] = $field['is_mandatory'];
-    //                             $answerObj['field_type'] = $field['field_type'];
-    //                             $answerObj['unique'] = $field['is_unique'];
-    //                             $answers[] = $answerObj;
-    //                         }
-    //                     }
-
-    //                     $surveyData['custom_field_values'] = $answers;
-
-    //                     //pr($surveyData);                        
-    //                     $surveyEntity = $RepeaterSurveys->newEntity($surveyData);
-    //                     // save repeater by repeater
-    //                     //pr($surveyEntity);
-    //                     //die;
-    //                     if ($RepeaterSurveys->save($surveyEntity)) {
-    //                     } else {
-    //                         Log::write('debug', $surveyEntity->errors());
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
     // TODO: To implement delete logic for survey relevance
     // public function deleteCustomFieldValues(Event $event, $parentFormId, $deleteFieldIds)

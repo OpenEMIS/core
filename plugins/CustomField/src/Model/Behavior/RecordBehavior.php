@@ -290,7 +290,6 @@ class RecordBehavior extends Behavior
         $model = $this->_table;
         $process = function ($model, $entity) use ($data) {
             try {
-                // pr($entity);die;
                 $errors = $entity->errors();
 
                 $fileErrors = [];
@@ -332,17 +331,6 @@ class RecordBehavior extends Behavior
                         if (array_key_exists($model->alias(), $data)) {
                             if (array_key_exists('custom_table_cells', $data[$model->alias()])) {
                                 $event = $model->dispatchEvent('Render.processTableValues', [$entity, $data, $settings], $model);
-                                if ($event->isStopped()) {
-                                    return $event->result;
-                                }
-                            }
-                        }
-                    }
-
-                    if ($this->_table->hasBehavior('RenderRepeater')) {
-                        if (array_key_exists($model->alias(), $data)) {
-                            if (array_key_exists('institution_repeater_surveys', $data[$model->alias()])) {
-                                $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
                                     return $event->result;
                                 }
@@ -398,47 +386,13 @@ class RecordBehavior extends Behavior
                     // repatch $entity for saving, turn off validation
                     $data[$model->alias()]['custom_field_values'] = $settings['fieldValues'];
                     $data[$model->alias()]['custom_table_cells'] = $settings['tableCells'];
-                    
-
-                    //pr($settings['repeaterValues']->errors());die;
-                    // foreach ($settings['repeaterValues'] as $key => $value) {
-                    //     pr($value->errors());
-                    // }
-                    //die;
-                    // if ($settings['repeaterValues']->errors()) {
-                    //     $repeaterErrors = true;
-                    // }
-                    //die;
 
                     $requestData = $data->getArrayCopy();
                     $entity = $model->patchEntity($entity, $requestData);
                     // End
-                    $repeaterErrors = [];
-                    
-                    $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-                    foreach ($settings['repeaterValues'] as $key => $value) {
-                        $surveyEntity = $RepeaterSurveys->newEntity($value);
-
-                        if($surveyEntity->has('custom_field_values')){
-                            $tmp =[];
-                            foreach ($surveyEntity['custom_field_values'] as $key => $value) {
-                                if($value->errors()){
-                                    $tmp[] = $value;
-                                }
-                            }
-                        }
-                        $repeaterErrors[] = $tmp;
-                        $repeaterSuccess = $RepeaterSurveys->save($surveyEntity);
-                    }
-
-
-                    if($repeaterErrors){
-                        $entity->errors('institution_repeater_surveys', '');
-                    }
-                    
 
                     $result = $model->save($entity);
-                    if ($result && $repeaterSuccess) {
+                    if ($result) {
                         $conn->commit();
                     } else {
                         $conn->rollback();
