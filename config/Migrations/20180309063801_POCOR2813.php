@@ -1984,6 +1984,7 @@ class POCOR2813 extends AbstractMigration
         $this->dropTable('scholarship_payment_frequencies');
         $this->dropTable('scholarship_loans');
         $this->dropTable('scholarship_attachment_types');
+        $this->dropTable('scholarships_scholarship_attachment_types');
         $this->dropTable('scholarship_applications');
         $this->dropTable('scholarship_application_institution_choices');
         $this->dropTable('scholarship_institution_choice_statuses');
