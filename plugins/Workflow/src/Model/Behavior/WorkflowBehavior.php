@@ -237,7 +237,7 @@ class WorkflowBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew() && $entity->status_id == 0) {
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) {
             $this->setStatusAsOpen($entity);
         }
 

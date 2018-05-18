@@ -42,25 +42,6 @@ class ImportStaffLeaveTable extends AppTable
         return $events;
     }
 
-    // public function beforeAction($event)
-    // {
-    //     if (!is_null($this->request->query('user_id'))) {
-    //         $this->staffId = $this->request->query('user_id');
-    //         $Users = TableRegistry::get('Security.Users');
-    //     } else {
-    //         $session = $this->request->session();
-    //         if ($session->check('Staff.Staff.id')) {
-    //             $this->staffId = $session->read('Staff.Staff.id');
-    //             $this->request->query['user_id'] = $this->staffId;
-    //         }
-    //     }
-
-    //     $session = $this->request->session();
-    //     if ($session->check('Institution.Institutions.id')) {
-    //         $this->institutionId = $session->read('Institution.Institutions.id');
-    //     }
-    // }
-
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         if (!is_null($persona)) {

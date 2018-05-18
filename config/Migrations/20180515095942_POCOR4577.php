@@ -99,7 +99,7 @@ class POCOR4577 extends AbstractMigration
         $this->insert('locale_contents', $localeData);
 
         // security_functions
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= 154');
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= 153');
         
         $securityData = [
             [
@@ -114,7 +114,7 @@ class POCOR4577 extends AbstractMigration
                 '_add' => null,
                 '_delete' => null,
                 '_execute' => 'ImportStaffLeave.add|ImportStaffLeave.template|ImportStaffLeave.results|ImportStaffLeave.downloadFailed|ImportStaffLeave.downloadPassed',
-                'order' => 154,
+                'order' => 153,
                 'visible' => 1,
                 'description' => null,
                 'created_user_id' => 1,
@@ -135,6 +135,6 @@ class POCOR4577 extends AbstractMigration
 
         // security_functions
         $this->execute("DELETE FROM `security_functions` WHERE `id` = 3043");
-        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 154");
+        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= 153");
     }
 }
