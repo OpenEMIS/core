@@ -12,6 +12,7 @@ class ScholarshipRecipientsTable extends AppTable
 
         $this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
+        $this->belongsTo('RecipientActivityStatuses', ['className' => 'Scholarship.RecipientActivityStatuses', 'foreignKey' => 'scholarship_recipient_activity_status_id']);
         $this->hasMany('RecipientAcademicStandings', [
             'className' => 'Scholarship.RecipientAcademicStandings',
             'foreignKey' => ['recipient_id', 'scholarship_id'],
