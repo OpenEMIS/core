@@ -99,7 +99,7 @@ class POCOR4577 extends AbstractMigration
         $this->insert('locale_contents', $localeData);
 
         // security_functions
-        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3016'); // Leave id
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 3017'); // Order after Leave
         $order = $row['order'];
 
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= ' . $order);
@@ -117,7 +117,7 @@ class POCOR4577 extends AbstractMigration
                 '_add' => null,
                 '_delete' => null,
                 '_execute' => 'ImportStaffLeave.add|ImportStaffLeave.template|ImportStaffLeave.results|ImportStaffLeave.downloadFailed|ImportStaffLeave.downloadPassed',
-                'order' => 153,
+                'order' => $order,
                 'visible' => 1,
                 'description' => null,
                 'created_user_id' => 1,
