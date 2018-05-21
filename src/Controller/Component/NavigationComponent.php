@@ -632,7 +632,7 @@ class NavigationComponent extends Component
                 'title' => 'Positions',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Positions'],
+                'selected' => ['Institutions.Positions', 'Institutions.ImportInstitutionPositions'],
             ],
 
             'Institution.Finance' => [
