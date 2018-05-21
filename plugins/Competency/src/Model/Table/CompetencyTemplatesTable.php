@@ -142,9 +142,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         } else if ($action == 'add') {
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                ->find('visible')
-                ->contain(['EducationCycles'])
-                ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                ->find('availableProgrammes')
                 ->toArray();
 
             $attr['options'] = $programmeOptions;

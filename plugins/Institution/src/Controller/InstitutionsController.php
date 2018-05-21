@@ -168,7 +168,8 @@ class InstitutionsController extends AppController
             'ImportStudents'            => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
             'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
             'ImportInstitutionTextbooks'=> ['className' => 'Institution.ImportInstitutionTextbooks', 'actions' => ['add']],
-            'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']]
+            'ImportOutcomeResults'      => ['className' => 'Institution.ImportOutcomeResults', 'actions' => ['add']],
+            'ImportStaffLeave'          => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -1163,7 +1164,13 @@ class InstitutionsController extends AppController
                     $persona = $model->get($ids);
                 }
             } elseif (isset($requestQuery['user_id'])) {
-                $persona = $model->Users->get($requestQuery['user_id']);
+                // POCOR-4577 - to check if Users association existed in model - for staff leave import
+                if ($model->association('Users')) {
+                    $persona = $model->Users->get($requestQuery['user_id']);
+                } else {
+                    $Users = TableRegistry::get('Security.Users');
+                    $persona = $Users->get($requestQuery['user_id']);
+                }
             }
 
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
