@@ -47,7 +47,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionPositions']);
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);
