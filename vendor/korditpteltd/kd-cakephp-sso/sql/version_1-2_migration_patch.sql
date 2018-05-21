@@ -10,18 +10,20 @@ CREATE TABLE `authentication_types` (
 CREATE TABLE `system_authentications` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `code` CHAR(16) NOT NULL,
-  `name` VARCHAR(100) NULL,
-  `authentication_type_id` INT NOT NULL COMMENT 'links to authentication_types.id',
+  `name` VARCHAR(100) DEFAULT NULL,
   `status` INT NOT NULL,
-  `mapped_username` VARCHAR(50) NOT NULL,
   `allow_create_user` INT(1) NOT NULL,
-  `mapped_first_name` VARCHAR(50) NULL,
-  `mapped_last_name` VARCHAR(50) NULL,
-  `mapped_date_of_birth` VARCHAR(50) NULL,
-  `mapped_gender` VARCHAR(50) NULL,
-  `mapped_role` VARCHAR(50) NULL,
+  `mapped_username` VARCHAR(50) NOT NULL,
+  `mapped_first_name` VARCHAR(50) DEFAULT NULL,
+  `mapped_last_name` VARCHAR(50) DEFAULT NULL,
+  `mapped_date_of_birth` VARCHAR(50) DEFAULT NULL,
+  `mapped_gender` VARCHAR(50) DEFAULT NULL,
+  `mapped_role` VARCHAR(50) DEFAULT NULL,
+  `mapped_email` VARCHAR(50) DEFAULT NULL,
+  `authentication_type_id` INT NOT NULL COMMENT 'links to authentication_types.id',
   PRIMARY KEY (`id`),
-  INDEX `authentication_type_id` (`authentication_type_id`)
+  INDEX `authentication_type_id` (`authentication_type_id`),
+  UNIQUE INDEX `code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains user specified authentication';
 
 CREATE TABLE `idp_google` (
@@ -38,7 +40,7 @@ CREATE TABLE `idp_oauth` (
   `client_id` VARCHAR(150) NOT NULL,
   `client_secret` VARCHAR(150) NOT NULL,
   `redirect_uri` VARCHAR(200) NOT NULL,
-  `well_known_uri` VARCHAR(200) NULL,
+  `well_known_uri` VARCHAR(200) DEFAULT NULL,
   `authorization_endpoint` VARCHAR(200) NOT NULL,
   `token_endpoint` VARCHAR(200) NOT NULL,
   `userinfo_endpoint` VARCHAR(200) NOT NULL,
@@ -55,13 +57,13 @@ CREATE TABLE `idp_saml` (
   `idp_slo` VARCHAR(200) NOT NULL,
   `idp_slo_binding` VARCHAR(100) NOT NULL,
   `idp_x509cert` TEXT NOT NULL,
-  `idp_cert_fingerprint` VARCHAR(100) NULL,
-  `idp_cert_fingerprint_algorithm` VARCHAR(10) NULL,
+  `idp_cert_fingerprint` VARCHAR(100) DEFAULT NULL,
+  `idp_cert_fingerprint_algorithm` VARCHAR(10) DEFAULT NULL,
   `sp_entity_id` VARCHAR(200) NOT NULL,
   `sp_acs` VARCHAR(200) NOT NULL,
   `sp_slo` VARCHAR(100) NOT NULL,
-  `sp_name_id_format` VARCHAR(100) NULL,
-  `sp_private_key` TEXT NULL,
+  `sp_name_id_format` VARCHAR(100) DEFAULT NULL,
+  `sp_private_key` TEXT DEFAULT NULL,
   `sp_metadata` TEXT NOT NULL,
   PRIMARY KEY (`system_authentication_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains SAML authentication attributes';
@@ -178,7 +180,7 @@ UPDATE `config_items` SET `name`='Enable Local Login', `code`='enable_local_logi
 
 -- security_user_logins
 CREATE TABLE `security_user_logins` (
-  `id` BIGINT unsigned NOT NULL auto_increment,
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `security_user_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
   `login_date_time` datetime DEFAULT NULL,
   `login_period` INT(6) NOT NULL,
