@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Database\Expression\QueryExpression;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -381,12 +382,13 @@ class SecurityRolesTable extends ControllerActionTable
 
         switch ($selectedAction) {
             case 'user':
-                $groupOptions = $this->getGroupOptions();
-
                 if ($action == 'add') {
+                    $groupOptions = $this->getGroupOptions();
+
                     $attr['options'] = $groupOptions;
                 } elseif ($action == 'edit') {
                     $entity = $attr['entity'];
+                    $groupOptions = $this->getGroupOptions();
                     $groupId = $entity->security_group_id;
 
                     $attr['type'] = 'readonly';
@@ -454,21 +456,40 @@ class SecurityRolesTable extends ControllerActionTable
     public function getGroupOptions()
     {
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $institutionSecurityGroup = $InstitutionsTable->find('list');
-
-        $whereClause = [];
         $SecurityGroupsTable = $this->SecurityGroups;
 
-        if ($this->Auth->user('super_admin') != 1) { //if not admin, then list out SecurityGroups which member created
-            $whereClause[] = $SecurityGroupsTable->aliasField('created_user_id') . ' = ' . $this->Auth->user('id');
-            $whereClause[] = 'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')';
-        } else { //if admin then show all SecurityGroups excluding default institution System Group
-            $whereClause[] = 'NOT EXISTS ('.$institutionSecurityGroup->sql().' WHERE '.$InstitutionsTable->aliasField('security_group_id').' = '.$SecurityGroupsTable->aliasField('id').')';
+        $subquery = $InstitutionsTable->find()
+            ->select([$InstitutionsTable->aliasField('id')])
+            ->where(function (QueryExpression $exp, Query $q) use ($InstitutionsTable, $SecurityGroupsTable) {
+                return $exp->equalFields($InstitutionsTable->aliasField('security_group_id'), $SecurityGroupsTable->aliasField('id'));
+            });
+
+        $query = $SecurityGroupsTable->find('list')
+            ->where(function (QueryExpression $exp, Query $q) use ($subquery) {
+                return $exp->notExists($subquery);
+            });
+
+        $userId = $this->Auth->user('id');
+        $isSuperAdmin = $this->Auth->user('super_admin');
+        if (!$isSuperAdmin) {
+            $query->andWhere([
+                $SecurityGroupsTable->aliasField('created_user_id = ') => $userId
+            ]);
         }
 
-        $list = $SecurityGroupsTable->find('list')
-            ->where($whereClause)
-            ->toArray();
+        /* Generated SQL: */
+
+        // is Super Admin
+        // SELECT `SecurityGroups`.`id` AS `SecurityGroups__id`, `SecurityGroups`.`name` AS `SecurityGroups__name`
+        // FROM `security_groups` `SecurityGroups`
+        // WHERE NOT EXISTS (SELECT `Institutions`.`id` AS `Institutions__id` FROM `institutions` `Institutions` WHERE `Institutions`.`security_group_id` = (`SecurityGroups`.`id`));
+
+        // not Super Admin
+        // SELECT `SecurityGroups`.`id` AS `SecurityGroups__id`, `SecurityGroups`.`name` AS `SecurityGroups__name`
+        // FROM `security_groups` `SecurityGroups`
+        // WHERE (NOT EXISTS (SELECT `Institutions`.`id` AS `Institutions__id` FROM `institutions` `Institutions` WHERE `Institutions`.`security_group_id` = (`SecurityGroups`.`id`)) AND `SecurityGroups`.`created_user_id` = :c0);
+
+        $list = $query->toArray();
 
         return $list;
     }

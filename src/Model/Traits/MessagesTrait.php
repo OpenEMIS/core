@@ -1982,6 +1982,21 @@ trait MessagesTrait
                 ]
             ],
         ],
+        'Scholarship' => [
+            'Scholarships' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
+                'application_close_date' => [
+                    'ruleCompareDateReverse' => 'Application Close Date should not be earlier than Application Open Date'
+                ]
+            ],
+            'Applications' => [
+                'requested_amount' => [
+                    'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
+                ]
+            ]
+        ],
         'Competency' => [
             'GradingOptions' => [
                 'code' => [
