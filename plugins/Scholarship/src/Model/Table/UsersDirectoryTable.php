@@ -18,11 +18,24 @@ class UsersDirectoryTable extends AppTable
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $this->entityClass('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
     }
 
     public function findIndex(Query $query, array $options)
     {
-        $query->where([$this->aliasField('super_admin') => 0]);
+        return $query->where([$this->aliasField('super_admin') => 0]);
+    }
+
+    public function findSearch(Query $query, array $options)
+    {
+        $searchOptions = $options['search'];
+        $searchOptions['defaultSearch'] = false; // turn off defaultSearch function in page
+
+        $search = $searchOptions['searchText'];
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+        }
         return $query;
     }
 }
