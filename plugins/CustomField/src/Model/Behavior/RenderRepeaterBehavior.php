@@ -89,10 +89,6 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 $tableHeaders[] = $headerHtml;
                 $colOffset = 1; // 0 -> No.
 
-                foreach ($questions as $colKey => $question) {
-                    $questionName = !is_null($question->name) ? $question->name : $question->custom_field->name;
-                    $tableHeaders[$colKey + $colOffset] = $questionName;
-                }
 
                 // remove button
                 if ($action == 'edit') {
@@ -137,7 +133,18 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         ->toArray();
 
                     $rowCount = 1;
+                    
+                    //Get and build repeater error messages, repeater by repeater
+                    $repeaterErrorObj = null;
                     foreach ($repeaters as $rowKey => $repeaterId) {
+                        if($entity->institution_repeater_surveys_error_obj){
+                            foreach($entity['institution_repeater_surveys_error_obj'] as $key => $value){
+                                if($value['repeater_id'] == $repeaterId){
+                                   $repeaterErrorObj = $value['custom_field_values'];
+                                }
+                            }
+                        }
+                        
                         $rowPrefix = "$fieldPrefix.$repeaterId";
 
                         $rowData = [];
@@ -154,6 +161,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         }
 
                         foreach ($questions as $colKey => $question) {
+                            $questionName = !is_null($question->name) ? $question->name : $question->custom_field->name;
+                            $tableHeaders[$colKey + $colOffset] = $questionName;
+
                             $questionId = $question->custom_field->id;
                             $questionType = $question->custom_field->field_type;
 
@@ -162,6 +172,25 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             $cellValue = "";
                             $cellOptions = ['label' => false, 'value' => ''];
                             $answerObj = null;
+
+                            //To get the error message of each individual fields in a repeater
+                            $errors = null;
+                            $errorInput = "";
+                            if($repeaterErrorObj){
+                                foreach ($repeaterErrorObj as $repeaterKey => $repeaterValue) {
+                                    if($repeaterValue['survey_question_id'] == $questionId){
+                                        $fieldErrors = $repeaterValue->errors();
+                                        foreach ($fieldErrors as $fieldErrorRule => $fieldErrorMessage) {
+                                            foreach ($fieldErrorMessage as $key => $value) {
+                                                $errors = $value;
+                                                if(!is_null($errors)){
+                                                    $errorInput = '<div class="error-message">'.$errors.'</div>';
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
 
                             // put back answer value for edit and validation failed
                             if (isset($entity->institution_repeater_surveys[$fieldId][$repeaterId][$questionId])) {
@@ -174,6 +203,17 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $cellOptions['type'] = 'string';
                                     $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+
+                                    // input mask for custom text
+                                    if ($question['custom_field']->has('params') && !empty($question['custom_field']->params)) {
+                                        $params = json_decode($question['custom_field']->params, true);
+                                        if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
+                                            $HtmlField = $event->subject();
+                                            $HtmlField->includes['jasny']['include'] = true;
+                                            $cellOptions['data-mask'] = $params['input_mask'];
+                                        }
+                                    }
+                                    //end
 
                                     $cellValue = !is_null($answerValue) ? $answerValue : '';
                                     break;
@@ -277,6 +317,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $event->subject()->viewSet('datepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                     $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
+                                    if($errorInput){
+                                        $cellInput .= $errorInput;
+                                    }
                                     unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
@@ -325,15 +368,20 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $event->subject()->viewSet('timepicker', $attr);
                                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
                                     $cellValue = !is_null($answerValue) ? $this->_table->formatTime($answerValue) : '';
+                                    if($errorInput){
+                                        $cellInput .= $errorInput;
+                                    }
                                     unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                     break;
 
                                 default:
                                     break;
                             }
-
                             if (in_array($questionType, ['TEXT', 'NUMBER', 'DECIMAL', 'DROPDOWN', 'TEXTAREA'])) {
                                 $cellInput .= $form->input($cellPrefix.".".$fieldTypes[$questionType], $cellOptions);
+                                if($errorInput){
+                                    $cellInput .= $errorInput;
+                                }
                             }
 
                             if ($action == 'view') {
@@ -446,12 +494,12 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $entity->set('institution_repeaters', $repeatersArray);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function processRepeaterValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         if ($entity->has('institution_repeater_surveys')) {
+            $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
+
             $fieldKey = 'survey_question_id';
             $formKey = 'survey_form_id';
-            $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-            $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
 
             $status = $entity->status_id;
             $institutionId = $entity->institution_id;
@@ -461,106 +509,70 @@ class RenderRepeaterBehavior extends RenderBehavior {
             foreach ($entity->institution_repeater_surveys as $fieldId => $fieldObj) {
                 $formId = $fieldObj[$formKey];
                 unset($fieldObj[$formKey]);
-
-                // Logic to delete all answers before re-insert
-                $repeaterIds = array_keys($fieldObj);
-                $originalRepeaterIds = [];
-                if ($entity->has('institution_repeaters')) {
-                    if (array_key_exists($fieldId, $entity->institution_repeaters)) {
-                        $originalRepeaterIds = array_values($entity->institution_repeaters[$fieldId]);
-                    }
-                }
-
-                $surveyIds = [];
-                if (!empty($originalRepeaterIds)) {
-                    $surveyIds = $RepeaterSurveys
-                        ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                        ->where([
-                            $RepeaterSurveys->aliasField('status_id') => $status,
-                            $RepeaterSurveys->aliasField('institution_id') => $institutionId,
-                            $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
-                            $RepeaterSurveys->aliasField($formKey) => $formId,
-                            $RepeaterSurveys->aliasField('repeater_id IN ') => $originalRepeaterIds
-                        ])
-                        ->toArray();
-                }
-
-                if (!empty($surveyIds)) {
-                    // always deleted all existing answers before re-insert
-                    $RepeaterSurveyAnswers->deleteAll([
-                        $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
-                    ]);
-                }
-
-                if (!empty($repeaterIds)) {
-                    if (!empty($originalRepeaterIds)) {
-                        $missingRepeaters = array_diff($originalRepeaterIds, $repeaterIds);
-                        if (!empty($missingRepeaters)) {
-                            // if user has remove particular repeater from form, delete away that repeater from database too
-                            $RepeaterSurveys->deleteAll([
-                                $RepeaterSurveys->aliasField('status_id') => $status,
-                                $RepeaterSurveys->aliasField('institution_id') => $institutionId,
-                                $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
-                                $RepeaterSurveys->aliasField($formKey) => $formId,
-                                $RepeaterSurveys->aliasField('repeater_id IN ') => $missingRepeaters
-                            ]);
-                        }
-                    }
-                } else {
-                    // if user remove all rows from form, delete away all repeater records
-                    $RepeaterSurveys->deleteAll([
-                        $RepeaterSurveys->aliasField('status_id') => $status,
-                        $RepeaterSurveys->aliasField('institution_id') => $institutionId,
-                        $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
-                        $RepeaterSurveys->aliasField($formKey) => $formId
-                    ]);
-                }
-                // End
-
-                foreach ($fieldObj as $repeaterId => $repeaterObj) {
-                    if (is_array($repeaterObj)) {
-                        $surveyData = [
-                            'status_id' => $status,
-                            'institution_id' => $institutionId,
-                            'academic_period_id' => $periodId,
-                            $formKey => $formId,
-                            'parent_form_id' => $parentFormId,
-                            'repeater_id' => $repeaterId
-                        ];
-                        // for edit record
-                        if (array_key_exists('id', $repeaterObj)) {
-                            $surveyData['id'] = $repeaterObj['id'];
-                            unset($repeaterObj['id']);
-                        }
-                        // End
-
-                        $answers = [];
-                        foreach ($repeaterObj as $questionId => $answerObj) {
-                            // checking to skip insert if is empty
-                            $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
-                            $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
-                            $decimalValue = isset($answerObj['decimal_value']) && strlen($answerObj['decimal_value']) > 0 ? $answerObj['decimal_value'] : null;
-                            $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
-                            $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
-                            $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
-
-                            if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
-                                $answerObj = array_merge($answerObj, [
-                                    $fieldKey => $questionId
-                                ]);
-
-                                $answers[] = $answerObj;
+                if(!empty($fieldObj)){
+                    foreach ($fieldObj as $repeaterId => $repeaterObj) {
+                        if (is_array($repeaterObj)) {
+                            $surveyData = [
+                                'status_id' => $status,
+                                'institution_id' => $institutionId,
+                                'academic_period_id' => $periodId,
+                                $formKey => $formId,
+                                'parent_form_id' => $parentFormId,
+                                'repeater_id' => $repeaterId
+                            ];
+                            // for edit record
+                            if (array_key_exists('id', $repeaterObj)) {
+                                $surveyData['id'] = $repeaterObj['id'];
+                                unset($repeaterObj['id']);
                             }
-                        }
+                            // End
 
-                        $surveyData['custom_field_values'] = $answers;
-                        $surveyEntity = $RepeaterSurveys->newEntity($surveyData, ['validate' => false]);
-                        // save repeater by repeater
-                        if ($RepeaterSurveys->save($surveyEntity)) {
-                        } else {
-                            Log::write('debug', $surveyEntity->errors());
+                            $answers = [];
+                            foreach ($repeaterObj as $questionId => $answerObj) {
+                                $field = $CustomFields->find()
+                                ->where(['id IN' => $questionId])
+                                ->first()
+                                ;
+
+                                if($field['is_mandatory']){
+                                    $answerObj = array_merge($answerObj, [
+                                        $fieldKey => $questionId
+                                    ]);
+                                    $answerObj['params'] = $field['params'];
+                                    $answerObj['mandatory'] = $field['is_mandatory'];
+                                    $answerObj['field_type'] = $field['field_type'];
+                                    $answerObj['unique'] = $field['is_unique'];
+
+                                    $answers[] = $answerObj;
+
+                                }else{
+                                    // checking to skip insert if is empty
+                                    $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
+                                    $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
+                                    $decimalValue = isset($answerObj['decimal_value']) && strlen($answerObj['decimal_value']) > 0 ? $answerObj['decimal_value'] : null;
+                                    $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
+                                    $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
+                                    $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
+
+                                    if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
+                                        $answerObj = array_merge($answerObj, [
+                                            $fieldKey => $questionId
+                                        ]);
+                                        $answerObj['params'] = $field['params'];
+                                        $answerObj['mandatory'] = $field['is_mandatory'];
+                                        $answerObj['field_type'] = $field['field_type'];
+                                        $answerObj['unique'] = $field['is_unique'];
+
+                                        $answers[] = $answerObj;
+                                    }
+                                }
+                            }
+                            
+                            $surveyData['custom_field_values'] = $answers;
+                            $tmp[] = $surveyData;
                         }
                     }
+                    $settings['repeaterValues'] = $tmp;
                 }
             }
         }
