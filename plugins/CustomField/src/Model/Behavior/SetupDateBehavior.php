@@ -133,7 +133,7 @@ class SetupDateBehavior extends SetupBehavior
 
     public function onGetValidationRulesDate(Event $event, Entity $entity)
     {
-        $paramsArray = (!empty($entity->params))? json_decode($entity->params, true): [];
+        $paramsArray = (!empty($entity->params))? json_decode(html_entity_decode($entity->params), true): [];
         if (array_key_exists('start_date', $paramsArray) && array_key_exists('end_date', $paramsArray)) {
             return $this->rangeValidationOptions['between'].' '.$paramsArray['start_date'].' - '.$paramsArray['end_date'];
         } else if (array_key_exists('start_date', $paramsArray)) {

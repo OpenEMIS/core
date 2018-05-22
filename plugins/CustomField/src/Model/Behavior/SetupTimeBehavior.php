@@ -134,7 +134,7 @@ class SetupTimeBehavior extends SetupBehavior
 
     public function onGetValidationRulesTime(Event $event, Entity $entity)
     {
-        $paramsArray = (!empty($entity->params))? json_decode($entity->params, true): [];
+        $paramsArray = (!empty($entity->params))? json_decode(html_entity_decode($entity->params), true): [];
         if (array_key_exists('start_time', $paramsArray) && array_key_exists('end_time', $paramsArray)) {
             return $this->rangeValidationOptions['between'].' '.$this->_table->formatTime(new Time($paramsArray['start_time'])).' - '.$this->_table->formatTime(new Time($paramsArray['end_time']));
         } else if (array_key_exists('start_time', $paramsArray)) {
