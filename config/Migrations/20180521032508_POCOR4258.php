@@ -78,9 +78,18 @@ class POCOR4258 extends AbstractMigration
                 'en' => '(Leave blank for Non-Teaching type)',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Selected value does not match with Staff Position Title Type',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Position number cannot be longer than 30',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
-
         $this->insert('locale_contents', $localeData);
 
         // security_functions
@@ -121,6 +130,8 @@ class POCOR4258 extends AbstractMigration
         // locale_contents
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave as blank to auto generate)'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave as blank for Non-Teaching type)'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Selected value does not match with Staff Position Title Type'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Position number cannot be longer than 30'");
 
         // security_functions
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1003'); // Leave id
