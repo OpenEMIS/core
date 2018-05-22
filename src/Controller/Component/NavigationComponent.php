@@ -1489,7 +1489,7 @@ class NavigationComponent extends Component
                     'title' => 'Recipients',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => ['ScholarshipRecipients.index', 'ScholarshipRecipients.view', 'ScholarshipRecipients.edit']
+                    'selected' => ['ScholarshipRecipients.index', 'ScholarshipRecipients.view', 'ScholarshipRecipients.edit', 'ScholarshipRecipientInstitutionChoices.index', 'ScholarshipRecipientInstitutionChoices.view', 'ScholarshipRecipientInstitutionChoices.edit']
                 ],
 
             'Textbooks.Textbooks' => [
