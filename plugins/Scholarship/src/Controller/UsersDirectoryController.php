@@ -100,7 +100,7 @@ class UsersDirectoryController extends PageController
         $queryString = $this->paramsEncode(['applicant_id' => $applicantId]);
 
         $rowActionsArray = $rowActions->getArrayCopy();
-        $rowActionsArray[] = [
+        $rowActionsArray['apply'] = [
             'url' => [
                 'plugin' => 'Scholarship',
                 'controller' => 'Scholarships',
