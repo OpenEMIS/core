@@ -43,6 +43,7 @@ class AttachmentTypesTable extends ControllerActionTable
 
         $ScholarshipsScholarshipAttachmentTypesTable = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
         $query
+            ->select(['is_mandatory' => $ScholarshipsScholarshipAttachmentTypesTable->aliasField('is_mandatory')])
             ->find('visible')
             ->find('order')
             ->innerJoin(
@@ -51,12 +52,11 @@ class AttachmentTypesTable extends ControllerActionTable
                     $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_attachment_type_id = ') . $this->aliasField('id'),
                     $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_id') => $scholarshipId
                 ]
-            );
+            )
+            ->autoFields(true);
 
         if ($existingAttachmentTypeIds) {
-            $query->where([
-                $this->aliasField('id NOT IN') => $existingAttachmentTypeIds
-            ]);
+            $query->where([$this->aliasField('id NOT IN') => $existingAttachmentTypeIds]);
         }
 
         return $query;
