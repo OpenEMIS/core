@@ -12,6 +12,7 @@ class AttachmentTypesTable extends ControllerActionTable
         $this->table('scholarship_attachment_types');
         parent::initialize($config);
 
+        $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'scholarship_attachment_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('Scholarships', [
             'className' => 'Scholarship.Scholarships',
             'joinTable' => 'scholarships_scholarship_attachment_types',
@@ -52,7 +53,7 @@ class AttachmentTypesTable extends ControllerActionTable
                 ]
             );
 
-        if($existingAttachmentTypeIds) {
+        if ($existingAttachmentTypeIds) {
             $query->where([
                 $this->aliasField('id NOT IN') => $existingAttachmentTypeIds
             ]);
