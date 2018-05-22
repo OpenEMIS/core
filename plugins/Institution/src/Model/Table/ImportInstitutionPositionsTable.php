@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use PHPExcel_Worksheet;
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
@@ -13,6 +14,8 @@ use Workflow\Model\Behavior\WorkflowBehavior;
 
 class ImportInstitutionPositionsTable extends AppTable
 {
+    use OptionsTrait;
+
     private $institutionId;
 
     public function initialize(array $config)
@@ -37,7 +40,9 @@ class ImportInstitutionPositionsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        $events['Model.import.onImportGetIsHomeroomId'] = 'onImportGetIsHomeroomId';
         $events['Model.import.onImportPopulateStaffPositionTitlesData'] = 'onImportPopulateStaffPositionTitlesData';
+        $events['Model.import.onImportPopulateIsHomeroomData'] = 'onImportPopulateIsHomeroomData';
         $events['Model.import.onImportPopulateWorkflowStepsData'] = 'onImportPopulateWorkflowStepsData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
@@ -52,6 +57,17 @@ class ImportInstitutionPositionsTable extends AppTable
 
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
+    }
+
+    public function onImportGetIsHomeroomId(Event $event, $cellValue)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+        foreach ($options as $key => $value) {
+            if ($cellValue == $key) {
+                return $cellValue;
+            }
+        }
+        return null;
     }
 
     public function onImportPopulateStaffPositionTitlesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
@@ -89,6 +105,21 @@ class ImportInstitutionPositionsTable extends AppTable
                     $row->id
                 ];
             }
+        }
+    }
+
+    public function onImportPopulateIsHomeroomData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $translatedReadableCol = $this->getExcelLabel('Is Homeroom', 'name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+
+        $options = $this->getSelectOptions('general.yesno');
+        foreach ($options as $key => $value) {
+            $data[$columnOrder]['data'][] = [
+                $value,
+                $key
+            ];
         }
     }
 

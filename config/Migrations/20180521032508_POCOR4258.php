@@ -11,7 +11,7 @@ class POCOR4258 extends AbstractMigration
             [
                 'model' => 'Institution.InstitutionPositions',
                 'column_name' => 'position_no',
-                'description' => '(Leave blank to auto generate)',
+                'description' => '(Leave as blank to auto generate)',
                 'order' => 1,
                 'is_optional' => 1,
                 'foreign_key' => 0,
@@ -44,13 +44,13 @@ class POCOR4258 extends AbstractMigration
             [
                 'model' => 'Institution.InstitutionPositions',
                 'column_name' => 'is_homeroom',
-                'description' => '(Leave blank for Non-Teaching type)',
+                'description' => '(Leave as blank for Non-Teaching type)',
                 'order' => 4,
                 'is_optional' => 1,
-                'foreign_key' => 0,
+                'foreign_key' => 3,
                 'lookup_plugin' => null,
-                'lookup_model' => null,
-                'lookup_column' => null
+                'lookup_model' => 'IsHomeroom',
+                'lookup_column' => 'id'
             ],
             [
                 'model' => 'Institution.InstitutionPositions',
@@ -119,8 +119,8 @@ class POCOR4258 extends AbstractMigration
         $this->execute("DELETE FROM `import_mapping` WHERE `model` = 'Institution.InstitutionPositions'");
 
         // locale_contents
-        $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave blank to auto generate)'");
-        $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave blank for Non-Teaching type)'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave as blank to auto generate)'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave as blank for Non-Teaching type)'");
 
         // security_functions
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1003'); // Leave id
