@@ -1,6 +1,7 @@
 <?php
 namespace Scholarship\Controller;
 
+use ArrayObject;
 use Cake\Event\Event;
 use App\Controller\PageController;
 
@@ -12,6 +13,14 @@ class UsersDirectoryController extends PageController
         $this->loadModel('Scholarship.UsersDirectory');
         $this->loadComponent('User.User');
         $this->Page->loadElementsFromTable($this->UsersDirectory);
+    }
+
+    public function implementedEvents()
+    {
+        $event = parent::implementedEvents();
+        $event['Controller.Page.getEntityRowActions'] = 'getEntityRowActions';
+
+        return $event;
     }
 
     public function beforeFilter(Event $event)
@@ -83,5 +92,26 @@ class UsersDirectoryController extends PageController
                 'options' => []
             ]);
         }
+    }
+
+    public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
+    {
+        $applicantId = $entity->id;
+        $queryString = $this->paramsEncode(['applicant_id' => $applicantId]);
+
+        $rowActionsArray = $rowActions->getArrayCopy();
+        $rowActionsArray[] = [
+            'url' => [
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'Applications',
+                'add',
+                'queryString' => $queryString
+            ],
+            'icon' => 'fa kd-add',
+            'title' => __('Apply')
+        ];
+
+        $rowActions->exchangeArray($rowActionsArray);
     }
 }
