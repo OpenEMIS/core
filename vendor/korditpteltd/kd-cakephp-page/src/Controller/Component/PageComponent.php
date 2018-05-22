@@ -774,7 +774,7 @@ class PageComponent extends Component
 
         $rowActions = [];
         if (!in_array('view', $disabledActions) && $view == true) {
-            $rowActions[] = [
+            $rowActions['view'] = [
                 'url' => $this->getUrl(array_merge($url, ['action' => 'view', $primaryKey])),
                 'icon' => 'fa fa-eye',
                 'title' => __('View')
@@ -782,7 +782,7 @@ class PageComponent extends Component
         }
 
         if (!in_array('edit', $disabledActions) && $edit == true) {
-            $rowActions[] = [
+            $rowActions['edit'] = [
                 'url' => $this->getUrl(array_merge($url, ['action' => 'edit', $primaryKey])),
                 'icon' => 'fa fa-pencil',
                 'title' => __('Edit')
@@ -790,7 +790,7 @@ class PageComponent extends Component
         }
 
         if (!in_array('delete', $disabledActions) && $delete == true) {
-            $rowActions[] = [
+            $rowActions['delete'] = [
                 'url' => $this->getUrl(array_merge($url, ['action' => 'delete', $primaryKey])),
                 'icon' => 'fa fa-trash',
                 'title' => __('Delete')
