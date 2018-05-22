@@ -342,11 +342,15 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function getUniquePositionNo()
+    public function getUniquePositionNo($institutionId = null)
     {
         $prefix = '';
         $currentStamp = time();
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        if (is_null($institutionId)) {
+            $institutionId = $this->Session->read('Institution.Institutions.id');
+        }
+        
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $prefix .= $institutionCode;
         $newStamp = $currentStamp;
