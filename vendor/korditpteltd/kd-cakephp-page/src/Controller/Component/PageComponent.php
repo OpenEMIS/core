@@ -151,18 +151,18 @@ class PageComponent extends Component
                     // end
 
                     // row actions
-                    $rowActions = $this->getRowActions($entity);
-                    $rowActionsArrayObject = new ArrayObject($rowActions);
-                    $event = $controller->dispatchEvent('Controller.Page.getEntityRowActions', [$entity, $rowActionsArrayObject], $this);
-                    $rowActions = $rowActionsArrayObject->getArrayCopy();
+                    $rowActionsArray = $this->getRowActions($entity);
+                    $rowActions = new ArrayObject($rowActionsArray);
+                    $event = $controller->dispatchEvent('Controller.Page.getEntityRowActions', [$entity, $rowActions], $this);
+                    $rowActionsArray = $rowActions->getArrayCopy();
 
                     if ($event->result) {
-                        $rowActions = $event->result;
+                        $rowActionsArray = $event->result;
                     }
                     if ($entity instanceof Entity) {
-                        $entity->rowActions = $rowActions;
+                        $entity->rowActions = $rowActionsArray;
                     } else {
-                        $entity['rowActions'] = $rowActions;
+                        $entity['rowActions'] = $rowActionsArray;
                     }
                     // end
 
