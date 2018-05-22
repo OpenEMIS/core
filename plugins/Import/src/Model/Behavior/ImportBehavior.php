@@ -1335,10 +1335,10 @@ class ImportBehavior extends Behavior
                     $val = $cellValue;
                 }
             } elseif ($foreignKey == self::NON_TABLE_LIST) {
-                if (!empty($cellValue)) {
+                if (strlen($cellValue) > 0) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
                     $recordId = $getIdEvent->result;
-                    if (!empty($recordId)) {
+                    if (strlen($recordId) > 0) {
                         $val = $recordId;
                     } else {
                         $rowPass = false;
@@ -1365,7 +1365,7 @@ class ImportBehavior extends Behavior
                     $tempRow['customColumns'][$columnName] = $val;
                 }
             }
-            if (!$isOptional || ($isOptional && !empty($val))) {
+            if (!$isOptional || ($isOptional && strlen($val) > 0)) {
                 $tempRow[$columnName] = $val;
             }
         }
