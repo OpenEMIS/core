@@ -231,7 +231,7 @@ class PageHelper extends Helper
 
         $disabledActions = $this->_View->get('disabledActions');
         $actionButtons = ['view', 'edit', 'delete'];
-        if (count(array_intersect($actionButtons, $disabledActions)) < 3) {
+        if (count(array_intersect($actionButtons, $disabledActions)) < count($actionButtons)) {
             $headers[] = [__('Actions') => ['class' => 'cell-action']];
         }
 
@@ -255,7 +255,7 @@ class PageHelper extends Helper
             }
             $disabledActions = $this->_View->get('disabledActions');
             $actionButtons = ['view', 'edit', 'delete'];
-            if (count(array_intersect($actionButtons, $disabledActions)) < 3) {
+            if (count(array_intersect($actionButtons, $disabledActions)) < count($actionButtons)) {
                 $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
             }
 

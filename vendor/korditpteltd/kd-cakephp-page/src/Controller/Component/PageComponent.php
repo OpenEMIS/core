@@ -136,6 +136,7 @@ class PageComponent extends Component
                 $this->loadDataToElements($data, false);
             } elseif ($action == 'index') { // populate entities with action permissions
                 foreach ($data as $entity) {
+                    // disabled actions
                     $disabledActions = [];
                     $event = $controller->dispatchEvent('Controller.Page.getEntityDisabledActions', [$entity], $this);
 
@@ -147,6 +148,23 @@ class PageComponent extends Component
                     } else {
                         $entity['disabledActions'] = $disabledActions;
                     }
+                    // end
+
+                    // row actions
+                    $rowActions = $this->getRowActions($entity);
+                    $rowActionsArrayObject = new ArrayObject($rowActions);
+                    $event = $controller->dispatchEvent('Controller.Page.getEntityRowActions', [$entity, $rowActionsArrayObject], $this);
+                    $rowActions = $rowActionsArrayObject->getArrayCopy();
+
+                    if ($event->result) {
+                        $rowActions = $event->result;
+                    }
+                    if ($entity instanceof Entity) {
+                        $entity->rowActions = $rowActions;
+                    } else {
+                        $entity['rowActions'] = $rowActions;
+                    }
+                    // end
 
                     foreach ($this->elements as $element) {
                         $key = $element->getKey();
@@ -718,6 +736,68 @@ class PageComponent extends Component
         $this->queryOptions['user'] = $user;
 
         return $this->queryOptions;
+    }
+
+    public function getRowActions($entity)
+    {
+        $url = ['plugin' => $this->request->params['plugin'], 'controller' => $this->request->params['controller']];
+        $primaryKey = !is_array($entity) ? $entity->primaryKey : $entity['primaryKey']; // $entity may be Entity or array
+
+        $view = true;
+        $edit = true;
+        $delete = true;
+
+        // disabled actions for each row
+        if (!is_array($entity)) {
+            if ($entity->has('disabledActions')) {
+                $view = !in_array('view', $entity->disabledActions);
+                $edit = !in_array('edit', $entity->disabledActions);
+                $delete = !in_array('delete', $entity->disabledActions);
+            }
+        } else {
+            if (array_key_exists('disabledActions', $entity)) {
+                $view = !in_array('view', $entity['disabledActions']);
+                $edit = !in_array('edit', $entity['disabledActions']);
+                $delete = !in_array('delete', $entity['disabledActions']);
+            }
+        }
+        // end
+
+        // disabled actions for a page
+        $disabledActions = [];
+        foreach ($this->actions as $action => $value) {
+            if ($value == false) {
+                $disabledActions[] = $action;
+            }
+        }
+        // end
+
+        $rowActions = [];
+        if (!in_array('view', $disabledActions) && $view == true) {
+            $rowActions[] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'view', $primaryKey])),
+                'icon' => 'fa fa-eye',
+                'title' => __('View')
+            ];
+        }
+
+        if (!in_array('edit', $disabledActions) && $edit == true) {
+            $rowActions[] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'edit', $primaryKey])),
+                'icon' => 'fa fa-pencil',
+                'title' => __('Edit')
+            ];
+        }
+
+        if (!in_array('delete', $disabledActions) && $delete == true) {
+            $rowActions[] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'delete', $primaryKey])),
+                'icon' => 'fa fa-trash',
+                'title' => __('Delete')
+            ];
+        }
+
+        return $rowActions;
     }
 
     public function setPaginateOption($key, $value)
