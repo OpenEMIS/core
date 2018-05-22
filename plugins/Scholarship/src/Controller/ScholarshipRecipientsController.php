@@ -1,6 +1,8 @@
 <?php
 namespace Scholarship\Controller;
 
+use ArrayObject;
+
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
@@ -12,6 +14,7 @@ class ScholarshipRecipientsController extends PageController
     {
         parent::initialize();
         $this->loadModel('Scholarship.RecipientActivityStatuses');
+        $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
     }
 
@@ -19,6 +22,7 @@ class ScholarshipRecipientsController extends PageController
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderStatus'] = 'onRenderStatus';
+        $event['Controller.Page.getEntityRowActions'] = 'getEntityRowActions';
         return $event;
     }
 
@@ -60,6 +64,7 @@ class ScholarshipRecipientsController extends PageController
         parent::view($id);
         $page = $this->Page;
         $entity = $page->getData();
+        $this->setupTabElements();
 
         $page->exclude(['scholarship_recipient_activity_status_id']);
 
@@ -94,6 +99,8 @@ class ScholarshipRecipientsController extends PageController
         $page = $this->Page;
         $entity = $page->getData();
 
+        $this->setupTabElements();
+
         $page->addNew('openemis_no')
             ->setDisplayFrom('recipient.openemis_no');
         $page->addNew('financial_assistance_type')
@@ -125,6 +132,21 @@ class ScholarshipRecipientsController extends PageController
         $page->move('scholarship_id')->after('financial_assistance_type');
     }
 
+    public function setupTabElements()
+    {
+        $page = $this->Page;
+        $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
+
+        foreach ($tabElements as $tab => $tabAttr) {
+            $page->addTab($tab)
+                ->setTitle($tabAttr['text'])
+                ->setUrl($tabAttr['url']);
+        }
+
+        // set active tab
+        $page->getTab('Recipients')->setActive('true');
+    }
+
     public function onRenderStatus(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
@@ -134,6 +156,28 @@ class ScholarshipRecipientsController extends PageController
                 return '<span class="status highlight">' . $entity->recipient_activity_status->name . '</span>';
             }
         }
+    }
+
+    public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
+    {
+        $rowActionsArray = $rowActions->getArrayCopy();
+
+        $recipientId = $entity->recipient_id;
+        $scholarshipId = $entity->scholarship_id;
+        $queryString = $this->paramsEncode([
+            'recipient_id' => $recipientId,
+            'scholarship_id' => $scholarshipId
+        ]);
+
+        if (array_key_exists('view', $rowActions)) {
+            $rowActionsArray['view']['url']['queryString'] = $queryString;
+        }
+
+        if (array_key_exists('edit', $rowActions)) {
+            $rowActionsArray['edit']['url']['queryString'] = $queryString;
+        }
+
+        $rowActions->exchangeArray($rowActionsArray);
     }
 
     private function getActivityStatusData(Entity $entity)

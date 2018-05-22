@@ -50,11 +50,40 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Attachments')
             ]
         ];
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getScholarshipRecipientTabs($options = [])
     {
+        $tabElements = [
+            'Recipients' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $this->queryString, 'queryString' => $this->queryString],
+                'text' => __('Overview')
+            ],
+            'InstitutionChoices' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientInstitutionChoices', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Institution Choices')
+            ],
+            'PaymentStructures' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientPaymentStructures', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Payment Structures')
+            ],
+            'Disbursements' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientDisbursements', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Disbursements')
+            ],
+            'Collections' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientCollections', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Collections')
+            ],
+            'AcademicStandings' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientAcademicStandings', 'action' => 'index', 'queryString' => $this->queryString],
+                'text' => __('Academic Standings')
+            ]
+        ];
+
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getScholarshipProfileTabs($options = [])
@@ -73,6 +102,7 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Attachments')
             ]
         ];
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
