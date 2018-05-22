@@ -466,6 +466,8 @@ class ScholarshipsTable extends ControllerActionTable
             $attachmentTypeOptions = $this->AttachmentTypes->getList()->toArray();
 
             if (!empty($arrayAttachmentTypes)) {
+                $usedAttachmentTypes = $this->getUsedAttachmentTypes($entity->id);
+
                 foreach ($arrayAttachmentTypes as $key => $obj) {
                     $fieldPrefix = $attr['model'] . '.attachment_types.' . $cellCount++;
                     $joinDataPrefix = $fieldPrefix . '._joinData';
@@ -482,13 +484,17 @@ class ScholarshipsTable extends ControllerActionTable
                         'default' => $obj['_joinData']['is_mandatory'],
                         'value' => $obj['_joinData']['is_mandatory']
                     ];
-
                     $mandatoryCellData = $form->input("$joinDataPrefix.is_mandatory", $mandatoryInputOptions);
 
                     $rowData = [];
                     $rowData[] = $cellData;
                     $rowData[] = $mandatoryCellData;
-                    $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+
+                    if (in_array($obj['id'], $usedAttachmentTypes)) {
+                        $rowData[] = __('In use');
+                    } else {
+                        $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+                    }
 
                     $tableCells[] = $rowData;
 
@@ -611,6 +617,17 @@ class ScholarshipsTable extends ControllerActionTable
     public function addCurrencySuffix($label)
     {
         return __($label) . ' (' . $this->currency . ')';
+    }
+
+    public function getUsedAttachmentTypes($scholarshipId)
+    {
+        $types = $this->AttachmentTypes->find()
+            ->innerJoinWith('ApplicationAttachments', function ($q) use ($scholarshipId) {
+                return $q->where(['ApplicationAttachments.scholarship_id' => $scholarshipId]);
+            })
+            ->extract('id')
+            ->toArray();
+        return $types;
     }
 
     public function getAvailableScholarships($options = [])
