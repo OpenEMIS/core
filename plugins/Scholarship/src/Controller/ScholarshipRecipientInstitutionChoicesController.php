@@ -1,0 +1,42 @@
+<?php
+namespace Scholarship\Controller;
+
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Page\Model\Entity\PageElement;
+use App\Controller\PageController;
+use Scholarship\Controller\InstitutionChoicesController as BaseController;
+
+class ScholarshipRecipientInstitutionChoicesController extends BaseController
+{
+    public function beforeFilter(Event $event)
+    {
+        $page = $this->Page;
+
+        if (isset($this->request->query['queryString'])) {
+            $queryString = $this->request->query['queryString'];
+
+            $recipientId = $this->paramsDecode($queryString)['recipient_id'];
+            $scholarshipId = $this->paramsDecode($queryString)['scholarship_id'];
+            $userName = $this->Users->get($recipientId)->name;
+
+            parent::beforeFilter($event);
+
+            // set header
+            $page->setHeader($userName . ' - ' . __('Institution Choices'));
+
+            $page->setQueryString('recipient_id', $recipientId);
+            $page->setQueryString('scholarship_id', $scholarshipId);
+
+            $page->get('applicant_id')->setControlType('hidden')->setValue($recipientId);
+            $page->get('scholarship_id')->setControlType('hidden')->setValue($scholarshipId);
+
+            $this->setBreadCrumb(['userName' => $userName]);
+            $this->setupTabElements();
+
+            $page->exclude(['is_selected']);
+        }
+
+        $page->disable(['add', 'delete']);
+    }
+}

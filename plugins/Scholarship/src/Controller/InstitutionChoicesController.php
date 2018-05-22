@@ -141,12 +141,11 @@ class InstitutionChoicesController extends PageController
 
                 $page->addCrumb($userName);
 
-            } else if ($name == 'RecipientInstitutionChoices') {
-                $page->addCrumb('Applicants', [
+            } else if ($name == 'ScholarshipRecipientInstitutionChoices') {
+                $page->addCrumb('Recipients', [
                     'plugin' => 'Scholarship',
-                    'controller' => 'Scholarships',
-                    'action' => 'Applications',
-                    'index'
+                    'controller' => 'ScholarshipRecipients',
+                    'action' => 'index'
                 ]);
             }
 
@@ -174,6 +173,8 @@ class InstitutionChoicesController extends PageController
         $tabElements = [];
         if ($name == 'ScholarshipApplicationInstitutionChoices') {
             $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
+        } elseif ($name == 'ScholarshipRecipientInstitutionChoices') {
+            $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
         } elseif ($name == 'ProfileApplicationInstitutionChoices') {
             $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
         }
