@@ -208,7 +208,7 @@ class ImportInstitutionPositionsTable extends AppTable
             ->all();
 
         if ($result->isEmpty()) {
-            $rowInvalidCodeCols['staff_position_grade_id'] = __('Selected value does not match with Staff Position Grade Type');
+            $rowInvalidCodeCols['staff_position_grade_id'] = __('Selected value does not match with Staff Position Title Type');
             return false;
         }
 
