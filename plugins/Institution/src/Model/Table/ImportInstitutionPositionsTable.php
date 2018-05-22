@@ -175,7 +175,6 @@ class ImportInstitutionPositionsTable extends AppTable
             $tempRow['position_no'] = $this->InstitutionPositions->getUniquePositionNo($this->institutionId);
         } elseif (strlen($tempRow['position_no']) > 30) {
             $rowInvalidCodeCols['position_no'] = __('Position number cannot be longer than 30');
-            $tempRow['position_no'] = false;
             return false;
         }
 
@@ -191,11 +190,9 @@ class ImportInstitutionPositionsTable extends AppTable
         if ($positionTitleEntity->type == 1) {
             if (!isset($tempRow['is_homeroom'])) {
                 $rowInvalidCodeCols['is_homeroom'] = __('This field cannot be left empty');
-                $tempRow['is_homeroom'] = false;
                 return false;
             }
         }
-
 
         $result = $this->StaffPositionTitlesGrades
             ->find()
