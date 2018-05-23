@@ -46,7 +46,8 @@ class PageComponent extends Component
         'edit' => true,
         'delete' => true,
         'download' => false,
-        'search' => true
+        'search' => true,
+        'reorder' => false
     ];
 
     private $cakephpReservedPassKeys = [
@@ -94,6 +95,11 @@ class PageComponent extends Component
         $this->status = new PageStatus();
 
         $this->setHeader(Inflector::humanize(Inflector::underscore($this->controller->name)));
+
+        $action = $this->request->action;
+        if ($action == 'reorder') {
+            $this->enableReorder($action);
+        }
     }
 
     public function implementedEvents()
@@ -1270,5 +1276,16 @@ class PageComponent extends Component
             }
         }
         return false;
+    }
+
+    private function enableReorder($action)
+    {
+        if ($this->request->is('post')) {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
+        $this->controller->Security->config('unlockedActions', [
+            $action
+        ]);
     }
 }
