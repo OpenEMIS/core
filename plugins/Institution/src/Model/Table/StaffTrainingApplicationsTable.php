@@ -10,7 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
-use Workflow\Model\Table\WorkflowBehavior;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 class StaffTrainingApplicationsTable extends ControllerActionTable
 {
