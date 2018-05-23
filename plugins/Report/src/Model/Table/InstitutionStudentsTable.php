@@ -96,7 +96,7 @@ class InstitutionStudentsTable extends AppTable  {
                         'Users.third_name',
                         'Users.last_name',
                         'Users.preferred_name',
-                        'Users.date_of_birth',
+                        'dob' =>'Users.date_of_birth',
                         'username' => 'Users.username',
                         'number' => 'Users.identity_number'
                     ]
@@ -377,6 +377,13 @@ class InstitutionStudentsTable extends AppTable  {
 			'type' => 'string',
 			'label' => ''
 		];
+
+        $extraField[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'dob',
+            'type' => 'date',
+            'label' => ''
+        ];
 
         if ($statusId == $this->statuses['TRANSFERRED']) {
             $extraField[] = [
