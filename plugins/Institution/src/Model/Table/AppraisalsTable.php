@@ -156,7 +156,7 @@ class AppraisalsTable extends ControllerActionTable
                 ]);
                 if ($section != $details['section']) {
                     $section = $details['section'];
-                    $this->field('section' . $sectionCount++, ['type' => 'section']);
+                    $this->field('section' . $sectionCount++, ['type' => 'section', 'title' => $details['section']]);
                 }
                 $this->appraisalCustomFieldExtra($details, $formCritieria, $criteriaCounter, $entity);
             }
