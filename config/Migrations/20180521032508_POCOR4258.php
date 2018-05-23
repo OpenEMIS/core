@@ -49,7 +49,7 @@ class POCOR4258 extends AbstractMigration
                 'is_optional' => 1,
                 'foreign_key' => 3,
                 'lookup_plugin' => null,
-                'lookup_model' => 'IsHomeroom',
+                'lookup_model' => 'HomeroomTeacher',
                 'lookup_column' => 'id'
             ],
             [
