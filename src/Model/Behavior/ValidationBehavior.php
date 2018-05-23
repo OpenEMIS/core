@@ -2606,6 +2606,27 @@ class ValidationBehavior extends Behavior
         return true; 
     }
 
+    public static function checkChoiceStatus($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $statusId = $globalData['data']['scholarship_institution_choice_status_id'];
+        $InstitutionChoiceStatuses = TableRegistry::get('Scholarship.InstitutionChoiceStatuses');
+        
+        $institutionChoiceStatusesOptions = $InstitutionChoiceStatuses
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code'
+            ])
+            ->order([$InstitutionChoiceStatuses->aliasField('id')])
+            ->toArray();
+
+        if($institutionChoiceStatusesOptions[$statusId] != 'ACCEPTED') {
+            return false;
+        }
+        
+        return true; 
+    }
+
     //check whether position assigned to class(es)
     public static function checkHomeRoomTeacherAssignments($field, array $globalData)
     {
