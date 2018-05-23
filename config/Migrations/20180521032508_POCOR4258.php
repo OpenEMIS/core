@@ -88,10 +88,10 @@ class POCOR4258 extends AbstractMigration
         $this->insert('locale_contents', $localeData);
 
         // security_functions
-        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1003'); // Order after Positions
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1017'); // Order after Positions
         $order = $row['order'];
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > ' . $order);
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` >= ' . $order);
 
         $securityData = [
             [
@@ -106,7 +106,7 @@ class POCOR4258 extends AbstractMigration
                 '_add' => null,
                 '_delete' => null,
                 '_execute' => 'ImportInstitutionPositions.add|ImportInstitutionPositions.template|ImportInstitutionPositions.results|ImportInstitutionPositions.downloadFailed|ImportInstitutionPositions.downloadPassed',
-                'order' => $order + 1,
+                'order' => $order,
                 'visible' => 1,
                 'description' => null,
                 'created_user_id' => 1,
@@ -128,10 +128,10 @@ class POCOR4258 extends AbstractMigration
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Selected value does not match with Staff Position Title Type'");
 
         // security_functions
-        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1003'); // Leave id
+        $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1017'); // Leave id
         $order = $row['order'];
 
         $this->execute("DELETE FROM `security_functions` WHERE `id` = 1084");
-        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > " . $order);
+        $this->execute("UPDATE security_functions SET `order` = `order` - 1 WHERE `order` >= " . $order);
     }
 }
