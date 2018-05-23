@@ -4,6 +4,7 @@ namespace Page\View\Helper;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\I18n\I18n;
@@ -234,6 +235,9 @@ class PageHelper extends Helper
         if (count(array_intersect($actionButtons, $disabledActions)) < count($actionButtons)) {
             $headers[] = [__('Actions') => ['class' => 'cell-action']];
         }
+        if (!in_array('reorder', $disabledActions)) {
+            $headers[] = [__('Reorder') => ['class' => 'cell-reorder']];
+        }
 
         return $headers;
     }
@@ -258,6 +262,24 @@ class PageHelper extends Helper
             if (count(array_intersect($actionButtons, $disabledActions)) < count($actionButtons)) {
                 $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
             }
+            if (!in_array('reorder', $disabledActions)) {
+                $row[] = [$this->_View->element('Page.reorder', ['data' => $entity]), ['class' => 'sorter']];
+            }
+
+            $model = TableRegistry::get($entity->source());
+            $primaryKeys = $model->primaryKey();
+
+            $primaryKeyValue = [];
+            if (is_array($primaryKeys)) {
+                foreach ($primaryKeys as $key) {
+                    $primaryKeyValue[$key] = $entity->getOriginal($key);
+                }
+            } else {
+                $primaryKeyValue[$primaryKeys] = $entity->getOriginal($primaryKeys);
+            }
+
+            $encodedKeys = $this->encode($primaryKeyValue);
+            $row[0] = [$row[0], ['data-row-id' => $encodedKeys]];
 
             $tableData[] = $row;
         }
