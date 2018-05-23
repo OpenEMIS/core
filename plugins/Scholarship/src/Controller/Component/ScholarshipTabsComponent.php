@@ -56,9 +56,12 @@ class ScholarshipTabsComponent extends Component
 
     public function getScholarshipRecipientTabs($options = [])
     {
+        $ids = $this->controller->paramsDecode($this->queryString);
+        $encodedIds = $this->Page->encode($ids);
+        
         $tabElements = [
             'Recipients' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $this->queryString, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $encodedIds, 'queryString' => $this->queryString],
                 'text' => __('Overview')
             ],
             'InstitutionChoices' => [
