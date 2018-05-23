@@ -13,6 +13,8 @@ class ScholarshipRecipientsController extends PageController
     public function initialize()
     {
         parent::initialize();
+        $this->loadModel('Scholarship.Scholarships');
+        $this->loadModel('Scholarship.FinancialAssistanceTypes');
         $this->loadModel('Scholarship.RecipientActivityStatuses');
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
@@ -22,6 +24,7 @@ class ScholarshipRecipientsController extends PageController
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderStatus'] = 'onRenderStatus';
+        $event['Controller.Page.onRenderApprovedAmount'] = 'onRenderApprovedAmount';
         $event['Controller.Page.getEntityRowActions'] = 'getEntityRowActions';
         return $event;
     }
@@ -73,6 +76,10 @@ class ScholarshipRecipientsController extends PageController
             ->setDisplayFrom('recipient.openemis_no');
         $page->addNew('financial_assistance_type')
             ->setDisplayFrom('scholarship.financial_assistance_type.name');
+        $maximumAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Maximum Award Amount');
+        $page->addNew('maximum_award_amount')
+            ->setDisplayFrom('scholarship.maximum_award_amount')
+            ->setLabel($maximumAwardAmountLabel);
 
         $activityStatusData = $this->getActivityStatusData($entity);
         $page->addNew('activity_status')
@@ -80,7 +87,9 @@ class ScholarshipRecipientsController extends PageController
             ->setAttributes('column', [
                 ['label' => __('Date'), 'key' => 'date'],
                 ['label' => __('Transition'), 'key' => 'transition'],
-                ['label' => __('Comments'), 'key' => 'comments']
+                ['label' => __('Comments'), 'key' => 'comments'],
+                ['label' => __('Last Executer'), 'key' => 'last_executer'],
+                ['label' => __('Last Execution Date'), 'key' => 'last_execution_date']
             ])
             ->setAttributes('row', $activityStatusData);
 
@@ -89,7 +98,8 @@ class ScholarshipRecipientsController extends PageController
         $page->move('recipient_id')->after('openemis_no');
         $page->move('financial_assistance_type')->after('recipient_id');
         $page->move('scholarship_id')->after('financial_assistance_type');
-        $page->move('approved_amount')->after('scholarship_id');
+        $page->move('maximum_award_amount')->after('scholarship_id');
+        $page->move('approved_amount')->after('maximum_award_amount');
         $page->move('activity_status')->after('approved_amount');
     }
 
@@ -101,12 +111,19 @@ class ScholarshipRecipientsController extends PageController
 
         $this->setupTabElements();
 
+        $page->get('scholarship_recipient_activity_status_id')
+            ->setLabel('Status');
         $page->addNew('openemis_no')
             ->setDisplayFrom('recipient.openemis_no');
         $page->addNew('financial_assistance_type')
             ->setDisplayFrom('scholarship.financial_assistance_type.name');
-
-        $page->addNew('status')
+        $maximumAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Maximum Award Amount');
+        $maximumAwardAmountValue = $entity->scholarship->maximum_award_amount;
+        $page->addNew('maximum_award_amount')
+            ->setDisplayFrom('scholarship.maximum_award_amount')
+            ->setLabel($maximumAwardAmountLabel)
+            ->setValue($maximumAwardAmountValue);
+        $page->addNew('activity_status')
             ->setControlType('section');
         $page->addNew('date')
             ->setControlType('date');
@@ -130,6 +147,9 @@ class ScholarshipRecipientsController extends PageController
         $page->move('recipient_id')->after('openemis_no');
         $page->move('financial_assistance_type')->after('recipient_id');
         $page->move('scholarship_id')->after('financial_assistance_type');
+        $page->move('maximum_award_amount')->after('scholarship_id');
+        $page->move('approved_amount')->after('maximum_award_amount');
+        $page->move('activity_status')->after('approved_amount');
     }
 
     public function setupTabElements()
@@ -154,6 +174,35 @@ class ScholarshipRecipientsController extends PageController
         if ($page->is(['index', 'view'])) {
             if ($entity->has('recipient_activity_status') && $entity->recipient_activity_status->has('name')) {
                 return '<span class="status highlight">' . $entity->recipient_activity_status->name . '</span>';
+            }
+        }
+    }
+
+    public function onRenderApprovedAmount(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+        $scholarshipEntity = $entity->has('scholarship') ? $entity->scholarship : null;
+
+        $isLoan = false;
+        if ($scholarshipEntity->has('financial_assistance_type_id')) {
+            $isLoan = $this->FinancialAssistanceTypes->is($scholarshipEntity->financial_assistance_type_id, 'LOAN');
+        } elseif ($scholarshipEntity->has('financial_assistance_type') && $scholarshipEntity->financial_assistance_type->id) {
+            $isLoan = $this->FinancialAssistanceTypes->is($scholarshipEntity->financial_assistance_type->id, 'LOAN');
+        }
+        $fieldLabel = $this->Scholarships->addCurrencySuffix('Approved Amount');
+        $element->setLabel($fieldLabel);
+
+        if ($page->is(['view'])) {
+            $element->setVisible($isLoan);
+        } elseif ($page->is(['edit'])) {
+            if ($isLoan) {
+                $element
+                    ->setRequired(true)
+                    ->setAttributes('onblur', 'return utility.checkDecimal(this, 2);');
+            } else {
+                $element
+                    ->setControlType('hidden')
+                    ->setValue('');
             }
         }
     }
@@ -183,10 +232,9 @@ class ScholarshipRecipientsController extends PageController
     private function getActivityStatusData(Entity $entity)
     {
         $rows = [];
+
         if ($entity->has('recipient_activities')) {
             foreach ($entity->recipient_activities as $key => $obj) {
-                // $dateDisplay = $obj->date->format('Y-m-d H:i:s');
-                $dateDisplay = $this->ScholarshipRecipients->formatDate($obj->date);
                 $prevStatusName = $obj->prev_recipient_activity_status_name;
                 $statusName = $obj->recipient_activity_status_name;
 
@@ -198,7 +246,13 @@ class ScholarshipRecipientsController extends PageController
                     $transitionDisplay .= '<span class="status past">' . __($statusName) . '</span>';
                 }
 
-                $rows[] = ['date' => $dateDisplay, 'transition' => $transitionDisplay, 'comments' => nl2br($obj->comments)];
+                $rows[] = [
+                    'date' => $this->ScholarshipRecipients->formatDate($obj->date),
+                    'transition' => $transitionDisplay,
+                    'comments' => nl2br($obj->comments),
+                    'last_executer' => $obj->created_user->name,
+                    'last_execution_date' => $obj->created->format('Y-m-d H:i:s')
+                ];
             }
         }
 
