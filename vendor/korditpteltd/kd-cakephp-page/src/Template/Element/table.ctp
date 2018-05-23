@@ -1,9 +1,21 @@
 <?php
 echo $this->Html->script('Page.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
+echo $this->Html->script('Page.reorder', ['block' => true]);
 
 $tableClass = 'table table-curved table-sortable table-checkable';
-$displayReorder = false;
+$displayReorder = isset($reorder) && $reorder && $data->count() > 1;;
 $displayAction = true;
+
+$url = [
+    'plugin' => $this->request->params['plugin'],
+    'controller' => $this->request->params['controller'],
+    'action' => $this->request->params['action']
+];
+
+if ($this->request->params['action'] == 'index') {
+    $url['action'] = 'reorder';
+}
+$baseUrl = $this->Url->build($url);
 
 $tableHeaders = $this->Page->getTableHeaders();
 $tableData = $this->Page->getTableData();
