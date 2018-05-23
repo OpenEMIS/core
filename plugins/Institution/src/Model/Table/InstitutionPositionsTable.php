@@ -89,6 +89,44 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
+            ->add('staff_position_grade_id', 'custom', [
+                'rule' => function ($value, $context) {
+                    $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+                    $staffPositionTitleId = $context['data']['staff_position_title_id'];
+
+                    $result = $StaffPositionTitlesGrades
+                        ->find()
+                        ->where([
+                            'AND' => [
+                                [$StaffPositionTitlesGrades->aliasField('staff_position_title_id') => $staffPositionTitleId],
+                                'OR' => [
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => $value],
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => -1]
+                                ]
+                            ]
+                        ])
+                        ->all();
+
+                    return !$result->isEmpty();
+                },
+                'message' => __('Selected value does not match with Staff Position Title Type')
+            ])
+            ->requirePresence('is_homeroom', function ($context) {
+                if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+                    $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                    $titleId = $context['data']['staff_position_title_id'];
+
+                    $titleEntity = $StaffPositionTitles
+                        ->find()
+                        ->select([$StaffPositionTitles->aliasField('type')])
+                        ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+                        ->first();
+
+                    $positionType = $titleEntity->type;
+                    return $positionType == 1;
+                }
+                return false;
+            })
             ->add('is_homeroom', 'ruleCheckHomeRoomTeacherAssignments', [
                 'rule' => 'checkHomeRoomTeacherAssignments',
                 'on' => function ($context) {

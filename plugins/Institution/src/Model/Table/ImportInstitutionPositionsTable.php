@@ -40,9 +40,9 @@ class ImportInstitutionPositionsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-        $events['Model.import.onImportGetIsHomeroomId'] = 'onImportGetIsHomeroomId';
+        $events['Model.import.onImportGetHomeroomTeacherId'] = 'onImportGetHomeroomTeacherId';
         $events['Model.import.onImportPopulateStaffPositionTitlesData'] = 'onImportPopulateStaffPositionTitlesData';
-        $events['Model.import.onImportPopulateIsHomeroomData'] = 'onImportPopulateIsHomeroomData';
+        $events['Model.import.onImportPopulateHomeroomTeacherData'] = 'onImportPopulateHomeroomTeacherData';
         $events['Model.import.onImportPopulateWorkflowStepsData'] = 'onImportPopulateWorkflowStepsData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
@@ -59,7 +59,7 @@ class ImportInstitutionPositionsTable extends AppTable
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportGetIsHomeroomId(Event $event, $cellValue)
+    public function onImportGetHomeroomTeacherId(Event $event, $cellValue)
     {
         $options = $this->getSelectOptions('general.yesno');
         foreach ($options as $key => $value) {
@@ -108,7 +108,7 @@ class ImportInstitutionPositionsTable extends AppTable
         }
     }
 
-    public function onImportPopulateIsHomeroomData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateHomeroomTeacherData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('Is Homeroom', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -173,43 +173,6 @@ class ImportInstitutionPositionsTable extends AppTable
 
         if (!isset($tempRow['position_no'])) {
             $tempRow['position_no'] = $this->InstitutionPositions->getUniquePositionNo($this->institutionId);
-        } elseif (strlen($tempRow['position_no']) > 30) {
-            $rowInvalidCodeCols['position_no'] = __('Position number cannot be longer than 30');
-            return false;
-        }
-
-        $positionTitleEntity = $this->StaffPositionTitles
-            ->find()
-            ->select([$this->StaffPositionTitles->aliasField('type')])
-            ->where([
-                $this->StaffPositionTitles->aliasField('id') => $tempRow['staff_position_title_id']
-            ])
-            ->first();
-
-        // Selected title is teaching type, need to check if the homeroom is set (Teaching = 1, Non-Teaching = 0)
-        if ($positionTitleEntity->type == 1) {
-            if (!isset($tempRow['is_homeroom'])) {
-                $rowInvalidCodeCols['is_homeroom'] = __('This field cannot be left empty');
-                return false;
-            }
-        }
-
-        $result = $this->StaffPositionTitlesGrades
-            ->find()
-            ->where([
-                'AND' => [
-                    $this->StaffPositionTitlesGrades->aliasField('staff_position_title_id') => $tempRow['staff_position_title_id'],
-                    'OR' => [
-                        [$this->StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => $tempRow['staff_position_grade_id']],
-                        [$this->StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => -1]
-                    ]
-                ]
-            ])
-            ->all();
-
-        if ($result->isEmpty()) {
-            $rowInvalidCodeCols['staff_position_grade_id'] = __('Selected value does not match with Staff Position Title Type');
-            return false;
         }
 
         return true;
