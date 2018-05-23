@@ -106,7 +106,7 @@ class ImportInstitutionPositionsTable extends AppTable
 
     public function onImportPopulateHomeroomTeacherData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $translatedReadableCol = $this->getExcelLabel('Is Homeroom', 'name');
+        $translatedReadableCol = $this->getExcelLabel('Homeroom Teacher', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 
