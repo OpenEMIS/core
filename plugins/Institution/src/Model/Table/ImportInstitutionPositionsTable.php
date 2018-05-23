@@ -29,11 +29,7 @@ class ImportInstitutionPositionsTable extends AppTable
         ]);
 
         $this->Workflows = TableRegistry::get('Workflow.Workflows');
-        $this->WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-        $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
         $this->InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
-        $this->StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-        $this->StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
     }
 
     public function implementedEvents()
