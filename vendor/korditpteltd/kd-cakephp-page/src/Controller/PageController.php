@@ -64,6 +64,12 @@ class PageController extends AppController
         if ($request->is(['get', 'ajax']) && $page->hasMainTable() && $showData) {
             $table = $page->getMainTable();
 
+            $columns = $table->schema()->columns();
+            if (in_array($page->config('sequence'), $columns) && $page->isActionAllowed('edit')) {
+                $page->enable(['reorder']);
+                $page->setVar('reorder', true);
+            }
+
             $primaryKey = $table->primaryKey();
             if (!is_array($primaryKey)) { // if primary key is not composite key, then hide from index page
                 $page->exclude($primaryKey);
@@ -447,6 +453,48 @@ class PageController extends AppController
             }
         } else {
             // need error handling
+        }
+    }
+
+    public function reorder()
+    {
+        $page = $this->Page;
+        $request = $this->request;
+        $this->autoRender = false;
+
+        if ($page->hasMainTable()) {
+            $table = $page->getMainTable();
+
+            if ($request->is('ajax')) {
+                $primaryKey = $table->primaryKey();
+                $orderField = $page->config('sequence');
+
+                $encodedIds = json_decode($request->data("ids"));
+
+                $ids = [];
+                $idKeys = [];
+                foreach ($encodedIds as $id) {
+                    $ids[] = $page->decode($id);
+                    $idKeys[] = $table->getIdKeys($table, $page->decode($id));
+                }
+
+                if (!empty($ids)) {
+                    $originalOrder = $table
+                        ->find()
+                        ->select($primaryKey)
+                        ->select($orderField)
+                        ->where(['OR' => $idKeys])
+                        ->order([$table->aliasField($orderField)])
+                        ->hydrate(false)
+                        ->toArray();
+
+                    $originalOrder = array_reverse($originalOrder);
+                    foreach ($ids as $id) {
+                        $orderValue = array_pop($originalOrder);
+                        $table->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+                    }
+                }
+            }
         }
     }
 

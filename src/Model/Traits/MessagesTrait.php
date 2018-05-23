@@ -1995,6 +1995,12 @@ trait MessagesTrait
                 'requested_amount' => [
                     'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
                 ]
+            ],
+            'ScholarshipRecipients' => [
+                'approved_amount' => [
+                    'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
+                    'validateDecimal' => 'Value cannot be more than two decimal places'
+                ]
             ]
         ],
         'Competency' => [
