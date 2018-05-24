@@ -38,6 +38,10 @@ class OutcomeCriteriasTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentOutcomes' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
