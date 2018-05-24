@@ -96,7 +96,8 @@ class InstitutionStudentsTable extends AppTable  {
                         'Users.third_name',
                         'Users.last_name',
                         'Users.preferred_name',
-                        'dob' =>'Users.date_of_birth',
+                        'dob' =>'Users.date_of_birth', // for Date Of Birth field
+                        'Users.date_of_birth',  // for Age field
                         'username' => 'Users.username',
                         'number' => 'Users.identity_number'
                     ]
