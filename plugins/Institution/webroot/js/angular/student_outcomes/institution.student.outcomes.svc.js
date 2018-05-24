@@ -16,6 +16,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         getStudentOutcomeResults: getStudentOutcomeResults,
         getStudentOutcomeComments: getStudentOutcomeComments,
         getColumnDefs: getColumnDefs,
+        getRowData: getRowData,
         renderInput: renderInput,
         saveOutcomeResults: saveOutcomeResults,
         saveOutcomeComments: saveOutcomeComments,
@@ -28,6 +29,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         StudentStatuses: 'Student.StudentStatuses',
         InstitutionClassStudents: 'Institution.InstitutionClassStudents',
         OutcomeTemplates: 'Outcome.OutcomeTemplates',
+        OutcomeCriterias: 'Outcome.OutcomeCriterias',
         OutcomeGradingTypes: 'Outcome.OutcomeGradingTypes',
         InstitutionOutcomeResults: 'Institution.InstitutionOutcomeResults',
         OutcomeSubjectComments: 'Institution.InstitutionOutcomeSubjectComments'
@@ -95,7 +97,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
         return OutcomeTemplates
             .get(primaryKey)
-            .contain(['Periods', 'Criterias', 'EducationGrades.EducationSubjects'])
+            .contain(['Periods', 'EducationGrades.EducationSubjects'])
             .ajax({success: success, defer:true});
     }
 
@@ -143,7 +145,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(period, subject, student, periodOptions, subjectOptions, studentOptions) {
+    function getColumnDefs(period, subject, student, periodOptions, subjectOptions, studentOptions, studentResults) {
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
             cellHeight: 30
@@ -178,11 +180,48 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             filterParams: filterParams,
             menuTabs: menuTabs
         };
-        var extra = {};
+        var extra = {
+            studentResults: studentResults
+        };
         columnDef = this.renderInput(columnDef, extra);
         columnDefs.push(columnDef);
 
         return {data: columnDefs};
+    }
+
+    function getRowData(outcomeTemplateId, subjectId, defaultRow, gradingOptions, studentResults, limit, page) {
+        var success = function(response, deferred) {
+            var criterias = response.data.data;
+
+            var rowData = [];
+            angular.forEach(criterias, function (value, key) {
+                var row = angular.copy(defaultRow);
+                row['outcome_criteria_id'] = value.id;
+                row['outcome_criteria_name'] = value.code_name;
+
+                if (angular.isDefined(gradingOptions[value.outcome_grading_type_id])) {
+                    row['grading_options'] = gradingOptions[value.outcome_grading_type_id];
+                }
+
+                if (angular.isDefined(studentResults[value.id])) {
+                    row['result'] = studentResults[value.id];
+                }
+                this.push(row);
+            }, rowData);
+
+            response.data.data = rowData;
+            deferred.resolve(response);
+        };
+
+        return OutcomeCriterias
+            .select()
+            .where({
+                outcome_template_id: outcomeTemplateId,
+                education_subject_id: subjectId
+            })
+            .limit(limit)
+            .page(page)
+            .ajax({success: success, defer:true});
     }
 
     function renderInput(cols, extra) {
@@ -191,141 +230,153 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         cols = angular.merge(cols, {
             cellClassRules: {
                 'oe-cell-error': function(params) {
-                    return params.data.save_error[params.colDef.field];
+                    if (angular.isDefined(params.data) && angular.isDefined(params.data.save_error)) {
+                        return params.data.save_error[params.colDef.field];
+                    }
                 }
             },
             cellRenderer: function(params) {
-                var periodEditable = params.data.period_editable;
-                var studentStatus = params.data.student_status;
-                var gradingOptions = {0 : '-- Select --'};
-                if (angular.isDefined(params.data.grading_options)) {
-                    angular.forEach(params.data.grading_options, function(obj, key) {
-                        gradingOptions[obj.id] = obj.code_name;
-                    });
-                }
-
-                if (periodEditable && studentStatus == "CURRENT") {
-                    var oldValue = params.value;
-
-                    var eCell = document.createElement('div');
-                    eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
-
-                    var eSelect = document.createElement("select");
-                    angular.forEach(gradingOptions, function(value, key) {
-                        var eOption = document.createElement("option");
-                        eOption.setAttribute("value", key);
-                        eOption.innerHTML = value;
-                        eSelect.appendChild(eOption);
-                    });
-                    eSelect.value = params.value;
-
-                    eSelect.addEventListener('blur', function () {
-                        var newValue = eSelect.value;
-
-                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
-                            params.data[params.colDef.field] = newValue;
-
-                            var controller = params.context._controller;
-                            vm.saveOutcomeResults(params)
-                            .then(function(response) {
-                                params.data.save_error[params.colDef.field] = false;
-                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
-                                params.api.refreshCells({
-                                    rowNodes: [params.node],
-                                    columns: [params.colDef.field],
-                                    force: true
-                                });
-
-                            }, function(error) {
-                                params.data.save_error[params.colDef.field] = true;
-                                console.log(error);
-                                AlertSvc.error(controller, "There was an error when saving the results");
-                                params.api.refreshCells({
-                                    rowNodes: [params.node],
-                                    columns: [params.colDef.field],
-                                    force: true
-                                });
-                            });
-                        }
-                    });
-
-                    eCell.appendChild(eSelect);
-
-                } else {
-                    // don't allow input if period is not editable
-                    var cellValue = '';
-                    if (angular.isDefined(params.value) && params.value.length != 0 && params.value != 0) {
-                        cellValue = gradingOptions[params.value];
+                if (angular.isDefined(params.data)) {
+                    var periodEditable = params.data.period_editable;
+                    var studentStatus = params.data.student_status;
+                    var gradingOptions = {0 : '-- Select --'};
+                    if (angular.isDefined(params.data.grading_options)) {
+                        angular.forEach(params.data.grading_options, function(obj, key) {
+                            gradingOptions[obj.id] = obj.code_name;
+                        });
                     }
 
-                    var eCell = document.createElement('div');
-                    var eLabel = document.createTextNode(cellValue);
-                    eCell.appendChild(eLabel);
-                }
+                    if (periodEditable && studentStatus == "CURRENT") {
+                        var oldValue = params.value;
 
-                return eCell;
+                        var eCell = document.createElement('div');
+                        eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+
+                        var eSelect = document.createElement("select");
+                        angular.forEach(gradingOptions, function(value, key) {
+                            var eOption = document.createElement("option");
+                            eOption.setAttribute("value", key);
+                            eOption.innerHTML = value;
+                            eSelect.appendChild(eOption);
+                        });
+                        eSelect.value = params.value;
+
+                        eSelect.addEventListener('blur', function () {
+                            var newValue = eSelect.value;
+
+                            if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                                params.data[params.colDef.field] = newValue;
+
+                                var outcomeCriteriaId = params.data.outcome_criteria_id;
+                                if (extra.studentResults[outcomeCriteriaId] == undefined) {
+                                    extra.studentResults[outcomeCriteriaId] = 0;
+                                }
+                                extra.studentResults[outcomeCriteriaId] = newValue;
+
+                                var controller = params.context._controller;
+                                vm.saveOutcomeResults(params)
+                                .then(function(response) {
+                                    params.data.save_error[params.colDef.field] = false;
+                                    AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
+                                    params.api.refreshCells({
+                                        rowNodes: [params.node],
+                                        columns: [params.colDef.field],
+                                        force: true
+                                    });
+
+                                }, function(error) {
+                                    params.data.save_error[params.colDef.field] = true;
+                                    console.log(error);
+                                    AlertSvc.error(controller, "There was an error when saving the results");
+                                    params.api.refreshCells({
+                                        rowNodes: [params.node],
+                                        columns: [params.colDef.field],
+                                        force: true
+                                    });
+                                });
+                            }
+                        });
+
+                        eCell.appendChild(eSelect);
+
+                    } else {
+                        // don't allow input if period is not editable
+                        var cellValue = '';
+                        if (angular.isDefined(params.value) && params.value.length != 0 && params.value != 0) {
+                            cellValue = gradingOptions[params.value];
+                        }
+
+                        var eCell = document.createElement('div');
+                        var eLabel = document.createTextNode(cellValue);
+                        eCell.appendChild(eLabel);
+                    }
+
+                    return eCell;
+                }
             },
             pinnedRowCellRenderer: function(params) {
-                var periodEditable = params.data.period_editable;
-                var studentStatus = params.data.student_status;
+                if (angular.isDefined(params.data)) {
+                    var periodEditable = params.data.period_editable;
+                    var studentStatus = params.data.student_status;
 
-                if (periodEditable && studentStatus == "CURRENT") {
-                    var oldValue = params.value;
+                    if (periodEditable && studentStatus == "CURRENT") {
+                        var oldValue = params.value;
 
-                    var eCell = document.createElement('div');
-                    var textInput = document.createElement('input');
-                    textInput.setAttribute("type", "text");
-                    textInput.setAttribute("class", "oe-cell-editable");
-                    textInput.value = params.value;
-                    eCell.appendChild(textInput);
+                        var eCell = document.createElement('div');
+                        var textInput = document.createElement('input');
+                        textInput.setAttribute("type", "text");
+                        textInput.setAttribute("class", "oe-cell-editable");
+                        textInput.value = params.value;
+                        eCell.appendChild(textInput);
 
-                    // allow keyboard shortcuts
-                    textInput.addEventListener('keydown', function(event) {
-                        event.stopPropagation();
-                    });
+                        // allow keyboard shortcuts
+                        textInput.addEventListener('keydown', function(event) {
+                            event.stopPropagation();
+                        });
 
-                    textInput.addEventListener('blur', function() {
-                        var newValue = textInput.value;
+                        textInput.addEventListener('blur', function() {
+                            var newValue = textInput.value;
 
-                        if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
-                            params.data[params.colDef.field] = newValue;
+                            if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                                params.data[params.colDef.field] = newValue;
 
-                            var controller = params.context._controller;
-                            vm.saveOutcomeComments(params)
-                            .then(function(response) {
-                                params.data.save_error[params.colDef.field] = false;
-                                AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
-                                params.api.refreshCells({
-                                    rowNodes: [params.node],
-                                    columns: [params.colDef.field],
-                                    force: true
+                                var controller = params.context._controller;
+                                vm.saveOutcomeComments(params)
+                                .then(function(response) {
+                                    params.data.save_error[params.colDef.field] = false;
+                                    AlertSvc.info(controller, "Changes will be automatically saved when any value is changed");
+                                    params.api.refreshCells({
+                                        rowNodes: [params.node],
+                                        columns: [params.colDef.field],
+                                        force: true
+                                    });
+
+                                }, function(error) {
+                                    params.data.save_error[params.colDef.field] = true;
+                                    console.log(error);
+                                    AlertSvc.error(controller, "There was an error when saving the comments");
+                                    params.api.refreshCells({
+                                        rowNodes: [params.node],
+                                        columns: [params.colDef.field],
+                                        force: true
+                                    });
                                 });
+                            }
+                        });
 
-                            }, function(error) {
-                                params.data.save_error[params.colDef.field] = true;
-                                console.log(error);
-                                AlertSvc.error(controller, "There was an error when saving the comments");
-                                params.api.refreshCells({
-                                    rowNodes: [params.node],
-                                    columns: [params.colDef.field],
-                                    force: true
-                                });
-                            });
+                    } else {
+                        // don't allow input if period is not editable
+                        var cellValue = '';
+                        if (angular.isDefined(params.value) && params.value.length != 0) {
+                            cellValue = params.value;
                         }
-                    });
 
-                } else {
-                    // don't allow input if period is not editable
-                    var cellValue = '';
-                    if (angular.isDefined(params.value) && params.value.length != 0) {
-                        cellValue = params.value;
+                        var eCell = document.createElement('div');
+                        var eLabel = document.createTextNode(cellValue);
+                        eCell.appendChild(eLabel);
                     }
-
-                    var eCell = document.createElement('div');
-                    var eLabel = document.createTextNode(cellValue);
-                    eCell.appendChild(eLabel);
+                    return eCell;
                 }
-                return eCell;
             },
             suppressMenu: true
         });
