@@ -1028,11 +1028,17 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.'
+                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
                 ],
+            ],
+            'StaffUser' => [
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ]
             ],
             'StudentAdmission' => [
                 'student_id' => [
