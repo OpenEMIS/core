@@ -74,6 +74,10 @@ class ScholarshipsTable extends ControllerActionTable
         $this->interestRateOptions = $this->getSelectOptions($this->aliasField('interest_rate'));
         $this->mandatoryOptions = $this->getSelectOptions('general.yesno');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
+
+        $this->addBehavior('Excel', [
+            'pages' => ['index']
+        ]);
     }
 
     public function implementedEvents()
@@ -132,6 +136,117 @@ class ScholarshipsTable extends ControllerActionTable
                 'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                 'message' => __('Value cannot be more than two decimal places')
             ]);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $query
+            ->contain([
+                'Loans.PaymentFrequencies',
+                'FieldOfStudies' => [
+                    'fields' => [
+                        'FieldOfStudies.name',
+                        'ScholarshipsFieldOfStudies.scholarship_id'
+                    ]
+                ],
+                'AttachmentTypes' => [
+                    'fields' => [
+                        'AttachmentTypes.name',
+                        'ScholarshipsScholarshipAttachmentTypes.scholarship_id'
+                    ]
+                ]
+            ])
+            ->select([
+                'interest_rate' => 'Loans.interest_rate', 
+                'interest_rate_type' => 'Loans.interest_rate_type', 
+                'loan_term' => 'Loans.loan_term', 
+                'payment_frequency_name' => 'PaymentFrequencies.name'
+            ]);
+    }
+
+     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+     {
+            $newArray = [];
+            $newArray[] = [
+                'key' => 'FieldOfStudies.name',
+                'field' => 'all_field_of_studies',
+                'type' => 'string',
+                'label' =>  __('Field Of Studies')
+            ];
+            $newArray[] = [
+                'key' => 'AttachmentTypes.name',
+                'field' => 'all_attachment_types',
+                'type' => 'string',
+                'label' =>  __('Attachment Types')
+            ];
+            $newArray[] = [
+                'key' => 'Loans.interest_rate',
+                'field' => 'interest_rate',
+                'type' => 'string',
+                'label' => __('Interest Rate %')
+            ];
+            $newArray[] = [
+                'key' => 'Loans.interest_rate_type',
+                'field' => 'interest_rate_type',
+                'type' => 'string',
+                'label' => ''
+            ];
+            $newArray[] = [
+                'key' => 'Loans.loan_term',
+                'field' => 'loan_term',
+                'type' => 'integer'
+            ];
+            $newArray[] = [
+                'key' => 'PaymentFrequencies.name',
+                'field' => 'payment_frequency_name',
+                'type' => 'string',
+                'label' => __('Payment Frequency')
+            ];
+       
+            $newFields = array_merge($fields->getArrayCopy(), $newArray);
+            $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetInterestRateType(Event $event, Entity $entity)
+    {   
+        $value = '';
+        if ($entity->has('interest_rate_type')) {
+            if (isset($entity->interest_rate_type)) {
+                $interestRateType = $entity->interest_rate_type;
+                $value = $this->interestRateOptions[$interestRateType];
+            }
+        }
+        return $value;
+    }
+
+    public function onExcelGetAllAttachmentTypes(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('attachment_types')) {
+            if (!empty($entity->attachment_types)) {
+                foreach ($entity->attachment_types as $attachmentType) {
+                        $return[] = $attachmentType->name;
+                }
+            }
+        }
+        return implode(', ', array_values($return));
+    }
+
+    public function onExcelGetAllFieldOfStudies(Event $event, Entity $entity)
+    {
+        $return = [];
+        if ($entity->has('field_of_studies')) {
+            if (!empty($entity->field_of_studies)) {
+                foreach ($entity->field_of_studies as $studyField) {
+                        $return[] = $studyField->name;
+                }
+            }else {
+                $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies')->getList()->toArray();
+                foreach ($EducationFieldOfStudies as $educationFieldOfStudy) {
+                    $return [] = $educationFieldOfStudy;
+                }
+            }
+        }
+        return implode(', ', array_values($return));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
