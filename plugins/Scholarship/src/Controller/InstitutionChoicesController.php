@@ -58,6 +58,10 @@ class InstitutionChoicesController extends PageController
     public function index()
     {
         $page = $this->Page;
+
+        // default ordering
+        $page->setQueryOption('order', [$this->ApplicationInstitutionChoices->aliasField('order') => 'ASC']);
+
         parent::index();
 
         $page->exclude(['institution_id', 'estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id', 'is_selected', 'requested_amount']);
