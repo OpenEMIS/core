@@ -661,4 +661,14 @@ class SecurityRolesTable extends ControllerActionTable
 
         return (!empty($principalData))? $principalData->id: null;
     }
+
+    public function getDeputyPrincipalRoleId()
+    {
+        $deputyPrincipalData = $this->find()
+            ->select([$this->primaryKey()])
+            ->where([$this->aliasField('code') => 'DEPUTY_PRINCIPAL'])
+            ->first();
+
+        return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
+    }
 }
