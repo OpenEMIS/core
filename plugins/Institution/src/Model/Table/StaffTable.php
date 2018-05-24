@@ -181,6 +181,34 @@ class StaffTable extends ControllerActionTable
             ])
             ->requirePresence('FTE')
             ->requirePresence('position_type')
+            ->add('start_date', 'ruleInAllPeriod', [
+                'rule' => function ($value, $context) {
+                    $checkDate = date('Y-m-d', strtotime($value));
+                    $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                    // check for staff import start date must be within the range of the academic period - POCOR-4576
+                    $academicPeriodList = $AcademicPeriods
+                        ->find('years')
+                        ->select([
+                            $AcademicPeriods->aliasField('start_date'),
+                            $AcademicPeriods->aliasField('end_date')
+                        ])
+                        ->toArray();
+
+                    foreach ($academicPeriodList as $academicPeriod) {
+                        $startDate = date('Y-m-d', strtotime($academicPeriod->start_date));
+                        $endDate = date('Y-m-d', strtotime($academicPeriod->end_date));
+
+                        if ($startDate <= $checkDate && $endDate >= $checkDate) {
+                            return true;
+                        }
+                    }
+                    return false;
+                },
+                'on' => function ($context) {
+                    // check for staff import on create operations - where academic_period_id do not exist in the context data
+                    return ($context['newRecord'] && !array_key_exists('academic_period_id', $context['data']));
+                }
+            ])
         ;
     }
 
