@@ -139,8 +139,6 @@ class InstitutionChoicesController extends PageController
                     'index'
                 ]);
 
-                $page->addCrumb($userName);
-
             } else if ($name == 'ScholarshipRecipientInstitutionChoices') {
                 $page->addCrumb('Recipients', [
                     'plugin' => 'Scholarship',
@@ -149,6 +147,7 @@ class InstitutionChoicesController extends PageController
                 ]);
             }
 
+            $page->addCrumb($userName);
             $page->addCrumb('Instititution Choices');
 
         } else if ($plugin == 'Profile') {
