@@ -56,9 +56,12 @@ class ScholarshipTabsComponent extends Component
 
     public function getScholarshipRecipientTabs($options = [])
     {
+        $ids = $this->controller->paramsDecode($this->queryString);
+        $encodedIds = $this->Page->encode($ids);
+        
         $tabElements = [
             'Recipients' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $this->queryString, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $encodedIds, 'queryString' => $this->queryString],
                 'text' => __('Overview')
             ],
             'InstitutionChoices' => [
@@ -66,15 +69,15 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Institution Choices')
             ],
             'PaymentStructures' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientPaymentStructures', 'action' => 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'RecipientPaymentStructures', 'index', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Payment Structures')
             ],
             'Disbursements' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientDisbursements', 'action' => 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'RecipientDisbursements', 'index', 'queryString' => $this->queryString],
                 'text' => __('Disbursements')
             ],
             'Collections' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipientCollections', 'action' => 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'RecipientCollections', 'index', 'queryString' => $this->queryString],
                 'text' => __('Collections')
             ],
             'AcademicStandings' => [
