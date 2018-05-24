@@ -140,7 +140,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('appraisal_period_id', ['visible' => false]);
-        $this->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'title', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
+        $this->setFieldOrder(['appraisal_type_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised']);
         $this->setupTabElements();
     }
 
@@ -160,7 +160,6 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_id', ['type' => 'hidden', 'value' => $entity->staff_id]);
-        $this->field('title');
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->appraisal_period->academic_period_id, 'attr' => ['value' => $entity->appraisal_period->academic_period->name]]);
         $this->field('appraisal_period_from');
         $this->field('appraisal_period_to');
@@ -176,7 +175,6 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('staff_id', ['type' => 'hidden', 'value' => $this->staff->id]);
-        $this->field('title');
         $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
         $this->field('appraisal_period_from');
         $this->field('appraisal_period_to');
@@ -210,7 +208,6 @@ class StaffAppraisalsTable extends ControllerActionTable
         );
         // End
         $this->field('staff_id', ['visible' => false]);
-        $this->field('title');
         $this->field('academic_period_id', ['fieldName' => 'appraisal_period.academic_period.name']);
         $this->field('appraisal_period_from');
         $this->field('appraisal_period_to');
@@ -226,7 +223,7 @@ class StaffAppraisalsTable extends ControllerActionTable
  
     private function setupFieldOrder()
     {
-        $this->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'title', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
+        $this->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
     }
 
     private function printAppraisalCustomField($appraisalFormId, Entity $entity)
