@@ -95,11 +95,6 @@ class PageComponent extends Component
         $this->status = new PageStatus();
 
         $this->setHeader(Inflector::humanize(Inflector::underscore($this->controller->name)));
-
-        $action = $this->request->action;
-        if ($action == 'reorder') {
-            $this->enableReorder($action);
-        }
     }
 
     public function implementedEvents()
@@ -107,6 +102,14 @@ class PageComponent extends Component
         $events = parent::implementedEvents();
         $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 7];
         return $events;
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        $action = $this->request->action;
+        if ($action == 'reorder') {
+            $this->enableReorder($action);
+        }
     }
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
@@ -242,6 +245,22 @@ class PageComponent extends Component
                 $this->setVar('tabs', $this->tabsToArray());
             }
 
+            if ($this->hasMainTable()) {
+                $table = $this->getMainTable();
+                $columns = $table->schema()->columns();
+
+                if (array_key_exists('paging', $request->params)) {
+                    $paging = $request->params['paging'][$table->alias()];
+                    $paging['limitOptions'] = $this->limitOptions;
+                    $this->setVar('paging', $paging);
+                }
+
+                if (in_array($this->config('sequence'), $columns) && $this->isActionAllowed('edit')) {
+                    $this->enable(['reorder']);
+                    $this->setVar('reorder', true);
+                }
+            }
+
             $disabledActions = [];
             foreach ($this->actions as $action => $value) {
                 if ($value == false) {
@@ -249,15 +268,6 @@ class PageComponent extends Component
                 }
             }
             $this->setVar('disabledActions', $disabledActions);
-
-            if ($this->hasMainTable()) {
-                $table = $this->getMainTable();
-                if (array_key_exists('paging', $request->params)) {
-                    $paging = $request->params['paging'][$table->alias()];
-                    $paging['limitOptions'] = $this->limitOptions;
-                    $this->setVar('paging', $paging);
-                }
-            }
         }
 
         if ($session->check('alert')) {
