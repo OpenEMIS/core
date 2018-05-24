@@ -6,11 +6,10 @@ class POCOR4624 extends AbstractMigration
 {
     public function up()
     {
-
-        //create backup for security_roles
+        // create backup for security_roles
         $this->execute('CREATE TABLE `z_4624_security_roles` LIKE `security_roles`');
         $this->execute('INSERT INTO `z_4624_security_roles` SELECT * FROM `security_roles`');
-        //Gets the current order for PRINCIPAL
+        // Gets the current order for PRINCIPAL
         $row = $this->fetchRow('SELECT `order` FROM `security_roles` WHERE `code` = "PRINCIPAL"');
         $order = $row['order'];
         $this->execute('UPDATE security_roles SET `order` = `order` + 1 WHERE `security_group_id`= -1 AND `order` > '. $order);
@@ -28,16 +27,7 @@ class POCOR4624 extends AbstractMigration
 
     public function down()
     {
-
         $this->execute('DROP TABLE IF EXISTS `security_roles`');
         $this->execute('RENAME TABLE `z_4624_security_roles` TO `security_roles`');
-
-
-        // $row = $this->fetchRow('SELECT `order` FROM `security_roles` WHERE `code` = "PRINCIPAL"');
-        // $order = $row['order'];
-
-        // $this->execute('UPDATE security_roles SET `order` = `order` - 1 WHERE `security_group_id`= -1 AND `order` > '. $order);
-
-        // $this->execute("DELETE FROM `security_roles` WHERE `code` = 'DEPUTY_PRINCIPAL'");
     }
 }
