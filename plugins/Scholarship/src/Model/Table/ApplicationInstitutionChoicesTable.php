@@ -42,11 +42,11 @@ class ApplicationInstitutionChoicesTable extends AppTable
                 'rule' => ['checkChoiceStatus'],
                 'provider' => 'table',
                 'message' => __('Please ensure that status is ACCEPTED'),
-                'on' => function ($context) {  
-                //trigger validation only when selection is set to 1 and edit operation
-                return ($context['data']['is_selected'] == 1  && !$context['newRecord']);
-            }
-        ]);
+                'on' => function ($context) {
+                    //trigger validation only when selection is set to 1 and edit operation
+                    return (isset($context['data']['is_selected']) && $context['data']['is_selected'] == 1  && !$context['newRecord']);
+                }
+            ]);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
