@@ -263,23 +263,21 @@ class PageHelper extends Helper
                 $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
             }
             if (!in_array('reorder', $disabledActions)) {
-                $row[] = [$this->_View->element('Page.reorder', ['data' => $entity]), ['class' => 'sorter']];
-            }
+                $model = TableRegistry::get($entity->source());
+                $primaryKeys = $model->primaryKey();
 
-            $model = TableRegistry::get($entity->source());
-            $primaryKeys = $model->primaryKey();
-
-            $primaryKeyValue = [];
-            if (is_array($primaryKeys)) {
-                foreach ($primaryKeys as $key) {
-                    $primaryKeyValue[$key] = $entity->getOriginal($key);
+                $primaryKeyValue = [];
+                if (is_array($primaryKeys)) {
+                    foreach ($primaryKeys as $key) {
+                        $primaryKeyValue[$key] = $entity->getOriginal($key);
+                    }
+                } else {
+                    $primaryKeyValue[$primaryKeys] = $entity->getOriginal($primaryKeys);
                 }
-            } else {
-                $primaryKeyValue[$primaryKeys] = $entity->getOriginal($primaryKeys);
-            }
 
-            $encodedKeys = $this->encode($primaryKeyValue);
-            $row[0] = [$row[0], ['data-row-id' => $encodedKeys]];
+                $encodedKeys = $this->encode($primaryKeyValue);
+                $row[] = [$this->_View->element('Page.reorder'), ['class' => 'sorter', 'data-row-id' => $encodedKeys]];
+            }
 
             $tableData[] = $row;
         }
