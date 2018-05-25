@@ -44,7 +44,7 @@ class PageController extends AppController
         if (in_array($action, ['index', 'add', 'edit', 'delete'])) {
             $this->Page->exclude($this->excludedFields);
         }
-        if (!$this->Page->isActionAllowed($action) && $action != 'onchange') {
+        if (!$this->Page->isActionAllowed($action) && !in_array($action, ['onchange', 'reorder'])) {
             $this->Page->throwMissingActionException();
         }
     }
@@ -63,12 +63,6 @@ class PageController extends AppController
 
         if ($request->is(['get', 'ajax']) && $page->hasMainTable() && $showData) {
             $table = $page->getMainTable();
-
-            $columns = $table->schema()->columns();
-            if (in_array($page->config('sequence'), $columns) && $page->isActionAllowed('edit')) {
-                $page->enable(['reorder']);
-                $page->setVar('reorder', true);
-            }
 
             $primaryKey = $table->primaryKey();
             if (!is_array($primaryKey)) { // if primary key is not composite key, then hide from index page
