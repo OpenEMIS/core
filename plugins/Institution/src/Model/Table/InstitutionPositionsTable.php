@@ -388,10 +388,35 @@ class InstitutionPositionsTable extends ControllerActionTable
         if (is_null($institutionId)) {
             $institutionId = $this->Session->read('Institution.Institutions.id');
         }
+
+        $latestPositionEntity = $this
+            ->find()
+            ->contain(['Institutions'])
+            ->order($this->aliasField('id') . ' DESC ')
+            ->first();
+
+        if (!is_null($latestPositionEntity)) {
+            $latestInstitutionCode = $latestPositionEntity->institution->code;
+            $latestPositionNumber = $latestPositionEntity->position_no;
+            $list = explode('-', $latestPositionNumber);
+
+            // if position number is auto generated, index 0 will be the institution code
+            if ($list[0] == $latestInstitutionCode) {
+                $latestTimestamp = $list[1];
+            }
+        }
         
+
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $prefix .= $institutionCode;
-        $newStamp = $currentStamp;
+
+        // if latest timestamp can be found and the current timestamp is smaller/equal, set to latest + 1
+        if (isset($latestTimestamp) && $latestTimestamp >= $currentStamp) {
+            $newStamp = $latestTimestamp + 1;
+        } else {
+            $newStamp = $currentStamp;
+        }
+
         return $prefix.'-'.$newStamp;
     }
 
