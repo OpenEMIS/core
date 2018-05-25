@@ -42,6 +42,7 @@ class ReportCardsTable extends AppTable
                 'InstitutionStudentsReportCardsComments',
                 'Institutions',
                 'Principal',
+                'DeputyPrincipal',
                 'InstitutionClasses',
                 'InstitutionSubjectStudents',
                 'StudentBehaviours',
@@ -85,6 +86,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardsComments'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardsComments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseDeputyPrincipal'] = 'onExcelTemplateInitialiseDeputyPrincipal';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudents'] = 'onExcelTemplateInitialiseInstitutionSubjectStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
@@ -571,6 +573,51 @@ class ReportCardsTable extends AppTable
         }
     }
 
+    public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $Staff = TableRegistry::get('Institution.Staff');
+            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $deputyPrincipalRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
+
+            $entity = $Staff
+                ->find()
+                ->select([
+                    $Staff->aliasField('id'),
+                    $Staff->aliasField('FTE'),
+                    $Staff->aliasField('start_date'),
+                    $Staff->aliasField('start_year'),
+                    $Staff->aliasField('end_date'),
+                    $Staff->aliasField('end_year'),
+                    $Staff->aliasField('staff_id'),
+                    $Staff->aliasField('security_group_user_id')
+                ])
+                ->innerJoinWith('SecurityGroupUsers')
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code'
+                        ]
+                    ]
+                ])
+                ->where([
+                    $Staff->aliasField('institution_id') => $params['institution_id'],
+                    'SecurityGroupUsers.security_role_id' => $deputyPrincipalRoleId
+                ])
+                ->first();
+
+            return $entity;
+        }
+    }
+
     public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_class_id', $params)) {
@@ -578,6 +625,19 @@ class ReportCardsTable extends AppTable
             $entity = $InstitutionClasses->get($params['institution_class_id'], [
                 'contain' => [
                     'Staff' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code'
+                        ]
+                    ],
+                    'SecondaryStaff' => [
                         'fields' => [
                             'openemis_no',
                             'first_name',
