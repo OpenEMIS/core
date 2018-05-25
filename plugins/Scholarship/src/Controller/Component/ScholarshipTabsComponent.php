@@ -69,7 +69,7 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Institution Choices')
             ],
             'PaymentStructures' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'RecipientPaymentStructures', 'index', $this->queryString, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'RecipientPaymentStructures', 'index','queryString' => $this->queryString],
                 'text' => __('Payment Structures')
             ],
             'Disbursements' => [
