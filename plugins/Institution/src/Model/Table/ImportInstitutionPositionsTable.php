@@ -40,6 +40,7 @@ class ImportInstitutionPositionsTable extends AppTable
         $events['Model.import.onImportPopulateStaffPositionTitlesData'] = 'onImportPopulateStaffPositionTitlesData';
         $events['Model.import.onImportPopulateHomeroomTeacherData'] = 'onImportPopulateHomeroomTeacherData';
         $events['Model.import.onImportPopulateWorkflowStepsData'] = 'onImportPopulateWorkflowStepsData';
+        $events['Model.import.onImportSetModelPassedRecord'] = 'onImportSetModelPassedRecord';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
     }
@@ -154,6 +155,13 @@ class ImportInstitutionPositionsTable extends AppTable
                 ];
             }
         }
+    }
+
+    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
+    {
+        $flipped = array_flip($columns);
+        $key = $flipped['position_no'];
+        $tempPassedRecord['data'][$key] = $clonedEntity->position_no;
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)

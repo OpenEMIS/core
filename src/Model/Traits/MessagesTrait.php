@@ -926,7 +926,8 @@ trait MessagesTrait
                     'ruleNoSpaces' => 'Only alphabets and numbers are allowed'
                 ],
                 'is_homeroom' => [
-                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes'
+                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes',
+                    'ruleIsHomeroomEmpty' => 'Please leave this field empty for non-teaching type titles'
                 ]
             ],
             'InstitutionShifts' => [

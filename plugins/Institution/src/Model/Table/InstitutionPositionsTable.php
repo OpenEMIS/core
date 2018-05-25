@@ -111,7 +111,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 },
                 'message' => $this->getMessage('Import.staff_title_grade_not_match')
             ])
-            ->requirePresence('is_homeroom', function ($context) {
+            ->requirePresence('is_homeroom', function ($context) { 
                 if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
                     $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
                     $titleId = $context['data']['staff_position_title_id'];
@@ -132,6 +132,28 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'on' => function ($context) {
                     //trigger validation only when homeroom teacher set to no and edit operation
                     return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
+                }
+            ])
+            ->add('is_homeroom', 'ruleIsHomeroomEmpty', [
+                // validations to ensure no value for is_homeroom field, if the selected title type is non-teaching type (0), for position import - POCOR-4258
+                'rule' => function ($value, $context) {
+                    return strlen($value) == 0;
+                },
+                'on' => function ($context) {
+                    if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+                        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                        $titleId = $context['data']['staff_position_title_id'];
+
+                        $titleEntity = $StaffPositionTitles
+                            ->find()
+                            ->select([$StaffPositionTitles->aliasField('type')])
+                            ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+                            ->first();
+
+                        $positionType = $titleEntity->type;
+                        return $positionType == 0;
+                    }
+                    return false;
                 }
             ]);
 
