@@ -21,7 +21,6 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
     Controller.institutionId = null;
     Controller.outcomeTemplateName = '';
     Controller.educationGradeId = null;
-    Controller.criterias = [];
     Controller.gradingOptions = [];
     Controller.studentResults = [];
     Controller.studentComments = '';
@@ -75,7 +74,6 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             .then(function (outcomeTemplate) {
                 Controller.outcomeTemplateName = outcomeTemplate.code_name;
                 Controller.educationGradeId = outcomeTemplate.education_grade_id;
-                Controller.criterias = outcomeTemplate.criterias;
 
                 Controller.periodOptions = outcomeTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
@@ -146,8 +144,8 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         Controller.studentResults = studentResults;
     }
 
-    function resetColumnDefs(criterias, gradingOptions, period, selectedPeriodStatus, subject, student, studentStatusCode) {
-        var response = InstitutionStudentOutcomesSvc.getColumnDefs(period, subject, student, Controller.periodOptions, Controller.subjectOptions, Controller.studentOptions);
+    function resetColumnDefs(gradingOptions, period, selectedPeriodStatus, subject, student, studentStatusCode) {
+        var response = InstitutionStudentOutcomesSvc.getColumnDefs(period, subject, student, Controller.periodOptions, Controller.subjectOptions, Controller.studentOptions, Controller.studentResults);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
@@ -170,17 +168,21 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     Controller.gridOptions.api.setColumnDefs(response.data);
 
                     if (period != null && subject != null && student != null) {
-                        var rowData = [];
-                        angular.forEach(criterias, function (value, key) {
-                            if (value.education_subject_id == subject) {
-                                var row = {
+                        var limit = 10;
+                        var dataSource = {
+                            pageSize: limit,
+                            getRows: function (params) {
+                                var page = parseInt(params.startRow / limit) + 1;
+
+                                UtilsSvc.isAppendSpinner(true, 'institution-student-outcome-table');
+                                var defaultRow = {
                                     student_id: student,
                                     student_status: studentStatusCode,
                                     outcome_period_id: period,
                                     period_editable: selectedPeriodStatus,
                                     education_subject_id: subject,
-                                    outcome_criteria_id: value.id,
-                                    outcome_criteria_name: value.code_name,
+                                    outcome_criteria_id: 0,
+                                    outcome_criteria_name: '',
                                     grading_options: {},
                                     result: 0,
                                     save_error: {
@@ -188,33 +190,38 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                                     }
                                 };
 
-                                if (angular.isDefined(gradingOptions[value.outcome_grading_type_id])) {
-                                    row['grading_options'] = gradingOptions[value.outcome_grading_type_id];
-                                }
+                                InstitutionStudentOutcomesSvc.getRowData(Controller.outcomeTemplateId, subject, defaultRow, gradingOptions, Controller.studentResults, limit, page)
+                                .then(function(response) {
+                                    var lastRowIndex = response.data.total;
 
-                                if (angular.isDefined(Controller.studentResults[value.id])) {
-                                    row['result'] = Controller.studentResults[value.id];
-                                }
-                                this.push(row);
+                                    if (lastRowIndex > 0) {
+                                        var rows = response.data.data;
+                                        AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+
+                                        params.successCallback(rows, lastRowIndex);
+                                    } else {
+                                        // No Students
+                                        var emptyRow = [{
+                                            period_editable: false,
+                                            outcome_criteria_name: 'No Outcome Criterias',
+                                            result: '',
+                                            save_error: {
+                                                result: false
+                                            }
+                                        }];
+                                        params.successCallback(emptyRow, 1);
+                                        AlertSvc.warning(Controller, "Please setup outcome criterias for the selected subject");
+                                    }
+                                }, function(error) {
+                                    console.log(error);
+                                })
+                                .finally(function() {
+                                    UtilsSvc.isAppendSpinner(false, 'institution-student-outcome-table');
+                                });
                             }
-                        }, rowData);
+                        };
 
-                        if (rowData.length > 0) {
-                            AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
-                            Controller.gridOptions.api.setRowData(rowData);
-                        } else {
-                            AlertSvc.warning(Controller, "Please setup outcome criterias for the selected subject");
-                            Controller.gridOptions.api.hideOverlay();
-                            var emptyRow = [{
-                                period_editable: false,
-                                outcome_criteria_name: 'No Outcome Criterias',
-                                result: '',
-                                save_error: {
-                                    result: false
-                                }
-                            }];
-                            Controller.gridOptions.api.setRowData(emptyRow);
-                        }
+                        Controller.gridOptions.api.setDatasource(dataSource);
 
                         // subject comments (pinned row at bottom)
                         var pinnedRowData = [{
@@ -262,7 +269,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         })
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
-            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+            Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
         }, function (error) {
         });
     }
@@ -287,7 +294,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
         })
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
-            Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+            Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
         }, function (error) {
         });
     }   
@@ -315,9 +322,16 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 suppressMenuHide: true,
                 suppressMovableColumns: true,
                 singleClickEdit: true,
+                rowModelType: 'infinite',
+
+                // Added options
                 suppressContextMenu: true,
                 stopEditingWhenGridLosesFocus: true,
                 ensureDomOrder: true,
+                pagination: true,
+                paginationPageSize: 10,
+                maxBlocksInCache: 1,
+                cacheBlockSize: 10,
                 localeText: localeText,
                 domLayout: 'autoHeight',
                 onGridSizeChanged: function(e) {
@@ -329,7 +343,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+                    Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
                 }
             };
         }, function(error){
@@ -367,7 +381,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     }
                 },
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criterias, Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
+                    Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode);
                 }
             };
         });
