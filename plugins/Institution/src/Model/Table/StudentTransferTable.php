@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Controller\Component;
 use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
-use Workflow\Model\Table\WorkflowBehavior;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 
 class StudentTransferTable extends ControllerActionTable
