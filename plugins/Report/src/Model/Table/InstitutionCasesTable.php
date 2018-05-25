@@ -95,7 +95,6 @@ class InstitutionCasesTable extends AppTable
                 $arrayRes = $results->toArray();
                 foreach ($arrayRes as $arr) {
                     Log::write('debug', $arr);
-                    // $this->log($arr, 'debug');
                     $arr->executed_by = $arr['_matchingData']['CreatedUser']['name'];
                 }
                 return $arrayRes;
