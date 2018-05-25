@@ -395,14 +395,17 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->order($this->aliasField('id') . ' DESC ')
             ->first();
 
-        $latestInstitutionCode = $latestPositionEntity->institution->code;
-        $latestPositionNumber = $latestPositionEntity->position_no;
-        $list = explode('-', $latestPositionNumber);
+        if (!is_null($latestPositionEntity)) {
+            $latestInstitutionCode = $latestPositionEntity->institution->code;
+            $latestPositionNumber = $latestPositionEntity->position_no;
+            $list = explode('-', $latestPositionNumber);
 
-        // if position number is auto generated, index 0 will be the institution code
-        if ($list[0] == $latestInstitutionCode) {
-            $latestTimestamp = $list[1];
+            // if position number is auto generated, index 0 will be the institution code
+            if ($list[0] == $latestInstitutionCode) {
+                $latestTimestamp = $list[1];
+            }
         }
+        
 
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $prefix .= $institutionCode;
