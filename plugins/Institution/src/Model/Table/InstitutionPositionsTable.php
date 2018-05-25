@@ -111,7 +111,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 },
                 'message' => $this->getMessage('Import.staff_title_grade_not_match')
             ])
-            ->requirePresence('is_homeroom', function ($context) { 
+            ->requirePresence('is_homeroom', function ($context) {
                 if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
                     $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
                     $titleId = $context['data']['staff_position_title_id'];
