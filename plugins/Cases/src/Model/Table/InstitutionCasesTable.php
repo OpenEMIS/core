@@ -82,6 +82,21 @@ class InstitutionCasesTable extends ControllerActionTable
             $this->request->query['sort'] = 'created';
             $this->request->query['direction'] = 'desc';
         }
+
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $educationGradeOptions = $EducationGrades
+            ->find('list')
+            ->toArray();
+
+        $gradeOptions = ['-1' => __('All Grades')] + $educationGradeOptions;
+        $selectedGrade = $this->queryString('education_grade', $gradeOptions);
+        $this->advancedSelectOptions($gradeOptions, $selectedGrade);
+        $this->controller->set(compact('gradeOptions', 'selectedGrade'));
+
+        // pr('--');
+        // pr($gradeOptions);
+        // pr($selectedGrade);
+        // die;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
