@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use DateTime;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -25,7 +26,9 @@ class InstitutionCasesTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->hasMany('InstitutionCaseRecords', ['className' => 'Institution.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->addBehavior('Excel');
+        $this->addBehavior('Excel', [
+            'autoFields' => false
+        ]);
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('AcademicPeriod.Period');
@@ -90,8 +93,8 @@ class InstitutionCasesTable extends AppTable
             ->order([$this->aliasField('case_number')])
             ->formatResults(function ($results) {
                 $arrayRes = $results->toArray();
-                foreach ($arrayRes as &$arr) {
-                    $this->log($arr, 'debug');
+                foreach ($arrayRes as $arr) {
+                    Log::write('debug', $arr);
                     $arr->executed_by = $arr['_matchingData']['CreatedUser']['name'];
                 }
                 return $arrayRes;
@@ -107,7 +110,16 @@ class InstitutionCasesTable extends AppTable
         }
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
-            $query->find('inPeriod', ['field' => 'created', 'academic_period_id' => $academicPeriodId]);
+            $startDate = $requestData->report_start_date;
+            $endDate = $requestData->report_end_date;
+
+            $reportStartDate = (new DateTime($startDate))->format('Y-m-d');
+            $reportEndDate = (new DateTime($endDate))->format('Y-m-d');
+
+            $query->where([
+                $this->aliasField('created') . ' <= ' => $reportEndDate,
+                $this->aliasField('created') . ' >= ' => $reportStartDate
+            ]);
         }
     }
 
