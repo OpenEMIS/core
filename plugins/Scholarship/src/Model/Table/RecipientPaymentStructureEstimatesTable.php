@@ -1,6 +1,7 @@
 <?php
 namespace Scholarship\Model\Table;
 
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class RecipientPaymentStructureEstimatesTable extends AppTable
@@ -15,5 +16,16 @@ class RecipientPaymentStructureEstimatesTable extends AppTable
 		$this->belongsTo('RecipientPaymentStructures', ['className' => 'Scholarship.RecipientPaymentStructures', 'foreignKey' => 'scholarship_recipient_payment_structure_id']);
 		$this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('estimated_amount', 'validateDecimal', [
+                'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                'message' => __('Amount cannot be more than two decimal places')
+            ]);
     }
 }
