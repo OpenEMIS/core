@@ -83,6 +83,11 @@ class POCOR4258 extends AbstractMigration
                 'en' => 'Selected value does not match with Staff Position Title Type',
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s')
+            ],
+            [
+                'en' => 'Invalid status id',
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
             ]
         ];
         $this->insert('locale_contents', $localeData);
@@ -126,6 +131,7 @@ class POCOR4258 extends AbstractMigration
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave as blank to auto generate)'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = '(Leave as blank for Non-Teaching type)'");
         $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Selected value does not match with Staff Position Title Type'");
+        $this->execute("DELETE FROM `locale_contents` WHERE `en` = 'Invalid status id'");
 
         // security_functions
         $row = $this->fetchRow('SELECT `order` FROM `security_functions` WHERE `id` = 1017'); // Leave id
