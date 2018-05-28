@@ -122,8 +122,12 @@ class InstitutionPositionsTable extends ControllerActionTable
                         ->where([$StaffPositionTitles->aliasField('id') => $titleId])
                         ->first();
 
-                    $positionType = $titleEntity->type;
-                    return $positionType == 1;
+                    if (!is_null($titleEntity)) {
+                        $positionType = $titleEntity->type;
+                        return $positionType == 1;
+                    } else {
+                        return false;
+                    }
                 }
                 return false;
             })
@@ -150,10 +154,30 @@ class InstitutionPositionsTable extends ControllerActionTable
                             ->where([$StaffPositionTitles->aliasField('id') => $titleId])
                             ->first();
 
-                        $positionType = $titleEntity->type;
-                        return $positionType == 0;
+                        if (!is_null($titleEntity)) {
+                            $positionType = $titleEntity->type;
+                            return $positionType == 0;
+                        } else {
+                            return false;
+                        }
                     }
                     return false;
+                }
+            ])
+            ->add('status_id', 'ruleCheckStatusIdValid', [
+                'rule' => function ($value, $context) {
+                    $Workflows = TableRegistry::get('Workflow.Workflows');
+                    $workflowResult = $Workflows
+                        ->find()
+                        ->matching('WorkflowModels', function ($q) {
+                            return $q->where(['WorkflowModels.model' => 'Institution.InstitutionPositions']);
+                        })
+                        ->matching('WorkflowSteps', function ($q) use ($value) {
+                            return $q->where(['WorkflowSteps.id' => $value]);
+                        })
+                        ->all();
+
+                    return !$workflowResult->isEmpty();
                 }
             ]);
 
