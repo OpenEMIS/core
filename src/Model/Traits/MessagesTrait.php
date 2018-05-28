@@ -928,6 +928,9 @@ trait MessagesTrait
                 'is_homeroom' => [
                     'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes',
                     'ruleIsHomeroomEmpty' => 'Please leave this field empty for non-teaching type titles'
+                ],
+                'status_id' => [
+                    'ruleCheckStatusIdValid' => 'Invalid status id'
                 ]
             ],
             'InstitutionShifts' => [
