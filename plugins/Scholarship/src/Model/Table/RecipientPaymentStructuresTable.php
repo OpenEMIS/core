@@ -27,7 +27,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
-        $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
 
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
@@ -87,7 +87,14 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['RecipientPaymentStructureEstimates']);
+        $query->contain([
+            'RecipientPaymentStructureEstimates.DisbursementCategories'
+        ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
     }
 
     public function setupFields($entity = null)
@@ -119,6 +126,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $this->field('balance_amount', [
             'type' => 'disabled',
             'after' => 'approved_amount',
+            'visible' => ['view' => false, 'add' => true, 'edit' => true],
             'attr' => ['label' => $this->addCurrencySuffix('Balance Amount')],
             'entity' => $entity
         ]);
@@ -158,6 +166,34 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         ];
     }
 
+    // index
+    public function onGetEstimatedAmount(Event $event, Entity $entity)
+    {
+        $query = $this->RecipientPaymentStructureEstimates->find();
+        $RecipientPaymentStructureEstimates = $query->where([
+                $this->RecipientPaymentStructureEstimates->aliasField('scholarship_recipient_payment_structure_id') => $entity->id
+            ])
+        ->select([
+                'total_amount_used' => $query->func()->sum('estimated_amount')
+            ])
+        ->first();
+
+        $value = $RecipientPaymentStructureEstimates->total_amount_used;
+
+        return $value;
+    }
+
+    //view
+    public function onGetScholarshipName(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->name;
+    }
+
+    public function onGetApprovedAmount(Event $event, Entity $entity)
+    {
+         return $entity->scholarship_recipient->approved_amount;
+    }
+
     public function onGetCustomDisbursementCategoryElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'index') {
@@ -169,7 +205,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             if ($entity->has('recipient_payment_structure_estimates')) {
                 foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
                     $rowData = [];
-                    $rowData[] = $obj->scholarship_recipient_payment_structure_id;
+                    $rowData[] = $obj->disbursement_category->name;
                     $rowData[] = $obj->estimated_disbursement_date;
                     $rowData[] = $obj->estimated_amount;
                     $rowData[] = $obj->comments;
@@ -315,23 +351,17 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                 ]);
 
             if (!$entity->isNew()) {
-                $query->where([$this->RecipientPaymentStructureEstimates->aliasField('id <> ') => $entity->id]);
+                $query->where([$this->RecipientPaymentStructureEstimates->aliasField('scholarship_recipient_payment_structure_id <> ') => $entity->id]);
             }
 
             $RecipientPaymentStructureEstimates = $query->first();
 
-            $amountUsed = $RecipientPaymentStructureEstimates->total_amount_used;
-            
-            $balance = $approvedAmt - $amountUsed;
+            $balance = $approvedAmt - ($RecipientPaymentStructureEstimates->total_amount_used);
+             
             $attr['attr']['value'] =  $balance;
         }
 
         return $attr;
-    }
-
-
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
-        $includes['datepicker']['include'] = true;
     }
 
     public function addCurrencySuffix($label)
@@ -339,24 +369,42 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         return __($label) . ' (' . $this->currency . ')';
     }
 
-    // public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
-    // {
-    //     $totalAmt = 0;
-    //     if ($entity->has('recipient_payment_structure_estimates')) {
-    //         foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
-    //             $totalAmt += $obj['estimated_amount'];
-    //         }
-    //     }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    {  
+        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
+        $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
 
-    //     $query = $this->RecipientPaymentStructureEstimates->find();
-    //     $RecipientPaymentStructureEstimates = $query
-    //         ->select([
-    //             'total_amount_used' => $query->func()->sum('estimated_amount')
-    //         ])
-    //         ->first();
+        $approvedAmt = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId])->approved_amount;
+        
+        $query = $this->RecipientPaymentStructureEstimates->find();
+        $query->select([
+                'total_amount_used' => $query->func()->sum('estimated_amount')
+            ]);
 
-    //     $totalAmt += $RecipientPaymentStructureEstimates->total_amount_used;
+        if (!$entity->isNew()) {
+            $query->where([$this->RecipientPaymentStructureEstimates->aliasField('scholarship_recipient_payment_structure_id <> ') => $entity->id]);
+        }
 
-    // }
+        $RecipientPaymentStructureEstimates = $query->first();
+
+        $balance = $approvedAmt - ($RecipientPaymentStructureEstimates->total_amount_used);
+
+        $totalAmt = 0;
+        if ($entity->has('recipient_payment_structure_estimates')) {
+            foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
+                $totalAmt += $obj['estimated_amount'];
+            }
+        }
+            
+        if($totalAmt > $balance) {
+            $entity->errors('balance_amount', __('Insufficient Balance'));
+            $this->Alert->warning($this->aliasField('noBalanceAvailable'));
+            return false;
+        }
+    }
+
+    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+        $includes['datepicker']['include'] = true;
+    }
 
 }

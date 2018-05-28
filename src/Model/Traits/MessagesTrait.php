@@ -743,6 +743,9 @@ trait MessagesTrait
             'unpublish' => 'The Report Card has been successfully unpublished',
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
+        'RecipientPaymentStructures' => [
+            'noBalanceAvailable' => 'There are insufficient balances for this scholarship'
+        ],
         'AlertRules' => [
             'Attendance' => [
                 'threshold' => 'Days within 1 to 30'
