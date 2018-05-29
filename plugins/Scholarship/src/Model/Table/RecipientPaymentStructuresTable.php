@@ -28,6 +28,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
+        $this->hasMany('RecipientDisbursements', ['className' => 'Scholarship.RecipientDisbursements', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
 
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
