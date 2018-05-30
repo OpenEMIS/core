@@ -96,31 +96,27 @@ class ScholarshipRecipientCollectionsController extends PageController
 
         $recipientId = $page->getQueryString('recipient_id');
         $scholarshipId = $page->getQueryString('scholarship_id');
-
-        $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => ['FinancialAssistanceTypes']]);
-        $recipientEntity = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);
+        $recipientEntity = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId], [
+            'contain' => ['Scholarships.FinancialAssistanceTypes']
+        ]);
 
         // summary fields
         $page->addNew('financial_assistance_type')
-            ->setControlType('string')
             ->setDisabled(true)
-            ->setValue($scholarshipEntity->financial_assistance_type->name);
+            ->setValue($recipientEntity->scholarship->financial_assistance_type->name);
 
         $page->addNew('loan')
-            ->setControlType('string')
             ->setDisabled(true)
-            ->setValue($scholarshipEntity->code_name);
+            ->setValue($recipientEntity->scholarship->code_name);
 
         $page->addNew('approved_amount')
-            ->setControlType('string')
             ->setDisabled(true)
             ->setLabel($this->addCurrencySuffix('Approved Amount'))
             ->setValue($recipientEntity->approved_amount);
 
         $page->addNew('balance_amount')
-            ->setControlType('string')
-            ->setLabel($this->addCurrencySuffix('Balance Amount'))
-            ->setDisabled(true);
+            ->setDisabled(true)
+            ->setLabel($this->addCurrencySuffix('Balance Amount'));
 
         $page->addNew('collections')->setControlType('section');
 
@@ -144,27 +140,9 @@ class ScholarshipRecipientCollectionsController extends PageController
         if ($page->is(['add', 'edit'])) {
             $recipientId = $page->getQueryString('recipient_id');
             $scholarshipId = $page->getQueryString('scholarship_id');
-            $recipientEntity = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);
+            $currentId = $entity->has('id') ? $entity->id : '';
 
-            if (!empty($recipientEntity->approved_amount)) {
-                $approvedAmount = $recipientEntity->approved_amount;
-
-                $where = [
-                    $this->RecipientCollections->aliasField('recipient_id') => $recipientId,
-                    $this->RecipientCollections->aliasField('scholarship_id') => $scholarshipId
-                ];
-                if ($entity->has('id')) {
-                    $where[$this->RecipientCollections->aliasField('id <> ')] = $entity->id;
-                }
-
-                $amountUsed = $this->RecipientCollections->find()
-                    ->select(['total' => $this->RecipientCollections->find()->func()->sum('amount')])
-                    ->where($where)
-                    ->first();
-
-                $balance = $approvedAmount - $amountUsed->total;
-                return $balance;
-            }
+            return $this->RecipientCollections->getBalanceAmount($recipientId, $scholarshipId, $currentId);
         }
     }
 
