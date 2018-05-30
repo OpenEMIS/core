@@ -45,7 +45,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
             // set header
             $page->setHeader($userName . ' - ' . __('Institution Choices'));
 
-            $page->setQueryString('recipient_id', $recipientId);
+            $page->setQueryString('applicant_id', $recipientId);
             $page->setQueryString('scholarship_id', $scholarshipId);
 
             $page->get('applicant_id')->setControlType('hidden')->setValue($recipientId);

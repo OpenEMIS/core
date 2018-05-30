@@ -1,14 +1,10 @@
 <?php
 namespace Scholarship\Model\Table;
 
-use ArrayObject;
+use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
-use Cake\Event\Event;
-use Cake\Network\Request;
-use Cake\Controller\Component;
-use App\Model\Table\ControllerActionTable;
-
-class RecipientDisbursementsTable extends ControllerActionTable
+class RecipientDisbursementsTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -21,36 +17,17 @@ class RecipientDisbursementsTable extends ControllerActionTable
         $this->belongsTo('RecipientPaymentStructures', ['className' => 'Scholarship.RecipientPaymentStructures', 'foreignKey' => 'scholarship_recipient_payment_structure_id']);
 		$this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
+        $this->belongsTo('RecipientPaymentStructures', ['className' => 'Scholarship.RecipientPaymentStructures', 'foreignKey' => 'scholarship_recipient_payment_structure_id']);
     }
 
-    public function implementedEvents()
+    public function validationDefault(Validator $validator)
     {
-        $events = parent::implementedEvents();
-        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-        return $events;
-    }
+        $validator = parent::validationDefault($validator);
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        // set header
-        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
-        $recipientName = $this->Recipients->get($recipientId)->name;
-        $this->controller->set('contentHeader', $recipientName . ' - ' . __('Disbursements'));
-        // set tabs
-        $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Disbursements');
-    }
-
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
-    {
-        $title = __('Disbursements');
-
-        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
-        $recipientName = $this->Recipients->get($recipientId)->name;
-
-        $Navigation->addCrumb('Recipients', ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'index']);
-        $Navigation->addCrumb($recipientName);
-        $Navigation->addCrumb($title);
+        return $validator
+            ->add('amount', 'validateDecimal', [
+                'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                'message' => __('Amount cannot be more than two decimal places')
+            ]);
     }
 }

@@ -44,6 +44,11 @@ class ScholarshipRecipientCollectionsController extends PageController
         $scholarshipId = $this->paramsDecode($queryString)['scholarship_id'];
         $recipientName = $this->Users->get($recipientId)->name;
 
+        $recipientEntity = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);
+        if(empty($recipientEntity->approved_amount)) {
+            $this->Page->disable(['add']);
+        }
+
         $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
         $page->addCrumb('Recipients', ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'index']);
         $page->addCrumb($recipientName);
