@@ -65,26 +65,6 @@ class ScholarshipRecipientsTable extends AppTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->allowEmpty('approved_amount', function ($context) {
-                if (array_key_exists('scholarship_id', $context['data']) && !empty($context['data']['scholarship_id'])) {
-                    $scholarshipId = $context['data']['scholarship_id'];
-
-                    $ScholarshipsTable = TableRegistry::get('Scholarship.Scholarships');
-                    $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
-                    $scholarshipEntity = $ScholarshipsTable->get($scholarshipId);
-
-                    $isLoan = false;
-                    if ($scholarshipEntity->has('scholarship_financial_assistance_type_id')) {
-                        $isLoan = $FinancialAssistanceTypesTable->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
-                    }
-
-                    if ($isLoan) {
-                        return false;
-                    }
-                }
-
-                return true;
-            })
             ->add('approved_amount', [
                 'comparison' => [
                     'rule' => function ($value, $context) {
@@ -93,6 +73,10 @@ class ScholarshipRecipientsTable extends AppTable
                 ],
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/']
+                ],
+                'ruleCheckApprovedAmount' => [
+                    'rule' => ['checkApprovedAmount'],
+                    'provider' => 'table'
                 ]
             ])
             ->allowEmpty('date', function ($context) {
