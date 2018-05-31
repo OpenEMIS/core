@@ -267,14 +267,12 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
         // academic_period_id
         if (empty($requestQuery['academic_period_id'])) {
             $requestQuery['academic_period_id'] = $AcademicPeriods->getCurrent();
         }
         $selectedAcademicPeriod = $requestQuery['academic_period_id'];
-
         $academicPeriodOptions = $AcademicPeriods->getYearList();
 
         // education_grade_id
@@ -282,7 +280,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $requestQuery['education_grade_id'] = -1;
         }
         $selectedEducationGrades = $requestQuery['education_grade_id'];
-
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                 'keyField' => 'id',
@@ -303,7 +300,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         if (empty($requestQuery['institution_class_id'])) {
             $requestQuery['institution_class_id'] = -1;
         }
-
         if ($selectedEducationGrades != -1) {
             $selectedClassId = $requestQuery['institution_class_id'];
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -321,7 +317,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     [$InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriod],
                     [$InstitutionClasses->aliasField('institution_id') => $institutionId]
                 ])
-                ->group($InstitutionClasses->aliasField('id'))
                 ->toArray();
 
             $institutionClassOptions = ['-1' => __('-- Select Class --')] + $institutionClassOptions;
@@ -355,6 +350,22 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $academicPeriodId = $requestQuery['academic_period_id'];
 
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
+            $periodEntity = $AcademicPeriods
+                ->find()
+                ->select([
+                    $AcademicPeriods->aliasField('start_date'),
+                    $AcademicPeriods->aliasField('end_date')
+                ])
+                ->where([$AcademicPeriods->aliasField('id') => $academicPeriodId])
+                ->first();
+
+            if (!is_null($periodEntity)) {
+                $startDate = $periodEntity->start_date->format('Y-m-d');
+                $endDate = $periodEntity->end_date->format('Y-m-d');
+            }
+
             $result = $InstitutionClassStudents
                 ->find('list', [
                     'keyField' => 'student_id',
@@ -362,21 +373,24 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ])
                 ->select([$InstitutionClassStudents->aliasField('student_id')])
                 ->where([
+                    $InstitutionClassStudents->aliasField('institution_class_id') => $institutionClassId,
                     $InstitutionClassStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionClassStudents->aliasField('institution_class_id') => $institutionClassId
+                    $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId
                 ])
                 ->all();
+
             $query->innerJoin(
                 [$this->alias() => $this->table()],
                 [$this->aliasField('id = ') . 'LinkedRecords.record_id']
             );
 
-            if (!$result->isEmpty()) {
+            if (!$result->isEmpty() && isset($startDate)) {
                 $studentList = $result->toArray();
                 $query->where([
-                    $this->aliasField('student_id IN ') => $studentList]
-                );
+                    $this->aliasField('student_id IN ') => $studentList,
+                    $this->aliasField('start_date >= ') => $startDate,
+                    $this->aliasField('start_date <= ') => $endDate
+                ]);
             } else {
                 $query->where(['1 = 0']);
             }
