@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
+use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -17,6 +18,16 @@ use Workflow\Model\Behavior\WorkflowBehavior;
 class InstitutionCasesTable extends ControllerActionTable
 {
     use OptionsTrait;
+
+    private $featureList = [
+        1 => 'Student Attendances',
+        2 => 'Staff Behaviours'
+    ];
+
+    private $featureModels = [
+        1 => 'Institution.InstitutionStudentAbsences',
+        2 => 'Institution.StaffBehaviours'
+    ];
 
     public function initialize(array $config)
     {
@@ -83,25 +94,82 @@ class InstitutionCasesTable extends ControllerActionTable
             $this->request->query['direction'] = 'desc';
         }
 
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $educationGradeOptions = $EducationGrades
-            ->find('list')
-            ->toArray();
+        $featureOptions = $this->featureList;
+        if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->query('feature');
+        } else {
+            $selectedFeature = key($featureOptions);
+            $this->request->query['feature'] = $selectedFeature;
+        }
+        $this->advancedSelectOptions($featureOptions, $selectedFeature);
+        $this->controller->set(compact('featureOptions', 'selectedFeature'));
 
-        $gradeOptions = ['-1' => __('All Grades')] + $educationGradeOptions;
-        $selectedGrade = $this->queryString('education_grade', $gradeOptions);
-        $this->advancedSelectOptions($gradeOptions, $selectedGrade);
-        $this->controller->set(compact('gradeOptions', 'selectedGrade'));
+        $selectedModel = $this->featureModels[$selectedFeature];
+        $featureModel = TableRegistry::get($selectedModel);
 
-        // pr('--');
-        // pr($gradeOptions);
-        // pr($selectedGrade);
-        // die;
+        $session = $this->request->session();
+        $requestQuery = $this->request->query;
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        $event = $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbar', [$requestQuery, $institutionId], $featureModel);
+        if ($event->isStopped()) {
+            return $event->result;
+        }
+        if (!empty($event->result)) {
+            $params = $event->result;
+
+            if (array_key_exists('element', $params)) {
+                $extra['elements'] = $params['element'] + $extra['elements'];
+            }
+
+            if (array_key_exists('options', $params)) {
+                $optionList = $params['options'];
+                $this->controller->set($optionList);
+            }
+
+            if (array_key_exists('query', $params)) {
+                $this->request->query = $params['query'];
+            }
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['LinkedRecords']);
+        $requestQuery = $this->request->query;
+        $feature = $requestQuery['feature'];
+        $selectedFeature = Inflector::camelize($this->featureList[$feature]);
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('case_number'),
+                $this->aliasField('title'),
+                $this->aliasField('description'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created_user_id'),
+                $this->aliasField('created'),
+                $this->Assignees->aliasField('first_name'),
+                $this->Assignees->aliasField('middle_name'),
+                $this->Assignees->aliasField('last_name'),
+                $this->Assignees->aliasField('third_name'),
+                $this->Assignees->aliasField('preferred_name')
+            ])
+            ->contain(['Assignees', 'LinkedRecords'])
+            ->innerJoin(
+                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [
+                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                    [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                ]
+            )
+            ->group($this->aliasField('id'));
+
+        $selectedModel = $this->featureModels[$feature];
+        $featureModel = TableRegistry::get($selectedModel);
+        $event = $featureModel->dispatchEvent('InstitutionCase.onSetFilterBeforeQuery', [$requestQuery, $query], $featureModel);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
