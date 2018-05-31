@@ -239,6 +239,7 @@ class PageController extends BaseController
                     'data' => [
                         'title' => __('Back'),
                         'url' => ['action' => 'index'],
+                        'urlParams' => 'QUERY',
                         'iconClass' => 'fa kd-back',
                         'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
                     ],
@@ -280,6 +281,7 @@ class PageController extends BaseController
                     'data' => [
                         'title' => __('Back'),
                         'url' => ['action' => 'index'],
+                        'urlParams' => 'QUERY',
                         'iconClass' => 'fa kd-back',
                         'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
                     ],
@@ -307,6 +309,7 @@ class PageController extends BaseController
                     'data' => [
                         'title' => __('List'),
                         'url' => ['action' => 'index'],
+                        'urlParams' => 'QUERY',
                         'iconClass' => 'fa kd-lists',
                         'linkOptions' => ['title' => __('List')]
                     ],
@@ -334,6 +337,7 @@ class PageController extends BaseController
                     'data' => [
                         'title' => __('List'),
                         'url' => ['action' => 'index'],
+                        'urlParams' => 'QUERY',
                         'iconClass' => 'fa kd-lists',
                         'linkOptions' => ['title' => __('List')]
                     ],
