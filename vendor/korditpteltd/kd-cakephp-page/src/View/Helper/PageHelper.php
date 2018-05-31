@@ -176,9 +176,9 @@ class PageHelper extends Helper
         $icon = array('prev' => '', 'next' => '');
         $html = $this->Paginator->{$type}(
             $icon[$type],
-            array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true)),
+            array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true])),
             null,
-            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true))
+            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true]))
         );
         return $html;
     }
@@ -194,7 +194,7 @@ class PageHelper extends Helper
             'first' => 2,
             'last' => 2,
             'ellipsis' => '<li><a>...</a></li>',
-            'url' => $this->getUrl(['action' => $this->request->param('action')], true)
+            'url' => $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true])
         ));
         return $html;
     }
@@ -217,7 +217,7 @@ class PageHelper extends Helper
             $label = $attr['label'];
 
             if ($attr['sortable']) {
-                $url = $this->getUrl(['action' => $this->request->param('action')], true);
+                $url = $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true]);
                 if (array_key_exists('sort', $url)) {
                     unset($url['sort']);
                 }
@@ -334,11 +334,21 @@ class PageHelper extends Helper
         return $value;
     }
 
-    public function getUrl($route, $toArray = false)
+    public function getUrl($url, $options = [])
     {
         $request = $this->request;
-        $url = array_merge($route, $request->query);
+        $toArray = isset($options['toArray']) ? $options['toArray'] : false;
+        $urlParams = isset($options['urlParams']) ? $options['urlParams'] : true; /* 'PASS' | 'QUERY' | false */
+
         $this->mergeRequestParams($url);
+
+        if ($urlParams === true) {
+            $url = array_merge($url, $request->pass, $request->query);
+        } elseif ($urlParams === 'PASS') {
+            $url = array_merge($url, $request->pass);
+        } elseif ($urlParams === 'QUERY') {
+            $url = array_merge($url, $request->query);
+        }
         return $toArray ? $url : $this->Url->build($url);
     }
 
