@@ -168,6 +168,18 @@ class RecipientPaymentsTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'estimated_amount') {
+            return $this->Scholarships->addCurrencySuffix('Estimated Amount');
+        } else if ($field == 'disbursed_fund') {
+            return $this->Scholarships->addCurrencySuffix('Disbursed Fund');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+        
+    }
+
     // edit fields
     public function onUpdateFieldEstimatedAmount(Event $event, array $attr, $action, $request)
     {
@@ -249,7 +261,7 @@ class RecipientPaymentsTable extends ControllerActionTable
         if ($action == 'index') {
             // No implementation yet
         } elseif ($action == 'view') {
-            $tableHeaders = [__('Category') , __('Disbursement Date'), __('Amount'), __('Semester'), __('Comments'), ''];
+            $tableHeaders = [__('Category') , __('Disbursement Date'), $this->Scholarships->addCurrencySuffix('Amount'), __('Semester'), __('Comments'), ''];
             $tableCells = [];
 
             $Semesters = TableRegistry::get('Scholarship.Semesters');
@@ -261,10 +273,10 @@ class RecipientPaymentsTable extends ControllerActionTable
 
                     $rowData = [];
                     $rowData[] = $obj->disbursement_category->name;
-                    $rowData[] = $obj->disbursement_date;
+                    $rowData[] = $this->formatDate($obj->disbursement_date);
                     $rowData[] = $obj->amount;
                     $rowData[] = $semesterEntity['name'];
-                    $rowData[] = $obj->comments;
+                    $rowData[] = nl2br($obj->comments);
 
                     $tableCells[] = $rowData;
                     $totalAmt += $obj->amount;
@@ -281,7 +293,7 @@ class RecipientPaymentsTable extends ControllerActionTable
             $form->unlockField($attr['model'] . '.recipient_disbursements');
 
             $cellCount = 0;
-            $tableHeaders = [__('Category') , __('Disbursement Date'), __('Amount'), __('Semester'), __('Comments'), ''];
+            $tableHeaders = [__('Category') , __('Disbursement Date'), $this->Scholarships->addCurrencySuffix('Amount'), __('Semester'), __('Comments'), ''];
             $tableCells = [];
 
             $arrayRecipientDisbursements = [];
@@ -368,7 +380,7 @@ class RecipientPaymentsTable extends ControllerActionTable
                             $attr['value'] = date('d-m-Y', strtotime($attr['value']));
                         }
                     }
- 
+                    $attr['class'] = 'no-margin-bottom';
                     $event->subject()->viewSet('datepicker', $attr);
                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);   
                     unset($attr['value']);
@@ -407,6 +419,15 @@ class RecipientPaymentsTable extends ControllerActionTable
         return $event->subject()->renderElement('../ControllerAction/table_with_dropdown', ['attr' => $attr]);
     }
 
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        if (array_key_exists($this->alias(), $requestData)) {
+            if (!array_key_exists('recipient_disbursements', $requestData[$this->alias()])) {
+                    $requestData[$this->alias()]['recipient_disbursements'] = []; 
+            } 
+        }
+    }
+    
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
     {  
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
