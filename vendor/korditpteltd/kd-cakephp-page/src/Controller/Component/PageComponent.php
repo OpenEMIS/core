@@ -255,10 +255,8 @@ class PageComponent extends Component
                     $this->setVar('paging', $paging);
                 }
 
-                if (!in_array($this->config('sequence'), $columns)) {
-                    if (!$this->isActionAllowed('reorder') || !$this->isActionAllowed('edit')) {
-                        $this->disable(['reorder']);
-                    }
+                if (!in_array($this->config('sequence'), $columns) || !($this->isActionAllowed('reorder') && $this->isActionAllowed('edit'))) {
+                    $this->disable(['reorder']);
                 }
             }
 
