@@ -28,6 +28,8 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
         $this->hasMany('RecipientDisbursements', ['className' => 'Scholarship.RecipientDisbursements', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
+        
+        $this->setDeleteStrategy('restrict');
     }
 
     public function implementedEvents()
@@ -196,6 +198,15 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'estimated_amount') {
+            return $this->Scholarships->addCurrencySuffix('Estimated Amount');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     //view
     public function onGetScholarshipName(Event $event, Entity $entity)
     {
@@ -212,7 +223,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         if ($action == 'index') {
             // No implementation yet
         } elseif ($action == 'view') {
-            $tableHeaders = [__('Category') , __('Estimated Disbursement Date'), __('Estimated Amount'), __('Comments')];
+            $tableHeaders = [__('Category') , __('Estimated Disbursement Date'), $this->Scholarships->addCurrencySuffix('Estimated Amount'), __('Comments')];
             $tableCells = [];
 
             $totalAmt = 0;
@@ -220,9 +231,9 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                 foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
                     $rowData = [];
                     $rowData[] = $obj->disbursement_category->name;
-                    $rowData[] = $obj->estimated_disbursement_date;
+                    $rowData[] = $this->formatDate($obj->estimated_disbursement_date);
                     $rowData[] = $obj->estimated_amount;
-                    $rowData[] = $obj->comments;
+                    $rowData[] = nl2br($obj->comments);
 
                     $tableCells[] = $rowData;
                     $totalAmt += $obj->estimated_amount;
@@ -239,7 +250,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             $form->unlockField($attr['model'] . '.recipient_payment_structure_estimates');
 
             $cellCount = 0;
-            $tableHeaders = [__('Category') , __('Estimated Disbursement Date'), __('Estimated Amount'), __('Comments'), ''];
+            $tableHeaders = [__('Category') , __('Estimated Disbursement Date'), $this->Scholarships->addCurrencySuffix('Estimated Amount'), __('Comments'), ''];
             $tableCells = [];
 
             $arrayPaymentStructureEstimates = [];
@@ -325,7 +336,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                             $attr['value'] = date('d-m-Y', strtotime($attr['value']));
                         }
                     }
- 
+                    $attr['class'] = 'no-margin-bottom';
                     $event->subject()->viewSet('datepicker', $attr);
                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);   
                     unset($attr['value']);
@@ -382,6 +393,15 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        if (array_key_exists($this->alias(), $requestData)) {
+            if (!array_key_exists('recipient_payment_structure_estimates', $requestData[$this->alias()])) {
+                    $requestData[$this->alias()]['recipient_payment_structure_estimates'] = []; 
+            } 
+        }
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
