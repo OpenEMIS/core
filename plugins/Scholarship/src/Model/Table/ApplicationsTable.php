@@ -307,7 +307,9 @@ class ApplicationsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         // remove queryString when redirect
-        $extra['redirect'] = $this->url('index', false);
+        if (isset($extra['redirect']['queryString'])) {
+            unset($extra['redirect']['queryString']);
+        }
 
         if (isset($extra['toolbarButtons']['back']['url'])) {
             $extra['toolbarButtons']['back']['url'] = [
@@ -343,6 +345,22 @@ class ApplicationsTable extends ControllerActionTable
         $this->setupApplicantFields($entity);
         $this->field('scholarship_details_header', ['type' => 'section', 'title' => __('Apply for Scholarship')]);
         $this->setupScholarshipFields($entity);
+    }
+
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // remove queryString for index page
+        if (isset($extra['toolbarButtons']['list']['url']['queryString'])) {
+            unset($extra['toolbarButtons']['list']['url']['queryString']);
+        }
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // remove queryString for index page
+        if (isset($extra['toolbarButtons']['back']['url']['queryString'])) {
+            unset($extra['toolbarButtons']['back']['url']['queryString']);
+        }
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -444,6 +462,14 @@ class ApplicationsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupScholarshipFields($entity);
+    }
+
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // remove queryString when redirect
+        if (isset($extra['redirect']['queryString'])) {
+            unset($extra['redirect']['queryString']);
+        }
     }
 
     // index fields
