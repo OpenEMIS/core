@@ -24,7 +24,6 @@ class ScholarshipRecipientsController extends PageController
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderStatus'] = 'onRenderStatus';
-        $event['Controller.Page.onRenderApprovedAmount'] = 'onRenderApprovedAmount';
         $event['Controller.Page.getEntityRowActions'] = 'getEntityRowActions';
         return $event;
     }
@@ -123,6 +122,11 @@ class ScholarshipRecipientsController extends PageController
             ->setDisplayFrom('scholarship.maximum_award_amount')
             ->setLabel($maximumAwardAmountLabel)
             ->setValue($maximumAwardAmountValue);
+        $approvedAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Amount');
+        $page->get('approved_amount')
+            ->setLabel($approvedAmountLabel)
+            ->setRequired(true)
+            ->setAttributes('onblur', 'return utility.checkDecimal(this, 2);');
         $page->addNew('activity_status')
             ->setControlType('section');
         $page->addNew('date')
@@ -174,35 +178,6 @@ class ScholarshipRecipientsController extends PageController
         if ($page->is(['index', 'view'])) {
             if ($entity->has('recipient_activity_status') && $entity->recipient_activity_status->has('name')) {
                 return '<span class="status highlight">' . $entity->recipient_activity_status->name . '</span>';
-            }
-        }
-    }
-
-    public function onRenderApprovedAmount(Event $event, Entity $entity, PageElement $element)
-    {
-        $page = $this->Page;
-        $scholarshipEntity = $entity->has('scholarship') ? $entity->scholarship : null;
-
-        $isLoan = false;
-        if ($scholarshipEntity->has('financial_assistance_type_id')) {
-            $isLoan = $this->FinancialAssistanceTypes->is($scholarshipEntity->financial_assistance_type_id, 'LOAN');
-        } elseif ($scholarshipEntity->has('financial_assistance_type') && $scholarshipEntity->financial_assistance_type->id) {
-            $isLoan = $this->FinancialAssistanceTypes->is($scholarshipEntity->financial_assistance_type->id, 'LOAN');
-        }
-        $fieldLabel = $this->Scholarships->addCurrencySuffix('Approved Amount');
-        $element->setLabel($fieldLabel);
-
-        if ($page->is(['view'])) {
-            $element->setVisible($isLoan);
-        } elseif ($page->is(['edit'])) {
-            if ($isLoan) {
-                $element
-                    ->setRequired(true)
-                    ->setAttributes('onblur', 'return utility.checkDecimal(this, 2);');
-            } else {
-                $element
-                    ->setControlType('hidden')
-                    ->setValue('');
             }
         }
     }
