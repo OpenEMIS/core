@@ -53,6 +53,8 @@ class InstitutionChoicesController extends PageController
 
         $page->get('is_selected')
             ->setLabel('Selection');
+
+        $page->exclude(['order']);
     }
 
     public function index()
