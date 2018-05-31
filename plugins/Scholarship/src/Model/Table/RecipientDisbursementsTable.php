@@ -17,7 +17,6 @@ class RecipientDisbursementsTable extends AppTable
         $this->belongsTo('RecipientPaymentStructures', ['className' => 'Scholarship.RecipientPaymentStructures', 'foreignKey' => 'scholarship_recipient_payment_structure_id']);
 		$this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
-        $this->belongsTo('RecipientPaymentStructures', ['className' => 'Scholarship.RecipientPaymentStructures', 'foreignKey' => 'scholarship_recipient_payment_structure_id']);
     }
 
     public function validationDefault(Validator $validator)
