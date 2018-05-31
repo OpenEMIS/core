@@ -44,6 +44,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
         $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
+        $events['InstitutionCase.onSetFilterToolbar'] = 'onSetFilterToolbar';
         return $events;
     }
 
@@ -303,6 +304,13 @@ class StaffBehavioursTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    public function onSetFilterToolbar(Event $event, $requestQuery, $institutionId)
+    {
+        $params = [];
+        $params['element'] = ['filter' => ['name' => 'Cases.StaffBehaviours/controls', 'order' => 2]];
+        return $params;
     }
 
     public function onSetCustomCaseTitle(Event $event, Entity $entity)
