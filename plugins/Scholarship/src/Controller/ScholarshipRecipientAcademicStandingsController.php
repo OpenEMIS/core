@@ -48,10 +48,10 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
             ->setLabel('Semester');
 
         $page->get('gpa')
-            ->setLabel('Student GPA');
+            ->setLabel('GPA');
 
         $page->get('date')
-            ->setLabel('Date entered');
+            ->setLabel('Date Entered');
 
         $page->setQueryString('recipient_id', $recipientId);
         $page->setQueryString('scholarship_id', $scholarshipId);
@@ -69,10 +69,18 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
         parent::index();
         $page = $this->Page;
 
-        $page->exclude(['recipient_id', 'scholarship_id']);
+        $page->exclude(['recipient_id', 'scholarship_id', 'comments']);
 
         $this->reorderFields();
    }
+
+    public function view($id)
+    {
+        $page = $this->Page;
+        parent::view($id);
+
+        $this->reorderFields();
+    }
 
     public function add()
     {
@@ -103,7 +111,6 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
 
     public function reorderFields() 
     {
-
         $page = $this->Page;
 
         $page->move('academic_period_id')->first();
