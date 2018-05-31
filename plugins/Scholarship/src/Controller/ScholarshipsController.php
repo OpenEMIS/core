@@ -60,9 +60,9 @@ class ScholarshipsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.RecipientPaymentStructures']);
     }
 
-    public function RecipientDisbursements()
+    public function RecipientPayments()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.RecipientDisbursements']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.RecipientPayments']);
     }
 
     public function RecipientCollections()
@@ -79,7 +79,7 @@ class ScholarshipsController extends AppController
         $header = __('Scholarships');
         $alias = $model->alias();
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
-            $excludedModel = ['Scholarships', 'Applications', 'RecipientPaymentStructures', 'RecipientDisbursements', 'RecipientCollections'];
+            $excludedModel = ['Scholarships', 'Applications', 'RecipientPaymentStructures', 'RecipientPayments'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->toggle('add', false);

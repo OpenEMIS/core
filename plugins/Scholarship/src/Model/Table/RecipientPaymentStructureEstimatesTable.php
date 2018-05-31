@@ -28,4 +28,23 @@ class RecipientPaymentStructureEstimatesTable extends AppTable
                 'message' => __('Amount cannot be more than two decimal places')
             ]);
     }
+
+    public function getEstimatedAmount($paymentStructureId = 0)
+    {
+        $value = 0;
+        if(!is_null($paymentStructureId)) {
+            $estimatedAmount = $this->find()
+                ->where([
+                    $this->aliasField('scholarship_recipient_payment_structure_id') => $paymentStructureId
+                ])
+                ->select([
+                        'total' => $this->find()->func()->sum('estimated_amount')
+                    ])
+                ->first();
+
+            $value = $estimatedAmount->total;
+        }
+        return $value;
+    }
+
 }

@@ -744,7 +744,7 @@ trait MessagesTrait
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
         'RecipientPaymentStructures' => [
-            'noBalanceAvailable' => 'There are insufficient balances for this scholarship'
+            'noApprovedAmount' => 'Please set up approved amount for the scholarship'
         ],
         'AlertRules' => [
             'Attendance' => [
@@ -2002,7 +2002,10 @@ trait MessagesTrait
             'ScholarshipRecipients' => [
                 'approved_amount' => [
                     'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
-                    'validateDecimal' => 'Value cannot be more than two decimal places'
+                    'validateDecimal' => 'Value cannot be more than two decimal places',
+                    'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
+                    'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
+                    'ruleCheckApprovedWithCollected' => 'Approved Amount cannot be less than the Collected Amounts',
                 ]
             ]
         ],
