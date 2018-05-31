@@ -12,6 +12,9 @@ class ScholarshipTabsComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $this->queryString = $this->request->query('queryString');
+
+        $this->controller->loadModel('Scholarship.Scholarships');
+        $this->controller->loadModel('Scholarship.FinancialAssistanceTypes');
     }
 
     public function getScholarshipApplicationTabs($options = [])
@@ -85,6 +88,15 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Academic Standings')
             ]
         ];
+
+        $isLoan = false;
+        if (array_key_exists('scholarship_id', $ids) && !empty($ids['scholarship_id'])) {
+            $scholarshipEntity = $this->controller->Scholarships->get($ids['scholarship_id']);
+            $isLoan = $this->controller->FinancialAssistanceTypes->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
+        }
+        if (!$isLoan) {
+            unset($tabElements['Collections']);
+        }
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
