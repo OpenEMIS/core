@@ -46,7 +46,8 @@ class PageComponent extends Component
         'edit' => true,
         'delete' => true,
         'download' => false,
-        'search' => true
+        'search' => true,
+        'reorder' => false
     ];
 
     private $cakephpReservedPassKeys = [
@@ -103,6 +104,14 @@ class PageComponent extends Component
         return $events;
     }
 
+    public function beforeFilter(Event $event)
+    {
+        $action = $this->request->action;
+        if ($action == 'reorder') {
+            $this->enableReorder($action);
+        }
+    }
+
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
@@ -136,6 +145,7 @@ class PageComponent extends Component
                 $this->loadDataToElements($data, false);
             } elseif ($action == 'index') { // populate entities with action permissions
                 foreach ($data as $entity) {
+                    // disabled actions
                     $disabledActions = [];
                     $event = $controller->dispatchEvent('Controller.Page.getEntityDisabledActions', [$entity], $this);
 
@@ -147,6 +157,23 @@ class PageComponent extends Component
                     } else {
                         $entity['disabledActions'] = $disabledActions;
                     }
+                    // end
+
+                    // row actions
+                    $rowActionsArray = $this->getRowActions($entity);
+                    $rowActions = new ArrayObject($rowActionsArray);
+                    $event = $controller->dispatchEvent('Controller.Page.getEntityRowActions', [$entity, $rowActions], $this);
+                    $rowActionsArray = $rowActions->getArrayCopy();
+
+                    if ($event->result) {
+                        $rowActionsArray = $event->result;
+                    }
+                    if ($entity instanceof Entity) {
+                        $entity->rowActions = $rowActionsArray;
+                    } else {
+                        $entity['rowActions'] = $rowActionsArray;
+                    }
+                    // end
 
                     foreach ($this->elements as $element) {
                         $key = $element->getKey();
@@ -218,6 +245,22 @@ class PageComponent extends Component
                 $this->setVar('tabs', $this->tabsToArray());
             }
 
+            if ($this->hasMainTable()) {
+                $table = $this->getMainTable();
+                $columns = $table->schema()->columns();
+
+                if (array_key_exists('paging', $request->params)) {
+                    $paging = $request->params['paging'][$table->alias()];
+                    $paging['limitOptions'] = $this->limitOptions;
+                    $this->setVar('paging', $paging);
+                }
+
+                if (in_array($this->config('sequence'), $columns) && $this->isActionAllowed('edit')) {
+                    $this->enable(['reorder']);
+                    $this->setVar('reorder', true);
+                }
+            }
+
             $disabledActions = [];
             foreach ($this->actions as $action => $value) {
                 if ($value == false) {
@@ -225,15 +268,6 @@ class PageComponent extends Component
                 }
             }
             $this->setVar('disabledActions', $disabledActions);
-
-            if ($this->hasMainTable()) {
-                $table = $this->getMainTable();
-                if (array_key_exists('paging', $request->params)) {
-                    $paging = $request->params['paging'][$table->alias()];
-                    $paging['limitOptions'] = $this->limitOptions;
-                    $this->setVar('paging', $paging);
-                }
-            }
         }
 
         if ($session->check('alert')) {
@@ -720,6 +754,68 @@ class PageComponent extends Component
         return $this->queryOptions;
     }
 
+    public function getRowActions($entity)
+    {
+        $url = ['plugin' => $this->request->params['plugin'], 'controller' => $this->request->params['controller']];
+        $primaryKey = !is_array($entity) ? $entity->primaryKey : $entity['primaryKey']; // $entity may be Entity or array
+
+        $view = true;
+        $edit = true;
+        $delete = true;
+
+        // disabled actions for each row
+        if (!is_array($entity)) {
+            if ($entity->has('disabledActions')) {
+                $view = !in_array('view', $entity->disabledActions);
+                $edit = !in_array('edit', $entity->disabledActions);
+                $delete = !in_array('delete', $entity->disabledActions);
+            }
+        } else {
+            if (array_key_exists('disabledActions', $entity)) {
+                $view = !in_array('view', $entity['disabledActions']);
+                $edit = !in_array('edit', $entity['disabledActions']);
+                $delete = !in_array('delete', $entity['disabledActions']);
+            }
+        }
+        // end
+
+        // disabled actions for a page
+        $disabledActions = [];
+        foreach ($this->actions as $action => $value) {
+            if ($value == false) {
+                $disabledActions[] = $action;
+            }
+        }
+        // end
+
+        $rowActions = [];
+        if (!in_array('view', $disabledActions) && $view == true) {
+            $rowActions['view'] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'view', $primaryKey])),
+                'icon' => 'fa fa-eye',
+                'title' => __('View')
+            ];
+        }
+
+        if (!in_array('edit', $disabledActions) && $edit == true) {
+            $rowActions['edit'] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'edit', $primaryKey])),
+                'icon' => 'fa fa-pencil',
+                'title' => __('Edit')
+            ];
+        }
+
+        if (!in_array('delete', $disabledActions) && $delete == true) {
+            $rowActions['delete'] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'delete', $primaryKey])),
+                'icon' => 'fa fa-trash',
+                'title' => __('Delete')
+            ];
+        }
+
+        return $rowActions;
+    }
+
     public function setPaginateOption($key, $value)
     {
         $this->paginateOptions->offsetSet($key, $value);
@@ -1190,5 +1286,16 @@ class PageComponent extends Component
             }
         }
         return false;
+    }
+
+    private function enableReorder($action)
+    {
+        if ($this->request->is('post')) {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
+        $this->controller->Security->config('unlockedActions', [
+            $action
+        ]);
     }
 }

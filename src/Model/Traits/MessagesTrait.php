@@ -745,6 +745,9 @@ trait MessagesTrait
             'unpublish' => 'The Report Card has been successfully unpublished',
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
+        'RecipientPaymentStructures' => [
+            'noApprovedAmount' => 'Please set up approved amount for the scholarship'
+        ],
         'AlertRules' => [
             'Attendance' => [
                 'threshold' => 'Days within 1 to 30'
@@ -2006,6 +2009,15 @@ trait MessagesTrait
             'Applications' => [
                 'requested_amount' => [
                     'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
+                ]
+            ],
+            'ScholarshipRecipients' => [
+                'approved_amount' => [
+                    'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
+                    'validateDecimal' => 'Value cannot be more than two decimal places',
+                    'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
+                    'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
+                    'ruleCheckApprovedWithCollected' => 'Approved Amount cannot be less than the Collected Amounts',
                 ]
             ]
         ],

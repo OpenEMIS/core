@@ -4,6 +4,7 @@ namespace Scholarship\Model\Table;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -64,6 +65,20 @@ class ScholarshipRecipientsTable extends AppTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->add('approved_amount', [
+                'comparison' => [
+                    'rule' => function ($value, $context) {
+                        return floatval($value) <= floatval($context['data']['maximum_award_amount']);
+                    }
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/']
+                ],
+                'ruleCheckApprovedAmount' => [
+                    'rule' => ['checkApprovedAmount'],
+                    'provider' => 'table'
+                ]
+            ])
             ->allowEmpty('date', function ($context) {
                 if (array_key_exists('next_status', $context['data']) && !empty($context['data']['next_status'])) {
                     return false;
@@ -113,31 +128,160 @@ class ScholarshipRecipientsTable extends AppTable
     public function findIndex(Query $query, array $options)
     {
         return $query
+            ->select([
+                $this->aliasField('recipient_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('approved_amount'),
+                $this->aliasField('scholarship_recipient_activity_status_id')
+            ])
             ->contain([
-                'Recipients',
-                'Scholarships.FinancialAssistanceTypes',
-                'RecipientActivityStatuses'
+                'Recipients' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ],
+                'Scholarships' => [
+                    'fields' => [
+                        'id',
+                        'code',
+                        'name',
+                        'scholarship_financial_assistance_type_id'
+                    ]
+                ],
+                'Scholarships.FinancialAssistanceTypes' => [
+                    'fields' => [
+                        'id',
+                        'code',
+                        'name'
+                    ]
+                ],
+                'RecipientActivityStatuses' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                    ]
+                ]
             ]);
     }
 
     public function findView(Query $query, array $options)
     {
         return $query
+            ->select([
+                $this->aliasField('recipient_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('approved_amount'),
+                $this->aliasField('scholarship_recipient_activity_status_id')
+            ])
             ->contain([
-                'Recipients',
-                'Scholarships.FinancialAssistanceTypes',
-                'RecipientActivityStatuses',
-                'RecipientActivities'
+                'Recipients' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ],
+                'Scholarships' => [
+                    'fields' => [
+                        'id',
+                        'code',
+                        'name',
+                        'maximum_award_amount',
+                        'scholarship_financial_assistance_type_id'
+                    ]
+                ],
+                'Scholarships.FinancialAssistanceTypes' => [
+                    'fields' => [
+                        'id',
+                        'code',
+                        'name'
+                    ]
+                ],
+                'RecipientActivityStatuses' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                    ]
+                ],
+                'RecipientActivities' => [
+                    'fields' => [
+                        'id',
+                        'date',
+                        'comments',
+                        'prev_recipient_activity_status_name',
+                        'recipient_activity_status_name',
+                        'recipient_id',
+                        'scholarship_id',
+                        'created_user_id',
+                        'created'
+                    ]
+                ],
+                'RecipientActivities.CreatedUser' => [
+                    'fields' => [
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ]
             ]);
     }
 
     public function findEdit(Query $query, array $options)
     {
         return $query
+            ->select([
+                $this->aliasField('recipient_id'),
+                $this->aliasField('scholarship_id'),
+                $this->aliasField('approved_amount'),
+                $this->aliasField('scholarship_recipient_activity_status_id')
+            ])
             ->contain([
-                'Recipients',
-                'Scholarships.FinancialAssistanceTypes',
-                'RecipientActivityStatuses'
+                'Recipients' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ],
+                'Scholarships' => [
+                    'fields' => [
+                        'id',
+                        'code',
+                        'name',
+                        'maximum_award_amount',
+                        'scholarship_financial_assistance_type_id'
+                    ]
+                ],
+                'Scholarships.FinancialAssistanceTypes' => [
+                    'fields' => [
+                        'id',
+                        'code',
+                        'name'
+                    ]
+                ],
+                'RecipientActivityStatuses' => [
+                    'fields' => [
+                        'id',
+                        'name'
+                    ]
+                ]
             ]);
     }
 }
