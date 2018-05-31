@@ -81,6 +81,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['Model.afterSaveCommit'] = ['callable' => 'afterSaveCommit', 'priority' => '9'];
         $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
         $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
+        $events['InstitutionCase.onSetFilterToolbar'] = 'onSetFilterToolbar';
+        $events['InstitutionCase.onSetFilterBeforeQuery'] = 'onSetFilterBeforeQuery';
         return $events;
     }
 
@@ -256,6 +258,131 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->absence_type->name;
 
         return $title;
+    }
+
+    public function onSetFilterToolbar(Event $event, $requestQuery, $institutionId)
+    {
+        $params = [];
+        $params['element'] = ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]];
+
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
+        // academic_period_id
+        if (empty($requestQuery['academic_period_id'])) {
+            $requestQuery['academic_period_id'] = $AcademicPeriods->getCurrent();
+        }
+        $selectedAcademicPeriod = $requestQuery['academic_period_id'];
+
+        $academicPeriodOptions = $AcademicPeriods->getYearList();
+
+        // education_grade_id
+        if (empty($requestQuery['education_grade_id'])) {
+            $requestQuery['education_grade_id'] = -1;
+        }
+        $selectedEducationGrades = $requestQuery['education_grade_id'];
+
+        $educationGradesOptions = $InstitutionEducationGrades
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->select([
+                'id' => 'EducationGrades.id',
+                'name' => 'EducationGrades.name'
+            ])
+            ->contain(['EducationGrades'])
+            ->where(['institution_id' => $institutionId])
+            ->group('education_grade_id')
+            ->toArray();
+
+        $educationGradesOptions = ['-1' => __('-- Select Grade --')] + $educationGradesOptions;
+
+        // institution_class_id
+        if (empty($requestQuery['institution_class_id'])) {
+            $requestQuery['institution_class_id'] = -1;
+        }
+
+        if ($selectedEducationGrades != -1) {
+            $selectedClassId = $requestQuery['institution_class_id'];
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $institutionClassOptions = $InstitutionClasses
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ])
+                ->find('byGrades', ['education_grade_id' => $selectedEducationGrades])
+                ->select([
+                    'id' => $InstitutionClasses->aliasField('id'),
+                    'name' => $InstitutionClasses->aliasField('name')
+                ])
+                ->where([
+                    [$InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriod],
+                    [$InstitutionClasses->aliasField('institution_id') => $institutionId]
+                ])
+                ->group($InstitutionClasses->aliasField('id'))
+                ->toArray();
+
+            $institutionClassOptions = ['-1' => __('-- Select Class --')] + $institutionClassOptions;
+        } else {
+            $selectedClassId = -1;
+            $institutionClassOptions = ['-1' => __('-- Select Class --')];
+        }
+
+        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
+        $this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
+        $this->advancedSelectOptions($institutionClassOptions, $selectedClassId);
+
+        $params['query'] = $requestQuery;
+        $params['options'] = [
+            'selectedAcademicPeriod' => $selectedAcademicPeriod,
+            'academicPeriodOptions' => $academicPeriodOptions,
+            'selectedEducationGrades' => $selectedEducationGrades,
+            'educationGradesOptions' => $educationGradesOptions,
+            'selectedClassId' => $selectedClassId,
+            'institutionClassOptions' => $institutionClassOptions
+        ];
+
+        return $params;
+    }
+
+    public function onSetFilterBeforeQuery(Event $event, $requestQuery, Query $query) 
+    {
+        if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != -1) {
+            $institutionClassId = $requestQuery['institution_class_id'];
+            $educationGradeId = $requestQuery['education_grade_id'];
+            $academicPeriodId = $requestQuery['academic_period_id'];
+
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $result = $InstitutionClassStudents
+                ->find('list', [
+                    'keyField' => 'student_id',
+                    'valueField' => 'student_id'
+                ])
+                ->select([$InstitutionClassStudents->aliasField('student_id')])
+                ->where([
+                    $InstitutionClassStudents->aliasField('education_grade_id') => $educationGradeId,
+                    $InstitutionClassStudents->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionClassStudents->aliasField('institution_class_id') => $institutionClassId
+                ])
+                ->all();
+            $query->innerJoin(
+                [$this->alias() => $this->table()],
+                [$this->aliasField('id = ') . 'LinkedRecords.record_id']
+            );
+
+            if (!$result->isEmpty()) {
+                $studentList = $result->toArray();
+                $query->where([
+                    $this->aliasField('student_id IN ') => $studentList]
+                );
+            } else {
+                $query->where(['1 = 0']);
+            }
+        } else {
+            $query->where(['1 = 0']);
+        }
     }
 
     public function onSetCustomCaseSummary(Event $event, int $id)
