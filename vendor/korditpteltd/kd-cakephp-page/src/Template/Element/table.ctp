@@ -8,7 +8,7 @@ $displayAction = true;
 if ($displayReorder) {
     echo $this->Html->script('Page.reorder', ['block' => true]);
     $action = ($this->request->param('action') == 'index') ? 'reorder' : $this->request->param('action');
-    $baseUrl = $this->Page->getUrl(['action' => $action], false);
+    $baseUrl = $this->Page->getUrl(['action' => $action]);
 }
 
 $tableHeaders = $this->Page->getTableHeaders();

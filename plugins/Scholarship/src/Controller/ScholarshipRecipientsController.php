@@ -41,6 +41,29 @@ class ScholarshipRecipientsController extends PageController
         $page->disable(['add', 'delete']);
     }
 
+    public function beforeRender(Event $event)
+    {
+        $page = $this->Page;
+        parent::beforeRender($event);
+
+        $action = $this->request->action;
+        $toolbars = $page->getToolbars();
+
+        // remove queryString for index page
+        switch ($action) {
+            case 'view':
+                if ($toolbars->offsetExists('back')) {
+                    $toolbars['back']['data']['urlParams'] = false;
+                }
+                break;
+            case 'edit':
+                if ($toolbars->offsetExists('list')) {
+                    $toolbars['list']['data']['urlParams'] = false;
+                }
+                break;
+        }
+    }
+
     public function index()
     {
         parent::index();
