@@ -13,6 +13,11 @@ class POCOR4613 extends AbstractMigration
             ->addIndex('scholarship_recipient_payment_structure_id')
             ->save();
       
+        //export for scholarship
+        $this->execute("UPDATE security_functions 
+                    SET `_execute` = 'Scholarships.excel' 
+                    WHERE `id` = 5090");   
+
         // download permission
        $this->execute("UPDATE security_functions 
                     SET `_view` = 'index|view|download' 
@@ -114,10 +119,14 @@ class POCOR4613 extends AbstractMigration
 
         $ScholarshipRecipientDisbursements = $this->table('scholarship_recipient_disbursements');
         $ScholarshipRecipientDisbursements->removeIndex('scholarship_recipient_payment_structure_id');
+
+        $this->execute("UPDATE security_functions 
+                    SET `_execute` = null 
+                    WHERE `id` = 5090");   
         
         $this->execute("UPDATE security_functions 
-                        SET `_view` = 'index|view' 
-                        WHERE `id` = 5099");   
+                    SET `_view` = 'index|view' 
+                    WHERE `id` = 5099");   
 
         $this->execute("UPDATE security_functions 
                     SET `_edit` = null 
