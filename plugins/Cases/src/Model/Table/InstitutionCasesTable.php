@@ -118,8 +118,7 @@ class InstitutionCasesTable extends ControllerActionTable
             }
 
             if (array_key_exists('options', $params)) {
-                $optionList = $params['options'];
-                $this->controller->set($optionList);
+                $this->controller->set($params['options']);
             }
 
             if (array_key_exists('query', $params)) {
