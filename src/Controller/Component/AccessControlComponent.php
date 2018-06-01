@@ -244,7 +244,7 @@ class AccessControlComponent extends Component
 
         // we only need controller and action
         foreach ($url as $i => $val) {
-            if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val) || $this->isSHA256($val) || $this->isEncodedParam($val)) {
+            if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val) || $this->isSHA256($val) || $this->isEncodedParam($val) || $this->isHex($val)) {
                 unset($url[$i]);
             }
         }
@@ -382,6 +382,11 @@ class AccessControlComponent extends Component
             }
         }
         return false;
+    }
+
+    private function isHex($input)
+    {
+        return ctype_xdigit($input);
     }
 
     public function isAdmin()
