@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\I18n\Date;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
@@ -153,7 +154,8 @@ class ScholarshipRecipientsController extends PageController
         $page->addNew('activity_status')
             ->setControlType('section');
         $page->addNew('date')
-            ->setControlType('date');
+            ->setControlType('date')
+            ->setValue((new Date()));
 
         $nextStatusOptions = $this->RecipientActivityStatuses
             ->find('optionList', ['defaultOption' => false])
