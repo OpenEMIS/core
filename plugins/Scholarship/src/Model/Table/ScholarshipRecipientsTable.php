@@ -177,7 +177,9 @@ class ScholarshipRecipientsTable extends AppTable
                 $this->aliasField('recipient_id'),
                 $this->aliasField('scholarship_id'),
                 $this->aliasField('approved_amount'),
-                $this->aliasField('scholarship_recipient_activity_status_id')
+                $this->aliasField('scholarship_recipient_activity_status_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created')
             ])
             ->contain([
                 'Recipients' => [
@@ -227,6 +229,26 @@ class ScholarshipRecipientsTable extends AppTable
                     ]
                 ],
                 'RecipientActivities.CreatedUser' => [
+                    'fields' => [
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ],
+                'ModifiedUser' => [
+                    'fields' => [
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ],
+                'CreatedUser' => [
                     'fields' => [
                         'openemis_no',
                         'first_name',
