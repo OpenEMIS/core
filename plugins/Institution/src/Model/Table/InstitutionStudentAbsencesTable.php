@@ -81,8 +81,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['Model.afterSaveCommit'] = ['callable' => 'afterSaveCommit', 'priority' => '9'];
         $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
         $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
-        $events['InstitutionCase.onSetFilterToolbar'] = 'onSetFilterToolbar';
-        $events['InstitutionCase.onSetFilterBeforeQuery'] = 'onSetFilterBeforeQuery';
+        $events['InstitutionCase.onSetFilterToolbarElement'] = 'onSetFilterToolbarElement';
+        $events['InstitutionCase.onCaseIndexBeforeQuery'] = 'onCaseIndexBeforeQuery';
         return $events;
     }
 
@@ -260,10 +260,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         return $title;
     }
 
-    public function onSetFilterToolbar(Event $event, $requestQuery, $institutionId)
+    public function onSetFilterToolbarElement(Event $event, $requestQuery, $institutionId)
     {
         $params = [];
-        $params['element'] = ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]];
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -280,7 +279,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $requestQuery['education_grade_id'] = -1;
         }
         $selectedEducationGrades = $requestQuery['education_grade_id'];
-        $educationGradesOptions = $InstitutionEducationGrades
+        $result = $InstitutionEducationGrades
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name'
@@ -292,9 +291,14 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ->contain(['EducationGrades'])
             ->where(['institution_id' => $institutionId])
             ->group('education_grade_id')
-            ->toArray();
+            ->all();
 
-        $educationGradesOptions = ['-1' => __('-- Select Grade --')] + $educationGradesOptions;
+        if (!$result->isEmpty()) {
+            $gradeList = $result->toArray();
+            $educationGradesOptions = ['-1' => __('-- Select Grade --')] + $gradeList;
+        } else {
+            $educationGradesOptions = ['-1' => __('No Grades')];
+        }
 
         // institution_class_id
         if (empty($requestQuery['institution_class_id'])) {
@@ -303,7 +307,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         if ($selectedEducationGrades != -1) {
             $selectedClassId = $requestQuery['institution_class_id'];
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $institutionClassOptions = $InstitutionClasses
+            $result = $InstitutionClasses
                 ->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'name'
@@ -317,18 +321,20 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     [$InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriod],
                     [$InstitutionClasses->aliasField('institution_id') => $institutionId]
                 ])
-                ->toArray();
+                ->all();
 
-            $institutionClassOptions = ['-1' => __('-- Select Class --')] + $institutionClassOptions;
+            if (!$result->isEmpty()) {
+                $classList = $result->toArray();
+                $institutionClassOptions = ['-1' => __('-- Select Class --')] + $classList;
+            } else {
+                $institutionClassOptions = ['-1' => __('No Classes')];
+            }
         } else {
             $selectedClassId = -1;
             $institutionClassOptions = ['-1' => __('-- Select Class --')];
         }
 
-        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
-        $this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
-        $this->advancedSelectOptions($institutionClassOptions, $selectedClassId);
-
+        $params['element'] = ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]];
         $params['query'] = $requestQuery;
         $params['options'] = [
             'selectedAcademicPeriod' => $selectedAcademicPeriod,
@@ -342,7 +348,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         return $params;
     }
 
-    public function onSetFilterBeforeQuery(Event $event, $requestQuery, Query $query) 
+    public function onCaseIndexBeforeQuery(Event $event, $requestQuery, Query $query) 
     {
         if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != -1) {
             $institutionClassId = $requestQuery['institution_class_id'];
@@ -379,18 +385,19 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ])
                 ->all();
 
-            $query->innerJoin(
-                [$this->alias() => $this->table()],
-                [$this->aliasField('id = ') . 'LinkedRecords.record_id']
-            );
-
             if (!$result->isEmpty() && isset($startDate)) {
                 $studentList = $result->toArray();
-                $query->where([
-                    $this->aliasField('student_id IN ') => $studentList,
-                    $this->aliasField('start_date >= ') => $startDate,
-                    $this->aliasField('start_date <= ') => $endDate
-                ]);
+
+                $query
+                    ->innerJoin(
+                        [$this->alias() => $this->table()],
+                        [$this->aliasField('id = ') . 'LinkedRecords.record_id']
+                    )
+                    ->where([
+                        $this->aliasField('student_id IN ') => $studentList,
+                        $this->aliasField('start_date >= ') => $startDate,
+                        $this->aliasField('start_date <= ') => $endDate
+                    ]);
             } else {
                 $query->where(['1 = 0']);
             }

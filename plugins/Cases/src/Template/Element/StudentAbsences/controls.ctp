@@ -15,8 +15,10 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $featureOptions,
+						'default' => $selectedFeature,
 						'url' => $baseUrl,
-						'data-named-key' => 'feature'	
+						'data-named-key' => 'feature',
+						'data-named-group' => 'category'
 					));
 				}
 
@@ -25,9 +27,10 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $academicPeriodOptions,
+						'default' => $selectedAcademicPeriod,
 						'url' => $baseUrl,
 						'data-named-key' => 'academic_period_id',
-						'data-named-group' => 'feature'
+						'data-named-group' => 'category,feature'
 					));
 				}
 
@@ -36,9 +39,10 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $educationGradesOptions,
+						'default' => $selectedEducationGrades,
 						'url' => $baseUrl,
 						'data-named-key' => 'education_grade_id',
-						'data-named-group' => 'feature,academic_period_id'
+						'data-named-group' => 'category,feature,academic_period_id'
 					));
 				}
 
@@ -47,9 +51,10 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $institutionClassOptions,
+						'default' => $selectedClassId,
 						'url' => $baseUrl,
 						'data-named-key' => 'institution_class_id',
-						'data-named-group' => 'feature,academic_period_id, education_grade_id'
+						'data-named-group' => 'category,feature,academic_period_id,education_grade_id'
 					));
 				}
 			?>

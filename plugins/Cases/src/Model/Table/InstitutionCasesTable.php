@@ -19,15 +19,7 @@ class InstitutionCasesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    private $featureList = [
-        1 => 'Student Attendances',
-        2 => 'Staff Behaviours'
-    ];
-
-    private $featureModels = [
-        1 => 'Institution.InstitutionStudentAbsences',
-        2 => 'Institution.StaffBehaviours'
-    ];
+    private $features = [];
 
     public function initialize(array $config)
     {
@@ -44,6 +36,9 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', false);
+
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
     }
 
     public function implementedEvents()
@@ -94,24 +89,25 @@ class InstitutionCasesTable extends ControllerActionTable
             $this->request->query['direction'] = 'desc';
         }
 
-        $featureOptions = $this->featureList;
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $featureOptions = $WorkflowRules->getFeatureOptions();
+
         if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
             $selectedFeature = $this->request->query('feature');
         } else {
             $selectedFeature = key($featureOptions);
             $this->request->query['feature'] = $selectedFeature;
         }
-        $this->advancedSelectOptions($featureOptions, $selectedFeature);
+
         $this->controller->set(compact('featureOptions', 'selectedFeature'));
 
-        $selectedModel = $this->featureModels[$selectedFeature];
+        $selectedModel = $this->features[$selectedFeature];
         $featureModel = TableRegistry::get($selectedModel);
-
         $session = $this->request->session();
         $requestQuery = $this->request->query;
         $institutionId = $session->read('Institution.Institutions.id');
 
-        $event = $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbar', [$requestQuery, $institutionId], $featureModel);
+        $event = $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$requestQuery, $institutionId], $featureModel);
         if ($event->isStopped()) {
             return $event->result;
         }
@@ -136,8 +132,9 @@ class InstitutionCasesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->query;
-        $feature = $requestQuery['feature'];
-        $selectedFeature = Inflector::camelize($this->featureList[$feature]);
+        $selectedFeature = $requestQuery['feature'];
+        $featureModel = TableRegistry::get($this->features[$selectedFeature]);
+
         $query
             ->select([
                 $this->aliasField('id'),
@@ -157,7 +154,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 $this->Assignees->aliasField('third_name'),
                 $this->Assignees->aliasField('preferred_name')
             ])
-            ->contain(['Assignees', 'LinkedRecords'])
+            ->contain(['LinkedRecords'])
             ->innerJoin(
                 [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
                 [
@@ -167,9 +164,11 @@ class InstitutionCasesTable extends ControllerActionTable
             )
             ->group($this->aliasField('id'));
 
-        $selectedModel = $this->featureModels[$feature];
-        $featureModel = TableRegistry::get($selectedModel);
-        $event = $featureModel->dispatchEvent('InstitutionCase.onSetFilterBeforeQuery', [$requestQuery, $query], $featureModel);
+        
+        $event = $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+        if ($event->isStopped()) {
+            return $event->result;
+        }
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
