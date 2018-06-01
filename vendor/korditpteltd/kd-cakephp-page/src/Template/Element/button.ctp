@@ -1,5 +1,9 @@
 <?php
-$href = $this->Page->getUrl($url, true);
+$options = [
+    'toArray' => true,
+    'urlParams' => isset($urlParams) ? $urlParams : true
+];
+$href = $this->Page->getUrl($url, $options);
 
 $_linkOptions = [
     'class' => 'btn btn-xs btn-default',

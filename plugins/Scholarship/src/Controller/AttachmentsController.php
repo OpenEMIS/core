@@ -3,6 +3,7 @@ namespace Scholarship\Controller;
 
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Datasource\ResultSetInterface;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
@@ -36,6 +37,15 @@ class AttachmentsController extends PageController
 
         $page->get('scholarship_attachment_type_id')
             ->setLabel('Type');
+
+        if ($page->is(['view', 'add', 'edit'])) {
+            $page->exclude(['file_name']);
+            $page->move('file_content')->after('scholarship_attachment_type_id');
+
+        } elseif ($page->is(['delete'])) {
+            $page->exclude(['file_content']);
+            $page->move('file_name')->after('scholarship_attachment_type_id');
+        }
     }
 
     public function index()
@@ -60,26 +70,29 @@ class AttachmentsController extends PageController
         $this->addEdit();
     }
 
-    public function edit($id)
-    {
-        parent::edit($id);
-        $this->addEdit();
-    }
-
     private function addEdit()
     {
         $page = $this->Page;
 
-        $page->exclude(['file_name']);
         $applicantId = $page->getQueryString('applicant_id');
         $scholarshipId = $page->getQueryString('scholarship_id');
 
         $attachmentTypesOption = $this->AttachmentTypes
-            ->find('list')
             ->find('availableAttachmentTypes', [
                 'applicant_id' => $applicantId,
                 'scholarship_id' => $scholarshipId
             ])
+            ->formatResults(function (ResultSetInterface $results) {
+                $returnArr = [];
+                foreach ($results as $result) {
+                    $name = $result->name;
+                    if (!$result->is_mandatory) {
+                        $name .= ' (' . __('Optional') . ')';
+                    }
+                    $returnArr[$result->id] = $name;
+                }
+                return $returnArr;
+            })
             ->toArray();
 
         $page->get('scholarship_attachment_type_id')
@@ -161,13 +174,7 @@ class AttachmentsController extends PageController
                 ])
                 ->is_mandatory;
 
-            if ($isMandatory) {
-                return "<i class='fa fa-check'></i>";
-            } else {
-                return "<i class='fa fa-close'></i>";
-            }
-
-            return "<i class='fa fa-close'></i>";
+            return $isMandatory ? "<i class='fa fa-check'></i>" : "<i class='fa fa-close'></i>";
         }
     }
 }

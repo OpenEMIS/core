@@ -4,6 +4,7 @@ namespace Page\View\Helper;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\I18n\I18n;
@@ -175,9 +176,9 @@ class PageHelper extends Helper
         $icon = array('prev' => '', 'next' => '');
         $html = $this->Paginator->{$type}(
             $icon[$type],
-            array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true)),
+            array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true])),
             null,
-            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true))
+            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true]))
         );
         return $html;
     }
@@ -193,7 +194,7 @@ class PageHelper extends Helper
             'first' => 2,
             'last' => 2,
             'ellipsis' => '<li><a>...</a></li>',
-            'url' => $this->getUrl(['action' => $this->request->param('action')], true)
+            'url' => $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true])
         ));
         return $html;
     }
@@ -216,7 +217,7 @@ class PageHelper extends Helper
             $label = $attr['label'];
 
             if ($attr['sortable']) {
-                $url = $this->getUrl(['action' => $this->request->param('action')], true);
+                $url = $this->getUrl(['action' => $this->request->param('action')], ['toArray' => true]);
                 if (array_key_exists('sort', $url)) {
                     unset($url['sort']);
                 }
@@ -231,8 +232,11 @@ class PageHelper extends Helper
 
         $disabledActions = $this->_View->get('disabledActions');
         $actionButtons = ['view', 'edit', 'delete'];
-        if (count(array_intersect($actionButtons, $disabledActions)) < 3) {
+        if (count(array_intersect($actionButtons, $disabledActions)) < count($actionButtons)) {
             $headers[] = [__('Actions') => ['class' => 'cell-action']];
+        }
+        if (!in_array('reorder', $disabledActions)) {
+            $headers[] = [__('Reorder') => ['class' => 'cell-reorder']];
         }
 
         return $headers;
@@ -255,8 +259,24 @@ class PageHelper extends Helper
             }
             $disabledActions = $this->_View->get('disabledActions');
             $actionButtons = ['view', 'edit', 'delete'];
-            if (count(array_intersect($actionButtons, $disabledActions)) < 3) {
+            if (count(array_intersect($actionButtons, $disabledActions)) < count($actionButtons)) {
                 $row[] = $this->_View->element('Page.actions', ['data' => $entity]);
+            }
+            if (!in_array('reorder', $disabledActions)) {
+                $model = TableRegistry::get($entity->source());
+                $primaryKeys = $model->primaryKey();
+
+                $primaryKeyValue = [];
+                if (is_array($primaryKeys)) {
+                    foreach ($primaryKeys as $key) {
+                        $primaryKeyValue[$key] = $entity->getOriginal($key);
+                    }
+                } else {
+                    $primaryKeyValue[$primaryKeys] = $entity->getOriginal($primaryKeys);
+                }
+
+                $encodedKeys = $this->encode($primaryKeyValue);
+                $row[] = [$this->_View->element('Page.reorder'), ['class' => 'sorter', 'data-row-id' => $encodedKeys]];
             }
 
             $tableData[] = $row;
@@ -314,11 +334,21 @@ class PageHelper extends Helper
         return $value;
     }
 
-    public function getUrl($route, $toArray = false)
+    public function getUrl($url, $options = [])
     {
         $request = $this->request;
-        $url = array_merge($route, $request->query);
+        $toArray = isset($options['toArray']) ? $options['toArray'] : false;
+        $urlParams = isset($options['urlParams']) ? $options['urlParams'] : true; /* 'PASS' | 'QUERY' | false */
+
         $this->mergeRequestParams($url);
+
+        if ($urlParams === true) {
+            $url = array_merge($url, $request->pass, $request->query);
+        } elseif ($urlParams === 'PASS') {
+            $url = array_merge($url, $request->pass);
+        } elseif ($urlParams === 'QUERY') {
+            $url = array_merge($url, $request->query);
+        }
         return $toArray ? $url : $this->Url->build($url);
     }
 
@@ -361,6 +391,7 @@ class PageHelper extends Helper
         $isStringType = in_array($controlType, ['string', 'textarea']);
         $hasDateTimeFormat = array_key_exists('format', $field);
         $valueIsNotEmpty = !empty($value);
+        $action = !is_null($this->request->param('action')) ? $this->request->param('action') : 'index';
 
         if ($isDateTimeType && $hasDateTimeFormat && $valueIsNotEmpty) {
             $valueIsDateObject = $value instanceof Date;
@@ -369,7 +400,7 @@ class PageHelper extends Helper
             } else {
                 $value = (new Date($value))->i18nFormat($field['format']);
             }
-        } elseif (($isStringType || $field['foreignKey'] != false) && $valueIsNotEmpty) {
+        } elseif (($action == 'index') && ($isStringType || $field['foreignKey'] != false) && $valueIsNotEmpty) {
             $value = $this->highlight($value);
         }
         return $value;
