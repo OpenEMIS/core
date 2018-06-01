@@ -27,13 +27,6 @@ class ScholarshipRecipientCollectionsController extends PageController
         $this->currency = $this->ConfigItems->value('currency');
     }
 
-    public function implementedEvents()
-    {
-        $event = parent::implementedEvents();
-        $event['Controller.Page.onRenderBalanceAmount'] = 'onRenderBalanceAmount';
-        return $event;
-    }
-
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
@@ -87,11 +80,13 @@ class ScholarshipRecipientCollectionsController extends PageController
 
     public function edit($id)
     {
+        $page = $this->Page;
         parent::edit($id);
-        $this->addEdit($id);
+        $collectionId = $page->decode($id)['id'];
+        $this->addEdit($collectionId);
     }
 
-    private function addEdit($id = null)
+    private function addEdit($collectionId = null)
     {
         $page = $this->Page;
 
@@ -115,9 +110,11 @@ class ScholarshipRecipientCollectionsController extends PageController
             ->setLabel($this->addCurrencySuffix('Approved Amount'))
             ->setValue($recipientEntity->approved_amount);
 
+        $balanceAmount = $this->RecipientCollections->getBalanceAmount($recipientId, $scholarshipId, $collectionId);
         $page->addNew('balance_amount')
             ->setDisabled(true)
-            ->setLabel($this->addCurrencySuffix('Balance Amount'));
+            ->setLabel($this->addCurrencySuffix('Balance Amount'))
+            ->setValue($balanceAmount);
 
         $page->addNew('collections')->setControlType('section');
 
@@ -132,19 +129,6 @@ class ScholarshipRecipientCollectionsController extends PageController
         $page->move('balance_amount')->after('approved_amount');
         $page->move('collections')->after('balance_amount');
         $page->move('academic_period_id')->after('collections');
-    }
-
-    public function onRenderBalanceAmount(Event $event, Entity $entity, PageElement $element)
-    {
-        $page = $this->Page;
-
-        if ($page->is(['add', 'edit'])) {
-            $recipientId = $page->getQueryString('recipient_id');
-            $scholarshipId = $page->getQueryString('scholarship_id');
-            $currentId = $entity->has('id') ? $entity->id : '';
-
-            return $this->RecipientCollections->getBalanceAmount($recipientId, $scholarshipId, $currentId);
-        }
     }
 
     public function setupTabElements($scholarshipId)
