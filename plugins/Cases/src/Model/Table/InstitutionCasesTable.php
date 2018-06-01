@@ -78,6 +78,7 @@ class InstitutionCasesTable extends ControllerActionTable
             'valueClass' => 'table-full-width',
             'after' => 'description'
         ]);
+        
         $this->field('created', [
             'visible' => true,
             'after' => 'linked_records'
@@ -106,10 +107,11 @@ class InstitutionCasesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionId = $session->read('Institution.Institutions.id');
 
-        $params = new ArrayObject([]);
-        $params['element'] = ['filter' => ['name' => 'Cases.controls', 'order' => 2]];
-        $params['options'] = [];
-        $params['query'] = $this->request->query;
+        $params = new ArrayObject([
+            'element' => ['filter' => ['name' => 'Cases.controls', 'order' => 2]],
+            'options' => [],
+            'query' => $this->request->query
+        ]);
 
         $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$params, $institutionId], $featureModel);
 
