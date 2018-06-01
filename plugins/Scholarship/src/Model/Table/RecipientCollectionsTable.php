@@ -33,7 +33,7 @@ class RecipientCollectionsTable extends ControllerActionTable
                         $balance = $this->getBalanceAmount($recipientId, $scholarshipId, $currentId);
                         return floatval($value) <= floatval($balance);
                     },
-                    'message' => __('Collected Amount cannot be more than the Balance Amount')
+                    'message' => __('Collected Amount must not exceed Balance Amount')
                 ],
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
