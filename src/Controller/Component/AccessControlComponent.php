@@ -386,7 +386,7 @@ class AccessControlComponent extends Component
 
     private function isHex($input)
     {
-        return ctype_xdigit($input);
+        return ctype_xdigit($input) && strpos($input, '0') !== false;
     }
 
     public function isAdmin()
