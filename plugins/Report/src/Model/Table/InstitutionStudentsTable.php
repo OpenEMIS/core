@@ -96,7 +96,7 @@ class InstitutionStudentsTable extends AppTable  {
                         'Users.third_name',
                         'Users.last_name',
                         'Users.preferred_name',
-                        'Users.date_of_birth',
+                        'date_of_birth' => 'Users.date_of_birth',
                         'username' => 'Users.username',
                         'number' => 'Users.identity_number'
                     ]
@@ -260,15 +260,11 @@ class InstitutionStudentsTable extends AppTable  {
 
 	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
 		$age = '';
-		if ($entity->has('user')) {
-			if ($entity->user->has('date_of_birth')) {
-				if (!empty($entity->user->date_of_birth)) {
-					$dateOfBirth = $entity->user->date_of_birth->format('Y-m-d');
-                    $today = date('Y-m-d');
-                    $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
-				}
-			}
-		}
+        if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
+            $dateOfBirth = $entity->date_of_birth->format('Y-m-d');
+            $today = date('Y-m-d');
+            $age = date_diff(date_create($dateOfBirth), date_create($today))->y;
+        }
 		return $age;
 	}
 
@@ -378,6 +374,13 @@ class InstitutionStudentsTable extends AppTable  {
 			'label' => ''
 		];
 
+        $extraField[] = [
+            'key' => 'Users.date_of_birth',
+            'field' => 'date_of_birth',
+            'type' => 'date',
+            'label' => ''
+        ];
+
         if ($statusId == $this->statuses['TRANSFERRED']) {
             $extraField[] = [
                 'key' => 'Institutions.area_code',
@@ -440,8 +443,8 @@ class InstitutionStudentsTable extends AppTable  {
 
 		$extraField[] = [
 			'key' => 'Age',
-			'field' => 'Age',
-			'type' => 'Age',
+			'field' => 'age',
+			'type' => 'age',
 			'label' => 'Age',
 		];
 
