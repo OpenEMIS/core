@@ -106,15 +106,17 @@ class InstitutionCasesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionId = $session->read('Institution.Institutions.id');
 
+        $filterElement = ['filter' => ['name' => 'Cases.controls', 'order' => 2]];
         $event = $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$requestQuery, $institutionId], $featureModel);
         if ($event->isStopped()) {
             return $event->result;
         }
+
         if (!empty($event->result)) {
             $params = $event->result;
 
             if (array_key_exists('element', $params)) {
-                $extra['elements'] = $params['element'] + $extra['elements'];
+                $filterElement = $params['element'];
             }
 
             if (array_key_exists('options', $params)) {
@@ -125,6 +127,8 @@ class InstitutionCasesTable extends ControllerActionTable
                 $this->request->query = $params['query'];
             }
         }
+
+        $extra['elements'] = $filterElement + $extra['elements'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
