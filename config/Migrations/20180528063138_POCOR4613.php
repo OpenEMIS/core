@@ -98,7 +98,7 @@ class POCOR4613 extends AbstractMigration
         $this->insert('security_functions', [
             'id' => 5105,
             'name' => 'Academic Standings',
-            'controller' => 'RecipientAcademicStandings',
+            'controller' => 'ScholarshipRecipientAcademicStandings',
             'module' => 'Administration',
             'category' => 'Scholarships - Recipients',
             'parent_id' => 5000,
