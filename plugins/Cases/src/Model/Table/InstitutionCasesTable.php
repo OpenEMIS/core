@@ -106,8 +106,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionId = $session->read('Institution.Institutions.id');
 
-        $params = new ArrayObject;
-        $params['element'] = $filterElement = ['filter' => ['name' => 'Cases.controls', 'order' => 2]];
+        $params = new ArrayObject([]);
+        $params['element'] = ['filter' => ['name' => 'Cases.controls', 'order' => 2]];
         $params['options'] = [];
         $params['query'] = $this->request->query;
 
