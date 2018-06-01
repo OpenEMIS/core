@@ -462,9 +462,9 @@ class RecipientPaymentsTable extends ControllerActionTable
                 $totalAmt += $obj['amount'];
             }
         }
-            
-        if($totalAmt > $balance) {
-            $entity->errors('balance_amount', __('Disbursed amount must not exceed Balance Amount'));
+
+        if ($totalAmt > $balance) {
+            $entity->errors('balance_amount', __('Disbursed Amount must not exceed Balance Amount'));
             return false;
         }
     }

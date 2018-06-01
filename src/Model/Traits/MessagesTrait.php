@@ -744,7 +744,7 @@ trait MessagesTrait
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
         'RecipientPaymentStructures' => [
-            'noApprovedAmount' => 'Please set up approved amount for the scholarship'
+            'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
         ],
         'AlertRules' => [
             'Attendance' => [
