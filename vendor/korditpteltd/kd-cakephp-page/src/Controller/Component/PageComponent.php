@@ -47,7 +47,7 @@ class PageComponent extends Component
         'delete' => true,
         'download' => false,
         'search' => true,
-        'reorder' => false
+        'reorder' => true
     ];
 
     private $cakephpReservedPassKeys = [
@@ -255,9 +255,8 @@ class PageComponent extends Component
                     $this->setVar('paging', $paging);
                 }
 
-                if (in_array($this->config('sequence'), $columns) && $this->isActionAllowed('edit')) {
-                    $this->enable(['reorder']);
-                    $this->setVar('reorder', true);
+                if (!in_array($this->config('sequence'), $columns) || !($this->isActionAllowed('reorder') && $this->isActionAllowed('edit'))) {
+                    $this->disable(['reorder']);
                 }
             }
 
