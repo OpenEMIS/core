@@ -94,10 +94,17 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
         $this->addEdit($id);
     }
 
+    public function delete($id)
+    {
+        $page = $this->Page;
+        parent::delete($id);
+        $this->reorderFields();
+    }
+
     private function addEdit($id=0)
     {
         $page = $this->Page;
-        
+
         // set academic
         $page->get('academic_period_id')
             ->setControlType('select')
