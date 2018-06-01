@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
-use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
