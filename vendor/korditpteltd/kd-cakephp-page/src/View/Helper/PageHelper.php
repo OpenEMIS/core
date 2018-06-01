@@ -391,6 +391,7 @@ class PageHelper extends Helper
         $isStringType = in_array($controlType, ['string', 'textarea']);
         $hasDateTimeFormat = array_key_exists('format', $field);
         $valueIsNotEmpty = !empty($value);
+        $action = !is_null($this->request->param('action')) ? $this->request->param('action') : 'index';
 
         if ($isDateTimeType && $hasDateTimeFormat && $valueIsNotEmpty) {
             $valueIsDateObject = $value instanceof Date;
@@ -399,7 +400,7 @@ class PageHelper extends Helper
             } else {
                 $value = (new Date($value))->i18nFormat($field['format']);
             }
-        } elseif (($isStringType || $field['foreignKey'] != false) && $valueIsNotEmpty) {
+        } elseif (($action == 'index') && ($isStringType || $field['foreignKey'] != false) && $valueIsNotEmpty) {
             $value = $this->highlight($value);
         }
         return $value;
