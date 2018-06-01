@@ -106,29 +106,19 @@ class InstitutionCasesTable extends ControllerActionTable
         $requestQuery = $this->request->query;
         $institutionId = $session->read('Institution.Institutions.id');
 
-        $filterElement = ['filter' => ['name' => 'Cases.controls', 'order' => 2]];
-        $event = $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$requestQuery, $institutionId], $featureModel);
-        if ($event->isStopped()) {
-            return $event->result;
+        $params = new ArrayObject;
+        $params['element'] = $filterElement = ['filter' => ['name' => 'Cases.controls', 'order' => 2]];
+        $params['options'] = [];
+        $params['query'] = $this->request->query;
+
+        $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$params, $institutionId], $featureModel);
+
+        $extra['elements'] = $params['element'] + $extra['elements'];
+        $this->request->query = $params['query'];
+
+        if (!empty($params['options'])) {
+            $this->controller->set($params['options']);
         }
-
-        if (!empty($event->result)) {
-            $params = $event->result;
-
-            if (array_key_exists('element', $params)) {
-                $filterElement = $params['element'];
-            }
-
-            if (array_key_exists('options', $params)) {
-                $this->controller->set($params['options']);
-            }
-
-            if (array_key_exists('query', $params)) {
-                $this->request->query = $params['query'];
-            }
-        }
-
-        $extra['elements'] = $filterElement + $extra['elements'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -167,10 +157,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ->group($this->aliasField('id'));
 
         
-        $event = $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
-        if ($event->isStopped()) {
-            return $event->result;
-        }
+        $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)

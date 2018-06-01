@@ -260,9 +260,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         return $title;
     }
 
-    public function onSetFilterToolbarElement(Event $event, $requestQuery, $institutionId)
+    public function onSetFilterToolbarElement(Event $event, ArrayObject $params, $institutionId)
     {
-        $params = [];
+        $requestQuery = $params['query'];
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -344,11 +344,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'selectedClassId' => $selectedClassId,
             'institutionClassOptions' => $institutionClassOptions
         ];
-
-        return $params;
     }
 
-    public function onCaseIndexBeforeQuery(Event $event, $requestQuery, Query $query) 
+    public function onCaseIndexBeforeQuery(Event $event, $requestQuery, Query $query)
     {
         if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != -1) {
             $institutionClassId = $requestQuery['institution_class_id'];
