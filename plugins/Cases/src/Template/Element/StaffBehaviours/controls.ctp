@@ -15,6 +15,7 @@
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $featureOptions,
+                        'default' => $selectedFeature,
                         'url' => $baseUrl,
                         'data-named-key' => 'feature'   
                     ));
