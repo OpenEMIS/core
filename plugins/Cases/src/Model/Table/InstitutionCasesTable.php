@@ -78,7 +78,6 @@ class InstitutionCasesTable extends ControllerActionTable
             'valueClass' => 'table-full-width',
             'after' => 'description'
         ]);
-        
         $this->field('created', [
             'visible' => true,
             'after' => 'linked_records'
