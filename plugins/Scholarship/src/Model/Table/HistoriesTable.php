@@ -46,7 +46,6 @@ class HistoriesTable extends ControllerActionTable
             'disableWorkflow' => true
         ]);
         $this->addBehavior('CompositeKey');
-        $this->toggle('view', false);
     }
 
     public function implementedEvents()

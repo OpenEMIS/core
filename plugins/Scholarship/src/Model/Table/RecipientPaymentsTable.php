@@ -8,12 +8,11 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
-use Cake\ORM\ResultSet;
 use Cake\Controller\Component;
 use Cake\View\Helper\IdGeneratorTrait;
 use App\Model\Table\ControllerActionTable;
 
-class RecipientPaymentStructuresTable extends ControllerActionTable
+class RecipientPaymentsTable extends ControllerActionTable
 {
     use IdGeneratorTrait;
 
@@ -23,13 +22,14 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);
-		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->hasMany('RecipientPaymentStructureEstimates', ['className' => 'Scholarship.RecipientPaymentStructureEstimates', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
         $this->hasMany('RecipientDisbursements', ['className' => 'Scholarship.RecipientDisbursements', 'foreignKey' => 'scholarship_recipient_payment_structure_id', 'dependent' => true, 'cascadeCallbacks' => true,  'saveStrategy' => 'replace']);
-        
-        $this->setDeleteStrategy('restrict');
+
+        $this->toggle('add', false);
+        $this->toggle('remove', false);
     }
 
     public function implementedEvents()
@@ -42,27 +42,22 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
-        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
-
         // set header
+        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
         $recipientName = $this->Recipients->get($recipientId)->name;
-        $this->controller->set('contentHeader', $recipientName . ' - ' . __('Payment Structures'));
+        $this->controller->set('contentHeader', $recipientName . ' - ' . __('Disbursements'));
         // set tabs
         $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'PaymentStructures');
-        
-        $entity = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);   
-        if(empty($entity->approved_amount)) {
-            $this->toggle('add', false);
-            $this->Alert->warning($this->aliasField('noApprovedAmount'));
-        }
+        $this->controller->set('selectedAction', 'Disbursements');
+
+        $this->field('recipient_id', ['type' => 'hidden']);
+        $this->field('scholarship_id', ['type' => 'hidden']);
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
-        $title = __('Payment Structures');
+        $title = __('Disbursements');
 
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
         $recipientName = $this->Recipients->get($recipientId)->name;
@@ -86,28 +81,21 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('recipient_id', ['type' => 'hidden']);
-        $this->field('scholarship_id', ['type' => 'hidden']);
-        $this->field('estimated_amount', ['after' => 'academic_period_id']);
-    }
-
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
-        $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
-        $entity->recipient_id = $recipientId;
-        $entity->scholarship_recipient = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId]);
-        $entity->scholarship_id = $scholarshipId;
-        $entity->scholarship = $this->Scholarships->get($scholarshipId);
-   
-        $this->setupFields($entity);
+        $this->field('academic_period_id', ['visible' => 'false']);
+        $this->field('estimated_amount', ['after' => 'name']);
+        $this->field('disbursed_fund', ['after' => 'estimated_amount']);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'RecipientPaymentStructureEstimates.DisbursementCategories'
+            'RecipientDisbursements.DisbursementCategories', 'AcademicPeriods', 'ScholarshipRecipients'
         ]);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity) 
+    {
+        $this->setupFields($entity);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -117,38 +105,36 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 
     public function setupFields($entity = null)
     {
+        $this->field('code', ['type' => 'disabled']);
+        $this->field('name', ['type' => 'disabled']);
+
         $this->field('academic_period_id', [
-            'type' => 'select',
-            'options' => $this->AcademicPeriods->getYearList(['isEditable' => true]),
+            'type' => 'readonly',
+            'attr' => ['value' => $entity->academic_period->name],
             'after' => 'name'
         ]);
 
-        $this->field('scholarship_name', [
+         $this->field('estimated_amount', [
             'type' => 'disabled',
-            'fieldName' => 'scholarship.name',
-            'attr' => ['label' => __('Scholarship')],
-            'after' => 'academic_period_id'
+            'after' => 'academic_period_id',
+            'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Estimated Amount')],
+            'entity' => $entity
         ]);
 
-        $this->field('scholarship_id', [
-            'type' => 'hidden'
-        ]);
-
-        $this->field('recipient_id', [
-            'type' => 'hidden'
-        ]);
-
-        $this->field('approved_amount', [
+         $this->field('approved_amount', [
             'type' => 'disabled',
-            'fieldName' => 'scholarship_recipient.approved_amount',
-            'after' => 'scholarship_name',
-            'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Approved Amount')]
+            'after' => 'estimated_amount',
+            'visible' => ['view' => false, 'edit' => true],
+            'attr' => [
+                'label' => $this->Scholarships->addCurrencySuffix('Approved Amount'), 
+                'value' => $entity->scholarship_recipient->approved_amount
+            ]
         ]);
 
         $this->field('balance_amount', [
             'type' => 'disabled',
             'after' => 'approved_amount',
-            'visible' => ['view' => false, 'add' => true, 'edit' => true],
+            'visible' => ['view' => false, 'edit' => true],
             'attr' => ['label' => $this->Scholarships->addCurrencySuffix('Balance Amount')],
             'entity' => $entity
         ]);
@@ -159,42 +145,26 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         ]);
     }
 
-    public function addEditOnSelectDisbursementCategory(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        $fieldKey = 'recipient_payment_structure_estimates';
-
-        if (!isset($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
-        }
-
-        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
-        $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
-
-        if (isset($data[$this->alias()]['disbursement_category_id']) && !empty($data[$this->alias()]['disbursement_category_id'])) {
-            $selectedDisbursementCategory = $data[$this->alias()]['disbursement_category_id'];
-            $disbursementCategoryEntity = TableRegistry::get('Scholarship.DisbursementCategories')->get($selectedDisbursementCategory);
-            $data[$this->alias()][$fieldKey][] = [
-                'scholarship_disbursement_category_id' => $disbursementCategoryEntity->id,
-                'scholarship_disbursement_category_name' => $disbursementCategoryEntity->name,
-                'estimated_disbursement_date' => '',
-                'estimated_amount' => null,
-                'comments' => '',
-                'recipient_id' => $recipientId,
-                'scholarship_id' => $scholarshipId
-            ];
-        }
-        $data[$this->alias()]['disbursement_category_id'] = '';
-
-        //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
-        $options['associated'] = [
-            'RecipientPaymentStructureEstimates' => ['validate' => false]
-        ];
-    }
-
-    // index
+    // index fields
     public function onGetEstimatedAmount(Event $event, Entity $entity)
     {
         $value = $this->RecipientPaymentStructureEstimates->getEstimatedAmount($entity->id);
+        return $value;
+    }
+
+    public function onGetDisbursedFund(Event $event, Entity $entity)
+    {
+        $query = $this->RecipientDisbursements->find();
+        $RecipientDisbursements = $query->where([
+                $this->RecipientDisbursements->aliasField('scholarship_recipient_payment_structure_id') => $entity->id
+            ])
+            ->select([
+                    'disbursed_amt' => $query->func()->sum('amount')
+                ])
+            ->first();
+
+        $value = $RecipientDisbursements->disbursed_amt;
+
         return $value;
     }
 
@@ -202,20 +172,88 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
     {
         if ($field == 'estimated_amount') {
             return $this->Scholarships->addCurrencySuffix('Estimated Amount');
+        } else if ($field == 'disbursed_fund') {
+            return $this->Scholarships->addCurrencySuffix('Disbursed Fund');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+        
     }
 
-    //view
-    public function onGetScholarshipName(Event $event, Entity $entity)
+    // edit fields
+    public function onUpdateFieldEstimatedAmount(Event $event, array $attr, $action, $request)
     {
-        return $entity->scholarship->name;
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = $this->RecipientPaymentStructureEstimates->getEstimatedAmount($entity->id);
+            $attr['attr']['value'] =  $value;
+        }
+        return $attr;
     }
 
-    public function onGetApprovedAmount(Event $event, Entity $entity)
+    public function onUpdateFieldBalanceAmount(Event $event, array $attr, $action, $request)
     {
-         return $entity->scholarship_recipient->approved_amount;
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+           
+            $approvedAmt = $entity->scholarship_recipient->approved_amount;
+            
+            $conditions = [
+                'recipient_id' => $entity->recipient_id,
+                'scholarship_id' => $entity->scholarship_id,
+                'scholarship_recipient_payment_structure_id <>' => $entity->id
+            ];
+
+            $query = $this->RecipientDisbursements->find();
+            $RecipientDisbursements = $query->where([$conditions])
+                ->select([
+                    'disbursed_amt' => $query->func()->sum('amount')
+                ])
+                ->first();
+
+            $balance = $approvedAmt - ($RecipientDisbursements->disbursed_amt);
+             
+            $attr['attr']['value'] =  $balance;
+        }
+
+        return $attr;
+    }
+
+    public function addEditOnSelectDisbursementCategory(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $fieldKey = 'recipient_disbursements';
+
+        if (!isset($data[$this->alias()][$fieldKey])) {
+            $data[$this->alias()][$fieldKey] = [];
+        }
+
+        $recipientId = $this->ControllerAction->getQueryString('recipient_id');
+        $scholarshipId = $this->ControllerAction->getQueryString('scholarship_id');
+      
+        if (isset($data[$this->alias()]['disbursement_category_id']) && !empty($data[$this->alias()]['disbursement_category_id'])) {
+            $selectedDisbursementCategory = $data[$this->alias()]['disbursement_category_id'];
+            $disbursementCategoryEntity = TableRegistry::get('Scholarship.DisbursementCategories')->get($selectedDisbursementCategory);
+            $semesterOptions = TableRegistry::get('Scholarship.Semesters')->getList()->toArray();
+
+            $data[$this->alias()][$fieldKey][] = [
+                'scholarship_disbursement_category_id' => $disbursementCategoryEntity->id,
+                'scholarship_disbursement_category_name' => $disbursementCategoryEntity->name,
+                'disbursement_date' => '',
+                'amount' => '',
+                'comments' => '',
+                'scholarship_semester_id' => key($semesterOptions),
+                'recipient_id' => $recipientId,
+                'scholarship_id' => $scholarshipId
+            ];
+        }
+
+        $data[$this->alias()]['disbursement_category_id'] = '';
+
+        //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+        $options['associated'] = [
+            'RecipientDisbursements' => ['validate' => false]
+        ];
     }
 
     public function onGetCustomDisbursementCategoryElement(Event $event, $action, $entity, $attr, $options = [])
@@ -223,50 +261,56 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         if ($action == 'index') {
             // No implementation yet
         } elseif ($action == 'view') {
-            $tableHeaders = [__('Category') , __('Estimated Disbursement Date'), $this->Scholarships->addCurrencySuffix('Estimated Amount'), __('Comments')];
+            $tableHeaders = [__('Category') , __('Disbursement Date'), $this->Scholarships->addCurrencySuffix('Amount'), __('Semester'), __('Comments'), ''];
             $tableCells = [];
 
+            $Semesters = TableRegistry::get('Scholarship.Semesters');
             $totalAmt = 0;
-            if ($entity->has('recipient_payment_structure_estimates')) {
-                foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
+
+            if ($entity->has('recipient_disbursements')) {
+                foreach ($entity->recipient_disbursements as $key => $obj) {
+                    $semesterEntity = $Semesters->get($obj->scholarship_semester_id);
+
                     $rowData = [];
                     $rowData[] = $obj->disbursement_category->name;
-                    $rowData[] = $this->formatDate($obj->estimated_disbursement_date);
-                    $rowData[] = $obj->estimated_amount;
+                    $rowData[] = $this->formatDate($obj->disbursement_date);
+                    $rowData[] = $obj->amount;
+                    $rowData[] = $semesterEntity['name'];
                     $rowData[] = nl2br($obj->comments);
 
                     $tableCells[] = $rowData;
-                    $totalAmt += $obj->estimated_amount;
+                    $totalAmt += $obj->amount;
                 }
             }
 
-            $tableFooters = [$this->Scholarships->addCurrencySuffix('Total'), '', $totalAmt, ''];
+            $tableFooters = [$this->Scholarships->addCurrencySuffix('Total'), '', $totalAmt, '', '', ''];
 
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
             $attr['tableFooters'] = $tableFooters;
         } elseif ($action == 'add' || $action == 'edit') {
             $form = $event->subject()->Form;
-            $form->unlockField($attr['model'] . '.recipient_payment_structure_estimates');
+            $form->unlockField($attr['model'] . '.recipient_disbursements');
 
             $cellCount = 0;
-            $tableHeaders = [__('Category') , __('Estimated Disbursement Date'), $this->Scholarships->addCurrencySuffix('Estimated Amount'), __('Comments'), ''];
+            $tableHeaders = [__('Category') , __('Disbursement Date'), $this->Scholarships->addCurrencySuffix('Amount'), __('Semester'), __('Comments'), ''];
             $tableCells = [];
 
-            $arrayPaymentStructureEstimates = [];
+            $arrayRecipientDisbursements = [];
             if ($this->request->is(['get'])) {
                 // edit
-                if (!$entity->isNew() && $entity->has('recipient_payment_structure_estimates')) {
-                    foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
+                if (!$entity->isNew() && $entity->has('recipient_disbursements')) {
+                    foreach ($entity->recipient_disbursements as $key => $obj) {
 
                         $disbursementCategoryEntity = TableRegistry::get('Scholarship.DisbursementCategories')->get($obj->scholarship_disbursement_category_id);
 
-                        $arrayPaymentStructureEstimates[] = [
+                        $arrayRecipientDisbursements[] = [
                             'scholarship_disbursement_category_id' => $obj->scholarship_disbursement_category_id,
                             'scholarship_disbursement_category_name' => $disbursementCategoryEntity->name,
-                            'estimated_disbursement_date' => $obj->estimated_disbursement_date,
-                            'estimated_amount' => $obj->estimated_amount,
+                            'disbursement_date' => $obj->disbursement_date,
+                            'amount' => $obj->amount,
                             'comments' => $obj->comments,
+                            'scholarship_semester_id' => $obj->scholarship_semester_id,
                             'recipient_id' => $obj->recipient_id,
                             'scholarship_id' => $obj->scholarship_id
                         ];
@@ -276,22 +320,22 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
             
                 $requestData = $this->request->data;
 
-                if (isset($requestData[$this->alias()]['recipient_payment_structure_estimates'])) {
-                    foreach ($requestData[$this->alias()]['recipient_payment_structure_estimates'] as $key => $obj) {
-                        $arrayPaymentStructureEstimates[] = $obj;
+                if (isset($requestData[$this->alias()]['recipient_disbursements'])) {
+                    foreach ($requestData[$this->alias()]['recipient_disbursements'] as $key => $obj) {
+                        $arrayRecipientDisbursements[] = $obj;
                     }
                 
                 }
 
             }
-            
+
             // options
             $DisbursementCategory = TableRegistry::get('Scholarship.DisbursementCategories');
             $disbursementCategoryOptions = $DisbursementCategory->getList()->toArray();
 
-            if (!empty($arrayPaymentStructureEstimates)) {
-                foreach ($arrayPaymentStructureEstimates as $key => $obj) {
-                    $fieldPrefix = $attr['model'] . '.recipient_payment_structure_estimates.' . $cellCount++;
+            if (!empty($arrayRecipientDisbursements)) {
+                foreach ($arrayRecipientDisbursements as $key => $obj) {
+                    $fieldPrefix = $attr['model'] . '.recipient_disbursements.' . $cellCount++;
                     
                     $cellData = $obj['scholarship_disbursement_category_name'];
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_disbursement_category_id", ['value' => $obj['scholarship_disbursement_category_id']]);
@@ -299,7 +343,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     $cellData .= $form->hidden($fieldPrefix.".recipient_id", ['value' => $obj['recipient_id']]);
                     $cellData .= $form->hidden($fieldPrefix.".scholarship_id", ['value' => $obj['scholarship_id']]);
                 
-                    $value = $obj['estimated_disbursement_date'] ? $obj['estimated_disbursement_date'] : null;
+                    $value = $obj['disbursement_date'] ? $obj['disbursement_date'] : null;
                     $_options = [
                         'format' => 'dd-mm-yyyy',
                         'todayBtn' => 'linked',
@@ -308,7 +352,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     ];
                     $attr['date_options'] = $_options;
 
-                    $attr['fieldName'] = $fieldPrefix.".".'estimated_disbursement_date';
+                    $attr['fieldName'] = $fieldPrefix.".".'disbursement_date';
                     
                     if (array_key_exists('fieldName', $attr)) {
                         $attr['id'] = $this->_domId($attr['fieldName']);
@@ -341,13 +385,24 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
                     $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);   
                     unset($attr['value']);
 
-                    $amountCellData = $form->input("$fieldPrefix.estimated_amount", ['type' => 'number']);
+                    $semesterOptions = TableRegistry::get('Scholarship.Semesters')->getList()->toArray();
+                    $semesterInputOptions = [
+                        'type' => 'select',
+                        'label' => false,
+                        'options' => $semesterOptions,
+                        'default' => $obj['scholarship_semester_id'],
+                        'value' => $obj['scholarship_semester_id']
+                    ];
+
+                    $semesterCellData = $form->input("$fieldPrefix.scholarship_semester_id", $semesterInputOptions);
+                    $amountCellData = $form->input("$fieldPrefix.amount", ['type' => 'number']);
                     $commentCellData = $form->input("$fieldPrefix.comments", ['type' => 'textarea']);
 
                     $rowData = [];
                     $rowData[] = $cellData;
                     $rowData[] = $cellInput;
                     $rowData[] = $amountCellData;
+                    $rowData[] = $semesterCellData;
                     $rowData[] = $commentCellData;
                     
                     $rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
@@ -364,46 +419,15 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         return $event->subject()->renderElement('../ControllerAction/table_with_dropdown', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldBalanceAmount(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-           
-            $approvedAmt = $entity->scholarship_recipient->approved_amount;
-            
-            $conditions = [
-                'recipient_id' => $entity->recipient_id,
-                'scholarship_id' => $entity->scholarship_id
-            ];
-
-            if (!$entity->isNew()) {
-                $conditions[('scholarship_recipient_payment_structure_id <> ')] = $entity->id;
-            }
-
-            $query = $this->RecipientPaymentStructureEstimates->find();
-            $RecipientPaymentStructureEstimates = $query->where([$conditions])
-                ->select([
-                    'total_amount_used' => $query->func()->sum('estimated_amount')
-                ])
-                ->first();
-
-            $balance = $approvedAmt - ($RecipientPaymentStructureEstimates->total_amount_used);
-             
-            $attr['attr']['value'] =  $balance;
-        }
-
-        return $attr;
-    }
-
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         if (array_key_exists($this->alias(), $requestData)) {
-            if (!array_key_exists('recipient_payment_structure_estimates', $requestData[$this->alias()])) {
-                    $requestData[$this->alias()]['recipient_payment_structure_estimates'] = []; 
+            if (!array_key_exists('recipient_disbursements', $requestData[$this->alias()])) {
+                    $requestData[$this->alias()]['recipient_disbursements'] = []; 
             } 
         }
     }
-
+    
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
     {  
         $recipientId = $this->ControllerAction->getQueryString('recipient_id');
@@ -412,32 +436,35 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $approvedAmt = $this->ScholarshipRecipients->get(['recipient_id' => $recipientId, 'scholarship_id' => $scholarshipId])->approved_amount;        
 
         $conditions = [
-            'recipient_id' => $recipientId,
-            'scholarship_id' => $scholarshipId
-        ];
+                'recipient_id' => $entity->recipient_id,
+                'scholarship_id' => $entity->scholarship_id,
+                'scholarship_recipient_payment_structure_id <>' => $entity->id
+            ];
 
-        if (!$entity->isNew()) {
-            $conditions[('scholarship_recipient_payment_structure_id <> ')] = $entity->id;
-        }
-
-        $query = $this->RecipientPaymentStructureEstimates->find();
-        $RecipientPaymentStructureEstimates = $query->where([$conditions])
+        $query = $this->RecipientDisbursements->find();
+        $RecipientDisbursements = $query->where([$conditions])
             ->select([
-                'total_amount_used' => $query->func()->sum('estimated_amount')
+                'disbursed_amt' => $query->func()->sum('amount')
             ])
             ->first();
 
-        $balance = $approvedAmt - ($RecipientPaymentStructureEstimates->total_amount_used);
+        $conditions = [
+                'recipient_id' => $entity->recipient_id,
+                'scholarship_id' => $entity->scholarship_id,
+                'scholarship_recipient_payment_structure_id <>' => $entity->id
+            ];
+
+        $balance = $approvedAmt - ($RecipientDisbursements->disbursed_amt);
 
         $totalAmt = 0;
-        if ($entity->has('recipient_payment_structure_estimates')) {
-            foreach ($entity->recipient_payment_structure_estimates as $key => $obj) {
-                $totalAmt += $obj['estimated_amount'];
+        if ($entity->has('recipient_disbursements')) {
+            foreach ($entity->recipient_disbursements as $key => $obj) {
+                $totalAmt += $obj['amount'];
             }
         }
-            
-        if($totalAmt > $balance) {
-            $entity->errors('balance_amount', __('Total Amount must not exceed Balance Amount'));
+
+        if ($totalAmt > $balance) {
+            $entity->errors('balance_amount', __('Disbursed Amount must not exceed Balance Amount'));
             return false;
         }
     }
@@ -445,4 +472,5 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
         $includes['datepicker']['include'] = true;
     }
+
 }

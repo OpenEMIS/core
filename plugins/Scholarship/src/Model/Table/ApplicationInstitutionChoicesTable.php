@@ -1,8 +1,12 @@
 <?php
 namespace Scholarship\Model\Table;
 
-use App\Model\Table\AppTable;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\Validation\Validator;
+
+use App\Model\Table\AppTable;
 
 class ApplicationInstitutionChoicesTable extends AppTable
 {
@@ -33,6 +37,31 @@ class ApplicationInstitutionChoicesTable extends AppTable
             ->add('estimated_cost', 'validateDecimal', [
                 'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                 'message' => __('Value cannot be more than two decimal places')
-            ]);;
+            ])
+            ->add('scholarship_institution_choice_status_id', 'ruleCheckChoiceStatus', [
+                'rule' => ['checkChoiceStatus'],
+                'provider' => 'table',
+                'message' => __('Please ensure that status is ACCEPTED'),
+                'on' => function ($context) {
+                    //trigger validation only when selection is set to 1 and edit operation
+                    return (isset($context['data']['is_selected']) && $context['data']['is_selected'] == 1  && !$context['newRecord']);
+                }
+            ]);
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->dirty('is_selected')) {
+            if ($entity->is_selected == 1) {
+                $this->updateAll(
+                    ['is_selected' => 0],
+                    [
+                        'applicant_id' => $entity->applicant->id,
+                        'scholarship_id' => $entity->scholarship->id,
+                        'id <> ' => $entity->id
+                    ]
+                 );
+            } 
+        }
     }
 }
