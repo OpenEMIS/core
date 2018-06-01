@@ -55,7 +55,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
             $this->setupTabElements();
         }
 
-        $page->disable(['add', 'delete']);
+        $page->disable(['add', 'delete', 'reorder']);
     }
 
     public function edit($id)
