@@ -2,7 +2,7 @@
 echo $this->Html->script('Page.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
 
 $tableClass = 'table table-curved table-sortable table-checkable';
-$displayReorder = isset($reorder) && $reorder && $data->count() > 1;
+$displayReorder = !in_array('reorder', $disabledActions) && $data->count() > 1;
 $displayAction = true;
 
 if ($displayReorder) {
