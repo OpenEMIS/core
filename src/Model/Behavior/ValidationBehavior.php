@@ -2606,6 +2606,72 @@ class ValidationBehavior extends Behavior
         return true; 
     }
 
+    public static function checkApprovedAmount($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $RecipientPaymentStructureEstimates = TableRegistry::get('Scholarship.RecipientPaymentStructureEstimates');
+        $RecipientDisbursements = TableRegistry::get('Scholarship.RecipientDisbursements');
+        $RecipientCollections = TableRegistry::get('Scholarship.RecipientCollections');
+
+        $approvedAmount = $globalData['data']['approved_amount'];
+        $conditions = [
+            'recipient_id' => $globalData['data']['recipient_id'],
+            'scholarship_id' => $globalData['data']['scholarship_id']
+        ];
+
+        $estimatedAmount = $RecipientPaymentStructureEstimates->find()
+            ->where([$conditions])
+            ->select([
+                'total' => $RecipientPaymentStructureEstimates->find()->func()->sum('estimated_amount')
+            ])
+            ->first();
+
+        $disbursedAmount = $RecipientDisbursements->find()
+            ->where([$conditions])
+            ->select([
+                'total' => $RecipientDisbursements->find()->func()->sum('amount')
+            ])
+            ->first();
+
+        $collectedAmount = $RecipientCollections->find()
+            ->where([$conditions])
+            ->select([
+                'total' => $RecipientCollections->find()->func()->sum('amount')
+            ])
+            ->first();
+
+        if ($approvedAmount < $estimatedAmount->total) {
+            return $model->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithEstimated');
+        } elseif ($approvedAmount < $disbursedAmount->total) {
+            return $model->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithDisbursed');
+        } else if ($approvedAmount < $collectedAmount->total) {
+            return $model->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithCollected');
+        }
+        
+        return true; 
+    }
+
+    public static function checkChoiceStatus($field, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $statusId = $globalData['data']['scholarship_institution_choice_status_id'];
+        $InstitutionChoiceStatuses = TableRegistry::get('Scholarship.InstitutionChoiceStatuses');
+        
+        $institutionChoiceStatusesOptions = $InstitutionChoiceStatuses
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code'
+            ])
+            ->order([$InstitutionChoiceStatuses->aliasField('id')])
+            ->toArray();
+
+        if($institutionChoiceStatusesOptions[$statusId] != 'ACCEPTED') {
+            return false;
+        }
+        
+        return true; 
+    }
+
     //check whether position assigned to class(es)
     public static function checkHomeRoomTeacherAssignments($field, array $globalData)
     {

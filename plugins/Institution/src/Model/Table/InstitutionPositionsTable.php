@@ -47,7 +47,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionPositions']);
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);
@@ -89,11 +89,95 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
+            ->add('staff_position_grade_id', 'custom', [
+                'rule' => function ($value, $context) {
+                    $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+                    $staffPositionTitleId = $context['data']['staff_position_title_id'];
+
+                    $result = $StaffPositionTitlesGrades
+                        ->find()
+                        ->where([
+                            'AND' => [
+                                [$StaffPositionTitlesGrades->aliasField('staff_position_title_id') => $staffPositionTitleId],
+                                'OR' => [
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => $value],
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => -1]
+                                ]
+                            ]
+                        ])
+                        ->all();
+
+                    return !$result->isEmpty();
+                },
+                'message' => $this->getMessage('Import.staff_title_grade_not_match')
+            ])
+            ->requirePresence('is_homeroom', function ($context) {
+                if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+                    $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                    $titleId = $context['data']['staff_position_title_id'];
+
+                    $titleEntity = $StaffPositionTitles
+                        ->find()
+                        ->select([$StaffPositionTitles->aliasField('type')])
+                        ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+                        ->first();
+
+                    if (!is_null($titleEntity)) {
+                        $positionType = $titleEntity->type;
+                        return $positionType == 1;
+                    } else {
+                        return false;
+                    }
+                }
+                return false;
+            })
             ->add('is_homeroom', 'ruleCheckHomeRoomTeacherAssignments', [
                 'rule' => 'checkHomeRoomTeacherAssignments',
                 'on' => function ($context) {
                     //trigger validation only when homeroom teacher set to no and edit operation
                     return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
+                }
+            ])
+            ->add('is_homeroom', 'ruleIsHomeroomEmpty', [
+                // validations to ensure no value for is_homeroom field, if the selected title type is non-teaching type (0), for position import - POCOR-4258
+                'rule' => function ($value, $context) {
+                    return strlen($value) == 0;
+                },
+                'on' => function ($context) {
+                    if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+                        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+                        $titleId = $context['data']['staff_position_title_id'];
+
+                        $titleEntity = $StaffPositionTitles
+                            ->find()
+                            ->select([$StaffPositionTitles->aliasField('type')])
+                            ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+                            ->first();
+
+                        if (!is_null($titleEntity)) {
+                            $positionType = $titleEntity->type;
+                            return $positionType == 0;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+            ])
+            ->add('status_id', 'ruleCheckStatusIdValid', [
+                'rule' => function ($value, $context) {
+                    $Workflows = TableRegistry::get('Workflow.Workflows');
+                    $workflowResult = $Workflows
+                        ->find()
+                        ->matching('WorkflowModels', function ($q) {
+                            return $q->where(['WorkflowModels.model' => 'Institution.InstitutionPositions']);
+                        })
+                        ->matching('WorkflowSteps', function ($q) use ($value) {
+                            return $q->where(['WorkflowSteps.id' => $value]);
+                        })
+                        ->all();
+
+                    return !$workflowResult->isEmpty();
                 }
             ]);
 
@@ -342,14 +426,43 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function getUniquePositionNo()
+    public function getUniquePositionNo($institutionId = null)
     {
         $prefix = '';
         $currentStamp = time();
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        if (is_null($institutionId)) {
+            $institutionId = $this->Session->read('Institution.Institutions.id');
+        }
+
+        $latestPositionEntity = $this
+            ->find()
+            ->contain(['Institutions'])
+            ->order($this->aliasField('id') . ' DESC ')
+            ->first();
+
+        if (!is_null($latestPositionEntity)) {
+            $latestInstitutionCode = $latestPositionEntity->institution->code;
+            $latestPositionNumber = $latestPositionEntity->position_no;
+            $list = explode('-', $latestPositionNumber);
+
+            // if position number is auto generated, index 0 will be the institution code
+            if ($list[0] == $latestInstitutionCode) {
+                $latestTimestamp = $list[1];
+            }
+        }
+        
+
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $prefix .= $institutionCode;
-        $newStamp = $currentStamp;
+
+        // if latest timestamp can be found and the current timestamp is smaller/equal, set to latest + 1
+        if (isset($latestTimestamp) && $latestTimestamp >= $currentStamp) {
+            $newStamp = $latestTimestamp + 1;
+        } else {
+            $newStamp = $currentStamp;
+        }
+
         return $prefix.'-'.$newStamp;
     }
 

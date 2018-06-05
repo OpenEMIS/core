@@ -1,3 +1,7 @@
+### [1.3.8] - 2018-05-21
+- Added logic to render toolbarbuttons (in index/view/add/edit/delete pages) from PageController of application  and allow to override in beforeRender of individual controller
+- Fixed notice error when no attachment.
+
 ### [1.3.7] - 2018-01-21
 - Fixed issue with the RTL checking logic
 
