@@ -44,7 +44,7 @@ class PageController extends AppController
         if (in_array($action, ['index', 'add', 'edit', 'delete'])) {
             $this->Page->exclude($this->excludedFields);
         }
-        if (!$this->Page->isActionAllowed($action) && $action != 'onchange') {
+        if (!$this->Page->isActionAllowed($action) && !in_array($action, ['onchange', 'reorder'])) {
             $this->Page->throwMissingActionException();
         }
     }
@@ -447,6 +447,48 @@ class PageController extends AppController
             }
         } else {
             // need error handling
+        }
+    }
+
+    public function reorder()
+    {
+        $page = $this->Page;
+        $request = $this->request;
+        $this->autoRender = false;
+
+        if ($page->hasMainTable()) {
+            $table = $page->getMainTable();
+
+            if ($request->is('ajax')) {
+                $primaryKey = $table->primaryKey();
+                $orderField = $page->config('sequence');
+
+                $encodedIds = json_decode($request->data("ids"));
+
+                $ids = [];
+                $idKeys = [];
+                foreach ($encodedIds as $id) {
+                    $ids[] = $page->decode($id);
+                    $idKeys[] = $table->getIdKeys($table, $page->decode($id));
+                }
+
+                if (!empty($ids)) {
+                    $originalOrder = $table
+                        ->find()
+                        ->select($primaryKey)
+                        ->select($orderField)
+                        ->where(['OR' => $idKeys])
+                        ->order([$table->aliasField($orderField)])
+                        ->hydrate(false)
+                        ->toArray();
+
+                    $originalOrder = array_reverse($originalOrder);
+                    foreach ($ids as $id) {
+                        $orderValue = array_pop($originalOrder);
+                        $table->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+                    }
+                }
+            }
         }
     }
 

@@ -615,7 +615,9 @@ trait MessagesTrait
             'identity_number_exist' => 'Identity Number for %s already exists.',
             'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
             'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
-            'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.'
+            'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
+            'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type'
+
         ],
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
@@ -742,6 +744,9 @@ trait MessagesTrait
             'publishAll' => 'All generated Report Cards have been published successfully',
             'unpublish' => 'The Report Card has been successfully unpublished',
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
+        ],
+        'RecipientPaymentStructures' => [
+            'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
         ],
         'AlertRules' => [
             'Attendance' => [
@@ -924,7 +929,11 @@ trait MessagesTrait
                     'ruleNoSpaces' => 'Only alphabets and numbers are allowed'
                 ],
                 'is_homeroom' => [
-                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes'
+                    'ruleCheckHomeRoomTeacherAssignments' => 'There are homeroom teachers assigned to Classes',
+                    'ruleIsHomeroomEmpty' => 'Please leave this field empty for non-teaching type titles'
+                ],
+                'status_id' => [
+                    'ruleCheckStatusIdValid' => 'Invalid status id'
                 ]
             ],
             'InstitutionShifts' => [
@@ -1028,11 +1037,17 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.'
+                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
                 ],
+            ],
+            'StaffUser' => [
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ]
             ],
             'StudentAdmission' => [
                 'student_id' => [
@@ -1994,6 +2009,15 @@ trait MessagesTrait
             'Applications' => [
                 'requested_amount' => [
                     'ruleCheckRequestedAmount' => 'Requested amount must not exceed the Maximum Award Amount',
+                ]
+            ],
+            'ScholarshipRecipients' => [
+                'approved_amount' => [
+                    'comparison' => 'Approved Amount cannot be more than Maximum Award Amount',
+                    'validateDecimal' => 'Value cannot be more than two decimal places',
+                    'ruleCheckApprovedWithEstimated' => 'Approved Amount cannot be less than the Estimated Amounts',
+                    'ruleCheckApprovedWithDisbursed' => 'Approved Amount cannot be less than the Disbursed Amounts',
+                    'ruleCheckApprovedWithCollected' => 'Approved Amount cannot be less than the Collected Amounts',
                 ]
             ]
         ],

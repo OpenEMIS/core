@@ -2,6 +2,7 @@
     <?php
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+        $tableFooters = isset($attr['tableFooters']) ? $attr['tableFooters'] : [];
     ?>
 
     <?php if (!empty($tableCells)) : ?>
@@ -10,6 +11,9 @@
                 <table class="table">
                     <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
                     <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+                <?php if (!empty($tableFooters)) : ?>
+                    <tfoot><?= $this->Html->tableCells($tableFooters) ?></tfoot>
+                <?php endif ?>
                 </table>
             </div>
         </div>
@@ -22,6 +26,7 @@
     <?php
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+        $tableFooters = isset($attr['tableFooters']) ? $attr['tableFooters'] : [];
 
         $label = $attr['label'];
         $inputField = implode('.', [$ControllerAction['table']->alias(), $attr['field']]);
@@ -57,6 +62,9 @@
         <table class="table table-curved table-input">
             <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
             <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+        <?php if (!empty($tableFooters)) : ?>
+            <tfoot><?= $this->Html->tableCells($tableFooters) ?></tfoot>
+        <?php endif ?>
         </table>
     </div>
 <?php endif ?>
