@@ -70,14 +70,14 @@ class InstitutionsTable extends AppTable
                     'rule' => ['compareDate', 'report_end_date', true],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords']);
+                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.StudentAttendanceSummary']);
                     }
                 ],
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords']);
+                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.StudentAttendanceSummary']);
                     },
                     'message' => __('Report Start Date should be later than Academic Period Start Date')
                 ],
@@ -89,7 +89,7 @@ class InstitutionsTable extends AppTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords']);
+                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.StudentAttendanceSummary']);
                     },
                     'message' => __('Report End Date should be earlier than Academic Period End Date')
                 ],
@@ -369,7 +369,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords']))
+            if ((in_array($feature, ['Report.InstitutionStudents', 'Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases', 'Report.ClassAttendanceNotMarkedRecords', 'Report.StudentAttendanceSummary']))
                 ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -380,7 +380,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
 
-                if ($feature == 'Report.ClassAttendanceNotMarkedRecords') {
+                if ($feature == 'Report.ClassAttendanceNotMarkedRecords' || $feature == 'Report.StudentAttendanceSummary') {
                     $attr['onChangeReload'] = true;
                 }
 
@@ -423,7 +423,7 @@ class InstitutionsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['academic_period_id'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
             $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.StudentAttendanceSummary'])) {
                 $EducationGrades = TableRegistry::get('Education.EducationGrades');
                 $gradeOptions = $EducationGrades
                     ->find('list', [
@@ -444,7 +444,11 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+                if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+                    $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+                }else{
+                     $attr['options'] = $gradeOptions;
+                }
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -456,7 +460,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords']) && isset($this->request->data[$this->alias()]['academic_period_id'])) {
+            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.StudentAttendanceSummary']) && isset($this->request->data[$this->alias()]['academic_period_id'])) {
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
@@ -476,7 +480,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords'])) {
+            if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.StudentAttendanceSummary'])) {
                 $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
