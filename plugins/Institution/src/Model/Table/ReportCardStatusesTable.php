@@ -140,6 +140,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('completed_on');
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
@@ -148,7 +149,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['status', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
+        $this->setFieldOrder(['status', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -217,7 +218,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status')
+                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
+                'report_card_modified' => $this->StudentsReportCards->aliasField('modified'),
+                'report_card_created' => $this->StudentsReportCards->aliasField('created')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -372,6 +375,19 @@ class ReportCardStatusesTable extends ControllerActionTable
         } else {
             $value = $this->statusOptions[self::NEW_REPORT];
         }
+        return $value;
+    }
+
+    public function onGetCompletedOn(Event $event, Entity $entity)
+    {
+        $value = '';
+
+        if ($entity->has('report_card_modified') && !empty($entity->report_card_modified)) {
+            $value = $this->formatDateTime($entity->report_card_modified);
+        } elseif ($entity->has('report_card_created') && !empty($entity->report_card_created)) {
+            $value = $this->formatDateTime($entity->report_card_created);
+        }
+
         return $value;
     }
 
