@@ -19,6 +19,7 @@ class POCOR4637 extends AbstractMigration
                 'default' => null,
                 'limit' => 11,
                 'null' => false,
+                'comment' => 'links to workflow_rules.id',
             ])
             ->addColumn('event_key', 'string', [
                 'default' => null,
