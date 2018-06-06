@@ -23,7 +23,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     CONST GENERATED = 3;
     CONST PUBLISHED = 4;
 
-    CONST MAX_PROCESSES = 24;
+    CONST MAX_PROCESSES = 2;
 
     public function initialize(array $config)
     {
