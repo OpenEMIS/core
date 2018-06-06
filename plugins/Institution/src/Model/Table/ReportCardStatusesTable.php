@@ -611,7 +611,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
 
-        if (count($runningProcess) < self::MAX_PROCESSES) {
+        if (count($runningProcess) <= self::MAX_PROCESSES) {
             $name = 'GenerateAllReportCards';
             $pid = '';
             $processModel = $this->registryAlias();
