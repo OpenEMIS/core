@@ -29,6 +29,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     private $absenceList;
     private $absenceCodeList;
 
+    private $workflowRuleEvents = [
+        [
+            'value' => 'Workflow.onAssignToHomeroomTeacher',
+            'text' => 'Assign to Homeroom Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Homeroom Teacher',
+            'method' => 'onAssignToHomeroomTeacher'
+        ]
+    ];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -83,7 +92,22 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
         $events['InstitutionCase.onSetFilterToolbarElement'] = 'onSetFilterToolbarElement';
         $events['InstitutionCase.onCaseIndexBeforeQuery'] = 'onCaseIndexBeforeQuery';
+
+        // workflow rule events
+        $events['Workflow.getRuleEvents'] = 'getWorkflowRuleEvents';
+        foreach($this->workflowRuleEvents as $event) {
+            $events[$event['value']] = $event['method'];
+        }
         return $events;
+    }
+
+    public function getWorkflowRuleEvents(Event $event, ArrayObject $eventsObject)
+    {
+        foreach ($this->workflowRuleEvents as $key => $attr) {
+            $attr['text'] = __($attr['text']);
+            $attr['description'] = __($attr['description']);
+            $eventsObject[] = $attr;
+        }
     }
 
     private function addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate)
