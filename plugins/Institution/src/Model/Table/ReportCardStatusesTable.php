@@ -57,7 +57,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        // $events['ControllerAction.Model.generate'] = 'generate'; // POCOR-4636: disable generate
+        $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         $events['ControllerAction.Model.publish'] = 'publish';
@@ -103,16 +103,15 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             $params['institution_class_id'] = $entity->institution_class_id;
 
-            // POCOR-4636: disable generate
             // Generate button, all statuses
-            // if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
-            //     $generateUrl = $this->setQueryString($this->url('generate'), $params);
-            //     $buttons['generate'] = [
-            //         'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
-            //         'attr' => $indexAttr,
-            //         'url' => $generateUrl
-            //     ];
-            // }
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
+                $generateUrl = $this->setQueryString($this->url('generate'), $params);
+                $buttons['generate'] = [
+                    'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
+                    'attr' => $indexAttr,
+                    'url' => $generateUrl
+                ];
+            }
 
             // Publish button, status must be generated
             if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') && $entity->report_card_status == self::GENERATED) {
@@ -421,29 +420,23 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $value;
     }
 
-    // POCOR-4636: disable generate
-    // public function generate(Event $event, ArrayObject $extra)
-    // {
-    //     $params = $this->getQueryString();
-    //     $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
+    public function generate(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
+        $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
-    //     if ($hasTemplate) {
-    //         $url = [
-    //             'plugin' => 'CustomExcel',
-    //             'controller' => 'CustomExcels',
-    //             'action' => 'export',
-    //             'ReportCards'
-    //         ];
-    //         $url = $this->setQueryString($url, $params);
-    //         $this->Alert->success('ReportCardStatuses.generate');
-    //     } else {
-    //         $url = $this->url('index');
-    //         $this->Alert->warning('ReportCardStatuses.noTemplate');
-    //     }
+        if ($hasTemplate) {
+            $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+            $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+            $this->Alert->warning('ReportCardStatuses.generate');
+        } else {
+            $url = $this->url('index');
+            $this->Alert->warning('ReportCardStatuses.noTemplate');
+        }
 
-    //     $event->stopPropagation();
-    //     return $this->controller->redirect($url);
-    // }
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
@@ -581,12 +574,17 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId)
+    private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         Log::write('debug', 'Initialize Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
 
         $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
         $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $where = [];
+        $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+        if (!is_null($studentId)) {
+            $where[$classStudentsTable->aliasField('student_id')] = $studentId;
+        }
         $classStudents = $classStudentsTable->find()
             ->select([
                 $classStudentsTable->aliasField('institution_class_id'),
@@ -595,9 +593,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $classStudentsTable->aliasField('education_grade_id'),
                 $classStudentsTable->aliasField('academic_period_id')
             ])
-            ->where([
-                $classStudentsTable->aliasField('institution_class_id') => $institutionClassId
-            ])
+            ->where($where)
             ->toArray();
 
         foreach ($classStudents as $student) {
@@ -624,10 +620,25 @@ class ReportCardStatusesTable extends ControllerActionTable
         Log::write('debug', 'End Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
     }
 
-    private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId)
+    private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+
+        foreach ($runningProcess as $key => $processData) {
+            $systemProcessId = $processData['id'];
+            $pId = !empty($processData['process_id']) ? $processData['process_id'] : 0;
+            $createdDate = $processData['created'];
+
+            $expiryDate = clone($createdDate);
+            $expiryDate->addMinutes(30);
+            $today = Time::now();
+
+            if ($expiryDate < $today) {
+                $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+                $SystemProcesses->killProcess($pId);
+            }
+        }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
             $name = 'GenerateAllReportCards';
@@ -639,7 +650,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'institution_class_id' => $institutionClassId,
                 'report_card_id' => $reportCardId
             ];
-            $params = json_encode($passArray);
+            if (!is_null($studentId)) {
+                $passArray['student_id'] = $studentId;
+            }
+            $params = json_encode($passArray);            
             $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
             $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, 0);
 
