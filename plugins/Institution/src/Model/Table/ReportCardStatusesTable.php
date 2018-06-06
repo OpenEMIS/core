@@ -587,16 +587,17 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
         $classStudents = $classStudentsTable->find()
             ->select([
-                $classStudentsTable->aliasField('institution_class_id'),
                 $classStudentsTable->aliasField('student_id'),
                 $classStudentsTable->aliasField('institution_id'),
+                $classStudentsTable->aliasField('academic_period_id'),
                 $classStudentsTable->aliasField('education_grade_id'),
-                $classStudentsTable->aliasField('academic_period_id')
+                $classStudentsTable->aliasField('institution_class_id')
             ])
             ->where($where)
             ->toArray();
 
         foreach ($classStudents as $student) {
+            // Report card processes
             $idKeys = [
                 'report_card_id' => $reportCardId,
                 'institution_class_id' => $student->institution_class_id,
@@ -615,6 +616,25 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $newEntity = $ReportCardProcesses->newEntity($obj);
                 $ReportCardProcesses->save($newEntity);
             }
+            // end
+
+            // Student report card
+            $recordIdKeys = [
+                'report_card_id' => $reportCardId,
+                'student_id' => $student->student_id,
+                'institution_id' => $student->institution_id,
+                'academic_period_id' => $student->academic_period_id,
+                'education_grade_id' => $student->education_grade_id,
+                'institution_class_id' => $student->institution_class_id,
+            ];
+            if ($this->StudentsReportCards->exists($recordIdKeys)) {
+                $studentsReportCardEntity = $this->StudentsReportCards->find()
+                    ->where($recordIdKeys)
+                    ->first();
+
+                $this->StudentsReportCards->delete($studentsReportCardEntity);
+            }
+            // end
         }
 
         Log::write('debug', 'End Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
