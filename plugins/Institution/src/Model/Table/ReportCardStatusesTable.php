@@ -382,10 +382,13 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $value = '';
 
-        $modifiedValue = new Time($entity->report_card_modified);
-        $createdValue = new Time($entity->report_card_created);
-
-        $value = !empty($modifiedValue) ? $this->formatDateTime($modifiedValue) : $this->formatDateTime($createdValue);
+        if ($entity->has('report_card_modified')) {
+            $modifiedValue = new Time($entity->report_card_modified);
+            $value = $this->formatDateTime($modifiedValue);
+        } elseif ($entity->has('report_card_created')) {
+            $createdValue = new Time($entity->report_card_created);
+            $value = $this->formatDateTime($createdValue);
+        }
 
         return $value;
     }
