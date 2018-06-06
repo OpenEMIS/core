@@ -17,7 +17,7 @@
         $alias = $model->alias();
         $eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];
         $eventSelectOptions = isset($attr['attr']['eventSelectOptions']) ? $attr['attr']['eventSelectOptions'] : [];
-        $this->Form->unlockField("WorkflowActions.workflow_rule_events");
+        $this->Form->unlockField("WorkflowRules.workflow_rule_events");
     ?>
     <div class="clearfix"></div>
     <h3><?= isset($attr['label']) ? $attr['label'] : $attr['field']; ?></h3>

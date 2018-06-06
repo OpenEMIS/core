@@ -25,7 +25,7 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
-        $this->hasMany('WorkflowRuleEvents', ['className' => 'Workflow.WorkflowRuleEvents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('WorkflowRuleEvents', ['className' => 'Workflow.WorkflowRuleEvents', 'saveStrategy' => 'replace', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Workflow.RuleStaffBehaviours');
         $this->addBehavior('Workflow.RuleStudentAttendances');
@@ -56,6 +56,11 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
+        // enables all events to be deleted
+        if (!$data->offsetExists('workflow_rule_events')) {
+            $data->offsetSet('workflow_rule_events', []);
+        }
+
         if (isset($data['submit']) && $data['submit'] == 'save') {
             if (isset($data['feature']) && !empty($data['feature'])) {
                 $ruleConfig = $this->getRuleConfigByFeature($data['feature']);
