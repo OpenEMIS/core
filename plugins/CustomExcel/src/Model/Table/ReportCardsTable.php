@@ -187,7 +187,9 @@ class ReportCardsTable extends AppTable
         $StudentsReportCards->updateAll([
             'status' => $status,
             'file_name' => $fileName,
-            'file_content' => $fileContent
+            'file_content' => $fileContent,
+            'modified' => date('Y-m-d H:i:s'),
+            'modified_user_id' => 1
         ], $params);
 
         // delete report card process
