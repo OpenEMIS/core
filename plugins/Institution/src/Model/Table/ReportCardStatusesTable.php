@@ -37,7 +37,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
-        $this->addBehavior('User.AdvancedNameSearch');tr
+        $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
