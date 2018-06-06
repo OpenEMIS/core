@@ -25,6 +25,7 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
+        $this->hasMany('WorkflowRuleEvents', ['className' => 'Workflow.WorkflowRuleEvents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Workflow.RuleStaffBehaviours');
         $this->addBehavior('Workflow.RuleStudentAttendances');
@@ -133,7 +134,9 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->matching('Workflows');
+        $query
+            ->matching('Workflows')
+            ->contain('WorkflowRuleEvents');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -150,7 +153,7 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         $fieldOrder = ['feature', 'workflow_id', 'rule'];
 
-        $this->field('feature', ['type' => 'select']);
+        $this->field('feature', ['type' => 'select', 'entity' => $entity]);
         $this->field('workflow_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('rule', ['type' => 'hidden']);
 
@@ -158,6 +161,16 @@ class WorkflowRulesTable extends ControllerActionTable
         if ($event->isStopped()) {
             return $event->result;
         }
+
+        $this->field('workflow_rule_events', [
+            'type' => 'element',
+            'element' => 'Workflow.WorkflowRules/events',
+            'valueClass' => 'table-full-width',
+            'attr' => [
+                'entity' => $entity,
+                'label' => __('Rule Events')
+            ]
+        ]);
 
         $this->setFieldOrder(['feature', 'workflow_id', 'rule']);
     }
@@ -174,7 +187,6 @@ class WorkflowRulesTable extends ControllerActionTable
             foreach ($ruleConfig as $key => $attr) {
                 if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
                     $options = $this->getOptionsByConfig($attr);
-
                     $attr['options'] = $options;
                 }
 
@@ -225,11 +237,18 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             $featureOptions = $this->getFeatureOptions();
 
             $attr['options'] = $featureOptions;
             $attr['onChangeReload'] = 'changeFeature';
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $featureOptions = $this->getFeatureOptions();
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->feature;
+            $attr['attr']['value'] = $featureOptions[$entity->feature];
         }
 
         return $attr;
@@ -256,7 +275,7 @@ class WorkflowRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->query['feature']);
@@ -266,6 +285,82 @@ class WorkflowRulesTable extends ControllerActionTable
                 if (array_key_exists('feature', $request->data[$this->alias()])) {
                     $request->query['feature'] = $request->data[$this->alias()]['feature'];
                 }
+            }
+        }
+    }
+
+    public function onUpdateFieldWorkflowRuleEvents(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'view') {
+            $entity = $attr['attr']['entity'];
+            $feature = $entity->feature;
+            $eventOptions = $this->getEvents($feature, false);
+
+            $tableHeaders = [];
+            $tableHeaders[] = $this->getMessage('general.name');
+            $tableHeaders[] = __('Description');
+
+            $tableCells = [];
+            $events = $this->convertEventKeysToEvents($entity);
+            foreach ($events as $key => $event) {
+                $tableCells[$key] = [
+                    $eventOptions[$event]['text'],
+                    $eventOptions[$event]['description']
+                ];
+            }
+
+            $attr['attr']['tableHeaders'] = $tableHeaders;
+            $attr['attr']['tableCells'] = $tableCells;
+        } else if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
+                $feature = $request->query('feature');
+            } else if ($action == 'edit') {
+                $feature = $attr['attr']['entity']->feature;
+            }
+
+            $eventOptions = $this->getEvents($feature, false);
+            $attr['attr']['eventOptions'] = $eventOptions;
+            $eventSelectOptions = $this->getEvents($feature, true);
+
+            $selectedEventKeys = [];
+            if ($request->is(['get'])) {
+                if ($action == 'edit') {
+                    $entity = $attr['attr']['entity'];
+                    $selectedEventKeys = $this->convertEventKeysToEvents($entity);
+                }
+            } else if ($request->is(['post', 'put'])) {
+                $requestData = $request->data;
+
+                if (array_key_exists($this->alias(), $requestData)) {
+                    if (array_key_exists('workflow_rule_events', $requestData[$this->alias()])) {
+                        foreach ($requestData[$this->alias()]['workflow_rule_events'] as $event) {
+                            $selectedEventKeys[] = $event['event_key'];
+                        }
+                    }
+                }
+            }
+
+            foreach ($selectedEventKeys as $key => $value) {
+                unset($eventSelectOptions[$value]);
+            }
+
+            $attr['attr']['eventSelectOptions'] = $eventSelectOptions;
+        }
+
+        return $attr;
+    }
+
+    public function addEditOnAddEvent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('event_method_key', $data[$this->alias()])) {
+                $methodKey = $data[$this->alias()]['event_method_key'];
+                if (!empty($methodKey)) {
+                    $data[$this->alias()]['workflow_rule_events'][] = [
+                        'event_key' => $methodKey
+                    ];
+                }
+                $data[$this->alias()]['event_method_key'] = '';
             }
         }
     }
@@ -352,6 +447,18 @@ class WorkflowRulesTable extends ControllerActionTable
         return $feature;
     }
 
+    public function getRegistryAliasByFeature($featureName)
+    {
+        $registryAlias = false;
+        $features = $this->getSelectOptions($this->aliasField('features'));
+        if (array_key_exists($featureName, $features)) {
+            if (array_key_exists('className', $features[$featureName])) {
+                $registryAlias = $features[$featureName]['className'];
+            }
+        }
+        return $registryAlias;
+    }
+
     private function extractRuleFromEntity(Entity $entity)
     {
         $ruleArray = json_decode($entity->rule, true);
@@ -360,6 +467,69 @@ class WorkflowRulesTable extends ControllerActionTable
             $where = $ruleArray['where'];
             foreach ($where as $field => $value) {
                 $entity->{$field} = $value;
+            }
+        }
+    }
+
+    private function convertEventKeysToEvents($entity)
+    {
+        $events = [];
+        if ($entity->has('workflow_rule_events') && !empty($entity->workflow_rule_events)) {
+            foreach ($entity->workflow_rule_events as $workflowRuleEvent) {
+                $events[] = $workflowRuleEvent->event_key;
+            }
+        }
+
+        return $events;
+    }
+
+    public function getEvents($feature = null, $listOnly = true)
+    {
+        $emptyOptions = [
+            0 => [
+                'value' => '',
+                'text' => $this->getMessage('general.select.noOptions')
+            ]
+        ];
+
+        // trigger Workflow.getEvents to retrieve the list of available events for the model
+        if (empty($feature)) {
+            return $emptyOptions;
+        } else {
+            $registryAlias = $this->getRegistryAliasByFeature($feature);
+            $subject = TableRegistry::get($registryAlias);
+            $eventsObject = new ArrayObject();
+            $subjectEvent = $subject->dispatchEvent('Workflow.getRuleEvents', [$eventsObject], $subject);
+            if ($subjectEvent->isStopped()) {
+                return $subjectEvent->result;
+            }
+
+            $events = $eventsObject;
+            if (empty($events)) {
+                return $emptyOptions;
+            } else {
+                $eventOptions = [];
+
+                if ($listOnly) {
+                    $eventOptions = [
+                        0 => __('-- Select Event --')
+                    ];
+                    foreach ($events as $event) {
+                        $eventOptions[$event['value']] = $event['text'];
+                    }
+                } else {
+                    $eventOptions = [
+                        0 => [
+                            'value' => '',
+                            'text' => __('-- Select Event --')
+                        ]
+                    ];
+                    foreach ($events as $event) {
+                        $eventOptions[$event['value']] = $event;
+                    }
+                }
+
+                return $eventOptions;
             }
         }
     }
