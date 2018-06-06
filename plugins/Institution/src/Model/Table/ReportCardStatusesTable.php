@@ -140,6 +140,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('completed_on');
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
@@ -148,7 +149,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['status', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
+        $this->setFieldOrder(['status', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -217,7 +218,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status')
+                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
+                'report_card_modified' => $this->StudentsReportCards->aliasField('modified'),
+                'report_card_created' => $this->StudentsReportCards->aliasField('created')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -372,6 +375,18 @@ class ReportCardStatusesTable extends ControllerActionTable
         } else {
             $value = $this->statusOptions[self::NEW_REPORT];
         }
+        return $value;
+    }
+
+    public function onGetCompletedOn(Event $event, Entity $entity)
+    {
+        $value = '';
+
+        $modifiedValue = new Time($entity->report_card_modified);
+        $createdValue = new Time($entity->report_card_created);
+
+        $value = !empty($modifiedValue) ? $this->formatDateTime($modifiedValue) : $this->formatDateTime($createdValue);
+
         return $value;
     }
 
@@ -611,7 +626,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
 
-        if (count($runningProcess) < self::MAX_PROCESSES) {
+        if (count($runningProcess) <= self::MAX_PROCESSES) {
             $name = 'GenerateAllReportCards';
             $pid = '';
             $processModel = $this->registryAlias();
