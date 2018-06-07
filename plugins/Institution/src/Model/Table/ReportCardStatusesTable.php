@@ -604,18 +604,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'student_id' => $student->student_id
             ];
 
-            if (!$ReportCardProcesses->exists($idKeys)) {
-                $data = [
-                    'status' => $ReportCardProcesses::NEW_PROCESS,
-                    'institution_id' => $student->institution_id,
-                    'education_grade_id' => $student->education_grade_id,
-                    'academic_period_id' => $student->academic_period_id,
-                    'created' => date('Y-m-d H:i:s')
-                ];
-                $obj = array_merge($idKeys, $data);
-                $newEntity = $ReportCardProcesses->newEntity($obj);
-                $ReportCardProcesses->save($newEntity);
-            }
+            $data = [
+                'status' => $ReportCardProcesses::NEW_PROCESS,
+                'institution_id' => $student->institution_id,
+                'education_grade_id' => $student->education_grade_id,
+                'academic_period_id' => $student->academic_period_id,
+                'created' => date('Y-m-d H:i:s')
+            ];
+            $obj = array_merge($idKeys, $data);
+            $newEntity = $ReportCardProcesses->newEntity($obj);
+            $ReportCardProcesses->save($newEntity);
             // end
 
             // Student report card
