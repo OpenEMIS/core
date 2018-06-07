@@ -80,6 +80,8 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('rule_events');
+
         $featureOptions = $this->getFeatureOptions();
         $selectedFeature = !is_null($this->request->query('feature')) ? $this->request->query('feature') : key($featureOptions);
         $workflowOptions = $this->getWorkflowOptions($selectedFeature);
@@ -107,12 +109,14 @@ class WorkflowRulesTable extends ControllerActionTable
             'order' => 1
         ];
 
-        $this->setFieldOrder(['feature', 'workflow_id', 'rule']);
+        $this->setFieldOrder(['feature', 'workflow_id', 'rule', 'rule_events']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->matching('Workflows');
+        $query
+            ->matching('Workflows')
+            ->contain('WorkflowRuleEvents');
 
         $searchKey = $this->getSearchKey();
 
@@ -240,6 +244,20 @@ class WorkflowRulesTable extends ControllerActionTable
         }
     }
 
+    public function onGetRuleEvents(Event $event, Entity $entity)
+    {
+        $feature = $entity->getOriginal('feature');
+        $eventOptions = $this->getEvents($feature);
+
+        $events = $this->convertEventKeysToEvents($entity);
+        $eventArray = [];
+        foreach ($events as $key => $event) {
+            $eventArray[] = $eventOptions[$event];
+        }
+
+        return implode(', ', $eventArray);
+    }
+
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -325,7 +343,7 @@ class WorkflowRulesTable extends ControllerActionTable
 
             $eventOptions = $this->getEvents($feature, false);
             $attr['attr']['eventOptions'] = $eventOptions;
-            $eventSelectOptions = $this->getEvents($feature, true);
+            $eventSelectOptions = $this->getEvents($feature);
 
             $selectedEventKeys = [];
             if ($request->is(['get'])) {
