@@ -139,6 +139,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('started_on');
         $this->field('completed_on');
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
@@ -148,7 +149,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['status', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
+        $this->setFieldOrder(['status', 'started_on', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -377,6 +378,18 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetStartedOn(Event $event, Entity $entity)
+    {
+        $value = '';
+
+        if ($entity->has('report_card_created')) {
+            $createdValue = new Time($entity->report_card_created);
+            $value = $this->formatDateTime($createdValue);
+        }
+
+        return $value;
+    }
+
     public function onGetCompletedOn(Event $event, Entity $entity)
     {
         $value = '';
@@ -384,9 +397,6 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($entity->has('report_card_modified')) {
             $modifiedValue = new Time($entity->report_card_modified);
             $value = $this->formatDateTime($modifiedValue);
-        } elseif ($entity->has('report_card_created')) {
-            $createdValue = new Time($entity->report_card_created);
-            $value = $this->formatDateTime($createdValue);
         }
 
         return $value;
@@ -604,18 +614,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'student_id' => $student->student_id
             ];
 
-            if (!$ReportCardProcesses->exists($idKeys)) {
-                $data = [
-                    'status' => $ReportCardProcesses::NEW_PROCESS,
-                    'institution_id' => $student->institution_id,
-                    'education_grade_id' => $student->education_grade_id,
-                    'academic_period_id' => $student->academic_period_id,
-                    'created' => date('Y-m-d H:i:s')
-                ];
-                $obj = array_merge($idKeys, $data);
-                $newEntity = $ReportCardProcesses->newEntity($obj);
-                $ReportCardProcesses->save($newEntity);
-            }
+            $data = [
+                'status' => $ReportCardProcesses::NEW_PROCESS,
+                'institution_id' => $student->institution_id,
+                'education_grade_id' => $student->education_grade_id,
+                'academic_period_id' => $student->academic_period_id,
+                'created' => date('Y-m-d H:i:s')
+            ];
+            $obj = array_merge($idKeys, $data);
+            $newEntity = $ReportCardProcesses->newEntity($obj);
+            $ReportCardProcesses->save($newEntity);
             // end
 
             // Student report card
