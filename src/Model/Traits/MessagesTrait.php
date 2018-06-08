@@ -856,7 +856,10 @@ trait MessagesTrait
                 ],
                 'staff_id' => [
                     'ruleCheckHomeRoomTeachers' => 'Home Room Teacher and Secondary Teacher cannot be the same person.'
-                ]
+                ],
+                'capacity' => [
+                    'ruleCheckMaxStudentsPerClass' => 'Capacity must not exceed the maximum number of students per class.'
+                ],
             ],
 
             'InstitutionProgrammes' => [
@@ -2150,9 +2153,6 @@ trait MessagesTrait
                 ],
             ],
             'ConfigStudentSettings' => [
-                'max_students_per_class' => [
-                    'maxStudentLimit' => 'Numeric Value should be between %s to %s'
-                ],
                 'max_students_per_subject' => [
                     'maxStudentLimit' => 'Numeric Value should be between %s to %s'
                 ],
