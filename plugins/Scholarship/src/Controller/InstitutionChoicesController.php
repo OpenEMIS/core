@@ -65,10 +65,18 @@ class InstitutionChoicesController extends PageController
         $page->setQueryOption('order', [$this->ApplicationInstitutionChoices->aliasField('order') => 'ASC']);
 
         parent::index();
+        
+        $page->exclude(['estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id']);
+        
+        $this->reorderFields();        
+    }
 
-        $page->exclude(['institution_id', 'estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id', 'is_selected', 'requested_amount']);
-
-        $page->move('scholarship_institution_choice_status_id')->first();
+    public function view($id)
+    {
+        parent::view($id);
+        
+        $page = $this->Page;
+        $this->reorderFields();
     }
 
     public function add()
