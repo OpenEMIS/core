@@ -6,6 +6,9 @@ class POCOR4518 extends AbstractMigration
 {
     public function up()
     {
+        $this->execute('CREATE TABLE `z_4518_locale_contents` LIKE `locale_contents`');
+        $this->execute('INSERT INTO `z_4518_locale_contents` SELECT * FROM `locale_contents`');
+
         $localeContent = [
             [
                 'en' => 'The selected institution only accepts Male student.',
@@ -134,5 +137,11 @@ class POCOR4518 extends AbstractMigration
             ]
         ];
         $this->insert('locale_contents', $localeContent);
+    }
+
+    public function down()
+    {
+        $this->execute('DROP TABLE IF EXISTS `locale_contents`');
+        $this->execute('RENAME TABLE `z_4518_locale_contents` TO `locale_contents`');
     }
 }
