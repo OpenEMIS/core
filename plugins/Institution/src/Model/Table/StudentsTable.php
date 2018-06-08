@@ -57,18 +57,21 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('HighChart', [
             'number_of_students_by_year' => [
                 '_function' => 'getNumberOfStudentsByYear',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_students_by_stage' => [
                 '_function' => 'getNumberOfStudentsByStage',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_student_gender' => [
-                '_function' => 'getNumberOfStudentsByGender'
+                '_function' => 'getNumberOfStudentsByGender',
+                '_defaultColors' => false,
             ],
             'institution_student_age' => [
                 '_function' => 'getNumberOfStudentsByAge'
@@ -1201,7 +1204,10 @@ class StudentsTable extends ControllerActionTable
                 'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('student_id')),
                 'gender' => 'Genders.name'
             ])
-            ->group(['gender'], true);
+            ->group(['gender'], true)
+            ->order([
+                'Genders.name'
+            ]);
 
         // Creating the data set
         $dataSet = [];
