@@ -896,7 +896,7 @@ class HtmlFieldHelper extends Helper
             if (isset($data->{$name})) {
                 $attr['value'] = $data->{$name};
             }
-            $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+            $value = $this->_View->element('ControllerAction.multi_file_input', ['attr' => $attr]);
         }
         return $value;
     }
