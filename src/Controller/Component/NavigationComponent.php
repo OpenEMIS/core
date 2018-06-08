@@ -814,6 +814,12 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution']
             ],
+            
+            'Institutions.Committees' => [
+                'title' => 'Committees',
+                'parent' => 'Institutions.Institutions.index',
+                'params' => ['plugin' => 'Institution']
+            ],
         ];
 
         foreach ($navigation as &$n) {
