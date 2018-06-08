@@ -134,7 +134,7 @@ class SingleGradeBehavior extends Behavior
         $model->fields['total_male_students']['visible'] = false;
         $model->fields['total_female_students']['visible'] = false;   
         $model->setFieldOrder([
-            'academic_period_id', 'education_grade', 'institution_shift_id', 'class_number', 'number_of_classes', 'single_grade_field'
+            'academic_period_id', 'education_grade', 'institution_shift_id', 'class_number', 'number_of_classes', 'capacity', 'single_grade_field'
         ]);
     }
 
