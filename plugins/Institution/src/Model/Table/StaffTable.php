@@ -1151,23 +1151,22 @@ class StaffTable extends ControllerActionTable
             ->matching('Users.Genders')
             ->select([
                 'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
-                'gender' => 'Genders.name'
+                'gender' => 'Genders.name',
+                'gender_code' => 'Genders.code'
             ])
-            ->group('Users.gender_id')
-            ->order([
-                'Genders.name'
-            ]);
+            ->group('Users.gender_id');
 
         // Creating the data set
-        $dataSet = [];
+        $dataSet = [
+            'M' => [],
+            'F' => [],
+        ];
         foreach ($InstitutionStaffCount->toArray() as $value) {
             //Compile the dataset
-            $dataSet[] = [__($value['gender']), $value['count']];
+            $dataSet[$value['gender_code']] = [__($value['gender']), $value['count']];
         }
-        $params['dataSet'] = $dataSet;
-
+        $params['dataSet'] = array_values($dataSet);
         unset($InstitutionRecords);
-
         return $params;
     }
 
