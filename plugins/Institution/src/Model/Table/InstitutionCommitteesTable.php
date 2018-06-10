@@ -37,10 +37,6 @@ class InstitutionCommitteesTable extends ControllerActionTable
         $query->contain([
             'InstitutionCommitteeAttachments'
             ]);
-
-        // pr($query->first());
-        // die;
-        // Log::write('debug', $query);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
