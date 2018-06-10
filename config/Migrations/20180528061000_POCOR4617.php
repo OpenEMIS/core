@@ -94,6 +94,36 @@ class POCOR4617 extends AbstractMigration
                 'limit' => 50,
                 'null' => false,
             ])
+             ->addColumn('order', 'integer', [
+                'default' => null,
+                'limit' => 3,
+                'null' => false,
+            ])
+            ->addColumn('visible', 'integer', [
+                'default' => '1',
+                'limit' => 1,
+                'null' => false,
+            ])
+            ->addColumn('editable', 'integer', [
+                'default' => '1',
+                'limit' => 1,
+                'null' => false,
+            ])
+            ->addColumn('default', 'integer', [
+                'default' => '0',
+                'limit' => 1,
+                'null' => false,
+            ])
+            ->addColumn('international_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true,
+            ])
+            ->addColumn('national_code', 'string', [
+                'default' => null,
+                'limit' => 50,
+                'null' => true,
+            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
@@ -121,6 +151,12 @@ class POCOR4617 extends AbstractMigration
 
         $data = [
             ['name' => 'School Board Of Management (BOM)',
+            'order' => 1,
+            'visible' => 1,
+            'editable' => 1,
+            'default' => 1,
+            'international_code' => '',
+            'national_code' => '',
             'modified_user_id' => NULL,
             'modified' => NULL,
             'created_user_id' => '1',
@@ -128,6 +164,12 @@ class POCOR4617 extends AbstractMigration
             ],
             [
             'name' => "Parents and Citizens' Association (P&C)",
+            'order' => 1,
+            'visible' => 1,
+            'editable' => 1,
+            'default' => 1,
+            'international_code' => '',
+            'national_code' => '',
             'modified_user_id' => NULL,
             'modified' => NULL,
             'created_user_id' => '1',
@@ -135,6 +177,12 @@ class POCOR4617 extends AbstractMigration
             ],
             [
             'name' => 'Staff Meeting',
+            'order' => 1,
+            'visible' => 1,
+            'editable' => 1,
+            'default' => 1,
+            'international_code' => '',
+            'national_code' => '',
             'modified_user_id' => NULL,
             'modified' => NULL,
             'created_user_id' => '1',
@@ -142,6 +190,12 @@ class POCOR4617 extends AbstractMigration
             ],
             [
             'name' => 'Parent Meeting',
+            'order' => 1,
+            'visible' => 1,
+            'editable' => 1,
+            'default' => 1,
+            'international_code' => '',
+            'national_code' => '',
             'modified_user_id' => NULL,
             'modified' => NULL,
             'created_user_id' => '1',
@@ -149,6 +203,12 @@ class POCOR4617 extends AbstractMigration
             ],
             [
             'name' => 'PTA committee',
+            'order' => 1,
+            'visible' => 1,
+            'editable' => 1,
+            'default' => 1,
+            'international_code' => '',
+            'national_code' => '',
             'modified_user_id' => NULL,
             'modified' => NULL,
             'created_user_id' => '1',
@@ -156,6 +216,12 @@ class POCOR4617 extends AbstractMigration
             ],
             [
             'name' => 'Hygiene committee',
+            'order' => 1,
+            'visible' => 1,
+            'editable' => 1,
+            'default' => 1,
+            'international_code' => '',
+            'national_code' => '',
             'modified_user_id' => NULL,
             'modified' => NULL,
             'created_user_id' => '1',
@@ -165,52 +231,6 @@ class POCOR4617 extends AbstractMigration
         $table->insert($data);
         $table->saveData();
         //end institution_committee_types
-
-        // institution_committees
-        // $table = $this->table('institution_committees', [
-        //     'collation' => 'utf8mb4_unicode_ci',
-        //     'comment' => 'This table contains list of committees for institutions'
-        // ]);
-
-        // $table
-        //     ->addColumn('committee_id', 'integer', [
-        //         'default' => null,
-        //         'limit' => 11,
-        //         'null' => false,
-        //         'comment' => 'links to committees.id'
-        //     ])
-        //     ->addColumn('institution_id', 'integer', [
-        //         // 'default' => null,
-        //         'limit' => 11,
-        //         'null' => false,
-        //         'comment' => 'links to institutions.id'
-        //     ])
-        //     ->addColumn('modified_user_id', 'integer', [
-        //         'default' => null,
-        //         'limit' => 11,
-        //         'null' => true,
-        //     ])
-        //     ->addColumn('modified', 'datetime', [
-        //         'default' => null,
-        //         'limit' => null,
-        //         'null' => true,
-        //     ])
-        //     ->addColumn('created_user_id', 'integer', [
-        //         'default' => null,
-        //         'limit' => 11,
-        //         'null' => false,
-        //     ])
-        //     ->addColumn('created', 'datetime', [
-        //         'default' => null,
-        //         'limit' => null,
-        //         'null' => false,
-        //     ])
-        //     ->addIndex('committee_id')
-        //     ->addIndex('institution_id')
-        //     ->addIndex('modified_user_id')
-        //     ->addIndex('created_user_id')
-        //     ->save();
-        // end institution_committees
 
        // committee_attachments
         $table = $this->table('institution_committee_attachments', [
@@ -256,7 +276,7 @@ class POCOR4617 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
-        // 
+        //end committee_attachments
     }
 
     //rollback
@@ -265,6 +285,5 @@ class POCOR4617 extends AbstractMigration
         $this->execute('DROP TABLE `institution_committees`');
         $this->execute('DROP TABLE `institution_committee_types`');
         $this->execute('DROP TABLE `institution_committee_attachments`');
-        // $this->execute('DROP TABLE `institution_committees`');
     }
 }
