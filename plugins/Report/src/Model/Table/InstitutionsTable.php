@@ -145,6 +145,7 @@ class InstitutionsTable extends AppTable
     public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
         $this->ControllerAction->field('status', ['type' => 'hidden']);
@@ -495,6 +496,23 @@ class InstitutionsTable extends AppTable
                 }
             } else {
                 $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StudentAttendanceSummary'])) {
+
+                $options = $this->find('list');
+               
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
             }
             return $attr;
         }
