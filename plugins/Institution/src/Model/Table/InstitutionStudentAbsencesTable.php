@@ -137,7 +137,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 $Students->aliasField('institution_id') => $linkedRecordEntity->institution_id,
                 $Students->aliasField('academic_period_id') => $linkedRecordEntity->academic_period_id,
                 $Students->aliasField('start_date <= ') => $linkedRecordEntity->start_date,
-                $Students->aliasField('end_date >= ') => $linkedRecordEntity->start_date
+                $Students->aliasField('end_date >= ') => $linkedRecordEntity->end_date
             ])
             ->first();
 
