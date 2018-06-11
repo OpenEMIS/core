@@ -219,14 +219,14 @@ class ValidationBehavior extends Behavior
     {   
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $maxCapacity = $ConfigItems
+        $entity = $ConfigItems
             ->find()
             ->where([
                 $ConfigItems->aliasField('code') => "max_students_per_class"
             ])
-            ->extract('default_value')
             ->first();
 
+        $maxCapacity = $entity->value ? $entity->value : $entity->default_value;
         if($capacity > $maxCapacity){
             $errorMsg = $model->getMessage('Institution.InstitutionClasses.capacity.ruleCheckMaxStudentsPerClass');
             return $errorMsg;

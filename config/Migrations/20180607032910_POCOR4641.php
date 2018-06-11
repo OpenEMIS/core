@@ -14,7 +14,7 @@ class POCOR4641 extends AbstractMigration
         $update = '
             UPDATE institution_classes
             SET capacity = (
-                SELECT IFNULL(value,default_value)
+                SELECT IFNULL(NULLIF(value, ""),default_value)
                 FROM config_items
                 WHERE code = "max_students_per_class"
             )';
