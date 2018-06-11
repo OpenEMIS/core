@@ -178,6 +178,12 @@ class InstitutionPositionsTable extends ControllerActionTable
                         ->all();
 
                     return !$workflowResult->isEmpty();
+                },
+                'on' => function ($context) {
+                    if (array_key_exists('is_imported', $context['data']) && $context['data']['is_imported']) {
+                        return true;
+                    }
+                    return false;
                 }
             ]);
 
