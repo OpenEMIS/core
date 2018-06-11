@@ -8,6 +8,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 use Cake\Log\Log;
 use ZipArchive;
 use App\Model\Table\ControllerActionTable;
@@ -21,6 +22,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     CONST IN_PROGRESS = 2;
     CONST GENERATED = 3;
     CONST PUBLISHED = 4;
+
+    CONST MAX_PROCESSES = 2;
 
     public function initialize(array $config)
     {
@@ -136,6 +139,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('started_on');
+        $this->field('completed_on');
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('report_card');
@@ -144,7 +149,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['status', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
+        $this->setFieldOrder(['status', 'started_on', 'completed_on', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -213,7 +218,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status')
+                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
+                'report_card_modified' => $this->StudentsReportCards->aliasField('modified'),
+                'report_card_created' => $this->StudentsReportCards->aliasField('created')
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -371,6 +378,30 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetStartedOn(Event $event, Entity $entity)
+    {
+        $value = '';
+
+        if ($entity->has('report_card_created')) {
+            $createdValue = new Time($entity->report_card_created);
+            $value = $this->formatDateTime($createdValue);
+        }
+
+        return $value;
+    }
+
+    public function onGetCompletedOn(Event $event, Entity $entity)
+    {
+        $value = '';
+
+        if ($entity->has('report_card_modified')) {
+            $modifiedValue = new Time($entity->report_card_modified);
+            $value = $this->formatDateTime($modifiedValue);
+        }
+
+        return $value;
+    }
+
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         $value = '';
@@ -405,21 +436,16 @@ class ReportCardStatusesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
-            $url = [
-                'plugin' => 'CustomExcel',
-                'controller' => 'CustomExcels',
-                'action' => 'export',
-                'ReportCards'
-            ];
-            $url = $this->setQueryString($url, $params);
-            $this->Alert->success('ReportCardStatuses.generate');
+            $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+            $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id'], $params['student_id']);
+            $this->Alert->warning('ReportCardStatuses.generate');
         } else {
             $url = $this->url('index');
             $this->Alert->warning('ReportCardStatuses.noTemplate');
         }
 
         $event->stopPropagation();
-        return $this->controller->redirect($url);
+        return $this->controller->redirect($this->url('index'));
     }
 
     public function generateAll(Event $event, ArrayObject $extra)
@@ -437,6 +463,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->count();
 
             if (!$inProgress) {
+                $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->Alert->warning('ReportCardStatuses.generateAll');
             } else {
@@ -557,22 +584,120 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId)
+    private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
-        $args = '';
-        $args .= !is_null($institutionId) ? ' '.$institutionId : '';
-        $args .= !is_null($institutionClassId) ? ' '.$institutionClassId : '';
-        $args .= !is_null($reportCardId) ? ' '.$reportCardId : '';
+        Log::write('debug', 'Initialize Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
 
-        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards'.$args;
-        $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
+        $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $where = [];
+        $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+        if (!is_null($studentId)) {
+            $where[$classStudentsTable->aliasField('student_id')] = $studentId;
+        }
+        $classStudents = $classStudentsTable->find()
+            ->select([
+                $classStudentsTable->aliasField('student_id'),
+                $classStudentsTable->aliasField('institution_id'),
+                $classStudentsTable->aliasField('academic_period_id'),
+                $classStudentsTable->aliasField('education_grade_id'),
+                $classStudentsTable->aliasField('institution_class_id')
+            ])
+            ->where($where)
+            ->toArray();
 
-        try {
-            $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
-        } catch(\Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception when generate all report cards : '. $ex);
+        foreach ($classStudents as $student) {
+            // Report card processes
+            $idKeys = [
+                'report_card_id' => $reportCardId,
+                'institution_class_id' => $student->institution_class_id,
+                'student_id' => $student->student_id
+            ];
+
+            $data = [
+                'status' => $ReportCardProcesses::NEW_PROCESS,
+                'institution_id' => $student->institution_id,
+                'education_grade_id' => $student->education_grade_id,
+                'academic_period_id' => $student->academic_period_id,
+                'created' => date('Y-m-d H:i:s')
+            ];
+            $obj = array_merge($idKeys, $data);
+            $newEntity = $ReportCardProcesses->newEntity($obj);
+            $ReportCardProcesses->save($newEntity);
+            // end
+
+            // Student report card
+            $recordIdKeys = [
+                'report_card_id' => $reportCardId,
+                'student_id' => $student->student_id,
+                'institution_id' => $student->institution_id,
+                'academic_period_id' => $student->academic_period_id,
+                'education_grade_id' => $student->education_grade_id,
+                'institution_class_id' => $student->institution_class_id,
+            ];
+            if ($this->StudentsReportCards->exists($recordIdKeys)) {
+                $studentsReportCardEntity = $this->StudentsReportCards->find()
+                    ->where($recordIdKeys)
+                    ->first();
+
+                $this->StudentsReportCards->delete($studentsReportCardEntity);
+            }
+            // end
+        }
+
+        Log::write('debug', 'End Generate All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' ('.Time::now().')');
+    }
+
+    private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    {
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+
+        foreach ($runningProcess as $key => $processData) {
+            $systemProcessId = $processData['id'];
+            $pId = !empty($processData['process_id']) ? $processData['process_id'] : 0;
+            $createdDate = $processData['created'];
+
+            $expiryDate = clone($createdDate);
+            $expiryDate->addMinutes(30);
+            $today = Time::now();
+
+            if ($expiryDate < $today) {
+                $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+                $SystemProcesses->killProcess($pId);
+            }
+        }
+
+        if (count($runningProcess) <= self::MAX_PROCESSES) {
+            $name = 'GenerateAllReportCards';
+            $pid = '';
+            $processModel = $this->registryAlias();
+            $eventName = '';
+            $passArray = [
+                'institution_id' => $institutionId,
+                'institution_class_id' => $institutionClassId,
+                'report_card_id' => $reportCardId
+            ];
+            if (!is_null($studentId)) {
+                $passArray['student_id'] = $studentId;
+            }
+            $params = json_encode($passArray);            
+            $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+            $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, 0);
+
+            $args = '';
+            $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+
+            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards'.$args;
+            $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+
+            try {
+                $pid = exec($shellCmd);
+                Log::write('debug', $shellCmd);
+            } catch(\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when generate all report cards : '. $ex);
+            }
         }
     }
 
