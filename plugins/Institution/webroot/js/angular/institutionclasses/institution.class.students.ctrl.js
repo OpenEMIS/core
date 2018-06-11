@@ -250,7 +250,9 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.capacity = parseInt(Controller.classCapacity);
 
         if(postData.capacity > Controller.maxStudentsPerClass) {
-            AlertSvc.error(Controller, 'The capacity per class has exceeded the maximum capacity limit of '+Controller.maxStudentsPerClass+' students.');
+            Controller.postError.capacity = {
+                'error': 'The capacity per class has exceeded the maximum capacity limit of '+Controller.maxStudentsPerClass+' students.'
+            };
         } else if(classStudents.length > postData.capacity) {
             AlertSvc.error(Controller, 'The number of students has reached the capacity limit of '+postData.capacity+' students.');
         } else {
