@@ -445,11 +445,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                if (in_array($feature, ['Report.StudentAttendanceSummary'])) {
-                    $attr['options'] = $gradeOptions;
-                }else{
-                    $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
-                }
+                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
