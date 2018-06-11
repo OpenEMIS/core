@@ -58,6 +58,8 @@ class ScholarshipRecipientsTable extends AppTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
+        $this->addBehavior('User.AdvancedNameSearch');
     }
 
     public function validationDefault(Validator $validator)
@@ -305,5 +307,24 @@ class ScholarshipRecipientsTable extends AppTable
                     ]
                 ]
             ]);
+    }
+
+    public function findSearch(Query $query, array $options)
+    {
+        $searchOptions = $options['search'];
+        $searchOptions['defaultSearch'] = false; // turn off defaultSearch function in page
+
+        $search = $searchOptions['searchText'];
+        if (!empty($search)) {
+            
+        $orConditions = [
+             'Scholarships.name LIKE' => $search.'%',
+             'FinancialAssistanceTypes.name LIKE' => $search.'%'
+        ];         
+        // function from AdvancedNameSearchBehavior 
+        $query = $this->addSearchConditions($query, ['alias' => 'Recipients', 'searchTerm' => $search, 'OR' => $orConditions]);
+
+        }
+        return $query;
     }
 }
