@@ -1,5 +1,4 @@
 <?php
-
 use Phinx\Migration\AbstractMigration;
 
 class POCOR4641 extends AbstractMigration
@@ -7,7 +6,7 @@ class POCOR4641 extends AbstractMigration
     public function up()
     {
         $this->execute('RENAME TABLE `institution_classes` TO `z_4641_institution_classes`');
-        
+
         // institution_classes table
         $table = $this->table('institution_classes', [
             'collation' => 'utf8mb4_unicode_ci',
@@ -19,7 +18,6 @@ class POCOR4641 extends AbstractMigration
                 'limit' => 100,
                 'null' => true,
                 'default' => null
-                
             ])
             ->addColumn('class_number', 'integer', [
                 'limit' => 11,
@@ -98,17 +96,10 @@ class POCOR4641 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-       $this->execute('INSERT INTO `institution_classes` (`id`, `name`, `class_number`, `total_male_students`, `total_female_students`, `staff_id`, `secondary_staff_id`, `institution_shift_id`, `institution_id`, `academic_period_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `name`, `class_number`, `total_male_students`, `total_female_students`, `staff_id`, `secondary_staff_id`, `institution_shift_id`, `institution_id`, `academic_period_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4641_institution_classes`');
+        $row = $this->fetchRow("SELECT IFNULL(NULLIF(`value`, ''), `default_value`) AS `max_capacity` FROM `config_items` WHERE `code` = 'max_students_per_class'");
+        $maxCapacity = $row['max_capacity'];
 
-        $update = '
-            UPDATE institution_classes
-            SET capacity = (
-                SELECT IFNULL(NULLIF(value, ""),default_value)
-                FROM config_items
-                WHERE code = "max_students_per_class"
-            )';
-
-        $this->execute($update);
+        $this->execute('INSERT INTO `institution_classes` (`id`, `name`, `class_number`, `capacity`, `total_male_students`, `total_female_students`, `staff_id`, `secondary_staff_id`, `institution_shift_id`, `institution_id`, `academic_period_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) SELECT `id`, `name`, `class_number`, '.$maxCapacity.', `total_male_students`, `total_female_students`, `staff_id`, `secondary_staff_id`, `institution_shift_id`, `institution_id`, `academic_period_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_4641_institution_classes`');
     }
     
     public function down()
