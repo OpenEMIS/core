@@ -124,7 +124,7 @@ class InstitutionEquipmentController extends PageController
     {
         $page = $this->Page;
 
-        if ($page->is(['index', 'view'])) {
+        if ($page->is(['index', 'view', 'delete'])) {
             return $this->accessibilityOptions[$entity->accessibility];
         }
     }
