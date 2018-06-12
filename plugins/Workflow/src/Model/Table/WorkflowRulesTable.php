@@ -326,10 +326,9 @@ class WorkflowRulesTable extends ControllerActionTable
             $tableCells = [];
             $events = $this->convertEventKeysToEvents($entity);
             foreach ($events as $key => $event) {
-                $tableCells[$key] = [
-                    $eventOptions[$event]['text'],
-                    $eventOptions[$event]['description']
-                ];
+                $tableCells[$key] = [];
+                $tableCells[$key][] = $eventOptions[$event]['text'];
+                $tableCells[$key][] = $eventOptions[$event]['description'];
             }
 
             $attr['attr']['tableHeaders'] = $tableHeaders;

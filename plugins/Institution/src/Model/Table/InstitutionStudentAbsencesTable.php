@@ -31,10 +31,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     private $workflowRuleEvents = [
         [
-            'value' => 'Workflow.onAssignToHomeroomTeacher',
-            'text' => 'Assign to Homeroom Teacher',
+            'value' => 'Workflow.onAssignToHomeRoomTeacher',
+            'text' => 'Assign to Home Room Teacher',
             'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher or Secondary Teacher',
-            'method' => 'onAssignToHomeroomTeacher'
+            'method' => 'onAssignToHomeRoomTeacher'
         ]
     ];
 
@@ -110,7 +110,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onAssignToHomeroomTeacher(Event $event, Entity $caseEntity, Entity $linkedRecordEntity)
+    public function onAssignToHomeRoomTeacher(Event $event, Entity $caseEntity, Entity $linkedRecordEntity)
     {
         $Students = TableRegistry::get('Institution.Students');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
