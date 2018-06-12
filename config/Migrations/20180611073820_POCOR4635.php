@@ -6,10 +6,10 @@ class POCOR4635 extends AbstractMigration
 {
     public function up()
     {
-        // equipment_types
-        $table = $this->table('equipment_types', [
+        // asset_types
+        $table = $this->table('asset_types', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This is a field option table containing the list of user-defined equipment types used by institution equipments'
+            'comment' => 'This is a field option table containing the list of user-defined asset types used by institution assets'
         ]);
         $table
             ->addColumn('name', 'string', [
@@ -69,10 +69,10 @@ class POCOR4635 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-        // equipment_purposes
-        $table = $this->table('equipment_purposes', [
+        // asset_purposes
+        $table = $this->table('asset_purposes', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This is a field option table containing the list of user-defined equipment purposes used by institution equipments'
+            'comment' => 'This is a field option table containing the list of user-defined asset purposes used by institution assets'
         ]);
         $table
             ->addColumn('name', 'string', [
@@ -132,10 +132,10 @@ class POCOR4635 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-        // equipment_conditions
-        $table = $this->table('equipment_conditions', [
+        // asset_conditions
+        $table = $this->table('asset_conditions', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This is a field option table containing the list of user-defined equipment conditions used by institution equipments'
+            'comment' => 'This is a field option table containing the list of user-defined asset conditions used by institution assets'
         ]);
         $table
             ->addColumn('name', 'string', [
@@ -195,10 +195,10 @@ class POCOR4635 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
-        // institution_equipments
-        $table = $this->table('institution_equipment', [
+        // institution_assets
+        $table = $this->table('institution_assets', [
             'collation' => 'utf8mb4_unicode_ci',
-            'comment' => 'This table contains all equipment used by institutions'
+            'comment' => 'This table contains all assets used by institutions'
         ]);
         $table
             ->addColumn('code', 'string', [
@@ -219,20 +219,20 @@ class POCOR4635 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to institutions.id'
             ])
-            ->addColumn('equipment_type_id', 'integer', [
+            ->addColumn('asset_type_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
-                'comment' => 'links to equipment_types.id'
+                'comment' => 'links to asset_types.id'
             ])
-            ->addColumn('equipment_purpose_id', 'integer', [
+            ->addColumn('asset_purpose_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
-                'comment' => 'links to equipment_purposes.id'
+                'comment' => 'links to asset_purposes.id'
             ])
-            ->addColumn('equipment_condition_id', 'integer', [
+            ->addColumn('asset_condition_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
-                'comment' => 'links to equipment_conditions.id'
+                'comment' => 'links to asset_conditions.id'
             ])
             ->addColumn('accessibility', 'integer', [
                 'null' => false,
@@ -259,9 +259,9 @@ class POCOR4635 extends AbstractMigration
             ])
             ->addIndex('academic_period_id')
             ->addIndex('institution_id')
-            ->addIndex('equipment_type_id')
-            ->addIndex('equipment_purpose_id')
-            ->addIndex('equipment_condition_id')
+            ->addIndex('asset_type_id')
+            ->addIndex('asset_purpose_id')
+            ->addIndex('asset_condition_id')
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
@@ -269,9 +269,9 @@ class POCOR4635 extends AbstractMigration
 
     public function down()
     {
-        $this->dropTable('equipment_types');
-        $this->dropTable('equipment_purposes');
-        $this->dropTable('equipment_conditions');
-        $this->dropTable('institution_equipment');
+        $this->dropTable('asset_types');
+        $this->dropTable('asset_purposes');
+        $this->dropTable('asset_conditions');
+        $this->dropTable('institution_assets');
     }
 }
