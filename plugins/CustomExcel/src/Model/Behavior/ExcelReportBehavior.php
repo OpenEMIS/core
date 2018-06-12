@@ -124,6 +124,10 @@ class ExcelReportBehavior extends Behavior
             $this->deleteFile($extra['temp_logo']);
         }
 
+        if ($extra->offsetExists('image_resource')) {
+            imagedestroy($extra['image_resource']);
+        }
+
         if ($extra->offsetExists('tmp_file_path')) {
             // delete temporary excel template file after save
             $this->deleteFile($extra['tmp_file_path']);
@@ -144,6 +148,8 @@ class ExcelReportBehavior extends Behavior
             // delete excel file after download
             $this->deleteFile($temppath);
         }
+
+        gc_collect_cycles();
     }
 
     public function loadExcelTemplate(ArrayObject $extra)
@@ -303,7 +309,7 @@ class ExcelReportBehavior extends Behavior
 
         $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
 
-        if ($imagePath) {
+        if (!array_key_exists('image_resource', $extra) && $imagePath) {
             switch ($attr['mime_type']) {
                 case 'image/png':
                     $imageResource = imagecreatefrompng($imagePath);
@@ -324,18 +330,19 @@ class ExcelReportBehavior extends Behavior
                     $imageResource = '';
                     break;
             }
+            $extra['image_resource'] = $imageResource;
         }
 
-        if ($imageResource) {
+        if (isset($extra['image_resource'])) {
             //retain transparency on png/gif file
-            imageAlphaBlending($imageResource, true);
-            imageSaveAlpha($imageResource, true);
+            imageAlphaBlending($extra['image_resource'], true);
+            imageSaveAlpha($extra['image_resource'], true);
 
-            $objDrawing->setImageResource($imageResource);
-            $objDrawing->setWidth($imageWidth); 
-            $objDrawing->setCoordinates($cellCoordinate); 
-            $objDrawing->setOffsetX($imageMarginLeft); 
-            $objDrawing->setOffsetY($imageMarginTop); 
+            $objDrawing->setImageResource($extra['image_resource']);
+            $objDrawing->setWidth($imageWidth);
+            $objDrawing->setCoordinates($cellCoordinate);
+            $objDrawing->setOffsetX($imageMarginLeft);
+            $objDrawing->setOffsetY($imageMarginTop);
             $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
         }
     }
