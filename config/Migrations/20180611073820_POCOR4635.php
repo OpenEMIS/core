@@ -234,6 +234,11 @@ class POCOR4635 extends AbstractMigration
                 'limit' => 11,
                 'comment' => 'links to equipment_conditions.id'
             ])
+            ->addColumn('accessibility', 'integer', [
+                'null' => false,
+                'limit' => 1,
+                'comment' => '0 -> Not Accessible, 1 -> Accessible'
+            ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
                 'limit' => 11,
