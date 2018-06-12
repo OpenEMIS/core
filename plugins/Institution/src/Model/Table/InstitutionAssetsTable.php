@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
-class InstitutionEquipmentTable extends ControllerActionTable
+class InstitutionAssetsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -12,9 +12,9 @@ class InstitutionEquipmentTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('EquipmentTypes', ['className' => 'Institution.EquipmentTypes']);
-        $this->belongsTo('EquipmentPurposes', ['className' => 'Institution.EquipmentPurposes']);
-        $this->belongsTo('EquipmentConditions', ['className' => 'Institution.EquipmentConditions']);
+        $this->belongsTo('AssetTypes', ['className' => 'Institution.AssetTypes']);
+        $this->belongsTo('AssetPurposes', ['className' => 'Institution.AssetPurposes']);
+        $this->belongsTo('AssetConditions', ['className' => 'Institution.AssetConditions']);
     }
 
     public function validationDefault(Validator $validator)

@@ -264,7 +264,7 @@ class NavigationComponent extends Component
             'InfrastructureWashWastes', 'InfrastructureWashSewages', 'InfrastructureUtilityElectricities', 'InfrastructureUtilityInternets',
             'InfrastructureUtilityTelephones', 'InstitutionTransportProviders', 'InstitutionBuses', 'InstitutionTrips',
             'StudentHistories', 'StaffHistories', 'InstitutionCalendars', 'InstitutionContactPersons', 'StudentInsurances', 'StaffInsurances',
-            'InstitutionEquipment'
+            'InstitutionAssets'
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
@@ -757,11 +757,11 @@ class NavigationComponent extends Component
                         'selected' => ['InfrastructureUtilityTelephones.view', 'InfrastructureUtilityTelephones.add', 'InfrastructureUtilityTelephones.edit', 'InfrastructureUtilityTelephones.delete']
                     ],
 
-            'InstitutionEquipment.index' => [
-                'title' => 'Equipment',
+            'InstitutionAssets.index' => [
+                'title' => 'Assets',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['InstitutionEquipment.index', 'InstitutionEquipment.view', 'InstitutionEquipment.add', 'InstitutionEquipment.edit', 'InstitutionEquipment.delete'],
+                'selected' => ['InstitutionAssets.index', 'InstitutionAssets.view', 'InstitutionAssets.add', 'InstitutionAssets.edit', 'InstitutionAssets.delete'],
             ],
 
             'Survey' => [

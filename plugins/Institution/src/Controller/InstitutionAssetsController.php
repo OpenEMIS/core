@@ -7,7 +7,7 @@ use App\Model\Traits\OptionsTrait;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
-class InstitutionEquipmentController extends PageController
+class InstitutionAssetsController extends PageController
 {
     use OptionsTrait;
 
@@ -18,8 +18,8 @@ class InstitutionEquipmentController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Institution.InstitutionEquipment');
-        $this->loadModel('Institution.EquipmentTypes');
+        $this->loadModel('Institution.InstitutionAssets');
+        $this->loadModel('Institution.AssetTypes');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
     }
 
@@ -42,15 +42,15 @@ class InstitutionEquipmentController extends PageController
 
         $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Equipment');
+        $page->addCrumb('Assets');
 
-        $page->setHeader($institutionName . ' - ' . __('Equipment'));
+        $page->setHeader($institutionName . ' - ' . __('Assets'));
 
         $page->setQueryString('institution_id', $institutionId);
 
-        $page->get('equipment_type_id')->setLabel('Type');
-        $page->get('equipment_purpose_id')->setLabel('Purpose');
-        $page->get('equipment_condition_id')->setLabel('Condition');
+        $page->get('asset_type_id')->setLabel('Type');
+        $page->get('asset_purpose_id')->setLabel('Purpose');
+        $page->get('asset_condition_id')->setLabel('Condition');
 
         // hide institution_id
         $page->get('institution_id')
@@ -59,7 +59,7 @@ class InstitutionEquipmentController extends PageController
 
         // get options
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $this->accessibilityOptions = $this->getSelectOptions($this->InstitutionEquipment->aliasField('accessibility'));
+        $this->accessibilityOptions = $this->getSelectOptions($this->InstitutionAssets->aliasField('accessibility'));
     }
 
     public function index()
@@ -72,13 +72,13 @@ class InstitutionEquipmentController extends PageController
         $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $page->setQueryString('academic_period_id', $academicPeriodId);
 
-        // equipment_type_id filter
-        $equipmentTypes = $this->EquipmentTypes
+        // asset_type_id filter
+        $assetTypes = $this->AssetTypes
             ->find('optionList', ['defaultOption' => false])
             ->find('order')
             ->toArray();
-        $equipmentTypeOptions = ['' => '-- ' . __('Select Type') . ' --'] + $equipmentTypes;
-        $page->addFilter('equipment_type_id')->setOptions($equipmentTypeOptions);
+        $assetTypeOptions = ['' => '-- ' . __('Select Type') . ' --'] + $assetTypes;
+        $page->addFilter('asset_type_id')->setOptions($assetTypeOptions);
 
         // accessibility filter
         $accessibilityOptions = ['' => '-- ' . __('Select Accessibility') . ' --'] + $this->accessibilityOptions;
@@ -89,8 +89,8 @@ class InstitutionEquipmentController extends PageController
         $page->exclude(['institution_id']);
 
         // sorting
-        $page->get('equipment_purpose_id')->setSortable(true);
-        $page->get('equipment_condition_id')->setSortable(true);
+        $page->get('asset_purpose_id')->setSortable(true);
+        $page->get('asset_condition_id')->setSortable(true);
     }
 
     public function add()
@@ -109,9 +109,9 @@ class InstitutionEquipmentController extends PageController
     {
         $page = $this->Page;
 
-        $page->get('equipment_type_id')->setControlType('select');
-        $page->get('equipment_purpose_id')->setControlType('select');
-        $page->get('equipment_condition_id')->setControlType('select');
+        $page->get('asset_type_id')->setControlType('select');
+        $page->get('asset_purpose_id')->setControlType('select');
+        $page->get('asset_condition_id')->setControlType('select');
 
         $page->get('academic_period_id')
             ->setControlType('select')
