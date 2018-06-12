@@ -65,22 +65,28 @@ class InstitutionEquipmentController extends PageController
     public function index()
     {
         $page = $this->Page;
-        parent::index();
 
-        $page->exclude(['institution_id']);
-
-        // filters
+        // academic_period_id filter
         $page->addFilter('academic_period_id')->setOptions($this->academicPeriodOptions);
 
+        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $page->setQueryString('academic_period_id', $academicPeriodId);
+
+        // equipment_type_id filter
         $equipmentTypes = $this->EquipmentTypes
             ->find('optionList', ['defaultOption' => false])
             ->find('order')
             ->toArray();
-        $equipmentTypeOptions = ['' => __('All Types')] + $equipmentTypes;
+        $equipmentTypeOptions = ['' => '-- ' . __('Select Type') . ' --'] + $equipmentTypes;
         $page->addFilter('equipment_type_id')->setOptions($equipmentTypeOptions);
 
-        $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
+        // accessibility filter
+        $accessibilityOptions = ['' => '-- ' . __('Select Accessibility') . ' --'] + $this->accessibilityOptions;
         $page->addFilter('accessibility')->setOptions($accessibilityOptions);
+
+        parent::index();
+
+        $page->exclude(['institution_id']);
     }
 
     public function view($id)
