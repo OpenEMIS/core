@@ -89,12 +89,6 @@ class InstitutionEquipmentController extends PageController
         $page->exclude(['institution_id']);
     }
 
-    public function view($id)
-    {
-        $page = $this->Page;
-        parent::view($id);
-    }
-
     public function add()
     {
         parent::add();
