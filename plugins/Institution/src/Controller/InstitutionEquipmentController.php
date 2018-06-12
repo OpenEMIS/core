@@ -87,6 +87,10 @@ class InstitutionEquipmentController extends PageController
         parent::index();
 
         $page->exclude(['institution_id']);
+
+        // sorting
+        $page->get('equipment_purpose_id')->setSortable(true);
+        $page->get('equipment_condition_id')->setSortable(true);
     }
 
     public function add()
