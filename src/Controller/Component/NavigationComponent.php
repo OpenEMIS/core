@@ -1474,7 +1474,7 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
                 'Scholarships.Scholarships' => [
-                    'title' => 'Scholarships',
+                    'title' => 'Details',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
                     'selected' => ['Scholarships.Scholarships', 'ScholarshipAttachmentTypes.index', 'ScholarshipAttachmentTypes.view', 'ScholarshipAttachmentTypes.add', 'ScholarshipAttachmentTypes.edit', 'ScholarshipAttachmentTypes.delete']
