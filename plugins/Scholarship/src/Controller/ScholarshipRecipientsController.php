@@ -17,6 +17,7 @@ class ScholarshipRecipientsController extends PageController
         $this->loadModel('Scholarship.Scholarships');
         $this->loadModel('Scholarship.FinancialAssistanceTypes');
         $this->loadModel('Scholarship.RecipientActivityStatuses');
+        $this->loadModel('Scholarship.RecipientActivities');
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
     }
@@ -72,11 +73,16 @@ class ScholarshipRecipientsController extends PageController
 
         $page->exclude(['scholarship_recipient_activity_status_id', 'approved_amount']);
 
-        $page->addNew('status');
+        $page->addNew('status')
+            ->setSortable(true);
         $page->addNew('openemis_no')
-            ->setDisplayFrom('recipient.openemis_no');
+            ->setDisplayFrom('recipient.openemis_no')
+            ->setSortable(true);
         $page->addNew('financial_assistance_type')
-            ->setDisplayFrom('scholarship.financial_assistance_type.name');
+            ->setDisplayFrom('scholarship.financial_assistance_type.name')
+            ->setSortable(true);
+        $page->get('recipient_id')->setSortable(true);
+        $page->get('scholarship_id')->setSortable(true);
 
         $page->move('status')->first();
         $page->move('openemis_no')->after('status');
@@ -153,9 +159,11 @@ class ScholarshipRecipientsController extends PageController
             ->setAttributes('onblur', 'return utility.checkDecimal(this, 2);');
         $page->addNew('activity_status')
             ->setControlType('section');
+
+        $lastActivityDate = $this->getLastActivityDate($entity);
         $page->addNew('date')
             ->setControlType('date')
-            ->setValue((new Date()));
+            ->setAttributes('minDate', $lastActivityDate);
 
         $nextStatusOptions = $this->RecipientActivityStatuses
             ->find('optionList', ['defaultOption' => false])
@@ -257,5 +265,28 @@ class ScholarshipRecipientsController extends PageController
         }
 
         return $rows;
+    }
+
+    private function getLastActivityDate(Entity $entity) 
+    {
+        $lastActivityDate = [];
+
+        $conditions = [
+            'recipient_id' => $entity->recipient_id,
+            'scholarship_id' => $entity->scholarship_id
+        ];
+
+        $query = $this->RecipientActivities->find();
+        $entity = $query->where([$conditions])
+            ->select([
+                'date' => $query->func()->max('date')
+            ])
+            ->first();
+
+        $lastActivityDate['day'] = $entity->date->format('d');
+        $lastActivityDate['month'] = $entity->date->format('m');
+        $lastActivityDate['year'] = $entity->date->format('Y');
+
+        return $lastActivityDate;
     }
 }
