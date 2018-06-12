@@ -1355,14 +1355,8 @@ class InstitutionClassesTable extends ControllerActionTable
     protected function tooltipMessage()
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $entity = $ConfigItems
-            ->find()
-            ->where([
-                $ConfigItems->aliasField('code') => "max_students_per_class"
-            ])
-            ->first();
-               
-        $maxCapacity = $entity->value ? $entity->value : $entity->default_value;
+        $maxCapacity = $ConfigItems->value('max_students_per_class');
+
         $message =  "Capacity must not exceed " . $maxCapacity . " students per class";
         $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
 
