@@ -2,11 +2,17 @@
 namespace Institution\Controller;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
+use App\Model\Traits\OptionsTrait;
+use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
 class InstitutionEquipmentController extends PageController
 {
+    use OptionsTrait;
+
     private $academicPeriodOptions = [];
+    private $accessibilityOptions = [];
 
     public function initialize()
     {
@@ -15,6 +21,13 @@ class InstitutionEquipmentController extends PageController
         $this->loadModel('Institution.InstitutionEquipment');
         $this->loadModel('Institution.EquipmentTypes');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
+    }
+
+    public function implementedEvents()
+    {
+        $event = parent::implementedEvents();
+        $event['Controller.Page.onRenderAccessibility'] = 'onRenderAccessibility';
+        return $event;
     }
 
     public function beforeFilter(Event $event)
@@ -46,6 +59,7 @@ class InstitutionEquipmentController extends PageController
 
         // get options
         $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $this->accessibilityOptions = $this->getSelectOptions($this->InstitutionEquipment->aliasField('accessibility'));
     }
 
     public function index()
@@ -64,6 +78,9 @@ class InstitutionEquipmentController extends PageController
             ->toArray();
         $equipmentTypeOptions = ['' => __('All Types')] + $equipmentTypes;
         $page->addFilter('equipment_type_id')->setOptions($equipmentTypeOptions);
+
+        $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
+        $page->addFilter('accessibility')->setOptions($accessibilityOptions);
     }
 
     public function view($id)
@@ -88,14 +105,27 @@ class InstitutionEquipmentController extends PageController
     {
         $page = $this->Page;
 
-        $page->get('academic_period_id')
-            ->setControlType('select')
-            ->setOptions($this->academicPeriodOptions, false);
-
         $page->get('equipment_type_id')->setControlType('select');
         $page->get('equipment_purpose_id')->setControlType('select');
         $page->get('equipment_condition_id')->setControlType('select');
 
+        $page->get('academic_period_id')
+            ->setControlType('select')
+            ->setOptions($this->academicPeriodOptions, false);
+
+        $page->get('accessibility')
+            ->setControlType('select')
+            ->setOptions($this->accessibilityOptions);
+
         $page->move('academic_period_id')->first();
+    }
+
+    public function onRenderAccessibility(Event $event, Entity $entity, PageElement $element)
+    {
+        $page = $this->Page;
+
+        if ($page->is(['index', 'view'])) {
+            return $this->accessibilityOptions[$entity->accessibility];
+        }
     }
 }
