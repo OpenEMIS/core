@@ -16,13 +16,11 @@ class POCOR4637 extends AbstractMigration
 
         $table
             ->addColumn('workflow_rule_id', 'integer', [
-                'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'comment' => 'links to workflow_rules.id',
             ])
             ->addColumn('event_key', 'string', [
-                'default' => null,
                 'limit' => 45,
                 'null' => false,
             ])
