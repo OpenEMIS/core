@@ -266,10 +266,10 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $workflowRuleResults = $WorkflowRules
             ->find()
-            ->where([
-                $WorkflowRules->aliasField('feature') => $feature
-            ])
+            ->contain('WorkflowRuleEvents')
+            ->where([$WorkflowRules->aliasField('feature') => $feature])
             ->all();
+
         // loop through each rule setup for the feature
         // if the record match the rule, then create a new case and linked it with the record
         if (!$workflowRuleResults->isEmpty()) {
@@ -312,14 +312,16 @@ class InstitutionCasesTable extends ControllerActionTable
                             $extra['workflow_rule_id'] = $workflowRuleEntity->id;
 
                             $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetCaseRecord', [$extra], $linkedRecordModel);
-                            if (!$event->result) {
+                            if (!empty($event->result)) {
+                                $caseData = $event->result;
+                            } else {
                                 $linkedRecords = [];
                                 $linkedRecords[] = [
                                     'record_id' => $recordId,
                                     'feature' => $feature
                                 ];
 
-                                $newData = [
+                                $caseData = [
                                     'case_number' => '',
                                     'title' => $title,
                                     'status_id' => $statusId,
@@ -328,13 +330,26 @@ class InstitutionCasesTable extends ControllerActionTable
                                     'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
                                     'linked_records' => $linkedRecords
                                 ];
-
-                                $patchOptions = ['validate' => false];
-
-                                $newEntity = $this->newEntity();
-                                $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
-                                $this->save($newEntity);
                             }
+
+                            $patchOptions = ['validate' => false];
+
+                            $newEntity = $this->newEntity();
+                            $newEntity = $this->patchEntity($newEntity, $caseData, $patchOptions);
+                            $this->save($newEntity);
+
+                            // Trigger rule Post Events
+                            if ($workflowRuleEntity->has('workflow_rule_events') && !empty($workflowRuleEntity->workflow_rule_events)) {
+                                $ruleEvents = $workflowRuleEntity->workflow_rule_events;
+
+                                foreach ($ruleEvents as $ruleEvent) {
+                                    $event = $linkedRecordModel->dispatchEvent($ruleEvent->event_key, [$newEntity, $linkedRecordEntity], $linkedRecordModel);
+                                    if ($event->isStopped()) {
+                                        return $event->result;
+                                    }
+                                }
+                            }
+                            // End
                         }
                     }
                 }
