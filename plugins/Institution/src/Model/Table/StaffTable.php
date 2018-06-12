@@ -77,24 +77,28 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('HighChart', [
             'number_of_staff_by_type' => [
                 '_function' => 'getNumberOfStaffByType',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Position Type')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_staff_by_position' => [
                 '_function' => 'getNumberOfStaffByPosition',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Position Title')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_staff_by_year' => [
                 '_function' => 'getNumberOfStaffByYear',
+                '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_staff_gender' => [
-                '_function' => 'getNumberOfStaffsByGender'
+                '_function' => 'getNumberOfStaffsByGender',
+                '_defaultColors' => false,
             ],
             'institution_staff_qualification' => [
                 '_function' => 'getNumberOfStaffsByQualification'
@@ -686,16 +690,16 @@ class StaffTable extends ControllerActionTable
                 $newEntity = $this->newEntity($entity->toArray(), ['validate' => 'AllowPositionType']);
                 $this->save($newEntity);
             // if ($this->save($newEntity)) {
-                // 	$url = [
-                // 		'plugin' => 'Institution',
-                // 		'controller' => 'Institutions',
-                // 		'action' => 'Staff',
-                // 		'0' => 'view',
-                // 		'1' => $newEntity->id
-                // 	];
-                // 	$url = array_merge($url, $this->ControllerAction->params());
-                // 	$event->stopPropagation();
-                // 	return $this->controller->redirect($url);
+                //  $url = [
+                //      'plugin' => 'Institution',
+                //      'controller' => 'Institutions',
+                //      'action' => 'Staff',
+                //      '0' => 'view',
+                //      '1' => $newEntity->id
+                //  ];
+                //  $url = array_merge($url, $this->ControllerAction->params());
+                //  $event->stopPropagation();
+                //  return $this->controller->redirect($url);
                 // }
             } else {
                 if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
@@ -1147,20 +1151,22 @@ class StaffTable extends ControllerActionTable
             ->matching('Users.Genders')
             ->select([
                 'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
-                'gender' => 'Genders.name'
+                'gender' => 'Genders.name',
+                'gender_code' => 'Genders.code'
             ])
             ->group('Users.gender_id');
 
         // Creating the data set
-        $dataSet = [];
+        $dataSet = [
+            'M' => [],
+            'F' => [],
+        ];
         foreach ($InstitutionStaffCount->toArray() as $value) {
             //Compile the dataset
-            $dataSet[] = [__($value['gender']), $value['count']];
+            $dataSet[$value['gender_code']] = [__($value['gender']), $value['count']];
         }
-        $params['dataSet'] = $dataSet;
-
+        $params['dataSet'] = array_values($dataSet);
         unset($InstitutionRecords);
-
         return $params;
     }
 

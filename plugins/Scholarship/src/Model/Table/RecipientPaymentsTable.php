@@ -83,7 +83,7 @@ class RecipientPaymentsTable extends ControllerActionTable
     {
         $this->field('academic_period_id', ['visible' => 'false']);
         $this->field('estimated_amount', ['after' => 'name']);
-        $this->field('disbursed_fund', ['after' => 'estimated_amount']);
+        $this->field('disbursed_amount', ['after' => 'estimated_amount']);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -152,7 +152,7 @@ class RecipientPaymentsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetDisbursedFund(Event $event, Entity $entity)
+    public function onGetDisbursedAmount(Event $event, Entity $entity)
     {
         $query = $this->RecipientDisbursements->find();
         $RecipientDisbursements = $query->where([
@@ -172,8 +172,8 @@ class RecipientPaymentsTable extends ControllerActionTable
     {
         if ($field == 'estimated_amount') {
             return $this->Scholarships->addCurrencySuffix('Estimated Amount');
-        } else if ($field == 'disbursed_fund') {
-            return $this->Scholarships->addCurrencySuffix('Disbursed Fund');
+        } else if ($field == 'disbursed_amount') {
+            return $this->Scholarships->addCurrencySuffix('Disbursed Amount');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

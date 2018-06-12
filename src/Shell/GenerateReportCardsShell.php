@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 
-class GenerateAllReportCardsShell extends Shell
+class GenerateReportCardsShell extends Shell
 {
     private $sleepTime = 5;
 
@@ -17,6 +17,7 @@ class GenerateAllReportCardsShell extends Shell
         parent::initialize();
         $this->loadModel('CustomExcel.ReportCards');
         $this->loadModel('ReportCard.ReportCardProcesses');
+        $this->loadModel('Institution.ReportCardStatuses');
         $this->loadModel('SystemProcesses');
     }
 
@@ -24,8 +25,7 @@ class GenerateAllReportCardsShell extends Shell
     {
         if (!empty($this->args[0])) {
             $pid = getmypid();
-            $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
-            $this->SystemProcesses->updatePid($systemProcessId, $pid);
+            $institutionId = !empty($this->args[0]) ? $this->args[0] : 0;
 
             $this->out('Initialize Generate All Report Cards ('.Time::now().')');
 
@@ -41,7 +41,8 @@ class GenerateAllReportCardsShell extends Shell
                         $this->ReportCardProcesses->aliasField('academic_period_id')
                     ])
                     ->where([
-                        $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS
+                        $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS,
+                        $this->ReportCardProcesses->aliasField('institution_id') => $institutionId
                     ])
                     ->order([
                         $this->ReportCardProcesses->aliasField('created'),
@@ -72,7 +73,6 @@ class GenerateAllReportCardsShell extends Shell
                     $this->out('End generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
                 } else {
                     $exit = true;
-                    $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
                 }
             }
 
