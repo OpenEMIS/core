@@ -9,12 +9,13 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\Utility\Inflector;
 use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Hash;
 use Cake\Datasource\ResultSetInterface;
-
+use Cake\Log\Log;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 
@@ -37,28 +38,28 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->hasMany('AppraisalTextAnswers', [
             'className' => 'StaffAppraisal.AppraisalTextAnswers',
             'foreignKey' => 'institution_staff_appraisal_id',
-            'saveStrategy' => 'replace',
+            // 'saveStrategy' => 'replace',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
         $this->hasMany('AppraisalSliderAnswers', [
             'className' => 'StaffAppraisal.AppraisalSliderAnswers',
             'foreignKey' => 'institution_staff_appraisal_id',
-            'saveStrategy' => 'replace',
+            // 'saveStrategy' => 'replace',
             'dependent' => true,
             'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalDropdownAnswers', [
             'className' => 'StaffAppraisal.AppraisalDropdownAnswers',
             'foreignKey' => 'institution_staff_appraisal_id',
-            'saveStrategy' => 'replace',
+            // 'saveStrategy' => 'replace',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
         $this->hasMany('AppraisalNumberAnswers', [
             'className' => 'StaffAppraisal.AppraisalNumberAnswers',
             'foreignKey' => 'institution_staff_appraisal_id',
-            'saveStrategy' => 'replace',
-            'dependent' => true, 
+            // 'saveStrategy' => 'replace',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
@@ -236,7 +237,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
             // retrieve all form criterias containing results
             $AppraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
-            $formsCriterias = $AppraisalFormsCriterias->find()
+            $query = $AppraisalFormsCriterias->find()
                 ->contain([
                     'AppraisalCriterias' => [
                         'FieldTypes',
@@ -258,23 +259,57 @@ class StaffAppraisalsTable extends ControllerActionTable
                     }
                 ])
                 ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
-                ->order($AppraisalFormsCriterias->aliasField('order'))
-                ->toArray();
+                ->order($AppraisalFormsCriterias->aliasField('order'));
 
+            $tabElements = [];
+
+            $action = $this->action;
+            $url = $this->url($action);
+           
+            //section tab
+            $formsCriterias = $query->toArray();
             foreach ($formsCriterias as $key => $formCritieria) {
-                $details = new ArrayObject([
-                    'appraisal_form_id' => $formCritieria->appraisal_form_id,
-                    'appraisal_criteria_id' => $formCritieria->appraisal_criteria_id,
-                    'section' => $formCritieria->section,
-                    'field_type' => $formCritieria->appraisal_criteria->field_type->code,
-                    'criteria_name' => $formCritieria->appraisal_criteria->name,
-                    'is_mandatory' => $formCritieria->is_mandatory
-                ]);
-                if ($section != $details['section']) {
-                    $section = $details['section'];
-                    $this->field('section' . $sectionCount++, ['type' => 'section', 'title' => $details['section']]);
+                if ($section != $formCritieria->section) {
+                    $section = $formCritieria->section;
+                    $tabName = Inflector::slug($section);
+                    if (empty($tabElements)) {
+                            $selectedAction = $tabName;
+                    }
+                    $url['tab_section'] = $tabName;
+                    $tabElements[$tabName] = [
+                        'url' => $url,
+                        'text' => $section,
+                    ];
                 }
-                $this->appraisalCustomFieldExtra($details, $formCritieria, $criteriaCounter, $entity);
+            }
+            //end
+
+            if (!empty($tabElements)) {
+                $selectedAction = !is_null($this->request->query('tab_section')) ? $this->request->query('tab_section') : $selectedAction;
+                if ($action != 'add') {
+                    $this->controller->set('tabElements', $tabElements);
+                    $this->controller->set('selectedAction', $selectedAction);
+                }
+                $query
+                    ->where([
+                    $AppraisalFormsCriterias->aliasField('section') => $tabElements[$selectedAction]['text']
+                    ]);
+            }
+
+            if (($action != 'add' &&  !empty($tabElements)) || empty($tabElements)) {
+                $formsCriterias = $query->toArray();
+                foreach ($formsCriterias as $key => $formsCriteria) {
+                    $details = new ArrayObject([
+                        'appraisal_form_id' => $formsCriteria->appraisal_form_id,
+                        'appraisal_criteria_id' => $formsCriteria->appraisal_criteria_id,
+                        'section' => $formsCriteria->section,
+                        'field_type' => $formsCriteria->appraisal_criteria->field_type->code,
+                        'criteria_name' => $formsCriteria->appraisal_criteria->name,
+                        'is_mandatory' => $formsCriteria->is_mandatory
+                    ]);
+                    
+                    $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
+                }
             }
         }
     }
@@ -395,8 +430,30 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
                 $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
                 $request->data[$this->alias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+            // This part ensures that the form belonging to the previously selected Appraisal Period will not populate at the bottom when user choose "Select" from the dropdown next. It should be empty.
+            }else{
+                   $request->data[$this->alias()]['appraisal_form_id'] = "";
             }
             return $attr;
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $errors = $entity->errors();
+
+        $fileErrors = [];
+        $session = $this->request->session();
+        $sessionErrors = $this->registryAlias().'.parseFileError';
+
+        if ($session->check($sessionErrors)) {
+            $fileErrors = $session->read($sessionErrors);
+        }
+
+        if (empty($errors) && empty($fileErrors)) {
+            // redirect only when no errors
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('view'));
         }
     }
 
