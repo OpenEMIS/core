@@ -1162,7 +1162,7 @@ trait MessagesTrait
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ],
-            'InstitutionEquipment' => [
+            'InstitutionAssets' => [
                 'code' => [
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
