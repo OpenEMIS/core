@@ -102,6 +102,10 @@ class InstitutionClassesTable extends ControllerActionTable
             ->add('staff_id', 'ruleCheckHomeRoomTeachers', [
                 'rule' => ['checkHomeRoomTeachers', 'secondary_staff_id'],
                 'provider' => 'table',
+            ])
+            ->add('capacity', 'ruleCheckMaxStudentsPerClass', [
+                'rule' => ['checkMaxStudentsPerClass'],
+                'provider' => 'table',
             ]);
 
         return $validator;
@@ -218,9 +222,12 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('secondary_staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
         $this->field('multigrade');
+        $this->field('capacity', [
+            'attr' => ['label' => __('Capacity'). $this->tooltipMessage()]
+        ]);
 
         $this->setFieldOrder([
-            'name','staff_id', 'secondary_staff_id', 'multigrade', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
+            'name','staff_id', 'secondary_staff_id', 'multigrade', 'capacity', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
     }
 
@@ -427,6 +434,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'id',
                 'name',
                 'class_number',
+                'capacity',
                 'staff_id',
                 'secondary_staff_id',
                 'total_male_students',
@@ -577,7 +585,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('total_students', ['visible' => true]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'total_male_students', 'total_female_students',
+            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'capacity', 'total_male_students', 'total_female_students',
             'total_students', 'staff_id', 'secondary_staff_id', 'multigrade', 'students'
         ]);
     }
@@ -1342,5 +1350,16 @@ class InstitutionClassesTable extends ControllerActionTable
                 return $q->where(['InstitutionSubjects.education_subject_id' => $subjectId]);
             })
             ->toArray();
+    }
+
+    protected function tooltipMessage()
+    {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $maxCapacity = $ConfigItems->value('max_students_per_class');
+
+        $message =  "Capacity must not exceed " . $maxCapacity . " students per class";
+        $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+
+        return $tooltipMessage;
     }
 }
