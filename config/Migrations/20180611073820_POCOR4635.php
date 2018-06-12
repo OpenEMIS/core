@@ -202,7 +202,7 @@ class POCOR4635 extends AbstractMigration
         ]);
         $table
             ->addColumn('code', 'string', [
-                'null' => true,
+                'null' => false,
                 'limit' => 50
             ])
             ->addColumn('name', 'string', [
