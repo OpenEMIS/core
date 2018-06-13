@@ -174,9 +174,9 @@ class UsersController extends AppController
                             'id' => $checksum
                         ];
 
-                        $UserPasswordRequests = TableRegistry::get('User.UserPasswordRequests');
-                        $saveEntity = $UserPasswordRequests->newEntity($passwordRequestData);
-                        $UserPasswordRequests->save($saveEntity);
+                        $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
+                        $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
+                        $SecurityUserPasswordRequests->save($saveEntity);
                         
                         $url = Router::url([
                             'plugin' => 'User',
@@ -269,10 +269,10 @@ class UsersController extends AppController
             $token = $this->request->query('token');
 
             if (!is_null($token)) {
-                $UserPasswordRequests = TableRegistry::get('User.UserPasswordRequests');
-                $requestEntity = $UserPasswordRequests
+                $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
+                $requestEntity = $SecurityUserPasswordRequests
                     ->find()
-                    ->where([$UserPasswordRequests->aliasField('id') => $token])
+                    ->where([$SecurityUserPasswordRequests->aliasField('id') => $token])
                     ->first();
 
                 if (!is_null($requestEntity)) {
@@ -289,7 +289,7 @@ class UsersController extends AppController
                     $errors = $userEntity->errors();
                     if (empty($errors)) {
                         if ($Passwords->save($userEntity)) {
-                            $UserPasswordRequests->delete($requestEntity);
+                            $SecurityUserPasswordRequests->delete($requestEntity);
                             $message = 'Password reset successfully';
                             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
                             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
@@ -327,11 +327,11 @@ class UsersController extends AppController
         $token = $this->request->query('token');
         $this->viewBuilder()->layout(false);
         if (!is_null($token)) {
-            $UserPasswordRequests = TableRegistry::get('User.UserPasswordRequests');
+            $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
 
-            $requestEntity = $UserPasswordRequests
+            $requestEntity = $SecurityUserPasswordRequests
                 ->find()
-                ->where([$UserPasswordRequests->aliasField('id') => $token])
+                ->where([$SecurityUserPasswordRequests->aliasField('id') => $token])
                 ->first();
 
             if (!is_null($requestEntity)) {
@@ -341,7 +341,7 @@ class UsersController extends AppController
                 if ($now <= $expiry) {
                     $this->set('token', $token);
                 } else {
-                    $UserPasswordRequests->delete($requestEntity);
+                    $SecurityUserPasswordRequests->delete($requestEntity);
                     $retryMessage = 'Token expired';
                     $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
@@ -366,7 +366,6 @@ class UsersController extends AppController
     public function forgotUsername()
     {
         $this->viewBuilder()->layout(false);
-
         $userEmail = $this->request->query('email');
         
         if (isset($userEmail)) {
