@@ -122,9 +122,6 @@ class InstitutionsController extends AppController
         'StudentOutcomes',
         'ImportOutcomeResults',
 
-        'InstitutionCommittee',
-
-
 
         // misc
         // 'IndividualPromotion',
@@ -404,10 +401,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsences']);
     }
-    public function Committees()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCommittees']);
-    }
+
     // End
 
     // AngularJS
