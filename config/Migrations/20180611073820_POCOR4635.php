@@ -195,12 +195,52 @@ class POCOR4635 extends AbstractMigration
             ->addIndex('created_user_id')
             ->save();
 
+        // asset_statuses
+        $table = $this->table('asset_statuses', [
+            'collation' => 'utf8mb4_unicode_ci',
+            'comment' => 'This table contains a fixed list of statuses for assets'
+        ]);
+        $table
+            ->addColumn('code', 'string', [
+                'null' => false,
+                'limit' => 100
+            ])
+            ->addColumn('name', 'string', [
+                'null' => false,
+                'limit' => 250
+            ])
+            ->save();
+
+        $statuses = [
+            [
+                'code' => 'IN_USE',
+                'name' => 'In Use'
+            ],
+            [
+                'code' => 'END_OF_USAGE',
+                'name' => 'End of Usage'
+            ]
+        ];
+        $this->insert('asset_statuses', $statuses);
+
         // institution_assets
         $table = $this->table('institution_assets', [
+            'id' => false,
+            'primary_key' => ['id', 'academic_period_id'],
             'collation' => 'utf8mb4_unicode_ci',
             'comment' => 'This table contains all assets used by institutions'
         ]);
         $table
+            ->addColumn('id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'identity' => true
+            ])
+            ->addColumn('academic_period_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to academic_periods.id'
+            ])
             ->addColumn('code', 'string', [
                 'null' => false,
                 'limit' => 50
@@ -209,15 +249,20 @@ class POCOR4635 extends AbstractMigration
                 'null' => false,
                 'limit' => 250
             ])
-            ->addColumn('academic_period_id', 'integer', [
+            ->addColumn('accessibility', 'integer', [
                 'null' => false,
-                'limit' => 11,
-                'comment' => 'links to academic_periods.id'
+                'limit' => 1,
+                'comment' => '0 -> Not Accessible, 1 -> Accessible'
             ])
             ->addColumn('institution_id', 'integer', [
                 'null' => false,
                 'limit' => 11,
                 'comment' => 'links to institutions.id'
+            ])
+            ->addColumn('asset_status_id', 'integer', [
+                'null' => false,
+                'limit' => 11,
+                'comment' => 'links to asset_statuses.id'
             ])
             ->addColumn('asset_type_id', 'integer', [
                 'null' => false,
@@ -233,11 +278,6 @@ class POCOR4635 extends AbstractMigration
                 'null' => false,
                 'limit' => 11,
                 'comment' => 'links to asset_conditions.id'
-            ])
-            ->addColumn('accessibility', 'integer', [
-                'null' => false,
-                'limit' => 1,
-                'comment' => '0 -> Not Accessible, 1 -> Accessible'
             ])
             ->addColumn('modified_user_id', 'integer', [
                 'default' => null,
@@ -259,6 +299,7 @@ class POCOR4635 extends AbstractMigration
             ])
             ->addIndex('academic_period_id')
             ->addIndex('institution_id')
+            ->addIndex('asset_status_id')
             ->addIndex('asset_type_id')
             ->addIndex('asset_purpose_id')
             ->addIndex('asset_condition_id')
@@ -272,6 +313,7 @@ class POCOR4635 extends AbstractMigration
         $this->dropTable('asset_types');
         $this->dropTable('asset_purposes');
         $this->dropTable('asset_conditions');
+        $this->dropTable('asset_statuses');
         $this->dropTable('institution_assets');
     }
 }
