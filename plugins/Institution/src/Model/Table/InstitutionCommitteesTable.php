@@ -11,7 +11,11 @@ class InstitutionCommitteesTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
         $this->belongsTo('InstitutionCommitteeTypes', ['className' => 'Institutions.InstitutionCommitteeTypes']);
-        $this->hasMany('InstitutionCommitteeAttachments', ['className' => 'Institutions.InstitutionCommitteeAttachments']);
+        $this->hasMany('InstitutionCommitteeAttachments', [
+            'className' => 'Institutions.InstitutionCommitteeAttachments', 
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
         // $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' =>'student_id']);
     }
 }
