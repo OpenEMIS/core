@@ -59,6 +59,14 @@ class InstitutionCommitteesController extends PageController
         $page->exclude(['comment', 'institution_id', 'academic_period_id']);
         $page->move('name')->after('institution_committee_type_id');
 
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $institutionCommitteeTypeOptions = $this->InstitutionCommitteeTypes->getAvailableCommitteeTypes(true,'ASC');
+
+        $page->addFilter('academic_period_id')
+            ->setOptions($academicPeriodOptions);
+
+        $page->addFilter('institution_committee_type_id')
+            ->setOptions([null => __('All Institution Committee Types')] + $institutionCommitteeTypeOptions);
     }
 
     public function view($id)
