@@ -71,7 +71,7 @@ $description = __d('open_emis', $_productName);
 			?>
 
 			<div class="form-group">
-				<?= $this->Form->button(__('Reset Password'), ['type' => 'submit', 'name' => 'submit', 'value' => 'reset', 'class' => 'btn btn-primary btn-login']) ?>
+				<?= $this->Form->button(__('Reset Password'), ['type' => 'submit', 'name' => 'submit', 'class' => 'btn btn-primary btn-login']) ?>
 			</div>
 			<div class="links-wrapper">
 				<a target="_self" href="./"><?= __('Return to login') ?></a>
