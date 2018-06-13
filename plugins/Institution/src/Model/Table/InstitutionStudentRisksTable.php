@@ -107,38 +107,38 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         // end back buttons
 
         // element control
-        // $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        // $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        // $selectedAcademicPeriodId = $params['academic_period_id'];
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $selectedAcademicPeriodId = $params['academic_period_id'];
 
-        // $classOptions = $Classes->getClassOptions($selectedAcademicPeriodId, $institutionId);
-        // if (!empty($classOptions)) {
-        //     $classOptions = [0 => 'All Classes'] + $classOptions;
-        // }
+        $classOptions = $Classes->getClassOptions($selectedAcademicPeriodId, $institutionId);
+        if (!empty($classOptions)) {
+            $classOptions = [0 => 'All Classes'] + $classOptions;
+        }
 
-        // $selectedClassId = $this->queryString('class_id', $classOptions);
-        // $this->advancedSelectOptions($classOptions, $selectedClassId, [
-        //     'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
-        //     'callable' => function ($id) use ($InstitutionClassStudents) {
-        //         return $InstitutionClassStudents
-        //             ->find()
-        //             ->where([
-        //                 $InstitutionClassStudents->aliasField('institution_class_id') => $id
-        //             ])
-        //             ->count();
-        //     }
-        // ]);
-        // $extra['selectedClass'] = $selectedClassId;
+        $selectedClassId = $this->queryString('class_id', $classOptions);
+        $this->advancedSelectOptions($classOptions, $selectedClassId, [
+            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+            'callable' => function ($id) use ($InstitutionClassStudents) {
+                return $InstitutionClassStudents
+                    ->find()
+                    ->where([
+                        $InstitutionClassStudents->aliasField('institution_class_id') => $id
+                    ])
+                    ->count();
+            }
+        ]);
+        $extra['selectedClass'] = $selectedClassId;
 
-        // $extra['elements']['control'] = [
-        //     'name' => 'StudentRisks/controls',
-        //     'data' => [
-        //         'classOptions'=>$classOptions,
-        //         'selectedClass'=>$selectedClassId,
-        //     ],
-        //     'options' => [],
-        //     'order' => 3
-        // ];
+        $extra['elements']['control'] = [
+            'name' => 'StudentRisks/controls',
+            'data' => [
+                'classOptions'=>$classOptions,
+                'selectedClass'=>$selectedClassId,
+            ],
+            'options' => [],
+            'order' => 3
+        ];
         // end element control
     }
 
