@@ -306,6 +306,29 @@ class POCOR4635 extends AbstractMigration
             ->addIndex('modified_user_id')
             ->addIndex('created_user_id')
             ->save();
+
+        // security_functions
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 102');
+
+        $securityFunctions = [
+            [
+                'id' => 3044,
+                'name' => 'Assets',
+                'controller' => 'InstitutionAssets',
+                'module' => 'Institutions',
+                'category' => 'Assets',
+                'parent_id' => 1000,
+                '_view' => 'index|view',
+                '_edit' => 'edit',
+                '_add' => 'add',
+                '_delete' => 'delete',
+                'order' => 103,
+                'visible' => 1,
+                'created_user_id' => 1,
+                'created' => date('Y-m-d H:i:s')
+            ]
+        ];
+        $this->insert('security_functions', $securityFunctions);
     }
 
     public function down()
@@ -315,5 +338,8 @@ class POCOR4635 extends AbstractMigration
         $this->dropTable('asset_conditions');
         $this->dropTable('asset_statuses');
         $this->dropTable('institution_assets');
+
+        $this->execute('DELETE FROM security_functions WHERE `id` = 3044');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 102');
     }
 }
