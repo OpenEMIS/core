@@ -43,6 +43,8 @@ class InstitutionCommitteesTable extends ControllerActionTable
     {
         $this->field('institution_committee_type_id', ['attr' => ['label' => __('Type')]]);
         $this->setFieldOrder(['academic_period_id', 'institution_committee_type_id', 'name', 'meeting_date', 'start_time', 'end_time','comment']);
+        // $request = $this->controller->request->params;
+        // pr($this->paramsDecode($request['pass'][1]));die;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -57,7 +59,6 @@ class InstitutionCommitteesTable extends ControllerActionTable
     {
 
         $session = $this->Session;
-        Log::write('debug',$session);
         $institutionId = $session->read('Institution.Institutions.id');
 
         // Academic Periods
@@ -97,9 +98,49 @@ class InstitutionCommitteesTable extends ControllerActionTable
         $this->fields['institution_committee_type_id']['type'] = 'select';
     }
 
-    // public function viewBeforeAction(Event $event, ArrayObject $extra)
-    // {
-    //     $this->toggle('edit', false);
-    //     $this->toggle('remove', false);
-    // }
+    public function setTabElements()
+    {
+        
+        $plugin = $this->controller->plugin;
+        $name = $this->controller->name;
+        $request = $this->controller->request->params;
+        // pr($this->paramsDecode($request['pass'][1]));die;
+        // $id = $this->ControllerAction->buttons['view']['url'][0];
+        $action = $this->ControllerAction->url('view');
+        $id = $action[1];
+        // pr($this->paramsDecode($action[1]));die;
+        // if ($id=='view' || $id=='edit') {
+        //     if (isset($this->ControllerAction->buttons['view']['url'][1])) {
+        //         $id = $this->ControllerAction->buttons['view']['url'][1];
+        //     }
+        // }
+
+        $tabElements = [
+            $this->alias => [
+                'url' => [],
+                'text' => __('Overview')
+            ],
+            'InstitutionCommitteeAttachments' => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'InstitutionCommitteeAttachments', 'index', $this->paramsEncode(['institution_committee_id' => $id])],
+                'text' => __('Attachments')
+            ]
+        ];
+
+
+        $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
+        $this->controller->set('selectedAction', $this->alias);
+        $this->controller->set('tabElements', $tabElements);
+    }
+
+    public function afterAction(Event $event)
+    {
+        if (isset($this->action) && in_array($this->action, ['view'])) {
+            $this->setTabElements();
+        }
+
+        // if (isset($this->action) && strtolower($this->action) != 'index') {
+        //     $this->Navigation->addCrumb($this->getHeader($this->action));
+        // }
+    }
+
 }
