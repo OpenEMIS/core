@@ -6,15 +6,15 @@ class POCOR4654 extends AbstractMigration
 {
     public function up()
     {   
-        // user_password_requests
-        $UserPasswordRequests = $this->table('user_password_requests', [
+        // security_user_password_requests
+        $SecurityUserPasswordRequests = $this->table('security_user_password_requests', [
             'comment' => 'This table contains all the reset password requests by the users',
             'id' => false,
             'primary_key' => 'id',
             'collation' => 'utf8mb4_unicode_ci'
         ]);
 
-        $UserPasswordRequests
+        $SecurityUserPasswordRequests
             ->addColumn('id', 'string', [
                 'null' => false,
                 'limit' => 64
@@ -45,6 +45,6 @@ class POCOR4654 extends AbstractMigration
 
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `user_password_requests`');
+        $this->execute('DROP TABLE IF EXISTS `security_user_password_requests`');
     }
 }
