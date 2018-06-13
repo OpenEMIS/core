@@ -13,18 +13,9 @@ class InstitutionCommitteeTabsComponent extends Component
 
     public function initialize(array $config)
     {
-        // pr($this->request);die;
         $this->controller = $this->_registry->getController();
         $this->querystring = $this->request->query('querystring');
         $this->institutionId = $this->request->params['institutionId'];
-        pr($this->querystring);die;
-        // pr($this->Page->decode($this->querystring));
-        // if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0]){
-        //     $this->pass = $this->request->params['pass'][0];
-        //     $institution_committee_id = $this->Page->decode($this->pass);
-        //     $institutionCommitteeId['institution_committee_id'] = $institution_committee_id['id'];
-        //     $this->institutionCommitteeId = $this->Page->encode($institutionCommitteeId);
-        // }
     }
 
     public function getInstitutionCommitteeTabs($options = [])
