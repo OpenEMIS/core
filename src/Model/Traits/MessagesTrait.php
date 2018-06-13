@@ -1165,6 +1165,11 @@ trait MessagesTrait
                     'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ],
+            'InstitutionAssets' => [
+                'code' => [
+                    'ruleUnique' => 'Code must be unique for the same academic period',
+                ]
+            ],
             'InstitutionAssessments' => [
                 'marks' => [
                     'markHint' => 'Mark should be between %s and %s'
