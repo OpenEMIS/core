@@ -559,14 +559,19 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('capacity'),
                     $this->aliasField('total_male_students'),
                     $this->aliasField('total_female_students'),
-                    'total_students' => $query->func()->sum('total_male_students + total_female_students'),
                     'pending_queue' => $query->func()->count('StudentAdmission.id')
                 ])
                 ->leftJoinWith('StudentAdmission')
                 ->where([
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('id')  => $classId
-                ]);
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $row->total_students = $row->total_male_students + $row->total_female_students;
+                        return $row;
+                    });
+                });
         } else {
             $query->where(['1=0']);
         }
