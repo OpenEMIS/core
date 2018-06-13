@@ -257,7 +257,11 @@ class CustomFormsTable extends ControllerActionTable
                 ->find('list', [
                     'keyField' => 'id',
                     'valueField' => function ($row) {
-                        return $row['code'] . ' - ' . $row['name'];
+                        if ($row->has('code') && !empty($row->code)) {
+                            return $row->code . ' - ' . $row->name;
+                        } else {
+                            return $row->name;
+                        }
                     }
                 ])
                 ->toArray();
