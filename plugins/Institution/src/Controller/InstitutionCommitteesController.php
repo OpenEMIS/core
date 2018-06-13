@@ -45,14 +45,10 @@ class InstitutionCommitteesController extends PageController
         // set header
         $page->setHeader($institutionName . ' - ' . __('Committees'));
 
-        // to filter by institution_id
-        $page->setQueryString('institution_id', $institutionId);
-
         // set institution_id
         $page->get('institution_id')
             ->setControlType('hidden')
             ->setValue($institutionId);
-     
     }
 
     public function index()
@@ -98,8 +94,6 @@ class InstitutionCommitteesController extends PageController
     public function setupTabElements()
     {
         $page = $this->Page;
-        $name = $this->name;
-
         $tabElements = [];
        
         $tabElements = $this->InstitutionCommitteeTabs->getInstitutionCommitteeTabs();
@@ -116,21 +110,20 @@ class InstitutionCommitteesController extends PageController
 
     public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
     {
+        
         $rowActionsArray = $rowActions->getArrayCopy();
+        $institutionCommitteeId = $entity->id;
 
-        $institutionCommitteId = $entity->id;
-        $queryString = $this->Page->encode([
-            'institution_committee_id' => $institutionCommitteId
+        $querystring = $this->Page->encode([
+            'institution_committee_id' => $institutionCommitteeId
         ]);
 
-        // pr($this->Page->decode($queryString));die;
-
         if (array_key_exists('view', $rowActions)) {
-            $rowActionsArray['view']['url']['querystring'] = $queryString;
+            $rowActionsArray['view']['url']['querystring'] = $querystring;
         }
 
         if (array_key_exists('edit', $rowActions)) {
-            $rowActionsArray['edit']['url']['querystring'] = $queryString;
+            $rowActionsArray['edit']['url']['querystring'] = $querystring;
         }
 
         $rowActions->exchangeArray($rowActionsArray);

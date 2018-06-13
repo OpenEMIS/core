@@ -35,18 +35,16 @@ class InstitutionCommitteeAttachmentsController extends PageController
         $page->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'InstitutionCommittees', 'action' => 'index']);
         $page->addCrumb('Attachments');
 
-        $this->setupTabElements();
-
         // set header
         $page->setHeader($institutionName . ' - ' . __('Committee Attachments'));
 
-        $institutionCommitteId = $this->Page->decode($this->request->query['querystring']);
+        $this->setupTabElements();
     }
 
     public function index()
     {
         parent::index();
-
+        
         $page = $this->Page;
         $page->exclude(['file_content']);
     }
@@ -62,11 +60,12 @@ class InstitutionCommitteeAttachmentsController extends PageController
     public function add()
     {
         parent::add();
-        $institutionCommitteId = $this->Page->decode($this->request->query['querystring']);
         $page = $this->Page;
+
+        $institutionCommitteeId = $page->decode($this->request->query['querystring']);
         $page->get('institution_committee_id')
              ->setControlType('hidden')
-             ->setValue($institutionCommitteId['institution_committee_id']);
+             ->setValue($institutionCommitteeId['institution_committee_id']);
         $page->get('file_content')
             ->setLabel('Attachment');
         $page->get('file_name')
@@ -77,7 +76,6 @@ class InstitutionCommitteeAttachmentsController extends PageController
     public function setupTabElements()
     {
         $page = $this->Page;
-        $name = $this->name;
 
         $tabElements = [];
        

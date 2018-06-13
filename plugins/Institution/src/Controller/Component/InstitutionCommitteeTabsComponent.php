@@ -9,20 +9,26 @@ class InstitutionCommitteeTabsComponent extends Component
     private $querystring;
     private $institutionId;
     private $institutionCommitteeId;
-    private $pass;
 
     public function initialize(array $config)
     {
         $this->controller = $this->_registry->getController();
         $this->querystring = $this->request->query('querystring');
         $this->institutionId = $this->request->params['institutionId'];
+        $decodeQueryString = $this->Page->decode($this->querystring);
+
+        $institutionCommitteeId = [];
+        if ($decodeQueryString) {
+            $institutionCommitteeId['id'] = $decodeQueryString['institution_committee_id'];
+        }
+        $this->institutionCommitteeId = $this->Page->encode($institutionCommitteeId);
     }
 
     public function getInstitutionCommitteeTabs($options = [])
     {
         $tabElements = [
             'InstitutionCommittees' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $this->institutionId, 'controller' => 'InstitutionCommittees', 'action' => 'view', $this->querystring, 'querystring' => $this->querystring],
+                'url' => ['plugin' => 'Institution', 'institutionId' => $this->institutionId, 'controller' => 'InstitutionCommittees', 'action' => 'view', $this->institutionCommitteeId, 'querystring' => $this->querystring],
                 'text' => __('Overview')
             ],
             'Attachments' => [
