@@ -67,12 +67,11 @@ $description = __d('open_emis', $_productName);
 			</div>
 
 			<?php 
-			echo $this->Form->input('username', ['placeholder' => __('Email'), 'label' => false]);
+			echo $this->Form->input('username', ['placeholder' => __('Email'), 'label' => false, 'value' => $username]);
 			?>
 
-
 			<div class="form-group">
-				<?= $this->Form->button(__('Recover Username'), ['type' => 'submit', 'name' => 'submit', 'value' => 'reset', 'class' => 'btn btn-primary btn-login']) ?>
+				<?= $this->Form->button(__('Recover Username'), ['type' => 'submit', 'name' => 'submit', 'class' => 'btn btn-primary btn-login']) ?>
 			</div>
 			<div class="links-wrapper">
 				<a target="_self" href="./"><?= __('Return to login') ?></a>

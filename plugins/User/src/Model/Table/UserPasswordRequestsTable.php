@@ -1,16 +1,16 @@
 <?php
-namespace Security\Model\Table;
+namespace User\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
-class ResetPasswordRequestsTable extends AppTable
+class UserPasswordRequestsTable extends AppTable
 {
     public function initialize(array $config)
     {
-        $this->table('reset_password_requests');
+        $this->table('user_password_requests');
         parent::initialize($config);
     }
 }
