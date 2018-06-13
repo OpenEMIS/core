@@ -122,7 +122,6 @@ class InstitutionsController extends AppController
         'StudentOutcomes',
         'ImportOutcomeResults',
 
-
         // misc
         // 'IndividualPromotion',
         // 'CourseCatalogue',
