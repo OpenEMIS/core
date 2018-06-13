@@ -1,11 +1,11 @@
-/* AUTOCOMPLETE v.1.0.3 */
-
-.ui-autocomplete {
+/* AUTOCOMPLETE v.1.0.4 */
+.iostg-v2.ui-autocomplete {
     max-height: 320px !important;
     overflow: scroll;
+    position: absolute !important;
 }
 
-.ui-widget-content {
+.iostg-v2.ui-widget-content {
     background: none !important;
     background-color: #FFF !important;
     border: 1px solid #CCC !important;
