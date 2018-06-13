@@ -40,8 +40,7 @@ class InstitutionCommitteeAttachmentsController extends PageController
         // set header
         $page->setHeader($institutionName . ' - ' . __('Committee Attachments'));
 
-        $institutionCommitteId = $this->Page->decode($this->request->query['querystring']); 
-        pr($institutionCommitteId);    
+        $institutionCommitteId = $this->Page->decode($this->request->query['querystring']);
     }
 
     public function index()
