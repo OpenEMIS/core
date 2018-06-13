@@ -48,9 +48,15 @@ class InstitutionAssetsController extends PageController
 
         $page->setQueryString('institution_id', $institutionId);
 
+        $page->get('asset_status_id')->setLabel('Status');
         $page->get('asset_type_id')->setLabel('Type');
         $page->get('asset_purpose_id')->setLabel('Purpose');
         $page->get('asset_condition_id')->setLabel('Condition');
+
+        $page->move('accessibility')->after('asset_condition_id');
+        $page->move('asset_status_id')->after('accessibility');
+
+        $page->exclude(['id']);
 
         // hide institution_id
         $page->get('institution_id')
@@ -75,6 +81,7 @@ class InstitutionAssetsController extends PageController
         // asset_type_id filter
         $assetTypes = $this->AssetTypes
             ->find('optionList', ['defaultOption' => false])
+            ->find('visible')
             ->find('order')
             ->toArray();
         $assetTypeOptions = ['' => '-- ' . __('Select Type') . ' --'] + $assetTypes;
@@ -91,6 +98,7 @@ class InstitutionAssetsController extends PageController
         // sorting
         $page->get('asset_purpose_id')->setSortable(true);
         $page->get('asset_condition_id')->setSortable(true);
+        $page->get('asset_status_id')->setSortable(true);
     }
 
     public function add()
@@ -109,6 +117,7 @@ class InstitutionAssetsController extends PageController
     {
         $page = $this->Page;
 
+        $page->get('asset_status_id')->setControlType('select');
         $page->get('asset_type_id')->setControlType('select');
         $page->get('asset_purpose_id')->setControlType('select');
         $page->get('asset_condition_id')->setControlType('select');
