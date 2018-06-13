@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -10,8 +11,9 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\I18n\Time;
 
-class AuditTable extends AppTable
+class LoginTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -50,6 +52,9 @@ class AuditTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
+
+        $this->ControllerAction->field('last_login_start_date');
+        $this->ControllerAction->field('last_login_end_date');
     }
 
     public function onExcelGetStatus(Event $event, Entity $entity)
@@ -74,22 +79,30 @@ class AuditTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $requestData = json_decode($settings['process']['params']);
+        // pr($requestData->report_start_date);
+        // $report_start_date = $requestData->report_start_date->format('Y-m-d');
+        // $report_end_date = $requestData->report_end_date->format('Y-m-d');
+
+        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
+        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
+
         $query
             ->select([
-                'openemis_no' => 'Audit.openemis_no',
-                'first_name' => 'Audit.first_name',
-                'middle_name' => 'Audit.middle_name',
-                'third_name' => 'Audit.third_name',
-                'last_name' => 'Audit.last_name',
-                'preferred_name' => 'Audit.preferred_name',
-                'email' => 'Audit.email',
+                'openemis_no' => 'Login.openemis_no',
+                'first_name' => 'Login.first_name',
+                'middle_name' => 'Login.middle_name',
+                'third_name' => 'Login.third_name',
+                'last_name' => 'Login.last_name',
+                'preferred_name' => 'Login.preferred_name',
+                'email' => 'Login.email',
                 'nationality_name' => 'MainNationalities.name',
                 'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => 'Audit.identity_number',
-                'external_reference' => 'Audit.external_reference',
-                'status' => 'Audit.status',
-                'last_login' => 'Audit.last_login',
-                'preferred_language' => 'Audit.preferred_language'
+                'identity_number' => 'Login.identity_number',
+                'external_reference' => 'Login.external_reference',
+                'status' => 'Login.status',
+                'last_login' => 'Login.last_login',
+                'preferred_language' => 'Login.preferred_language'
             ])
             ->contain([
                 'MainNationalities' => [
@@ -102,7 +115,13 @@ class AuditTable extends AppTable
                         'MainIdentityTypes.name'
                     ]
                 ]
+            ])
+            ->where([
+                $this->aliasField('last_login >= "') . $reportStartDate . '"',
+                $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
+
+            pr($query);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -126,5 +145,36 @@ class AuditTable extends AppTable
                 ];
             }
         }
+    }
+
+    public function onUpdateFieldLastLoginStartDate(Event $event, array $attr, $action, Request $request)
+    {
+        // pr($event);
+        // $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        // $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+
+        $attr['type'] = 'date';
+        // $attr['date_options']['startDate'] = ("")->format('d-m-Y');
+        // $attr['date_options']['endDate'] = ("")->format('d-m-Y');
+        // $attr['value'] = $selectedPeriod->start_date;
+        return $attr;
+    }
+
+    public function onUpdateFieldLastLoginEndDate(Event $event, array $attr, $action, Request $request)
+    {
+        // $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        // $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+
+        $attr['type'] = 'date';
+        // $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+        // $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+        // if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
+        //     $attr['value'] = $selectedPeriod->end_date;
+        // } else {
+            $attr['value'] = Time::now();
+        // }
+        return $attr;
     }
 }
