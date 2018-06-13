@@ -84,11 +84,11 @@ class InstitutionAssetsController extends PageController
             ->find('visible')
             ->find('order')
             ->toArray();
-        $assetTypeOptions = ['' => '-- ' . __('Select Type') . ' --'] + $assetTypes;
+        $assetTypeOptions = ['' => __('All Types')] + $assetTypes;
         $page->addFilter('asset_type_id')->setOptions($assetTypeOptions);
 
         // accessibility filter
-        $accessibilityOptions = ['' => '-- ' . __('Select Accessibility') . ' --'] + $this->accessibilityOptions;
+        $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
         $page->addFilter('accessibility')->setOptions($accessibilityOptions);
 
         parent::index();
