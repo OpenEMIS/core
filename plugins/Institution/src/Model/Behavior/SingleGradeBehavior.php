@@ -151,6 +151,7 @@ class SingleGradeBehavior extends Behavior
                     $requestData['MultiClasses'][$key]['institution_shift_id'] = $commonData['institution_shift_id'];
                     $requestData['MultiClasses'][$key]['institution_id'] = $commonData['institution_id'];
                     $requestData['MultiClasses'][$key]['academic_period_id'] = $commonData['academic_period_id'];
+                    $requestData['MultiClasses'][$key]['capacity'] = $commonData['capacity'];
                     $requestData['MultiClasses'][$key]['education_grades']['_ids'] = [$commonData['education_grade']];
                 }
 
