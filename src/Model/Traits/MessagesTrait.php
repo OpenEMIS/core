@@ -640,7 +640,7 @@ trait MessagesTrait
         ],
         'ExaminationStudents' => [
             'restrictAdd' => 'Add operation is not allowed.',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
@@ -675,12 +675,12 @@ trait MessagesTrait
 
         'LinkedInstitutionAddStudents' => [
             'noStudentSelected' => 'There are no students selected',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
 
         'BulkStudentRegistration' => [
             'noStudentSelected' => 'There are no students selected',
-            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to room.'
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
         'ExaminationCentresExaminationsInvigilators' => [
             'noInvigilatorsSelected' => 'There are no invigilators selected'
