@@ -210,6 +210,12 @@ class LicensesTable extends ControllerActionTable
                 $this->aliasField('modified'),
                 $this->aliasField('created'),
                 $this->Statuses->aliasField('name'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
                 $this->LicenseTypes->aliasField('name'),
                 $this->CreatedUser->aliasField('openemis_no'),
                 $this->CreatedUser->aliasField('first_name'),
@@ -218,7 +224,7 @@ class LicensesTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->LicenseTypes->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->LicenseTypes->alias(), $this->Users->alias(), $this->CreatedUser->alias()])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -243,7 +249,7 @@ class LicensesTable extends ControllerActionTable
 
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
-                    $row['request_title'] = sprintf(__('%s of %s'), $row->license_type->name, $row->license_number);
+                    $row['request_title'] = sprintf(__('%s of %s for %s'), $row->license_type->name, $row->license_number, $row->user->name_with_id);
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
 
