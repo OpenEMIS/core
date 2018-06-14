@@ -434,7 +434,7 @@ trait MessagesTrait
             'add_question' => 'Add Question',
             'add_to_section' => 'Add to Section',
             'notSupport' => 'Not supported in this form.',
-            'restrictEditFilters' => 'You are not allow to remove the following filters: %s'
+            'restrictEditFilters' => 'You are not allowed to remove the following filters: %s'
         ],
         'StaffPositionTitles' => [
             'inProgress' => 'Update of staff position title roles is in process, please try again later.',
@@ -2099,7 +2099,7 @@ trait MessagesTrait
             ],
             'StaffPositionTitles' => [
                'position_grades' => [
-                    'ruleCheckPositionGrades' => 'You are not allow to remove the following in-use grades: %s',
+                    'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                 ]
             ] 
         ],
