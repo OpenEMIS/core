@@ -62,7 +62,7 @@ class LoginTable extends AppTable
                             return in_array($feature, ['Report.Login']);
                         }
 
-                        return false;
+                        return true;
                     }
                 ],
             ]);

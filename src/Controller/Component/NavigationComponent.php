@@ -1178,7 +1178,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Report']
             ],
             'Reports.Login' => [
-                'title' => 'Login',
+                'title' => 'Audit',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
