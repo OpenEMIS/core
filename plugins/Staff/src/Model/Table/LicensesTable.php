@@ -249,7 +249,7 @@ class LicensesTable extends ControllerActionTable
 
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
-                    $row['request_title'] = sprintf(__('%s of %s for %s'), $row->license_type->name, $row->license_number, $row->user->name_with_id);
+                    $row['request_title'] = sprintf(__('%s of %s'), $row->license_type->name, $row->user->name_with_id);
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
 
