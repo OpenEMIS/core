@@ -103,8 +103,13 @@ class InstitutionAssetsController extends PageController
 
     public function add()
     {
+        $page = $this->Page;
         parent::add();
         $this->addEdit();
+
+        // set default academic period
+        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        $page->get('academic_period_id')->setValue($currentAcademicPeriod);
     }
 
     public function edit($id)
