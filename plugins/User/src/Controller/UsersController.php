@@ -133,6 +133,12 @@ class UsersController extends AppController
         if ($this->request->is('post')) {
             $userIdentifier = $this->request->data('username');
 
+            if (strlen($userIdentifier) === 0) {
+                $message = __('This field cannot be left empty');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'forgotPassword']);
+            }
+
             $userEntity = $this->Users
                 ->find()
                 ->select([
