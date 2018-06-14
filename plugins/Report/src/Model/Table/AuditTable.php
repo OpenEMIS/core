@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
-class LoginTable extends AppTable
+class AuditTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -108,20 +108,20 @@ class LoginTable extends AppTable
 
         $query
             ->select([
-                'openemis_no' => 'Login.openemis_no',
-                'first_name' => 'Login.first_name',
-                'middle_name' => 'Login.middle_name',
-                'third_name' => 'Login.third_name',
-                'last_name' => 'Login.last_name',
-                'preferred_name' => 'Login.preferred_name',
-                'email' => 'Login.email',
+                'openemis_no' => $this->aliasField('openemis_no'),
+                'first_name' => $this->aliasField('first_name'),
+                'middle_name' => $this->aliasField('middle_name'),
+                'third_name' => $this->aliasField('third_name'),
+                'last_name' => $this->aliasField('last_name'),
+                'preferred_name' => $this->aliasField('preferred_name'),
+                'email' => $this->aliasField('email'),
                 'nationality_name' => 'MainNationalities.name',
                 'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => 'Login.identity_number',
-                'external_reference' => 'Login.external_reference',
-                'status' => 'Login.status',
-                'last_login' => 'Login.last_login',
-                'preferred_language' => 'Login.preferred_language'
+                'identity_number' => $this->aliasField('identity_number'),
+                'external_reference' => $this->aliasField('external_reference'),
+                'status' => $this->aliasField('status'),
+                'last_login' => $this->aliasField('last_login'),
+                'preferred_language' => $this->aliasField('preferred_language')
             ])
             ->contain([
                 'MainNationalities' => [
