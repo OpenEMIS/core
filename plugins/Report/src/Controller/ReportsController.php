@@ -22,7 +22,7 @@ class ReportsController extends AppController
             'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
-            'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
+            'Login' => ['className' => 'Report.Login', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']]
         ];
         $this->loadComponent('Training.Training');
@@ -33,12 +33,12 @@ class ReportsController extends AppController
         parent::beforeFilter($event);
         $header = 'Reports';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb($this->request->action);
+        $this->Navigation->addCrumb("Audit");
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->alias());
+        $header = __('Reports') . ' - ' . __("Audit");
         $this->set('contentHeader', $header);
     }
 
@@ -108,9 +108,9 @@ class ReportsController extends AppController
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
                 'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates')
             ];
-        } elseif ($module == 'Audit') {
+        } elseif ($module == 'Login') {
             $options = [
-                'Report.Audit' => __('Login')
+                'Report.Login' => __('Login')
             ];
         } elseif ($module == 'Examinations') {
             $options = [

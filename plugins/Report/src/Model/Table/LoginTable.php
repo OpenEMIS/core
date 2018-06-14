@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 
-class AuditTable extends AppTable
+class LoginTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -59,7 +59,7 @@ class AuditTable extends AppTable
                     'on' => function ($context) {
                         if (array_key_exists('feature', $context['data'])) {
                             $feature = $context['data']['feature'];
-                            return in_array($feature, ['Report.Audit']);
+                            return in_array($feature, ['Report.Login']);
                         }
 
                         return true;
@@ -108,20 +108,20 @@ class AuditTable extends AppTable
 
         $query
             ->select([
-                'openemis_no' => 'Audit.openemis_no',
-                'first_name' => 'Audit.first_name',
-                'middle_name' => 'Audit.middle_name',
-                'third_name' => 'Audit.third_name',
-                'last_name' => 'Audit.last_name',
-                'preferred_name' => 'Audit.preferred_name',
-                'email' => 'Audit.email',
+                'openemis_no' => 'Login.openemis_no',
+                'first_name' => 'Login.first_name',
+                'middle_name' => 'Login.middle_name',
+                'third_name' => 'Login.third_name',
+                'last_name' => 'Login.last_name',
+                'preferred_name' => 'Login.preferred_name',
+                'email' => 'Login.email',
                 'nationality_name' => 'MainNationalities.name',
                 'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => 'Audit.identity_number',
-                'external_reference' => 'Audit.external_reference',
-                'status' => 'Audit.status',
-                'last_login' => 'Audit.last_login',
-                'preferred_language' => 'Audit.preferred_language'
+                'identity_number' => 'Login.identity_number',
+                'external_reference' => 'Login.external_reference',
+                'status' => 'Login.status',
+                'last_login' => 'Login.last_login',
+                'preferred_language' => 'Login.preferred_language'
             ])
             ->contain([
                 'MainNationalities' => [
